@@ -85,6 +85,9 @@ type RunWithCheckpoint = (
   task: (since: string) => Promise<void>,
 ) => Promise<boolean>;
 
+const entityLabel = (entityType: string, repoName: null | string): string =>
+  repoName ? `${entityType} (${repoName})` : entityType;
+
 interface RunWithCheckpointOptions {
   args: ImportCliOptions;
   context: ImportContext;
@@ -113,8 +116,9 @@ const createRunWithCheckpoint =
       !args.force &&
       (await hasRecentCheckpoint(context, entityType, repoName))
     ) {
-      const label = repoName ? `${entityType} (${repoName})` : entityType;
-      console.log(`  ⏭ Skipping ${label} — imported within the last 23h`);
+      console.log(
+        `  ⏭ Skipping ${entityLabel(entityType, repoName)} — imported within the last 23h`,
+      );
       stats.skipped += 1;
       return true;
     }
@@ -282,12 +286,25 @@ async function main(): Promise<void> {
       });
     }
 
+    // Organization-wide entities are not scoped to a repository, so a `--repo`
+    // run skips them instead of mutating unrelated datasets and spending API
+    // quota on repositories the caller did not ask for.
+    const skipGlobalEntities = args.repo !== undefined;
+    const shouldRunGlobal = (entityType: string): boolean =>
+      !skipGlobalEntities && shouldRun(entityType);
+
+    if (skipGlobalEntities) {
+      console.log(
+        "\n⏭ Skipping organization-wide entities — --repo scopes the run to one repository",
+      );
+    }
+
     // Captured once, after every repository has been imported, so the snapshot
     // reflects the full usage set. It has its own `tech-radar-snapshot`
     // checkpoint, so `--entity tech-radar` re-captures it even when all
     // per-repo steps are checkpoint-skipped. Skipped entirely when any
     // repository import failed, so a partial run is not published as complete.
-    if (shouldRun("tech-radar")) {
+    if (shouldRunGlobal("tech-radar")) {
       console.log("\n🎯 Techradar Snapshot");
 
       if (failedTechRadarRepositories.length > 0) {
@@ -301,7 +318,7 @@ async function main(): Promise<void> {
       }
     }
 
-    if (shouldRun("commits")) {
+    if (shouldRunGlobal("commits")) {
       console.log("\n🔍 DX Team Commits");
       for (const member of context.dxTeamMembers) {
         await runWithCheckpoint("commits", member, (since) =>
@@ -310,28 +327,28 @@ async function main(): Promise<void> {
       }
     }
 
-    if (shouldRun("code-search")) {
+    if (shouldRunGlobal("code-search")) {
       console.log("\n🔍 Code Search (DX Adoption)");
       await runWithCheckpoint("code-search", null, () =>
         importCodeSearch(context),
       );
     }
 
-    if (shouldRun("dx-pipelines")) {
+    if (shouldRunGlobal("dx-pipelines")) {
       console.log("\n🔍 DX Pipeline Usages");
       await runWithCheckpoint("dx-pipelines", null, () =>
         importDxPipelineUsages(context),
       );
     }
 
-    if (shouldRun("terraform-registry")) {
+    if (shouldRunGlobal("terraform-registry")) {
       console.log("\n📦 Terraform Registry");
       await runWithCheckpoint("terraform-registry", null, () =>
         importTerraformRegistryReleases(context),
       );
     }
 
-    if (shouldRun("tracker") && args.trackerCsv) {
+    if (shouldRunGlobal("tracker") && args.trackerCsv) {
       console.log("\n📋 Tracker");
       await runWithCheckpoint("tracker", null, () =>
         importTrackerCsv(context, args.trackerCsv),

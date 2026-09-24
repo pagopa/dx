@@ -74,7 +74,10 @@ Options:
 
   --tracker-csv <path>      Path to the tracker CSV file (used with --entity tracker)
   --config <path>           Path to config JSON file (default: shared DX Metrics config)
-  --repo <name>             Import only this repository (must be configured)
+  --repo <name>             Import only this repository (must be configured).
+                            Skips organization-wide entities (DX team commits,
+                            code search, DX pipelines, terraform registry,
+                            tracker and the techradar snapshot).
   --force                   Ignore cursors and checkpoints: re-import the whole
                             --since window for every entity/repository.
   --help                    Show this help message

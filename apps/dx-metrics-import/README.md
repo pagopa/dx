@@ -56,6 +56,18 @@ Repositories already imported resume from their cursor and are not re-downloaded
 `--force` disables cursors and checkpoints, re-reading the whole `--since` window
 for every entity/repository.
 
+Because organization-wide entities are not repository-scoped, a `--repo` run
+skips them (DX team commits, code search, DX pipelines, terraform registry,
+tracker and the techradar snapshot) instead of touching unrelated datasets.
+
+The cursor only advances when an entity processed its whole window. When an
+importer cannot fetch everything (a recoverable GitHub failure that is not a
+deleted resource), it fails the run instead of silently skipping the item, so the
+cursor stays put and the interval is retried on the next run. `workflow-runs`
+additionally reconciles runs that are still active, since a run created before
+the window can stay in progress (for example while waiting for an environment
+approval) after the window has moved past it.
+
 ## Entity types
 
 - `all` (default) — import everything

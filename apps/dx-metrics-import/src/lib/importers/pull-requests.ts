@@ -5,7 +5,11 @@ import { sql } from "drizzle-orm";
 
 import type { ImportContext } from "../import-context";
 
-import { formatSecondsElapsed, sleep } from "../importer-helpers";
+import {
+  errorStatus,
+  formatSecondsElapsed,
+  sleep,
+} from "../importer-helpers";
 
 const BOT_LOGINS = new Set(["dependabot", "dx-pagopa-bot", "renovate-pagopa"]);
 
@@ -79,6 +83,7 @@ export async function importPullRequestReviews(
           AND merged_at IS NOT NULL`,
     );
 
+  let failedReviewFetches = 0;
   let importedReviews = 0;
   let processedPullRequests = 0;
   for (const pullRequest of pullRequests) {
@@ -128,6 +133,11 @@ export async function importPullRequestReviews(
         importedReviews += 1;
       }
     } catch (error) {
+      // A 404 is a pull request deleted on GitHub, which will never come back;
+      // any other failure means the window was not fully imported.
+      if (errorStatus(error) !== 404) {
+        failedReviewFetches += 1;
+      }
       console.log(
         `\n    ⚠ listReviews failed for PR #${pullRequest.number}: ${error}`,
       );
@@ -143,6 +153,12 @@ export async function importPullRequestReviews(
   console.log(
     `    ✓ ${importedReviews} reviews imported for ${pullRequests.length} PRs in ${formatSecondsElapsed(startTime)}s`,
   );
+
+  if (failedReviewFetches > 0) {
+    throw new Error(
+      `${failedReviewFetches} pull request review fetches failed; the window will be retried`,
+    );
+  }
 }
 
 export async function importPullRequests(
@@ -269,6 +285,7 @@ async function backfillPullRequestDetails(
   );
 
   let detailsCount = 0;
+  let failedDetails = 0;
   for (const pullRequest of pullRequestsNeedingDetails) {
     try {
       const { data: detail } = await context.octokit.rest.pulls.get({
@@ -294,8 +311,12 @@ async function backfillPullRequestDetails(
           `\r    Details fetched: ${detailsCount}/${pullRequestsNeedingDetails.length}`,
         );
       }
-    } catch {
-      // Preserve the original behavior: skip transient errors while backfilling details.
+    } catch (error) {
+      // A deleted pull request (404) is gone for good; any other failure means
+      // the window was not fully imported and must be retried.
+      if (errorStatus(error) !== 404) {
+        failedDetails += 1;
+      }
     }
 
     await sleep(100);
@@ -304,6 +325,12 @@ async function backfillPullRequestDetails(
   if (detailsCount > 0) {
     process.stdout.write(
       `\r    Details fetched: ${detailsCount}/${pullRequestsNeedingDetails.length}\n`,
+    );
+  }
+
+  if (failedDetails > 0) {
+    throw new Error(
+      `${failedDetails} pull request detail fetches failed; the window will be retried`,
     );
   }
 }

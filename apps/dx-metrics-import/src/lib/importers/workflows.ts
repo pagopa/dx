@@ -7,6 +7,88 @@ import type { ImportContext } from "../import-context";
 
 import { formatSecondsElapsed } from "../importer-helpers";
 
+type WorkflowRunItem = Awaited<
+  ReturnType<
+    ImportContext["octokit"]["rest"]["actions"]["listWorkflowRunsForRepo"]
+  >
+>["data"]["workflow_runs"][number];
+
+/**
+ * Statuses a run can still change from. A run created before the incremental
+ * window can stay in progress (environment approvals can wait for days), so it
+ * is reconciled outside the cursor instead of being left with a stale outcome.
+ */
+const ACTIVE_WORKFLOW_RUN_STATUSES = [
+  "in_progress",
+  "pending",
+  "queued",
+  "requested",
+  "waiting",
+] as const;
+
+const fetchActiveWorkflowRuns = async (
+  context: ImportContext,
+  repoName: string,
+): Promise<WorkflowRunItem[]> => {
+  const activeRuns: WorkflowRunItem[] = [];
+
+  for (const status of ACTIVE_WORKFLOW_RUN_STATUSES) {
+    activeRuns.push(
+      ...(await context.octokit.paginate(
+        context.octokit.rest.actions.listWorkflowRunsForRepo,
+        {
+          owner: context.organization,
+          per_page: 100,
+          repo: repoName,
+          status,
+        },
+      )),
+    );
+  }
+
+  return activeRuns;
+};
+
+const upsertWorkflowRun = async (
+  context: ImportContext,
+  repoId: number,
+  workflowRun: WorkflowRunItem,
+): Promise<void> => {
+  await context.db
+    .insert(schema.workflows)
+    .values({
+      id: workflowRun.workflow_id,
+      name: workflowRun.name || "unknown",
+      pipeline: null,
+      repositoryId: repoId,
+    })
+    .onConflictDoNothing();
+
+  await context.db
+    .insert(schema.workflowRuns)
+    .values({
+      conclusion: workflowRun.conclusion || null,
+      createdAt: new Date(workflowRun.created_at),
+      event: workflowRun.event || null,
+      id: workflowRun.id,
+      repositoryId: repoId,
+      status: workflowRun.status || null,
+      triggeringActor: workflowRun.triggering_actor?.login ?? null,
+      updatedAt: new Date(workflowRun.updated_at),
+      workflowId: workflowRun.workflow_id,
+    })
+    .onConflictDoUpdate({
+      set: {
+        conclusion: workflowRun.conclusion || null,
+        event: workflowRun.event || null,
+        status: workflowRun.status || null,
+        triggeringActor: workflowRun.triggering_actor?.login ?? null,
+        updatedAt: new Date(workflowRun.updated_at),
+      },
+      target: schema.workflowRuns.id,
+    });
+};
+
 export async function importWorkflowRuns(
   context: ImportContext,
   repoName: string,
@@ -18,7 +100,7 @@ export async function importWorkflowRuns(
   console.log(`  Importing workflow runs for ${fullName}...`);
 
   let fetchedCount = 0;
-  const workflowRuns = await context.octokit.paginate(
+  const windowRuns = await context.octokit.paginate(
     context.octokit.rest.actions.listWorkflowRunsForRepo,
     {
       created: `>=${since}`,
@@ -34,41 +116,13 @@ export async function importWorkflowRuns(
   );
   process.stdout.write(`\r    Fetched ${fetchedCount} runs total\n`);
 
+  const activeRuns = await fetchActiveWorkflowRuns(context, repoName);
+  console.log(`    Reconciling ${activeRuns.length} active runs`);
+
+  const workflowRuns = [...windowRuns, ...activeRuns];
   let importedCount = 0;
   for (const workflowRun of workflowRuns) {
-    await context.db
-      .insert(schema.workflows)
-      .values({
-        id: workflowRun.workflow_id,
-        name: workflowRun.name || "unknown",
-        pipeline: null,
-        repositoryId: repoId,
-      })
-      .onConflictDoNothing();
-
-    await context.db
-      .insert(schema.workflowRuns)
-      .values({
-        conclusion: workflowRun.conclusion || null,
-        createdAt: new Date(workflowRun.created_at),
-        event: workflowRun.event || null,
-        id: workflowRun.id,
-        repositoryId: repoId,
-        status: workflowRun.status || null,
-        triggeringActor: workflowRun.triggering_actor?.login ?? null,
-        updatedAt: new Date(workflowRun.updated_at),
-        workflowId: workflowRun.workflow_id,
-      })
-      .onConflictDoUpdate({
-        set: {
-          conclusion: workflowRun.conclusion || null,
-          event: workflowRun.event || null,
-          status: workflowRun.status || null,
-          triggeringActor: workflowRun.triggering_actor?.login ?? null,
-          updatedAt: new Date(workflowRun.updated_at),
-        },
-        target: schema.workflowRuns.id,
-      });
+    await upsertWorkflowRun(context, repoId, workflowRun);
 
     importedCount += 1;
     if (importedCount % 50 === 0) {
