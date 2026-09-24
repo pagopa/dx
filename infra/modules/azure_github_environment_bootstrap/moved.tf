@@ -1,4 +1,19 @@
 moved {
+  from = azurerm_role_assignment.admins_group_rgs
+  to   = azurerm_role_assignment.admin_group_rgs
+}
+
+moved {
+  from = azurerm_role_assignment.admins_group_rgs_kv_data
+  to   = azurerm_role_assignment.admin_group_rgs_kv_data
+}
+
+moved {
+  from = azurerm_role_assignment.admins_group_rgs_kv_admin
+  to   = azurerm_role_assignment.admin_group_rgs_kv_admin
+}
+
+moved {
   from = github_repository_environment.infra_prod_cd
   to   = github_repository_environment.infra_cd
 }

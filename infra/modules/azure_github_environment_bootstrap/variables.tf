@@ -17,12 +17,20 @@ variable "environment" {
 
 variable "entraid_groups" {
   type = object({
-    admins_object_id    = string
+    admin_object_id     = optional(string)
+    admins_object_id    = optional(string)
     devs_object_id      = string
     externals_object_id = optional(string, null)
   })
 
-  description = "The Azure Entra ID groups to give role to."
+  description = "The Azure Entra ID groups to give roles to. Use admin_object_id; admins_object_id is deprecated."
+
+  validation {
+    condition = (var.entraid_groups.admin_object_id != null) != (
+      var.entraid_groups.admins_object_id != null
+    )
+    error_message = "Exactly one of admin_object_id or the deprecated admins_object_id must be set."
+  }
 }
 
 variable "terraform_storage_account" {
