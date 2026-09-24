@@ -6,8 +6,8 @@
       "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/4.0.4"
     },
     "azure_core_values": {
-      "hash": "76f853db68cdac39f66fa579c86ceb61e3512abc6182ae1470ffaf796de34c15",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/2.0.0"
+      "hash": "41cc1185f732f4830082cf06ef936e0483030cc2112c1ffd3dd4827d311489b5",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/2.0.2"
     }
   }
 }
