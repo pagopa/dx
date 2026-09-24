@@ -1,3 +1,13 @@
+## 0.1.10 (2026-09-24)
+
+### 🚀 Features
+
+- Expand the default DX Metrics repository set with io-app, Interop, IDPay, CSTAR, PN and PagoPA platform repositories ([#2263](https://github.com/pagopa/dx/pull/2263))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.1.9 (2026-09-22)
 
 ### 🧱 Updated Dependencies

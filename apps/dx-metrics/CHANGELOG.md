@@ -1,3 +1,17 @@
+## 0.5.21 (2026-09-24)
+
+### 🚀 Features
+
+- Add multi-repository selection to the metrics dashboards ([#2262](https://github.com/pagopa/dx/pull/2262))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.10
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.20 (2026-09-23)
 
 ### 🩹 Fixes
