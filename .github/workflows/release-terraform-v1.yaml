@@ -102,17 +102,20 @@ jobs:
 
             while IFS= read -r project; do
               [ -z "$project" ] && continue
+              root="$(pnpm nx show project "$project" --json | jq --raw-output '.root')"
               project_targets="$(
                 jq --compact-output \
                   --arg env_name "$env_name" \
                   --arg plan_env "$plan_env" \
                   --arg apply_env "$apply_env" \
                   --arg project "$project" \
+                  --arg root "$root" \
                   '. + [{
                     "env-name": $env_name,
                     "plan-github-environment": $plan_env,
                     "apply-github-environment": $apply_env,
-                    "project": $project
+                    "project": $project,
+                    "root": $root
                   }]' \
                   <<< "$project_targets"
               )"
@@ -168,14 +171,6 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
-      - name: Get project root
-        id: project
-        env:
-          PROJECT: ${{ matrix.target.project }}
-        run: |
-          set -euo pipefail
-          echo "root=$(pnpm nx show project "$PROJECT" --json | jq --raw-output '.root')" >> "$GITHUB_OUTPUT"
-
       - name: Terraform Plan
         env:
           PROJECT: ${{ matrix.target.project }}
@@ -189,7 +184,7 @@ jobs:
         uses: pagopa/dx/actions/terraform-plan-storage-upload@main
         with:
           plan-file: ${{ env.TFPLAN_FILE }}
-          working-directory: ${{ steps.project.outputs.root }}
+          working-directory: ${{ matrix.target.root }}
 
       - name: Save plan outputs to artifact
         env:
@@ -223,6 +218,11 @@ jobs:
     if: ${{ needs.assess-affected-projects.outputs.project-targets != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
     environment: ${{ matrix.target.apply-github-environment }}
+    # Serialize applies to the same project so two pushes can't race each
+    # other on the same Terraform state, without cancelling an in-flight apply.
+    concurrency:
+      group: ${{ github.workflow }}-${{ matrix.target.project }}-apply
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
@@ -264,14 +264,6 @@ jobs:
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
 
-      - name: Get project root
-        id: project
-        env:
-          PROJECT: ${{ matrix.target.project }}
-        run: |
-          set -euo pipefail
-          echo "root=$(pnpm nx show project "$PROJECT" --json | jq --raw-output '.root')" >> "$GITHUB_OUTPUT"
-
       # Download plan outputs artifact from release-plan
       - name: Download plan outputs artifact
         uses: pagopa/dx/.github/actions/download-artifact@main
@@ -298,7 +290,7 @@ jobs:
         with:
           provider: ${{ steps.plan_outputs.outputs.provider }}
           plan-path: ${{ steps.plan_outputs.outputs.plan_path }}
-          working-directory: ${{ steps.project.outputs.root }}
+          working-directory: ${{ matrix.target.root }}
           azure-storage-account: ${{ steps.plan_outputs.outputs.azure_storage_account }}
           azure-container: ${{ steps.plan_outputs.outputs.azure_container }}
           aws-bucket: ${{ steps.plan_outputs.outputs.aws_bucket }}
