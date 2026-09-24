@@ -31,7 +31,8 @@ variables {
 mock_provider "azurerm" {}
 mock_provider "azuread" {}
 mock_provider "dx" {}
-mock_provider "github" {
+mock_provider "github" {}
+mock_provider "hashicorpgithub" {
   mock_data "github_organization" {
     defaults = {
       id = "12345"
@@ -44,7 +45,6 @@ mock_provider "github" {
     }
   }
 }
-mock_provider "github-integration" {}
 
 override_data {
   target = data.azurerm_subscription.current
