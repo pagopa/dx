@@ -57,6 +57,7 @@ chmod +x start.sh
 | **DX Adoption**   | DX pipeline and Terraform module adoption                |
 | **Techradar**     | Discoverable tool adoption mapped to DX Techradar        |
 | **DX Team**       | Team commits across repositories                         |
+| **Copilot**       | Copilot review, agent PRs and co-authored commits        |
 | **Tracker**       | DX request tracking and trends                           |
 
 ## Configuration

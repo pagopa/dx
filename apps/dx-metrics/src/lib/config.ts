@@ -19,6 +19,27 @@ export const DX_REPO: string = dxMetricsConfig.dxRepo;
 export const BOT_AUTHORS = ["renovate-pagopa", "dependabot", "dx-pagopa-bot"];
 
 /**
+ * Reviewer login GitHub attaches to Copilot code review. It ends with `[bot]`,
+ * so the shared bot exclusion keeps it out of every human-review metric; the
+ * Copilot dashboard matches it explicitly to measure the feature instead.
+ */
+export const COPILOT_REVIEWER_LOGIN = "copilot-pull-request-reviewer[bot]";
+
+/**
+ * Author login shown on pull requests opened by the Copilot coding agent. It is
+ * not a `[bot]` account, so it passes the shared human-PR predicate and must be
+ * matched by name to be told apart from a teammate.
+ */
+export const COPILOT_PR_AUTHOR = "Copilot";
+
+/**
+ * Share of merged pull requests that should receive a Copilot code review for
+ * adoption to read as healthy, used by the Copilot dashboard insight. Tuned to
+ * flag low uptake without penalising teams that use Copilot selectively.
+ */
+export const COPILOT_REVIEW_ADOPTION_PCT = 20;
+
+/**
  * Workflows that are CI tooling rather than the team's own pipelines. Excluded
  * from workflow metrics so a scanner ("CodeQL") or a labeller ("Labeler") never
  * inflates run counts, durations, or failure Pareto charts. Centralised so a

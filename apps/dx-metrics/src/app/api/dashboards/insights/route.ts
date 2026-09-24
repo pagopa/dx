@@ -2,15 +2,17 @@
  * Executive-summary API route: aggregates the insights computed by every
  * dashboard adapter into a single payload.
  *
- * Previously `/dashboards/overview` fetched all nine dashboard endpoints from
- * the browser, each of which ran its full adapter — nine HTTP round trips plus
- * the full payload of every dashboard just to harvest the `insights` field.
- * Running the adapters server-side in parallel, one request, keeps the same
- * result with a fraction of the round trips and lets the response be cached.
+ * Previously `/dashboards/overview` fetched all dashboard endpoints from the
+ * browser, each of which ran its full adapter — one HTTP round trip per
+ * dashboard plus the full payload of every dashboard just to harvest the
+ * `insights` field. Running the adapters server-side in parallel, one request,
+ * keeps the same result with a fraction of the round trips and lets the
+ * response be cached.
  */
 import { NextRequest, NextResponse } from "next/server";
 
 import { getIacDashboard } from "@/adapters/db/iac/queries";
+import { getCopilotDashboard } from "@/adapters/db/copilot/queries";
 import { fetchDxAdoption } from "@/adapters/db/dx-adoption/queries";
 import { fetchDxTeamDashboard } from "@/adapters/db/dx-team/queries";
 import { fetchPrDashboard } from "@/adapters/db/pull-requests/queries";
@@ -28,6 +30,7 @@ import { parseDashboardQuery, resolveRepositories } from "@/lib/query-params";
 
 /** Dashboards whose insights feed the executive summary. */
 const ENDPOINT_LABELS = {
+  copilot: "Copilot",
   "dx-adoption": "DX Adoption",
   "dx-team": "DX Team",
   iac: "IaC PRs",
@@ -72,6 +75,10 @@ export async function GET(req: NextRequest) {
     {
       key: "pull-requests-review",
       request: getPullRequestsReviewDashboard(db, { days, fullNames }),
+    },
+    {
+      key: "copilot",
+      request: getCopilotDashboard(db, { days, fullNames }),
     },
     {
       key: "workflows",
