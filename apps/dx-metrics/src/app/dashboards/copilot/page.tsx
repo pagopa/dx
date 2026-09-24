@@ -203,7 +203,10 @@ export default function CopilotDashboard() {
               previousValue={previousCoveragePct}
               sampleSize={data.cards.mergedPrs}
               severity={coverageSeverity}
-              sparkline={data.weeklyTrend.map((row) => row.reviewedPrs)}
+              sparkline={data.coverageTrend.map((row) => {
+                const total = row.cumulativeWith + row.cumulativeWithout;
+                return total > 0 ? (row.cumulativeWith / total) * 100 : 0;
+              })}
               suffix="%"
               target={COPILOT_REVIEW_ADOPTION_PCT}
               tooltip={tooltipContent.copilotReviewCoverage}

@@ -33,7 +33,7 @@ describe("botAuthorsExclusion", () => {
     const query = dialect.sqlToQuery(botAuthorsExclusion("pr.author"));
 
     expect(query.sql).toBe(
-      "(pr.author NOT IN ($1, $2, $3) AND pr.author NOT LIKE '%[bot]')",
+      "(pr.author NOT IN ($1, $2, $3, $4) AND pr.author NOT LIKE '%[bot]')",
     );
     expect(query.params).toEqual([...BOT_AUTHORS]);
   });
@@ -42,7 +42,7 @@ describe("botAuthorsExclusion", () => {
     const query = dialect.sqlToQuery(botAuthorsExclusion("reviewer"));
 
     expect(query.sql).toBe(
-      "(reviewer NOT IN ($1, $2, $3) AND reviewer NOT LIKE '%[bot]')",
+      "(reviewer NOT IN ($1, $2, $3, $4) AND reviewer NOT LIKE '%[bot]')",
     );
   });
 });
@@ -52,7 +52,7 @@ describe("isHumanReview", () => {
     const query = dialect.sqlToQuery(isHumanReview("rr", "pr"));
 
     expect(query.sql).toBe(
-      "(rr.reviewer NOT IN ($1, $2, $3) AND rr.reviewer NOT LIKE '%[bot]') AND rr.reviewer <> pr.author",
+      "(rr.reviewer NOT IN ($1, $2, $3, $4) AND rr.reviewer NOT LIKE '%[bot]') AND rr.reviewer <> pr.author",
     );
     expect(query.params).toEqual([...BOT_AUTHORS]);
   });
@@ -196,7 +196,7 @@ describe("humanPullRequest", () => {
     const query = dialect.sqlToQuery(humanPullRequest("pr"));
 
     expect(query.sql).toBe(
-      "((pr.author NOT IN ($1, $2, $3) AND pr.author NOT LIKE '%[bot]') AND (pr.draft IS NULL OR pr.draft = 0))",
+      "((pr.author NOT IN ($1, $2, $3, $4) AND pr.author NOT LIKE '%[bot]') AND (pr.draft IS NULL OR pr.draft = 0))",
     );
     expect(query.params).toEqual([...BOT_AUTHORS]);
   });

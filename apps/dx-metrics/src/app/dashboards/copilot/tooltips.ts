@@ -6,7 +6,7 @@ export const copilotTooltips = {
   agentPrOutcome:
     "Merge rate of pull requests opened by the Copilot coding agent in the selected period. A low rate is not automatically bad (work in progress is expected), but several long-lived open agent pull requests are worth a look.",
   copilotCoauthoredCommits:
-    "Commits in the selected period whose message carries a `Co-authored-by: Copilot` trailer, i.e. commits the Copilot coding agent contributed to. The card also shows this as a share of the team commits imported in the period. Only commits authored by DX team members are imported, so this is a floor, not a total.",
+    "Commits in the selected period whose message carries a `Co-authored-by: Copilot` trailer, i.e. commits the Copilot coding agent contributed to. The card also shows this as a share of the team commits imported in the period. Two data limits keep this a floor, not a total: only commits authored by DX team members are imported, and commit messages are stored truncated to 500 characters, so a trailer on a longer message may be missing.",
   copilotLeadTime:
     "Average time from open to merge for pull requests merged in the selected period, split by whether they received a Copilot review. Copilot tends to review larger or riskier changes, so the difference is a correlation, not a proven speed-up.",
   copilotReviewCoverage:
@@ -18,7 +18,7 @@ export const copilotTooltips = {
   commitsByRepository:
     "Copilot co-authored commits in the selected period, grouped by repository. Shows where the coding agent contributes most.",
   coverageTrend:
-    "Cumulative merged pull requests over the selected period, split by whether they had received a Copilot review. The two lines partition the same population: as the gap closes, Copilot adoption is growing. A weak signal above zero already indicates some usage; the raw count is not directly comparable across repositories of different size.",
+    "Cumulative merged pull requests over the selected period, split by whether they had received a Copilot review. The two series partition the same population, so compare their slopes, or read the coverage card for the rate: the absolute gap widens whenever uncovered PRs outnumber covered ones, even when adoption is improving. The raw count is not directly comparable across repositories of different size.",
   leadTimeComparison:
     "Average open-to-merge time for merged pull requests, with versus without a Copilot review. Bars come from the same population, so they are directly comparable.",
   recentAuthoredPrs:

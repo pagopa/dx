@@ -9,10 +9,7 @@ import type { WithInsights } from "@/lib/insights/types";
 import type { Database, WithMeta } from "../shared/types";
 import type { CopilotDashboard, GetCopilotDashboardInput } from "./schemas";
 
-import {
-  buildReferenceDateQuery,
-  parseReferenceDate,
-} from "../shared/reference-date";
+import { parseReferenceDate } from "../shared/reference-date";
 import {
   copilotCoauthorTrailerMatch,
   humanPullRequest,
@@ -36,13 +33,26 @@ export const getCopilotDashboard = async (
   db: Database,
   { days, fullNames }: GetCopilotDashboardInput,
 ): Promise<CopilotDashboard & WithInsights & WithMeta> => {
-  const referenceDateResult = await db.execute(
-    buildReferenceDateQuery({
-      column: "GREATEST(pr.created_at, pr.merged_at)",
-      from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
-      where: repositoryIn("r.full_name", fullNames),
-    }),
-  );
+  // The dashboard reads pull requests and commits, so the window is anchored to
+  // the newest timestamp across both: anchoring to pull requests alone would
+  // exclude newer commits, and a selection with no pull requests would fall back
+  // to NOW() and misreport the commit data. GREATEST ignores NULLs, so the
+  // COALESCE only kicks in when neither source has any row.
+  const referenceDateResult = await db.execute(sql`
+    SELECT COALESCE(
+      GREATEST(
+        (SELECT MAX(GREATEST(pr.created_at, pr.merged_at))
+          FROM pull_requests pr
+          JOIN repositories r ON pr.repository_id = r.id
+          WHERE ${repositoryIn("r.full_name", fullNames)}),
+        (SELECT MAX(c.committer_date)
+          FROM commits c
+          JOIN repositories r ON c.repository_id = r.id
+          WHERE ${repositoryIn("r.full_name", fullNames)})
+      ),
+      NOW()
+    ) AS "referenceDate"
+  `);
   const referenceDate = parseReferenceDate(
     referenceDateResult.rows[0],
     "copilot referenceDate",
@@ -52,7 +62,7 @@ export const getCopilotDashboard = async (
   // "Copilot review" means a review from the Copilot reviewer bot. Lead time is
   // compared across the two subsets of the same scan, so the denominator cannot
   // drift between the coverage card and the lead-time card.
-  const cardsResult = await db.execute(sql`
+  const cardsQuery = db.execute(sql`
     SELECT
       COUNT(*) AS "mergedPrs",
       COUNT(*) FILTER (
@@ -86,7 +96,7 @@ export const getCopilotDashboard = async (
   // --- Same card metrics over the preceding, equally-sized window ---
   // The Copilot review is matched on the pull request, not on when the review
   // was submitted, so a review that lands just before the window still counts.
-  const previousValuesResult = await db.execute(sql`
+  const previousValuesQuery = db.execute(sql`
     SELECT
       (SELECT ROUND(
           COUNT(*) FILTER (WHERE EXISTS (
@@ -146,7 +156,7 @@ export const getCopilotDashboard = async (
   // Counting agent pull requests needs no human-PR filter (the author is the
   // agent itself), and co-authored commits are counted on committer date so a
   // commit lands in the window it was written in.
-  const activityResult = await db.execute(sql`
+  const activityQuery = db.execute(sql`
     SELECT
       (SELECT COUNT(*)
         FROM pull_requests pr
@@ -185,7 +195,7 @@ export const getCopilotDashboard = async (
   // --- Who reviewed the merged PRs: Copilot, a human, both, or neither ---
   // The population is the same merged-PR set as the coverage card, so the
   // "Copilot only" slice is directly comparable to the coverage percentage.
-  const reviewCombinationResult = await db.execute(sql`
+  const reviewCombinationQuery = db.execute(sql`
     SELECT
       COUNT(*) FILTER (WHERE cop_exists AND human_exists) AS "copilotAndHuman",
       COUNT(*) FILTER (WHERE cop_exists AND NOT human_exists) AS "copilotOnly",
@@ -213,7 +223,7 @@ export const getCopilotDashboard = async (
   // --- Copilot review adoption by pull-request size ---
   // Explains the lead-time gap: if Copilot reviews larger PRs, its "with
   // Copilot" lead time is higher by selection, not by slowdown.
-  const prSizeBucketsResult = await db.execute(sql`
+  const prSizeBucketsQuery = db.execute(sql`
     SELECT
       CASE
         WHEN pr.additions IS NULL THEN 'unknown'
@@ -244,7 +254,7 @@ export const getCopilotDashboard = async (
   `);
 
   // --- Weekly Copilot review activity ---
-  const weeklyTrendResult = await db.execute(sql`
+  const weeklyTrendQuery = db.execute(sql`
     SELECT DATE_TRUNC('week', prr.submitted_at)::date AS week,
       COUNT(*) AS reviews,
       COUNT(DISTINCT prr.pull_request_id) AS "reviewedPrs"
@@ -262,7 +272,7 @@ export const getCopilotDashboard = async (
   // Commits are bucketed by committer date and lead time by merge date, so the
   // two series answer "in weeks with more Copilot co-authorship, was delivery
   // faster or slower?". Correlation only: neither series causes the other.
-  const coauthorLeadTimeTrendResult = await db.execute(sql`
+  const coauthorLeadTimeTrendQuery = db.execute(sql`
     WITH bounds AS (
       SELECT
         DATE_TRUNC('week', ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days}))::date AS start_week,
@@ -306,7 +316,7 @@ export const getCopilotDashboard = async (
   // One point per week: how many merged pull requests had received a Copilot
   // review by the end of that week, versus how many had not. The two series
   // partition the same population, so the total is the merged-PR volume.
-  const coverageTrendResult = await db.execute(sql`
+  const coverageTrendQuery = db.execute(sql`
     WITH weekly AS (
       SELECT DATE_TRUNC('week', pr.merged_at)::date AS week,
         COUNT(*) FILTER (WHERE EXISTS (
@@ -332,7 +342,7 @@ export const getCopilotDashboard = async (
     ORDER BY week
   `);
 
-  const commitsByRepositoryResult = await db.execute(sql`
+  const commitsByRepositoryQuery = db.execute(sql`
     SELECT r.full_name AS repository, COUNT(*) AS commits
     FROM commits c
     JOIN repositories r ON c.repository_id = r.id
@@ -343,7 +353,7 @@ export const getCopilotDashboard = async (
     ORDER BY commits DESC
   `);
 
-  const recentAuthoredPrsResult = await db.execute(sql`
+  const recentAuthoredPrsQuery = db.execute(sql`
     SELECT pr.number,
       r.full_name AS repository,
       pr.title,
@@ -360,6 +370,32 @@ export const getCopilotDashboard = async (
     ORDER BY pr.created_at DESC
     LIMIT 20
   `);
+
+  // The result queries are independent; run them concurrently so the route
+  // pays one round-trip latency instead of ten, matching the other adapters.
+  const [
+    cardsResult,
+    previousValuesResult,
+    activityResult,
+    reviewCombinationResult,
+    prSizeBucketsResult,
+    weeklyTrendResult,
+    coauthorLeadTimeTrendResult,
+    coverageTrendResult,
+    commitsByRepositoryResult,
+    recentAuthoredPrsResult,
+  ] = await Promise.all([
+    cardsQuery,
+    previousValuesQuery,
+    activityQuery,
+    reviewCombinationQuery,
+    prSizeBucketsQuery,
+    weeklyTrendQuery,
+    coauthorLeadTimeTrendQuery,
+    coverageTrendQuery,
+    commitsByRepositoryQuery,
+    recentAuthoredPrsQuery,
+  ]);
 
   const cards = parseSqlRow(
     copilotCardsSchema,
