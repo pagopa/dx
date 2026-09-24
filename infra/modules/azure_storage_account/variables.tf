@@ -36,7 +36,7 @@ variable "use_case" {
 
 variable "subnet_pep_id" {
   type        = string
-  description = "The ID of the subnet used for private endpoints. Required only if `force_public_network_access_enabled` is set to false."
+  description = "The ID of the subnet used for private endpoints. When set, private endpoints are created for the subservices enabled in `subservices_enabled`, independently of `force_public_network_access_enabled` (this allows enabling private endpoints even when public network access is also enabled). Required only if `force_public_network_access_enabled` is set to false."
   default     = null
 
   validation {
@@ -95,7 +95,7 @@ variable "subservices_enabled" {
     queue = optional(bool, false)
     table = optional(bool, false)
   })
-  description = "Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only if force_public_network_access_enabled is false."
+  description = "Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only when subnet_pep_id is set."
   default     = {}
 
   validation {

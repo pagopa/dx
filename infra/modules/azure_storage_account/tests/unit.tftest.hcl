@@ -309,6 +309,53 @@ run "storage_account_private_network" {
   }
 }
 
+# ── 8b. Public network with opt-in private endpoints ───────────────────────
+run "storage_account_public_network_with_subnet_pep_id" {
+  command = plan
+
+  variables {
+    force_public_network_access_enabled = true
+    subnet_pep_id                       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
+  }
+
+  override_data {
+    target = data.azurerm_private_dns_zone.storage_account["blob"]
+    values = {
+      id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+      name = "privatelink.blob.core.windows.net"
+    }
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.public_network_access_enabled == true
+    error_message = "public_network_access_enabled must remain true when force_public=true, even with subnet_pep_id set"
+  }
+
+  assert {
+    condition     = local.peps.create_subservices.blob == true
+    error_message = "peps.create_subservices.blob must be true when subnet_pep_id is set, even if public network is forced"
+  }
+}
+
+# ── 8c. Public network without opt-in keeps prior no-PEP behavior ──────────
+run "storage_account_public_network_default_still_skips_private_endpoint" {
+  command = plan
+
+  variables {
+    force_public_network_access_enabled = true
+  }
+
+  assert {
+    condition     = local.peps.create_subservices.blob == false
+    error_message = "peps.create_subservices.blob must remain false by default when public network is forced and subnet_pep_id is unset (backward compatibility)"
+  }
+
+  assert {
+    condition     = length(azurerm_private_endpoint.this) == 0
+    error_message = "No private endpoints must be created by default when public network is forced and subnet_pep_id is unset (backward compatibility)"
+  }
+}
+
 # ── 9. Immutability forces versioning and change_feed ───────────────────────
 run "storage_account_immutability_forces_versioning" {
   command = plan

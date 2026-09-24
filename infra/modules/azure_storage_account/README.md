@@ -48,6 +48,19 @@ malware_scanning_enabled = true
 
 This storage account module should **not** be used as an origin for an Azure CDN if the variable `force_public_network_access_enabled` is set to `false` (as default). Azure CDN requires the origin to be publicly accessible. For CDN setups, please refer to the dedicated [Azure CDN module](https://registry.terraform.io/modules/pagopa-dx/azure-cdn/azurerm/latest).
 
+## Public Access with Private Endpoints
+
+By default, setting `force_public_network_access_enabled = true` results in no private endpoint being created, since `subnet_pep_id` is left unset in that case, and the two were previously treated as mutually exclusive: a publicly reachable storage account did not need a private path.
+
+Some scenarios require both: for example, using the storage account as an Azure Front Door origin (which needs a public endpoint) while still connecting privately from workloads inside the network. To support this, private endpoint creation is now driven directly by `subnet_pep_id`, independently of `force_public_network_access_enabled`: setting `subnet_pep_id` also creates private endpoints for the subservices listed in `subservices_enabled`, in addition to the public endpoint.
+
+Existing configurations are unaffected: as long as `subnet_pep_id` is left unset while public access is forced, no private endpoint resources are created.
+
+```hcl
+force_public_network_access_enabled = true
+subnet_pep_id                       = azurerm_subnet.private_endpoints.id
+```
+
 ## Note about Replication
 
 For use cases with `secondary replica`, the module creates a secondary storage account in the specified `secondary_location` to enable geo-redundant storage. This setup ensures data durability and availability across different geographic regions.
@@ -290,8 +303,8 @@ No modules.
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where the storage account and related resources will be deployed. | `string` | n/a | yes |
 | <a name="input_secondary_location"></a> [secondary\_location](#input\_secondary\_location) | Secondary location for geo-redundant storage accounts. Used if `use_case` need a replication\_type like GRS or GZRS. | `string` | `null` | no |
 | <a name="input_static_website"></a> [static\_website](#input\_static\_website) | Configures static website hosting with index and error documents. | <pre>object({<br/>    enabled            = optional(bool, false)<br/>    index_document     = optional(string, null)<br/>    error_404_document = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "error_404_document": null,<br/>  "index_document": null<br/>}</pre> | no |
-| <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet used for private endpoints. Required only if `force_public_network_access_enabled` is set to false. | `string` | `null` | no |
-| <a name="input_subservices_enabled"></a> [subservices\_enabled](#input\_subservices\_enabled) | Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only if force\_public\_network\_access\_enabled is false. | <pre>object({<br/>    blob  = optional(bool, true)<br/>    file  = optional(bool, false)<br/>    queue = optional(bool, false)<br/>    table = optional(bool, false)<br/>  })</pre> | `{}` | no |
+| <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet used for private endpoints. When set, private endpoints are created for the subservices enabled in `subservices_enabled`, independently of `force_public_network_access_enabled` (this allows enabling private endpoints even when public network access is also enabled). Required only if `force_public_network_access_enabled` is set to false. | `string` | `null` | no |
+| <a name="input_subservices_enabled"></a> [subservices\_enabled](#input\_subservices\_enabled) | Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only when subnet\_pep\_id is set. | <pre>object({<br/>    blob  = optional(bool, true)<br/>    file  = optional(bool, false)<br/>    queue = optional(bool, false)<br/>    table = optional(bool, false)<br/>  })</pre> | `{}` | no |
 | <a name="input_tables"></a> [tables](#input\_tables) | Tables to be created. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to all resources created by this module. | `map(any)` | n/a | yes |
 | <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Storage account use case. Allowed values: 'default', 'audit', 'delegated\_access', 'development', 'archive'. | `string` | `"default"` | no |
