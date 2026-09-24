@@ -16,12 +16,12 @@ terraform {
     }
 
     github = {
-      source  = "hashicorp/github"
+      source  = "integrations/github"
       version = "~> 6.12"
     }
 
-    github-integration = {
-      source  = "integrations/github"
+    hashicorpgithub = {
+      source  = "hashicorp/github"
       version = "~> 6.12"
     }
   }

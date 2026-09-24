@@ -8,7 +8,8 @@ locals {
 }
 
 resource "github_actions_environment_secret" "integration_tests_client_id" {
-  count = var.environment.env_short == "u" ? 1 : 0
+  provider = hashicorpgithub
+  count    = var.environment.env_short == "u" ? 1 : 0
 
   repository  = var.repository.name
   environment = local.automation_cd_environment_name
@@ -17,7 +18,8 @@ resource "github_actions_environment_secret" "integration_tests_client_id" {
 }
 
 resource "github_actions_environment_secret" "integration_tests_subscription_id" {
-  count = var.environment.env_short == "u" ? 1 : 0
+  provider = hashicorpgithub
+  count    = var.environment.env_short == "u" ? 1 : 0
 
   repository  = var.repository.name
   environment = local.automation_cd_environment_name
@@ -26,6 +28,7 @@ resource "github_actions_environment_secret" "integration_tests_subscription_id"
 }
 
 resource "github_actions_environment_secret" "automation_infra_cd_client_id" {
+  provider    = hashicorpgithub
   repository  = var.repository.name
   environment = local.automation_cd_environment_name
   secret_name = "ARM_CLIENT_ID"
@@ -33,6 +36,7 @@ resource "github_actions_environment_secret" "automation_infra_cd_client_id" {
 }
 
 resource "github_actions_environment_secret" "automation_infra_cd_subscription_id" {
+  provider    = hashicorpgithub
   repository  = var.repository.name
   environment = local.automation_cd_environment_name
   secret_name = "ARM_SUBSCRIPTION_ID"

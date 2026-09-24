@@ -15,6 +15,8 @@ data "azuread_group" "externals" {
 }
 
 data "github_organization" "owner" {
+  provider = hashicorpgithub
+
   count = var.environment.env_short == "u" ? 1 : 0
 
   name         = var.repository.owner
@@ -22,6 +24,8 @@ data "github_organization" "owner" {
 }
 
 data "github_repository" "this" {
+  provider = hashicorpgithub
+
   count = var.environment.env_short == "u" ? 1 : 0
 
   name = var.repository.name
