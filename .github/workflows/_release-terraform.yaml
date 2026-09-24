@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - feat-align-infra-apply-nx # Is for testing, remove before merge
     paths:
       - "infra/resources/**"
       - ".github/workflows/_release-terraform.yaml"

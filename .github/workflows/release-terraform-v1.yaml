@@ -177,7 +177,9 @@ jobs:
           echo "root=$(pnpm nx show project "$PROJECT" --json | jq --raw-output '.root')" >> "$GITHUB_OUTPUT"
 
       - name: Terraform Plan
-        run: pnpm nx run "${{ matrix.target.project }}:plan" --configuration=ci --out="$TFPLAN_FILE"
+        env:
+          PROJECT: ${{ matrix.target.project }}
+        run: pnpm nx run "$PROJECT:plan" --configuration=ci --out="$TFPLAN_FILE"
 
       # Bundle the plan file together with .terraform.lock.hcl and .terraform/modules/
       # and upload it to the same storage backend used for the Terraform state.
@@ -303,8 +305,10 @@ jobs:
           aws-region: ${{ steps.plan_outputs.outputs.aws_region }}
 
       - name: Terraform Apply
+        env:
+          PROJECT: ${{ matrix.target.project }}
         run: |
-          pnpm nx run "${{ matrix.target.project }}:apply" --configuration=ci -- \
+          pnpm nx run "${PROJECT}:apply" --configuration=ci -- \
             -auto-approve \
             -input=false \
             -lock-timeout=120s \
