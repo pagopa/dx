@@ -5,11 +5,7 @@ import { sql } from "drizzle-orm";
 
 import type { ImportContext } from "../import-context";
 
-import {
-  errorStatus,
-  formatSecondsElapsed,
-  sleep,
-} from "../importer-helpers";
+import { errorStatus, formatSecondsElapsed, sleep } from "../importer-helpers";
 
 const BOT_LOGINS = new Set(["dependabot", "dx-pagopa-bot", "renovate-pagopa"]);
 
