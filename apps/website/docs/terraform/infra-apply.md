@@ -6,9 +6,9 @@ sidebar_position: 6
 
 :::info Reusable Workflows
 
-| Workflow                            | Version | Source                                                                                                                |
-| ----------------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
-| **Infrastructure Apply**            | latest  | [`infra_apply.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_apply.yaml)                       |
+| Workflow                              | Version | Source                                                                                                            |
+| ------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Infrastructure Apply**              | latest  | [`infra_apply.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_apply.yaml)                   |
 | **Nx Terraform Infrastructure Apply** | latest  | [`release-terraform-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-terraform-v1.yaml) |
 
 :::
@@ -44,23 +44,22 @@ the versioned reusable workflow implementation.
 `release-terraform-v1.yaml` contains the release logic and follows the same
 environment discovery approach used by `validate-v2.yaml`: it reads the
 repository GitHub environments named `infra-<env>-cd` (and the paired
-`infra-<env>-ci` used for planning), and checks which Terraform Nx projects
-are affected for each environment.
+`infra-<env>-ci` used for planning), and checks which Terraform Nx projects are
+affected for each environment.
 
-Like the legacy `infra_apply` workflow, releases follow a
-**Plan → Approve → Apply** flow, so the plan a reviewer approves is what gets
-applied:
+Like the legacy `infra_apply` workflow, releases follow a **Plan → Approve →
+Apply** flow, so the plan a reviewer approves is what gets applied:
 
 1. **Plan** (`release-plan`): runs on the matching self-hosted runner label,
-   under the `infra-<env>-ci` GitHub environment (no required reviewers).
-   Runs the Terraform Nx `plan` target for each affected project and uploads
-   the resulting plan bundle to the same storage backend used for the
-   Terraform state.
+   under the `infra-<env>-ci` GitHub environment (no required reviewers). Runs
+   the Terraform Nx `plan` target for each affected project and uploads the
+   resulting plan bundle to the same storage backend used for the Terraform
+   state.
 2. **Apply** (`release-apply`): runs under the `infra-<env>-cd` GitHub
-   environment, so any required reviewers configured on it must approve the
-   run before it proceeds. Downloads the plan bundle uploaded by
-   `release-plan` and runs the Terraform Nx `apply` target against that exact
-   plan file, instead of recomputing a new plan.
+   environment, so any required reviewers configured on it must approve the run
+   before it proceeds. Downloads the plan bundle uploaded by `release-plan` and
+   runs the Terraform Nx `apply` target against that exact plan file, instead of
+   recomputing a new plan.
 
 If no matching Nx project is found, both jobs are skipped.
 
@@ -194,5 +193,5 @@ The typical execution flow in a CI/CD process includes:
 2. **Review & Approval**: reviewers examine the plan output for each affected
    Terraform project and approve the changes
 3. **Merge**: after approval, the PR is merged into the main branch
-4. **Deploy**: `infra_apply` or `_release-terraform` is triggered to
-   implement the changes in the desired environment
+4. **Deploy**: `infra_apply` or `_release-terraform` is triggered to implement
+   the changes in the desired environment
