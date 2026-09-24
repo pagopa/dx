@@ -6,6 +6,7 @@ export interface ImportCliOptions {
   configPath?: string;
   entity: string;
   force: boolean;
+  repo?: string;
   since: string;
   trackerCsv: string;
 }
@@ -48,9 +49,12 @@ export function getHelpText(): string {
 Usage: pnpm import -- [options]
 
 Options:
-  --since YYYY-MM-DD        Start date for the import (e.g. 2024-01-01).
-                            If omitted, computed from the IMPORT_SINCE_DAYS
-                            environment variable (default: 30 days ago).
+  --since YYYY-MM-DD        Floor for the import (e.g. 2024-01-01): the start
+                            used when an entity/repository has no history yet.
+                            Runs with a stored cursor resume from it instead, so
+                            already-imported data is not re-downloaded. If
+                            omitted, computed from IMPORT_SINCE_DAYS (default:
+                            30 days ago).
 
   --entity <type>           Import only the specified entity type (default: all)
                             Valid values:
@@ -70,7 +74,9 @@ Options:
 
   --tracker-csv <path>      Path to the tracker CSV file (used with --entity tracker)
   --config <path>           Path to config JSON file (default: shared DX Metrics config)
-  --force                   Re-import even if a checkpoint already exists
+  --repo <name>             Import only this repository (must be configured)
+  --force                   Ignore cursors and checkpoints: re-import the whole
+                            --since window for every entity/repository.
   --help                    Show this help message
 `;
 }
@@ -84,6 +90,7 @@ export function parseArgs(
   let trackerCsv = "";
   let force = false;
   let configPath: string | undefined;
+  let repo: string | undefined;
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -117,10 +124,16 @@ export function parseArgs(
       continue;
     }
 
+    if (argument === "--repo" && nextArgument) {
+      repo = nextArgument;
+      index += 1;
+      continue;
+    }
+
     if (argument === "--force") {
       force = true;
     }
   }
 
-  return { configPath, entity, force, since, trackerCsv };
+  return { configPath, entity, force, repo, since, trackerCsv };
 }

@@ -5,7 +5,7 @@ import {
   cleanStaleCheckpoints,
   completeCheckpoint,
   failCheckpoint,
-  hasCheckpoint,
+  hasRecentCheckpoint,
   startCheckpoint,
 } from "./lib/checkpoints";
 import {
@@ -13,12 +13,19 @@ import {
   computeSinceDate,
   getHelpText,
   HelpRequestedError,
+  type ImportCliOptions,
   parseArgs,
 } from "./lib/cli";
-import { loadImportConfig, resolveImportSettings } from "./lib/config";
+import {
+  loadImportConfig,
+  resolveImportSettings,
+  resolveOverlapDays,
+} from "./lib/config";
+import { computeCursorAt, resolveEntitySince } from "./lib/cursor";
 import {
   closeImportContext,
   createImportContext,
+  type ImportContext,
   seedConfig,
 } from "./lib/import-context";
 import {
@@ -72,6 +79,149 @@ const handleCliError = (error: unknown): never => {
   throw error;
 };
 
+type RunWithCheckpoint = (
+  entityType: string,
+  repoName: null | string,
+  task: (since: string) => Promise<void>,
+) => Promise<boolean>;
+
+interface RunWithCheckpointOptions {
+  args: ImportCliOptions;
+  context: ImportContext;
+  overlapDays: number;
+  stats: { skipped: number };
+}
+
+/**
+ * Builds the checkpoint- and cursor-aware runner shared by every entity step.
+ * Extracted from `main` to keep the orchestrator readable and within lint
+ * limits, and to keep the incremental policy in a single place.
+ */
+const createRunWithCheckpoint =
+  ({
+    args,
+    context,
+    overlapDays,
+    stats,
+  }: RunWithCheckpointOptions): RunWithCheckpoint =>
+  async (
+    entityType: string,
+    repoName: null | string,
+    task: (since: string) => Promise<void>,
+  ): Promise<boolean> => {
+    if (
+      !args.force &&
+      (await hasRecentCheckpoint(context, entityType, repoName))
+    ) {
+      const label = repoName ? `${entityType} (${repoName})` : entityType;
+      console.log(`  ⏭ Skipping ${label} — imported within the last 23h`);
+      stats.skipped += 1;
+      return true;
+    }
+
+    const isRepositoryEntity =
+      repoName !== null && context.repositories.includes(repoName);
+    const repoId =
+      repoName && isRepositoryEntity
+        ? await context.ensureRepo(repoName)
+        : null;
+
+    // `--force` ignores the cursor and re-reads the whole floor window;
+    // otherwise a stored cursor resumes from where the last import stopped.
+    const since = args.force
+      ? args.since
+      : await resolveEntitySince(context, {
+          entityType,
+          floor: args.since,
+          overlapDays,
+          repoName,
+        });
+
+    const syncRunId = await startCheckpoint(
+      context,
+      entityType,
+      repoName,
+      since,
+      repoId,
+    );
+
+    try {
+      await task(since);
+      const cursorAt = computeCursorAt(entityType);
+      await completeCheckpoint(context, syncRunId, cursorAt);
+      return true;
+    } catch (error) {
+      await failCheckpoint(context, syncRunId);
+      console.error(`  ❌ Failed: ${error}`);
+      return false;
+    }
+  };
+
+interface RepositoryImportOptions {
+  context: ImportContext;
+  failedTechRadarRepositories: string[];
+  repoName: string;
+  runWithCheckpoint: RunWithCheckpoint;
+  shouldRun: (entityType: string) => boolean;
+}
+
+/** Imports every per-repository entity for a single repository. */
+const runRepositoryImport = async ({
+  context,
+  failedTechRadarRepositories,
+  repoName,
+  runWithCheckpoint,
+  shouldRun,
+}: RepositoryImportOptions): Promise<void> => {
+  console.log(`\n📦 ${context.organization}/${repoName}`);
+
+  if (shouldRun("pull-requests")) {
+    await runWithCheckpoint("pull-requests", repoName, (since) =>
+      importPullRequests(context, repoName, since),
+    );
+  }
+
+  if (shouldRun("workflows")) {
+    await runWithCheckpoint("workflows", repoName, () =>
+      importWorkflows(context, repoName),
+    );
+  }
+
+  if (shouldRun("workflow-runs")) {
+    await runWithCheckpoint("workflow-runs", repoName, (since) =>
+      importWorkflowRuns(context, repoName, since),
+    );
+  }
+
+  if (shouldRun("iac-pr")) {
+    await runWithCheckpoint("iac-pr", repoName, (since) =>
+      importIacPrLeadTime(context, repoName, since),
+    );
+  }
+
+  if (shouldRun("terraform-modules")) {
+    await runWithCheckpoint("terraform-modules", repoName, () =>
+      importTerraformModules(context, repoName),
+    );
+  }
+
+  if (shouldRun("pr-reviews")) {
+    await runWithCheckpoint("pr-reviews", repoName, (since) =>
+      importPullRequestReviews(context, repoName, since),
+    );
+  }
+
+  if (shouldRun("tech-radar")) {
+    const succeeded = await runWithCheckpoint("tech-radar", repoName, () =>
+      importTechRadarRepositoryUsages(context, repoName),
+    );
+
+    if (!succeeded) {
+      failedTechRadarRepositories.push(repoName);
+    }
+  }
+};
+
 async function main(): Promise<void> {
   const overallStartTime = Date.now();
   const args = parseArgs(process.argv.slice(2), process.cwd());
@@ -84,16 +234,25 @@ async function main(): Promise<void> {
     fileConfig,
     readEnvironmentOverrides(),
   );
+
+  if (args.repo && !settings.repositories.includes(args.repo)) {
+    throw new CliUsageError(
+      `Unknown repository "${args.repo}". Configured repositories: ${settings.repositories.join(", ")}.`,
+    );
+  }
+
+  const overlapDays = resolveOverlapDays(process.env.IMPORT_OVERLAP_DAYS);
   const context = await createImportContext(settings, readRuntimeEnvironment());
+  const repositories = args.repo ? [args.repo] : context.repositories;
   const stats = { skipped: 0 };
 
   try {
     console.log("\n🚀 DX Metrics Import");
-    console.log(`   Since: ${args.since}`);
+    console.log(`   Since (floor): ${args.since}`);
     console.log(`   Entity: ${args.entity}`);
     console.log(`   Force: ${args.force}`);
     console.log(`   Organization: ${context.organization}`);
-    console.log(`   Repositories: ${context.repositories.length}\n`);
+    console.log(`   Repositories: ${repositories.length}\n`);
 
     await cleanStaleCheckpoints(context);
     await seedConfig(context);
@@ -101,101 +260,26 @@ async function main(): Promise<void> {
     const shouldRun = (entityType: string): boolean =>
       args.entity === "all" || args.entity === entityType;
 
-    const runWithCheckpoint = async (
-      entityType: string,
-      repoName: null | string,
-      task: () => Promise<void>,
-    ): Promise<boolean> => {
-      if (
-        !args.force &&
-        (await hasCheckpoint(context, entityType, repoName, args.since))
-      ) {
-        const label = repoName ? `${entityType} (${repoName})` : entityType;
-        console.log(
-          `  ⏭ Skipping ${label} — already imported for --since ${args.since}`,
-        );
-        stats.skipped += 1;
-        return true;
-      }
-
-      const isRepositoryEntity =
-        repoName !== null && context.repositories.includes(repoName);
-      const repoId =
-        repoName && isRepositoryEntity
-          ? await context.ensureRepo(repoName)
-          : null;
-      const syncRunId = await startCheckpoint(
-        context,
-        entityType,
-        repoName,
-        args.since,
-        repoId,
-      );
-
-      try {
-        await task();
-        await completeCheckpoint(context, syncRunId);
-        return true;
-      } catch (error) {
-        await failCheckpoint(context, syncRunId);
-        console.error(`  ❌ Failed: ${error}`);
-        return false;
-      }
-    };
+    const runWithCheckpoint = createRunWithCheckpoint({
+      args,
+      context,
+      overlapDays,
+      stats,
+    });
 
     // Repositories whose per-repo Techradar import failed this run. The
     // organisation-wide snapshot is skipped when any of them failed, so a
     // partial import is never recorded as complete.
     const failedTechRadarRepositories: string[] = [];
 
-    for (const repoName of context.repositories) {
-      console.log(`\n📦 ${context.organization}/${repoName}`);
-
-      if (shouldRun("pull-requests")) {
-        await runWithCheckpoint("pull-requests", repoName, () =>
-          importPullRequests(context, repoName, args.since),
-        );
-      }
-
-      if (shouldRun("workflows")) {
-        await runWithCheckpoint("workflows", repoName, () =>
-          importWorkflows(context, repoName),
-        );
-      }
-
-      if (shouldRun("workflow-runs")) {
-        await runWithCheckpoint("workflow-runs", repoName, () =>
-          importWorkflowRuns(context, repoName, args.since),
-        );
-      }
-
-      if (shouldRun("iac-pr")) {
-        await runWithCheckpoint("iac-pr", repoName, () =>
-          importIacPrLeadTime(context, repoName, args.since),
-        );
-      }
-
-      if (shouldRun("terraform-modules")) {
-        await runWithCheckpoint("terraform-modules", repoName, () =>
-          importTerraformModules(context, repoName),
-        );
-      }
-
-      if (shouldRun("pr-reviews")) {
-        await runWithCheckpoint("pr-reviews", repoName, () =>
-          importPullRequestReviews(context, repoName, args.since),
-        );
-      }
-
-      if (shouldRun("tech-radar")) {
-        const succeeded = await runWithCheckpoint("tech-radar", repoName, () =>
-          importTechRadarRepositoryUsages(context, repoName),
-        );
-
-        if (!succeeded) {
-          failedTechRadarRepositories.push(repoName);
-        }
-      }
+    for (const repoName of repositories) {
+      await runRepositoryImport({
+        context,
+        failedTechRadarRepositories,
+        repoName,
+        runWithCheckpoint,
+        shouldRun,
+      });
     }
 
     // Captured once, after every repository has been imported, so the snapshot
@@ -220,8 +304,8 @@ async function main(): Promise<void> {
     if (shouldRun("commits")) {
       console.log("\n🔍 DX Team Commits");
       for (const member of context.dxTeamMembers) {
-        await runWithCheckpoint("commits", member, () =>
-          importCommitsForMember(context, member, args.since),
+        await runWithCheckpoint("commits", member, (since) =>
+          importCommitsForMember(context, member, since),
         );
       }
     }

@@ -37,6 +37,25 @@ By default, the importer uses the shared DX Metrics defaults from
 pnpm run import -- --config ./config.json --since 2026-01-01
 ```
 
+## Incremental imports
+
+The importer is incremental by default. For each entity and repository it
+records, in `sync_runs.cursor_at`, the time up to which it has imported, and the
+next run resumes from there — minus `IMPORT_OVERLAP_DAYS` (default `2`), a safety
+margin that catches rows updated just after the previous run — instead of
+re-downloading the whole window. `--since` (or `IMPORT_SINCE_DAYS`) is only the
+**floor**, used when an entity/repository has no history yet.
+
+Adding a repository to the config therefore backfills just that repository:
+
+```bash
+pnpm run import -- --since 2024-01-01 --repo new-repo
+```
+
+Repositories already imported resume from their cursor and are not re-downloaded.
+`--force` disables cursors and checkpoints, re-reading the whole `--since` window
+for every entity/repository.
+
 ## Entity types
 
 - `all` (default) — import everything
@@ -58,23 +77,23 @@ pnpm run import -- --since 2024-01-01 --entity tracker --tracker-csv /path/to/tr
 
 ## Backfilling a new column
 
-The scheduled import is incremental: it fetches workflow runs created in the
-last `IMPORT_SINCE_DAYS` days (30 in the deployed job) and only upserts those
-rows. It therefore cannot populate a **newly added** column on older rows, which
+The scheduled import is incremental: it resumes from the per-entity,
+per-repository cursor and only re-fetches what changed since the last successful
+run. It therefore cannot populate a **newly added** column on older rows, which
 then read as blank. When a column the portal charts is added (for example
 `workflow_runs.event` or `workflow_runs.triggering_actor`), apply the schema and
-then run a one-off import with a `since` wide enough to cover the history you
-care about:
+then run a one-off import with `--force` and a `since` wide enough to cover the
+history you care about:
 
 ```bash
 cd apps/dx-metrics-import
-pnpm run import -- --entity workflow-runs --since 2024-01-01
+pnpm run import -- --entity workflow-runs --since 2024-01-01 --force
 ```
 
-A different `--since` bypasses the freshness checkpoint, so `--force` is only
-needed to repeat the same backfill on the same day. Until the backfill runs, the
-trigger charts on the portal exclude the blank rows and report the excluded
-share in their caption.
+`--force` ignores the cursor and re-reads the whole `--since` window. Without
+`--force`, an entity/repository that already completed within the last 23 hours is
+skipped. Until the backfill runs, the trigger charts on the portal exclude the
+blank rows and report the excluded share in their caption.
 
 ## GitHub authentication
 
