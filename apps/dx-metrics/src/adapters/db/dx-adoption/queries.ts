@@ -12,7 +12,7 @@ import {
   buildReferenceDateQuery,
   parseReferenceDate,
 } from "../shared/reference-date";
-import { workflowNameExclusion } from "../shared/sql-fragments";
+import { repositoryIn, workflowNameExclusion } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import {
   moduleAdoptionRowSchema,
@@ -29,7 +29,7 @@ import {
  */
 export const fetchDxAdoption = async (
   db: Database,
-  { fullName }: FetchDxAdoptionInput,
+  { fullNames }: FetchDxAdoptionInput,
 ): Promise<DxAdoptionResult & WithInsights & WithMeta> => {
   const referenceDateResult = await db.execute(
     buildReferenceDateQuery({
@@ -45,9 +45,9 @@ export const fetchDxAdoption = async (
   // DX Pipeline Adoption (pie)
   const pipelineAdoption = await db.execute(sql`
     WITH distinct_workflows AS (
-      SELECT DISTINCT ON (w.name) w.name, w.pipeline
+      SELECT DISTINCT ON (r.full_name, w.name) w.name, w.pipeline
       FROM workflows w JOIN repositories r ON w.repository_id = r.id
-      WHERE r.full_name = ${fullName} AND ${workflowNameExclusion("w.name")}
+      WHERE ${repositoryIn("r.full_name", fullNames)} AND ${workflowNameExclusion("w.name")}
     )
     SELECT CASE WHEN pipeline LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END AS "pipelineType",
       COUNT(*) AS "pipelineCount"
@@ -59,9 +59,9 @@ export const fetchDxAdoption = async (
   // DX Terraform Modules Adoption (pie)
   const moduleAdoption = await db.execute(sql`
     WITH distinct_modules AS (
-      SELECT DISTINCT ON (module) module
+      SELECT DISTINCT ON (repository, module) module
       FROM terraform_modules
-      WHERE repository = ${fullName}
+      WHERE ${repositoryIn("repository", fullNames)}
         AND module NOT LIKE './%' AND module NOT LIKE '../%'
     )
     SELECT CASE WHEN module LIKE '%pagopa-dx%' OR module LIKE '%pagopa/dx%'
@@ -75,22 +75,22 @@ export const fetchDxAdoption = async (
 
   // Workflows List
   const workflowsList = await db.execute(sql`
-    SELECT DISTINCT ON (w.name) w.name AS "workflowName",
+    SELECT DISTINCT ON (r.full_name, w.name) r.full_name AS repository, w.name AS "workflowName",
       CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN '✓ DX' ELSE 'Non-DX' END AS "pipelineType"
     FROM workflows w JOIN repositories r ON w.repository_id = r.id
-    WHERE r.full_name = ${fullName} AND ${workflowNameExclusion("w.name")}
-    ORDER BY w.name, CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 0 ELSE 1 END
+    WHERE ${repositoryIn("r.full_name", fullNames)} AND ${workflowNameExclusion("w.name")}
+    ORDER BY r.full_name, w.name, CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 0 ELSE 1 END
   `);
 
   // Terraform Modules List
   const modulesList = await db.execute(sql`
-    SELECT DISTINCT ON (module) module AS "moduleName",
+    SELECT DISTINCT ON (repository, module) repository, module AS "moduleName",
       CASE WHEN module LIKE '%pagopa-dx%' OR module LIKE '%pagopa/dx%' THEN '✓ DX' ELSE 'Non-DX' END AS "moduleType",
       file_path AS "filePath"
     FROM terraform_modules
-    WHERE repository = ${fullName}
+    WHERE ${repositoryIn("repository", fullNames)}
       AND module NOT LIKE './%' AND module NOT LIKE '../%'
-    ORDER BY module, CASE WHEN module LIKE '%pagopa-dx%' OR module LIKE '%pagopa/dx%' THEN 0 ELSE 1 END
+    ORDER BY repository, module, CASE WHEN module LIKE '%pagopa-dx%' OR module LIKE '%pagopa/dx%' THEN 0 ELSE 1 END
   `);
 
   // Version Drift: compare the used major version constraint against the latest
@@ -98,6 +98,7 @@ export const fetchDxAdoption = async (
   // Terraform constraint (e.g. `~> 1.2`), so minor/patch drift is not reliable.
   const versionDriftList = await db.execute(sql`
     SELECT
+      tm.repository AS repository,
       tm.module AS "moduleName",
       tm.version AS "usedVersion",
       trr.latest_version AS "latestVersion",
@@ -117,7 +118,7 @@ export const fetchDxAdoption = async (
       ORDER BY trr.major_version DESC
       LIMIT 1
     ) trr ON true
-    WHERE tm.repository = ${fullName}
+    WHERE ${repositoryIn("tm.repository", fullNames)}
       AND (tm.module LIKE '%pagopa-dx%' OR tm.module LIKE '%pagopa/dx%')
       AND tm.module NOT LIKE './%'
       AND tm.module NOT LIKE '../%'
@@ -142,7 +143,7 @@ export const fetchDxAdoption = async (
         ORDER BY trr.major_version DESC
         LIMIT 1
       ) trr ON true
-      WHERE tm.repository = ${fullName}
+      WHERE ${repositoryIn("tm.repository", fullNames)}
         AND (tm.module LIKE '%pagopa-dx%' OR tm.module LIKE '%pagopa/dx%')
         AND tm.module NOT LIKE './%'
         AND tm.module NOT LIKE '../%'

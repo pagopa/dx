@@ -23,7 +23,8 @@ interface ExecutiveSummaryData {
 }
 
 export default function OverviewDashboard() {
-  const { days, repository, setDays, setRepository } = useDashboardFilters();
+  const { days, repositories, setDays, setRepositories } =
+    useDashboardFilters();
 
   // A single aggregated endpoint replaces the previous nine per-dashboard
   // fetches: the server runs every adapter in parallel and returns only the
@@ -31,7 +32,7 @@ export default function OverviewDashboard() {
   const { data, error, loading, refetch } =
     useDashboardData<ExecutiveSummaryData>("insights", {
       days,
-      repository,
+      repositories,
     });
 
   return (
@@ -41,14 +42,15 @@ export default function OverviewDashboard() {
         <TooltipIcon content={tooltipContent.title} label="Executive Summary" />
       </div>
       <p className="mb-4 text-sm text-muted-foreground">
-        Most urgent insights across every dashboard for the selected repository.
-        For the cross-repository comparison see the Benchmark page.
+        Most urgent insights across every dashboard for the selected
+        repositories. For the cross-repository comparison see the Benchmark
+        page.
       </p>
 
       <DashboardFilters
-        onRepositoryChange={setRepository}
+        onRepositoriesChange={setRepositories}
         onTimeIntervalChange={setDays}
-        repository={repository}
+        repositories={repositories}
         timeInterval={days}
       />
       <DashboardRequestState

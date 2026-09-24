@@ -24,6 +24,7 @@ import { percentileRowSchema, previousValueRowSchema } from "../shared/schemas";
 import {
   humanPullRequest,
   isHumanReview,
+  repositoryIn,
   timeBucket,
   timeBucketInterval,
 } from "../shared/sql-fragments";
@@ -75,14 +76,14 @@ const prSizeSortOrderExpression = sql`CASE ${sql.join(
  */
 const fetchReferenceDate = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
 ): Promise<string> => {
   const result = await db.execute(
     buildReferenceDateQuery({
       column:
         "GREATEST(pr.created_at, pr.merged_at, pr.closed_at, pr.updated_at)",
       from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
-      where: sql`r.full_name = ${fullName}`,
+      where: repositoryIn("r.full_name", fullNames),
     }),
   );
   return parseReferenceDate(result.rows[0], "pull-requests referenceDate");
@@ -93,9 +94,9 @@ export const fetchPrDashboard = async (
   db: Database,
   params: FetchPrDashboardInput,
 ): Promise<PrDashboardResult & WithInsights & WithMeta> => {
-  const { days, fullName, peerBenchmark } = params;
+  const { days, fullNames, peerBenchmark } = params;
 
-  const referenceDate = await fetchReferenceDate(db, fullName);
+  const referenceDate = await fetchReferenceDate(db, fullNames);
 
   const [
     cards,
@@ -106,13 +107,13 @@ export const fetchPrDashboard = async (
     prsByContributor,
     openBacklog,
   ] = await Promise.all([
-    fetchPrSummary(db, fullName, referenceDate, days),
-    fetchLeadTimeData(db, fullName, referenceDate, days),
-    fetchPrCountData(db, fullName, referenceDate, days),
-    fetchPrQualityData(db, fullName, referenceDate, days),
-    fetchLeadTimeStats(db, fullName, referenceDate, days),
-    fetchPrsByContributor(db, fullName, referenceDate, days),
-    fetchPrOpenBacklog(db, fullName, referenceDate, days),
+    fetchPrSummary(db, fullNames, referenceDate, days),
+    fetchLeadTimeData(db, fullNames, referenceDate, days),
+    fetchPrCountData(db, fullNames, referenceDate, days),
+    fetchPrQualityData(db, fullNames, referenceDate, days),
+    fetchLeadTimeStats(db, fullNames, referenceDate, days),
+    fetchPrsByContributor(db, fullNames, referenceDate, days),
+    fetchPrOpenBacklog(db, fullNames, referenceDate, days),
   ]);
 
   const dashboard = {
@@ -128,7 +129,9 @@ export const fetchPrDashboard = async (
     ...dashboard,
     insights: buildPullRequestsInsights(
       dashboard,
-      `https://github.com/${fullName}`,
+      // Deep links only make sense when a single repository is in scope; with a
+      // multi-repository selection there is no one repository to link to.
+      fullNames.length === 1 ? `https://github.com/${fullNames[0]}` : undefined,
       peerBenchmark,
     ),
     meta: { days, referenceDate },
@@ -143,7 +146,7 @@ export const fetchPrDashboard = async (
  */
 async function fetchLeadTimeStats(
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   referenceDate: string,
   days: number,
 ): Promise<
@@ -163,7 +166,7 @@ async function fetchLeadTimeStats(
           ORDER BY EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400
         )::numeric, 2) AS "p95"
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-      WHERE r.full_name = ${fullName}
+      WHERE ${repositoryIn("r.full_name", fullNames)}
         AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
         AND ${humanPullRequest("pr")}
@@ -171,7 +174,7 @@ async function fetchLeadTimeStats(
     db.execute(sql`
       SELECT ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS "previous"
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-      WHERE r.full_name = ${fullName}
+      WHERE ${repositoryIn("r.full_name", fullNames)}
         AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
         AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
@@ -195,7 +198,7 @@ async function fetchLeadTimeStats(
 
 async function fetchLeadTimeData(
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   referenceDate: string,
   days: number,
 ): Promise<PrLeadTimeData> {
@@ -204,7 +207,7 @@ async function fetchLeadTimeData(
       SELECT DATE_TRUNC('week', pr.merged_at)::date AS week,
         ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS "avgLeadTimeDays"
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-      WHERE r.full_name = ${fullName}
+      WHERE ${repositoryIn("r.full_name", fullNames)}
         AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
         AND ${humanPullRequest("pr")}
@@ -217,7 +220,7 @@ async function fetchLeadTimeData(
           COUNT(*)::numeric AS weight,
           ROW_NUMBER() OVER (ORDER BY DATE_TRUNC('week', pr.merged_at)::date) AS x
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
           AND ${humanPullRequest("pr")}
@@ -268,7 +271,7 @@ async function fetchLeadTimeData(
 
 async function fetchPrCountData(
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   referenceDate: string,
   days: number,
 ): Promise<PrCountData> {
@@ -284,7 +287,7 @@ async function fetchPrCountData(
       pr_counts AS (
         SELECT ${timeBucket("pr.merged_at", days)} AS "prDate", COUNT(*) AS "prCount"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at <= ${referenceDate}::timestamptz
           AND pr.merged_at IS NOT NULL
@@ -309,7 +312,7 @@ async function fetchPrCountData(
         SELECT pr.created_at::date AS "createdDate",
           COALESCE(pr.closed_at::date, (${referenceDate}::timestamptz)::date + 1) AS "closedDate"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.created_at IS NOT NULL
           AND pr.merged_at IS NULL
           AND (pr.closed_at IS NULL OR pr.closed_at > ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days}))
@@ -331,7 +334,7 @@ async function fetchPrCountData(
       pr_counts AS (
         SELECT ${timeBucket("pr.created_at", days)} AS "prDate", COUNT(*) AS "prCount"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.created_at <= ${referenceDate}::timestamptz
           AND ${humanPullRequest("pr")}
@@ -344,7 +347,7 @@ async function fetchPrCountData(
       WITH daily_pr AS (
         SELECT pr.created_at::date AS date, COUNT(*) AS "dailyCount"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND ${humanPullRequest("pr")}
         GROUP BY pr.created_at::date
@@ -380,7 +383,7 @@ async function fetchPrCountData(
 
 async function fetchPrQualityData(
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   referenceDate: string,
   days: number,
 ): Promise<PrQualityData> {
@@ -390,7 +393,7 @@ async function fetchPrQualityData(
         SELECT DATE_TRUNC('week', pr.created_at)::date AS week,
           ROUND(AVG(pr.additions)::numeric, 2) AS "avgAdditions"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.additions IS NOT NULL
           AND ${humanPullRequest("pr")}
@@ -400,7 +403,7 @@ async function fetchPrQualityData(
         SELECT DATE_TRUNC('week', pr.created_at)::date AS week,
           ROUND(AVG(pr.total_comments_count)::numeric, 2) AS "avgComments"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND ${humanPullRequest("pr")}
         GROUP BY DATE_TRUNC('week', pr.created_at)::date ORDER BY week
@@ -412,7 +415,7 @@ async function fetchPrQualityData(
             ${prSizeRangeExpression} AS "sizeRange",
             ${prSizeSortOrderExpression} AS "sortOrder"
           FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-          WHERE r.full_name = ${fullName}
+          WHERE ${repositoryIn("r.full_name", fullNames)}
             AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
             AND pr.additions IS NOT NULL
             AND ${humanPullRequest("pr")}
@@ -425,7 +428,7 @@ async function fetchPrQualityData(
         SELECT pr.title, ROUND(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400, 2) AS "leadTimeDays",
           pr.number, pr.created_at AS "createdAt", pr.merged_at AS "mergedAt"
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
           AND ${humanPullRequest("pr")}
@@ -460,14 +463,14 @@ async function fetchPrQualityData(
  */
 async function fetchPrsByContributor(
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   referenceDate: string,
   days: number,
 ): Promise<Pick<PrDashboardResult, "prsByContributor">> {
   const result = await db.execute(sql`
     SELECT pr.author, COUNT(*) AS "prCount"
     FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND pr.author IS NOT NULL
       AND ${humanPullRequest("pr")}
@@ -492,7 +495,7 @@ async function fetchPrsByContributor(
  */
 async function fetchPrOpenBacklog(
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   referenceDate: string,
   days: number,
 ): Promise<Pick<PrDashboardResult, "openBacklog" | "stalePrs">> {
@@ -511,7 +514,7 @@ async function fetchPrOpenBacklog(
             AND pr.closed_at <= ${referenceDate}::timestamptz
         ) AS "closedUnmerged"
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-      WHERE r.full_name = ${fullName}
+      WHERE ${repositoryIn("r.full_name", fullNames)}
         AND pr.merged_at IS NULL
         AND ${humanPullRequest("pr")}
     `),
@@ -522,7 +525,7 @@ async function fetchPrOpenBacklog(
         )) / 86400, 0) AS "idleDays",
         COALESCE(pr.updated_at, pr.created_at) AS "updatedAt"
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-      WHERE r.full_name = ${fullName}
+      WHERE ${repositoryIn("r.full_name", fullNames)}
         AND pr.merged_at IS NULL AND pr.closed_at IS NULL
         AND COALESCE(pr.updated_at, pr.created_at)
           < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${METRIC_TARGETS.staleOpenPrDays})
@@ -548,7 +551,7 @@ async function fetchPrOpenBacklog(
 
 async function fetchPrSummary(
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   referenceDate: string,
   days: number,
 ): Promise<PrSummaryCards> {
@@ -559,18 +562,18 @@ async function fetchPrSummary(
     SELECT
       (SELECT ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
           AND ${humanPullRequest("pr")}) AS "avgLeadTime",
       (SELECT COUNT(*)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND ${humanPullRequest("pr")}) AS "totalPrs",
       (SELECT COUNT(DISTINCT pr.author)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.author IS NOT NULL
           AND ${humanPullRequest("pr")}) AS "contributors",
@@ -582,18 +585,18 @@ async function fetchPrSummary(
             AND ${isHumanReview("prr", "pr")}
           ORDER BY submitted_at DESC LIMIT 1
         ) last_approval ON true
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND ${humanPullRequest("pr")}) AS "avgTimeToMerge",
       (SELECT COUNT(*)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
           AND pr.created_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND ${humanPullRequest("pr")}) AS "previousTotalPrs",
       (SELECT COUNT(DISTINCT pr.author)
         FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
           AND pr.created_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND pr.author IS NOT NULL
@@ -606,7 +609,7 @@ async function fetchPrSummary(
             AND ${isHumanReview("prr", "pr")}
           ORDER BY submitted_at DESC LIMIT 1
         ) last_approval ON true
-        WHERE r.full_name = ${fullName}
+        WHERE ${repositoryIn("r.full_name", fullNames)}
           AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
           AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
           AND ${humanPullRequest("pr")}) AS "previousAvgTimeToMerge"

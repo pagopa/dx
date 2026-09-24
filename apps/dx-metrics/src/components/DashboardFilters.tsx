@@ -1,5 +1,6 @@
 "use client";
 
+import { RepositoryMultiSelect } from "@/components/RepositoryMultiSelect";
 import type { DashboardFilterMode } from "@/lib/useDashboardFilters";
 
 import { REPOSITORIES, TIME_INTERVALS } from "@/lib/config";
@@ -7,9 +8,9 @@ import { focusRing } from "@/lib/utils";
 
 interface DashboardFiltersProps {
   mode?: DashboardFilterMode;
-  onRepositoryChange?: (repo: string) => void;
+  onRepositoriesChange?: (repositories: string[]) => void;
   onTimeIntervalChange?: (days: number) => void;
-  repository?: string;
+  repositories?: readonly string[];
   timeInterval?: number;
 }
 
@@ -27,48 +28,43 @@ const labelClassName =
 
 export function DashboardFilters({
   mode = "repository-and-time",
-  onRepositoryChange,
+  onRepositoriesChange,
   onTimeIntervalChange,
-  repository,
+  repositories = [],
   timeInterval,
 }: DashboardFiltersProps) {
   const showRepository = showsRepositoryFilter(mode);
   const showTimeInterval = showsTimeIntervalFilter(mode);
 
   return (
-    <div className="mb-8 flex flex-wrap items-end gap-6">
-      {showRepository && (
-        // The label wraps the control, so the select always has an accessible name.
-        <label className="block space-y-1.5">
-          <span className={labelClassName}>Repository</span>
-          <select
-            className={`${selectClassName} ${focusRing}`}
-            onChange={(e) => onRepositoryChange?.(e.target.value)}
-            value={repository}
-          >
-            {REPOSITORIES.map((repo) => (
-              <option key={repo} value={repo}>
-                {repo}
-              </option>
-            ))}
-          </select>
-        </label>
-      )}
+    <div className="mb-8 flex flex-col items-start gap-4 min-[1268px]:flex-row min-[1268px]:items-stretch">
       {showTimeInterval && (
-        <label className="block space-y-1.5">
-          <span className={labelClassName}>Time Interval</span>
-          <select
-            className={`${selectClassName} ${focusRing}`}
-            onChange={(e) => onTimeIntervalChange?.(Number(e.target.value))}
-            value={timeInterval}
-          >
-            {TIME_INTERVALS.map((ti) => (
-              <option key={ti.value} value={ti.value}>
-                {ti.label}
-              </option>
-            ))}
-          </select>
-        </label>
+        // On wide viewports the row stretches both columns to the tallest one,
+        // so the time interval stays top-aligned and does not drift when the
+        // repository chips make its neighbour grow.
+        <div className="flex flex-col min-[1268px]:self-stretch">
+          <label className="block space-y-1.5">
+            <span className={labelClassName}>Time Interval</span>
+            <select
+              className={`${selectClassName} ${focusRing}`}
+              onChange={(e) => onTimeIntervalChange?.(Number(e.target.value))}
+              value={timeInterval}
+            >
+              {TIME_INTERVALS.map((ti) => (
+                <option key={ti.value} value={ti.value}>
+                  {ti.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      )}
+      {showRepository && (
+        <RepositoryMultiSelect
+          onChange={(next) => onRepositoriesChange?.(next)}
+          options={REPOSITORIES}
+          value={repositories}
+        />
       )}
     </div>
   );

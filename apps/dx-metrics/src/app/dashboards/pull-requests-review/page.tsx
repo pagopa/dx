@@ -65,12 +65,13 @@ interface PrReviewDashboardData {
 
 export default function PullRequestsReviewDashboard() {
   const colors = useSeriesColors();
-  const { days, repository, setDays, setRepository } = useDashboardFilters();
+  const { days, repositories, setDays, setRepositories } =
+    useDashboardFilters();
 
   const { data, error, loading, refetch } =
     useDashboardData<PrReviewDashboardData>("pull-requests-review", {
       days,
-      repository,
+      repositories,
     });
 
   const reviewMatrixWithoutSelfReviews =
@@ -141,9 +142,9 @@ export default function PullRequestsReviewDashboard() {
         />
       </div>
       <DashboardFilters
-        onRepositoryChange={setRepository}
+        onRepositoriesChange={setRepositories}
         onTimeIntervalChange={setDays}
-        repository={repository}
+        repositories={repositories}
         timeInterval={days}
       />
       <DashboardRequestState
