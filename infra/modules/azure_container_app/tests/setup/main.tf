@@ -62,6 +62,60 @@ resource "azurerm_container_app_environment" "sut" {
   tags = var.tags
 }
 
+resource "random_integer" "key_vault_instance" {
+  min = 1
+  max = 99
+}
+
+resource "azurerm_user_assigned_identity" "key_vault_secret" {
+  name                = provider::dx::resource_name(merge(var.environment, { resource_type = "managed_identity", app_name = "kv" }))
+  resource_group_name = azurerm_resource_group.sut.name
+  location            = azurerm_resource_group.sut.location
+
+  tags = var.tags
+}
+
+#trivy:ignore:AVD-AZU-0013 Key vault should have the network acl block specified
+#trivy:ignore:AVD-AZU-0016 Key vault should have purge protection enabled
+resource "azurerm_key_vault" "sut" {
+  name = provider::dx::resource_name(merge(var.environment, {
+    resource_type   = "key_vault"
+    instance_number = random_integer.key_vault_instance.result
+  }))
+  location                      = azurerm_resource_group.sut.location
+  resource_group_name           = azurerm_resource_group.sut.name
+  tenant_id                     = data.azurerm_client_config.current.tenant_id
+  sku_name                      = "standard"
+  soft_delete_retention_days    = 7
+  purge_protection_enabled      = false
+  public_network_access_enabled = true
+  rbac_authorization_enabled    = true
+
+  tags = var.tags
+}
+
+resource "azurerm_role_assignment" "key_vault_admin" {
+  scope                = azurerm_key_vault.sut.id
+  role_definition_name = "Key Vault Administrator"
+  principal_id         = data.azurerm_client_config.current.object_id
+}
+
+resource "azurerm_role_assignment" "key_vault_secret_user" {
+  scope                = azurerm_key_vault.sut.id
+  role_definition_name = "Key Vault Secrets User"
+  principal_id         = azurerm_user_assigned_identity.key_vault_secret.principal_id
+}
+
+#trivy:ignore:AVD-AZU-0015 Key vault Secret should have a content type set
+#trivy:ignore:AVD-AZU-0017 Key Vault Secret should have an expiration date set
+resource "azurerm_key_vault_secret" "container_app" {
+  name         = "container-app-integration"
+  value        = "integration-test-secret-value"
+  key_vault_id = azurerm_key_vault.sut.id
+
+  depends_on = [azurerm_role_assignment.key_vault_admin]
+}
+
 output "subscription_id" {
   value = data.azurerm_client_config.current.subscription_id
 }
@@ -78,10 +132,19 @@ output "log_analytics_workspace_id" {
   value = data.azurerm_log_analytics_workspace.logs.id
 }
 
+output "key_vault_secret_id" {
+  value = azurerm_key_vault_secret.container_app.id
+}
+
+output "key_vault_secret_user_identity_id" {
+  value = azurerm_user_assigned_identity.key_vault_secret.id
+}
+
 output "instance_numbers" {
   value = {
-    default     = tostring(random_integer.instance_base.result)
-    development = tostring(random_integer.instance_base.result + 25)
-    autoscaler  = tostring(random_integer.instance_base.result + 50)
+    default          = tostring(random_integer.instance_base.result)
+    development      = tostring(random_integer.instance_base.result + 25)
+    autoscaler       = tostring(random_integer.instance_base.result + 50)
+    key_vault_secret = tostring(random_integer.instance_base.result + 75)
   }
 }
