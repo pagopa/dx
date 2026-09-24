@@ -1,0 +1,12 @@
+{
+  "name": "bootstrapper-uat",
+  "targets": {
+    "test": {
+      "cache": false,
+      "command": "terraform init -backend=false -input=false && terraform test -test-directory=.",
+      "options": {
+        "cwd": "{projectRoot}/tests/terraform"
+      }
+    }
+  }
+}

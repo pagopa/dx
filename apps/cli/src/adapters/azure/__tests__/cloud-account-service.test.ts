@@ -171,7 +171,10 @@ beforeEach(() => {
   mockSleep.mockClear();
 });
 
-const expectBootstrapperFederatedCredentials = (repo: string) => {
+const expectBootstrapperFederatedCredentials = (
+  repo: string,
+  owner = "pagopa",
+) => {
   [
     { identityName: "dx-d-itn-bootstrap-id-01", stage: "cd" },
     { identityName: "dx-d-itn-bootstrap-ci-id-01", stage: "ci" },
@@ -185,7 +188,7 @@ const expectBootstrapperFederatedCredentials = (repo: string) => {
       {
         audiences: ["api://AzureADTokenExchange"],
         issuer: "https://token.actions.githubusercontent.com",
-        subject: `repo:pagopa/${repo}:environment:${environmentName}`,
+        subject: `repo:${owner}/${repo}:environment:${environmentName}`,
       },
     );
   });
@@ -195,6 +198,7 @@ const expectImmutableBootstrapperFederatedCredentials = (
   repo: string,
   ownerId: number,
   repoId: number,
+  owner = "pagopa",
 ) => {
   [
     { identityName: "dx-d-itn-bootstrap-id-01", stage: "cd" },
@@ -209,7 +213,7 @@ const expectImmutableBootstrapperFederatedCredentials = (
       {
         audiences: ["api://AzureADTokenExchange"],
         issuer: "https://token.actions.githubusercontent.com",
-        subject: `repo:pagopa@${ownerId}/${repo}@${repoId}:environment:${environmentName}`,
+        subject: `repo:${owner}@${ownerId}/${repo}@${repoId}:environment:${environmentName}`,
       },
     );
   });
@@ -221,10 +225,12 @@ const expectBootstrapperEnvironmentSecrets = (
     cdClientId = "client-1",
     ciClientId = "client-1",
     includesRunnerSecrets = true,
+    owner = "pagopa",
   }: {
     cdClientId?: string;
     ciClientId?: string;
     includesRunnerSecrets?: boolean;
+    owner?: string;
   } = {},
 ) => {
   const expectedSecrets = [
@@ -250,7 +256,7 @@ const expectBootstrapperEnvironmentSecrets = (
   expectedSecrets.forEach(([environmentName, secretName, secretValue]) => {
     expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
       environmentName,
-      owner: "pagopa",
+      owner,
       repo: "dx",
       secretName,
       secretValue,
@@ -452,7 +458,7 @@ describe("initialize", () => {
         key: "private-key\n",
       },
       {
-        owner: "pagopa",
+        owner: "example-org",
         repo: "dx",
       },
       {
@@ -526,10 +532,11 @@ describe("initialize", () => {
           "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
       }),
     );
-    expectBootstrapperFederatedCredentials("dx");
+    expectBootstrapperFederatedCredentials("dx", "example-org");
     expectBootstrapperEnvironmentSecrets(createOrUpdateEnvironmentSecret, {
       cdClientId: "cd-client-1",
       ciClientId: "ci-client-1",
+      owner: "example-org",
     });
   });
 
@@ -611,7 +618,7 @@ describe("initialize", () => {
           prefix: "dx",
         },
         {
-          owner: "pagopa",
+          owner: "example-org",
           ownerId: 57742367,
           repo: "aiepdf-poc",
           repoId: 1373623344,
@@ -634,11 +641,12 @@ describe("initialize", () => {
 
       // One name-based credential plus one immutable credential per identity.
       expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledTimes(4);
-      expectBootstrapperFederatedCredentials("aiepdf-poc");
+      expectBootstrapperFederatedCredentials("aiepdf-poc", "example-org");
       expectImmutableBootstrapperFederatedCredentials(
         "aiepdf-poc",
         57742367,
         1373623344,
+        "example-org",
       );
     });
   });
