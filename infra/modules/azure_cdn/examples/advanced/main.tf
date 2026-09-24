@@ -25,7 +25,11 @@ module "storage_account" {
 
   resource_group_name = azurerm_resource_group.example.name
   use_case            = "default"
-  subnet_pep_id       = data.azurerm_subnet.pep.id
+  # Setting subnet_pep_id also creates a private endpoint for the enabled
+  # subservices below, in addition to the public endpoint used by the CDN
+  # origin, so the storage account is reachable both publicly (via Front
+  # Door/CDN) and privately from workloads inside the network.
+  subnet_pep_id = data.azurerm_subnet.pep.id
 
   force_public_network_access_enabled = true # Public network access enabled for CDN origin reachability
 

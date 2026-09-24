@@ -1,6 +1,7 @@
 # This data block retrieves information only about Azure Private DNS Zones
 # regarding the subservices enabled by the user in var.subservices_enabled,
-# when private endpoints are created (see local.create_private_endpoints).
+# when private endpoints are created (see local.create_private_endpoints,
+# i.e. when subnet_pep_id is set).
 data "azurerm_private_dns_zone" "storage_account" {
   for_each            = { for subservice, status in local.peps.create_subservices : subservice => status if status == true }
   name                = local.peps[each.key].dns_zone

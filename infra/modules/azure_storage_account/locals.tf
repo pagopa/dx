@@ -78,10 +78,12 @@ locals {
   immutability_policy_enabled         = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled
   immutability_policy_state           = var.blob_features.immutability_policy.state != null ? var.blob_features.immutability_policy.state : "Unlocked"
 
-  # Private endpoints are created whenever public access is not forced, or when
-  # it is forced but force_private_endpoint_enabled explicitly opts back in
-  # (e.g. to keep a private backend behind a publicly-reachable Front Door origin).
-  create_private_endpoints = !local.force_public_network_access_enabled || var.force_private_endpoint_enabled
+  # Private endpoints are created whenever a subnet is provided, independently of
+  # force_public_network_access_enabled. This lets a storage account be reachable
+  # both publicly (e.g. as a Front Door/CDN origin) and privately from within the
+  # network. Existing public-only configurations that leave subnet_pep_id unset
+  # keep planning with no private endpoint resources.
+  create_private_endpoints = var.subnet_pep_id != null && var.subnet_pep_id != ""
 
   peps = {
     create_subservices = local.create_private_endpoints ? var.subservices_enabled : {

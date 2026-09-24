@@ -310,12 +310,11 @@ run "storage_account_private_network" {
 }
 
 # ── 8b. Public network with opt-in private endpoints ───────────────────────
-run "storage_account_public_network_with_forced_private_endpoint" {
+run "storage_account_public_network_with_subnet_pep_id" {
   command = plan
 
   variables {
     force_public_network_access_enabled = true
-    force_private_endpoint_enabled      = true
     subnet_pep_id                       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
   }
 
@@ -329,17 +328,17 @@ run "storage_account_public_network_with_forced_private_endpoint" {
 
   assert {
     condition     = azurerm_storage_account.this.public_network_access_enabled == true
-    error_message = "public_network_access_enabled must remain true when force_public=true, even with force_private_endpoint_enabled set"
+    error_message = "public_network_access_enabled must remain true when force_public=true, even with subnet_pep_id set"
   }
 
   assert {
     condition     = local.peps.create_subservices.blob == true
-    error_message = "peps.create_subservices.blob must be true when force_private_endpoint_enabled is set, even if public network is forced"
+    error_message = "peps.create_subservices.blob must be true when subnet_pep_id is set, even if public network is forced"
   }
 
   assert {
     condition     = azurerm_private_endpoint.this["blob"].subnet_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
-    error_message = "A blob private endpoint must actually be planned when force_private_endpoint_enabled is set, even if public network is forced"
+    error_message = "A blob private endpoint must actually be planned when subnet_pep_id is set, even if public network is forced"
   }
 }
 
@@ -353,12 +352,12 @@ run "storage_account_public_network_default_still_skips_private_endpoint" {
 
   assert {
     condition     = local.peps.create_subservices.blob == false
-    error_message = "peps.create_subservices.blob must remain false by default when public network is forced (backward compatibility)"
+    error_message = "peps.create_subservices.blob must remain false by default when public network is forced and subnet_pep_id is unset (backward compatibility)"
   }
 
   assert {
     condition     = length(azurerm_private_endpoint.this) == 0
-    error_message = "No private endpoints must be created by default when public network is forced and force_private_endpoint_enabled is unset (backward compatibility)"
+    error_message = "No private endpoints must be created by default when public network is forced and subnet_pep_id is unset (backward compatibility)"
   }
 }
 

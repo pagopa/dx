@@ -60,20 +60,6 @@ run "missing_subnet_pep_for_private_storage" {
   expect_failures = [var.subnet_pep_id]
 }
 
-# ── 2b. Missing subnet_pep_id when force_public=true but private endpoints
-#        are explicitly opted in via force_private_endpoint_enabled ─────────
-run "missing_subnet_pep_for_forced_private_endpoint" {
-  command = plan
-
-  variables {
-    force_public_network_access_enabled = true
-    force_private_endpoint_enabled      = true
-    subnet_pep_id                       = null
-  }
-
-  expect_failures = [var.subnet_pep_id]
-}
-
 # ── 3. Audit requires CMK ───────────────────────────────────────────────────
 run "audit_requires_cmk" {
   command = plan
