@@ -1,6 +1,6 @@
 {
   "name": "dx-metrics-import",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "private": true,
   "description": "DX Metrics importer that synchronizes GitHub engineering data into PostgreSQL.",
   "repository": {
