@@ -7,5 +7,5 @@ terraform {
 }
 
 provider "github" {
-  owner = "pagopa"
+  owner = var.repository.owner
 }
