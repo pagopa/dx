@@ -4,3 +4,10 @@ module "azure_core_values" {
 
   core_state = local.core_state
 }
+
+# Dummy resource to force Terraform plan changes
+resource "null_resource" "dummy" {
+  triggers = {
+    version = "1"
+  }
+}
