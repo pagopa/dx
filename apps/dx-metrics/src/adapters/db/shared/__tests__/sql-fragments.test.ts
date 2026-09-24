@@ -12,6 +12,7 @@ import {
   isHumanReview,
   notInValues,
   notLikeAll,
+  repositoryIn,
   textArray,
   timeBucket,
   timeBucketInterval,
@@ -138,6 +139,24 @@ describe("textArray", () => {
     const rendered = dialect.sqlToQuery(textArray([]));
 
     expect(rendered.sql).toBe("ARRAY[]::text[]");
+  });
+});
+
+describe("repositoryIn", () => {
+  it("matches any of the provided repositories", () => {
+    const rendered = dialect.sqlToQuery(
+      repositoryIn("r.full_name", ["pagopa/dx", "pagopa/io-infra"]),
+    );
+
+    expect(rendered.sql).toBe("r.full_name = ANY(ARRAY[$1, $2]::text[])");
+    expect(rendered.params).toEqual(["pagopa/dx", "pagopa/io-infra"]);
+  });
+
+  it("matches nothing for an empty list", () => {
+    const rendered = dialect.sqlToQuery(repositoryIn("r.full_name", []));
+
+    expect(rendered.sql).toBe("r.full_name = ANY(ARRAY[]::text[])");
+    expect(rendered.params).toEqual([]);
   });
 });
 

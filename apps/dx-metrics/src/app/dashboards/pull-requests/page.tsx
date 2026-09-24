@@ -93,13 +93,14 @@ interface PrDashboardData {
 
 export default function PullRequestsDashboard() {
   const colors = useSeriesColors();
-  const { days, repository, setDays, setRepository } = useDashboardFilters();
+  const { days, repositories, setDays, setRepositories } =
+    useDashboardFilters();
 
   const { data, error, loading, refetch } = useDashboardData<PrDashboardData>(
     "pull-requests",
     {
       days,
-      repository,
+      repositories,
     },
   );
 
@@ -108,7 +109,13 @@ export default function PullRequestsDashboard() {
   const bucketCaption =
     days < WEEKLY_BUCKET_THRESHOLD_DAYS ? "per day" : "per week";
 
-  const repositoryUrl = `https://github.com/${ORGANIZATION}/${repository}`;
+  // Deep links need a single repository: with a multi-repository selection
+  // there is no one repository the rows belong to, so the tables show plain
+  // numbers instead of a wrong link.
+  const repositoryUrl =
+    repositories.length === 1
+      ? `https://github.com/${ORGANIZATION}/${repositories[0]}`
+      : null;
   // A cached payload from before these fields existed must not be rendered as a
   // real zero backlog; the cards only appear when the snapshot is present, so an
   // empty backlog is distinguishable from unavailable data.
@@ -208,9 +215,9 @@ export default function PullRequestsDashboard() {
       </div>
 
       <DashboardFilters
-        onRepositoryChange={setRepository}
+        onRepositoriesChange={setRepositories}
         onTimeIntervalChange={setDays}
-        repository={repository}
+        repositories={repositories}
         timeInterval={days}
       />
       <DashboardRequestState
@@ -415,16 +422,19 @@ export default function PullRequestsDashboard() {
                   {
                     key: "number",
                     label: "#",
-                    renderCell: (value) => (
-                      <a
-                        className="text-link hover:underline"
-                        href={`${repositoryUrl}/pull/${value}`}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        #{value}
-                      </a>
-                    ),
+                    renderCell: (value) =>
+                      repositoryUrl ? (
+                        <a
+                          className="text-link hover:underline"
+                          href={`${repositoryUrl}/pull/${value}`}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          #{value}
+                        </a>
+                      ) : (
+                        `#${value}`
+                      ),
                   },
                   { key: "title", label: "Title" },
                   {
@@ -534,16 +544,19 @@ export default function PullRequestsDashboard() {
                 {
                   key: "number",
                   label: "#",
-                  renderCell: (value) => (
-                    <a
-                      className="text-link hover:underline"
-                      href={`${repositoryUrl}/pull/${value}`}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      #{value}
-                    </a>
-                  ),
+                  renderCell: (value) =>
+                    repositoryUrl ? (
+                      <a
+                        className="text-link hover:underline"
+                        href={`${repositoryUrl}/pull/${value}`}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        #{value}
+                      </a>
+                    ) : (
+                      `#${value}`
+                    ),
                 },
                 { key: "createdAt", label: "Created" },
                 { key: "mergedAt", label: "Merged" },

@@ -165,7 +165,7 @@ const leadTimePeerComparisonInsight = (
     return null;
   }
 
-  // Lower lead time is better, so a high share of peers below this repository
+  // Lower lead time is better, so a high share of peers below the selection
   // means it is among the slowest. The 0.25/0.75 cut-offs mirror how the
   // benchmark page classifies "best in class" and "needs attention".
   const severity =
@@ -179,7 +179,7 @@ const leadTimePeerComparisonInsight = (
         : undefined,
     category: "velocity",
     confidence: confidenceFromSample(input.leadTimePercentiles?.count),
-    detail: `Average lead time is ${formatNumber(current)} days; the median across ${peers} organisation repositories is ${formatNumber(median)} days. This repository sits at the ${formatNumber(rank * 100, 0)}th percentile (higher means slower than more peers).`,
+    detail: `Average lead time is ${formatNumber(current)} days; the median across ${peers} organisation repositories is ${formatNumber(median)} days. The selection sits at the ${formatNumber(rank * 100, 0)}th percentile (higher means slower than more peers).`,
     id: "pr-lead-time-peers",
     sampleSize: input.leadTimePercentiles?.count,
     severity,

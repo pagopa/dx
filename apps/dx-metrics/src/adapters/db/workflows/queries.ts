@@ -20,6 +20,7 @@ import {
   deployWorkflowMatch,
   dxPipelineCase,
   dxWorkflowNameLabel,
+  repositoryIn,
   workflowNameExclusion,
 } from "../shared/sql-fragments";
 import {
@@ -47,9 +48,9 @@ export const getWorkflowDashboard = async (
   db: Database,
   params: GetWorkflowDashboardInput,
 ): Promise<WorkflowDashboardResult & WithInsights & WithMeta> => {
-  const { days, fullName } = params;
+  const { days, fullNames } = params;
 
-  const referenceDate = await fetchReferenceDate(db, fullName);
+  const referenceDate = await fetchReferenceDate(db, fullNames);
 
   // Card/insight deltas compare the two halves of the selected window.
   const half = Math.max(1, Math.floor(days / 2));
@@ -70,20 +71,20 @@ export const getWorkflowDashboard = async (
     triggerTypes,
     triggerBreakdown,
   ] = await Promise.all([
-    fetchDeployments(db, fullName, days, referenceDate),
-    fetchDxVsNonDx(db, fullName, days, referenceDate),
-    fetchFailures(db, fullName, days, referenceDate),
-    fetchAvgDuration(db, fullName, days, referenceDate),
-    fetchRunCount(db, fullName, days, referenceDate),
-    fetchCumulativeDuration(db, fullName, days, referenceDate),
-    fetchInfraPlan(db, fullName, days, referenceDate),
-    fetchInfraApply(db, fullName, days, referenceDate),
-    fetchSuccessRatio(db, fullName, days, referenceDate),
-    fetchSummary(db, fullName, days, referenceDate),
-    fetchSuccessRateStats(db, fullName, days, half, referenceDate),
-    fetchDurationPercentiles(db, fullName, days, referenceDate),
-    fetchTriggerTypes(db, fullName, days, referenceDate),
-    fetchTriggerBreakdown(db, fullName, days, referenceDate),
+    fetchDeployments(db, fullNames, days, referenceDate),
+    fetchDxVsNonDx(db, fullNames, days, referenceDate),
+    fetchFailures(db, fullNames, days, referenceDate),
+    fetchAvgDuration(db, fullNames, days, referenceDate),
+    fetchRunCount(db, fullNames, days, referenceDate),
+    fetchCumulativeDuration(db, fullNames, days, referenceDate),
+    fetchInfraPlan(db, fullNames, days, referenceDate),
+    fetchInfraApply(db, fullNames, days, referenceDate),
+    fetchSuccessRatio(db, fullNames, days, referenceDate),
+    fetchSummary(db, fullNames, days, referenceDate),
+    fetchSuccessRateStats(db, fullNames, days, half, referenceDate),
+    fetchDurationPercentiles(db, fullNames, days, referenceDate),
+    fetchTriggerTypes(db, fullNames, days, referenceDate),
+    fetchTriggerBreakdown(db, fullNames, days, referenceDate),
   ]);
 
   const dashboard = {
@@ -106,13 +107,18 @@ export const getWorkflowDashboard = async (
     ...dashboard,
     insights: buildWorkflowsInsights(
       dashboard,
-      `https://github.com/${fullName}`,
+      // Deep links only make sense for a single repository; a multi-repository
+      // selection has no one repository to link to.
+      fullNames.length === 1 ? `https://github.com/${fullNames[0]}` : undefined,
     ),
     meta: { days, referenceDate },
   };
 };
 
-const fetchReferenceDate = async (db: Database, fullName: string) => {
+const fetchReferenceDate = async (
+  db: Database,
+  fullNames: readonly string[],
+) => {
   // Some metrics filter on `created_at` and others on `updated_at`; anchoring
   // the window to the latest activity in either column keeps both populations
   // inside the same window instead of silently truncating one of them.
@@ -120,7 +126,7 @@ const fetchReferenceDate = async (db: Database, fullName: string) => {
     buildReferenceDateQuery({
       column: "GREATEST(wr.created_at, wr.updated_at)",
       from: "workflow_runs wr JOIN repositories r ON wr.repository_id = r.id",
-      where: sql`r.full_name = ${fullName}`,
+      where: repositoryIn("r.full_name", fullNames),
     }),
   );
   return parseReferenceDate(result.rows[0], "workflows referenceDate");
@@ -128,7 +134,7 @@ const fetchReferenceDate = async (db: Database, fullName: string) => {
 
 const fetchDeployments = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -141,7 +147,7 @@ const fetchDeployments = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND ${deployWorkflowMatch("w.name")}
       AND TRIM(wr.conclusion) = 'success'
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
@@ -157,7 +163,7 @@ const fetchDeployments = async (
 
 const fetchDxVsNonDx = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -171,7 +177,7 @@ const fetchDxVsNonDx = async (
       FROM workflow_runs wr
       JOIN workflows w ON wr.workflow_id = w.id
       JOIN repositories r ON wr.repository_id = r.id
-      WHERE r.full_name = ${fullName}
+      WHERE ${repositoryIn("r.full_name", fullNames)}
         AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
         AND ${workflowNameExclusion("w.name")}
       -- Group by the output alias: the CASE binds parameters, so repeating the
@@ -185,7 +191,7 @@ const fetchDxVsNonDx = async (
 
 const fetchFailures = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -195,7 +201,7 @@ const fetchFailures = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND TRIM(wr.conclusion) = 'failure'
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND ${workflowNameExclusion("w.name")}
@@ -206,7 +212,7 @@ const fetchFailures = async (
 
 const fetchAvgDuration = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -216,7 +222,7 @@ const fetchAvgDuration = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
@@ -232,7 +238,7 @@ const fetchAvgDuration = async (
 
 const fetchRunCount = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -242,7 +248,7 @@ const fetchRunCount = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
@@ -254,7 +260,7 @@ const fetchRunCount = async (
 
 const fetchCumulativeDuration = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -264,7 +270,7 @@ const fetchCumulativeDuration = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
@@ -280,7 +286,7 @@ const fetchCumulativeDuration = async (
 
 const fetchInfraPlan = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -290,7 +296,7 @@ const fetchInfraPlan = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.status = 'completed'
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.created_at <= ${maxDate}::timestamptz
@@ -306,7 +312,7 @@ const fetchInfraPlan = async (
 
 const fetchInfraApply = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -316,7 +322,7 @@ const fetchInfraApply = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.status = 'completed'
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.created_at <= ${maxDate}::timestamptz
@@ -332,7 +338,7 @@ const fetchInfraApply = async (
 
 const fetchSuccessRatio = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -344,7 +350,7 @@ const fetchSuccessRatio = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND TRIM(wr.conclusion) IN ('success', 'failure')
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND ${workflowNameExclusion("w.name")}
@@ -359,7 +365,7 @@ const fetchSuccessRatio = async (
 
 const fetchSummary = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -377,7 +383,7 @@ const fetchSummary = async (
       FROM workflow_runs wr
       JOIN workflows w ON wr.workflow_id = w.id
       JOIN repositories r ON wr.repository_id = r.id
-      WHERE r.full_name = ${fullName}
+      WHERE ${repositoryIn("r.full_name", fullNames)}
         AND wr.status = 'completed' AND TRIM(wr.conclusion) IN ('success', 'failure')
         AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
         AND wr.updated_at <= ${maxDate}::timestamptz
@@ -404,7 +410,7 @@ const fetchSummary = async (
 
 const fetchSuccessRateStats = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   half: number,
   maxDate: string,
@@ -424,7 +430,7 @@ const fetchSuccessRateStats = async (
        FROM workflow_runs wr2
        JOIN workflows w2 ON wr2.workflow_id = w2.id
        JOIN repositories r2 ON wr2.repository_id = r2.id
-       WHERE r2.full_name = ${fullName}
+       WHERE ${repositoryIn("r2.full_name", fullNames)}
          AND wr2.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
          AND wr2.updated_at < ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${half})
          AND ${workflowNameExclusion("w2.name")}
@@ -432,7 +438,7 @@ const fetchSuccessRateStats = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${half})
       AND wr.updated_at <= ${maxDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
@@ -446,7 +452,7 @@ const fetchSuccessRateStats = async (
 
 const fetchDurationPercentiles = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -465,7 +471,7 @@ const fetchDurationPercentiles = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
       AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.updated_at <= ${maxDate}::timestamptz
@@ -488,7 +494,7 @@ const fetchDurationPercentiles = async (
  */
 const fetchTriggerTypes = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -503,7 +509,7 @@ const fetchTriggerTypes = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.created_at <= ${maxDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
@@ -525,7 +531,7 @@ const fetchTriggerTypes = async (
  */
 const fetchTriggerBreakdown = async (
   db: Database,
-  fullName: string,
+  fullNames: readonly string[],
   days: number,
   maxDate: string,
 ) => {
@@ -539,7 +545,7 @@ const fetchTriggerBreakdown = async (
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
-    WHERE r.full_name = ${fullName}
+    WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
       AND wr.created_at <= ${maxDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}

@@ -24,7 +24,7 @@ import { jsonWithCache } from "@/lib/api-cache";
 import { ORGANIZATION, REPOSITORIES } from "@/lib/config";
 import { sortInsights } from "@/lib/insights/insight-helpers";
 import type { Insight, WithInsights } from "@/lib/insights/types";
-import { parseDashboardQuery } from "@/lib/query-params";
+import { parseDashboardQuery, resolveRepositories } from "@/lib/query-params";
 
 /** Dashboards whose insights feed the executive summary. */
 const ENDPOINT_LABELS = {
@@ -52,8 +52,10 @@ const latestReferenceDate = (dates: readonly string[]): null | string =>
 export async function GET(req: NextRequest) {
   const parsed = parseDashboardQuery(req);
   if ("error" in parsed) return parsed.error;
-  const { days, repository = "dx" } = parsed.query;
-  const fullName = `${ORGANIZATION}/${repository}`;
+  const { days } = parsed.query;
+  const fullNames = resolveRepositories(parsed.query, "dx").map(
+    (repository) => `${ORGANIZATION}/${repository}`,
+  );
 
   // Every adapter runs concurrently; each failure degrades the summary instead
   // of failing the whole endpoint, so a single broken dashboard still yields
@@ -63,17 +65,20 @@ export async function GET(req: NextRequest) {
     key: EndpointKey;
     request: Promise<WithInsights & { meta?: unknown }>;
   }[] = [
-    { key: "pull-requests", request: fetchPrDashboard(db, { days, fullName }) },
+    {
+      key: "pull-requests",
+      request: fetchPrDashboard(db, { days, fullNames }),
+    },
     {
       key: "pull-requests-review",
-      request: getPullRequestsReviewDashboard(db, { days, fullName }),
+      request: getPullRequestsReviewDashboard(db, { days, fullNames }),
     },
     {
       key: "workflows",
-      request: getWorkflowDashboard(db, { days, fullName }),
+      request: getWorkflowDashboard(db, { days, fullNames }),
     },
-    { key: "iac", request: getIacDashboard(db, { days, fullName }) },
-    { key: "dx-adoption", request: fetchDxAdoption(db, { fullName }) },
+    { key: "iac", request: getIacDashboard(db, { days, fullNames }) },
+    { key: "dx-adoption", request: fetchDxAdoption(db, { fullNames }) },
     {
       key: "techradar",
       request: getTechRadarDashboard(db, {

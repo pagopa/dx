@@ -80,10 +80,14 @@ interface WorkflowDashboardData {
 }
 
 export default function WorkflowsDashboard() {
-  const { days, repository, setDays, setRepository } = useDashboardFilters();
+  const { days, repositories, setDays, setRepositories } =
+    useDashboardFilters();
 
   const { data, error, loading, refetch } =
-    useDashboardData<WorkflowDashboardData>("workflows", { days, repository });
+    useDashboardData<WorkflowDashboardData>("workflows", {
+      days,
+      repositories,
+    });
 
   return (
     <div>
@@ -96,9 +100,9 @@ export default function WorkflowsDashboard() {
         />
       </div>
       <DashboardFilters
-        onRepositoryChange={setRepository}
+        onRepositoriesChange={setRepositories}
         onTimeIntervalChange={setDays}
-        repository={repository}
+        repositories={repositories}
         timeInterval={days}
       />
       <DashboardRequestState

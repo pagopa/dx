@@ -115,6 +115,20 @@ export const textArray = (values: readonly string[]): SQL =>
       )}]::text[]`;
 
 /**
+ * Predicate matching rows whose repository column is one of `fullNames`.
+ *
+ * Uses `col = ANY(<array>)` so a multi-repository selection is a single bound
+ * parameter. An empty list matches nothing, which is how the portal turns an
+ * empty repository selection into an empty dashboard instead of "all".
+ * Accepts a qualified column name (e.g. `r.full_name`), so the same scope can
+ * be applied to any alias.
+ */
+export const repositoryIn = (
+  column: string,
+  fullNames: readonly string[],
+): SQL => sql`${sql.raw(column)} = ANY(${textArray(fullNames)})`;
+
+/**
  * Builds `col NOT IN (...)` for an exclusion list. Returns `TRUE` for an empty
  * list so the predicate never breaks. Accepts a qualified column name
  * (e.g. `ipr.title`), so the same exclusion can be applied to any alias.
