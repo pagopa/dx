@@ -23,7 +23,7 @@ Here's a minimal example to get started:
 ```hcl
 module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 7.0"
 
   environment = {
     prefix          = "dx"
@@ -34,8 +34,8 @@ module "bootstrap" {
   }
 
   entraid_groups = {
-    admins_object_id = data.azuread_group.admins.object_id
-    devs_object_id   = data.azuread_group.developers.object_id
+    admin_object_id = data.azuread_group.admin.object_id
+    devs_object_id  = data.azuread_group.developers.object_id
   }
 
   terraform_storage_account = {
@@ -62,6 +62,12 @@ module "bootstrap" {
   tags = local.tags
 }
 ```
+
+Use `entraid_groups.admin_object_id` for the admin Entra ID group. The legacy
+`admins_object_id` attribute remains available as a deprecated alias during
+the migration period; set exactly one of these attributes. Configurations that
+set both or neither fail validation. Migrate callers to `admin_object_id`
+before the deprecated alias is removed in a future major release.
 
 ## Using with Core Values Exporter
 
@@ -97,7 +103,7 @@ Then use the exported values in the bootstrap module:
 ```hcl
 module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 7.0"
 
   # ... other required variables ...
 
@@ -175,7 +181,7 @@ Azure Entra ID (formerly Azure AD) security groups for RBAC assignments. These g
 
 ```hcl
 entraid_groups = {
-  admins_object_id    = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Full admin access
+  admin_object_id     = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Full admin access
   devs_object_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Developer access
   externals_object_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"  # Optional: external collaborators
 }
@@ -351,7 +357,7 @@ resource "azurerm_resource_group" "myapp" {
 
 module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 7.0"
 
   # ... other required variables ...
 
@@ -438,7 +444,7 @@ This module includes practical examples to help you get started quickly:
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
@@ -447,14 +453,14 @@ This module includes practical examples to help you get started quickly:
 ## Modules
 
 | Name | Source | Version |
-| ---- | ------ | ------- |
+|------|--------|---------|
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
 | <a name="module_github_runner_dx"></a> [github\_runner\_dx](#module\_github\_runner\_dx) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
 
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [azurerm_federated_identity_credential.github_app_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.github_app_cd_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.github_app_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
@@ -470,9 +476,9 @@ This module includes practical examples to help you get started quickly:
 | [azurerm_federated_identity_credential.github_opex_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.github_opex_ci_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_resource_group.main](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
-| [azurerm_role_assignment.admins_group_rgs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.admins_group_rgs_kv_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.admins_group_rgs_kv_data](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.admin_group_rgs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.admin_group_rgs_kv_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.admin_group_rgs_kv_data](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.app_cd_rgs_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.app_cd_subscription_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.app_cd_tf_rg_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
@@ -524,9 +530,9 @@ This module includes practical examples to help you get started quickly:
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_additional_resource_group_ids"></a> [additional\_resource\_group\_ids](#input\_additional\_resource\_group\_ids) | A set of IDs for existing resource groups owned by the domain team. | `set(string)` | `[]` | no |
-| <a name="input_entraid_groups"></a> [entraid\_groups](#input\_entraid\_groups) | The Azure Entra ID groups to give role to. | <pre>object({<br/>    admins_object_id    = string<br/>    devs_object_id      = string<br/>    externals_object_id = optional(string, null)<br/>  })</pre> | n/a | yes |
+| <a name="input_entraid_groups"></a> [entraid\_groups](#input\_entraid\_groups) | The Azure Entra ID groups to give roles to. Use admin\_object\_id; admins\_object\_id is deprecated. | <pre>object({<br/>    admin_object_id     = optional(string)<br/>    admins_object_id    = optional(string)<br/>    devs_object_id      = string<br/>    externals_object_id = optional(string, null)<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration. | <pre>object({<br/>    container_app_environment_id = string<br/>    replica_timeout_in_seconds   = optional(number, 1800)<br/>    polling_interval_in_seconds  = optional(number, 30)<br/>    min_instances                = optional(number, 0)<br/>    max_instances                = optional(number, 30)<br/>    labels                       = optional(list(string), [])<br/>    key_vault = object({<br/>      name                = string<br/>      resource_group_name = string<br/>      secret_name         = optional(string, "github-runner-pat")<br/>      use_rbac            = optional(bool, false)<br/>    })<br/>    use_github_app = optional(bool, false)<br/>    cpu            = optional(number, 1.5)<br/>    memory         = optional(string, "3Gi")<br/>  })</pre> | n/a | yes |
 | <a name="input_opex_resource_group_id"></a> [opex\_resource\_group\_id](#input\_opex\_resource\_group\_id) | The ID of the resource group containing Opex dashboards. | `string` | n/a | yes |
@@ -538,7 +544,7 @@ This module includes practical examples to help you get started quickly:
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_github_dx_runner"></a> [github\_dx\_runner](#output\_github\_dx\_runner) | Details of the DX GitHub self-hosted runner, including ID, name, resource group name, image, and labels. |
 | <a name="output_github_private_runner"></a> [github\_private\_runner](#output\_github\_private\_runner) | Details of the GitHub private runner, including ID, name, and resource group name. |
 | <a name="output_identities"></a> [identities](#output\_identities) | Details of the user-assigned identities for app, infra, and opex, including IDs and names. |

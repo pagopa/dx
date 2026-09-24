@@ -231,7 +231,7 @@ run "azure_github_environment_bootstrap_entraid_rbac" {
   command = plan
 
   assert {
-    condition     = azurerm_role_assignment.admins_group_rgs["main"].role_definition_name == "Owner"
+    condition     = azurerm_role_assignment.admin_group_rgs["main"].role_definition_name == "Owner"
     error_message = "The Admins group should have Owner on resource groups"
   }
 

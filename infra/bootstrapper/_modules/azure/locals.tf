@@ -13,7 +13,7 @@ locals {
   }[lower(var.environment.env_short)]
 
   adgroups = {
-    admins_name   = "${var.environment.prefix}-${var.environment.env_short}-adgroup-admin"
+    admin_name    = "${var.environment.prefix}-${var.environment.env_short}-adgroup-admin"
     devs_name     = "${var.environment.prefix}-${var.environment.env_short}-adgroup-developers"
     external_name = "${var.environment.prefix}-${var.environment.env_short}-adgroup-externals"
   }
@@ -25,4 +25,3 @@ locals {
 
   tf_storage_account_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${local.tf_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${local.tf_storage_account.name}"
 }
-

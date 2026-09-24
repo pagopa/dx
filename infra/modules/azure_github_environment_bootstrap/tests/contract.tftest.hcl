@@ -102,18 +102,33 @@ run "azure_github_environment_bootstrap_additional_resource_group_ids" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.admins_group_rgs["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-opex-rg-01"].role_definition_name == "Owner"
+    condition     = azurerm_role_assignment.admin_group_rgs["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-opex-rg-01"].role_definition_name == "Owner"
     error_message = "The Admins group should be Owner of additional resource groups"
   }
 
   assert {
-    condition     = azurerm_role_assignment.admins_group_rgs_kv_data["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-opex-rg-01"].role_definition_name == "Key Vault Data Access Administrator"
+    condition     = azurerm_role_assignment.admin_group_rgs_kv_data["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-opex-rg-01"].role_definition_name == "Key Vault Data Access Administrator"
     error_message = "The Admins group should manage Key Vault data on additional resource groups"
   }
 
   assert {
-    condition     = azurerm_role_assignment.admins_group_rgs_kv_admin["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-opex-rg-01"].role_definition_name == "Key Vault Administrator"
+    condition     = azurerm_role_assignment.admin_group_rgs_kv_admin["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-opex-rg-01"].role_definition_name == "Key Vault Administrator"
     error_message = "The Admins group should manage Key Vaults on additional resource groups"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admin_group_rgs["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-opex-rg-01"].principal_id == "00000000-0000-0000-0000-000000000001"
+    error_message = "The deprecated admins_object_id input should remain compatible"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admin_group_rgs_kv_data["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-opex-rg-01"].principal_id == "00000000-0000-0000-0000-000000000001"
+    error_message = "The deprecated admins_object_id input should be used for Key Vault data assignments"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admin_group_rgs_kv_admin["/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-opex-rg-01"].principal_id == "00000000-0000-0000-0000-000000000001"
+    error_message = "The deprecated admins_object_id input should be used for Key Vault administrator assignments"
   }
 
   assert {
@@ -161,3 +176,61 @@ run "azure_github_environment_bootstrap_invalid_additional_resource_group_ids" {
   ]
 }
 
+run "azure_github_environment_bootstrap_singular_admin_object_id" {
+  command = plan
+
+  variables {
+    entraid_groups = {
+      admin_object_id     = "00000000-0000-0000-0000-000000000011"
+      devs_object_id      = "00000000-0000-0000-0000-000000000002"
+      externals_object_id = "00000000-0000-0000-0000-000000000003"
+    }
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admin_group_rgs["main"].principal_id == "00000000-0000-0000-0000-000000000011"
+    error_message = "The singular admin_object_id input should be used for admin role assignments"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admin_group_rgs_kv_data["main"].principal_id == "00000000-0000-0000-0000-000000000011"
+    error_message = "The singular admin_object_id input should be used for Key Vault data assignments"
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.admin_group_rgs_kv_admin["main"].principal_id == "00000000-0000-0000-0000-000000000011"
+    error_message = "The singular admin_object_id input should be used for Key Vault administrator assignments"
+  }
+}
+
+run "azure_github_environment_bootstrap_rejects_both_admin_object_ids" {
+  command = plan
+
+  variables {
+    entraid_groups = {
+      admin_object_id     = "00000000-0000-0000-0000-000000000011"
+      admins_object_id    = "00000000-0000-0000-0000-000000000011"
+      devs_object_id      = "00000000-0000-0000-0000-000000000002"
+      externals_object_id = "00000000-0000-0000-0000-000000000003"
+    }
+  }
+
+  expect_failures = [
+    var.entraid_groups,
+  ]
+}
+
+run "azure_github_environment_bootstrap_requires_an_admin_object_id" {
+  command = plan
+
+  variables {
+    entraid_groups = {
+      devs_object_id      = "00000000-0000-0000-0000-000000000002"
+      externals_object_id = "00000000-0000-0000-0000-000000000003"
+    }
+  }
+
+  expect_failures = [
+    var.entraid_groups,
+  ]
+}

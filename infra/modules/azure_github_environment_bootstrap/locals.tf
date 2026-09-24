@@ -1,5 +1,6 @@
 locals {
-  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/module.json")).name, basename(path.module)) })
+  tags            = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/module.json")).name, basename(path.module)) })
+  admin_object_id = var.entraid_groups.admin_object_id != null ? var.entraid_groups.admin_object_id : var.entraid_groups.admins_object_id
   naming_config = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
