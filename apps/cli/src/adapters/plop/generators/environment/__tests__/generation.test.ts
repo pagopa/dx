@@ -37,6 +37,14 @@ import {
 import getActions from "../actions.js";
 import { Payload, PLOP_ENVIRONMENT_GENERATOR_NAME } from "../index.js";
 
+const terraformValidator = vi.hoisted(() =>
+  vi.fn(async () => ({ stdout: "" })),
+);
+
+vi.mock("execa", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("execa")>()),
+  execa: vi.fn(() => terraformValidator),
+}));
 vi.mock("../../../../execa/terraform.js", () => {
   const terraformCommand = vi.fn(async () => undefined);
   const tf$ = vi.fn(() => terraformCommand);
