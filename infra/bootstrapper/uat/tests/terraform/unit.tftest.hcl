@@ -44,6 +44,7 @@ mock_provider "github" {
     }
   }
 }
+mock_provider "github-integration" {}
 
 override_data {
   target = data.azurerm_subscription.current

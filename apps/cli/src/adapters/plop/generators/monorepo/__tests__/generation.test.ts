@@ -102,8 +102,7 @@ describe("monorepo generator — file generation", () => {
       .getGenerator(PLOP_MONOREPO_GENERATOR_NAME)
       .runActions(customPayload);
     const realFailures = result.failures.filter(
-      (failure) =>
-        failure.error !== "Aborted due to previous action failure",
+      (failure) => failure.error !== "Aborted due to previous action failure",
     );
     expect(realFailures).toEqual([]);
 
