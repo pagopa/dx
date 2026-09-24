@@ -377,3 +377,84 @@ run "azure_github_environment_bootstrap_immutable_identities" {
     error_message = "The name-based credentials must be kept for backward compatibility"
   }
 }
+
+run "azure_github_environment_bootstrap_custom_owner_identities" {
+  command = plan
+
+  variables {
+    repository = {
+      owner = "example-org"
+      name  = "dx-test-monorepo-starter-pack"
+    }
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_app_ci.subject == "repo:example-org/dx-test-monorepo-starter-pack:environment:app-uat-ci"
+    error_message = "The App CI subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_app_cd.subject == "repo:example-org/dx-test-monorepo-starter-pack:environment:app-uat-cd"
+    error_message = "The App CD subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_ci.subject == "repo:example-org/dx-test-monorepo-starter-pack:environment:infra-uat-ci"
+    error_message = "The Infra CI subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_cd.subject == "repo:example-org/dx-test-monorepo-starter-pack:environment:infra-uat-cd"
+    error_message = "The Infra CD subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_automation_cd.subject == "repo:example-org/dx-test-monorepo-starter-pack:environment:automation-uat-cd"
+    error_message = "The Automation CD subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_opex_ci.subject == "repo:example-org/dx-test-monorepo-starter-pack:environment:opex-uat-ci"
+    error_message = "The Opex CI subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_opex_cd.subject == "repo:example-org/dx-test-monorepo-starter-pack:environment:opex-uat-cd"
+    error_message = "The Opex CD subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_ci_immutable.subject == "repo:example-org@57742367/dx-test-monorepo-starter-pack@1373623344:environment:infra-uat-ci"
+    error_message = "The immutable Infra CI subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_cd_immutable.subject == "repo:example-org@57742367/dx-test-monorepo-starter-pack@1373623344:environment:infra-uat-cd"
+    error_message = "The immutable Infra CD subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_automation_cd_immutable.subject == "repo:example-org@57742367/dx-test-monorepo-starter-pack@1373623344:environment:automation-uat-cd"
+    error_message = "The immutable Automation CD subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_app_ci_immutable.subject == "repo:example-org@57742367/dx-test-monorepo-starter-pack@1373623344:environment:app-uat-ci"
+    error_message = "The immutable App CI subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_app_cd_immutable.subject == "repo:example-org@57742367/dx-test-monorepo-starter-pack@1373623344:environment:app-uat-cd"
+    error_message = "The immutable App CD subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_opex_ci_immutable.subject == "repo:example-org@57742367/dx-test-monorepo-starter-pack@1373623344:environment:opex-uat-ci"
+    error_message = "The immutable Opex CI subject must use the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_opex_cd_immutable.subject == "repo:example-org@57742367/dx-test-monorepo-starter-pack@1373623344:environment:opex-uat-cd"
+    error_message = "The immutable Opex CD subject must use the configured GitHub owner"
+  }
+}

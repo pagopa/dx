@@ -42,6 +42,7 @@ const registerStubActions = (plop: NodePlopAPI) => {
 describe("monorepo generator — file generation", () => {
   let tmpDir: string;
   let originalCwd: string;
+  let plop: NodePlopAPI;
 
   const payload: Payload = {
     repoDescription: "A test repository for DX",
@@ -54,7 +55,7 @@ describe("monorepo generator — file generation", () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-monorepo-test-"));
     process.chdir(tmpDir);
 
-    const plop = await nodePlop();
+    plop = await nodePlop();
     registerStubActions(plop);
     plop.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
       actions: getActions(resolveTemplatesPath("monorepo")),
@@ -88,6 +89,35 @@ describe("monorepo generator — file generation", () => {
     );
 
     expect(generatedFiles).toMatchSnapshot();
+  });
+
+  it("uses the selected GitHub organization in repository provider configuration", async () => {
+    const customPayload: Payload = {
+      ...payload,
+      repoName: "my-custom-owner-repo",
+      repoOwner: "example-org",
+    };
+
+    const result = await plop
+      .getGenerator(PLOP_MONOREPO_GENERATOR_NAME)
+      .runActions(customPayload);
+    const realFailures = result.failures.filter(
+      (failure) =>
+        failure.error !== "Aborted due to previous action failure",
+    );
+    expect(realFailures).toEqual([]);
+
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, customPayload.repoName),
+      ["infra/repository/providers.tf"],
+    );
+
+    expect(generatedFiles["infra/repository/providers.tf"]).toContain(
+      'owner = "example-org"',
+    );
+    expect(generatedFiles["infra/repository/providers.tf"]).not.toContain(
+      'owner = "pagopa"',
+    );
   });
 
   it("propagates action outputs into generated version files", async () => {
