@@ -288,8 +288,8 @@ jobs:
           REQUIRED_ENVIRONMENT: ${{ inputs.environment }}-cd
         run: |
           if [ -z "$GH_TOKEN" ]; then
-            echo "::error::GH_TOKEN_DEPLOYMENT_APPROVAL secret is not set."
-            exit 1
+            echo "::notice::GH_TOKEN_DEPLOYMENT_APPROVAL secret is not set; automatic approval is disabled."
+            exit 0
           fi
 
           deployments=$(gh api \
