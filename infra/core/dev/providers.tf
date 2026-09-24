@@ -17,7 +17,7 @@ terraform {
 
     awsdx = {
       source  = "pagopa-dx/aws"
-      version = "~> 0.0"
+      version = "~> 0.1"
     }
 
     random = {
