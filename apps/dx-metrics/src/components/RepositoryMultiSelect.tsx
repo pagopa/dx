@@ -76,7 +76,7 @@ export function RepositoryMultiSelect({
       <Popover.Root onOpenChange={setOpen} open={open}>
         <Popover.Trigger asChild>
           <button
-            aria-labelledby={labelId}
+aria-label={`Repositories: ${value.length === 0 ? "no repository selected" : `${value.length} selected`}`}
             className={cn(triggerClassName, focusRing)}
             type="button"
           >

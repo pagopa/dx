@@ -31,7 +31,11 @@ const isPositiveInteger = (value: number) =>
 
 /** Keeps only known repositories, preserving the caller's order. */
 const sanitizeRepositories = (repositories: readonly string[]): string[] =>
-  repositories.filter((repository) => REPOSITORIES.includes(repository));
+  Array.from(
+    new Set(
+      repositories.filter((repository) => REPOSITORIES.includes(repository)),
+    ),
+  );
 
 /**
  * Resolves the selection from the URL.
