@@ -24,8 +24,7 @@ const makeContext = <TRow extends Record<string, unknown>>(
       return { rows: [...rows] };
     },
   );
-  const execute: CursorContext["db"]["execute"] = (query) =>
-    executeMock(query);
+  const execute: CursorContext["db"]["execute"] = (query) => executeMock(query);
   const context = { db: { execute } } satisfies CursorContext;
 
   return { context, executeMock };
