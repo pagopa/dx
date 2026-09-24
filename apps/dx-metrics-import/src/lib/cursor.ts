@@ -23,14 +23,21 @@ export interface CursorContext {
 }
 
 /**
- * Entities whose importer fetches a time window (`since`) and can therefore
- * resume from a cursor. Full-list and replace-style entities (workflows,
- * terraform modules/registry, code-search, dx-pipelines, tech-radar, tracker)
- * have no window and always start from the floor.
+ * Entities whose importer can safely resume from a cursor: they fetch a time
+ * window (`since`) and every row they write is fully determined by that window.
+ *
+ * `iac-pr` is deliberately excluded: it derives a pull request's `targetAuthors`
+ * from the commits in the window and replaces the whole array on upsert, so a
+ * narrow window would truncate the reviewer set of a pull request whose commits
+ * predate it. It stays on the floor window until the importer can merge the
+ * complete commit set per pull request.
+ *
+ * Full-list and replace-style entities (workflows, terraform modules/registry,
+ * code-search, dx-pipelines, tech-radar, tracker) have no window and also start
+ * from the floor.
  */
 const INCREMENTAL_ENTITIES: ReadonlySet<string> = new Set([
   "commits",
-  "iac-pr",
   "pr-reviews",
   "pull-requests",
   "workflow-runs",

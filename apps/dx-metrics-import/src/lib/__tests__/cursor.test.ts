@@ -51,11 +51,10 @@ const renderExecutedSql = (
 };
 
 describe("hasCursorSource", () => {
-  it("recognizes entities with a date dimension", () => {
+  it("recognizes entities that are fully determined by the window", () => {
     expect(hasCursorSource("pull-requests")).toBe(true);
     expect(hasCursorSource("pr-reviews")).toBe(true);
     expect(hasCursorSource("workflow-runs")).toBe(true);
-    expect(hasCursorSource("iac-pr")).toBe(true);
     expect(hasCursorSource("commits")).toBe(true);
   });
 
@@ -64,6 +63,12 @@ describe("hasCursorSource", () => {
     expect(hasCursorSource("terraform-modules")).toBe(false);
     expect(hasCursorSource("tech-radar")).toBe(false);
     expect(hasCursorSource("code-search")).toBe(false);
+  });
+
+  it("keeps iac-pr on the floor window", () => {
+    // Its reviewer set is derived from the commits in the window, so a narrow
+    // window would truncate it.
+    expect(hasCursorSource("iac-pr")).toBe(false);
   });
 });
 
