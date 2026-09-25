@@ -4,15 +4,16 @@ sidebar_position: 6
 
 # Deploying Infrastructure Changes
 
-:::info Reusable Workflow
+:::info Reusable Workflows
 
-| Workflow                 | Version | Source                                                                                          |
-| ------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
-| **Infrastructure Apply** | latest  | [`infra_apply.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_apply.yaml) |
+| Workflow                              | Version | Source                                                                                                            |
+| ------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Infrastructure Apply**              | latest  | [`infra_apply.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/infra_apply.yaml)                   |
+| **Nx Terraform Infrastructure Apply** | latest  | [`release-terraform-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-terraform-v1.yaml) |
 
 :::
 
-This document describes the GitHub workflow that automates Terraform apply
+This document describes the GitHub workflows that automate Terraform apply
 operations.
 
 ## Overview
@@ -32,6 +33,46 @@ The workflow supports both of these repository layouts under
 
 This allows one apply pipeline to work for both single-state and multi-state
 environments.
+
+## Nx-based Terraform apply
+
+Use `_release-terraform.yaml` as the repository-level release workflow for
+repositories that manage Terraform projects through Nx and
+`@pagopa/nx-terraform-plugin`. Like `_validate.yaml`, this wrapper only invokes
+the versioned reusable workflow implementation.
+
+`release-terraform-v1.yaml` contains the release logic and follows the same
+environment discovery approach used by `validate-v2.yaml`: it reads the
+repository GitHub environments named `infra-<env>-cd` (and the paired
+`infra-<env>-ci` used for planning), and checks which Terraform Nx projects are
+affected for each environment.
+
+Like the legacy `infra_apply` workflow, releases follow a **Plan → Approve →
+Apply** flow, so the plan a reviewer approves is what gets applied:
+
+1. **Plan** (`release-plan`): runs on the matching self-hosted runner label,
+   under the `infra-<env>-ci` GitHub environment (no required reviewers). Runs
+   the Terraform Nx `plan` target for each affected project and uploads the
+   resulting plan bundle to the same storage backend used for the Terraform
+   state.
+2. **Apply** (`release-apply`): runs under the `infra-<env>-cd` GitHub
+   environment, so any required reviewers configured on it must approve the run
+   before it proceeds. Downloads the plan bundle uploaded by `release-plan` and
+   runs the Terraform Nx `apply` target against that exact plan file, instead of
+   recomputing a new plan.
+
+If no matching Nx project is found, both jobs are skipped.
+
+```yaml
+jobs:
+  release:
+    uses: pagopa/dx/.github/workflows/release-terraform-v1.yaml@main
+    secrets: inherit
+```
+
+Keep using `infra_apply.yaml` for the legacy Terraform flow that creates,
+stores, downloads, and applies Terraform plan bundles without relying on Nx
+project discovery.
 
 ## Use Cases
 
@@ -55,7 +96,7 @@ environments.
 
 ## How it Works
 
-The workflow executes the following steps:
+The legacy `infra_apply` workflow executes the following steps:
 
 1. Determines the Terraform version to use from the `.terraform-version` file
 2. Detects the Terraform project roots inside `<base_path>/<environment>`
@@ -69,7 +110,7 @@ The workflow executes the following steps:
 
 ## Project detection rules
 
-The workflow automatically detects which directories must be applied:
+The legacy workflow automatically detects which directories must be applied:
 
 - **Flat layout**: if Terraform files exist directly in
   `<base_path>/<environment>`, that directory is treated as the single Terraform
@@ -77,10 +118,8 @@ The workflow automatically detects which directories must be applied:
   - `workflow_dispatch` is triggered (full directory scan)
   - Shared modules change (full environment scan)
 - **Multi-project layout**: if there are no Terraform files directly in the
-
   environment directory, each first-level subdirectory containing changed files
   is treated as an independent project root.
-
 - **Shared modules changed**: if files under `<base_path>/_modules` change, the
   workflow applies all Terraform projects in the target environment.
 - **Manual runs**: when triggered with `workflow_dispatch`, the workflow scans
@@ -154,5 +193,5 @@ The typical execution flow in a CI/CD process includes:
 2. **Review & Approval**: reviewers examine the plan output for each affected
    Terraform project and approve the changes
 3. **Merge**: after approval, the PR is merged into the main branch
-4. **Deploy**: this `infra_apply` workflow is triggered to implement the changes
-   in the desired environment, reusing the per-project plan bundles
+4. **Deploy**: `infra_apply` or `_release-terraform` is triggered to implement
+   the changes in the desired environment

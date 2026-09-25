@@ -1,0 +1,307 @@
+name: Release Terraform
+
+on:
+  workflow_call:
+
+env:
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+  ARM_USE_OIDC: true
+  ARM_USE_AZUREAD: true
+  ARM_STORAGE_USE_AZUREAD: true
+  ROLE_ARN: ${{ secrets.ROLE_ARN }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
+  TF_IN_AUTOMATION: true
+  PNPM_CONFIG_STORE_DIR: ~/.local/share/pnpm/store
+  MISE_ENV: ""
+  TFPLAN_FILE: tf-outcome-${{ github.sha }}
+
+jobs:
+  assess-affected-projects:
+    name: Affected Projects Assessment
+    runs-on: ubuntu-24.04
+    outputs:
+      project-targets: ${{ steps.detect.outputs.project-targets }}
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Setup Node.js
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: "node pnpm"
+          minimum_release_age: 7d
+
+      - name: Set base and head SHAs for affected commands
+        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Install dependencies
+        run: pnpm --filter . ci
+
+      - name: Assess affected projects and environments
+        id: detect
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          # GitHub environments named `infra-<env>-cd` gate the Terraform
+          # apply for that environment. The paired `infra-<env>-ci`
+          # environment (no required reviewers) runs the preceding plan.
+          candidate_environments="$(
+            gh api \
+              --paginate \
+              --slurp \
+              "/repos/$GITHUB_REPOSITORY/environments?per_page=100" |
+              jq --compact-output '
+              [
+                .[].environments[]
+                | select(.name | test("^infra-.+-cd$"))
+                | (.name | capture("^infra-(?<env>.+)-cd$").env) as $env
+                | {
+                    "env-name": $env,
+                    "plan-github-environment": "infra-\($env)-ci",
+                    "apply-github-environment": .name
+                  }
+              ]
+            '
+          )"
+
+          project_targets='[]'
+          while IFS= read -r environment; do
+            env_name="$(jq --raw-output '."env-name"' <<< "$environment")"
+            plan_env="$(jq --raw-output '."plan-github-environment"' <<< "$environment")"
+            apply_env="$(jq --raw-output '."apply-github-environment"' <<< "$environment")"
+
+            # Manual runs plan every Terraform project for the environment;
+            # other events only plan what Nx reports as affected.
+            if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+              projects="$(
+                pnpm nx show projects \
+                  --type=app \
+                  --projects=tag:terraform \
+                  --exclude="!tag:env:$env_name" \
+                  --json
+              )"
+            else
+              projects="$(
+                pnpm nx show projects \
+                  --affected \
+                  --type=app \
+                  --projects=tag:terraform \
+                  --exclude="!tag:env:$env_name" \
+                  --json
+              )"
+            fi
+
+            while IFS= read -r project; do
+              [ -z "$project" ] && continue
+              root="$(pnpm nx show project "$project" --json | jq --raw-output '.root')"
+              project_targets="$(
+                jq --compact-output \
+                  --arg env_name "$env_name" \
+                  --arg plan_env "$plan_env" \
+                  --arg apply_env "$apply_env" \
+                  --arg project "$project" \
+                  --arg root "$root" \
+                  '. + [{
+                    "env-name": $env_name,
+                    "plan-github-environment": $plan_env,
+                    "apply-github-environment": $apply_env,
+                    "project": $project,
+                    "root": $root
+                  }]' \
+                  <<< "$project_targets"
+              )"
+            done < <(jq --raw-output '.[]' <<< "$projects")
+          done < <(jq --compact-output '.[]' <<< "$candidate_environments")
+
+          printf 'project-targets=%s\n' "$project_targets" >> "$GITHUB_OUTPUT"
+
+  release-plan:
+    name: "Plan: ${{ matrix.target.project }}"
+    needs: assess-affected-projects
+    if: ${{ needs.assess-affected-projects.outputs.project-targets != '[]' }}
+    runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
+    environment: ${{ matrix.target.plan-github-environment }}
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.assess-affected-projects.outputs.project-targets) }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    env:
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Setup repository tools
+        if: ${{ hashFiles('mise.toml') != '' }}
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          experimental: true
+          minimum_release_age: 7d
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.PNPM_CONFIG_STORE_DIR }}
+          key: ${{ runner.os }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
+
+      - name: Install dependencies
+        run: |
+          mise deps --skip pnpm
+          pnpm --filter . ci
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Terraform Plan
+        env:
+          PROJECT: ${{ matrix.target.project }}
+        run: pnpm nx run "$PROJECT:plan" --configuration=ci --out="$TFPLAN_FILE"
+
+      # Bundle the plan file together with .terraform.lock.hcl and .terraform/modules/
+      # and upload it to the same storage backend used for the Terraform state.
+      # Outputs (provider, plan-path, credentials) are passed to release-apply.
+      - name: Upload Terraform Plan
+        id: upload_plan
+        uses: pagopa/dx/actions/terraform-plan-storage-upload@main
+        with:
+          plan-file: ${{ env.TFPLAN_FILE }}
+          working-directory: ${{ matrix.target.root }}
+
+      - name: Save plan outputs to artifact
+        env:
+          PROVIDER: ${{ steps.upload_plan.outputs.provider }}
+          PLAN_PATH: ${{ steps.upload_plan.outputs['plan-path'] }}
+          AZURE_STORAGE_ACCOUNT: ${{ steps.upload_plan.outputs['azure-storage-account'] }}
+          AZURE_CONTAINER: ${{ steps.upload_plan.outputs['azure-container'] }}
+          AWS_BUCKET: ${{ steps.upload_plan.outputs['aws-bucket'] }}
+          AWS_REGION: ${{ steps.upload_plan.outputs['aws-region'] }}
+        run: |
+          set -euo pipefail
+          jq -n \
+            --arg provider "$PROVIDER" \
+            --arg plan_path "$PLAN_PATH" \
+            --arg azure_storage_account "$AZURE_STORAGE_ACCOUNT" \
+            --arg azure_container "$AZURE_CONTAINER" \
+            --arg aws_bucket "$AWS_BUCKET" \
+            --arg aws_region "$AWS_REGION" \
+            '{provider: $provider, plan_path: $plan_path, azure_storage_account: $azure_storage_account, azure_container: $azure_container, aws_bucket: $aws_bucket, aws_region: $aws_region}' \
+            > plan-outputs.json
+
+      - name: Upload plan outputs artifact
+        uses: pagopa/dx/.github/actions/upload-artifact@main
+        with:
+          bundle_name: tfplan-${{ matrix.target.project }}-outputs
+          file_path: plan-outputs.json
+
+  release-apply:
+    name: "Apply: ${{ matrix.target.project }}"
+    needs: [assess-affected-projects, release-plan]
+    if: ${{ needs.assess-affected-projects.outputs.project-targets != '[]' }}
+    runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
+    environment: ${{ matrix.target.apply-github-environment }}
+    # Serialize applies to the same project so two pushes can't race each
+    # other on the same Terraform state, without cancelling an in-flight apply.
+    concurrency:
+      group: ${{ github.workflow }}-${{ matrix.target.project }}-apply
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix:
+        target: ${{ fromJSON(needs.assess-affected-projects.outputs.project-targets) }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+    env:
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: tree:0
+
+      - name: Setup repository tools
+        if: ${{ hashFiles('mise.toml') != '' }}
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          experimental: true
+          minimum_release_age: 7d
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.PNPM_CONFIG_STORE_DIR }}
+          key: ${{ runner.os }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
+
+      - name: Install dependencies
+        run: |
+          mise deps --skip pnpm
+          pnpm --filter . ci
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      # Download plan outputs artifact from release-plan
+      - name: Download plan outputs artifact
+        uses: pagopa/dx/.github/actions/download-artifact@main
+        with:
+          bundle_name: tfplan-${{ matrix.target.project }}-outputs
+          file_path: /tmp/plan-outputs
+
+      - name: Read plan outputs
+        id: plan_outputs
+        run: |
+          set -euo pipefail
+          FILE=/tmp/plan-outputs/plan-outputs.json
+          echo "provider=$(jq -r .provider "$FILE")" >> "$GITHUB_OUTPUT"
+          echo "plan_path=$(jq -r .plan_path "$FILE")" >> "$GITHUB_OUTPUT"
+          echo "azure_storage_account=$(jq -r .azure_storage_account "$FILE")" >> "$GITHUB_OUTPUT"
+          echo "azure_container=$(jq -r .azure_container "$FILE")" >> "$GITHUB_OUTPUT"
+          echo "aws_bucket=$(jq -r .aws_bucket "$FILE")" >> "$GITHUB_OUTPUT"
+          echo "aws_region=$(jq -r .aws_region "$FILE")" >> "$GITHUB_OUTPUT"
+
+      # Download the exact plan bundle uploaded by release-plan and apply it,
+      # instead of recomputing a new plan.
+      - name: Download Terraform Plan
+        uses: pagopa/dx/actions/terraform-plan-storage-download@main
+        with:
+          provider: ${{ steps.plan_outputs.outputs.provider }}
+          plan-path: ${{ steps.plan_outputs.outputs.plan_path }}
+          working-directory: ${{ matrix.target.root }}
+          azure-storage-account: ${{ steps.plan_outputs.outputs.azure_storage_account }}
+          azure-container: ${{ steps.plan_outputs.outputs.azure_container }}
+          aws-bucket: ${{ steps.plan_outputs.outputs.aws_bucket }}
+          aws-region: ${{ steps.plan_outputs.outputs.aws_region }}
+
+      - name: Terraform Apply
+        env:
+          PROJECT: ${{ matrix.target.project }}
+        run: |
+          pnpm nx run "${PROJECT}:apply" --configuration=ci -- \
+            -auto-approve \
+            -input=false \
+            -lock-timeout=120s \
+            "$TFPLAN_FILE"
