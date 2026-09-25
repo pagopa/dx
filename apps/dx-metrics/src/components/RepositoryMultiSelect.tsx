@@ -1,11 +1,14 @@
 "use client";
 
 import * as Popover from "@radix-ui/react-popover";
-import { Command } from "cmdk";
+import { Command, useCommandState } from "cmdk";
 import { Check, ChevronDown, X } from "lucide-react";
 import { useId, useRef, useState } from "react";
 
 import { cn, focusRing } from "@/lib/utils";
+
+/** Whether picking a repository replaces or extends the current selection. */
+type RepositorySelectionMode = "single" | "multi";
 
 interface RepositoryMultiSelectProps {
   /** Repositories currently selected, in display order. */
@@ -30,8 +33,79 @@ const itemClassName =
 const actionClassName =
   "rounded px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground";
 
+const modeButtonClassName =
+  "rounded px-1.5 py-0.5 text-xs font-medium transition-colors";
+
 /**
- * Multi-repository picker with inline search.
+ * Literal, case-insensitive substring match instead of cmdk's default fuzzy
+ * scorer. Repository names are short identifiers where a fuzzy match (`pn-`
+ * also lighting up `interop`) is noise, not a feature: only repositories that
+ * actually contain the typed string stay visible.
+ */
+const matchesSearch = (value: string, search: string) =>
+  value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
+
+/**
+ * The action row inside the popover.
+ *
+ * Lives inside `Command` so it can read the live search query through
+ * `useCommandState`: "Select all results" must target only the repositories
+ * that survive the current filter, not the whole option list.
+ */
+function CommandActions({
+  mode,
+  onChange,
+  options,
+  value,
+}: {
+  mode: RepositorySelectionMode;
+  onChange: (repositories: string[]) => void;
+  options: readonly string[];
+  value: readonly string[];
+}) {
+  const search = useCommandState((state) => state.search);
+
+  const selectAllResults = () => {
+    // Mirror cmdk's own filtering exactly, so "results" means precisely what
+    // the user can see. An empty query keeps cmdk's unfiltered list, i.e. all
+    // repositories.
+    const visible = search
+      ? options.filter((option) => matchesSearch(option, search) > 0)
+      : options;
+
+    const selected = new Set(value);
+    visible.forEach((repository) => selected.add(repository));
+
+    // Re-derive from `options` so the selection keeps the display order.
+    onChange(options.filter((option) => selected.has(option)));
+  };
+
+  return (
+    <div className="flex items-center justify-between border-b border-border px-1.5 py-1">
+      {mode === "multi" ? (
+        <button
+          className={actionClassName}
+          onClick={selectAllResults}
+          type="button"
+        >
+          Select all results
+        </button>
+      ) : (
+        <span />
+      )}
+      <button
+        className={actionClassName}
+        onClick={() => onChange([])}
+        type="button"
+      >
+        Clear
+      </button>
+    </div>
+  );
+}
+
+/**
+ * Multi-repository picker with inline search and a single/multi selection mode.
  *
  * Built on cmdk (filtering, keyboard navigation) inside a Radix popover, so a
  * long repository list stays navigable by keyboard and by typing. The selection
@@ -44,10 +118,27 @@ export function RepositoryMultiSelect({
   value,
 }: RepositoryMultiSelectProps) {
   const [open, setOpen] = useState(false);
+  const [mode, setMode] = useState<RepositorySelectionMode>("multi");
   const labelId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const changeMode = (next: RepositorySelectionMode) => {
+    setMode(next);
+
+    // A single-select picker cannot express more than one repository: keep the
+    // first selected one rather than silently carrying an invalid state.
+    if (next === "single" && value.length > 1) {
+      onChange(value.slice(0, 1));
+    }
+  };
+
   const toggle = (repository: string) => {
+    if (mode === "single") {
+      onChange(value.includes(repository) ? [] : [repository]);
+      setOpen(false);
+      return;
+    }
+
     const selected = new Set(value);
 
     if (selected.has(repository)) {
@@ -65,6 +156,13 @@ export function RepositoryMultiSelect({
     onChange(value.filter((selected) => selected !== repository));
   };
 
+  const triggerText =
+    value.length === 0
+      ? "No repository selected"
+      : mode === "single"
+        ? value[0]
+        : `${value.length} selected`;
+
   return (
     <div className="block space-y-1.5">
       <span
@@ -76,15 +174,11 @@ export function RepositoryMultiSelect({
       <Popover.Root onOpenChange={setOpen} open={open}>
         <Popover.Trigger asChild>
           <button
-            aria-label={`Repositories: ${value.length === 0 ? "no repository selected" : `${value.length} selected`}`}
+            aria-label={`Repositories: ${value.length === 0 ? "no repository selected" : triggerText}`}
             className={cn(triggerClassName, focusRing)}
             type="button"
           >
-            <span className="truncate">
-              {value.length === 0
-                ? "No repository selected"
-                : `${value.length} selected`}
-            </span>
+            <span className="truncate">{triggerText}</span>
             <ChevronDown
               aria-hidden="true"
               className={cn(
@@ -97,7 +191,7 @@ export function RepositoryMultiSelect({
         <Popover.Portal>
           <Popover.Content
             align="start"
-            className="z-50 w-72 rounded-lg border border-border bg-card shadow-lg outline-none"
+            className="z-50 w-80 rounded-lg border border-border bg-card shadow-lg outline-none"
             // Let the search input own the initial focus instead of the content
             // wrapper, so a keyboard user can start typing immediately.
             onOpenAutoFocus={(event) => {
@@ -106,28 +200,52 @@ export function RepositoryMultiSelect({
             }}
             sideOffset={4}
           >
-            <Command label="Repositories">
-              <Command.Input
-                className="w-full rounded-t-lg border-b border-border bg-transparent px-3 py-2 text-sm text-foreground outline-none placeholder:text-subtle-foreground"
-                placeholder="Search repositories…"
-                ref={inputRef}
-              />
-              <div className="flex items-center justify-between border-b border-border px-1.5 py-1">
-                <button
-                  className={actionClassName}
-                  onClick={() => onChange([...options])}
-                  type="button"
+            <Command filter={matchesSearch} label="Repositories">
+              <div className="flex items-center gap-2 border-b border-border px-3 py-2">
+                <Command.Input
+                  className="min-w-0 flex-1 bg-transparent text-sm text-foreground outline-none placeholder:text-subtle-foreground"
+                  placeholder="Search repositories…"
+                  ref={inputRef}
+                />
+                <div
+                  aria-label="Selection mode"
+                  className="flex shrink-0 rounded-md border border-border p-0.5"
+                  role="group"
                 >
-                  Select all
-                </button>
-                <button
-                  className={actionClassName}
-                  onClick={() => onChange([])}
-                  type="button"
-                >
-                  Clear
-                </button>
+                  <button
+                    aria-pressed={mode === "single"}
+                    className={cn(
+                      modeButtonClassName,
+                      mode === "single"
+                        ? "bg-accent text-white"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                    onClick={() => changeMode("single")}
+                    type="button"
+                  >
+                    Single
+                  </button>
+                  <button
+                    aria-pressed={mode === "multi"}
+                    className={cn(
+                      modeButtonClassName,
+                      mode === "multi"
+                        ? "bg-accent text-white"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                    onClick={() => changeMode("multi")}
+                    type="button"
+                  >
+                    Multi
+                  </button>
+                </div>
               </div>
+              <CommandActions
+                mode={mode}
+                onChange={onChange}
+                options={options}
+                value={value}
+              />
               <Command.List className="custom-scrollbar max-h-64 overflow-y-auto p-1">
                 <Command.Empty className="px-2 py-6 text-center text-sm text-muted-foreground">
                   No repository found.
@@ -145,13 +263,19 @@ export function RepositoryMultiSelect({
                       <span
                         aria-hidden="true"
                         className={cn(
-                          "inline-flex size-4 shrink-0 items-center justify-center rounded border",
+                          "inline-flex size-4 shrink-0 items-center justify-center border",
+                          mode === "single" ? "rounded-full" : "rounded",
                           selected
                             ? "border-accent bg-accent text-white"
                             : "border-border",
                         )}
                       >
-                        {selected && <Check className="size-3" />}
+                        {selected &&
+                          (mode === "single" ? (
+                            <span className="size-2 rounded-full bg-white" />
+                          ) : (
+                            <Check className="size-3" />
+                          ))}
                       </span>
                       <span className="truncate">{repository}</span>
                       <span className="sr-only">
