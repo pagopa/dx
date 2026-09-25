@@ -18,6 +18,7 @@ overrides:
 
 allowBuilds:
   "@swc/core": true
+  "@tree-sitter-grammars/tree-sitter-hcl": false
   core-js: false
   cpu-features: true
   esbuild: false
