@@ -148,8 +148,9 @@ jobs:
           echo "affected-projects=true" >> "$GITHUB_OUTPUT"
 
           # GitHub environments named `infra-<env>-ci` or
-          # `bootstrapper-<env>-cd` define which credentials and runner labels
-          # are used for Terraform plans.
+          # `bootstrapper-<env>-ci` define which credentials and runner labels
+          # are used for Terraform plans. `<env>` may contain dashes
+          # (e.g. `ced-prod`), so only the fixed prefix and suffix are stripped.
           candidate_environments="$(
             gh api \
               --paginate \
@@ -158,10 +159,10 @@ jobs:
               jq --compact-output '
               [
                 .[].environments[]
-                | select(.name | test("^(infra-.+-ci|bootstrapper-.+-ci)$"))
+                | select(.name | test("^(infra|bootstrapper)-.+-ci$"))
                 | {
                     "github-environment": .name,
-                    "env-name": (.name | split("-")[1])
+                    "env-name": (.name | capture("^(infra|bootstrapper)-(?<env>.+)-ci$").env)
                   }
               ]
             '
@@ -170,19 +171,31 @@ jobs:
           affected_environments=()
           while IFS= read -r environment; do
             env_name="$(jq --raw-output '."env-name"' <<< "$environment")"
+            github_environment="$(jq --raw-output '."github-environment"' <<< "$environment")"
 
-            # Keep Terraform apps and exclude those not tagged for this environment.
+            # Bootstrapper environments plan only their bootstrapper project
+            # (plus `repository` in prod); infra environments plan the other
+            # Terraform apps tagged for the environment. The same exclusion is
+            # used here and by the plan job, so no job is started for nothing.
+            case "$github_environment" in
+              bootstrapper-prod-ci) exclude="*,!bootstrapper-${env_name},!repository" ;;
+              bootstrapper-*) exclude="*,!bootstrapper-${env_name}" ;;
+              *) exclude="!tag:env:${env_name},bootstrapper-*,repository" ;;
+            esac
+
             affected_projects="$(
               pnpm nx show projects \
                 --affected \
                 --type=app \
                 --projects=tag:terraform \
-                --exclude="!tag:env:$env_name" \
+                --exclude="$exclude" \
                 --json
             )"
 
             if jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
-              affected_environments+=("$environment")
+              affected_environments+=("$(
+                jq --compact-output --arg exclude "$exclude" '. + {exclude: $exclude}' <<< "$environment"
+              )")
             fi
           done < <(jq --compact-output '.[]' <<< "$candidate_environments")
 
@@ -266,6 +279,12 @@ jobs:
     environment:
       name: ${{ matrix.target.github-environment }}
       deployment: false
+    # Serialize plans on the same environment so concurrent runs don't
+    # compete for the same Terraform state lock, without cancelling the
+    # in-flight plan.
+    concurrency:
+      group: ${{ github.workflow }}-${{ matrix.target.github-environment }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
@@ -303,9 +322,6 @@ jobs:
           # Enable experimental features to use "mise deps"
           experimental: true
           minimum_release_age: 7d
-
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
 
       # Mise deps for pnpm only performs a global "pnpm install".
       # Here we want to install only the root workspace dependencies,
@@ -364,19 +380,16 @@ jobs:
             echo "$(date)" > "$MARKER_FILE"
           fi
 
+      # Log in only after tools and dependencies are installed, so their
+      # lifecycle scripts never run with cloud credentials.
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
       - name: Run Terraform plan on affected environment projects
         env:
-          ENV_NAME: ${{ matrix.target.env-name }}
-          GITHUB_ENVIRONMENT: ${{ matrix.target.github-environment }}
+          EXCLUDE: ${{ matrix.target.exclude }}
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
         run: |
-          if [[ "$GITHUB_ENVIRONMENT" == "bootstrapper-prod-cd" ]]; then
-            EXCLUDE="*,!bootstrapper-${ENV_NAME},!repository"
-          elif [[ "$GITHUB_ENVIRONMENT" == bootstrapper-* ]]; then
-            EXCLUDE="*,!bootstrapper-${ENV_NAME}"
-          else
-            EXCLUDE="!tag:env:${ENV_NAME},bootstrapper-*,repository"
-          fi
           pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" && \
             pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
 
