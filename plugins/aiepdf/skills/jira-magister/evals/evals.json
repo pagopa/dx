@@ -24,6 +24,7 @@
         "Uses the canonical As/ I want/ so that Story structure.",
         "Keeps Stories and Tasks scoped to one two-week sprint or flags work that must be split.",
         "Represents repository setup and API contract wiring as Tasks rather than actor-facing Stories.",
+        "Routes concrete Tasks to the repository from the DR/SRS references.repository link.",
         "Links each item to its Epic and one or more source UC-XX or AC-XX IDs."
       ],
       "files": []
@@ -63,6 +64,47 @@
         "Requests the Jira project key or unambiguous target board.",
         "Does not guess a project, issue type mapping, or required custom field.",
         "Does not create or update Jira items before the missing context is supplied."
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "project-open-questions-and-errors",
+      "prompt": "Project a ready DR/SRS and Use Case into Jira. The DR/SRS records open.item-007 with Blocking: yes (which CAdES verification library to use) and open.item-003 with Blocking: no. The repository is linked as references.repository = github.com/pagopa/ced-portal. UC-01 defines AGREEMENT_EXTENSION_INVALID and AGREEMENT_SIGNATURE_INVALID; UC-02 reuses AGREEMENT_SIGNATURE_INVALID for the same condition. Draft the backlog.",
+      "expected_output": "A backlog draft where open.item-007 becomes a spike Task that blocks the dependent Story or Task, open.item-003 is recorded as a non-blocking gap, the error-handling Task for AGREEMENT_SIGNATURE_INVALID is created once and linked to both Use Cases, and concrete Tasks target the linked repository.",
+      "expectations": [
+        "Turns open.item-007 (Blocking: yes) into an independent spike Task and makes the dependent item blocked by it.",
+        "Records open.item-003 (Blocking: no) as a gap with an owner and no blocking edge.",
+        "Creates one error-handling Task for AGREEMENT_SIGNATURE_INVALID, shared by UC-01 and UC-02, instead of duplicating it.",
+        "Routes concrete Tasks to github.com/pagopa/ced-portal from references.repository.",
+        "Adds no Task and no link for a non-blocking question, and does not invent the answer to a spike."
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "create-one-prepared-story",
+      "prompt": "Create a single Jira Story in project PAY for the actor \"Cittadino pagatore\": as that actor, they want to download the payment receipt, so that they can keep proof of payment. The acceptance check is that the receipt downloads as a PDF. Do not propose Epics or a full backlog. Ask for confirmation before creating anything.",
+      "expected_output": "A single-item mode flow that normalizes one Story to the canonical contract, asks for any missing field, requests confirmation, and never proposes Epic slicing or a whole backlog.",
+      "expectations": [
+        "Uses single-item mode and does not propose Epic slices or a full backlog.",
+        "Writes the canonical As a [Actor], I want to [action], so that [Gain] summary with the exact actor name.",
+        "Keeps the Story scoped to one two-week sprint.",
+        "Asks for missing fields such as the parent Epic, labels, or source IDs instead of inventing them.",
+        "Requests explicit confirmation before creating the item."
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "update-single-item-by-key",
+      "prompt": "Update the existing Jira Story PAY-42 to add the acceptance check that the receipt is also available from the payment history page. Preserve its actor, summary, parent, and existing acceptance checks. Show the proposed diff and wait for explicit confirmation before updating.",
+      "expected_output": "A single-item update that matches the issue by the supplied key, changes only the requested acceptance check, shows a field-level diff, and requires confirmation before mutation.",
+      "expectations": [
+        "Matches the existing item using the supplied Jira key rather than creating a duplicate.",
+        "Adds only the new acceptance check and preserves the actor, summary, parent, and existing acceptance IDs.",
+        "Shows a field-level proposed diff and waits for explicit confirmation before updating.",
+        "Re-fetches and verifies the updated item after mutation."
       ],
       "files": []
     }
