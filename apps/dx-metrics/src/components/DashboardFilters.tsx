@@ -39,10 +39,10 @@ export function DashboardFilters({
   return (
     <div className="mb-8 flex flex-col items-start gap-4 min-[1268px]:flex-row min-[1268px]:items-stretch">
       {showTimeInterval && (
-        // On wide viewports the row stretches both columns to the tallest one,
-        // so the time interval stays top-aligned and does not drift when the
-        // repository chips make its neighbour grow.
-        <div className="flex flex-col min-[1268px]:self-stretch">
+        // A fixed width plus `shrink-0` keeps the time interval from narrowing
+        // or drifting as the repository chips grow its neighbour; on narrow
+        // viewports the columns stack and the width is harmless.
+        <div className="flex w-44 shrink-0 flex-col min-[1268px]:self-stretch">
           <label className="block space-y-1.5">
             <span className={labelClassName}>Time Interval</span>
             <select
@@ -60,11 +60,15 @@ export function DashboardFilters({
         </div>
       )}
       {showRepository && (
-        <RepositoryMultiSelect
-          onChange={(next) => onRepositoriesChange?.(next)}
-          options={REPOSITORIES}
-          value={repositories}
-        />
+        // `min-w-0` lets this column absorb the leftover space and wrap its
+        // chips instead of pushing into the time interval on wide viewports.
+        <div className="w-full min-w-0">
+          <RepositoryMultiSelect
+            onChange={(next) => onRepositoriesChange?.(next)}
+            options={REPOSITORIES}
+            value={repositories}
+          />
+        </div>
       )}
     </div>
   );

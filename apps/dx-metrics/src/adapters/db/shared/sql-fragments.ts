@@ -4,6 +4,7 @@ import { sql, type SQL } from "drizzle-orm";
 
 import {
   BOT_AUTHORS,
+  COPILOT_REVIEWER_LOGIN,
   DX_REPO,
   EXCLUDED_WORKFLOW_NAMES,
   ORGANIZATION,
@@ -40,6 +41,24 @@ export const botAuthorsExclusion = (column: string): SQL =>
  */
 export const isHumanReview = (reviewAlias: string, authorAlias: string): SQL =>
   sql`${botAuthorsExclusion(`${reviewAlias}.reviewer`)} AND ${sql.raw(reviewAlias)}.reviewer <> ${sql.raw(authorAlias)}.author`;
+
+/**
+ * Predicate matching a Copilot code review. Copilot reviews are bots (the login
+ * ends with `[bot]`), so {@link isHumanReview} deliberately leaves them out of
+ * the human-review metrics; the Copilot dashboard matches them explicitly to
+ * measure the feature on its own.
+ */
+export const isCopilotReview = (reviewAlias: string): SQL =>
+  sql`${sql.raw(reviewAlias)}.reviewer = ${COPILOT_REVIEWER_LOGIN}`;
+
+/**
+ * Matches the `Co-authored-by: Copilot…` trailer GitHub adds to commits the
+ * Copilot coding agent contributed to, whatever the exact identity (`Copilot`,
+ * `Copilot App`, `Copilot Autofix powered by AI`). Anchored to the trailer
+ * prefix so prose that merely mentions Copilot is not counted.
+ */
+export const copilotCoauthorTrailerMatch = (column: string): SQL =>
+  sql`${sql.raw(column)} ~ 'Co-authored-by: Copilot[^\\n\\r]*'`;
 
 /**
  * The single population every pull-request metric is computed on: pull requests

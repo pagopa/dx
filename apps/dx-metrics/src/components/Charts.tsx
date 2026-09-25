@@ -6,6 +6,7 @@ import {
   BarChart,
   CartesianGrid,
   Cell,
+  ComposedChart,
   Legend,
   Line,
   LineChart,
@@ -197,6 +198,22 @@ interface SimpleLineChartProps {
   zeroBaseline?: boolean;
 }
 
+// --- Bar + Line Chart ---
+interface SimpleBarLineChartProps {
+  /** Bars, read on the left axis. */
+  bar: { color?: string; key: string; name: string; unit?: string };
+  /** Short note under the title, e.g. the time bucket a series uses. */
+  caption?: string;
+  className?: string;
+  data: Record<string, unknown>[];
+  /** Line, read on the right axis. */
+  line: { color?: string; key: string; name: string; unit?: string };
+  title: string;
+  tooltip?: string;
+  xKey: string;
+  xValueFormatter?: (value: unknown) => string;
+}
+
 // --- Pie Chart ---
 interface SimplePieChartProps {
   /** Short note under the title, e.g. the time bucket a series uses. */
@@ -263,7 +280,7 @@ function ChartDataTable({
 }: {
   chartTitle: string;
   data: Record<string, unknown>[];
-  series: readonly { key: string; name: string }[];
+  series: readonly { key: string; name: string; unit?: string }[];
   unit?: string;
   valueFormatter?: (value: number) => string;
   xKey: string;
@@ -287,9 +304,9 @@ function ChartDataTable({
                 scope="col"
               >
                 {entry.name}
-                {unit && (
+                {(entry.unit ?? unit) && (
                   <span className="ml-1 font-normal text-subtle-foreground">
-                    ({unit})
+                    ({entry.unit ?? unit})
                   </span>
                 )}
               </th>
@@ -306,7 +323,11 @@ function ChartDataTable({
               </td>
               {series.map((entry) => (
                 <td className="px-3 py-1.5 text-foreground" key={entry.key}>
-                  {formatSeriesValue(row[entry.key], valueFormatter, unit)}
+                  {formatSeriesValue(
+                    row[entry.key],
+                    valueFormatter,
+                    entry.unit ?? unit,
+                  )}
                 </td>
               ))}
             </tr>
@@ -329,7 +350,7 @@ function ChartDataToggle({
 }: {
   chartTitle: string;
   data: Record<string, unknown>[];
-  series: readonly { key: string; name: string }[];
+  series: readonly { key: string; name: string; unit?: string }[];
   unit?: string;
   valueFormatter?: (value: number) => string;
   xKey: string;
@@ -804,6 +825,132 @@ export function SimpleLineChart({
           />
         ))}
       </LineChart>
+    </ChartWrapper>
+  );
+}
+
+/**
+ * Bars on the left axis plus a line on the right axis, for two series that share
+ * a timeline but not a unit (e.g. a count and a duration). Kept as one chart so
+ * a correlation is visible at a glance; the two axes are labelled by unit so the
+ * dual scale is explicit and not read as a single magnitude.
+ */
+export function SimpleBarLineChart({
+  bar,
+  caption,
+  className,
+  data,
+  line,
+  title,
+  tooltip,
+  xKey,
+  xValueFormatter,
+}: SimpleBarLineChartProps) {
+  const defaultTickFormatter = useDefaultTickFormatter();
+  const colors = useSeriesColors();
+  const chrome = useChartChrome();
+
+  return (
+    <ChartWrapper
+      caption={caption}
+      className={className}
+      footer={
+        <ChartDataToggle
+          chartTitle={title}
+          data={data}
+          series={[
+            { key: bar.key, name: bar.name, unit: bar.unit },
+            { key: line.key, name: line.name, unit: line.unit },
+          ]}
+          xKey={xKey}
+          xValueFormatter={xValueFormatter}
+        />
+      }
+      isEmpty={data.length === 0}
+      title={title}
+      tooltip={tooltip}
+    >
+      <ComposedChart
+        data={data}
+        height={288}
+        margin={{ bottom: 5, left: 10, right: 10, top: 20 }}
+        responsive
+        width="100%"
+      >
+        <CartesianGrid
+          stroke={chrome.grid}
+          strokeDasharray="3 3"
+          vertical={false}
+        />
+        <XAxis
+          angle={data.length > 6 ? -35 : 0}
+          dataKey={xKey}
+          height={data.length > 6 ? 70 : 30}
+          interval={Math.max(0, Math.floor(data.length / 8) - 1)}
+          stroke={chrome.axis}
+          tick={{
+            fill: chrome.tick,
+            fontSize: 11,
+            textAnchor: data.length > 6 ? "end" : "middle",
+          }}
+          tickFormatter={xValueFormatter ?? defaultTickFormatter}
+          tickMargin={data.length > 6 ? 15 : 0}
+        />
+        <YAxis
+          orientation="left"
+          stroke={chrome.axis}
+          tick={{ fill: chrome.tick, fontSize: 11 }}
+          tickFormatter={numericTickFormatter(bar.unit)}
+          yAxisId="bar"
+        />
+        <YAxis
+          orientation="right"
+          stroke={chrome.axis}
+          tick={{ fill: chrome.tick, fontSize: 11 }}
+          tickFormatter={numericTickFormatter(line.unit)}
+          yAxisId="line"
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: chrome.tooltipBackground,
+            border: `1px solid ${chrome.tooltipBorder}`,
+            borderRadius: "8px",
+            color: chrome.tooltipText,
+          }}
+          formatter={(value, name) =>
+            formatTooltipValue(
+              value,
+              undefined,
+              name === line.name ? line.unit : bar.unit,
+            )
+          }
+          itemStyle={{ color: chrome.tooltipText }}
+        />
+        <Legend
+          wrapperStyle={{
+            color: chrome.legend,
+            fontSize: "12px",
+            paddingTop: "10px",
+          }}
+        />
+        <Bar
+          dataKey={bar.key}
+          fill={bar.color ?? colors.blue}
+          name={bar.name}
+          yAxisId="bar"
+        />
+        <Line
+          connectNulls
+          dataKey={line.key}
+          dot={false}
+          isAnimationActive={false}
+          name={line.name}
+          stroke={line.color ?? colors.amber}
+          strokeWidth={2}
+          type="linear"
+          yAxisId="line"
+        />
+      </ComposedChart>
     </ChartWrapper>
   );
 }

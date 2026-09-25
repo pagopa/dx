@@ -43,18 +43,24 @@ export const csvCell = (value: unknown): string => {
 /**
  * Serializes a chart's series into a spreadsheet-friendly CSV document. Series
  * headers and values carry the same unit as the chart and data table so the
- * export is not ambiguous.
+ * export is not ambiguous. A series-level `unit` overrides the shared one, which
+ * lets a chart mix series measured in different units (e.g. counts and days).
  */
 export const buildChartCsv = (
   data: readonly Record<string, unknown>[],
-  series: readonly { key: string; name: string }[],
+  series: readonly { key: string; name: string; unit?: string }[],
   xKey: string,
   formatter?: (value: number) => string,
   unit?: string,
 ): string => {
+  const seriesUnit = (entry: { unit?: string }): string | undefined =>
+    entry.unit ?? unit;
   const header = [
     xKey,
-    ...series.map((entry) => (unit ? `${entry.name} (${unit})` : entry.name)),
+    ...series.map((entry) => {
+      const resolved = seriesUnit(entry);
+      return resolved ? `${entry.name} (${resolved})` : entry.name;
+    }),
   ]
     .map(csvCell)
     .join(",");
@@ -62,7 +68,7 @@ export const buildChartCsv = (
     [
       row[xKey],
       ...series.map((entry) =>
-        formatSeriesValue(row[entry.key], formatter, unit),
+        formatSeriesValue(row[entry.key], formatter, seriesUnit(entry)),
       ),
     ]
       .map(csvCell)
