@@ -148,8 +148,9 @@ jobs:
           echo "affected-projects=true" >> "$GITHUB_OUTPUT"
 
           # GitHub environments named `infra-<env>-ci` or
-          # `bootstrapper-<env>-cd` define which credentials and runner labels
-          # are used for Terraform plans.
+          # `bootstrapper-<env>-ci` define which credentials and runner labels
+          # are used for Terraform plans. `<env>` may contain dashes
+          # (e.g. `ced-prod`), so only the fixed prefix and suffix are stripped.
           candidate_environments="$(
             gh api \
               --paginate \
@@ -158,10 +159,10 @@ jobs:
               jq --compact-output '
               [
                 .[].environments[]
-                | select(.name | test("^(infra-.+-ci|bootstrapper-.+-ci)$"))
+                | select(.name | test("^(infra|bootstrapper)-.+-ci$"))
                 | {
                     "github-environment": .name,
-                    "env-name": (.name | split("-")[1])
+                    "env-name": (.name | capture("^(infra|bootstrapper)-(?<env>.+)-ci$").env)
                   }
               ]
             '
@@ -266,6 +267,12 @@ jobs:
     environment:
       name: ${{ matrix.target.github-environment }}
       deployment: false
+    # Serialize plans on the same environment so concurrent runs don't
+    # compete for the same Terraform state lock, without cancelling the
+    # in-flight plan.
+    concurrency:
+      group: ${{ github.workflow }}-${{ matrix.target.github-environment }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
@@ -303,9 +310,6 @@ jobs:
           # Enable experimental features to use "mise deps"
           experimental: true
           minimum_release_age: 7d
-
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
 
       # Mise deps for pnpm only performs a global "pnpm install".
       # Here we want to install only the root workspace dependencies,
@@ -363,6 +367,11 @@ jobs:
             mkdir -p "$(dirname "$MARKER_FILE")"
             echo "$(date)" > "$MARKER_FILE"
           fi
+
+      # Log in only after tools and dependencies are installed, so their
+      # lifecycle scripts never run with cloud credentials.
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
 
       - name: Run Terraform plan on affected environment projects
         env:
