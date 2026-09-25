@@ -1,7 +1,18 @@
 terraform {
   required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 2.0"
+    }
+
     dx = {
-      source = "pagopa-dx/azure"
+      source  = "pagopa-dx/azure"
+      version = "~> 0.12"
     }
 
     github = {
@@ -14,12 +25,4 @@ terraform {
       version = "~> 6.12"
     }
   }
-}
-
-provider "github" {
-  owner = var.repository.owner
-}
-
-provider "hashicorpgithub" {
-  owner = var.repository.owner
 }
