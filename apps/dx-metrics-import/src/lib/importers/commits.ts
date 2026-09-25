@@ -4,7 +4,7 @@ import * as schema from "@pagopa/dx-metrics-core/schema";
 
 import type { ImportContext } from "../import-context";
 
-import { formatSecondsElapsed, sleep } from "../importer-helpers";
+import { errorStatus, formatSecondsElapsed, sleep } from "../importer-helpers";
 
 const getCommitterLogin = (value: unknown): null | string => {
   if (typeof value !== "object" || value === null || !("login" in value)) {
@@ -13,6 +13,12 @@ const getCommitterLogin = (value: unknown): null | string => {
 
   return typeof value.login === "string" ? value.login : null;
 };
+
+type AssociatedPullRequest = Awaited<
+  ReturnType<
+    ImportContext["octokit"]["rest"]["repos"]["listPullRequestsAssociatedWithCommit"]
+  >
+>["data"][number];
 
 interface PullRequestEntry {
   author: string;
@@ -52,6 +58,7 @@ export async function importCommitsForMember(
       `\r      Fetched ${fetchedCount} commits for ${member}\n`,
     );
 
+    let failedRepos = 0;
     let importedCount = 0;
     for (const result of results) {
       const repositoryFullName = result.repository?.full_name;
@@ -67,7 +74,12 @@ export async function importCommitsForMember(
       let repoId: number;
       try {
         repoId = await context.ensureRepo(repoName);
-      } catch {
+      } catch (error) {
+        // A repository that no longer exists (404) cannot be imported; any
+        // other failure means the commit was skipped and must be retried.
+        if (errorStatus(error) !== 404) {
+          failedRepos += 1;
+        }
         continue;
       }
 
@@ -92,6 +104,12 @@ export async function importCommitsForMember(
     console.log(
       `    ✓ ${member}: ${importedCount} commits imported in ${formatSecondsElapsed(startTime)}s`,
     );
+
+    if (failedRepos > 0) {
+      throw new Error(
+        `${member}: ${failedRepos} repositories could not be resolved; the window will be retried`,
+      );
+    }
   } catch (error) {
     console.log(`    ⚠ ${member}: search failed - ${error}`);
     throw error;
@@ -138,9 +156,14 @@ export async function importIacPrLeadTime(
       },
     );
     process.stdout.write(`\r    Fetched ${fetchedCommits} commits\n`);
-  } catch {
-    console.log(`    ⚠ No commits found for path ${filePath}`);
-    return;
+  } catch (error) {
+    // A repository without commits on the path is an empty, fully imported
+    // window; anything else is a failure the cursor must not move past.
+    if (errorStatus(error) === 404) {
+      console.log(`    ⚠ No commits found for path ${filePath}`);
+      return;
+    }
+    throw error;
   }
 
   const pullRequestMap = new Map<number, PullRequestEntry>();
@@ -196,6 +219,47 @@ export async function importIacPrLeadTime(
   );
 }
 
+/**
+ * Records the reviewers and the merged lead time carried by the pull requests
+ * associated with one commit.
+ */
+const applyAssociatedPullRequests = (
+  pullRequests: readonly AssociatedPullRequest[],
+  commitAuthor: string | undefined,
+  isTargetAuthor: boolean,
+  pullRequestMap: Map<number, PullRequestEntry>,
+  pullRequestReviewers: Map<number, Set<string>>,
+): void => {
+  for (const pullRequest of pullRequests) {
+    if (
+      isTargetAuthor &&
+      commitAuthor &&
+      commitAuthor !== pullRequest.user?.login?.toLowerCase()
+    ) {
+      const reviewers = pullRequestReviewers.get(pullRequest.number);
+      if (reviewers) {
+        reviewers.add(commitAuthor);
+      } else {
+        pullRequestReviewers.set(pullRequest.number, new Set([commitAuthor]));
+      }
+    }
+
+    if (pullRequest.merged_at && !pullRequestMap.has(pullRequest.number)) {
+      const createdAt = new Date(pullRequest.created_at);
+      const mergedAt = new Date(pullRequest.merged_at);
+      pullRequestMap.set(pullRequest.number, {
+        author: pullRequest.user?.login || "unknown",
+        createdAt: pullRequest.created_at,
+        leadTimeDays:
+          (mergedAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24),
+        mergedAt: pullRequest.merged_at,
+        number: pullRequest.number,
+        title: pullRequest.title,
+      });
+    }
+  }
+};
+
 async function analyzeCommitsForIacPrs(
   allCommits: Awaited<
     ReturnType<ImportContext["octokit"]["rest"]["repos"]["listCommits"]>
@@ -206,6 +270,7 @@ async function analyzeCommitsForIacPrs(
   context: ImportContext,
   repoName: string,
 ): Promise<void> {
+  let failedLookups = 0;
   let processedCommits = 0;
   for (const commit of allCommits) {
     const commitAuthor = commit.author?.login?.toLowerCase();
@@ -220,38 +285,22 @@ async function analyzeCommitsForIacPrs(
           owner: context.organization,
           repo: repoName,
         });
-    } catch {
+    } catch (error) {
+      // A commit that no longer exists (404) cannot map to a pull request; any
+      // other failure hides a lead time and must be retried.
+      if (errorStatus(error) !== 404) {
+        failedLookups += 1;
+      }
       continue;
     }
 
-    for (const pullRequest of pullRequests.data) {
-      if (
-        isTargetAuthor &&
-        commitAuthor &&
-        commitAuthor !== pullRequest.user?.login?.toLowerCase()
-      ) {
-        const reviewers = pullRequestReviewers.get(pullRequest.number);
-        if (reviewers) {
-          reviewers.add(commitAuthor);
-        } else {
-          pullRequestReviewers.set(pullRequest.number, new Set([commitAuthor]));
-        }
-      }
-
-      if (pullRequest.merged_at && !pullRequestMap.has(pullRequest.number)) {
-        const createdAt = new Date(pullRequest.created_at);
-        const mergedAt = new Date(pullRequest.merged_at);
-        pullRequestMap.set(pullRequest.number, {
-          author: pullRequest.user?.login || "unknown",
-          createdAt: pullRequest.created_at,
-          leadTimeDays:
-            (mergedAt.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24),
-          mergedAt: pullRequest.merged_at,
-          number: pullRequest.number,
-          title: pullRequest.title,
-        });
-      }
-    }
+    applyAssociatedPullRequests(
+      pullRequests.data,
+      commitAuthor,
+      isTargetAuthor,
+      pullRequestMap,
+      pullRequestReviewers,
+    );
 
     processedCommits += 1;
     if (processedCommits % 10 === 0) {
@@ -266,6 +315,12 @@ async function analyzeCommitsForIacPrs(
   if (processedCommits > 0) {
     process.stdout.write(
       `\r    Analyzed: ${processedCommits}/${allCommits.length} commits, found ${pullRequestMap.size} PRs\n`,
+    );
+  }
+
+  if (failedLookups > 0) {
+    throw new Error(
+      `${failedLookups} commit-to-pull-request lookups failed; the window will be retried`,
     );
   }
 }

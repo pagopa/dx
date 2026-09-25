@@ -1,3 +1,17 @@
+## 0.1.15 (2026-09-24)
+
+### 🚀 Features
+
+- Make the importer incremental by default: persist a per-entity, per-repository cursor in sync_runs.cursor_at and resume from it, so newly added repositories are backfilled without re-downloading data already present. The cursor only advances after a complete window (recoverable failures are retried); in-progress workflow runs are reconciled by id and iac-pr stays on the floor window to keep reviewer sets complete. Add --repo to scope a run to one repository, skipping organization-wide entities. Requires applying the new sync_runs.cursor_at column with drizzle-kit push. ([#2269](https://github.com/pagopa/dx/pull/2269))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.11
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.1.14 (2026-09-24)
 
 ### 🧱 Updated Dependencies
