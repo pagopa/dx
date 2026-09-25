@@ -191,6 +191,30 @@ const expectBootstrapperFederatedCredentials = (repo: string) => {
   });
 };
 
+const expectImmutableBootstrapperFederatedCredentials = (
+  repo: string,
+  ownerId: number,
+  repoId: number,
+) => {
+  [
+    { identityName: "dx-d-itn-bootstrap-id-01", stage: "cd" },
+    { identityName: "dx-d-itn-bootstrap-ci-id-01", stage: "ci" },
+  ].forEach(({ identityName, stage }) => {
+    const environmentName = `bootstrapper-dev-${stage}`;
+
+    expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledWith(
+      "dx-d-itn-common-rg-01",
+      identityName,
+      `${repo}-${environmentName}-immutable`,
+      {
+        audiences: ["api://AzureADTokenExchange"],
+        issuer: "https://token.actions.githubusercontent.com",
+        subject: `repo:pagopa@${ownerId}/${repo}@${repoId}:environment:${environmentName}`,
+      },
+    );
+  });
+};
+
 const expectBootstrapperEnvironmentSecrets = (
   createOrUpdateEnvironmentSecret: Mock,
   {
@@ -543,6 +567,12 @@ describe("initialize", () => {
           getRepository: vi.fn(),
           updateFile: vi.fn(),
         },
+        {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
+        },
       );
 
       expect(mockCreateIdentity).not.toHaveBeenCalled();
@@ -559,8 +589,57 @@ describe("initialize", () => {
       expectBootstrapperEnvironmentSecrets(createOrUpdateEnvironmentSecret, {
         cdClientId: "cd-client-1",
         ciClientId: "ci-client-1",
-        includesRunnerSecrets: false,
       });
+    });
+
+    test("creates immutable federated credentials when numeric GitHub IDs are provided", async ({
+      cloudAccountService,
+    }) => {
+      mockGetIdentity
+        .mockResolvedValueOnce({ clientId: "cd-client-1" })
+        .mockResolvedValueOnce({ clientId: "ci-client-1" });
+
+      await cloudAccountService.configureGitHubEnvironment(
+        {
+          csp: "azure",
+          defaultLocation: "italynorth",
+          displayName: "Test subscription",
+          id: "sub-1",
+        },
+        {
+          name: "dev",
+          prefix: "dx",
+        },
+        {
+          owner: "pagopa",
+          ownerId: 57742367,
+          repo: "aiepdf-poc",
+          repoId: 1373623344,
+        },
+        {
+          createBranch: vi.fn(),
+          createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
+          createPullRequest: vi.fn(),
+          getFileContent: vi.fn(),
+          getRepository: vi.fn(),
+          updateFile: vi.fn(),
+        },
+        {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
+        },
+      );
+
+      // One name-based credential plus one immutable credential per identity.
+      expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledTimes(4);
+      expectBootstrapperFederatedCredentials("aiepdf-poc");
+      expectImmutableBootstrapperFederatedCredentials(
+        "aiepdf-poc",
+        57742367,
+        1373623344,
+      );
     });
   });
 

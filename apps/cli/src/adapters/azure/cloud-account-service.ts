@@ -141,7 +141,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     { name, prefix }: EnvironmentId,
     github: GitHubRepo,
     gitHubService: GitHubService,
-    runnerAppCredentials?: GitHubAppCredentials,
+    runnerAppCredentials: GitHubAppCredentials,
   ): Promise<void> {
     assert.equal(cloudAccount.csp, "azure", "Cloud account must be Azure");
     assert.ok(
@@ -693,7 +693,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     msiClient: ManagedServiceIdentityClient;
     name: EnvironmentId["name"];
     resourceGroupName: BootstrapperResourceGroupName;
-    runnerAppCredentials?: GitHubAppCredentials;
+    runnerAppCredentials: GitHubAppCredentials;
     tenantId: string;
   }): Promise<void> {
     const logger = getLogger(["gen", "env"]);
@@ -732,6 +732,31 @@ export class AzureCloudAccountService implements CloudAccountService {
         ),
       ),
     );
+
+    if (github.ownerId !== undefined && github.repoId !== undefined) {
+      // GitHub emits immutable subject claims embedding the numeric owner and
+      // repository IDs for repositories created or renamed after 2026-07-15.
+      // Azure matches the subject as an exact string, so an extra credential
+      // with the immutable format is created next to the name-based one, which
+      // keeps working for older repositories.
+      await Promise.all(
+        environmentIdentities.map(({ environmentName, identityName }) =>
+          msiClient.federatedIdentityCredentials.createOrUpdate(
+            resourceGroupName,
+            identityName,
+            `${this.#createFederatedCredentialName({
+              github,
+              githubEnvironmentName: environmentName,
+            })}-immutable`,
+            {
+              audiences: ["api://AzureADTokenExchange"],
+              issuer: "https://token.actions.githubusercontent.com",
+              subject: `repo:${github.owner}@${github.ownerId}/${github.repo}@${github.repoId}:environment:${environmentName}`,
+            },
+          ),
+        ),
+      );
+    }
 
     logger.debug(
       "Configured bootstrapper federated identity credentials in subscription {subscriptionId}",

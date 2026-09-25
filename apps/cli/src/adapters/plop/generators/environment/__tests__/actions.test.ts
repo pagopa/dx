@@ -1,10 +1,18 @@
 import { type ActionConfig } from "node-plop";
-import { describe, expect, test } from "vitest";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 
 import { CloudAccount } from "../../../../../domain/cloud-account.js";
 import getActions from "../actions.js";
 import { Payload } from "../prompts.js";
+
+const loggerMocks = vi.hoisted(() => ({
+  debug: vi.fn(),
+}));
+
+vi.mock("@logtape/logtape", () => ({
+  getLogger: vi.fn(() => loggerMocks),
+}));
 
 const terraformBackendActionSchema = z.object({
   data: z.object({
@@ -56,6 +64,26 @@ export const getPayload = (includeInit = false): Payload => {
 };
 
 describe("actions", () => {
+  beforeEach(() => {
+    loggerMocks.debug.mockClear();
+  });
+
+  test("does not log Runner App private keys", () => {
+    const payload = getPayload(true);
+    payload.runnerAppCredentials = {
+      clientId: "top-level-client-id",
+      id: "top-level-app-id",
+      installationId: "top-level-installation-id",
+      key: "top-level-private-key",
+    };
+
+    getActions("/templates/path")(payload);
+
+    const loggedCalls = JSON.stringify(loggerMocks.debug.mock.calls);
+    expect(loggedCalls).not.toContain("test-private-key");
+    expect(loggedCalls).not.toContain("top-level-private-key");
+  });
+
   test.each([
     {
       payload: getPayload(true),
@@ -74,8 +102,14 @@ describe("actions", () => {
     ];
 
     if (payload.init) {
-      actionsOrder.unshift("initCloudAccounts", "provisionTerraformBackend");
+      actionsOrder.unshift(
+        "setupCloudTools",
+        "initCloudAccounts",
+        "provisionTerraformBackend",
+      );
       actionsOrder.push("addMany", "addMany");
+    } else {
+      actionsOrder.unshift("setupCloudTools");
     }
 
     const actions = getActions("/templates/path")(payload);

@@ -3,14 +3,14 @@ locals {
     BusinessUnit   = "DevEx"
     CostCenter     = "TS000 - Tecnologia e Servizi"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     ManagementTeam = "Developer Experience"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_managed_redis/examples/complete"
   }
 
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "example"
     app_name        = "amr"

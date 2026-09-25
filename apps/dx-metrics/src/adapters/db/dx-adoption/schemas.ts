@@ -8,7 +8,7 @@ import {
 } from "../shared/sql-parsing";
 
 export const fetchDxAdoptionInputSchema = z.object({
-  fullName: z.string().min(1),
+  fullNames: z.array(z.string().min(1)),
 });
 
 export const moduleAdoptionRowSchema = z.object({
@@ -20,6 +20,7 @@ export const moduleRowSchema = z.object({
   filePath: z.string().min(1),
   moduleName: z.string().min(1),
   moduleType: z.string().min(1),
+  repository: z.string().min(1),
 });
 
 export const pipelineAdoptionRowSchema = z.object({
@@ -32,6 +33,7 @@ export const versionDriftRowSchema = z.object({
   filePath: z.string().min(1),
   latestVersion: z.string().min(1).nullable(),
   moduleName: z.string().min(1),
+  repository: z.string().min(1),
   usedVersion: z.string().min(1).nullable(),
 });
 
@@ -51,6 +53,7 @@ export const versionDriftSummarySchema = z.object({
 
 export const workflowRowSchema = z.object({
   pipelineType: z.string().min(1),
+  repository: z.string().min(1),
   workflowName: z.string().min(1),
 });
 

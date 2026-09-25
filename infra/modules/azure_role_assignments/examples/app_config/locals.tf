@@ -1,7 +1,7 @@
 locals {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "roleassignappconfig"
@@ -18,7 +18,7 @@ locals {
 
   tags = {
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     ManagementTeam = "Developer Experience"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/modules/azure_role_assignments/examples/app_config"

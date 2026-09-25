@@ -122,6 +122,6 @@ Questions that are local to this behavior only. Do not repeat a question that
 already lives in the parent DR/SRS: reference its `open.item-XX` instead.
 Cross-Use-Case or initiative questions belong to the parent document.
 
-| ID           | Type                | Item                                                                                                   | Impact / blocker                                                        | Owner   | Resolution / link                                |
-| ------------ | ------------------- | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------- | ------- | ------------------------------------------------ |
-| `uc-open-01` | proposed decision   | Should a repeated valid `signingStep = 1` upload be idempotent (`200`) or rejected (`409`)? Proposed `409`. | Determines `AC-03` and the API contract response for the alternate flow | Product | TBD — proposed `409` in this UC                   |
+| ID           | Type              | Item                                                                                                        | Impact / blocker                                                        | Owner   | Resolution / link               |
+| ------------ | ----------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ------- | ------------------------------- |
+| `uc-open-01` | proposed decision | Should a repeated valid `signingStep = 1` upload be idempotent (`200`) or rejected (`409`)? Proposed `409`. | Determines `AC-03` and the API contract response for the alternate flow | Product | TBD — proposed `409` in this UC |

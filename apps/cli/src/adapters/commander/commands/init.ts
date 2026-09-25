@@ -150,14 +150,16 @@ const trackTerraformCliIsInstalled = (presenter: CommandPresenter) =>
     ),
   );
 
-const checkCorepack = () => tf$`corepack -v`;
+const checkMise = () => tf$`mise --version`;
 
-const trackCorepackIsInstalled = (presenter: CommandPresenter) =>
+const trackMiseIsInstalled = (presenter: CommandPresenter) =>
   trackStep(
     presenter,
-    "Checking Corepack installation...",
-    checkCorepack,
-    asError("Please install Corepack before running this command."),
+    "Checking mise installation...",
+    checkMise,
+    asError(
+      "Please install mise before running this command. See https://mise.jdx.dev/installing-mise.html",
+    ),
   );
 
 const azureAccountSchema = z.object({
@@ -220,14 +222,14 @@ const trackAzLogin = (presenter: CommandPresenter) =>
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
 export const runInitPreconditions = (presenter: CommandPresenter) =>
   trackTerraformCliIsInstalled(presenter).andThen(() =>
-    trackCorepackIsInstalled(presenter),
+    trackMiseIsInstalled(presenter),
   );
 
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
 export const runAddEnvironmentPreconditions = (presenter: CommandPresenter) =>
   trackTerraformCliIsInstalled(presenter)
-    .andThen(() => trackAzLogin(presenter))
-    .andThen(() => trackCorepackIsInstalled(presenter));
+    .andThen(() => trackMiseIsInstalled(presenter))
+    .andThen(() => trackAzLogin(presenter));
 
 const DEFAULT_GITHUB_PUBLISH_CONFIRMATION = true;
 

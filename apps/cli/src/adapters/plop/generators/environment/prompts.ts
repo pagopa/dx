@@ -30,6 +30,7 @@ import {
 import {
   type GitHubAppCredentials,
   githubAppCredentialsSchema,
+  type GitHubService,
 } from "../../../../domain/github.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
 import { validatePrompt } from "../../helpers/validate-prompt.js";
@@ -66,6 +67,7 @@ export const payloadSchema = z.object({
   env: environmentSchema,
   github: githubRepoSchema,
   init: initSchema.optional(),
+  runnerAppCredentials: githubAppCredentialsSchema.optional(),
   tags: tagsSchema,
   workspace: workspaceSchema,
 });
@@ -140,7 +142,9 @@ export type PromptsDependencies = {
   cloudAccountRepository: CloudAccountRepository;
   cloudAccountService: CloudAccountService;
   github?: GitHubRepo;
+  gitHubService?: GitHubService;
   initialAnswers?: InitialAnswers;
+  nonInteractive?: boolean;
 };
 
 type BasePromptAnswers = z.infer<typeof basePromptAnswersSchema>;
@@ -347,7 +351,7 @@ const getRunnerAppCredentialQuestions = (
 const mergeRunnerAppCredentials = (
   initialRunnerAppCredentials: Partial<GitHubAppCredentials>,
   promptedRunnerAppCredentials: Partial<GitHubAppCredentials> | undefined,
-): InitPayload["runnerAppCredentials"] => {
+): GitHubAppCredentials | undefined => {
   const runnerAppCredentials = {
     clientId:
       initialRunnerAppCredentials.clientId ??
@@ -426,13 +430,37 @@ const buildPayload = ({
     },
   });
 
+const withImmutableRepositoryIds = async (
+  github: GitHubRepo,
+  gitHubService?: GitHubService,
+): Promise<GitHubRepo> => {
+  if (!gitHubService) {
+    return github;
+  }
+
+  const repository = await gitHubService.getRepository(
+    github.owner,
+    github.repo,
+  );
+
+  return githubRepoSchema.parse({
+    ...github,
+    ownerId: repository.ownerId,
+    repoId: repository.id,
+  });
+};
+
 const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
   (deps) => async (promptModule) => {
     const logger = getLogger(["gen", "env"]);
     const github = deps.github ?? (await getGithubRepo());
     assert.ok(github, "This generator only works inside a GitHub repository.");
+    const repository = await withImmutableRepositoryIds(
+      github,
+      deps.gitHubService,
+    );
     const initialAnswers = parseInitialAnswers(deps.initialAnswers);
-    logger.debug("github repo {github}", { github });
+    logger.debug("github repo {github}", { github: repository });
     const availableCloudAccounts = await deps.cloudAccountRepository.list();
     const { answers, initialCloudAccounts } = await collectBaseAnswers(
       promptModule,
@@ -448,7 +476,7 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
 
     const payload = buildPayload({
       answers,
-      github,
+      github: repository,
       initialAnswers,
       selectedCloudAccounts,
     });
@@ -460,7 +488,33 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
 
     logger.debug("initialization status {initStatus}", { initStatus });
 
+    const initialRunnerAppCredentials =
+      initialAnswers.init?.runnerAppCredentials ?? {};
+    const runnerAppCredentialQuestions = getRunnerAppCredentialQuestions(
+      initialRunnerAppCredentials,
+    );
+
+    if (deps.nonInteractive && runnerAppCredentialQuestions.length > 0) {
+      throw new Error(
+        "GitHub Runner App credentials are required in non-interactive mode. Provide --runner-app-id, --client-id, --installation-id, and --private-key-path.",
+      );
+    }
+
     if (initStatus.initialized) {
+      const initInput =
+        runnerAppCredentialQuestions.length === 0
+          ? {}
+          : await promptModule.prompt(runnerAppCredentialQuestions);
+      const runnerAppCredentials = mergeRunnerAppCredentials(
+        initialRunnerAppCredentials,
+        initInput.runnerAppCredentials,
+      );
+
+      assert.ok(
+        runnerAppCredentials,
+        "GitHub Runner App credentials are required to configure the GitHub environment.",
+      );
+      payload.runnerAppCredentials = runnerAppCredentials;
       return payload;
     }
 
@@ -512,13 +566,11 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       (issue) => issue.type === "CLOUD_ACCOUNT_NOT_INITIALIZED",
     );
 
-    const initialRunnerAppCredentials =
-      initialAnswers.init?.runnerAppCredentials ?? {};
-
-    if (cloudAccountsNotInitialized) {
-      questions.push(
-        ...getRunnerAppCredentialQuestions(initialRunnerAppCredentials),
-      );
+    if (
+      cloudAccountsNotInitialized ||
+      runnerAppCredentialQuestions.length > 0
+    ) {
+      questions.push(...runnerAppCredentialQuestions);
     }
 
     const initInput =
@@ -533,6 +585,11 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       initInput.runnerAppCredentials,
     );
 
+    assert.ok(
+      runnerAppCredentials,
+      "GitHub Runner App credentials are required to configure the GitHub environment.",
+    );
+    payload.runnerAppCredentials = runnerAppCredentials;
     payload.init = payloadSchema.shape.init.parse({
       cloudAccountsToInitialize: getCloudAccountToInitialize(initStatus),
       runnerAppCredentials,

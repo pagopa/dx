@@ -1,3 +1,46 @@
+## 6.2.0 (2026-09-24)
+
+### 🚀 Features
+
+- Provision a DX GitHub self-hosted runner Container App Job alongside the legacy runner. ([#2244](https://github.com/pagopa/dx/pull/2244))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 6.1.0 (2026-09-22)
+
+### 🚀 Features
+
+- Federate managed identities and IAM roles with GitHub repositories that emit immutable OIDC subject claims (created or renamed after 2026-07-15). The DX CLI and the Azure and AWS Terraform modules now also trust the immutable subject embedding the numeric GitHub owner and repository IDs, keeping the name-based trust for older repositories.  ([#2219](https://github.com/pagopa/dx/pull/2219))
+
+  See https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 6.0.5 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
+## 6.0.4 (2026-09-15)
+
+### 🩹 Fixes
+
+- Update examples to target UAT environment ([#2192](https://github.com/pagopa/dx/pull/2192))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 6.0.3 (2026-09-08)
 
 ### 🩹 Fixes

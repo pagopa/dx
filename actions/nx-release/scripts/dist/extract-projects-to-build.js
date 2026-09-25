@@ -18279,16 +18279,14 @@ config(en_default());
 // scripts/shared.ts
 var execFileAsync = promisify(execFile);
 var NonEmptyStringSchema = external_exports.string().min(1);
-var ProjectTagsSchema = external_exports.array(external_exports.string());
 var StringArraySchema = external_exports.array(external_exports.string());
 var TagEntrySchema = external_exports.object({
   path: external_exports.string().nullable(),
   tag: external_exports.string(),
   version: external_exports.string()
 });
-var ProjectMetadataSchema = external_exports.looseObject({
-  root: NonEmptyStringSchema.optional(),
-  tags: ProjectTagsSchema.optional()
+external_exports.looseObject({
+  root: NonEmptyStringSchema.optional()
 });
 function createOctokit() {
   const token = process.env.GH_TOKEN;
@@ -18310,13 +18308,15 @@ function extractTagEntriesFromPRBody(prBody) {
     return [];
   }
 }
-async function getNxProjectNames() {
+async function getNxProjectNames(targetName) {
   try {
+    const targetArgs = targetName ? ["--withTarget", targetName] : [];
     const { stdout } = await execFileAsync("npx", [
       "nx",
       "show",
       "projects",
-      "--json"
+      "--json",
+      ...targetArgs
     ]);
     let jsonStart = stdout.indexOf('["');
     if (jsonStart === -1) jsonStart = stdout.indexOf("[]");
@@ -18362,15 +18362,6 @@ async function getRepoInfo() {
     "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote"
   );
 }
-async function isPublicProject(projectName) {
-  const metadata = await getNxProjectMetadata(projectName);
-  if (!metadata) return false;
-  const tags = metadata.tags;
-  if (!tags) return false;
-  return tags.some(
-    (tag) => tag === "public" || typeof tag === "string" && tag.endsWith(":public")
-  );
-}
 function matchProjectName(tag, projectNames) {
   const candidates = projectNames.filter((name) => {
     if (!tag.startsWith(name)) return false;
@@ -18388,38 +18379,6 @@ function parseTagEntries(raw) {
     return [];
   }
   return result.data;
-}
-async function getNxProjectMetadata(projectName) {
-  try {
-    const { stdout } = await execFileAsync("npx", [
-      "nx",
-      "show",
-      "project",
-      projectName,
-      "--json"
-    ]);
-    const jsonStart = stdout.indexOf("{");
-    if (jsonStart === -1) {
-      console.error(
-        `nx show project ${projectName}: no JSON object found in stdout:`,
-        stdout.slice(0, 200)
-      );
-      return null;
-    }
-    const parsed = JSON.parse(stdout.slice(jsonStart));
-    const result = ProjectMetadataSchema.safeParse(parsed);
-    if (!result.success) {
-      console.error(
-        `nx show project ${projectName}: validation failed:`,
-        result.error
-      );
-      return null;
-    }
-    return result.data;
-  } catch (err) {
-    console.error(`getNxProjectMetadata(${projectName}) failed:`, err);
-    return null;
-  }
 }
 
 // scripts/extract-projects-to-build.ts
@@ -18471,26 +18430,8 @@ async function run() {
     process.stdout.write("");
     return;
   }
-  console.error(
-    `Filtering public projects from ${matchedProjects.size} matched projects`
-  );
-  const publicProjects = [];
-  for (const projectName of matchedProjects) {
-    const isPublic = await isPublicProject(projectName);
-    if (isPublic) {
-      publicProjects.push(projectName);
-      console.error(`\u2713 ${projectName} is public`);
-    } else {
-      console.error(`\u2717 ${projectName} is private, skipping`);
-    }
-  }
-  if (publicProjects.length === 0) {
-    console.error("::warning::No public projects found to build");
-    process.stdout.write("");
-    return;
-  }
-  const projectsList = publicProjects.join(",");
-  console.error(`Public projects to build: ${projectsList}`);
+  const projectsList = [...matchedProjects].join(",");
+  console.error(`Versioned projects: ${projectsList}`);
   process.stdout.write(projectsList);
 }
 if (import.meta.url === `file://${process.argv[1]}`) {

@@ -8,20 +8,18 @@ It supports both **ESLint 9** and **ESLint 10**.
 
 1. Install `@pagopa/eslint-config` together with its peer dependencies.
 
-   The required peers are `eslint`, `@eslint/js` (matching the same major as `eslint`), and `prettier`.
+   The required peers are `eslint`, `@eslint/js` (matching the same major as `eslint`).
 
    For ESLint 10:
 
    ```shell
    pnpm add -D eslint@^10 @eslint/js@^10 @pagopa/eslint-config
-   pnpm add -D -E prettier
    ```
 
    For ESLint 9:
 
    ```shell
    pnpm add -D eslint@^9 @eslint/js@^9 @pagopa/eslint-config
-   pnpm add -D -E prettier
    ```
 
 2. Create a file names `eslint.config.js` at the root of your workspace with the following content
@@ -45,6 +43,34 @@ It supports both **ESLint 9** and **ESLint 10**.
      }
    }
    ```
+
+## Migration guide
+
+### Formatting
+
+`@pagopa/eslint-config` no longer runs Prettier through ESLint. The
+`eslint-plugin-prettier` dependency and the `prettier` peer dependency have
+been removed. The config still includes `eslint-config-prettier` to disable
+ESLint rules that conflict with an external formatter.
+
+If your workspace still uses Prettier, install and configure it independently:
+
+```shell
+pnpm add -D prettier
+```
+
+```json
+{
+  "scripts": {
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  }
+}
+```
+
+If you use another formatter, replace the commands above with the equivalent
+commands for that formatter. Formatting is no longer part of the `lint` or
+`lint:check` scripts provided by this package.
 
 ## Test-runner support
 

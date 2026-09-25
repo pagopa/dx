@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { dashboardParamsSchema } from "../shared/schemas";
+import { dashboardParamsSchema, percentileRowSchema } from "../shared/schemas";
 import {
   nullableSqlNumberSchema,
   nullableSqlTimestampSchema,
@@ -63,22 +63,49 @@ export const workflowSuccessRatioSchema = z.object({
 
 export const workflowSummarySchema = z.object({
   avgDurationMinutes: nullableSqlNumberSchema,
+  failedDurationMinutes: nullableSqlNumberSchema,
   firstPipelineDate: nullableSqlTimestampSchema,
+  /** Same card metrics over the immediately preceding, equally-sized window. */
+  previousAvgDurationMinutes: nullableSqlNumberSchema,
+  previousFailedDurationMinutes: nullableSqlNumberSchema,
+  previousTotalDurationMinutes: nullableSqlNumberSchema,
+  previousTotalPipelines: nullableSqlNumberSchema,
   totalDurationMinutes: nullableSqlNumberSchema,
   totalPipelines: sqlNumberSchema,
+});
+
+export const workflowSuccessRateStatsSchema = z.object({
+  current: nullableSqlNumberSchema,
+  previous: nullableSqlNumberSchema,
+});
+
+export const workflowTriggerTypeSchema = z.object({
+  runCount: sqlNumberSchema,
+  triggerType: z.string().min(1),
+});
+
+export const workflowTriggerBreakdownSchema = z.object({
+  automatic: sqlNumberSchema,
+  manual: sqlNumberSchema,
+  unknown: sqlNumberSchema,
+  workflowName: z.string().min(1),
 });
 
 export const workflowDashboardSchema = z.object({
   avgDuration: z.array(workflowAvgDurationSchema),
   cumulativeDuration: z.array(workflowCumulativeDurationSchema),
   deployments: z.array(workflowDeploymentSchema),
+  durationPercentiles: percentileRowSchema,
   dxVsNonDx: z.array(workflowDxVsNonDxSchema),
   failures: z.array(workflowFailureSchema),
   infraApply: z.array(workflowInfraDurationSchema),
   infraPlan: z.array(workflowInfraDurationSchema),
   runCount: z.array(workflowRunCountSchema),
   successRatio: z.array(workflowSuccessRatioSchema),
+  successRateStats: workflowSuccessRateStatsSchema,
   summary: workflowSummarySchema.optional(),
+  triggerBreakdown: z.array(workflowTriggerBreakdownSchema),
+  triggerTypes: z.array(workflowTriggerTypeSchema),
 });
 
 export type GetWorkflowDashboardInput = z.infer<
@@ -96,3 +123,4 @@ export type WorkflowInfraDuration = z.infer<typeof workflowInfraDurationSchema>;
 export type WorkflowRunCount = z.infer<typeof workflowRunCountSchema>;
 export type WorkflowSuccessRatio = z.infer<typeof workflowSuccessRatioSchema>;
 export type WorkflowSummary = z.infer<typeof workflowSummarySchema>;
+export type WorkflowTriggerType = z.infer<typeof workflowTriggerTypeSchema>;

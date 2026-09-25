@@ -2,13 +2,52 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-const buildDashboardQueryString = (params: Record<string, number | string>) => {
+/**
+ * Dashboard payloads are refreshed by the importer, not per request, so keeping
+ * them in memory for a short window makes navigating between dashboards instant
+ * and removes redundant database work. The server still owns the authoritative
+ * `s-maxage` policy; this only avoids re-fetching within one session.
+ */
+const CLIENT_CACHE_TTL_MS = 60_000;
+
+interface CacheEntry {
+  data: unknown;
+  storedAt: number;
+}
+
+const dashboardCache = new Map<string, CacheEntry>();
+
+const readCache = <T>(key: string): null | T => {
+  const entry = dashboardCache.get(key);
+
+  if (
+    entry === undefined ||
+    Date.now() - entry.storedAt > CLIENT_CACHE_TTL_MS
+  ) {
+    return null;
+  }
+
+  return entry.data as T;
+};
+
+const writeCache = (key: string, data: unknown): void => {
+  dashboardCache.set(key, { data, storedAt: Date.now() });
+};
+
+const buildDashboardQueryString = (
+  params: Record<string, number | string | readonly string[]>,
+) => {
   const searchParams = new URLSearchParams();
 
   Object.entries(params)
     .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
     .forEach(([key, value]) => {
-      searchParams.set(key, String(value));
+      // Arrays (e.g. the repository selection) travel as a comma-separated
+      // value, matching the API route's `repositories` parameter.
+      searchParams.set(
+        key,
+        Array.isArray(value) ? value.join(",") : String(value),
+      );
     });
 
   return searchParams.toString();
@@ -38,15 +77,8 @@ const extractDashboardErrorMessage = async (response: Response) => {
 
 export function useDashboardData<T>(
   endpoint: string,
-  params: Record<string, number | string>,
+  params: Record<string, number | string | readonly string[]>,
 ) {
-  const [data, setData] = useState<null | T>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<null | string>(null);
-
-  // Serialize params to a stable string key to avoid unnecessary re-renders when
-  // callers pass inline objects. This ensures the effect only refetches when the
-  // actual param values change, not when the object identity changes.
   const paramsSerialized = useMemo(
     () =>
       JSON.stringify(
@@ -61,8 +93,25 @@ export function useDashboardData<T>(
     [paramsSerialized],
   );
 
+  const cacheKey = queryString ? `${endpoint}?${queryString}` : endpoint;
+
+  const [data, setData] = useState<null | T>(() => readCache<T>(cacheKey));
+  const [loading, setLoading] = useState(() => readCache(cacheKey) === null);
+  const [error, setError] = useState<null | string>(null);
+
   const fetchData = useCallback(
-    async (signal?: AbortSignal) => {
+    async (signal?: AbortSignal, options?: { force?: boolean }) => {
+      const cached = readCache<T>(cacheKey);
+
+      if (cached !== null && options?.force !== true) {
+        setData(cached);
+        // A cache hit is a success: clear any error left by a previous failed
+        // request for this key so the dashboard does not keep showing it.
+        setError(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       setError(null);
 
@@ -82,6 +131,7 @@ export function useDashboardData<T>(
         const payload: T = await response.json();
 
         if (!signal?.aborted) {
+          writeCache(cacheKey, payload);
           setData(payload);
         }
       } catch (caughtError) {
@@ -98,7 +148,7 @@ export function useDashboardData<T>(
         }
       }
     },
-    [endpoint, queryString],
+    [cacheKey, endpoint, queryString],
   );
 
   useEffect(() => {
@@ -114,8 +164,10 @@ export function useDashboardData<T>(
     };
   }, [fetchData]);
 
+  // An explicit retry must bypass the cache: otherwise a failed or empty first
+  // result would be served again instead of re-querying.
   const refetch = useCallback(async () => {
-    await fetchData();
+    await fetchData(undefined, { force: true });
   }, [fetchData]);
 
   return { data, error, loading, refetch };

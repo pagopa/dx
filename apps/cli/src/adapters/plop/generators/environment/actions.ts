@@ -1,6 +1,5 @@
 import type { ActionType, DynamicActionsFunction } from "node-plop";
 
-import { getLogger } from "@logtape/logtape";
 import path from "node:path";
 
 import { formatTerraformCode } from "../../../terraform/fmt.js";
@@ -66,10 +65,6 @@ export default function getActions(
   templatesPath: string,
 ): DynamicActionsFunction {
   return (input: unknown) => {
-    const logger = getLogger(["gen", "env"]);
-
-    logger.debug("environment generator input {input}", { input });
-
     const { env, init, workspace } = payloadSchema.parse(input);
 
     const addEnvironmentModule = addModule(
@@ -79,6 +74,9 @@ export default function getActions(
     );
 
     const actions: ActionType[] = [
+      {
+        type: "setupCloudTools",
+      },
       {
         type: "getTerraformBackend",
       },
@@ -96,7 +94,9 @@ export default function getActions(
     ];
 
     if (init) {
-      actions.unshift(
+      actions.splice(
+        1,
+        0,
         {
           type: "initCloudAccounts",
         },

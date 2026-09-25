@@ -1,3 +1,30 @@
+## 0.3.13 (2026-09-24)
+
+### 🩹 Fixes
+
+- Speed up release tag and GitHub Release sync by batching remote lookups ([#2261](https://github.com/pagopa/dx/pull/2261))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.3.12 (2026-09-22)
+
+### 🩹 Fixes
+
+- Route Docker image releases through inferred Nx publishers, including private ([#2225](https://github.com/pagopa/dx/pull/2225))
+  JavaScript projects that must not be published to npm.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.3.11 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+
 ## 0.3.10 (2026-09-11)
 
 ### 🩹 Fixes

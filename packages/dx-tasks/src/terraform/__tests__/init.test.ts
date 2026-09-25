@@ -11,6 +11,7 @@ const commandMocks = vi.hoisted(() => ({
 
 const fsMocks = vi.hoisted(() => ({
   mkdtemp: vi.fn(async () => "infra/example/.tfmodules-lock-random"),
+  readFile: vi.fn(async () => ""),
   rename: vi.fn(async () => {}),
   rm: vi.fn(async () => {}),
   writeFile: vi.fn(async () => {}),
@@ -42,19 +43,31 @@ const comparison = {
   path: "infra/example/tfmodules.lock.json",
 } satisfies ModuleLockComparison;
 
-describe("terraformInit", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    vi.spyOn(console, "error").mockImplementation(() => undefined);
-    vi.spyOn(console, "log").mockImplementation(() => undefined);
-    commandMocks.runCommand.mockResolvedValue({
-      exitCode: 0,
-      signal: null,
-      stderr: "",
-      stdout: "Terraform initialized.",
-    });
-    lockMocks.compareModuleLock.mockResolvedValue(comparison);
+const setupMocks = (): void => {
+  vi.clearAllMocks();
+  vi.spyOn(console, "error").mockImplementation(() => undefined);
+  vi.spyOn(console, "log").mockImplementation(() => undefined);
+  commandMocks.runCommand.mockResolvedValue({
+    exitCode: 0,
+    signal: null,
+    stderr: "",
+    stdout: "Terraform initialized.",
   });
+  lockMocks.compareModuleLock.mockResolvedValue(comparison);
+};
+
+const expectTerraformCommandLog = (
+  callIndex: number,
+  command: string,
+): void => {
+  expect(console.log).toHaveBeenNthCalledWith(
+    callIndex,
+    `$ terraform ${command}`,
+  );
+};
+
+describe("terraformInit", () => {
+  beforeEach(setupMocks);
 
   it("initializes Terraform and updates a changed module lock", async () => {
     await terraformInit({
@@ -68,6 +81,7 @@ describe("terraformInit", () => {
       "infra/example",
       {},
     );
+    expectTerraformCommandLog(1, "init -backend=false -get=true");
     expect(console.log).toHaveBeenCalledWith("Terraform initialized.");
     expect(lockMocks.compareModuleLock).toHaveBeenCalledExactlyOnceWith(
       "infra/example",
@@ -98,7 +112,38 @@ describe("terraformInit", () => {
       "Updated Terraform module lock at infra/example/tfmodules.lock.json",
     );
   });
+  it("locks providers for configured platforms after initialization", async () => {
+    await terraformInit({
+      modulePath: "infra/example",
+      platforms: ["darwin_arm64", "linux_amd64"],
+    });
 
+    expect(commandMocks.runCommand).toHaveBeenNthCalledWith(
+      1,
+      "terraform",
+      ["init", "-get=true"],
+      "infra/example",
+      {},
+    );
+    expect(commandMocks.runCommand).toHaveBeenNthCalledWith(
+      2,
+      "terraform",
+      [
+        "providers",
+        "lock",
+        "-enable-plugin-cache",
+        "-platform=darwin_arm64",
+        "-platform=linux_amd64",
+      ],
+      "infra/example",
+      {},
+    );
+    expectTerraformCommandLog(1, "init -get=true");
+    expectTerraformCommandLog(
+      3,
+      "providers lock -enable-plugin-cache -platform=darwin_arm64 -platform=linux_amd64",
+    );
+  });
   it("normalizes module download arguments before initialization", async () => {
     await terraformInit({
       args: ["-get=true", "--get", "true", "-backend=false"],
@@ -135,6 +180,12 @@ describe("terraformInit", () => {
       }),
     ).rejects.toThrow(
       "Terraform module lock is frozen and out of date at infra/example/tfmodules.lock.json: changed: example",
+    );
+    expect(commandMocks.runCommand).toHaveBeenCalledWith(
+      "terraform",
+      ["init", "-lockfile=readonly", "-get=true"],
+      "infra/example",
+      {},
     );
     expect(fsMocks.writeFile).not.toHaveBeenCalled();
   });
@@ -209,5 +260,51 @@ describe("terraformInit", () => {
       "The -get=false option is incompatible with Terraform module locking",
     );
     expect(commandMocks.runCommand).not.toHaveBeenCalled();
+  });
+});
+
+describe("terraform provider lock failures", () => {
+  beforeEach(setupMocks);
+
+  it("fails frozen initialization when the provider lock changes", async () => {
+    fsMocks.readFile
+      .mockResolvedValueOnce("provider lock before")
+      .mockResolvedValueOnce("provider lock after");
+
+    await expect(
+      terraformInit({
+        frozenLockfile: true,
+        modulePath: "infra/example",
+      }),
+    ).rejects.toThrow(
+      "Terraform provider lock is frozen and out of date at infra/example/.terraform.lock.hcl",
+    );
+    expect(lockMocks.compareModuleLock).not.toHaveBeenCalled();
+  });
+
+  it("reports provider lock failures and skips module lock comparison", async () => {
+    commandMocks.runCommand
+      .mockResolvedValueOnce({
+        exitCode: 0,
+        signal: null,
+        stderr: "",
+        stdout: "",
+      })
+      .mockResolvedValueOnce({
+        exitCode: 1,
+        signal: null,
+        stderr: "Provider lock failed.",
+        stdout: "",
+      });
+
+    await expect(
+      terraformInit({
+        modulePath: "infra/example",
+        platforms: ["linux_amd64"],
+      }),
+    ).rejects.toThrow(
+      "terraform providers lock failed with exit code 1\nProvider lock failed.",
+    );
+    expect(lockMocks.compareModuleLock).not.toHaveBeenCalled();
   });
 });

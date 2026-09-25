@@ -30,19 +30,19 @@
 
 ### Related artifacts — `Always`
 
-| ID                             | Artifact                                    | Link or reference                      | Relationship / status              |
-| ------------------------------ | ------------------------------------------- | -------------------------------------- | ---------------------------------- |
-| `references.prd`               | PRD                                         | _<link or N/A — direct DR/SRS intake>_ | _<source and status>_              |
-| `references.rfc`               | RFCs                                        | _<links or N/A — reason>_              | _<propagated / historical / open>_ |
-| `references.service-blueprint` | Service Blueprint                           | _<link or N/A — reason>_               | _<relevant journey>_               |
-| `references.figma`             | Figma / design discovery                    | _<link or N/A — reason>_               | _<relevant flow>_                  |
-| `references.contracts`         | OpenAPI / AsyncAPI / Data Contract          | _<links or N/A — reason>_              | _<affected contracts>_             |
-| `references.repository`        | Repository                                  | _<GitHub link or N/A — reason>_        | _<target codebase>_                |
-| `references.reviews`           | Security / Privacy / Legal reviews          | _<links or N/A — reason>_              | _<status>_                         |
-| `references.dpia`              | DPIA / privacy review                       | _<link or N/A — reason>_               | _<status>_                         |
-| `references.launch-review`     | Launch Readiness Review (separate Go/No-Go) | _<link or N/A — reason>_               | _<linked, not duplicated>_         |
+| ID                             | Artifact                                    | Link or reference                      | Relationship / status                                          |
+| ------------------------------ | ------------------------------------------- | -------------------------------------- | -------------------------------------------------------------- |
+| `references.prd`               | PRD                                         | _<link or N/A — direct DR/SRS intake>_ | _<source and status>_                                          |
+| `references.rfc`               | RFCs                                        | _<links or N/A — reason>_              | _<propagated / historical / open>_                             |
+| `references.service-blueprint` | Service Blueprint                           | _<link or N/A — reason>_               | _<relevant journey>_                                           |
+| `references.figma`             | Figma / design discovery                    | _<link or N/A — reason>_               | _<relevant flow>_                                              |
+| `references.contracts`         | OpenAPI / AsyncAPI / Data Contract          | _<links or N/A — reason>_              | _<affected contracts>_                                         |
+| `references.repository`        | Repository                                  | _<GitHub link or N/A — reason>_        | _<target codebase>_                                            |
+| `references.reviews`           | Security / Privacy / Legal reviews          | _<links or N/A — reason>_              | _<status>_                                                     |
+| `references.dpia`              | DPIA / privacy review                       | _<link or N/A — reason>_               | _<status>_                                                     |
+| `references.launch-review`     | Launch Readiness Review (separate Go/No-Go) | _<link or N/A — reason>_               | _<linked, not duplicated>_                                     |
 | `references.glossary`          | Business glossary (PRD/Confluence)          | _<link or N/A — reason>_               | _<external terms; the solution glossary lives in this DR/SRS>_ |
-| `references.operations`        | Jira board / runbook / readiness artifacts  | _<links or N/A — reason>_              | _<status>_                         |
+| `references.operations`        | Jira board / runbook / readiness artifacts  | _<links or N/A — reason>_              | _<status>_                                                     |
 
 <!-- id: expected-outcome -->
 
@@ -111,12 +111,12 @@ terms by name; do not assign them identifiers. Keep DDL, types, and code out of
 the DR/SRS. If the initiative has no domain behavior (for example a pure
 infrastructure change), write `N/A — <confirmed reason>`._
 
-| Entity | Description | Key attributes | Relations | States / invariants |
-| ------ | ----------- | -------------- | --------- | ------------------- |
+| Entity     | Description            | Key attributes | Relations     | States / invariants       |
+| ---------- | ---------------------- | -------------- | ------------- | ------------------------- |
 | _<entity>_ | _<what it represents>_ | _<attributes>_ | _<relations>_ | _<states and invariants>_ |
 
-| Term | Definition | Not to confuse with |
-| ---- | ---------- | ------------------- |
+| Term     | Definition     | Not to confuse with           |
+| -------- | -------------- | ----------------------------- |
 | _<term>_ | _<definition>_ | _<nearby or ambiguous terms>_ |
 
 ### Deployment and architecture view — `If applicable`
@@ -235,7 +235,7 @@ evidence; a human reviewer confirms it.
 | `ready.outcome-id`      | `metadata.canonical-outcome-id` is present and stable                                                                                                                                                                                   | _<evidence / gap>_ |
 | `ready.prd`             | Linked PRD has owner, outcome, JTBD, KPI, and guardrails — or, for a direct DR/SRS intake, outcome and scope are in `Expected outcome`                                                                                                  | _<evidence / gap>_ |
 | `ready.solution`        | All `Always` sections are complete, or gaps are explicit; the technology profile is included                                                                                                                                            | _<evidence / gap>_ |
-| `ready.domain`          | The `Domain model and glossary` describes the solution entities, relations, states, invariants, and terms (by name, no identifiers), or records `N/A — <confirmed reason>`                                              | _<evidence / gap>_ |
+| `ready.domain`          | The `Domain model and glossary` describes the solution entities, relations, states, invariants, and terms (by name, no identifiers), or records `N/A — <confirmed reason>`                                                              | _<evidence / gap>_ |
 | `ready.conditional`     | Relevant conditional blocks are populated or marked `N/A — <confirmed reason>`                                                                                                                                                          | _<evidence / gap>_ |
 | `ready.use-cases`       | Use Case catalog has stable IDs and titles linked to child pages; each selected child declares its priority, status, and minimum core (trigger, main flow, at least one binary acceptance check on Must) or records a gap with an owner | _<evidence / gap>_ |
 | `ready.discovery-links` | Figma/Service Blueprint links exist for user-facing work, or a gap is recorded                                                                                                                                                          | _<evidence / gap>_ |

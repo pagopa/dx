@@ -1,3 +1,26 @@
+## 6.0.4 (2026-09-23)
+
+### 🩹 Fixes
+
+- Grant the Infra CI merged role the permissions Terraform needs to refresh Static Web Apps and App Configuration. ([#2242](https://github.com/pagopa/dx/pull/2242))
+
+  The `azurerm` provider reads the computed secrets of both resources on every plan (`staticSites/listSecrets` and `configurationStores/listKeys`), so once a repository creates a Static Web App or an App Configuration store, the next plan fails with a 403 under the Infra CI identity. Add the `PagoPA Static Web Apps List Secrets` role and the App Configuration `listKeys` action to `DX Infra CI Resource Groups`.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 6.0.3 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 ## 6.0.2 (2026-09-08)
 
 ### 🩹 Fixes

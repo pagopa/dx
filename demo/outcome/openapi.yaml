@@ -65,24 +65,24 @@ paths:
       tags:
         - Agreements
       parameters:
-        - $ref: '#/components/parameters/OnboardingId'
+        - $ref: "#/components/parameters/OnboardingId"
       requestBody:
         required: true
         content:
           multipart/form-data:
             schema:
-              $ref: '#/components/schemas/UploadSignedAgreementRequest'
+              $ref: "#/components/schemas/UploadSignedAgreementRequest"
             encoding:
               file:
                 contentType: application/pdf, application/pkcs7-mime
       responses:
-        '201':
+        "201":
           description: Agreement accepted and practice moved to PENDING.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/UploadSignedAgreementResponse'
-        '400':
+                $ref: "#/components/schemas/UploadSignedAgreementResponse"
+        "400":
           description: >-
             The upload was rejected before any state change. The typed error is
             `AGREEMENT_EXTENSION_INVALID`, `AGREEMENT_SIGNATURE_INVALID`, or
@@ -90,7 +90,7 @@ paths:
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
               examples:
                 extensionInvalid:
                   value:
@@ -113,14 +113,14 @@ paths:
                     status: 400
                     detail: The uploaded file exceeds the allowed size.
                     errorCode: AGREEMENT_FILE_TOO_LARGE
-        '409':
+        "409":
           description: >-
             The practice is not in `REQUEST`, or a valid step 1 already exists.
             The typed error is `PRACTICE_STATE_INVALID`.
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
               examples:
                 practiceStateInvalid:
                   value:
@@ -129,12 +129,12 @@ paths:
                     status: 409
                     detail: The practice is not in the REQUEST state.
                     errorCode: PRACTICE_STATE_INVALID
-        '415':
+        "415":
           description: Unsupported media type. Error identifier TBD.
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
   /practices/{onboardingId}:
     get:
       operationId: getPractice
@@ -145,20 +145,20 @@ paths:
       tags:
         - Adhesion
       parameters:
-        - $ref: '#/components/parameters/OnboardingId'
+        - $ref: "#/components/parameters/OnboardingId"
       responses:
-        '200':
+        "200":
           description: Current practice status.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Practice'
-        '404':
+                $ref: "#/components/schemas/Practice"
+        "404":
           description: Practice not found. Error identifier TBD.
           content:
             application/problem+json:
               schema:
-                $ref: '#/components/schemas/Problem'
+                $ref: "#/components/schemas/Problem"
 components:
   parameters:
     OnboardingId:
@@ -207,7 +207,7 @@ components:
           type: string
           description: Identifier of the persisted Document.
         status:
-          $ref: '#/components/schemas/PracticeStatus'
+          $ref: "#/components/schemas/PracticeStatus"
         signingStep:
           type: integer
           minimum: 1
@@ -222,7 +222,7 @@ components:
         onboardingId:
           type: string
         status:
-          $ref: '#/components/schemas/PracticeStatus'
+          $ref: "#/components/schemas/PracticeStatus"
       additionalProperties: false
     PracticeStatus:
       type: string

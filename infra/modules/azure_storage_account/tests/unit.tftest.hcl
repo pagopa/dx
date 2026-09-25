@@ -63,7 +63,41 @@ run "storage_account_security_defaults" {
   }
 }
 
-# ── 2. Default use case ─────────────────────────────────────────────────────
+# ── 2. Malware scanning ──────────────────────────────────────────────────────
+run "storage_account_defender_malware_scanning" {
+  command = plan
+
+  variables {
+    malware_scanning_enabled = true
+  }
+
+  assert {
+    condition     = length(azurerm_security_center_storage_defender.this) == 1
+    error_message = "Defender for Storage must be created when malware scanning is enabled"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].malware_scanning_on_upload_enabled
+    error_message = "malware scanning on upload must be enabled"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].malware_scanning_on_upload_cap_gb_per_month == -1
+    error_message = "malware scanning cap must use the unlimited standard"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].sensitive_data_discovery_enabled
+    error_message = "sensitive data discovery must be enabled"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].override_subscription_settings_enabled
+    error_message = "subscription settings must be overridden when malware scanning is enabled"
+  }
+}
+
+# ── 3. Default use case ─────────────────────────────────────────────────────
 run "storage_account_default_use_case" {
   command = plan
 

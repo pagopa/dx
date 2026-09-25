@@ -13,7 +13,7 @@ Bootstrap a new project following DevEx conventions.
 **Always provisions**:
 
 - The monorepository, both locally and remotely on GitHub.com, with dotfiles and
-  a devcontainer configuration.
+  a locked mise toolchain configuration.
 
 ### Prompt Reference
 
@@ -67,6 +67,10 @@ Scaffold new components in your project following DevEx guidelines.
 ### `environment`
 
 Add a new cloud environment following DevEx conventions.
+
+The command requires `mise`. During setup it adds the AWS and Azure CLIs (and
+the `uv` runtime required by the Azure CLI backend) to the repository's
+`mise.toml`, then refreshes `mise.lock`.
 
 **Always provisions**:
 
@@ -142,15 +146,44 @@ names use the `ced-p-...` prefix convention.
 Run `add environment` once for each tenant/environment pair you need, changing
 both `--name` and `--prefix` when the tenant changes.
 
-**Initialization** _(conditional — only asked when the environment is new)_
+**Initialization and Runner App credentials**
+
+The initialization confirmation and Terraform backend selection are conditional
+on the environment state. Runner App credentials are required whenever a new
+GitHub environment is configured, including when the Azure bootstrap resources
+already exist. The CLI stores them as GitHub environment secrets used by the
+bootstrapper workflow; they are not written to generated Terraform or workflow
+files.
 
 | Prompt                                             | What to enter                                                                                                        |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | **Initialize it now?**                             | Confirm `Yes` to provision the baseline cloud infrastructure (VPN, network, monitoring, Terraform backend).          |
 | **Cloud Account for the remote Terraform backend** | Shown only when multiple accounts are selected. Pick the account that will host the Terraform state Storage Account. |
 | **GitHub Runner App ID**                           | The `App ID` retrieved in the [Prepare the GitHub App](../monorepository-setup.mdx#setting-up-a-github-app) section. |
+| **GitHub Runner App Client ID**                    | The `Client ID` retrieved in the same section.                                                                       |
 | **GitHub Runner App Installation ID**              | The `Installation ID` retrieved in the same section.                                                                 |
 | **GitHub Runner App Private Key**                  | An editor will open — paste the full content of the `.pem` private key file, then save and close the editor.         |
+
+For non-interactive execution, provide all four Runner App values explicitly:
+
+```bash
+CI=1 npx @pagopa/dx-cli add environment \
+  --name prod \
+  --account <subscription-id> \
+  --location <subscription-id>=italynorth \
+  --prefix dx \
+  --domain payments \
+  --business-unit devex \
+  --management-team devex \
+  --runner-app-id <runner-app-id> \
+  --client-id <client-id> \
+  --installation-id <installation-id> \
+  --private-key-path <path-to-private-key.pem> \
+  -y
+```
+
+If any Runner App value is missing in `CI=1` mode, the command stops with an
+explicit error before configuring the GitHub environment.
 
 #### Example Usage
 

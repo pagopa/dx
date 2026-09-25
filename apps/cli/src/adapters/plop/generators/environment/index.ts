@@ -9,6 +9,7 @@ import { type GitHubService } from "../../../../domain/github.js";
 import setGetTerraformBackend from "../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../actions/init-cloud-accounts.js";
 import setProvisionTerraformBackendAction from "../../actions/provision-terraform-backend.js";
+import { setSetupCloudToolsAction } from "../../actions/setup-cloud-tools.js";
 import setSyncRepositoryEnvironmentsAction from "../../actions/sync-repository-environments.js";
 import setEnvShortHelper from "../../helpers/env-short.js";
 import setEqHelper from "../../helpers/eq.js";
@@ -32,6 +33,7 @@ export default function (
   gitHubService: GitHubService,
   github?: GitHubRepo,
   initialAnswers: InitialAnswers = {},
+  nonInteractive = false,
 ) {
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
@@ -40,6 +42,7 @@ export default function (
 
   setGetTerraformBackend(plop, cloudAccountService);
   setProvisionTerraformBackendAction(plop, cloudAccountService);
+  setSetupCloudToolsAction(plop);
   setInitCloudAccountsAction(plop, cloudAccountService, gitHubService);
   setSyncRepositoryEnvironmentsAction(plop);
 
@@ -50,7 +53,9 @@ export default function (
       cloudAccountRepository,
       cloudAccountService,
       github,
+      gitHubService,
       initialAnswers,
+      nonInteractive,
     }),
   });
 }

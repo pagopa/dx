@@ -46,7 +46,18 @@ variables {
 }
 
 mock_provider "azurerm" {}
-mock_provider "github" {}
+mock_provider "github" {
+  mock_data "github_organization" {
+    defaults = {
+      id = "57742367"
+    }
+  }
+  mock_data "github_repository" {
+    defaults = {
+      repo_id = 1373623344
+    }
+  }
+}
 mock_provider "dx" {}
 
 override_data {

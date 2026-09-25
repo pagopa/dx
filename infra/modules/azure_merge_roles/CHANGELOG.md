@@ -1,3 +1,29 @@
+## 2.0.5 (2026-09-16)
+
+### 🧱 Updated Dependencies
+
+- Updated modules-azure-storage-account to 4.0.5
+
+## 2.0.4 (2026-09-16)
+
+### 🧱 Updated Dependencies
+
+- Updated modules-azure-storage-account to 4.0.4
+
+## 2.0.3 (2026-09-15)
+
+### 🩹 Fixes
+
+- Update examples to target UAT environment ([#2192](https://github.com/pagopa/dx/pull/2192))
+
+### 🧱 Updated Dependencies
+
+- Updated modules-azure-storage-account to 4.0.3
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 2.0.2 (2026-09-08)
 
 ### 🩹 Fixes

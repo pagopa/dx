@@ -6,6 +6,7 @@ Reusable task implementations and a small dispatcher for DX orchestration tools.
 
 | Task              | Description                                                                                                                                        |
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `terraformInit`   | Initializes Terraform, optionally locks providers for configured platforms, and enforces the downloaded module lock.                               |
 | `terraformPlan`   | Runs `terraform plan` for a module path, handles common flags, and masks sensitive output before printing it.                                      |
 | `renderReport`    | Reads the persisted reports under `.dx-tasks` and renders them in a target format (currently `markdown`) to stdout, using per-namespace renderers. |
 | `prComment`       | Adds a comment to a GitHub pull request, optionally replacing existing comments that match a search pattern.                                       |
@@ -166,7 +167,7 @@ and errors are rendered as GitHub Markdown notices before the summary line. Full
 never included in the Markdown comment, keeping comments compact even across many plans and linking
 back to `sourceUrl`, when provided, and report artifacts for the complete output.
 
-````markdown
+```markdown
 ### Terraform Plans
 
 #### Module: `./infra/modules/example` - ✅ Success
@@ -181,7 +182,7 @@ Plan: 0 to add, 1 to change, 0 to destroy.
 > [!NOTE]
 > Full plan output is not included in this comment.
 > See the workflow run logs or downloaded Terraform plan report artifacts for the complete output.
-````
+```
 
 To control which namespaces/formats are renderable, build your own `ReportStore` and register
 namespaces with `renderers` explicitly:

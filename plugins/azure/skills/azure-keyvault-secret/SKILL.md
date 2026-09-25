@@ -49,11 +49,11 @@ terraform {
 
 **The constraint MUST satisfy `>= 1.11.0`.**
 
-| Scenario | Action |
-|---|---|
+| Scenario                                                                               | Action                       |
+| -------------------------------------------------------------------------------------- | ---------------------------- |
 | Constraint is `>= 1.11`, `>= 1.11.0`, `~> 1.11`, `~> 1` with no upper bound below 1.11 | ✅ Proceed to provider check |
-| Constraint is `< 1.11`, `~> 1.9`, `>= 1.0, < 1.11` | ❌ Stop — inform the user |
-| No `required_version` found | ❌ Stop — inform the user |
+| Constraint is `< 1.11`, `~> 1.9`, `>= 1.0, < 1.11`                                     | ❌ Stop — inform the user    |
+| No `required_version` found                                                            | ❌ Stop — inform the user    |
 
 If the `required_version` requirement is **not met**, output this message and do nothing else:
 
@@ -86,11 +86,11 @@ required_providers {
 
 **The constraint MUST satisfy `>= 4.23`.**
 
-| Scenario | Action |
-|---|---|
-| Constraint is `~> 4.23`, `>= 4.23`, `~> 4.0` with no upper bound below 4.23, `~> 4` | ✅ Proceed |
+| Scenario                                                                            | Action                    |
+| ----------------------------------------------------------------------------------- | ------------------------- |
+| Constraint is `~> 4.23`, `>= 4.23`, `~> 4.0` with no upper bound below 4.23, `~> 4` | ✅ Proceed                |
 | Constraint is `~> 3.x`, `< 4.23`, `>= 3.116, < 5.0` with no guaranteed 4.23 overlap | ❌ Stop — inform the user |
-| No azurerm provider block found | ❌ Stop — inform the user |
+| No azurerm provider block found                                                     | ❌ Stop — inform the user |
 
 If the azurerm requirement is **not met**, output this message and do nothing else:
 
@@ -118,19 +118,20 @@ If the azurerm requirement is **not met**, output this message and do nothing el
 
 Ask the user (or infer from context) for:
 
-| Input | Required | Example |
-|---|---|---|
-| Resource label (Terraform identifier) | Yes | `db_password` |
-| Secret name (Azure resource name) | Yes | `"db-password"` |
-| `key_vault_id` reference | Yes | `azurerm_key_vault.main.id` |
-| `content_type` | No | `"text/plain"` |
-| `tags` | No | `var.tags` |
+| Input                                 | Required | Example                     |
+| ------------------------------------- | -------- | --------------------------- |
+| Resource label (Terraform identifier) | Yes      | `db_password`               |
+| Secret name (Azure resource name)     | Yes      | `"db-password"`             |
+| `key_vault_id` reference              | Yes      | `azurerm_key_vault.main.id` |
+| `content_type`                        | No       | `"text/plain"`              |
+| `tags`                                | No       | `var.tags`                  |
 
 ### Step 2 — Generate the resource
 
 Use the template at [./templates/key_vault_secret.tf.tpl](./templates/key_vault_secret.tf.tpl) and fill in the gathered values.
 
 **Rules that must never be broken:**
+
 - `value_wo` must always be `""`
 - `value_wo_version` must always be `1`
 - Never use the `value` attribute — it stores the secret in state

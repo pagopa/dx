@@ -279,7 +279,10 @@ export const authorizeCloudAccounts =
 
         const locShort = locationShort[account.defaultLocation];
         const input = requestAuthorizationInputSchema.safeParse({
-          bootstrapIdentityId: `${prefix}-${envShort}-${locShort}-bootstrap-id-01`,
+          bootstrapIdentityIds: {
+            cd: `${prefix}-${envShort}-${locShort}-bootstrap-id-01`,
+            ci: `${prefix}-${envShort}-${locShort}-bootstrap-ci-id-01`,
+          },
           envShort,
           prefix,
           repoName: envPayload.github.repo,
@@ -368,6 +371,7 @@ const addEnvironmentAction = (
   gitHubService: GitHubService,
   presenter: CommandPresenter,
   initialAnswers: DeploymentEnvironmentInitialAnswers = {},
+  nonInteractive = false,
 ): ResultAsync<AddResult, Error> =>
   runAddEnvironmentPreconditions(presenter)
     .andThen(() =>
@@ -387,6 +391,7 @@ const addEnvironmentAction = (
           gitHubService,
           undefined,
           initialAnswers,
+          nonInteractive,
         ),
         asError("Failed to run the deployment environment generator"),
       ),
@@ -507,6 +512,7 @@ export const makeAddCommand = (
                       gitHubService,
                       presenter,
                       initialAnswers,
+                      env.CI,
                     ),
                 ),
               ),

@@ -1,6 +1,6 @@
 ---
 name: dx-cli-companion
-description: 'Guide the use of the DX CLI for bootstrap tasks. Use when the user wants to inspect the CLI contract with `spec`, create a repository with `init`, create an environment with `add environment`, or scaffold multi-tenant environments such as `ced-prod`/`cgn-dev` with custom prefixes. Default to the published npm package `@pagopa/dx-cli`, show the exact parameters before execution, ask for missing inputs upfront, and avoid separate prerequisite checks unless the user explicitly asks to run the local compiled JS entrypoint.'
+description: "Guide the use of the DX CLI for bootstrap tasks. Use when the user wants to inspect the CLI contract with `spec`, create a repository with `init`, create an environment with `add environment`, or scaffold multi-tenant environments such as `ced-prod`/`cgn-dev` with custom prefixes. Default to the published npm package `@pagopa/dx-cli`, show the exact parameters before execution, ask for missing inputs upfront, and avoid separate prerequisite checks unless the user explicitly asks to run the local compiled JS entrypoint."
 ---
 
 # DX CLI Companion
@@ -108,19 +108,19 @@ printf '\nn\n' | CI=1 npx -y @pagopa/dx-cli init \
 ## Preparing `add environment`
 
 - Use the current `spec` output as the source of truth for the `add environment` command contract.
-- Collect every value needed to avoid follow-up prompts. In practice, expect to ask for the environment name, subscription or account IDs, location mappings, prefix, domain, business unit, management team, auto-confirm choice, and runner app credentials when environment initialization still needs them.
-- Before execution, show a short preview with the exact resolved values for the current run, including subscription and location pairs plus runner app values when they are in scope.
-- For a first-time environment setup, ask for the four GitHub Runner App values (`runner-app-id`, `client-id`, `installation-id`, `private-key-path`) before the first `add environment` execution unless the user explicitly confirms runner setup is already initialized and those values are not needed.
+- Collect every value needed to avoid follow-up prompts. In practice, expect to ask for the environment name, subscription or account IDs, location mappings, prefix, domain, business unit, management team, auto-confirm choice, and all four Runner App credentials for every new GitHub environment.
+- Before execution, show a short preview with the exact resolved values for the current run, including subscription and location pairs plus the Runner App values.
+- Ask for the four GitHub Runner App values (`runner-app-id`, `client-id`, `installation-id`, `private-key-path`) before every `add environment` execution. Existing Azure bootstrap resources do not remove this requirement because the values must be upserted into the new GitHub environment secrets.
 - For multi-tenant architectures, collect both the tenant-qualified environment name and the prefix. The environment name identifies the generated GitHub environment and infrastructure folder (for example `ced-prod` creates `infra/bootstrapper/ced-prod` and `infra/core/ced-prod`), while the prefix identifies the Azure resource naming prefix (for example `ced`). These are separate values and are not passed as `name=prefix`.
 
 ### Multi-Tenant Environment Names
 
 Use tenant-qualified environment names when a repository hosts multiple tenants or product scopes that share the same base lifecycle environment.
 
-| Input | Meaning | Example |
-| --- | --- | --- |
-| `--name` | Environment identifier. It can be `dev`, `uat`, `prod`, or a tenant-qualified name ending with `-dev`, `-uat`, or `-prod`. | `ced-prod` |
-| `--prefix` | Short 2–4 character tenant/product prefix used in Azure resource names. | `ced` |
+| Input      | Meaning                                                                                                                    | Example    |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `--name`   | Environment identifier. It can be `dev`, `uat`, `prod`, or a tenant-qualified name ending with `-dev`, `-uat`, or `-prod`. | `ced-prod` |
+| `--prefix` | Short 2–4 character tenant/product prefix used in Azure resource names.                                                    | `ced`      |
 
 The suffix of `--name` determines the base environment short code used in Azure names: `*-dev` maps to `d`, `*-uat` maps to `u`, and `*-prod` maps to `p`. For example, `--name ced-prod --prefix ced` uses `p` as the environment short code and generates infrastructure under `infra/bootstrapper/ced-prod` and `infra/core/ced-prod`.
 
@@ -165,24 +165,20 @@ CI=1 npx -y @pagopa/dx-cli add environment \
   --location <subscription-id>=<region> \
   --business-unit <business-unit> \
   --management-team <management-team> \
-  -y
-```
-
-If the initialization path requires GitHub Runner App credentials, extend the command with:
-
-```bash
   --runner-app-id <runner-app-id> \
   --client-id <client-id> \
   --installation-id <installation-id> \
-  --private-key-path <private-key-path>
+  --private-key-path <private-key-path> \
+  -y
 ```
 
 ### `add environment` Notes
 
 - `spec` is the first source of truth for the command name, flags, and choices.
 - In practice, missing `--business-unit` or `--management-team` causes the command to stop for input, so collect them before execution.
-- The spec output lists the Runner App flags as required because they are declared with value placeholders, but the runtime only needs them when the initialization flow reaches GitHub Runner App setup. Ask for them upfront when the goal is a fully non-interactive initialization of an environment that still needs setup.
-- Do not defer Runner App value collection to runtime prompts when performing first-time setup: collect them upfront unless the user explicitly confirms runner setup is already completed for the target environment.
+- The runtime requires Runner App credentials whenever it configures a new GitHub environment, regardless of whether the Azure account is already initialized. In `CI=1` mode, missing values produce an explicit error instead of being silently skipped.
+- The CLI upserts `GH_APP_ID`, `GH_APP_CLIENT_ID`, `GH_APP_INSTALLATION_ID`, and `GH_APP_KEY` in the bootstrapper CD GitHub environment. The values are encrypted by the GitHub API and are not rendered into generated Terraform or workflow files.
+- Do not defer Runner App value collection to runtime prompts for non-interactive execution: collect all four flags before running the command. Interactive execution prompts for any missing fields.
 - Repeat `--account` and `--location` for multi-subscription environments.
 - For multi-tenant environments, repeat the command once per tenant/environment combination, using a different `--name` and `--prefix` when needed. Do not encode both values into one flag.
 - If the user wants to minimize resource creation while trying a new tenant-qualified name, run without `-y` first so the DX CLI shows the resources to be created and lets the user decline the initialization confirmation. There is no scaffold-only mode for `add environment`: generating bootstrapper/core files for an uninitialized environment also involves repository environment synchronization and, when confirmed, cloud initialization.
@@ -192,13 +188,13 @@ If the initialization path requires GitHub Runner App credentials, extend the co
 
 ## Troubleshooting
 
-| Symptom | Meaning | Action |
-| --- | --- | --- |
-| `? Description` appears during `init` | The description was not prefilled, or it is intentionally empty | Ask for the description choice upfront; for an empty description, pipe a blank line on stdin. |
-| Publish confirmation appears during `init` | The publish choice was not encoded in the command | Ask whether to publish now; use `--publish` for yes, or answer `n` on stdin for no. |
-| `? Business unit` appears during `add environment` | `--business-unit` is missing | Ask for the value and rerun with the flag. |
-| `? Management team` appears during `add environment` | `--management-team` is missing | Ask for the value and rerun with the flag. |
-| Runner App credential prompts appear | The environment needs initialization credentials | Ask for the four Runner App values and rerun with the related flags. |
+| Symptom                                              | Meaning                                                         | Action                                                                                        |
+| ---------------------------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `? Description` appears during `init`                | The description was not prefilled, or it is intentionally empty | Ask for the description choice upfront; for an empty description, pipe a blank line on stdin. |
+| Publish confirmation appears during `init`           | The publish choice was not encoded in the command               | Ask whether to publish now; use `--publish` for yes, or answer `n` on stdin for no.           |
+| `? Business unit` appears during `add environment`   | `--business-unit` is missing                                    | Ask for the value and rerun with the flag.                                                    |
+| `? Management team` appears during `add environment` | `--management-team` is missing                                  | Ask for the value and rerun with the flag.                                                    |
+| Runner App credential prompts appear                 | One or more values are missing for the new GitHub environment   | Ask for the four Runner App values and rerun with the related flags.                          |
 
 ## Practical Rules
 
@@ -210,6 +206,6 @@ If the initialization path requires GitHub Runner App credentials, extend the co
 - Always show the final parameter set before running the command.
 - Always execute the CLI directly; do not front-load separate prerequisite probes.
 - If the subscription ID is missing, optionally try `az account show --query '{id:id,name:name}' -o json`, confirm both values with the user, and otherwise continue without turning that lookup into a prerequisite gate.
-- For first-time `add environment`, always ask runner-app-id/client-id/installation-id/private-key-path before execution unless the user explicitly confirms runner setup is already completed.
+- For every `add environment`, always ask runner-app-id/client-id/installation-id/private-key-path before execution.
 - In generated repositories, run mutating DX CLI commands with `NODENV_VERSION=$(cat .node-version)` (and install the pinned version if missing) to prevent runtime feature mismatches.
 - Stop on unexpected prompts and convert them into explicit user questions for the next run.

@@ -46,7 +46,18 @@ variables {
 }
 
 mock_provider "azurerm" {}
-mock_provider "github" {}
+mock_provider "github" {
+  mock_data "github_organization" {
+    defaults = {
+      id = "57742367"
+    }
+  }
+  mock_data "github_repository" {
+    defaults = {
+      repo_id = 1373623344
+    }
+  }
+}
 mock_provider "dx" {}
 
 override_data {
@@ -274,3 +285,95 @@ run "azure_github_environment_bootstrap_opex_identities" {
   }
 }
 
+run "azure_github_environment_bootstrap_dx_runner" {
+  command = plan
+
+  assert {
+    condition     = output.github_dx_runner != null
+    error_message = "The DX GitHub self-hosted runner should be provisioned"
+  }
+
+  assert {
+    condition     = output.github_dx_runner.name != output.github_private_runner.name
+    error_message = "The DX GitHub self-hosted runner should use its distinct name"
+  }
+}
+
+run "azure_github_environment_bootstrap_dx_runner_configuration" {
+  command = plan
+
+  variables {
+    github_private_runner = merge(var.github_private_runner, {
+      labels = ["uat"]
+    })
+  }
+
+  assert {
+    condition     = output.github_dx_runner.image == "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
+    error_message = "The DX GitHub self-hosted runner should use the DX image"
+  }
+
+  assert {
+    condition     = output.github_dx_runner.labels == ["uat", "dx"]
+    error_message = "The DX GitHub self-hosted runner should preserve configured labels and append dx"
+  }
+}
+
+run "azure_github_environment_bootstrap_dx_runner_instance_number_boundary" {
+  command = plan
+
+  variables {
+    environment = merge(var.environment, {
+      instance_number = "99"
+    })
+  }
+
+  assert {
+    condition     = output.github_dx_runner != null
+    error_message = "The DX GitHub self-hosted runner should support instance number 99"
+  }
+}
+
+run "azure_github_environment_bootstrap_immutable_identities" {
+  command = plan
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:infra-uat-ci"
+    error_message = "The Infra CI immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:infra-uat-cd"
+    error_message = "The Infra CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_automation_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:automation-uat-cd"
+    error_message = "The automation CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_app_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:app-uat-ci"
+    error_message = "The App CI immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_app_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:app-uat-cd"
+    error_message = "The App CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_opex_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:opex-uat-ci"
+    error_message = "The Opex CI immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_opex_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:opex-uat-cd"
+    error_message = "The Opex CD immutable subject is incorrect"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_ci != null && azurerm_federated_identity_credential.github_app_ci != null
+    error_message = "The name-based credentials must be kept for backward compatibility"
+  }
+}

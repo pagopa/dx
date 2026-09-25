@@ -5,7 +5,36 @@
 import { Octokit } from "@octokit/rest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { releaseExists } from "../sync-tags-releases.js";
+import { isAlreadyExistsError, releaseExists } from "../sync-tags-releases.js";
+
+describe("isAlreadyExistsError", () => {
+  it("recognizes GitHub's already_exists validation error", () => {
+    const err = {
+      response: {
+        data: {
+          errors: [{ code: "already_exists", field: "tag_name" }],
+        },
+      },
+      status: 422,
+    };
+
+    expect(isAlreadyExistsError(err)).toBe(true);
+  });
+
+  it("does not treat other validation errors as already existing", () => {
+    const err = {
+      response: { data: { errors: [{ code: "missing_field" }] } },
+      status: 422,
+    };
+
+    expect(isAlreadyExistsError(err)).toBe(false);
+  });
+
+  it("does not treat non-validation errors as already existing", () => {
+    expect(isAlreadyExistsError({ status: 500 })).toBe(false);
+    expect(isAlreadyExistsError(new Error("network down"))).toBe(false);
+  });
+});
 
 describe("releaseExists", () => {
   afterEach(() => {
