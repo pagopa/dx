@@ -8,7 +8,7 @@ locals {
 {{#if (eq displayName "PROD-IO")}}
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 6.0"
+  version = "~> 7.0"
 
   providers = {
     azurerm = azurerm.{{displayName}}
@@ -17,7 +17,7 @@ module "azure-{{displayName}}_bootstrap" {
   environment = merge(local.environment, local.azure_accounts.{{displayName}})
 
   entraid_groups = {
-    admins_object_id    = data.azuread_group.admins.object_id
+    admin_object_id     = data.azuread_group.admin.object_id
     devs_object_id      = data.azuread_group.developers.object_id
     externals_object_id = data.azuread_group.externals.object_id
   }
@@ -66,7 +66,7 @@ module "azure-{{displayName}}_core_values" {
 
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 6.0"
+  version = "~> 7.0"
 
   providers = {
     azurerm = azurerm.{{displayName}}
@@ -75,7 +75,7 @@ module "azure-{{displayName}}_bootstrap" {
   environment = merge(local.environment, local.azure_accounts.{{displayName}})
 
   entraid_groups = {
-    admins_object_id    = data.azuread_group.admins.object_id
+    admin_object_id     = data.azuread_group.admin.object_id
     devs_object_id      = data.azuread_group.developers.object_id
     externals_object_id = data.azuread_group.externals.object_id
   }
@@ -136,5 +136,3 @@ resource "azurerm_role_assignment" "infra_ci_kv_secrets_user_common_{{displayNam
 {{/if}}
 {{/if}}
 {{/each}}
-
-
