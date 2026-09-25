@@ -55,7 +55,7 @@ run "missing_subnet_pep_for_private_storage" {
   variables {
     force_public_network_access_enabled  = false
     subnet_pep_id                        = null
-    private_dns_zone_resource_group_name = "rg-network"
+    private_dns_zone_resource_group_name = null
   }
 
   expect_failures = [var.subnet_pep_id]

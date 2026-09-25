@@ -36,15 +36,17 @@ variable "use_case" {
 
 variable "subnet_pep_id" {
   type        = string
-  description = "The ID of the subnet used for private endpoints. Together with `private_dns_zone_resource_group_name`, enables private endpoints for the subservices in `subservices_enabled`, independently of `force_public_network_access_enabled`. Required when `force_public_network_access_enabled` is false."
+  description = "The ID of the subnet used for private endpoints. Together with `private_dns_zone_resource_group_name`, enables private endpoints for the subservices in `subservices_enabled`, independently of `force_public_network_access_enabled`. Required when `force_public_network_access_enabled` is false, except for `delegated_access` where public access is forced by the module."
   default     = null
 
   validation {
     condition = alltrue([
-      (var.subnet_pep_id != null && var.subnet_pep_id != "") == (var.private_dns_zone_resource_group_name != null && var.private_dns_zone_resource_group_name != ""),
-      var.use_case == "delegated_access" || var.force_public_network_access_enabled || (var.subnet_pep_id != null && var.subnet_pep_id != "")
+      (var.subnet_pep_id != null) == (var.private_dns_zone_resource_group_name != null),
+      var.subnet_pep_id == null || var.subnet_pep_id != "",
+      var.private_dns_zone_resource_group_name == null || var.private_dns_zone_resource_group_name != "",
+      var.use_case == "delegated_access" || var.force_public_network_access_enabled || var.subnet_pep_id != null
     ])
-    error_message = "subnet_pep_id and private_dns_zone_resource_group_name must both be set or both be unset; both are required when force_public_network_access_enabled is false."
+    error_message = "subnet_pep_id and private_dns_zone_resource_group_name must both be set or both be unset; both are required when force_public_network_access_enabled is false, except for delegated_access."
   }
 }
 

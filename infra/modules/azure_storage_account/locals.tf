@@ -78,10 +78,12 @@ locals {
   immutability_policy_enabled         = local.tier_features.immutability_policy || var.blob_features.immutability_policy.enabled
   immutability_policy_state           = var.blob_features.immutability_policy.state != null ? var.blob_features.immutability_policy.state : "Unlocked"
 
-  # A private endpoint requires both its subnet and the resource group containing
-  # the matching Private DNS zone. This remains independent of public access, so a
-  # storage account can be reachable through both Front Door/CDN and a private VNet.
-  create_private_endpoints = var.subnet_pep_id != null && var.subnet_pep_id != "" && var.private_dns_zone_resource_group_name != null && var.private_dns_zone_resource_group_name != ""
+  # A private endpoint requires the resource group containing the matching Private
+  # DNS zone. This remains independent of public access, so a storage account can
+  # be reachable through both Front Door/CDN and a private VNet. Do not depend on
+  # subnet_pep_id here: callers may pass a subnet ID computed in the same plan,
+  # while for_each keys must be known before apply.
+  create_private_endpoints = var.private_dns_zone_resource_group_name != null && var.private_dns_zone_resource_group_name != ""
 
   peps = {
     create_subservices = local.create_private_endpoints ? var.subservices_enabled : {
