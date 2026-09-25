@@ -1,3 +1,13 @@
+## 0.5.23 (2026-09-25)
+
+### 🚀 Features
+
+- Add a Copilot dashboard to the DX Metrics portal. It reports Copilot code review adoption and how it pairs with human review, the Copilot review rate by pull-request size, pull requests opened by the Copilot coding agent, and Copilot co-authored commits, with deterministic insights and a reusable dual-axis bar-and-line chart. ([#2272](https://github.com/pagopa/dx/pull/2272))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.22 (2026-09-24)
 
 ### 🧱 Updated Dependencies
