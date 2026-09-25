@@ -43,10 +43,11 @@ module "storage_account" {
   version     = "~> 4.0"
   environment = var.environment
 
-  resource_group_name                 = azurerm_resource_group.rg.name
-  use_case                            = "development"
-  subnet_pep_id                       = data.azurerm_subnet.pep.id
-  force_public_network_access_enabled = true
+  resource_group_name                  = azurerm_resource_group.rg.name
+  use_case                             = "development"
+  subnet_pep_id                        = data.azurerm_subnet.pep.id
+  private_dns_zone_resource_group_name = data.azurerm_resource_group.network.name
+  force_public_network_access_enabled  = true
   static_website = {
     enabled        = true
     index_document = "index.html"

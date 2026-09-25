@@ -36,12 +36,15 @@ variable "use_case" {
 
 variable "subnet_pep_id" {
   type        = string
-  description = "The ID of the subnet used for private endpoints. When set, private endpoints are created for the subservices enabled in `subservices_enabled`, independently of `force_public_network_access_enabled` (this allows enabling private endpoints even when public network access is also enabled). Required only if `force_public_network_access_enabled` is set to false."
+  description = "The ID of the subnet used for private endpoints. Together with `private_dns_zone_resource_group_name`, enables private endpoints for the subservices in `subservices_enabled`, independently of `force_public_network_access_enabled`. Required when `force_public_network_access_enabled` is false."
   default     = null
 
   validation {
-    condition     = var.use_case == "delegated_access" || var.force_public_network_access_enabled || (var.subnet_pep_id != null && var.subnet_pep_id != "")
-    error_message = "subnet_pep_id is required when force_public_network_access_enabled is false."
+    condition = alltrue([
+      (var.subnet_pep_id != null && var.subnet_pep_id != "") == (var.private_dns_zone_resource_group_name != null && var.private_dns_zone_resource_group_name != ""),
+      var.use_case == "delegated_access" || var.force_public_network_access_enabled || (var.subnet_pep_id != null && var.subnet_pep_id != "")
+    ])
+    error_message = "subnet_pep_id and private_dns_zone_resource_group_name must both be set or both be unset; both are required when force_public_network_access_enabled is false."
   }
 }
 
@@ -183,7 +186,7 @@ EOT
 
 variable "private_dns_zone_resource_group_name" {
   type        = string
-  description = "Resource group for the private DNS zone. Defaults to the virtual network's resource group."
+  description = "Resource group containing the private DNS zone. Must be set together with subnet_pep_id."
   default     = null
 }
 

@@ -286,8 +286,9 @@ run "storage_account_private_network" {
   command = plan
 
   variables {
-    force_public_network_access_enabled = false
-    subnet_pep_id                       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
+    force_public_network_access_enabled  = false
+    subnet_pep_id                        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
+    private_dns_zone_resource_group_name = "rg-network"
   }
 
   override_data {
@@ -314,8 +315,9 @@ run "storage_account_public_network_with_subnet_pep_id" {
   command = plan
 
   variables {
-    force_public_network_access_enabled = true
-    subnet_pep_id                       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
+    force_public_network_access_enabled  = true
+    subnet_pep_id                        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
+    private_dns_zone_resource_group_name = "rg-network"
   }
 
   override_data {
@@ -328,17 +330,17 @@ run "storage_account_public_network_with_subnet_pep_id" {
 
   assert {
     condition     = azurerm_storage_account.this.public_network_access_enabled == true
-    error_message = "public_network_access_enabled must remain true when force_public=true, even with subnet_pep_id set"
+    error_message = "public_network_access_enabled must remain true when force_public=true, even with private endpoint inputs set"
   }
 
   assert {
     condition     = local.peps.create_subservices.blob == true
-    error_message = "peps.create_subservices.blob must be true when subnet_pep_id is set, even if public network is forced"
+    error_message = "peps.create_subservices.blob must be true when both private endpoint inputs are set, even if public network is forced"
   }
 
   assert {
     condition     = azurerm_private_endpoint.this["blob"].subnet_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
-    error_message = "A blob private endpoint must actually be planned when subnet_pep_id is set, even if public network is forced"
+    error_message = "A blob private endpoint must actually be planned when both private endpoint inputs are set, even if public network is forced"
   }
 }
 

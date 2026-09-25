@@ -29,7 +29,8 @@ module "storage_account" {
   # subservices below, in addition to the public endpoint used by the CDN
   # origin, so the storage account is reachable both publicly (via Front
   # Door/CDN) and privately from workloads inside the network.
-  subnet_pep_id = data.azurerm_subnet.pep.id
+  subnet_pep_id                        = data.azurerm_subnet.pep.id
+  private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
 
   force_public_network_access_enabled = true # Public network access enabled for CDN origin reachability
 
@@ -82,9 +83,10 @@ module "storage_account_secondary" {
     instance_number = "01"
   })
 
-  resource_group_name = azurerm_resource_group.example.name
-  use_case            = "default"
-  subnet_pep_id       = data.azurerm_subnet.pep.id
+  resource_group_name                  = azurerm_resource_group.example.name
+  use_case                             = "default"
+  subnet_pep_id                        = data.azurerm_subnet.pep.id
+  private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
 
   force_public_network_access_enabled = true
 
