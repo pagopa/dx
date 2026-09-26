@@ -1,0 +1,16 @@
+{
+  "name": "@pagopa/dx-cli",
+  "targets": {
+    "test": {
+      "inputs": [
+        "default",
+        "^default",
+        "{workspaceRoot}/.github/plugin/marketplace.json",
+        "{workspaceRoot}/plugins/tests/plugin.json",
+        { "externalDependencies": ["vitest"] },
+        { "env": "CI" },
+        { "dependentTasksOutputFiles": "**/*.js", "transitive": true }
+      ]
+    }
+  }
+}
