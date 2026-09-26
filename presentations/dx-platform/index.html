@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>DX Platform — Astrazioni deterministiche per il SDLC agentico</title>
+    <title>DX Platform — Strumenti riusabili per SDLC agentico</title>
     <meta
       name="description"
       content="Presentazione interattiva della piattaforma PagoPA DX: astrazioni, layer, standard aperti e SDLC agentico."
@@ -41,7 +41,8 @@
         --green: #5ddba8;
         --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
         --font-display: "Space Grotesk", "Inter", system-ui, sans-serif;
-        --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+        --font-mono:
+          "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
         --ease-out: cubic-bezier(0.22, 0.8, 0.26, 1);
         --ease-spring: cubic-bezier(0.34, 1.4, 0.44, 1);
       }
@@ -84,9 +85,21 @@
         z-index: 0;
         overflow: hidden;
         background:
-          radial-gradient(1200px 800px at 12% -10%, rgba(0, 161, 176, 0.22), transparent 60%),
-          radial-gradient(1000px 700px at 108% 18%, rgba(124, 140, 255, 0.16), transparent 55%),
-          radial-gradient(900px 620px at 50% 122%, rgba(0, 161, 176, 0.12), transparent 60%),
+          radial-gradient(
+            1200px 800px at 12% -10%,
+            rgba(0, 161, 176, 0.22),
+            transparent 60%
+          ),
+          radial-gradient(
+            1000px 700px at 108% 18%,
+            rgba(124, 140, 255, 0.16),
+            transparent 55%
+          ),
+          radial-gradient(
+            900px 620px at 50% 122%,
+            rgba(0, 161, 176, 0.12),
+            transparent 60%
+          ),
           linear-gradient(180deg, #060b12, #081120 42%, #060b12);
       }
       .bg::before {
@@ -95,10 +108,22 @@
         inset: -35%;
         background-image:
           linear-gradient(rgba(255, 255, 255, 0.032) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.032) 1px, transparent 1px);
+          linear-gradient(
+            90deg,
+            rgba(255, 255, 255, 0.032) 1px,
+            transparent 1px
+          );
         background-size: 64px 64px;
-        -webkit-mask-image: radial-gradient(closest-side at 50% 45%, #000 45%, transparent 100%);
-        mask-image: radial-gradient(closest-side at 50% 45%, #000 45%, transparent 100%);
+        -webkit-mask-image: radial-gradient(
+          closest-side at 50% 45%,
+          #000 45%,
+          transparent 100%
+        );
+        mask-image: radial-gradient(
+          closest-side at 50% 45%,
+          #000 45%,
+          transparent 100%
+        );
         animation: grid-drift 70s linear infinite;
       }
       .bg::after {
@@ -179,7 +204,8 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: clamp(56px, 7vh, 84px) clamp(20px, 4vw, 64px) clamp(64px, 8vh, 92px);
+        padding: clamp(56px, 7vh, 84px) clamp(20px, 4vw, 64px)
+          clamp(64px, 8vh, 92px);
         opacity: 0;
         visibility: hidden;
         pointer-events: none;
@@ -264,7 +290,12 @@
         font-weight: 600;
       }
       .accent {
-        background: linear-gradient(92deg, var(--cyan), var(--teal-2) 45%, var(--indigo));
+        background: linear-gradient(
+          92deg,
+          var(--cyan),
+          var(--teal-2) 45%,
+          var(--indigo)
+        );
         -webkit-background-clip: text;
         background-clip: text;
         color: transparent;
@@ -322,6 +353,13 @@
         background: var(--green);
         box-shadow: 0 0 10px rgba(93, 219, 168, 0.9);
       }
+      .chip.bad {
+        border-color: rgba(255, 122, 144, 0.38);
+      }
+      .chip.bad i {
+        background: var(--rose);
+        box-shadow: 0 0 10px rgba(255, 122, 144, 0.9);
+      }
       .chips {
         display: flex;
         flex-wrap: wrap;
@@ -334,7 +372,11 @@
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 20px 22px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.015)
+        );
         box-shadow: 0 24px 60px -38px rgba(0, 0, 0, 0.9);
         transition:
           border-color 0.35s ease,
@@ -370,7 +412,11 @@
         color: var(--faint);
       }
       .card.hl {
-        background: linear-gradient(90deg, rgba(0, 161, 176, 0.11), rgba(124, 140, 255, 0.06));
+        background: linear-gradient(
+          90deg,
+          rgba(0, 161, 176, 0.11),
+          rgba(124, 140, 255, 0.06)
+        );
         border-color: rgba(38, 179, 194, 0.3);
       }
       .card.hl .k {
@@ -405,7 +451,11 @@
         border: 1px solid var(--line);
         border-radius: 14px;
         padding: 11px 16px;
-        background: linear-gradient(90deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.045),
+          rgba(255, 255, 255, 0.012)
+        );
         transition:
           border-color 0.3s ease,
           transform 0.3s var(--ease-out),
@@ -414,7 +464,11 @@
       .xf:hover {
         border-color: rgba(38, 179, 194, 0.45);
         transform: translateX(6px);
-        background: linear-gradient(90deg, rgba(38, 179, 194, 0.09), rgba(255, 255, 255, 0.014));
+        background: linear-gradient(
+          90deg,
+          rgba(38, 179, 194, 0.09),
+          rgba(255, 255, 255, 0.014)
+        );
       }
       .xf:not(:last-child)::after {
         content: "";
@@ -564,7 +618,12 @@
         display: block;
         height: 100%;
         width: 0;
-        background: linear-gradient(90deg, var(--teal), var(--cyan), var(--indigo));
+        background: linear-gradient(
+          90deg,
+          var(--teal),
+          var(--cyan),
+          var(--indigo)
+        );
         border-radius: 2px;
         transition: width 0.6s var(--ease-out);
         box-shadow: 0 0 14px rgba(38, 179, 194, 0.7);
@@ -823,7 +882,12 @@
         width: 54px;
         height: 54px;
         border-radius: 16px;
-        background: linear-gradient(140deg, var(--teal-2), var(--teal) 55%, #0b6e78);
+        background: linear-gradient(
+          140deg,
+          var(--teal-2),
+          var(--teal) 55%,
+          #0b6e78
+        );
         display: grid;
         place-items: center;
         font-family: var(--font-mono);
@@ -846,13 +910,944 @@
         max-width: 66ch;
       }
       /* ============================================================
+         Icon tiles
+         ============================================================ */
+      .tiles {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(168px, 1fr));
+        gap: 12px;
+        margin-top: 24px;
+      }
+      .tile {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 16px 16px 14px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.015)
+        );
+        display: grid;
+        gap: 10px;
+        align-content: start;
+        transition:
+          border-color 0.3s ease,
+          transform 0.3s var(--ease-out);
+      }
+      .tile:hover {
+        border-color: rgba(38, 179, 194, 0.45);
+        transform: translateY(-3px);
+      }
+      .tile .ic {
+        width: 32px;
+        height: 32px;
+        border-radius: 10px;
+        display: grid;
+        place-items: center;
+        background: rgba(38, 179, 194, 0.12);
+        border: 1px solid rgba(38, 179, 194, 0.32);
+        color: var(--teal-2);
+      }
+      .tile .ic svg {
+        width: 16px;
+        height: 16px;
+        stroke: currentColor;
+        fill: none;
+        stroke-width: 1.7;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .tile .tt {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 14.5px;
+        line-height: 1.25;
+      }
+      .tile .st {
+        font-size: 11.5px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .tile .st .mono {
+        font-size: 10.5px;
+      }
+      .tile .fn {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: var(--cyan);
+        line-height: 1.4;
+        word-break: break-all;
+      }
+      .tile.rose .ic {
+        background: rgba(255, 122, 144, 0.1);
+        border-color: rgba(255, 122, 144, 0.32);
+        color: var(--rose);
+      }
+      .tile.violet .ic {
+        background: rgba(124, 140, 255, 0.12);
+        border-color: rgba(124, 140, 255, 0.32);
+        color: var(--indigo);
+      }
+      .tile.amber .ic {
+        background: rgba(255, 200, 97, 0.1);
+        border-color: rgba(255, 200, 97, 0.32);
+        color: var(--amber);
+      }
+      .tile.green .ic {
+        background: rgba(93, 219, 168, 0.1);
+        border-color: rgba(93, 219, 168, 0.32);
+        color: var(--green);
+      }
+      .tiles.five > :last-child {
+        grid-column: 1 / -1;
+      }
+
+      /* ============================================================
+         Divergenza vs contratto (slide 2)
+         ============================================================ */
+      .fan {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 26px;
+      }
+      .fan-col {
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 18px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.045),
+          rgba(255, 255, 255, 0.012)
+        );
+      }
+      .fan-col .hd {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+      .fan-col .hd .nm {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 14.5px;
+      }
+      .fan-col .hd .bdg {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        padding: 4px 9px;
+        border-radius: 999px;
+        letter-spacing: 0.06em;
+      }
+      .fan-col.raw .hd .bdg {
+        background: rgba(255, 122, 144, 0.12);
+        border: 1px solid rgba(255, 122, 144, 0.35);
+        color: var(--rose);
+      }
+      .fan-col.ok .hd .bdg {
+        background: rgba(38, 179, 194, 0.14);
+        border: 1px solid rgba(38, 179, 194, 0.4);
+        color: var(--teal-2);
+      }
+      /* Budget di contesto: blocchi (slide 2) */
+      .ctxbudget {
+        margin-top: 26px;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        padding: 20px 22px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.015)
+        );
+      }
+      .cb-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+      }
+      .cb-title {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 15px;
+      }
+      .cb-legend {
+        display: flex;
+        gap: 14px;
+      }
+      .lg {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+      .lg::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-radius: 3px;
+      }
+      .lg-ctx::before {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 122, 144, 0.9),
+          rgba(255, 122, 144, 0.5)
+        );
+      }
+      .lg-code::before {
+        background: linear-gradient(
+          180deg,
+          rgba(38, 179, 194, 0.9),
+          rgba(38, 179, 194, 0.5)
+        );
+      }
+      .cb-row {
+        display: grid;
+        grid-template-columns: 96px 1fr 128px;
+        gap: 16px;
+        align-items: center;
+        padding: 11px 0;
+      }
+      .cb-row + .cb-row {
+        border-top: 1px dashed rgba(255, 255, 255, 0.08);
+      }
+      .cb-lbl {
+        font-family: var(--font-mono);
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .blocks {
+        display: grid;
+        grid-template-columns: repeat(20, 1fr);
+        gap: 4px;
+      }
+      .blocks i {
+        height: 20px;
+        border-radius: 5px;
+        background: rgba(255, 255, 255, 0.07);
+        opacity: 0.3;
+        transform: scale(0.85);
+        transition:
+          opacity 0.45s ease,
+          transform 0.5s var(--ease-out),
+          background 0.3s ease;
+        transition-delay: var(--d, 0ms);
+      }
+      .js .is-active .blocks i {
+        opacity: 1;
+        transform: none;
+      }
+      .blocks i.ctx {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 122, 144, 0.9),
+          rgba(255, 122, 144, 0.45)
+        );
+      }
+      .blocks i.code {
+        background: linear-gradient(
+          180deg,
+          rgba(38, 179, 194, 0.85),
+          rgba(38, 179, 194, 0.4)
+        );
+      }
+      .blocks i.dim {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.32),
+          rgba(255, 255, 255, 0.1)
+        );
+      }
+      .blocks i.hot {
+        background: linear-gradient(
+          180deg,
+          rgba(38, 179, 194, 0.95),
+          rgba(38, 179, 194, 0.45)
+        );
+      }
+      .blocks.slim i {
+        height: 16px;
+      }
+
+      /* ============================================================
+         Confronto velocità CI (slide affected)
+         ============================================================ */
+      .speed {
+        margin-top: 16px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        padding: 14px 18px;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.04),
+          rgba(255, 255, 255, 0.012)
+        );
+        display: grid;
+        gap: 10px;
+      }
+      .sp-row {
+        display: grid;
+        grid-template-columns: 150px 1fr 150px;
+        gap: 16px;
+        align-items: center;
+      }
+      .sp-lbl {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: var(--muted);
+      }
+      .sp-track {
+        position: relative;
+        height: 24px;
+        border-radius: 8px;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.03);
+        display: flex;
+        align-items: center;
+        padding: 0 3px;
+      }
+      .sp-bar {
+        display: flex;
+        gap: 3px;
+        width: 100%;
+      }
+      .sp-bar.ok {
+        width: var(--w, 19%);
+      }
+      .sp-bar .blocks {
+        grid-template-columns: none;
+        grid-auto-flow: column;
+        grid-auto-columns: 1fr;
+      }
+      .sp-skip {
+        position: absolute;
+        right: 10px;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--faint);
+      }
+      .sp-out {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: var(--muted);
+        text-align: right;
+      }
+      .sp-out.teal {
+        color: var(--teal-2);
+      }
+      .cb-num {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        text-align: right;
+        color: var(--teal-2);
+      }
+      .cb-num.rose {
+        color: var(--rose);
+      }
+
+      .fan-svg {
+        width: 100%;
+        height: auto;
+        display: block;
+        margin-top: 6px;
+      }
+      .fan-svg text {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        text-anchor: middle;
+      }
+      .fan-svg .f-src {
+        fill: rgba(255, 255, 255, 0.05);
+        stroke: var(--line-strong);
+        stroke-width: 1;
+      }
+      .fan-svg .f-txt {
+        fill: var(--muted);
+      }
+      .fan-svg .f-l {
+        fill: none;
+        stroke-width: 1.6;
+      }
+      .fan-col.raw .fan-svg .f-l {
+        stroke: rgba(255, 122, 144, 0.45);
+      }
+      .fan-col.raw .fan-svg .f-o1 {
+        fill: rgba(255, 122, 144, 0.3);
+        stroke: rgba(255, 122, 144, 0.65);
+      }
+      .fan-col.raw .fan-svg .f-o2 {
+        fill: rgba(255, 200, 97, 0.28);
+        stroke: rgba(255, 200, 97, 0.65);
+      }
+      .fan-col.raw .fan-svg .f-o3 {
+        fill: rgba(124, 140, 255, 0.3);
+        stroke: rgba(124, 140, 255, 0.65);
+      }
+      .fan-col.raw .fan-svg .f-cap {
+        fill: var(--rose);
+      }
+      .fan-col.ok .fan-svg .f-src {
+        fill: rgba(38, 179, 194, 0.1);
+        stroke: rgba(38, 179, 194, 0.6);
+      }
+      .fan-col.ok .fan-svg .f-txt {
+        fill: var(--teal-2);
+      }
+      .fan-col.ok .fan-svg .f-l {
+        stroke: rgba(38, 179, 194, 0.55);
+      }
+      .fan-col.ok .fan-svg .f-o {
+        fill: rgba(38, 179, 194, 0.26);
+        stroke: rgba(38, 179, 194, 0.7);
+      }
+      .fan-col.ok .fan-svg .f-cap {
+        fill: var(--teal-2);
+      }
+      .js .is-active .fan-svg .f-l {
+        stroke-dasharray: 240;
+        stroke-dashoffset: 240;
+        animation: draw-line 1s var(--ease-out) forwards;
+        animation-delay: var(--dd, 100ms);
+      }
+      .js .is-active .fan-svg .f-out {
+        opacity: 0;
+        animation: fpop 0.5s var(--ease-out) forwards;
+        animation-delay: var(--dd, 500ms);
+      }
+      @keyframes draw-line {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
+      @keyframes fpop {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: none;
+        }
+      }
+      .fan-cap {
+        margin-top: 14px;
+        font-size: 11.5px;
+        color: var(--faint);
+      }
+
+      /* ============================================================
+         Scambio di identità OIDC, statico (slide 7)
+         ============================================================ */
+      .oidc-flow {
+        display: flex;
+        align-items: stretch;
+        gap: 10px;
+      }
+      .oidc-node {
+        flex: 1;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 14px;
+        padding: 14px 12px;
+        text-align: center;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.015)
+        );
+      }
+      .oidc-node b {
+        display: block;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 13.5px;
+      }
+      .oidc-node i {
+        display: block;
+        font-style: normal;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--muted);
+        margin-top: 5px;
+      }
+      .oidc-node.cloud {
+        border-color: rgba(38, 179, 194, 0.35);
+        background: linear-gradient(
+          180deg,
+          rgba(38, 179, 194, 0.1),
+          rgba(38, 179, 194, 0.02)
+        );
+      }
+      .oidc-arrow {
+        display: grid;
+        place-items: center;
+        align-content: center;
+        gap: 5px;
+        min-width: 104px;
+      }
+      .oidc-arrow svg {
+        width: 96px;
+        height: 22px;
+      }
+      .oidc-arrow svg path {
+        fill: none;
+        stroke: rgba(38, 179, 194, 0.65);
+        stroke-width: 1.6;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .oidc-arrow em {
+        font-style: normal;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        color: var(--teal-2);
+      }
+
+      /* ============================================================
+         Ruoli e permessi (slide 7)
+         ============================================================ */
+      .roles {
+        display: grid;
+        gap: 9px;
+      }
+      .role {
+        display: grid;
+        grid-template-columns: 108px 1fr;
+        gap: 12px;
+        align-items: center;
+      }
+      .role .nm {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .role .rs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      .role .rs .chip {
+        font-size: 10.5px;
+        padding: 4px 9px;
+      }
+
+      /* ============================================================
+         Percorso del deploy (slide dipendenza)
+         ============================================================ */
+      .deploy {
+        position: relative;
+        margin-top: 20px;
+        display: grid;
+        gap: 9px;
+        padding-left: 36px;
+      }
+      .dp-spine {
+        position: absolute;
+        left: 12px;
+        top: 16px;
+        bottom: 16px;
+        width: 2px;
+        border-radius: 2px;
+        background: linear-gradient(
+          180deg,
+          rgba(124, 140, 255, 0.5),
+          rgba(38, 179, 194, 0.5),
+          rgba(255, 159, 110, 0.45)
+        );
+        overflow: hidden;
+      }
+      .dp-spine i {
+        position: absolute;
+        left: -3px;
+        width: 8px;
+        height: 54px;
+        border-radius: 8px;
+        background: radial-gradient(
+          closest-side,
+          rgba(111, 227, 239, 0.95),
+          rgba(111, 227, 239, 0) 78%
+        );
+        filter: blur(1px);
+      }
+      .js .is-active .dp-spine i {
+        animation: travel 5.5s linear infinite;
+      }
+      @keyframes travel {
+        from {
+          top: -54px;
+        }
+        to {
+          top: 100%;
+        }
+      }
+      .dp-step {
+        position: relative;
+        display: grid;
+        grid-template-columns: 152px 186px 1fr;
+        gap: 14px;
+        align-items: center;
+        padding: 10px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top-color: rgba(255, 255, 255, 0.22);
+        background:
+          repeating-linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.02) 0 7px,
+            rgba(255, 255, 255, 0) 7px 14px
+          ),
+          linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.075),
+            rgba(255, 255, 255, 0.02)
+          );
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.16),
+          0 5px 0 rgba(2, 6, 10, 0.8),
+          0 16px 26px -18px rgba(0, 0, 0, 0.9);
+      }
+      .dp-step .dp-dot {
+        position: absolute;
+        left: -27px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: var(--lc, var(--teal-2));
+        box-shadow: 0 0 14px var(--lc, rgba(38, 179, 194, 0.9));
+      }
+      .dp-step .dp-lb {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 0.1em;
+        color: var(--lc, var(--teal-2));
+        white-space: nowrap;
+      }
+      .dp-step .dp-act {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .dp-step .dp-det {
+        font-size: 12.5px;
+        color: var(--muted);
+        line-height: 1.45;
+      }
+      .dp-step .dp-det code {
+        font-family: var(--font-mono);
+        font-size: 11.5px;
+        color: var(--cyan);
+      }
+
+      /* ============================================================
+         Architettura hub & spoke (slide 8)
+         ============================================================ */
+      .arch {
+        margin-top: 16px;
+      }
+      .arch-svg {
+        width: 100%;
+        max-width: 920px;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+      }
+      .arch-svg text {
+        text-anchor: middle;
+        font-family: var(--font-mono);
+      }
+      .arch-svg .a-small {
+        font-size: 11px;
+        fill: var(--faint);
+        text-anchor: start;
+      }
+      .arch-svg .a-small.a-end {
+        text-anchor: end;
+      }
+      .arch-svg .a-bound {
+        fill: rgba(255, 255, 255, 0.015);
+        stroke: rgba(255, 255, 255, 0.16);
+        stroke-dasharray: 6 6;
+      }
+      .arch-svg .a-link {
+        fill: none;
+        stroke: rgba(38, 179, 194, 0.5);
+        stroke-width: 1.6;
+      }
+      .arch-svg .a-link.a-dash {
+        stroke: rgba(111, 227, 239, 0.4);
+        stroke-dasharray: 5 6;
+      }
+      .arch-svg .a-dot {
+        fill: var(--teal-2);
+      }
+      .arch-svg .a-hub {
+        fill: rgba(38, 179, 194, 0.1);
+        stroke: rgba(38, 179, 194, 0.55);
+      }
+      .arch-svg .a-hub-t {
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        fill: var(--teal-2);
+      }
+      .arch-svg .a-chip {
+        fill: rgba(38, 179, 194, 0.1);
+        stroke: rgba(38, 179, 194, 0.32);
+      }
+      .arch-svg .a-chip-t {
+        font-size: 11.5px;
+        fill: var(--text);
+      }
+      .arch-svg .a-domain {
+        fill: rgba(124, 140, 255, 0.08);
+        stroke: rgba(124, 140, 255, 0.38);
+      }
+      .arch-svg .a-domain-t {
+        font-size: 13px;
+        fill: var(--text);
+        font-family: var(--font-display);
+        font-weight: 600;
+      }
+      .arch-svg .a-domain-s {
+        font-size: 10.5px;
+        fill: var(--muted);
+      }
+      .arch-svg .a-new {
+        fill: rgba(255, 200, 97, 0.07);
+        stroke: rgba(255, 200, 97, 0.5);
+        stroke-dasharray: 6 6;
+      }
+      .arch-svg .a-new-t {
+        font-size: 12.5px;
+        fill: var(--amber);
+      }
+      .arch-svg .a-new-s {
+        font-size: 10.5px;
+        fill: var(--faint);
+      }
+      .arch-svg .a-link.a-new-link {
+        stroke: rgba(255, 200, 97, 0.55);
+        stroke-dasharray: 4 5;
+      }
+      .arch-svg .a-core {
+        fill: rgba(124, 140, 255, 0.08);
+        stroke: rgba(124, 140, 255, 0.35);
+        stroke-dasharray: 5 6;
+      }
+      .arch-svg .a-core-t {
+        font-size: 11.5px;
+        fill: var(--muted);
+      }
+      .js .is-active .arch-svg .a-link:not(.a-dash) {
+        stroke-dasharray: 260;
+        stroke-dashoffset: 260;
+        animation: draw-line 1s var(--ease-out) forwards;
+        animation-delay: var(--dd, 140ms);
+      }
+      .js .is-active .arch-svg .a-hub {
+        animation: hub-pulse 3.8s ease infinite;
+      }
+      @keyframes hub-pulse {
+        0%,
+        100% {
+          filter: drop-shadow(0 0 0 rgba(38, 179, 194, 0));
+        }
+        50% {
+          filter: drop-shadow(0 0 16px rgba(38, 179, 194, 0.55));
+        }
+      }
+
+      /* ============================================================
+         Mini diagramma del grafo Nx (slide 10)
+         ============================================================ */
+      .nxg {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .nxg .chips {
+        margin-top: 0;
+        flex: 1 1 auto;
+      }
+      .nxg .chips .chip {
+        font-size: 10.5px;
+        padding: 5px 10px;
+      }
+      .nxg .arr {
+        font-family: var(--font-mono);
+        color: var(--faint);
+      }
+      .nxg .merge {
+        border: 1px solid rgba(38, 179, 194, 0.45);
+        border-radius: 12px;
+        padding: 10px 14px;
+        background: rgba(38, 179, 194, 0.08);
+        font-size: 12px;
+        color: var(--text);
+        text-align: center;
+        line-height: 1.35;
+      }
+      .nxg .merge span {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        color: var(--faint);
+        margin-top: 3px;
+      }
+
+      /* ============================================================
+         Grafo "affected" (slide CI)
+         ============================================================ */
+      .afg {
+        margin-top: 16px;
+      }
+      .afg-svg {
+        width: 100%;
+        max-width: 980px;
+        height: auto;
+        display: block;
+        margin: 0 auto;
+      }
+      .afg-svg text {
+        font-family: var(--font-mono);
+      }
+      .afg-svg .g-edge {
+        fill: none;
+        stroke: rgba(255, 255, 255, 0.14);
+        stroke-width: 1.5;
+      }
+      .afg-svg .g-edge.live {
+        stroke: rgba(38, 179, 194, 0.55);
+      }
+      .afg-svg .g-node {
+        fill: rgba(255, 255, 255, 0.03);
+        stroke: rgba(255, 255, 255, 0.14);
+      }
+      .afg-svg .g-node.changed {
+        fill: rgba(255, 200, 97, 0.14);
+        stroke: rgba(255, 200, 97, 0.65);
+      }
+      .afg-svg .g-node.affected {
+        fill: rgba(38, 179, 194, 0.12);
+        stroke: rgba(38, 179, 194, 0.55);
+      }
+      .afg-svg .g-t {
+        font-size: 12px;
+        fill: var(--muted);
+        text-anchor: middle;
+      }
+      .afg-svg .g-t.bright {
+        fill: var(--text);
+      }
+      .afg-svg .g-badge {
+        font-size: 10px;
+        letter-spacing: 0.08em;
+        text-anchor: middle;
+      }
+      .afg-svg .g-badge.changed {
+        fill: var(--amber);
+      }
+      .afg-svg .g-badge.affected {
+        fill: var(--teal-2);
+      }
+      .afg-svg .g-badge.dim {
+        fill: var(--faint);
+      }
+      .afg-sweep {
+        fill: rgba(38, 179, 194, 0.07);
+      }
+      .js .is-active .afg-svg .g-edge.live {
+        stroke-dasharray: 340;
+        stroke-dashoffset: 340;
+        animation: draw-line 1s var(--ease-out) forwards;
+        animation-delay: var(--dd, 200ms);
+      }
+      .js .is-active .afg-svg .g-pop {
+        opacity: 0;
+        animation: fpop 0.5s var(--ease-out) forwards;
+        animation-delay: var(--dd, 600ms);
+      }
+      .js .is-active .afg-sweep {
+        animation: sweep 2.6s var(--ease-out) forwards;
+      }
+      @keyframes sweep {
+        0% {
+          transform: translateX(-90px);
+          opacity: 0.9;
+        }
+        80% {
+          opacity: 0.7;
+        }
+        100% {
+          transform: translateX(1080px);
+          opacity: 0;
+        }
+      }
+      .afg-legend {
+        display: flex;
+        gap: 16px;
+        justify-content: center;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+
+      /* ============================================================
+         Flowmap: catena PRD → DR → … → CD (slide adozione)
+         ============================================================ */
+      .flowmap {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 26px;
+        padding: 18px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.04),
+          rgba(255, 255, 255, 0.012)
+        );
+      }
+      .fm-node {
+        font-family: var(--font-mono);
+        font-size: 12.5px;
+        padding: 9px 16px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.16);
+        background: rgba(255, 255, 255, 0.04);
+        color: var(--text);
+      }
+      .fm-node.ok {
+        border-color: rgba(93, 219, 168, 0.45);
+        background: rgba(93, 219, 168, 0.1);
+        color: var(--green);
+      }
+      .fm-arr {
+        color: var(--faint);
+        font-family: var(--font-mono);
+        font-size: 13px;
+      }
+
+      /* ============================================================
          Context funnel (slide 2)
          ============================================================ */
       .ctxmap {
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 20px 22px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.015)
+        );
         display: grid;
         gap: 16px;
       }
@@ -879,7 +1874,11 @@
         height: 10px;
         border-radius: 8px;
         width: 0;
-        background: linear-gradient(90deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.1));
+        background: linear-gradient(
+          90deg,
+          rgba(255, 255, 255, 0.25),
+          rgba(255, 255, 255, 0.1)
+        );
         transition: width 1.1s var(--ease-out) var(--d, 0ms);
       }
       .js .is-active .ctxmap .bar {
@@ -1035,7 +2034,11 @@
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 18px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.05),
+          rgba(255, 255, 255, 0.015)
+        );
         display: flex;
         flex-direction: column;
         gap: 14px;
@@ -1121,28 +2124,44 @@
          ============================================================ */
       .stack {
         display: grid;
-        gap: 10px;
-        margin-top: 26px;
+        gap: 9px;
+        margin-top: 22px;
+        position: relative;
       }
       .layer {
+        position: relative;
         display: grid;
         grid-template-columns: 74px 220px 1fr auto;
         align-items: center;
         gap: 18px;
         text-align: left;
-        border: 1px solid var(--line);
-        border-radius: 15px;
-        background: linear-gradient(90deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
         color: var(--text);
-        padding: 13px 18px;
-        cursor: pointer;
         font: inherit;
-        position: relative;
-        overflow: hidden;
+        cursor: pointer;
+        padding: 12px 18px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top-color: rgba(255, 255, 255, 0.26);
+        border-radius: 12px;
+        background:
+          repeating-linear-gradient(
+            135deg,
+            rgba(255, 255, 255, 0.022) 0 7px,
+            rgba(255, 255, 255, 0) 7px 14px
+          ),
+          linear-gradient(
+            180deg,
+            rgba(255, 255, 255, 0.09),
+            rgba(255, 255, 255, 0.022)
+          );
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.18),
+          inset 0 -2px 0 rgba(0, 0, 0, 0.35),
+          0 6px 0 rgba(2, 6, 10, 0.85),
+          0 18px 30px -18px rgba(0, 0, 0, 0.95);
         transition:
-          border-color 0.3s ease,
           transform 0.35s var(--ease-out),
-          background 0.3s ease;
+          box-shadow 0.35s ease,
+          border-color 0.3s ease;
       }
       .layer::before {
         content: "";
@@ -1150,23 +2169,30 @@
         left: 0;
         top: 0;
         bottom: 0;
-        width: 3px;
-        background: linear-gradient(180deg, var(--teal-2), var(--indigo));
-        opacity: 0;
-        transition: opacity 0.3s ease;
+        width: 4px;
+        border-radius: 12px 0 0 12px;
+        background: linear-gradient(
+          180deg,
+          var(--lc, var(--teal-2)),
+          rgba(255, 255, 255, 0.06)
+        );
       }
       .layer:hover {
-        border-color: rgba(38, 179, 194, 0.5);
-        transform: translateX(8px);
-        background: linear-gradient(90deg, rgba(38, 179, 194, 0.1), rgba(255, 255, 255, 0.015));
+        transform: translateY(-5px);
+        border-color: rgba(38, 179, 194, 0.45);
+        box-shadow:
+          inset 0 1px 0 rgba(255, 255, 255, 0.22),
+          inset 0 -2px 0 rgba(0, 0, 0, 0.35),
+          0 11px 0 rgba(2, 6, 10, 0.85),
+          0 30px 46px -22px rgba(0, 0, 0, 0.95);
       }
-      .layer:hover::before {
-        opacity: 1;
+      .layer:active {
+        transform: translateY(-2px);
       }
       .layer .num {
         font-family: var(--font-mono);
         font-size: 12px;
-        color: var(--teal-2);
+        color: var(--lc, var(--teal-2));
         letter-spacing: 0.12em;
       }
       .layer .name {
@@ -1183,11 +2209,24 @@
         font-family: var(--font-mono);
         font-size: 13px;
         color: var(--faint);
-        transition: transform 0.3s var(--ease-spring), color 0.3s ease;
+        transition:
+          transform 0.3s var(--ease-spring),
+          color 0.3s ease;
       }
       .layer:hover .go {
         transform: translateX(4px);
-        color: var(--teal-2);
+        color: var(--lc, var(--teal-2));
+      }
+      .stack-ground {
+        height: 20px;
+        margin: 0 28px;
+        border-radius: 50%;
+        background: radial-gradient(
+          closest-side,
+          rgba(0, 0, 0, 0.65),
+          transparent 78%
+        );
+        filter: blur(3px);
       }
       @media (max-width: 860px) {
         .layer {
@@ -1321,7 +2360,11 @@
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 26px 22px 22px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012));
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.04),
+          rgba(255, 255, 255, 0.012)
+        );
         position: relative;
         overflow: hidden;
       }
@@ -1344,7 +2387,12 @@
       .pipe-line i {
         position: absolute;
         inset: 0;
-        background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--cyan),
+          transparent
+        );
         transform: translateX(-100%);
       }
       .is-active .pipe-line i {
@@ -1444,7 +2492,11 @@
         border: 1px solid var(--line);
         border-radius: 18px;
         padding: 20px 22px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.012));
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.04),
+          rgba(255, 255, 255, 0.012)
+        );
       }
       .cmp[data-mode="magic"] .cmp-panel[data-panel="magic"],
       .cmp[data-mode="std"] .cmp-panel[data-panel="std"] {
@@ -1534,7 +2586,11 @@
         border-color: var(--line-strong);
       }
       .step.is-on {
-        background: linear-gradient(90deg, rgba(38, 179, 194, 0.14), rgba(124, 140, 255, 0.08));
+        background: linear-gradient(
+          90deg,
+          rgba(38, 179, 194, 0.14),
+          rgba(124, 140, 255, 0.08)
+        );
         border-color: rgba(38, 179, 194, 0.5);
         color: var(--text);
       }
@@ -1547,7 +2603,11 @@
         border-radius: 16px;
         padding: 20px 22px;
         min-height: 336px;
-        background: linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.012));
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.045),
+          rgba(255, 255, 255, 0.012)
+        );
       }
       .step-panel.is-on {
         display: block;
@@ -1614,7 +2674,13 @@
       .sdlc .tl-line i {
         position: absolute;
         inset: 0;
-        background: linear-gradient(90deg, transparent, var(--indigo), var(--cyan), transparent);
+        background: linear-gradient(
+          90deg,
+          transparent,
+          var(--indigo),
+          var(--cyan),
+          transparent
+        );
         transform: translateX(-100%);
       }
       .is-active .sdlc .tl-line i {
@@ -1730,13 +2796,25 @@
         border-radius: 6px;
         transform-origin: left center;
         transform: scaleX(0);
-        background: linear-gradient(90deg, rgba(38, 179, 194, 0.9), rgba(111, 227, 239, 0.9));
+        background: linear-gradient(
+          90deg,
+          rgba(38, 179, 194, 0.9),
+          rgba(111, 227, 239, 0.9)
+        );
       }
       .tr-row.violet .tr-bar {
-        background: linear-gradient(90deg, rgba(124, 140, 255, 0.9), rgba(124, 140, 255, 0.55));
+        background: linear-gradient(
+          90deg,
+          rgba(124, 140, 255, 0.9),
+          rgba(124, 140, 255, 0.55)
+        );
       }
       .tr-row.green .tr-bar {
-        background: linear-gradient(90deg, rgba(93, 219, 168, 0.9), rgba(93, 219, 168, 0.5));
+        background: linear-gradient(
+          90deg,
+          rgba(93, 219, 168, 0.9),
+          rgba(93, 219, 168, 0.5)
+        );
       }
       .is-active .tr-bar {
         animation: grow 0.9s var(--ease-out) both;
@@ -1908,6 +2986,37 @@
           gap: 8px;
           margin-top: 16px;
         }
+        .deploy {
+          gap: 7px;
+          margin-top: 15px;
+        }
+        .dp-step {
+          padding: 8px 14px;
+          grid-template-columns: 138px 160px 1fr;
+        }
+        .dp-step .dp-act {
+          font-size: 13px;
+        }
+        .dp-step .dp-det {
+          font-size: 11.8px;
+        }
+        .afg-svg {
+          max-width: 780px;
+        }
+        .speed {
+          padding: 10px 14px;
+          gap: 8px;
+          margin-top: 12px;
+        }
+        .sp-row {
+          grid-template-columns: 128px 1fr 128px;
+        }
+        .sp-track {
+          height: 20px;
+        }
+        .blocks.slim i {
+          height: 13px;
+        }
         .xf {
           padding: 9px 15px;
         }
@@ -1963,14 +3072,43 @@
       </div>
       <div class="top-progress" aria-hidden="true"><i id="progress"></i></div>
       <div class="top-actions">
-        <button class="icon-btn" id="btn-overview" aria-label="Panoramica slide (O)" title="Panoramica (O)">
-          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+        <button
+          class="icon-btn"
+          id="btn-overview"
+          aria-label="Panoramica slide (O)"
+          title="Panoramica (O)"
+        >
+          <svg viewBox="0 0 24 24">
+            <rect x="3" y="3" width="7" height="7" rx="1.5" />
+            <rect x="14" y="3" width="7" height="7" rx="1.5" />
+            <rect x="3" y="14" width="7" height="7" rx="1.5" />
+            <rect x="14" y="14" width="7" height="7" rx="1.5" />
+          </svg>
         </button>
-        <button class="icon-btn" id="btn-help" aria-label="Scorciatoie (?)" title="Scorciatoie (?)">
-          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2-2.5 3.4"/><line x1="12" y1="17" x2="12" y2="17.01"/></svg>
+        <button
+          class="icon-btn"
+          id="btn-help"
+          aria-label="Scorciatoie (?)"
+          title="Scorciatoie (?)"
+        >
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" />
+            <path d="M9.5 9.2a2.6 2.6 0 0 1 5 .9c0 1.7-2.5 2-2.5 3.4" />
+            <line x1="12" y1="17" x2="12" y2="17.01" />
+          </svg>
         </button>
-        <button class="icon-btn" id="btn-full" aria-label="Fullscreen (F)" title="Fullscreen (F)">
-          <svg viewBox="0 0 24 24"><path d="M4 9V5a1 1 0 0 1 1-1h4"/><path d="M20 9V5a1 1 0 0 0-1-1h-4"/><path d="M4 15v4a1 1 0 0 0 1 1h4"/><path d="M20 15v4a1 1 0 0 1-1 1h-4"/></svg>
+        <button
+          class="icon-btn"
+          id="btn-full"
+          aria-label="Fullscreen (F)"
+          title="Fullscreen (F)"
+        >
+          <svg viewBox="0 0 24 24">
+            <path d="M4 9V5a1 1 0 0 1 1-1h4" />
+            <path d="M20 9V5a1 1 0 0 0-1-1h-4" />
+            <path d="M4 15v4a1 1 0 0 0 1 1h4" />
+            <path d="M20 15v4a1 1 0 0 1-1 1h-4" />
+          </svg>
         </button>
       </div>
     </header>
@@ -1985,16 +3123,22 @@
             <span class="cover-mark">dx</span>
             <div>
               <div class="kicker">PagoPA · DevEx Initiative</div>
-              <p class="small" style="margin: 4px 0 0">Developer Experience &amp; Agentic Experience</p>
+              <p class="small" style="margin: 4px 0 0">
+                Developer Experience &amp; Agentic Experience
+              </p>
             </div>
           </div>
           <h1 class="cover-title" data-reveal style="--d: 90ms">
             DX Platform
-            <span class="line2">Astrazioni deterministiche<br />per il SDLC agentico.</span>
+            <span class="line2">
+              Componenti riusabili<br />
+              per la delivery agentica
+            </span>
           </h1>
           <p class="lead cover-sub" data-reveal style="--d: 180ms">
-            Gli standard aziendali diventano <strong>artefatti eseguibili</strong>:
-            moduli, workflow, skill e MCP che agenti e persone condividono.
+            Gli standard aziendali diventano
+            <strong>artefatti eseguibili</strong>: moduli, workflow e skill che
+            agenti e persone condividono.
           </p>
           <div class="chips" data-reveal style="--d: 260ms">
             <span class="chip"><i></i>Azure + AWS</span>
@@ -2003,8 +3147,11 @@
             <span class="chip warm"><i></i>OIDC end-to-end</span>
           </div>
           <p class="note" data-reveal style="--d: 340ms">
-            <strong>Naviga:</strong> <span class="mono">← →</span> o <span class="mono">Spazio</span> ·
-            <span class="mono">O</span> panoramica · <span class="mono">F</span> fullscreen · <span class="mono">?</span> scorciatoie
+            <strong>Naviga:</strong> <span class="mono">← →</span> o
+            <span class="mono">Spazio</span> ·
+            <span class="mono">O</span> panoramica ·
+            <span class="mono">F</span> fullscreen ·
+            <span class="mono">?</span> scorciatoie
           </p>
         </div>
       </section>
@@ -2020,312 +3167,301 @@
             È il <span class="accent">contesto</span>.
           </h2>
           <p class="lead" data-reveal style="--d: 160ms">
-            Gli agenti amplificano ciò che trovano: un contratto lo ereditano,
-            una convenzione non scritta la reinventano.
+            Gli agenti amplificano ciò che trovano.
           </p>
-          <div class="split" style="margin-top: 30px">
-            <div class="cards-dense">
-              <div class="grid-2" style="margin-top: 0">
-                <div class="card" data-reveal style="--d: 240ms">
-                  <span class="glyph">01</span>
-                  <div class="k">Ereditarietà</div>
-                  <h3>Le convenzioni si ereditano, non si leggono</h3>
-                  <p>
-                    Un'astrazione è conoscenza compressa: massima precisione,
-                    minimo contesto.
-                  </p>
-                </div>
-                <div class="card" data-reveal style="--d: 320ms">
-                  <span class="glyph">02</span>
-                  <div class="k">Governabilità</div>
-                  <h3>Centralizzato = aggiornabile</h3>
-                  <p>
-                    Ciò che è sparso per repository è conoscenza che scade in
-                    silenzio.
-                  </p>
-                </div>
-              </div>
-              <p class="note" data-reveal style="--d: 400ms">
-                <strong>Conseguenza:</strong> ogni standard reso esplicito si
-                moltiplica per ogni agente e ogni team che lo usa.
-              </p>
+          <div class="ctxbudget" data-reveal style="--d: 240ms">
+            <div class="cb-head">
+              <span class="cb-title"
+                >Dove finisce il tempo di un agente su un task</span
+              >
+              <span class="cb-legend">
+                <span class="lg lg-ctx">contesto da scoprire</span>
+                <span class="lg lg-code">codice + review</span>
+              </span>
             </div>
-            <div class="ctxmap" data-reveal style="--d: 300ms">
-              <div class="row raw">
-                <div class="lbl">
-                  <b>Repository intero</b><span class="mono">contesto massimo</span>
-                </div>
-                <div class="bar" style="--w: 100%; --d: 100ms"></div>
-              </div>
-              <div class="row mid">
-                <div class="lbl">
-                  <b>Documentazione + moduli</b><span class="mono">contesto mirato</span>
-                </div>
-                <div class="bar" style="--w: 52%; --d: 260ms"></div>
-              </div>
-              <div class="row dx">
-                <div class="lbl">
-                  <b>Skill + MCP + contratti</b><span class="mono">contesto minimo</span>
-                </div>
-                <div class="bar" style="--w: 20%; --d: 420ms"></div>
-              </div>
-              <div class="cap">
-                <span>Stessa accuratezza, una frazione del contesto.</span>
-                <span class="mono">token ↓ · tempo ↓ · variabilità ↓</span>
-              </div>
+            <div class="cb-row">
+              <span class="cb-lbl">Senza DX</span>
+              <div
+                class="blocks"
+                data-blocks
+                data-total="20"
+                data-ctx="16"
+              ></div>
+              <span class="cb-num rose">80% contesto</span>
             </div>
+            <div class="cb-row">
+              <span class="cb-lbl">Con DX</span>
+              <div
+                class="blocks"
+                data-blocks
+                data-total="20"
+                data-ctx="3"
+              ></div>
+              <span class="cb-num">15% contesto</span>
+            </div>
+            <p class="fan-cap">
+              Il contesto è il collo di bottiglia: ogni artefatto riusabile lo
+              taglia.
+              <span class="mono">stima illustrativa</span>
+            </p>
+          </div>
+          <div class="chips" data-reveal style="--d: 400ms">
+            <span class="chip"><i></i>Centralizzato = aggiornabile</span>
+            <span class="chip green"><i></i>Bus factor ↓</span>
+            <span class="chip violet"><i></i>Contesto ↓ → token ↓</span>
+            <span class="chip warm"><i></i>Nessun esperto necessario</span>
           </div>
         </div>
       </section>
 
       <!-- ============================================================
-           03 · Quattro ragioni economiche
+           03 · Cinque ragioni economiche
            ============================================================ -->
-      <section class="slide" data-title="Cinque ragioni economiche" data-section="Valore">
+      <section
+        class="slide"
+        data-title="Cinque ragioni economiche"
+        data-section="Valore"
+      >
         <div class="slide-inner">
-          <div class="kicker" data-reveal>Il valore delle astrazioni, in epoca agentica</div>
-          <h2 data-reveal style="--d: 80ms; margin-top: 14px">Cinque ragioni economiche</h2>
+          <div class="kicker" data-reveal>
+            Il valore delle astrazioni, in epoca agentica
+          </div>
+          <h2 data-reveal style="--d: 80ms; margin-top: 14px">
+            Ragioni per vincoli e astrazioni
+          </h2>
           <div class="split" style="margin-top: 22px">
-            <div class="cards-dense">
-              <div class="grid-2" style="margin-top: 0">
-                <div class="card" data-reveal style="--d: 140ms">
-                  <div class="k">01 · Manutenzione</div>
-                  <h3>Update centralizzati</h3>
-                  <p>
-                    Un fix nel modulo arriva a tutti i repository. Renovate
-                    propaga le versioni. Il costo è
-                    <strong>O(1) per piattaforma</strong>, non O(n) per repo.
-                  </p>
-                </div>
-                <div class="card" data-reveal style="--d: 220ms">
-                  <div class="k">02 · Compliance</div>
-                  <h3>Determinismo e governance</h3>
-                  <p>
-                    Naming, CIDR, tag, IAM e policy derivano da contratti.
-                    <strong>Stesso input → stesso output</strong>, per umani e
-                    agenti. La governance è codice.
-                  </p>
-                </div>
-                <div class="card" data-reveal style="--d: 300ms">
-                  <div class="k">03 · Organizzazione</div>
-                  <h3>Bus factor ↓</h3>
-                  <p>
-                    La conoscenza sta in moduli, skill, documentazione e MCP,
-                    non nelle teste. Onboarding =
-                    <strong>clonare e leggere gli artefatti</strong>.
-                  </p>
-                </div>
-                <div class="card" data-reveal style="--d: 380ms">
-                  <div class="k">04 · Agenti</div>
-                  <h3>Contesto ↓ → token e tempo ↓</h3>
-                  <p>
-                    L'agente carica contratti mirati invece di esplorare il
-                    repository. Meno contesto significa
-                    <strong>meno token, meno latenza, meno variabilità</strong>.
-                  </p>
-                </div>
+            <div
+              class="tiles five"
+              style="
+                margin-top: 0;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+              "
+            >
+              <div class="tile" data-reveal style="--d: 140ms">
+                <span class="ic"
+                  ><svg viewBox="0 0 24 24">
+                    <path d="M21 12a9 9 0 1 1-2.6-6.4" />
+                    <path d="M21 4v5h-5" /></svg
+                ></span>
+                <span class="tt">Update centralizzati</span>
+                <span class="st">un fix vale per tutti i repository</span>
               </div>
-              <p class="note" data-reveal style="--d: 540ms">
-                <strong>Stima illustrativa</strong> su un task tipo "storage con
-                private endpoint": esplorazione libera vs artefatti DX.
-              </p>
+              <div class="tile green" data-reveal style="--d: 200ms">
+                <span class="ic"
+                  ><svg viewBox="0 0 24 24">
+                    <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+                    <path d="M9.5 12l1.8 1.8 3.4-3.6" /></svg
+                ></span>
+                <span class="tt">Determinismo e governance</span>
+                <span class="st">naming · techradar · standards</span>
+              </div>
+              <div class="tile violet" data-reveal style="--d: 260ms">
+                <span class="ic"
+                  ><svg viewBox="0 0 24 24">
+                    <circle cx="9" cy="9" r="3" />
+                    <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
+                    <circle cx="17" cy="10" r="2.4" />
+                    <path d="M15.5 18.4a4.6 4.6 0 0 1 5-4.3" /></svg
+                ></span>
+                <span class="tt">Bus factor ↓</span>
+                <span class="st">conoscenza in moduli, skill e docs</span>
+              </div>
+              <div class="tile amber" data-reveal style="--d: 320ms">
+                <span class="ic"
+                  ><svg viewBox="0 0 24 24">
+                    <path d="M4 15a8 8 0 1 1 16 0" />
+                    <path d="M12 15l4.5-5.5" />
+                    <path d="M4 19h16" /></svg
+                ></span>
+                <span class="tt">Contesto ↓</span>
+                <span class="st"
+                  >meno token · meno tempo · meno variabilità</span
+                >
+              </div>
+              <div class="tile green" data-reveal style="--d: 380ms">
+                <span class="ic"
+                  ><svg viewBox="0 0 24 24">
+                    <rect x="5" y="11" width="14" height="9" rx="2" />
+                    <path d="M8 11V8a4 4 0 0 1 7.5-2" /></svg
+                ></span>
+                <span class="tt"
+                  >Democratizzazione della produzione software</span
+                >
+                <span class="st"
+                  >nessun esperto necessario: l'expertise è compressa nella
+                  piattaforma</span
+                >
+              </div>
             </div>
             <div>
-              <div class="meter" data-mode="raw" data-meter data-reveal style="--d: 240ms">
-              <div class="seg" role="group" aria-label="Confronto contesto agente">
-                <button type="button" class="is-on" data-mode="raw">Senza astrazioni</button>
-                <button type="button" data-mode="dx">Con DX</button>
+              <div
+                class="meter"
+                data-mode="raw"
+                data-meter
+                data-reveal
+                style="--d: 240ms"
+              >
+                <div
+                  class="seg"
+                  role="group"
+                  aria-label="Confronto contesto agente"
+                >
+                  <button type="button" class="is-on" data-mode="raw">
+                    Senza astrazioni
+                  </button>
+                  <button type="button" data-mode="dx">Con DX</button>
+                </div>
+                <div class="m-row">
+                  <span class="lbl">Contesto esplorato</span>
+                  <div class="m-track">
+                    <div
+                      class="m-fill"
+                      style="--w-raw-off: 92%; --w-dx-off: 14%"
+                    ></div>
+                  </div>
+                  <span class="m-val" data-raw="~68k tok" data-dx="~9k tok"
+                    >~68k tok</span
+                  >
+                </div>
+                <div class="m-row">
+                  <span class="lbl">Iterazioni medie</span>
+                  <div class="m-track">
+                    <div
+                      class="m-fill"
+                      style="--w-raw-off: 78%; --w-dx-off: 22%"
+                    ></div>
+                  </div>
+                  <span class="m-val" data-raw="4–6" data-dx="1–2">4–6</span>
+                </div>
+                <div class="m-row">
+                  <span class="lbl">Drift dallo standard</span>
+                  <div class="m-track">
+                    <div
+                      class="m-fill"
+                      style="--w-raw-off: 70%; --w-dx-off: 6%"
+                    ></div>
+                  </div>
+                  <span class="m-val" data-raw="alto" data-dx="quasi zero"
+                    >alto</span
+                  >
+                </div>
+                <div class="m-pulse">
+                  <span class="mono">mode:</span>
+                  <em data-meter-mode>raw repository exploration</em>
+                </div>
               </div>
-              <div class="m-row">
-                <span class="lbl">Contesto esplorato</span>
-                <div class="m-track"><div class="m-fill" style="--w-raw-off: 92%; --w-dx-off: 14%"></div></div>
-                <span class="m-val" data-raw="~68k tok" data-dx="~9k tok">~68k tok</span>
-              </div>
-              <div class="m-row">
-                <span class="lbl">Iterazioni medie</span>
-                <div class="m-track"><div class="m-fill" style="--w-raw-off: 78%; --w-dx-off: 22%"></div></div>
-                <span class="m-val" data-raw="4–6" data-dx="1–2">4–6</span>
-              </div>
-              <div class="m-row">
-                <span class="lbl">Drift dallo standard</span>
-                <div class="m-track"><div class="m-fill" style="--w-raw-off: 70%; --w-dx-off: 6%"></div></div>
-                <span class="m-val" data-raw="alto" data-dx="quasi zero">alto</span>
-              </div>
-              <div class="m-pulse">
-                <span class="mono">mode:</span>
-                <em data-meter-mode>raw repository exploration</em>
-              </div>
-              </div>
-              <div class="card hl" data-reveal style="--d: 460ms; margin-top: 16px">
-                <div class="k">05 · Accesso · no experts required</div>
-                <h3>Democratizzazione della produzione</h3>
-                <p>
-                  L'expertise cloud sta <strong>nella piattaforma</strong>, non
-                  in ogni team: con gli agenti, chi sa descrivere il bisogno
-                  arriva in produzione con moduli, pipeline e guardrail già
-                  corretti.
-                </p>
-              </div>
+              <p class="note" data-reveal style="--d: 460ms">
+                Task IaC tipo "storage con private endpoint" — stima
+                illustrativa.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       <!-- ============================================================
-           04 · Determinismo o improvvisazione
+           04 · Mappa della piattaforma
            ============================================================ -->
-      <section class="slide" data-title="Determinismo o improvvisazione" data-section="Valore">
+      <section
+        class="slide"
+        data-title="Mappa della piattaforma"
+        data-section="Piattaforma"
+      >
         <div class="slide-inner">
-          <div class="kicker" data-reveal>Determinismo</div>
+          <div class="kicker" data-reveal>I materiali</div>
           <h2 data-reveal style="--d: 80ms; margin-top: 14px">
-            Ciò che non è verificabile da una macchina<br />
-            non è uno standard: è un <span class="accent">suggerimento</span>.
+            Layer componibili
           </h2>
-          <div class="grid-2" style="margin-top: 30px">
-            <div class="card" data-reveal style="--d: 160ms">
-              <div class="k">Documenti per umani</div>
-              <h3>Lineare, ambiguo, deperibile</h3>
-              <div class="contract" style="margin-top: 14px">
-                <div class="doc-line">
-                  <span class="id">convenzione</span>
-                  <span>"usa nomi coerenti"</span>
-                  <span class="no">non verificabile</span>
-                </div>
-                <div class="doc-line">
-                  <span class="id">versione</span>
-                  <span>"aggiorna i consumatori"</span>
-                  <span class="no">manuale</span>
-                </div>
-                <div class="doc-line">
-                  <span class="id">accessi</span>
-                  <span>"ricorda i permessi giusti"</span>
-                  <span class="no">tribale</span>
-                </div>
-                <div class="doc-line">
-                  <span class="id">knowledge</span>
-                  <span>nelle teste delle persone</span>
-                  <span class="no">bus factor 1</span>
-                </div>
-              </div>
-            </div>
-            <div class="card" data-reveal style="--d: 260ms">
-              <div class="k">Contratti per umani e agenti</div>
-              <h3>Strutturati, versionati, verificati</h3>
-              <div class="contract" style="margin-top: 14px">
-                <div class="doc-line">
-                  <span class="id">naming + tag</span>
-                  <span>derivati dal provider DX</span>
-                  <span class="ok">deterministico</span>
-                </div>
-                <div class="doc-line">
-                  <span class="id">semver + v1/v2</span>
-                  <span>contratti versionati</span>
-                  <span class="ok">update sicuri</span>
-                </div>
-                <div class="doc-line">
-                  <span class="id">IAM as code</span>
-                  <span>ruoli minimi nel bootstrapper</span>
-                  <span class="ok">ripetibile</span>
-                </div>
-                <div class="doc-line">
-                  <span class="id">skill + MCP</span>
-                  <span>conoscenza interrogabile</span>
-                  <span class="ok">bus factor n</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="chips" data-reveal style="--d: 360ms">
-            <span class="chip"><i></i>ID stabili</span>
-            <span class="chip"><i></i>Version plans</span>
-            <span class="chip"><i></i>Policy as code</span>
-            <span class="chip"><i></i>Validation in CI</span>
-            <span class="chip green"><i></i>Umano e agente: stessi contratti</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- ============================================================
-           05 · Mappa della piattaforma
-           ============================================================ -->
-      <section class="slide" data-title="Mappa della piattaforma" data-section="Piattaforma">
-        <div class="slide-inner">
-          <div class="kicker" data-reveal>La mappa</div>
-          <h2 data-reveal style="--d: 80ms; margin-top: 14px">Layer che si compongono in una direzione</h2>
-          <p class="lead" data-reveal style="--d: 150ms">
-            Ogni layer consuma i contratti di quello sotto: clicca per il
-            dettaglio.
-          </p>
           <div class="stack" data-reveal style="--d: 220ms">
-            <button class="layer" data-goto="6">
-              <span class="num">L00</span>
-              <span class="name">Toolchain del monorepo</span>
-              <span class="desc">pnpm · Nx · mise · pre-commit · struttura standard</span>
-              <span class="go">→</span>
-            </button>
-            <button class="layer" data-goto="7">
-              <span class="num">L01</span>
-              <span class="name">Bootstrapping</span>
-              <span class="desc">ruoli e permessi CSP · OIDC · runner self-hosted</span>
-              <span class="go">→</span>
-            </button>
-            <button class="layer" data-goto="8">
-              <span class="num">L02</span>
-              <span class="name">Core &amp; Hub</span>
-              <span class="desc">networking · DNS · VPN · servizi condivisi</span>
-              <span class="go">→</span>
-            </button>
-            <button class="layer" data-goto="9">
-              <span class="num">L03</span>
-              <span class="name">Moduli Terraform</span>
-              <span class="desc">registry pagopa-dx · module-first · naming e tag inferiti</span>
-              <span class="go">→</span>
-            </button>
-            <button class="layer" data-goto="10">
-              <span class="num">L04</span>
-              <span class="name">Pipelines</span>
-              <span class="desc">CI di validazione · CD di release e deploy · Nx multilang</span>
-              <span class="go">→</span>
-            </button>
-            <button class="layer" data-goto="11">
-              <span class="num">L05</span>
-              <span class="name">Artefatti per agenti</span>
-              <span class="desc">plugin e skill · MCP · istruzioni · mise</span>
-              <span class="go">→</span>
-            </button>
-            <button class="layer" data-goto="12">
+            <button class="layer" data-goto="12" style="--lc: #ff9f6e">
               <span class="num">L06</span>
               <span class="name">Osservabilità</span>
               <span class="desc">tracing OTel · dashboard OpEx · metriche</span>
               <span class="go">→</span>
             </button>
+            <button class="layer" data-goto="11" style="--lc: #b18cff">
+              <span class="num">L05</span>
+              <span class="name">Artefatti per agenti</span>
+              <span class="desc">plugin e skill · istruzioni · mise</span>
+              <span class="go">→</span>
+            </button>
+            <button class="layer" data-goto="9" style="--lc: #5ddba8">
+              <span class="num">L04</span>
+              <span class="name">Pipelines</span>
+              <span class="desc"
+                >CI di validazione · CD di release e deploy · Nx multilang</span
+              >
+              <span class="go">→</span>
+            </button>
+            <button class="layer" data-goto="8" style="--lc: #ffc861">
+              <span class="num">L03</span>
+              <span class="name">Moduli Terraform</span>
+              <span class="desc"
+                >registry pagopa-dx · module-first · naming e tag inferiti</span
+              >
+              <span class="go">→</span>
+            </button>
+            <button class="layer" data-goto="7" style="--lc: #6fe3ef">
+              <span class="num">L02</span>
+              <span class="name">Hub &amp; Spoke</span>
+              <span class="desc"
+                >core di rete · servizi condivisi · domini applicativi ai
+                raggi</span
+              >
+              <span class="go">→</span>
+            </button>
+            <button class="layer" data-goto="6" style="--lc: #7c8cff">
+              <span class="num">L01</span>
+              <span class="name">Bootstrapping</span>
+              <span class="desc"
+                >ruoli e permessi CSP · OIDC · runner self-hosted</span
+              >
+              <span class="go">→</span>
+            </button>
+            <button class="layer" data-goto="5" style="--lc: #26b3c2">
+              <span class="num">L00</span>
+              <span class="name">Toolchain del monorepo</span>
+              <span class="desc">pnpm · Nx · mise · struttura standard</span>
+              <span class="go">→</span>
+            </button>
           </div>
+          <div class="stack-ground" aria-hidden="true"></div>
         </div>
       </section>
 
       <!-- ============================================================
-           06 · Layer 00 — Toolchain
+           05 · Layer 00 — Toolchain
            ============================================================ -->
-      <section class="slide" data-title="Layer 00 · Toolchain del monorepo" data-section="Layer 00">
+      <section
+        class="slide"
+        data-title="Layer 00 · Toolchain del monorepo"
+        data-section="Layer 00"
+      >
         <div class="slide-inner">
           <div class="layer-head" data-reveal>
             <span class="layer-badge">LAYER 00</span>
             <div>
               <h2>Toolchain del monorepo</h2>
-              <p class="small" style="margin: 6px 0 0">Il contratto che <span class="mono">dx-cli init</span> scaffolda: tutto il resto lo presuppone.</p>
+              <p class="small" style="margin: 6px 0 0">
+                Il contratto che
+                <span class="mono">dx-cli init</span> scaffolda: tutto il resto
+                lo presuppone.
+              </p>
             </div>
           </div>
           <div class="grid-2" style="margin-top: 22px">
             <div>
               <div class="term" data-reveal style="--d: 140ms; margin-top: 0">
-                <div class="term-bar"><i></i><i></i><i></i><span>~/nuovo-prodotto</span></div>
+                <div class="term-bar">
+                  <i></i><i></i><i></i><span>~/nuovo-prodotto</span>
+                </div>
                 <pre><span class="c"># scaffold del monorepo</span>
 <span class="t">$</span> npx @pagopa/dx-cli init
 
 <span class="g">✓</span> workspace pnpm        <span class="c">apps/* · packages/*</span>
 <span class="g">✓</span> nx.json               <span class="c">task graph + version plans</span>
 <span class="g">✓</span> mise.toml + lock      <span class="c">tool fissati, dev = CI</span>
-<span class="g">✓</span> .pre-commit-config    <span class="c">fmt · validate · tflint · trivy</span>
+<span class="g">✓</span> nx validate           <span class="c">fmt · static-analysis · tflint · trivy</span>
 <span class="g">✓</span> infra/repository      <span class="c">prima configurazione TF</span>
 <span class="g">✓</span> .github/copilot       <span class="c">plugin DX già abilitati</span>
 
@@ -2333,49 +3469,64 @@
 <span class="y">?</span> ambienti: <span class="c">dev · uat · prod</span></pre>
               </div>
             </div>
-            <div>
-              <div class="list" data-reveal style="--d: 200ms; margin-top: 0">
-                <div class="li">
-                  <span class="tick">✓</span>
-                  <span><b>Un solo task graph.</b> Nx orchestra build, test, lint e typecheck di TypeScript, Go, Python e Terraform con cache e <span class="mono">affected</span>.</span>
-                </div>
-                <div class="li">
-                  <span class="tick">✓</span>
-                  <span><b>Un solo toolchain.</b> mise + lockfile fissano Node, pnpm, Terraform, TFLint, Trivy, terraform-docs, pre-commit e gh: macchina, devcontainer e CI eseguono le stesse versioni.</span>
-                </div>
-                <div class="li">
-                  <span class="tick">✓</span>
-                  <span><b>Un solo contratto di struttura.</b> <span class="mono">apps/</span>, <span class="mono">packages/</span>, <span class="mono">infra/{repository,bootstrapper,core,resources}</span>, <span class="mono">docs/</span>: gli agenti sanno sempre dove guardare.</span>
-                </div>
-                <div class="li">
-                  <span class="tick">✓</span>
-                  <span><b>Qualità alla fonte.</b> Pre-commit con hook DX e pre-commit-terraform: format, validate, tflint, trivy e lock di provider e moduli.</span>
-                </div>
-                <div class="li">
-                  <span class="tick">✓</span>
-                  <span><b>Agenti configurati dal repository.</b> <span class="mono">.github/copilot/settings.json</span> abilita marketplace e plugin DX: zero setup per sviluppatore, nessun drift di configurazione.</span>
-                </div>
+            <div
+              class="tiles"
+              data-reveal
+              style="
+                --d: 200ms;
+                margin-top: 0;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                align-content: start;
+              "
+            >
+              <div class="tile">
+                <span class="fn">workspace.yaml</span>
+                <span class="st"
+                  >apps + packages · <span class="mono">workspace:^</span></span
+                >
+              </div>
+              <div class="tile violet">
+                <span class="fn">nx.json</span>
+                <span class="st">un task graph · version plans</span>
+              </div>
+              <div class="tile green">
+                <span class="fn">mise.toml + lock</span>
+                <span class="st">dev = CI</span>
+              </div>
+              <div class="tile amber">
+                <span class="fn">nx validate / sync</span>
+                <span class="st">qualità alla fonte</span>
+              </div>
+              <div class="tile">
+                <span class="fn">infra/repository</span>
+                <span class="st">primo apply del repo</span>
+              </div>
+              <div class="tile rose">
+                <span class="fn">.github/copilot/settings.json</span>
+                <span class="st">plugin DX attivi</span>
               </div>
             </div>
           </div>
-          <p class="note" data-reveal style="--d: 300ms">
-            <strong>Perché è il layer zero:</strong> un agente che trova sempre
-            la stessa struttura non deve indovinare dove intervenire. È il
-            prerequisito di ogni automazione successiva.
-          </p>
         </div>
       </section>
 
       <!-- ============================================================
-           07 · Layer 01 — Bootstrapping
+           06 · Layer 01 — Bootstrapping
            ============================================================ -->
-      <section class="slide" data-title="Layer 01 · Bootstrapping" data-section="Layer 01">
+      <section
+        class="slide"
+        data-title="Layer 01 · Bootstrapping"
+        data-section="Layer 01"
+      >
         <div class="slide-inner">
           <div class="layer-head" data-reveal>
             <span class="layer-badge">LAYER 01</span>
             <div>
-              <h2>Bootstrapping</h2>
-              <p class="small" style="margin: 6px 0 0">Dal repository vuoto ai permessi giusti, senza credenziali a lunga vita.</p>
+              <h2>Bootstrapping deterministico</h2>
+              <p class="small" style="margin: 6px 0 0">
+                Dal repository vuoto ai permessi giusti, senza credenziali a
+                lunga vita.
+              </p>
             </div>
           </div>
           <div class="pipe-wrap" data-reveal style="--d: 140ms">
@@ -2407,176 +3558,307 @@
               </div>
             </div>
           </div>
-          <div class="grid-3" style="margin-top: 20px">
-            <div class="card" data-reveal style="--d: 220ms">
-              <div class="k">Ruoli e permessi</div>
-              <h3>Gruppi per responsabilità</h3>
-              <p>
-                <span class="mono">admin</span> (Contributor, Key Vault Secrets
-                Officer), <span class="mono">developers</span> (Reader,
-                Monitoring Contributor), <span class="mono">externals</span>
-                (Reader). Il gruppo <span class="mono">vpn</span> apre le
-                risorse private.
-              </p>
+          <div class="split" style="margin-top: 20px; align-items: start">
+            <div data-reveal style="--d: 200ms">
+              <div class="panel-title">Ruoli e permessi · gruppi Entra ID</div>
+              <div class="roles">
+                <div class="role">
+                  <span class="nm">admin</span>
+                  <span class="rs"
+                    ><span class="chip">Contributor</span
+                    ><span class="chip">KV Secrets Officer</span></span
+                  >
+                </div>
+                <div class="role">
+                  <span class="nm">developers</span>
+                  <span class="rs"
+                    ><span class="chip">Reader</span
+                    ><span class="chip">Monitoring</span
+                    ><span class="chip">Support</span></span
+                  >
+                </div>
+                <div class="role">
+                  <span class="nm">externals</span>
+                  <span class="rs"><span class="chip">Reader</span></span>
+                </div>
+                <div class="role">
+                  <span class="nm">vpn</span>
+                  <span class="rs"
+                    ><span class="chip">Private access</span></span
+                  >
+                </div>
+              </div>
             </div>
-            <div class="card" data-reveal style="--d: 300ms">
-              <div class="k">Zero secret statici</div>
-              <h3>OIDC federated identity</h3>
-              <p>
-                I workflow si autenticano su Azure e AWS con federated
-                identity. Niente password né service principal da ruotare: la
-                fiducia è un contratto tra GitHub e il cloud.
-              </p>
-            </div>
-            <div class="card" data-reveal style="--d: 380ms">
-              <div class="k">Esecuzione</div>
-              <h3>Runner self-hosted</h3>
-              <p>
-                Container Apps Jobs su Azure, CodeBuild su AWS. Rete privata,
-                cache e toolchain identica alla CI. Un runner per prodotto,
-                gestito da una GitHub App dedicata.
-              </p>
+            <div data-reveal style="--d: 280ms">
+              <div class="panel-title">Identità del deploy</div>
+              <div class="oidc-flow">
+                <span class="oidc-node">
+                  <b>GitHub Actions</b>
+                  <i>workflow *-cd</i>
+                </span>
+                <span class="oidc-arrow">
+                  <svg viewBox="0 0 96 24" aria-hidden="true">
+                    <path d="M2 12 H80"></path>
+                    <path d="M74 6 L82 12 L74 18"></path>
+                  </svg>
+                  <em>OIDC token</em>
+                </span>
+                <span class="oidc-node cloud">
+                  <b>Azure · AWS</b>
+                  <i>ruoli minimi</i>
+                </span>
+              </div>
+              <div class="chips" style="margin-top: 16px">
+                <span class="chip green"><i></i>zero secret a lunga vita</span>
+                <span class="chip"><i></i>runner self-hosted per prodotto</span>
+              </div>
             </div>
           </div>
-          <p class="note" data-reveal style="--d: 460ms">
-            <strong>Risultato:</strong> un nuovo prodotto ha repository,
-            ambienti, permessi, runner e pipeline in una sessione interattiva —
-            e ogni passo è riproducibile.
-          </p>
         </div>
       </section>
 
       <!-- ============================================================
-           08 · Layer 02 — Core & Hub
+           07 · Layer 02 — Hub & Spoke
            ============================================================ -->
-      <section class="slide" data-title="Layer 02 · Core & Hub" data-section="Layer 02">
+      <section
+        class="slide"
+        data-title="Layer 02 · Hub &amp; Spoke"
+        data-section="Layer 02"
+      >
         <div class="slide-inner">
           <div class="layer-head" data-reveal>
             <span class="layer-badge">LAYER 02</span>
             <div>
-              <h2>Core &amp; Hub</h2>
-              <p class="small" style="margin: 6px 0 0">Infrastruttura di piattaforma per ambiente: si applica una volta, la usano tutti i team.</p>
-            </div>
-          </div>
-          <div class="split" style="margin-top: 24px">
-            <div>
-              <div class="panel-title">Core · <span class="mono">infra/core/&lt;env&gt;</span></div>
-              <div class="list" style="margin-top: 0">
-                <div class="li" data-reveal style="--d: 140ms">
-                  <span class="tick">⌁</span>
-                  <span><b>Networking</b> — VNet, subnet e private endpoint con CIDR derivati.</span>
-                </div>
-                <div class="li" data-reveal style="--d: 200ms">
-                  <span class="tick">⌁</span>
-                  <span><b>DNS privato</b> — zone gestite centralmente e consumate dai servizi.</span>
-                </div>
-                <div class="li" data-reveal style="--d: 260ms">
-                  <span class="tick">⌁</span>
-                  <span><b>VPN cross-cloud</b> — connettività AWS ↔ Azure con modulo dedicato.</span>
-                </div>
-                <div class="li" data-reveal style="--d: 320ms">
-                  <span class="tick">⌁</span>
-                  <span><b>Log Analytics e App Insights</b> — destinazione di default di trace e metriche.</span>
-                </div>
-                <div class="li" data-reveal style="--d: 380ms">
-                  <span class="tick">⌁</span>
-                  <span><b>Policy</b> — guardrail di subscription e valori esportati agli altri layer.</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="panel-title">Hub · <span class="mono">infra/resources/&lt;env&gt;</span></div>
-              <div class="list" style="margin-top: 0">
-                <div class="li" data-reveal style="--d: 180ms">
-                  <span class="tick">◇</span>
-                  <span><b>API gateway</b> — API Management: punto di ingresso unico e policy di accesso.</span>
-                </div>
-                <div class="li" data-reveal style="--d: 240ms">
-                  <span class="tick">◇</span>
-                  <span><b>Key Vault</b> — segreti referenziati dalle app, mai nei valori di configurazione.</span>
-                </div>
-                <div class="li" data-reveal style="--d: 300ms">
-                  <span class="tick">◇</span>
-                  <span><b>Messaggistica condivisa</b> — namespace per le integrazioni asincrone tra servizi.</span>
-                </div>
-                <div class="li" data-reveal style="--d: 360ms">
-                  <span class="tick">◇</span>
-                  <span><b>Consumo per team</b> — ruoli e valori pronti; le risorse applicative vivono nel repo del prodotto.</span>
-                </div>
-              </div>
-              <p class="note" data-reveal style="--d: 420ms">
-                I servizi dati (database, cache, storage) sono risorse del team,
-                composte con i moduli DX — non infrastruttura condivisa.
+              <h2>Architettura Hub &amp; Spoke</h2>
+              <p class="small" style="margin: 6px 0 0">
+                Il core è la rete, l'hub i servizi condivisi, i domini
+                applicativi i raggi.
               </p>
             </div>
           </div>
-          <p class="note" data-reveal style="--d: 500ms">
-            <strong>Confine chiaro:</strong> core e hub sono a carico della
-            piattaforma; i team compongono le proprie risorse e ricevono ruoli e
-            valori già pronti.
+          <div class="arch" data-reveal style="--d: 160ms">
+            <svg
+              class="arch-svg"
+              viewBox="0 0 1000 520"
+              role="img"
+              aria-label="Architettura hub and spoke: l'hub con API gateway, Key Vault e messaggistica; ai raggi i domini applicativi con i loro servizi; una nuova iniziativa si innesta sull'hub; alla base il core di rete"
+            >
+              <rect
+                class="a-bound"
+                x="30"
+                y="14"
+                width="940"
+                height="404"
+                rx="18"
+              ></rect>
+              <text class="a-small" x="52" y="40">VNet · rete privata</text>
+              <text class="a-small a-end" x="948" y="40">
+                domini applicativi · repo dei team
+              </text>
+              <path
+                class="a-link"
+                style="--dd: 150ms"
+                d="M350 220 C 330 220 330 90 310 90"
+              ></path>
+              <path
+                class="a-link"
+                style="--dd: 300ms"
+                d="M350 220 C 330 220 330 314 310 314"
+              ></path>
+              <path
+                class="a-link"
+                style="--dd: 450ms"
+                d="M650 220 C 670 220 670 90 690 90"
+              ></path>
+              <path
+                class="a-link"
+                style="--dd: 600ms"
+                d="M650 220 C 670 220 670 314 690 314"
+              ></path>
+              <path class="a-link a-new-link" d="M500 290 L 500 318"></path>
+              <circle class="a-dot" cx="310" cy="90" r="3.5"></circle>
+              <circle class="a-dot" cx="310" cy="314" r="3.5"></circle>
+              <circle class="a-dot" cx="690" cy="90" r="3.5"></circle>
+              <circle class="a-dot" cx="690" cy="314" r="3.5"></circle>
+              <rect
+                class="a-hub"
+                x="350"
+                y="150"
+                width="300"
+                height="140"
+                rx="16"
+              ></rect>
+              <text class="a-hub-t" x="500" y="182">HUB</text>
+              <rect
+                class="a-chip"
+                x="400"
+                y="196"
+                width="200"
+                height="30"
+                rx="15"
+              ></rect>
+              <text class="a-chip-t" x="500" y="216">API gateway</text>
+              <rect
+                class="a-chip"
+                x="362"
+                y="240"
+                width="130"
+                height="30"
+                rx="15"
+              ></rect>
+              <text class="a-chip-t" x="427" y="260">Key Vault</text>
+              <rect
+                class="a-chip"
+                x="508"
+                y="240"
+                width="130"
+                height="30"
+                rx="15"
+              ></rect>
+              <text class="a-chip-t" x="573" y="260">Messaging</text>
+              <rect
+                class="a-domain"
+                x="80"
+                y="48"
+                width="230"
+                height="84"
+                rx="14"
+              ></rect>
+              <text class="a-domain-t" x="195" y="82">Pagamenti</text>
+              <text class="a-domain-s" x="195" y="108">
+                checkout · payments
+              </text>
+              <rect
+                class="a-domain"
+                x="80"
+                y="272"
+                width="230"
+                height="84"
+                rx="14"
+              ></rect>
+              <text class="a-domain-t" x="195" y="306">Notifiche</text>
+              <text class="a-domain-s" x="195" y="332">notify · jobs</text>
+              <rect
+                class="a-domain"
+                x="690"
+                y="48"
+                width="230"
+                height="84"
+                rx="14"
+              ></rect>
+              <text class="a-domain-t" x="805" y="82">Identità</text>
+              <text class="a-domain-s" x="805" y="108">spid · cie</text>
+              <rect
+                class="a-domain"
+                x="690"
+                y="272"
+                width="230"
+                height="84"
+                rx="14"
+              ></rect>
+              <text class="a-domain-t" x="805" y="306">Onboarding</text>
+              <text class="a-domain-s" x="805" y="332">
+                registry · backoffice
+              </text>
+              <rect
+                class="a-new"
+                x="365"
+                y="318"
+                width="270"
+                height="70"
+                rx="14"
+              ></rect>
+              <text class="a-new-t" x="500" y="348">Nuova iniziativa</text>
+              <text class="a-new-s" x="500" y="372">
+                si innesta su hub e rete esistenti
+              </text>
+              <rect
+                class="a-core"
+                x="30"
+                y="436"
+                width="940"
+                height="62"
+                rx="14"
+              ></rect>
+              <text class="a-core-t" x="500" y="472">
+                CORE · VNet · DNS privato · VPN AWS ↔ Azure · Logs · Policy
+              </text>
+            </svg>
+          </div>
+          <p class="fan-cap" data-reveal style="--d: 260ms">
+            I domini parlano con l'hub, non tra loro; una nuova iniziativa si
+            innesta sulla stessa rete.
           </p>
         </div>
       </section>
 
       <!-- ============================================================
-           09 · Layer 03 — Moduli Terraform
+           08 · Layer 03 — Moduli Terraform
            ============================================================ -->
-      <section class="slide" data-title="Layer 03 · Moduli Terraform" data-section="Layer 03">
+      <section
+        class="slide"
+        data-title="Layer 03 · Moduli Terraform"
+        data-section="Layer 03"
+      >
         <div class="slide-inner">
           <div class="layer-head" data-reveal>
             <span class="layer-badge">LAYER 03</span>
             <div>
-              <h2>Moduli Terraform</h2>
-              <p class="small" style="margin: 6px 0 0">Le risorse più comuni, già assemblate come vorremmo trovarle in ogni repo.</p>
+              <h2>Infrastructure as Code</h2>
+              <p class="small" style="margin: 6px 0 0">
+                Moduli Terraform per le risorse più comuni.
+              </p>
             </div>
           </div>
           <div class="split" style="margin-top: 22px">
-            <div>
-              <div class="list" style="margin-top: 0">
-                <div class="li" data-reveal style="--d: 140ms">
-                  <span class="tick">✓</span>
-                  <span><b>Module-first</b> — prima i moduli pubblici <span class="mono">pagopa-dx</span>, poi le risorse raw solo se serve.</span>
-                </div>
-                <div class="li" data-reveal style="--d: 190ms">
-                  <span class="tick">✓</span>
-                  <span><b>Provider DX</b> — naming, CIDR e tag inferiti: meno parametri, meno errori.</span>
-                </div>
-                <div class="li" data-reveal style="--d: 240ms">
-                  <span class="tick">✓</span>
-                  <span><b>Contratti versionati</b> — semver e version plan; <span class="mono">v1</span> e <span class="mono">v2</span> convivono durante le migrazioni.</span>
-                </div>
-                <div class="li" data-reveal style="--d: 290ms">
-                  <span class="tick">✓</span>
-                  <span><b>Qualità</b> — README generati, esempi, test e2e e analisi statica in CI.</span>
-                </div>
-                <div class="li" data-reveal style="--d: 340ms">
-                  <span class="tick">✓</span>
-                  <span><b>Registry pubblico</b> — nessun lock-in: i moduli restano leggibili e riusabili anche fuori.</span>
-                </div>
+            <div
+              class="tiles"
+              style="
+                margin-top: 0;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+              "
+            >
+              <div class="tile" data-reveal style="--d: 140ms">
+                <span class="tt">Module-first</span>
+                <span class="st">prima i moduli dx, poi le risorse raw</span>
+              </div>
+              <div class="tile green" data-reveal style="--d: 190ms">
+                <span class="tt">Provider DX</span>
+                <span class="st">naming · CIDR · tag inferiti</span>
+              </div>
+              <div class="tile violet" data-reveal style="--d: 240ms">
+                <span class="tt">Contratti versionati</span>
+                <span class="st"
+                  >semver + changelog · <span class="mono">v1</span> e
+                  <span class="mono">v2</span> convivono</span
+                >
+              </div>
+              <div class="tile amber" data-reveal style="--d: 290ms">
+                <span class="tt">Qualità</span>
+                <span class="st"
+                  >esempi + test e2e in CI · registry pubblico</span
+                >
               </div>
             </div>
-            <div>
-              <div class="term" data-reveal style="--d: 220ms; margin-top: 0">
-                <div class="term-bar"><i></i><i></i><i></i><span>infra/resources/dev/citizen-api.tf</span></div>
-                <pre>module <span class="t">"storage"</span> {
-  source  = <span class="g">"pagopa-dx/azure-storage-account/azurerm"</span>
-  version = <span class="y">"~&gt; 3.0"</span>
-
-  name             = <span class="g">"citizen-assets"</span>
-  private_endpoint = <span class="t">true</span>
+            <div class="term" data-reveal style="--d: 220ms; margin-top: 0">
+              <div class="term-bar">
+                <i></i><i></i><i></i
+                ><span>infra/resources/dev/citizen-api.tf</span>
+              </div>
+              <pre>module <span class="t">"storage"</span> {
+  source   = <span class="g">"pagopa-dx/azure-storage-account/azurerm"</span>
+  version  = <span class="y">"~&gt; 3.0"</span>
+  use_case = <span class="g">"archive"</span>
 }
 
 <span class="c"># naming, tag e role assignment: dal contratto, non a mano</span></pre>
-              </div>
-              <p class="note" data-reveal style="--d: 280ms">
-                Un modulo nuovo nasce da un caso reale, con test e2e e
-                documentazione: mai da un'ipotesi.
-              </p>
             </div>
           </div>
           <div class="chips" data-reveal style="--d: 400ms">
             <span class="chip"><i></i>networking e VPN</span>
-            <span class="chip"><i></i>app service · function · container app</span>
+            <span class="chip"
+              ><i></i>app service · function · container app</span
+            >
             <span class="chip"><i></i>api management · key vault</span>
             <span class="chip"><i></i>postgres · redis · cosmos · storage</span>
             <span class="chip"><i></i>event hub · service bus</span>
@@ -2587,15 +3869,22 @@
       </section>
 
       <!-- ============================================================
-           10 · Layer 04 — Pipelines
+           09 · Layer 04 — Pipelines
            ============================================================ -->
-      <section class="slide" data-title="Layer 04 · Pipelines" data-section="Layer 04">
+      <section
+        class="slide"
+        data-title="Layer 04 · Pipelines"
+        data-section="Layer 04"
+      >
         <div class="slide-inner">
           <div class="layer-head" data-reveal>
             <span class="layer-badge">LAYER 04</span>
             <div>
-              <h2>Pipelines</h2>
-              <p class="small" style="margin: 6px 0 0">CI di validazione e CD di release su monorepo multi-linguaggio, orchestrate da Nx.</p>
+              <h2>Pipeline di review e release</h2>
+              <p class="small" style="margin: 6px 0 0">
+                CI di validazione e CD di release su monorepo multi-linguaggio,
+                orchestrate da Nx.
+              </p>
             </div>
           </div>
           <div class="pipe-wrap" data-reveal style="--d: 140ms">
@@ -2607,7 +3896,9 @@
               </div>
               <div class="p-node">
                 <div class="t">Validate</div>
-                <div class="d">affected Nx: build · test · lint · typecheck</div>
+                <div class="d">
+                  affected Nx: build · test · lint · typecheck
+                </div>
               </div>
               <div class="p-node">
                 <div class="t">Terraform plan</div>
@@ -2628,40 +3919,46 @@
             </div>
           </div>
           <div class="split" style="margin-top: 20px; align-items: start">
-            <div class="list" style="margin-top: 0">
-              <div class="li" data-reveal style="--d: 200ms">
-                <span class="tick">✓</span>
-                <span><b>CI</b> — affected Nx, static analysis e version plan check: si valida solo ciò che cambia.</span>
+            <div class="mock" data-reveal style="--d: 220ms">
+              <div class="term-bar">
+                <i></i><i></i><i></i><span>pagopa/checkout · PR #482</span>
               </div>
-              <div class="li" data-reveal style="--d: 250ms">
-                <span class="tick">✓</span>
-                <span><b>CD</b> — Version Packages, publish npm con provenance, tag e Release.</span>
-              </div>
-              <div class="li" data-reveal style="--d: 300ms">
-                <span class="tick">✓</span>
-                <span><b>Infra</b> — plan sulle PR, apply al merge con ambienti <span class="mono">*-ci</span> e <span class="mono">*-cd</span> separati.</span>
-              </div>
-              <div class="li" data-reveal style="--d: 350ms">
-                <span class="tick">✓</span>
-                <span><b>Manutenzione</b> — drift detection, keep-alive, rinnovo certificati.</span>
-              </div>
-              <div class="li" data-reveal style="--d: 400ms">
-                <span class="tick">✓</span>
-                <span><b>Multi-linguaggio</b> — TypeScript, Go, Python e Terraform nello stesso task graph Nx.</span>
-              </div>
-            </div>
-            <div class="mock" data-reveal style="--d: 300ms">
-              <div class="term-bar"><i></i><i></i><i></i><span>pagopa/checkout · PR #482</span></div>
               <div class="mock-body" style="gap: 0">
                 <div class="pr-line">
-                  <b>validate</b><span>affected: api, web, infra/dev</span><span class="res ok">✓ 4m 12s</span>
+                  <b>validate</b><span>affected: api, web, infra/dev</span
+                  ><span class="res ok">✓ 4m 12s</span>
                 </div>
                 <div class="pr-line">
-                  <b>terraform plan</b><span>dev · 2 to add, 0 to destroy</span><span class="res ok">✓</span>
+                  <b>terraform plan</b><span>dev · 2 to add, 0 to destroy</span
+                  ><span class="res ok">✓</span>
                 </div>
                 <div class="pr-line">
-                  <b>version plan</b><span>@pagopa/checkout-api</span><span class="res warn">⚠ mancante</span>
+                  <b>version plan</b><span>@pagopa/checkout-api</span
+                  ><span class="res warn">⚠ mancante</span>
                 </div>
+              </div>
+            </div>
+            <div data-reveal style="--d: 300ms">
+              <div class="panel-title">
+                Monorepo multi-linguaggio · un grafo Nx
+              </div>
+              <div class="nxg">
+                <div class="chips">
+                  <span class="chip">TypeScript</span>
+                  <span class="chip">Go</span>
+                  <span class="chip">Python</span>
+                  <span class="chip">Terraform</span>
+                </div>
+                <span class="arr">→</span>
+                <span class="merge"
+                  >task graph<span>cache · affected</span></span
+                >
+              </div>
+              <div class="chips" style="margin-top: 16px">
+                <span class="chip">CI: solo ciò che cambia</span>
+                <span class="chip">CD: versioni + changelog</span>
+                <span class="chip">Infra: plan → apply</span>
+                <span class="chip">drift · keep-alive · TLS</span>
               </div>
             </div>
           </div>
@@ -2669,52 +3966,262 @@
       </section>
 
       <!-- ============================================================
+           10 · CI su ciò che è affected
+           ============================================================ -->
+      <section
+        class="slide"
+        data-title="CI su ciò che è affected"
+        data-section="Layer 04"
+      >
+        <div class="slide-inner">
+          <div class="kicker" data-reveal>Dentro le pipelines</div>
+          <h2 data-reveal style="--d: 80ms; margin-top: 14px">
+            CI solo su ciò che è <span class="accent">affected</span>
+          </h2>
+          <p class="lead" data-reveal style="--d: 150ms">
+            Il grafo delle dipendenze decide cosa buildare, testare e
+            pianificare.
+          </p>
+          <div class="afg" data-reveal style="--d: 200ms">
+            <svg
+              class="afg-svg"
+              viewBox="0 0 1000 380"
+              role="img"
+              aria-label="Grafo delle dipendenze: la modifica a packages/shared attiva solo i progetti che ne dipendono"
+            >
+              <rect
+                class="afg-sweep"
+                x="0"
+                y="0"
+                width="80"
+                height="380"
+              ></rect>
+              <path
+                class="g-edge"
+                d="M250 178 C 290 178 290 278 330 278"
+              ></path>
+              <path
+                class="g-edge"
+                d="M540 278 C 600 278 600 298 670 298"
+              ></path>
+              <path
+                class="g-edge live"
+                style="--dd: 300ms"
+                d="M250 178 C 290 178 290 88 330 88"
+              ></path>
+              <path
+                class="g-edge live"
+                style="--dd: 700ms"
+                d="M540 88 C 600 88 600 48 670 48"
+              ></path>
+              <path
+                class="g-edge live"
+                style="--dd: 900ms"
+                d="M540 88 C 600 88 600 158 670 158"
+              ></path>
+              <rect
+                class="g-node changed"
+                x="40"
+                y="150"
+                width="210"
+                height="56"
+                rx="12"
+              ></rect>
+              <text class="g-t bright" x="145" y="184">packages/shared</text>
+              <text
+                class="g-badge changed g-pop"
+                style="--dd: 500ms"
+                x="145"
+                y="226"
+              >
+                CHANGED
+              </text>
+              <rect
+                class="g-node"
+                x="330"
+                y="250"
+                width="210"
+                height="56"
+                rx="12"
+              ></rect>
+              <text class="g-t" x="435" y="284">packages/logger</text>
+              <text class="g-badge dim" x="435" y="326">non affected</text>
+              <rect
+                class="g-node affected"
+                x="330"
+                y="60"
+                width="210"
+                height="56"
+                rx="12"
+              ></rect>
+              <text class="g-t bright" x="435" y="94">packages/payments</text>
+              <text
+                class="g-badge affected g-pop"
+                style="--dd: 800ms"
+                x="435"
+                y="136"
+              >
+                AFFECTED
+              </text>
+              <rect
+                class="g-node affected"
+                x="670"
+                y="20"
+                width="230"
+                height="56"
+                rx="12"
+              ></rect>
+              <text class="g-t bright" x="785" y="54">apps/checkout-api</text>
+              <text
+                class="g-badge affected g-pop"
+                style="--dd: 1000ms"
+                x="785"
+                y="96"
+              >
+                AFFECTED
+              </text>
+              <rect
+                class="g-node affected"
+                x="670"
+                y="130"
+                width="230"
+                height="56"
+                rx="12"
+              ></rect>
+              <text class="g-t bright" x="785" y="164">apps/backoffice</text>
+              <text
+                class="g-badge affected g-pop"
+                style="--dd: 1150ms"
+                x="785"
+                y="206"
+              >
+                AFFECTED
+              </text>
+              <rect
+                class="g-node"
+                x="670"
+                y="270"
+                width="230"
+                height="56"
+                rx="12"
+              ></rect>
+              <text class="g-t" x="785" y="304">apps/legacy-portal</text>
+              <text class="g-badge dim" x="785" y="346">non affected</text>
+            </svg>
+          </div>
+          <div class="afg-legend" data-reveal style="--d: 300ms">
+            <span class="chip warm"><i></i>changed · il file toccato</span>
+            <span class="chip"><i></i>affected · entra in CI</span>
+            <span class="chip"><i></i>non affected · resta fuori</span>
+          </div>
+          <div class="speed" data-reveal style="--d: 380ms">
+            <div class="sp-row">
+              <span class="sp-lbl">CI senza affected</span>
+              <div class="sp-track">
+                <div class="sp-bar">
+                  <div
+                    class="blocks slim"
+                    data-blocks
+                    data-total="24"
+                    data-kind="dim"
+                    style="flex: 1"
+                  ></div>
+                </div>
+              </div>
+              <span class="sp-out">tutto il repo</span>
+            </div>
+            <div class="sp-row">
+              <span class="sp-lbl">CI con affected</span>
+              <div class="sp-track">
+                <div class="sp-bar ok" style="--w: 19%">
+                  <div
+                    class="blocks slim"
+                    data-blocks
+                    data-total="5"
+                    data-kind="hot"
+                    style="flex: 1"
+                  ></div>
+                </div>
+                <span class="sp-skip">non eseguito</span>
+              </div>
+              <span class="sp-out teal">≈5× più veloce</span>
+            </div>
+          </div>
+          <p class="fan-cap" data-reveal style="--d: 440ms">
+            La modifica entra in CI insieme ai soli progetti che dipendono da
+            lei.
+            <span class="mono">stime illustrative</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- ============================================================
            11 · Layer 05 — Artefatti per agenti
            ============================================================ -->
-      <section class="slide" data-title="Layer 05 · Artefatti per agenti" data-section="Layer 05">
+      <section
+        class="slide"
+        data-title="Layer 05 · Artefatti per agenti"
+        data-section="Layer 05"
+      >
         <div class="slide-inner">
           <div class="layer-head" data-reveal>
             <span class="layer-badge">LAYER 05</span>
             <div>
               <h2>Artefatti per agenti</h2>
-              <p class="small" style="margin: 6px 0 0">Il contesto giusto, nel momento giusto, alla macchina giusta.</p>
+              <p class="small" style="margin: 6px 0 0">
+                Il contesto giusto, nel momento giusto, alla macchina giusta.
+              </p>
             </div>
           </div>
           <div class="split" style="margin-top: 22px; align-items: start">
             <div>
-              <div class="card" data-reveal style="--d: 140ms">
-                <div class="k">Plugin marketplace DX</div>
-                <h3>Skill, agenti, comandi e hook versionati nel repository</h3>
-                <p>
-                  <span class="mono">terraform</span> · <span class="mono">azure</span> ·
-                  <span class="mono">aiepdf</span> · <span class="mono">project-management</span> ·
-                  <span class="mono">standards</span> · <span class="mono">tests</span> ·
-                  <span class="mono">typescript</span>
-                </p>
+              <div class="panel-title" data-reveal>Plugin marketplace DX</div>
+              <div class="chips" data-reveal style="--d: 140ms">
+                <span class="chip"><i></i>terraform</span>
+                <span class="chip"><i></i>azure</span>
+                <span class="chip"><i></i>aiepdf</span>
+                <span class="chip"><i></i>project-management</span>
+                <span class="chip"><i></i>standards</span>
+                <span class="chip"><i></i>tests</span>
+                <span class="chip"><i></i>typescript</span>
               </div>
-              <div class="card" data-reveal style="--d: 220ms; margin-top: 14px">
-                <div class="k">Contesto selettivo</div>
-                <h3>L'agente chiede, non indovina</h3>
-                <p>
-                  DX MCP Server, <span class="mono">AGENTS.md</span>,
-                  <span class="mono">.github/instructions/*</span> e
-                  <strong>mise</strong>: gli standard arrivano per file e per
-                  task, gli ambienti restano isomorfi.
-                </p>
+              <div
+                class="panel-title"
+                data-reveal
+                style="--d: 220ms; margin-top: 20px"
+              >
+                Contesto selettivo
               </div>
+              <div class="chips" data-reveal style="--d: 260ms">
+                <span class="chip green"><i></i>AGENTS.md</span>
+                <span class="chip green"><i></i>.github/instructions/*</span>
+                <span class="chip green"><i></i>skill con eval</span>
+                <span class="chip green"><i></i>mise + lockfile</span>
+              </div>
+              <p class="fan-cap" data-reveal style="--d: 320ms">
+                Standard per file e per task · ambienti isomorfi · skill con
+                eval e fixture proprie.
+              </p>
             </div>
-            <div class="mock" data-reveal style="--d: 300ms">
-              <div class="term-bar"><i></i><i></i><i></i><span>copilot · citizen-api</span></div>
+            <div class="mock" data-reveal style="--d: 240ms">
+              <div class="term-bar">
+                <i></i><i></i><i></i><span>copilot · citizen-api</span>
+              </div>
               <div class="mock-body">
                 <div class="msg user">
                   <span class="av">you</span>
-                  <span class="bubble">Aggiungi uno storage con private endpoint per citizen-api.</span>
+                  <span class="bubble"
+                    >Aggiungi uno storage con private endpoint per
+                    citizen-api.</span
+                  >
                 </div>
                 <div class="msg tool">
                   <span class="av">dx</span>
                   <span class="bubble">
-                    <span class="ok">✓</span> skill terraform-best-practices (module-first)<br />
-                    <span class="ok">✓</span> modulo pagopa-dx/azure-storage-account<br />
+                    <span class="ok">✓</span> skill terraform-best-practices
+                    (module-first)<br />
+                    <span class="ok">✓</span> modulo
+                    pagopa-dx/azure-storage-account<br />
                     <span class="ok">✓</span> docs: private endpoint su Azure
                   </span>
                 </div>
@@ -2728,53 +4235,67 @@
               </div>
             </div>
           </div>
-          <p class="note" data-reveal style="--d: 380ms">
-            <strong>Il principio:</strong> non tutto il repository, ma ciò che
-            serve a quel task, nella forma che l'agente sa usare. Le skill
-            hanno eval e fixture proprie.
-          </p>
         </div>
       </section>
 
       <!-- ============================================================
            12 · Layer 06 — Osservabilità
            ============================================================ -->
-      <section class="slide" data-title="Layer 06 · Osservabilità" data-section="Layer 06">
+      <section
+        class="slide"
+        data-title="Layer 06 · Osservabilità"
+        data-section="Layer 06"
+      >
         <div class="slide-inner">
           <div class="layer-head" data-reveal>
             <span class="layer-badge">LAYER 06</span>
             <div>
               <h2>Osservabilità</h2>
-              <p class="small" style="margin: 6px 0 0">Chiudere il ciclo: dal deploy al comportamento reale, senza punti ciechi.</p>
+              <p class="small" style="margin: 6px 0 0">
+                Chiudere il ciclo: dal deploy al comportamento reale, senza
+                punti ciechi.
+              </p>
             </div>
           </div>
           <div class="split" style="margin-top: 24px">
             <div>
-              <div class="panel-title">Trace di una richiesta · OpenTelemetry</div>
+              <div class="panel-title">
+                Trace di una richiesta · OpenTelemetry
+              </div>
               <div class="trace">
                 <div class="tr-row" data-reveal style="--d: 120ms">
                   <span class="lbl">apim → app</span>
-                  <div class="tr-track"><div class="tr-bar" style="--d: 100ms; width: 88%"></div></div>
+                  <div class="tr-track">
+                    <div class="tr-bar" style="--d: 100ms; width: 88%"></div>
+                  </div>
                   <span class="ms">182 ms</span>
                 </div>
                 <div class="tr-row" data-reveal style="--d: 170ms">
                   <span class="lbl">http request</span>
-                  <div class="tr-track"><div class="tr-bar" style="--d: 220ms; width: 62%"></div></div>
+                  <div class="tr-track">
+                    <div class="tr-bar" style="--d: 220ms; width: 62%"></div>
+                  </div>
                   <span class="ms">121 ms</span>
                 </div>
                 <div class="tr-row violet" data-reveal style="--d: 220ms">
                   <span class="lbl">postgres query</span>
-                  <div class="tr-track"><div class="tr-bar" style="--d: 340ms; width: 34%"></div></div>
+                  <div class="tr-track">
+                    <div class="tr-bar" style="--d: 340ms; width: 34%"></div>
+                  </div>
                   <span class="ms">48 ms</span>
                 </div>
                 <div class="tr-row green" data-reveal style="--d: 270ms">
                   <span class="lbl">service bus publish</span>
-                  <div class="tr-track"><div class="tr-bar" style="--d: 460ms; width: 18%"></div></div>
+                  <div class="tr-track">
+                    <div class="tr-bar" style="--d: 460ms; width: 18%"></div>
+                  </div>
                   <span class="ms">21 ms</span>
                 </div>
                 <div class="tr-row" data-reveal style="--d: 320ms">
                   <span class="lbl">fetch esterno</span>
-                  <div class="tr-track"><div class="tr-bar" style="--d: 580ms; width: 26%"></div></div>
+                  <div class="tr-track">
+                    <div class="tr-bar" style="--d: 580ms; width: 26%"></div>
+                  </div>
                   <span class="ms">37 ms</span>
                 </div>
               </div>
@@ -2784,24 +4305,30 @@
                 incluso fetch nativo ed ESM. Correlation end-to-end pronta.
               </p>
             </div>
-            <div>
+            <div data-reveal style="--d: 200ms">
               <div class="panel-title">Segnali e dashboard</div>
-              <div class="list" style="margin-top: 0">
-                <div class="li" data-reveal style="--d: 180ms">
-                  <span class="tick">◉</span>
-                  <span><b>App Insights e Log Analytics</b> — destinazione di default definita nel core.</span>
+              <div
+                class="tiles"
+                style="
+                  margin-top: 0;
+                  grid-template-columns: repeat(2, minmax(0, 1fr));
+                "
+              >
+                <div class="tile">
+                  <span class="tt">App Insights + Logs</span>
+                  <span class="st">dal core, per default</span>
                 </div>
-                <div class="li" data-reveal style="--d: 240ms">
-                  <span class="tick">◉</span>
-                  <span><b>Dashboard OpEx da OpenAPI</b> — un <span class="mono">config.yaml</span> sotto <span class="mono">.opex/</span> genera dashboard con Terraform.</span>
+                <div class="tile violet">
+                  <span class="tt">Dashboard OpEx</span>
+                  <span class="st">da OpenAPI a Terraform</span>
                 </div>
-                <div class="li" data-reveal style="--d: 300ms">
-                  <span class="tick">◉</span>
-                  <span><b>Metriche di piattaforma</b> — adozione, pipeline health, tempi di consegna.</span>
+                <div class="tile green">
+                  <span class="tt">DX metrics</span>
+                  <span class="st">adozione · pipeline health</span>
                 </div>
-                <div class="li" data-reveal style="--d: 360ms">
-                  <span class="tick">◉</span>
-                  <span><b>Telemetria delle pipeline</b> — CI/CD alimenta le stesse metriche, con gli stessi strumenti dei team.</span>
+                <div class="tile amber">
+                  <span class="tt">Telemetria pipeline</span>
+                  <span class="st">stessi strumenti dei team</span>
                 </div>
               </div>
             </div>
@@ -2812,78 +4339,83 @@
       <!-- ============================================================
            13 · Dipendenza tra layer
            ============================================================ -->
-      <section class="slide" data-title="La dipendenza tra layer" data-section="Piattaforma">
+      <section
+        class="slide"
+        data-title="La dipendenza tra layer"
+        data-section="Piattaforma"
+      >
         <div class="slide-inner">
-          <div class="kicker" data-reveal>Perché è una piattaforma e non una collezione di tool</div>
+          <div class="kicker" data-reveal>
+            Perché è una piattaforma e non una collezione di tool
+          </div>
           <h2 data-reveal style="--d: 80ms; margin-top: 14px">
             Un deploy attraversa <span class="accent">tutti i layer</span>
           </h2>
           <p class="lead" data-reveal style="--d: 150ms">
             Esempio: la release di <span class="mono">citizen-api</span> su
-            Container App. Ogni layer consuma i contratti di quello sotto —
-            nessuno è decorativo.
+            Container App.
           </p>
-          <div class="xflow" data-reveal style="--d: 220ms">
-            <div class="xf">
-              <span class="lb">L01 · BOOTSTRAP</span>
-              <span class="act">IAM del deploy</span>
-              <span class="det">
-                Il job entra nel GitHub Environment <code>dev-cd</code> via
-                <b>OIDC federated identity</b>: ruoli e permessi creati dal
-                bootstrapper decidono chi può fare cosa. Nessun secret da
-                copiare o ruotare.
-              </span>
+          <div class="deploy" data-reveal style="--d: 220ms">
+            <div class="dp-spine" aria-hidden="true"><i></i></div>
+            <div class="dp-step" style="--lc: #7c8cff">
+              <span class="dp-dot"></span>
+              <span class="dp-lb">L01 · BOOTSTRAP</span>
+              <span class="dp-act">IAM del deploy</span>
+              <span class="dp-det"
+                >GitHub Environment <code>*-cd</code> · federated identity:
+                nessun secret da copiare.</span
+              >
             </div>
-            <div class="xf">
-              <span class="lb">L00 · TOOLCHAIN</span>
-              <span class="act">Build riproducibile</span>
-              <span class="det">
-                <code>pnpm nx build citizen-api</code> usa la toolchain fissata
-                da mise e lockfile, con cache e <code>affected</code>: la stessa
-                build della macchina locale, eseguita in CI.
-              </span>
+            <div class="dp-step" style="--lc: #26b3c2">
+              <span class="dp-dot"></span>
+              <span class="dp-lb">L00 · TOOLCHAIN</span>
+              <span class="dp-act">Build riproducibile</span>
+              <span class="dp-det"
+                ><code>pnpm nx build</code> · la stessa toolchain di dev, con
+                cache e <code>affected</code>.</span
+              >
             </div>
-            <div class="xf">
-              <span class="lb">L03 · MODULI</span>
-              <span class="act">Configurazione</span>
-              <span class="det">
-                Il modulo <code>azure_container_app</code> espone le opzioni del
-                servizio: immagine, variabili, segreti da Key Vault, scale.
-              </span>
+            <div class="dp-step" style="--lc: #ffc861">
+              <span class="dp-dot"></span>
+              <span class="dp-lb">L03 · MODULI</span>
+              <span class="dp-act">Configurazione</span>
+              <span class="dp-det"
+                ><code>azure_container_app</code>: immagine, variabili, segreti,
+                scale.</span
+              >
             </div>
-            <div class="xf">
-              <span class="lb">L04 · PIPELINES</span>
-              <span class="act">Orchestrazione</span>
-              <span class="det">
-                Il workflow riusabile <code>release-azure-containerapp-v1</code>
-                applica quelle opzioni: build, push dell'immagine, deploy della
-                revision. Zero YAML duplicato nei repository dei team.
-              </span>
+            <div class="dp-step" style="--lc: #5ddba8">
+              <span class="dp-dot"></span>
+              <span class="dp-lb">L04 · PIPELINES</span>
+              <span class="dp-act">Orchestrazione</span>
+              <span class="dp-det"
+                ><code>release-azure-containerapp-v1</code>: build → push →
+                deploy, zero YAML duplicato.</span
+              >
             </div>
-            <div class="xf">
-              <span class="lb">L02 · CORE &amp; HUB</span>
-              <span class="act">Destinazione</span>
-              <span class="det">
-                Key Vault, API gateway e rete privata esistono già
-                nell'ambiente: l'app si aggancia ai servizi condivisi senza
-                cablaggi manuali.
-              </span>
+            <div class="dp-step" style="--lc: #6fe3ef">
+              <span class="dp-dot"></span>
+              <span class="dp-lb">L02 · HUB &amp; SPOKE</span>
+              <span class="dp-act">Destinazione</span>
+              <span class="dp-det"
+                >Key Vault, API gateway e rete privata già presenti
+                nell'ambiente.</span
+              >
             </div>
-            <div class="xf">
-              <span class="lb">L06 · OSSERVABILITÀ</span>
-              <span class="act">Feedback</span>
-              <span class="det">
-                La nuova revision traccia su Application Insights e le dashboard
-                OpEx si rigenerano dal contratto OpenAPI: il ciclo si chiude sul
-                comportamento reale.
-              </span>
+            <div class="dp-step" style="--lc: #ff9f6e">
+              <span class="dp-dot"></span>
+              <span class="dp-lb">L06 · OSSERVABILITÀ</span>
+              <span class="dp-act">Feedback</span>
+              <span class="dp-det"
+                >Trace su App Insights · dashboard rigenerate
+                dall'OpenAPI.</span
+              >
             </div>
           </div>
           <p class="note" data-reveal style="--d: 320ms">
-            <strong>Rimuovi un layer e il deploy torna a essere un lavoro da
-            esperti:</strong> IAM gestito a mano, build non riproducibile,
-            configurazioni divergenti tra ambienti, nessun feedback in
-            produzione.
+            <strong
+              >Rimuovi un layer e il deploy torna un lavoro da esperti.</strong
+            >
           </p>
         </div>
       </section>
@@ -2891,7 +4423,11 @@
       <!-- ============================================================
            14 · Standard, non magia
            ============================================================ -->
-      <section class="slide" data-title="Standard, non magia" data-section="Principi">
+      <section
+        class="slide"
+        data-title="Standard, non magia"
+        data-section="Principi"
+      >
         <div class="slide-inner">
           <div class="kicker" data-reveal>Principio di progettazione</div>
           <h2 data-reveal style="--d: 80ms; margin-top: 14px">
@@ -2900,62 +4436,56 @@
           </h2>
           <p class="lead" data-reveal style="--d: 150ms">
             L'astrazione vive nei moduli e nei workflow, non in un runtime
-            proprietario. Nessun DSL custom: solo tecnologie documentate,
-            versionate e indipendenti dalla piattaforma.
+            proprietario.
           </p>
-          <div class="cmp" data-cmp data-mode="std" data-reveal style="--d: 220ms">
+          <div
+            class="cmp"
+            data-cmp
+            data-mode="std"
+            data-reveal
+            style="--d: 220ms"
+          >
             <div class="seg" role="group" aria-label="Confronto approcci">
-              <button type="button" data-mode="magic">Piattaforma custom</button>
-              <button type="button" class="is-on" data-mode="std">Standard aperti</button>
+              <button type="button" data-mode="magic">
+                Piattaforma custom
+              </button>
+              <button type="button" class="is-on" data-mode="std">
+                Standard aperti
+              </button>
             </div>
             <div class="cmp-panel" data-panel="magic" style="margin-top: 14px">
-              <div class="cmp-head"><span class="tag red">NON NE ABBIAMO BISOGNO</span></div>
-              <div class="list" style="margin-top: 0">
-                <div class="li red">
-                  <span class="tick">✕</span>
-                  <span>DSL proprietario da imparare: gli agenti non l'hanno mai visto nei dati di training e lo allucinano.</span>
-                </div>
-                <div class="li red">
-                  <span class="tick">✕</span>
-                  <span>Runtime di scaffolding interno: un altro sistema da mantenere, versionare e spiegare.</span>
-                </div>
-                <div class="li red">
-                  <span class="tick">✕</span>
-                  <span>Portale come unica fonte di verità: non è diff-abile, non è versionato, non è testabile in CI.</span>
-                </div>
-                <div class="li red">
-                  <span class="tick">✕</span>
-                  <span>Lock-in non necessario: uscire dalla piattaforma diventa più costoso che restarne dentro.</span>
-                </div>
+              <div class="cmp-head">
+                <span class="tag red">NON NE ABBIAMO BISOGNO</span>
               </div>
+              <div class="chips" style="margin-top: 0">
+                <span class="chip bad"><i></i>DSL proprietario</span>
+                <span class="chip bad"><i></i>runtime proprietario</span>
+                <span class="chip bad"
+                  ><i></i>portale come fonte di verità</span
+                >
+                <span class="chip bad"><i></i>lock-in</span>
+              </div>
+              <p class="fan-cap">
+                Gli agenti non conoscono la costruzione custom: la allucinano.
+              </p>
             </div>
             <div class="cmp-panel" data-panel="std" style="margin-top: 14px">
-              <div class="cmp-head"><span class="tag green">LA NOSTRA SCELTA</span></div>
-              <div class="list" style="margin-top: 0">
-                <div class="li">
-                  <span class="tick">✓</span>
-                  <span><b>Terraform</b> per l'infrastruttura, <b>GitHub Actions</b> per le pipeline, <b>Nx</b> per il monorepo.</span>
-                </div>
-                <div class="li">
-                  <span class="tick">✓</span>
-                  <span><b>OpenTelemetry</b> per l'osservabilità, <b>OpenAPI</b> per i contratti, <b>MCP</b> e <b>Agent Skills</b> per gli agenti.</span>
-                </div>
-                <div class="li">
-                  <span class="tick">✓</span>
-                  <span><b>mise</b> per gli ambienti, <b>pnpm</b> per i workspace, <b>pre-commit</b> per la qualità locale.</span>
-                </div>
-                <div class="li">
-                  <span class="tick">✓</span>
-                  <span><b>Conseguenza:</b> gli agenti sono già competenti, le persone non ripartono da zero, l'uscita resta possibile.</span>
-                </div>
+              <div class="cmp-head">
+                <span class="tag green">LA NOSTRA SCELTA</span>
               </div>
+              <div class="chips" style="margin-top: 0">
+                <span class="chip green"><i></i>Terraform</span>
+                <span class="chip green"><i></i>GitHub Actions</span>
+                <span class="chip green"><i></i>Nx</span>
+                <span class="chip green"><i></i>OpenTelemetry</span>
+                <span class="chip green"><i></i>OpenAPI</span>
+                <span class="chip green"><i></i>Agent Skills</span>
+                <span class="chip green"><i></i>mise</span>
+              </div>
+              <p class="fan-cap">
+                Competenze già presenti negli agenti, ispezionabili e portabili.
+              </p>
             </div>
-          </div>
-          <div class="chips" data-reveal style="--d: 320ms">
-            <span class="chip"><i></i>Portabilità</span>
-            <span class="chip"><i></i>Ispezionabilità</span>
-            <span class="chip"><i></i>Training data già noti agli agenti</span>
-            <span class="chip warm"><i></i>Exit strategy</span>
           </div>
         </div>
       </section>
@@ -2963,28 +4493,62 @@
       <!-- ============================================================
            15 · Framework AI — aiepdf
            ============================================================ -->
-      <section class="slide" data-title="Framework AI · aiepdf" data-section="AI Framework">
+      <section
+        class="slide"
+        data-title="Framework AI · aiepdf"
+        data-section="AI Framework"
+      >
         <div class="slide-inner">
           <div class="kicker" data-reveal>Framework AI · plugins/aiepdf</div>
           <h2 data-reveal style="--d: 80ms; margin-top: 14px">
-            Dall'intento al backlog, con un filo di tracciabilità
+            Dall'intento al backlog, guidato dagli agenti AI
           </h2>
           <div class="stepper" data-stepper data-reveal style="--d: 160ms">
-            <div class="steps" role="tablist" aria-label="Skill del framework aiepdf">
-              <button class="step is-on" data-step="0" role="tab" aria-selected="true">
+            <div
+              class="steps"
+              role="tablist"
+              aria-label="Skill del framework aiepdf"
+            >
+              <button
+                class="step is-on"
+                data-step="0"
+                role="tab"
+                aria-selected="true"
+              >
                 <span class="n">01</span><span class="t">PRD Alchemist</span>
               </button>
-              <button class="step" data-step="1" role="tab" aria-selected="false">
+              <button
+                class="step"
+                data-step="1"
+                role="tab"
+                aria-selected="false"
+              >
                 <span class="n">02</span><span class="t">DR Blacksmith</span>
               </button>
-              <button class="step" data-step="2" role="tab" aria-selected="false">
+              <button
+                class="step"
+                data-step="2"
+                role="tab"
+                aria-selected="false"
+              >
                 <span class="n">03</span><span class="t">UC Engraver</span>
               </button>
-              <button class="step" data-step="3" role="tab" aria-selected="false">
+              <button
+                class="step"
+                data-step="3"
+                role="tab"
+                aria-selected="false"
+              >
                 <span class="n">04</span><span class="t">Jira Magister</span>
               </button>
-              <button class="step" data-step="4" role="tab" aria-selected="false">
-                <span class="n">05</span><span class="t">Confluence Librarian</span>
+              <button
+                class="step"
+                data-step="4"
+                role="tab"
+                aria-selected="false"
+              >
+                <span class="n">05</span
+                ><span class="t">Confluence Librarian</span>
               </button>
               <div class="step-dots" aria-hidden="true">
                 <i class="is-on"></i><i></i><i></i><i></i><i></i>
@@ -2993,40 +4557,42 @@
             <div>
               <div class="step-panel is-on">
                 <div class="kicker">Discovery → PRD</div>
-                <h3 style="margin-top: 10px">Trasforma il materiale grezzo in un PRD a esiti</h3>
+                <h3 style="margin-top: 10px">
+                  Trasforma il materiale grezzo in un PRD a esiti
+                </h3>
                 <p>
-                  Attori, JTBD, metriche, guardrail, vincoli e domande aperte.
-                  Il passaggio <span class="mono">draft → review</span> avviene
-                  solo su conferma esplicita: l'agente non promuove sé stesso.
+                  Esiti, attori, JTBD: la promozione a review solo su conferma.
                 </p>
-                <div class="out">ID stabili: metadata.* · JTBD-XX · output pronto per Confluence</div>
-                <pre class="snip"><span class="c">&lt;!-- PRD-02-NEED --&gt;</span>
+                <pre
+                  class="snip"
+                ><span class="c">&lt;!-- PRD-02-NEED --&gt;</span>
 | <span class="v">JTBD-01</span> | <span class="g">"Come PM voglio … per …"</span> |
 | <span class="v">metadata.status</span> | <span class="y">draft</span> · promozione solo su conferma |</pre>
               </div>
               <div class="step-panel">
                 <div class="kicker">PRD / RFC → DR·SRS</div>
-                <h3 style="margin-top: 10px">Il progetto operativo, non l'idea</h3>
-                <p>
-                  Confini, componenti, contratti, NFR, rollout, monitoraggio.
-                  Un RFC <em>accepted</em> non guida l'implementazione finché la
-                  decisione non è propagata nel DR/SRS.
-                </p>
-                <div class="out">Fonte di verità unica: il DR/SRS, con catalogo UC-XX</div>
-                <pre class="snip"><span class="c">&lt;!-- DR-BOUNDARIES --&gt;</span>
+                <h3 style="margin-top: 10px">
+                  Il progetto operativo, non l'idea
+                </h3>
+                <p>Confini, contratti, NFR, rollout: il progetto operativo.</p>
+                <pre
+                  class="snip"
+                ><span class="c">&lt;!-- DR-BOUNDARIES --&gt;</span>
 | <span class="v">UC-01</span> | Checkout | <span class="y">P1</span> |
 <span class="g">RFC-12 accepted</span> → decisione propagata nel DR/SRS</pre>
               </div>
               <div class="step-panel">
                 <div class="kicker">DR/SRS → Use Case</div>
-                <h3 style="margin-top: 10px">Comportamento implementabile e testabile</h3>
+                <h3 style="margin-top: 10px">
+                  Comportamento implementabile e testabile
+                </h3>
                 <p>
-                  Flussi principali, alternativi ed eccezioni, postcondizioni e
-                  acceptance check binari. Gli attori sono copiati esattamente
-                  dal PRD; i conflitti restano visibili come domande aperte.
+                  Flussi, postcondizioni, acceptance check binari. Attori
+                  copiati dal PRD.
                 </p>
-                <div class="out">AC-UC-XX-YY binari · ogni UC aggiorna il catalogo del parent</div>
-                <pre class="snip"><span class="v">AC-UC-01-01</span>: dato un carrello non vuoto,
+                <pre
+                  class="snip"
+                ><span class="v">AC-UC-01-01</span>: dato un carrello non vuoto,
   quando l'utente conferma,
   allora l'ordine è creato.</pre>
               </div>
@@ -3034,25 +4600,24 @@
                 <div class="kicker">Use Case → Jira</div>
                 <h3 style="margin-top: 10px">La proiezione eseguibile</h3>
                 <p>
-                  Epic coerenti da pochi sprint, Story orientate al valore,
-                  Task abilitanti separati. Definition of Ready verificata
-                  prima di creare qualunque item.
+                  Epic da pochi sprint, Story orientate al valore, Task
+                  abilitanti.
                 </p>
-                <div class="out">Traceability nativa: UC · JTBD · KPI · link Confluence e Figma</div>
-                <pre class="snip">Story: <span class="g">"Come cittadino voglio … così da …"</span>
+                <pre
+                  class="snip"
+                >Story: <span class="g">"Come cittadino voglio … così da …"</span>
 parent: <span class="v">UC-01</span> · label: <span class="v">JTBD-01</span>
 link: Confluence + Figma nel description
 <span class="y">DoR verificata</span> prima di creare l'item</pre>
               </div>
               <div class="step-panel">
                 <div class="kicker">Documento → Confluence</div>
-                <h3 style="margin-top: 10px">Pubblicare senza perdere struttura</h3>
+                <h3 style="margin-top: 10px">
+                  Pubblicare senza perdere struttura
+                </h3>
                 <p>
-                  Gerarchie, tabelle, link, ID e stato del documento restano
-                  intatti. Le operazioni irreversibili richiedono conferma
-                  esplicita; la pubblicazione non cambia il lifecycle.
+                  Gerarchie, ID e stato intatti; conferma prima di pubblicare.
                 </p>
-                <div class="out">Parità Markdown ↔ Confluence verificata prima del publish</div>
                 <pre class="snip">op: create · space: DX · parent: Catalogo
 IDs preservati: <span class="v">UC-01</span>, <span class="v">AC-UC-01-01</span>
 conferma esplicita prima di pubblicare</pre>
@@ -3062,7 +4627,7 @@ conferma esplicita prima di pubblicare</pre>
           <p class="note" data-reveal style="--d: 300ms">
             <strong>Regole trasversali:</strong> <em>ask, never infer</em> · gli
             ID stabili sono un contratto · le skill hanno eval e fixture proprie
-            · MCP Atlassian e Figma forniscono il contesto operativo.
+            · gli strumenti Atlassian e Figma forniscono il contesto operativo.
           </p>
         </div>
       </section>
@@ -3074,7 +4639,8 @@ conferma esplicita prima di pubblicare</pre>
         <div class="slide-inner">
           <div class="kicker" data-reveal>Come immaginiamo il ciclo</div>
           <h2 data-reveal style="--d: 80ms; margin-top: 14px">
-            Agenti ovunque. Decisioni umane ai <span class="accent">gate</span>.
+            Gli agenti <span class="accent">lavorano</span>, gli umani
+            <span class="accent">decidono</span>.
           </h2>
           <div class="sdlc" data-reveal style="--d: 160ms">
             <div class="tl-line"><i></i></div>
@@ -3103,7 +4669,7 @@ conferma esplicita prima di pubblicare</pre>
             </div>
             <div class="tl-node">
               <div class="t">Implementazione</div>
-              <div class="d">agenti con skill e MCP</div>
+              <div class="d">agenti con skill e istruzioni</div>
             </div>
             <div class="tl-node">
               <div class="t">CI/CD</div>
@@ -3115,30 +4681,37 @@ conferma esplicita prima di pubblicare</pre>
               <div class="d">tracing e metriche</div>
             </div>
           </div>
-          <div class="grid-3" style="margin-top: 28px">
-            <div class="card" data-reveal style="--d: 260ms">
-              <div class="k">Handoff</div>
-              <h3>Ogni passaggio è un artefatto versionato</h3>
-              <p>
-                PRD, DR/SRS, Use Case e item Jira: file con ID stabili, non
-                messaggi in chat.
-              </p>
+          <div
+            class="tiles"
+            style="margin-top: 28px; grid-template-columns: repeat(3, 1fr)"
+          >
+            <div class="tile" data-reveal style="--d: 260ms">
+              <span class="ic"
+                ><svg viewBox="0 0 24 24">
+                  <path d="M7 3h7l4 4v14H7z" />
+                  <path d="M14 3v4h4" />
+                  <path d="M10 13l1.6 1.6L15 11" /></svg
+              ></span>
+              <span class="tt">Handoff</span>
+              <span class="st">Artefatti versionati, non chat.</span>
             </div>
-            <div class="card" data-reveal style="--d: 330ms">
-              <div class="k">Guardrail</div>
-              <h3>Ciò che non rispetta gli standard non arriva in review</h3>
-              <p>
-                Validazione, version plan, plan Terraform, analisi statica: i
-                blocchi avvengono prima.
-              </p>
+            <div class="tile green" data-reveal style="--d: 330ms">
+              <span class="ic"
+                ><svg viewBox="0 0 24 24">
+                  <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6z" />
+                  <path d="M9.5 12l1.8 1.8 3.4-3.6" /></svg
+              ></span>
+              <span class="tt">Guardrail</span>
+              <span class="st">I blocchi arrivano prima della review.</span>
             </div>
-            <div class="card" data-reveal style="--d: 400ms">
-              <div class="k">Feedback</div>
-              <h3>L'osservabilità rientra nell'intento</h3>
-              <p>
-                Trace, metriche e dashboard OpEx aggiornano le decisioni del
-                ciclo successivo.
-              </p>
+            <div class="tile amber" data-reveal style="--d: 400ms">
+              <span class="ic"
+                ><svg viewBox="0 0 24 24">
+                  <path d="M21 12a9 9 0 1 1-2.6-6.4" />
+                  <path d="M21 4v5h-5" /></svg
+              ></span>
+              <span class="tt">Feedback</span>
+              <span class="st">Trace e dashboard chiudono il ciclo.</span>
             </div>
           </div>
         </div>
@@ -3150,48 +4723,48 @@ conferma esplicita prima di pubblicare</pre>
       <section class="slide" data-title="Adozione" data-section="Adozione">
         <div class="slide-inner">
           <div class="kicker" data-reveal>Come si inizia</div>
-          <h2 data-reveal style="--d: 80ms; margin-top: 14px">Tre passi, poi la piattaforma lavora per te</h2>
-          <div class="grid-3" style="margin-top: 30px">
-            <div class="card" data-reveal style="--d: 160ms">
-              <span class="glyph">01</span>
-              <div class="k">Bootstrap</div>
-              <h3 class="mono" style="font-size: 15px">npx @pagopa/dx-cli init</h3>
-              <p>
-                Monorepo, toolchain, prima infrastruttura, runner e ambienti.
-                La PR iniziale è già un artefatto rivedibile.
-              </p>
+          <h2 data-reveal style="--d: 80ms; margin-top: 14px">
+            Un comando, poi il ciclo agentico
+          </h2>
+          <div
+            class="tiles"
+            style="
+              margin-top: 28px;
+              grid-template-columns: repeat(2, minmax(0, 1fr));
+            "
+          >
+            <div class="tile" data-reveal style="--d: 160ms">
+              <span class="ic">01</span>
+              <span class="fn">npx @pagopa/dx-cli init</span>
+              <span class="st"
+                >monorepo · runner · ambienti · plugin agentici già
+                configurati</span
+              >
             </div>
-            <div class="card" data-reveal style="--d: 240ms">
-              <span class="glyph">02</span>
-              <div class="k">Agenti abilitati</div>
-              <h3>Plugin e MCP nel repository</h3>
-              <p>
-                Il file <span class="mono">.github/copilot/settings.json</span>
-                versiona marketplace e plugin: skill e conoscenza DX per ogni
-                sviluppatore e agente, senza setup manuale.
-              </p>
-            </div>
-            <div class="card" data-reveal style="--d: 320ms">
-              <span class="glyph">03</span>
-              <div class="k">Consegna</div>
-              <h3>Apri la PR e lascia fare ai guardrail</h3>
-              <p>
-                Validazione, version plan, release e deploy sono già cablati.
-                Il team decide, il resto è deterministico.
-              </p>
+            <div class="tile violet" data-reveal style="--d: 240ms">
+              <span class="ic">02</span>
+              <span class="tt">Il ciclo di lavoro</span>
+              <span class="st"
+                >gli agenti guidano il flusso, la piattaforma esegue i
+                guardrail</span
+              >
             </div>
           </div>
-          <div class="split" style="margin-top: 26px">
-            <div class="card" data-reveal style="--d: 400ms">
-              <div class="k">Esiti attesi</div>
-              <h3>Prima API in produzione in minuti</h3>
-              <p>Onboarding senza downtime; standard aggiornati da Renovate.</p>
-            </div>
-            <div class="card" data-reveal style="--d: 460ms">
-              <div class="k">Per gli agenti</div>
-              <h3>Meno contesto da indovinare</h3>
-              <p>Skill, MCP, moduli e workflow descrivono il «come» una volta sola, nella forma che le macchine sanno usare.</p>
-            </div>
+          <div class="flowmap" data-reveal style="--d: 300ms">
+            <span class="fm-node">PRD</span><span class="fm-arr">→</span>
+            <span class="fm-node">DR</span><span class="fm-arr">→</span>
+            <span class="fm-node">ticket</span><span class="fm-arr">→</span>
+            <span class="fm-node">PR</span><span class="fm-arr">→</span>
+            <span class="fm-node ok">CI</span><span class="fm-arr">→</span>
+            <span class="fm-node ok">CD</span>
+          </div>
+          <div class="chips" data-reveal style="--d: 380ms; margin-top: 26px">
+            <span class="chip green"><i></i>prima API in minuti</span>
+            <span class="chip"><i></i>onboarding senza downtime</span>
+            <span class="chip violet"
+              ><i></i>standard aggiornati centralmente</span
+            >
+            <span class="chip warm"><i></i>meno contesto per gli agenti</span>
           </div>
         </div>
       </section>
@@ -3204,10 +4777,15 @@ conferma esplicita prima di pubblicare</pre>
           <div class="split" style="margin-top: 0; align-items: center">
             <div>
               <div class="kicker" data-reveal>Sintesi</div>
-              <div class="quote" style="margin-top: 18px" data-reveal style="--d: 100ms">
-                Astrai per far <span class="u">scalare gli agenti</span>.<br />
-                Governa con <span class="u">contratti</span>, non con slide.<br />
-                Costruisci su <span class="u">standard</span> che le macchine già conoscono.
+              <div
+                class="quote"
+                style="margin-top: 18px"
+                data-reveal
+                style="--d: 100ms"
+              >
+                Astrazioni per far
+                <span class="u">scalare gli agenti</span>,<br />
+                standard per governare la produzione.<br />
               </div>
               <div class="chips" data-reveal style="--d: 220ms">
                 <span class="chip"><i></i>Determinismo</span>
@@ -3218,20 +4796,45 @@ conferma esplicita prima di pubblicare</pre>
             </div>
             <div>
               <div class="links" data-reveal style="--d: 200ms; margin-top: 0">
-                <a href="https://dx.pagopa.it/docs/" target="_blank" rel="noreferrer">
-                  <span>Documentazione DX</span><span class="u">dx.pagopa.it/docs</span>
+                <a
+                  href="https://dx.pagopa.it/docs/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span>Documentazione DX</span
+                  ><span class="u">dx.pagopa.it/docs</span>
                 </a>
-                <a href="https://registry.terraform.io/namespaces/pagopa-dx" target="_blank" rel="noreferrer">
-                  <span>Moduli Terraform</span><span class="u">registry/namespaces/pagopa-dx</span>
+                <a
+                  href="https://registry.terraform.io/namespaces/pagopa-dx"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span>Moduli Terraform</span
+                  ><span class="u">registry/namespaces/pagopa-dx</span>
                 </a>
-                <a href="https://github.com/pagopa/dx/tree/main/plugins" target="_blank" rel="noreferrer">
-                  <span>Plugin marketplace</span><span class="u">github.com/pagopa/dx/tree/main/plugins</span>
+                <a
+                  href="https://github.com/pagopa/dx/tree/main/plugins"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span>Plugin marketplace</span
+                  ><span class="u">github.com/pagopa/dx/tree/main/plugins</span>
                 </a>
-                <a href="https://github.com/pagopa/dx/tree/main/plugins/aiepdf" target="_blank" rel="noreferrer">
-                  <span>Framework AI aiepdf</span><span class="u">plugins/aiepdf</span>
+                <a
+                  href="https://github.com/pagopa/dx/tree/main/plugins/aiepdf"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span>Framework AI aiepdf</span
+                  ><span class="u">plugins/aiepdf</span>
                 </a>
-                <a href="https://api.dx.pagopa.it/mcp" target="_blank" rel="noreferrer">
-                  <span>DX MCP Server</span><span class="u">api.dx.pagopa.it/mcp</span>
+                <a
+                  href="https://pagopa.github.io/technology-radar/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <span>Technology Radar</span
+                  ><span class="u">pagopa.github.io/technology-radar</span>
                 </a>
               </div>
               <p class="note" data-reveal style="--d: 300ms">
@@ -3254,40 +4857,84 @@ conferma esplicita prima di pubblicare</pre>
         <span><kbd>F</kbd> fullscreen</span>
         <span><kbd>?</kbd> scorciatoie</span>
       </span>
-      <span class="hud-counter"><b id="cur">01</b> / <span id="tot">18</span></span>
+      <span class="hud-counter"
+        ><b id="cur">01</b> / <span id="tot">18</span></span
+      >
     </footer>
 
-    <div class="overlay" id="overview" role="dialog" aria-modal="true" aria-label="Panoramica slide">
+    <div
+      class="overlay"
+      id="overview"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Panoramica slide"
+    >
       <div class="overlay-head">
         <div>
           <div class="kicker">Panoramica</div>
           <h3 style="margin-top: 10px">Tutte le slide</h3>
         </div>
-        <button class="icon-btn" id="btn-close-overview" aria-label="Chiudi panoramica">
-          <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        <button
+          class="icon-btn"
+          id="btn-close-overview"
+          aria-label="Chiudi panoramica"
+        >
+          <svg viewBox="0 0 24 24">
+            <line x1="6" y1="6" x2="18" y2="18" />
+            <line x1="18" y1="6" x2="6" y2="18" />
+          </svg>
         </button>
       </div>
       <div class="overview-grid" id="overview-grid"></div>
     </div>
 
-    <div class="overlay" id="help" role="dialog" aria-modal="true" aria-label="Scorciatoie da tastiera">
+    <div
+      class="overlay"
+      id="help"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Scorciatoie da tastiera"
+    >
       <div class="overlay-head">
         <div>
           <div class="kicker">Scorciatoie</div>
           <h3 style="margin-top: 10px">Comandi rapidi</h3>
         </div>
-        <button class="icon-btn" id="btn-close-help" aria-label="Chiudi scorciatoie">
-          <svg viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+        <button
+          class="icon-btn"
+          id="btn-close-help"
+          aria-label="Chiudi scorciatoie"
+        >
+          <svg viewBox="0 0 24 24">
+            <line x1="6" y1="6" x2="18" y2="18" />
+            <line x1="18" y1="6" x2="6" y2="18" />
+          </svg>
         </button>
       </div>
       <div class="help-list">
-        <div class="help-row"><span>Slide successiva / precedente</span><span><kbd>→</kbd> <kbd>←</kbd> <kbd>Spazio</kbd></span></div>
-        <div class="help-row"><span>Prima / ultima slide</span><span><kbd>Home</kbd> <kbd>End</kbd></span></div>
-        <div class="help-row"><span>Panoramica slide</span><span><kbd>O</kbd></span></div>
-        <div class="help-row"><span>Fullscreen</span><span><kbd>F</kbd></span></div>
-        <div class="help-row"><span>Chiudi overlay</span><span><kbd>Esc</kbd></span></div>
-        <div class="help-row"><span>Scorciatoie</span><span><kbd>?</kbd></span></div>
-        <div class="help-row"><span>Touch</span><span>swipe orizzontale</span></div>
+        <div class="help-row">
+          <span>Slide successiva / precedente</span
+          ><span><kbd>→</kbd> <kbd>←</kbd> <kbd>Spazio</kbd></span>
+        </div>
+        <div class="help-row">
+          <span>Prima / ultima slide</span
+          ><span><kbd>Home</kbd> <kbd>End</kbd></span>
+        </div>
+        <div class="help-row">
+          <span>Panoramica slide</span><span><kbd>O</kbd></span>
+        </div>
+        <div class="help-row">
+          <span>Fullscreen</span><span><kbd>F</kbd></span>
+        </div>
+        <div class="help-row">
+          <span>Chiudi overlay</span><span><kbd>Esc</kbd></span>
+        </div>
+        <div class="help-row">
+          <span>Scorciatoie</span><span><kbd>?</kbd></span>
+        </div>
+        <div class="help-row">
+          <span>Touch</span><span>swipe orizzontale</span>
+        </div>
       </div>
     </div>
 
@@ -3295,7 +4942,9 @@ conferma esplicita prima di pubblicare</pre>
       (function () {
         "use strict";
 
-        var slides = Array.prototype.slice.call(document.querySelectorAll(".slide"));
+        var slides = Array.prototype.slice.call(
+          document.querySelectorAll(".slide"),
+        );
         var total = slides.length;
         var cur = 0;
         var progress = document.getElementById("progress");
@@ -3317,7 +4966,8 @@ conferma esplicita prima di pubblicare</pre>
           dot.className = "dot";
           dot.type = "button";
           dot.setAttribute("aria-label", pad(i + 1) + " · " + s.dataset.title);
-          dot.innerHTML = "<span>" + pad(i + 1) + " · " + s.dataset.title + "</span>";
+          dot.innerHTML =
+            "<span>" + pad(i + 1) + " · " + s.dataset.title + "</span>";
           dot.addEventListener("click", function () {
             go(i);
           });
@@ -3327,7 +4977,11 @@ conferma esplicita prima di pubblicare</pre>
           item.className = "ov-item";
           item.type = "button";
           item.innerHTML =
-            '<span class="n">' + pad(i + 1) + " · " + s.dataset.section + '</span><span class="t">' +
+            '<span class="n">' +
+            pad(i + 1) +
+            " · " +
+            s.dataset.section +
+            '</span><span class="t">' +
             s.dataset.title +
             "</span>";
           item.addEventListener("click", function () {
@@ -3367,7 +5021,10 @@ conferma esplicita prima di pubblicare</pre>
           if (!meter) return;
           var modeEl = meter.querySelector("[data-meter-mode]");
           var btns = meter.querySelectorAll(".seg button");
-          var modeLabels = { raw: "raw repository exploration", dx: "DX artifacts + MCP" };
+          var modeLabels = {
+            raw: "raw repository exploration",
+            dx: "DX artifacts + skill",
+          };
           Array.prototype.forEach.call(btns, function (b) {
             b.addEventListener("click", function () {
               var mode = b.dataset.mode;
@@ -3402,8 +5059,12 @@ conferma esplicita prima di pubblicare</pre>
           var st = slide.querySelector("[data-stepper]");
           if (!st) return;
           var btns = Array.prototype.slice.call(st.querySelectorAll(".step"));
-          var panels = Array.prototype.slice.call(st.querySelectorAll(".step-panel"));
-          var dotsEls = Array.prototype.slice.call(st.querySelectorAll(".step-dots i"));
+          var panels = Array.prototype.slice.call(
+            st.querySelectorAll(".step-panel"),
+          );
+          var dotsEls = Array.prototype.slice.call(
+            st.querySelectorAll(".step-dots i"),
+          );
           function on(i) {
             btns.forEach(function (b, j) {
               b.classList.toggle("is-on", j === i);
@@ -3426,7 +5087,8 @@ conferma esplicita prima di pubblicare</pre>
           function restartStepper() {
             if (stepperTimer) clearInterval(stepperTimer);
             stepperTimer = setInterval(function () {
-              var i = (parseInt(st.dataset.current || "0", 10) + 1) % btns.length;
+              var i =
+                (parseInt(st.dataset.current || "0", 10) + 1) % btns.length;
               on(i);
             }, 4200);
           }
@@ -3441,7 +5103,10 @@ conferma esplicita prima di pubblicare</pre>
           slides[cur].classList.remove("is-active");
           dots[cur].classList.remove("is-on");
           ovItems[cur].classList.remove("is-on");
-          if (slides[cur].querySelector("[data-stepper]") && slides[cur].querySelector("[data-stepper]")._stop) {
+          if (
+            slides[cur].querySelector("[data-stepper]") &&
+            slides[cur].querySelector("[data-stepper]")._stop
+          ) {
             slides[cur].querySelector("[data-stepper]")._stop();
           }
 
@@ -3499,24 +5164,37 @@ conferma esplicita prima di pubblicare</pre>
           help.classList.remove("is-open");
         }
         function anyOverlayOpen() {
-          return overview.classList.contains("is-open") || help.classList.contains("is-open");
+          return (
+            overview.classList.contains("is-open") ||
+            help.classList.contains("is-open")
+          );
         }
 
-        document.getElementById("btn-overview").addEventListener("click", function () {
-          openOverlay(overview);
-        });
-        document.getElementById("btn-help").addEventListener("click", function () {
-          openOverlay(help);
-        });
-        document.getElementById("btn-close-overview").addEventListener("click", closeOverlays);
-        document.getElementById("btn-close-help").addEventListener("click", closeOverlays);
+        document
+          .getElementById("btn-overview")
+          .addEventListener("click", function () {
+            openOverlay(overview);
+          });
+        document
+          .getElementById("btn-help")
+          .addEventListener("click", function () {
+            openOverlay(help);
+          });
+        document
+          .getElementById("btn-close-overview")
+          .addEventListener("click", closeOverlays);
+        document
+          .getElementById("btn-close-help")
+          .addEventListener("click", closeOverlays);
         overview.addEventListener("click", function (e) {
           if (e.target === overview) closeOverlays();
         });
         help.addEventListener("click", function (e) {
           if (e.target === help) closeOverlays();
         });
-        document.getElementById("btn-full").addEventListener("click", toggleFullscreen);
+        document
+          .getElementById("btn-full")
+          .addEventListener("click", toggleFullscreen);
 
         function toggleFullscreen() {
           if (!document.fullscreenElement) {
@@ -3612,11 +5290,30 @@ conferma esplicita prima di pubblicare</pre>
         );
 
         /* ---------- Deep link dal layer stack ---------- */
-        Array.prototype.forEach.call(document.querySelectorAll("[data-goto]"), function (el) {
-          el.addEventListener("click", function () {
-            go(parseInt(el.dataset.goto, 10) - 1);
-          });
-        });
+        Array.prototype.forEach.call(
+          document.querySelectorAll("[data-goto]"),
+          function (el) {
+            el.addEventListener("click", function () {
+              go(parseInt(el.dataset.goto, 10) - 1);
+            });
+          },
+        );
+
+        /* ---------- Blocchi "budget di contesto" ---------- */
+        Array.prototype.forEach.call(
+          document.querySelectorAll("[data-blocks]"),
+          function (el) {
+            var total = parseInt(el.dataset.total, 10) || 20;
+            var ctx = parseInt(el.dataset.ctx, 10) || 0;
+            var kind = el.dataset.kind || "";
+            for (var i = 0; i < total; i++) {
+              var b = document.createElement("i");
+              b.className = kind ? kind : i < ctx ? "ctx" : "code";
+              b.style.setProperty("--d", 55 * i + "ms");
+              el.appendChild(b);
+            }
+          },
+        );
 
         /* ---------- Init widget ---------- */
         slides.forEach(function (s) {

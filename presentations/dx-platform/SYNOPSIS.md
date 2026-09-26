@@ -6,7 +6,7 @@
 
 | ID               | Campo    | Valore                                                                 |
 | ---------------- | -------- | ---------------------------------------------------------------------- |
-| `syn.meta.title` | Titolo   | DX Platform — Astrazioni deterministiche per il SDLC agentico          |
+| `syn.meta.title` | Titolo   | DX Platform — Strumenti riusabili per SDLC agentico                    |
 | `syn.meta.owner` | Owner    | PagoPA DX Team                                                          |
 | `syn.meta.status`| Stato    | draft                                                                  |
 | `syn.meta.format`| Formato  | Presentazione HTML interattiva (18 slide) + questa sinossi              |
@@ -37,10 +37,10 @@ agli artefatti eseguibili. Il risultato atteso è duplice:
 
 | ID        | Pilastro                       | Cosa significa in pratica                                                                                                                              |
 | --------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `syn.v1`  | Update centralizzati           | Un fix in un modulo o workflow arriva a tutti i repository; Renovate propaga le versioni. Manutenzione O(1) per piattaforma, non O(n) per repo.          |
+| `syn.v1`  | Update centralizzati           | Un fix in un modulo o workflow arriva a tutti i repository; le versioni seguono semver e changelog generati. Manutenzione O(1) per piattaforma, non O(n) per repo.          |
 | `syn.v2`  | Determinismo e governance      | Naming, CIDR, tag, IAM e policy derivano da contratti: stesso input → stesso output per umani e agenti. La compliance è codice, non un documento.        |
-| `syn.v3`  | Riduzione del bus factor       | La conoscenza sta in moduli, skill, documentazione e MCP server, non nelle persone. L'onboarding è clonare e leggere gli artefatti.                     |
-| `syn.v4`  | Riduzione del contesto         | L'agente carica contratti mirati (skill, MCP, moduli) invece di esplorare il repository. Meno contesto = meno token, meno tempo, meno errori.           |
+| `syn.v3`  | Riduzione del bus factor       | La conoscenza sta in moduli, skill, documentazione, istruzioni di repository e provider, non nelle persone. L'onboarding è clonare e leggere gli artefatti.                     |
+| `syn.v4`  | Riduzione del contesto         | L'agente carica contratti mirati (skill, istruzioni, moduli) invece di esplorare il repository. Meno contesto = meno token, meno tempo, meno errori.           |
 | `syn.v5`  | Democratizzazione (no experts required) | Fare infrastruttura, pipeline e deploy di qualità non richiede un esperto cloud in ogni team: l'expertise vive nella piattaforma, il team porta il dominio. Con gli agenti chi sa descrivere il bisogno può arrivare in produzione. |
 
 La presentazione esprime `syn.v4` anche in modo interattivo, con un misuratore
@@ -59,15 +59,16 @@ layer con un esempio di deploy end-to-end:
    cartelle e plugin DX già abilitati.
 1. **Bootstrapping** — la parte cloud del `dx-cli init`: ruoli e permessi CSP,
    federated identity, GitHub Environments e runner self-hosted.
-2. **Core & Hub** — infrastruttura di piattaforma per ambiente: networking, DNS,
-   VPN cross-cloud, Log Analytics (core) e servizi condivisi come API gateway e
-   Key Vault (hub).
+2. **Hub & Spoke** — infrastruttura di piattaforma per ambiente: il core di
+   rete (VNet, DNS, VPN cross-cloud, Logs, Policy), l'hub con i servizi
+   condivisi (API gateway, Key Vault, messaggistica) e i domini applicativi
+   come spoke, pronti a ospitare nuove iniziative.
 3. **Moduli Terraform** — moduli versionati nel registry pubblico `pagopa-dx`
    per le risorse più comuni, con provider DX che inferiscono naming, CIDR e tag.
 4. **Pipelines** — GitHub Actions riusabili per validazione (CI) e release (CD)
    su monorepo multi-linguaggio orchestrato da Nx.
-5. **Artefatti per agenti** — plugin, skill, MCP server, istruzioni di
-   repository e isomorfismo degli ambienti con mise.
+5. **Artefatti per agenti** — plugin, skill, istruzioni di repository e
+   isomorfismo degli ambienti con mise.
 6. **Osservabilità** — tracing OpenTelemetry, dashboard OpEx generate da OpenAPI,
    metriche di piattaforma.
 
@@ -111,17 +112,19 @@ un dettaglio: è il contratto che rende componibile tutto il resto.
 - La parte `bootstrapper` di Terraform crea ambienti GitHub `*-ci` e `*-cd`,
   federazione, runner e repository.
 
-### 4.2 Core & Hub (`syn.l2`)
+### 4.2 Hub & Spoke (`syn.l2`)
 
-- **Core** (`infra/core/<env>`): rete e subnet, DNS privato, VPN AWS↔Azure, Log
-  Analytics/Application Insights, policy. Espone valori alle configurazioni
-  successive tramite un core values exporter.
-- **Hub** (`infra/resources/<env>`): servizi condivisi consumati dai team — API
-  gateway (API Management), Key Vault e namespace di messaggistica. I servizi
-  dati (database, cache, storage) restano risorse del team, composte con i
-  moduli DX.
-- La piattaforma applica core e hub; i team compongono le proprie risorse nel
-  repository con i moduli DX e i role assignment.
+Topologia hub-and-spoke, resa nella presentazione come schema architetturale:
+
+- **Core** (`infra/core/<env>`): la rete — VNet e subnet, DNS privato, VPN
+  AWS↔Azure, Log Analytics/Application Insights, policy. Espone valori alle
+  configurazioni successive tramite un core values exporter.
+- **Hub** (`infra/resources/<env>`): i servizi condivisi raggiunti su rete
+  privata — API gateway (API Management), Key Vault, namespace di messaggistica.
+- **Spoke**: i domini applicativi (es. Pagamenti, Notifiche, Identità,
+  Onboarding), che al loro interno contengono i singoli servizi; i servizi dati
+  restano risorse dei team, non hub. Una nuova iniziativa si innesta sulla
+  stessa rete riusando l'hub esistente.
 
 ### 4.3 Moduli Terraform (`syn.l3`)
 
@@ -129,16 +132,17 @@ un dettaglio: è il contratto che rende componibile tutto il resto.
   necessarie.
 - I provider custom DX (Azure e AWS) derivano naming, CIDR e tag dai nomi,
   riducendo il numero di parametri e gli errori.
-- Contratti versionati con semver e version plan; README, esempi e test e2e
+- Contratti versionati con semver, changelog generati e version plan; README, esempi e test e2e
   validati in CI (tflint, trivy, terraform-docs).
 
 ### 4.4 Pipelines (`syn.l4`)
 
 - **CI**: `validate` esegue sull'affected di Nx build, test, lint, typecheck,
   static analysis e `terraform plan` con commento sulla PR; i version plan
-  mancanti producono un warning.
-- **CD**: al merge su `main` parte la release Nx (PR "Version Packages" → publish
-  su npm con provenance, tag e GitHub Release) e il deploy delle app (App
+  mancanti producono un warning. Il grafo delle dipendenze calcola l'insieme
+  dei progetti coinvolti: una modifica entra in CI insieme ai soli consumatori.
+- **CD**: al merge su `main` parte la release Nx (PR "Version Packages" → versioni,
+  changelog, publish su npm con provenance, tag e GitHub Release) e il deploy delle app (App
   Service, Container App, statiche) e dell'infrastruttura.
 - **Multi-linguaggio**: TypeScript, Go, Python e Terraform convivono nello stesso
   task graph Nx con cache e `affected`.
@@ -149,15 +153,13 @@ un dettaglio: è il contratto che rende componibile tutto il resto.
 
 - **Plugin marketplace DX** (`terraform`, `azure`, `aiepdf`,
   `project-management`, `standards`, `tests`, `typescript`) con skill, agenti,
-  comandi, hook e MCP: l'insieme cresce senza cambiare il contratto d'uso.
+  comandi e hook: l'insieme cresce senza cambiare il contratto d'uso.
 - **Skill esemplari**: `terraform-best-practices` (module-first + validazione
   obbligatoria), `technology-radar` (blocca tecnologie deprecate),
   `azure-keyvault-secret` (pattern `value_wo` senza segreti in state),
   `generate-backend-tests`.
-- **DX MCP Server** (`https://api.dx.pagopa.it/mcp`): l'agente interroga la
-  documentazione DX invece di indovinare.
 - **Istruzioni di repository**: `AGENTS.md` e `.github/instructions/*` rendono
-  espliciti gli standard per ogni agente.
+  espliciti gli standard per ogni agente; le skill hanno eval e fixture proprie.
 - **Isomorfismo ambienti con mise**: `mise.toml` + lockfile fissano gli stessi
   tool in devcontainer, runner e CI — dev = CI = produzione dei task.
 
@@ -182,7 +184,7 @@ tutti i layer:
 | L00 · Toolchain       | `pnpm nx build` usa la toolchain di mise e lockfile, con cache e `affected`: build riproducibile.      |
 | L04 · Pipelines       | Il workflow riusabile orchestra build, push dell'immagine e deploy della revision.                     |
 | L03 · Moduli          | Il modulo (es. `azure_container_app`) espone le opzioni del servizio: immagine, variabili, segreti, scale. |
-| L02 · Core & Hub      | Key Vault, API gateway e rete privata esistono già nell'ambiente: nessun cablaggio manuale.            |
+| L02 · Hub & Spoke     | Key Vault, API gateway e rete privata esistono già nell'ambiente: nessun cablaggio manuale.            |
 | L06 · Osservabilità   | La nuova revision traccia su Application Insights e le dashboard OpEx si rigenerano dall'OpenAPI.      |
 
 È questo che rende la piattaforma tale: rimuovi un layer e il deploy torna a
@@ -194,7 +196,7 @@ essere un lavoro da esperti — e la democratizzazione (`syn.v5`) sparisce.
 
 La piattaforma non introduce un DSL proprietario né un runtime custom: compone
 tecnologie che persone e agenti già conoscono — Terraform, GitHub Actions, Nx,
-OpenTelemetry, MCP, Agent Skills, mise, OpenAPI.
+OpenTelemetry, Agent Skills, mise, OpenAPI.
 
 Conseguenze:
 
@@ -226,14 +228,14 @@ unico filo di tracciabilità (`JTBD-XX` → `UC-XX` → `AC-UC-XX-YY` → issue 
    stato del documento; conferma prima delle operazioni irreversibili.
 
 Regole trasversali: *ask, never infer*; gli ID stabili sono un contratto; le
-skill hanno eval e fixture proprie; gli MCP Atlassian e Figma forniscono il
-contesto operativo.
+skill hanno eval e fixture proprie; gli strumenti Atlassian e Figma forniscono
+il contesto operativo.
 
 ### 6.2 Il SDLC che ci aspettiamo
 
 ```
 Intento → PRD → DR/SRS → Use Case + AC → Backlog Jira
-        → Implementazione (agenti + skill + MCP)
+        → Implementazione (agenti + skill + istruzioni)
         → CI/CD deterministiche (Nx + GitHub Actions + Terraform)
         → Osservabilità → feedback sull'intento
 ```
@@ -249,10 +251,10 @@ Intento → PRD → DR/SRS → Use Case + AC → Backlog Jira
 
 ## 7. Adozione
 
-1. `npx @pagopa/dx-cli init` — bootstrap di repository, ambienti e runner.
-2. Abilitare i plugin DX nel repository (`.github/copilot/settings.json`) —
-   skill e MCP disponibili per il team e per gli agenti.
-3. Aprire la PR — validazione, release e deploy sono già cablati.
+1. `npx @pagopa/dx-cli init` — bootstrap di repository, ambienti, runner e
+   plugin agentici già configurati: nessun setup manuale aggiuntivo.
+2. Lavorare nel ciclo agentico — **PRD → DR → ticket → PR → CI → CD**: gli
+   agenti guidano il flusso, la piattaforma esegue i guardrail.
 
 Esiti attesi: prima API in produzione in minuti, onboarding senza downtime,
 meno decisioni per ogni rilascio, standard aggiornati centralmente.
@@ -263,28 +265,32 @@ meno decisioni per ogni rilascio, standard aggiornati centralmente.
 
 | #  | Slide                                  | Messaggio chiave                                                            |
 | -- | -------------------------------------- | --------------------------------------------------------------------------- |
-| 1  | Cover                                  | DX Platform: astrazioni deterministiche per il SDLC agentico                |
-| 2  | La tesi                                | Il collo di bottiglia è il contesto, non il codice                          |
+| 1  | Cover                                  | DX Platform: strumenti riusabili per SDLC agentico                          |
+| 2  | La tesi                                | Il collo di bottiglia è il contesto: budget di contesto a blocchi           |
 | 3  | Cinque ragioni economiche              | Update centralizzati, determinismo, bus factor, contesto, democratizzazione (widget interattivo) |
-| 4  | Determinismo o improvvisazione         | Ciò che non è verificabile da una macchina non è uno standard               |
-| 5  | Mappa della piattaforma                | I layer, cliccabili verso i dettagli                                        |
-| 6  | Layer 00 · Toolchain del monorepo      | Il contratto scaffoldato da dx-cli: pnpm, Nx, mise, pre-commit              |
-| 7  | Layer 01 · Bootstrapping               | Ruoli, permessi, runner e OIDC in un comando                                |
-| 8  | Layer 02 · Core & Hub                  | Infrastruttura di piattaforma e servizi condivisi                           |
-| 9  | Layer 03 · Moduli Terraform            | Module-first, contratti versionati, provider DX (snippet d'uso)             |
-| 10 | Layer 04 · Pipelines                   | CI/CD riusabili su monorepo multi-linguaggio con Nx (mock commento PR)      |
-| 11 | Layer 05 · Artefatti per agenti        | Plugin, skill, MCP, istruzioni, isomorfismo con mise                        |
+| 4  | Mappa della piattaforma                | Layer componibili: materiali dall'alto (L06) al più basso (L00), cliccabili |
+| 5  | Layer 00 · Toolchain del monorepo      | Il contratto scaffoldato da dx-cli: pnpm, Nx, mise                          |
+| 6  | Layer 01 · Bootstrapping               | Ruoli, permessi, runner e OIDC in un comando                                |
+| 7  | Layer 02 · Hub & Spoke                 | Schema hub-and-spoke: core di rete, hub, domini applicativi ai raggi        |
+| 8  | Layer 03 · Moduli Terraform            | Module-first, contratti versionati, provider DX (snippet d'uso)             |
+| 9  | Layer 04 · Pipelines                   | CI/CD riusabili su monorepo multi-linguaggio con Nx (mock commento PR)      |
+| 10 | CI su ciò che è affected               | Grafo delle dipendenze e confronto di velocità della CI (animati)           |
+| 11 | Layer 05 · Artefatti per agenti        | Plugin, skill, istruzioni, isomorfismo con mise                             |
 | 12 | Layer 06 · Osservabilità               | Tracing, dashboard OpEx, metriche di piattaforma                            |
-| 13 | La dipendenza tra layer                | Un deploy attraversa i layer: IAM, build, pipeline, modulo, hub, trace      |
+| 13 | Dipendenza tra layer                   | Percorso del deploy attraverso i materiali: IAM, build, modulo, pipeline, hub, trace |
 | 14 | Standard, non magia                    | Nessun DSL o runtime custom (widget comparativo)                            |
-| 15 | Framework AI · aiepdf                  | PRD → DR → UC → Jira → Confluence con ID stabili (stepper interattivo)      |
-| 16 | SDLC agentico                          | Agenti ovunque, decisioni umane ai gate (timeline animata)                  |
-| 17 | Adozione                               | Tre passi per iniziare                                                      |
+| 15 | Framework AI · aiepdf                  | Dall'intento al backlog guidato dagli agenti AI (stepper interattivo)       |
+| 16 | SDLC agentico                          | Gli agenti lavorano, gli umani decidono (timeline animata)                  |
+| 17 | Adozione                               | `dx-cli init` e ciclo agentico PRD → DR → ticket → PR → CI → CD             |
 | 18 | Chiusura                               | Principi e link                                                             |
 
-Elementi visivi: funnel del contesto (slide 2), mock del commento PR e della
-chat agente, terminale con lo scaffold `dx-cli` e snippet d'uso dei moduli,
-trace waterfall, timeline animate e snippet di esempio per le skill `aiepdf`.
+Elementi visivi: layer presentati come materiali impilati con ordine
+visualizzato dall'alto verso il basso, percorso del deploy con spina animata,
+schema architetturale hub-and-spoke, budget di contesto a blocchi, grafo delle
+dipendenze per la CI affected con confronto di velocità, ruoli Entra ID, tile
+con icone, mock (commento PR, chat agente), terminale con lo scaffold `dx-cli`
+e snippet d'uso dei moduli, trace waterfall, timeline animate, catena PRD → CD
+e snippet di esempio per le skill `aiepdf`.
 Nessun conteggio hard-coded: i numeri della piattaforma cambiano, i contratti
 no.
 
@@ -304,7 +310,7 @@ rispettato.
 | `syn.r3` | [`infra/core/`](../../infra/core/), [`infra/resources/`](../../infra/resources/) | Layer core e hub per ambiente            |
 | `syn.r4` | [`actions/`](../../actions/), [`.github/workflows/`](../../.github/workflows/) | Composite action e workflow riusabili    |
 | `syn.r5` | [`apps/website/docs/pipelines/`](../../apps/website/docs/pipelines/)         | CI/CD, Nx release, OpEx dashboard           |
-| `syn.r6` | [`apps/website/docs/coding-with-ai/`](../../apps/website/docs/coding-with-ai/) | Plugin marketplace, MCP server             |
+| `syn.r6` | [`apps/website/docs/coding-with-ai/`](../../apps/website/docs/coding-with-ai/) | Plugin marketplace e skill                 |
 | `syn.r7` | [`packages/azure-tracing/`](../../packages/azure-tracing/)                   | Osservabilità OpenTelemetry                 |
 | `syn.r8` | [`plugins/aiepdf/`](../../plugins/aiepdf/)                                   | Framework AI e ciclo PRD → backlog          |
 | `syn.r9` | [`mise.toml`](../../mise.toml), [`containers/self-hosted-runner/`](../../containers/self-hosted-runner/) | Isomorfismo ambienti              |
@@ -316,6 +322,5 @@ rispettato.
 - Documentazione: <https://dx.pagopa.it/docs/>
 - Repository: <https://github.com/pagopa/dx>
 - Moduli Terraform: <https://registry.terraform.io/namespaces/pagopa-dx>
-- DX MCP Server: <https://api.dx.pagopa.it/mcp>
 - Plugin marketplace: <https://github.com/pagopa/dx/tree/main/plugins>
 - Framework AI: <https://github.com/pagopa/dx/tree/main/plugins/aiepdf>
