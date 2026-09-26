@@ -41,6 +41,7 @@ agli artefatti eseguibili. Il risultato atteso è duplice:
 | `syn.v2`  | Determinismo e governance      | Naming, CIDR, tag, IAM e policy derivano da contratti: stesso input → stesso output per umani e agenti. La compliance è codice, non un documento.        |
 | `syn.v3`  | Riduzione del bus factor       | La conoscenza sta in moduli, skill, documentazione, istruzioni di repository e provider, non nelle persone. L'onboarding è clonare e leggere gli artefatti.                     |
 | `syn.v4`  | Riduzione del contesto         | L'agente carica contratti mirati (skill, istruzioni, moduli) invece di esplorare il repository. Meno contesto = meno token, meno tempo, meno errori.           |
+| `syn.v6`  | Collaborazione e supporto       | Una piattaforma condivisa da team e agenti: stesso contesto, stesso linguaggio e un supporto che non riparte da zero per ogni richiesta. |
 | `syn.v5`  | Democratizzazione (no experts required) | Fare infrastruttura, pipeline e deploy di qualità non richiede un esperto cloud in ogni team: l'expertise vive nella piattaforma, il team porta il dominio. Con gli agenti chi sa descrivere il bisogno può arrivare in produzione. |
 
 La presentazione esprime `syn.v4` anche in modo interattivo, con un misuratore
@@ -267,7 +268,7 @@ meno decisioni per ogni rilascio, standard aggiornati centralmente.
 | -- | -------------------------------------- | --------------------------------------------------------------------------- |
 | 1  | Cover                                  | DX Platform: strumenti riusabili per SDLC agentico                          |
 | 2  | La tesi                                | Il collo di bottiglia è il contesto: budget di contesto a blocchi           |
-| 3  | Cinque ragioni economiche              | Update centralizzati, determinismo, bus factor, contesto, democratizzazione (widget interattivo) |
+| 3  | Ragioni per vincoli e astrazioni       | Sei ragioni: update, determinismo, bus factor, contesto, democratizzazione, collaborazione e supporto (widget interattivo) |
 | 4  | Mappa della piattaforma                | Layer componibili: materiali dall'alto (L06) al più basso (L00), cliccabili |
 | 5  | Layer 00 · Toolchain del monorepo      | Il contratto scaffoldato da dx-cli: pnpm, Nx, mise                          |
 | 6  | Layer 01 · Bootstrapping               | Ruoli, permessi, runner e OIDC in un comando                                |
