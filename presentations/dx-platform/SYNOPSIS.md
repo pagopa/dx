@@ -300,6 +300,16 @@ overview, `F` per il fullscreen, `?` per le scorciatoie, swipe su touch,
 barra di avanzamento, contatore slide e animazioni con `prefers-reduced-motion`
 rispettato.
 
+Supporto al relatore: `N` apre il cassetto delle note (ogni slide ha le sue
+note di conduzione), `P` apre la modalità relatore in una seconda finestra
+(slide corrente, slide successiva, note e timer sincronizzati), `B` manda lo
+schermo a nero, `T` avvia o mette in pausa il timer e `R` lo azzera; digitando
+un numero seguito da `Invio` si salta alla slide corrispondente. I deep link
+usano la forma `#<numero>-<slug>` e restano validi anche in forma numerica.
+
+Esportazione: `Cmd/Ctrl + P` produce un PDF 16:9 con una slide per pagina,
+senza cromature di navigazione.
+
 <!-- SYN-09 -->
 
 ## 9. Fonti nel repository
