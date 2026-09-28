@@ -3,7 +3,7 @@
 exports[`Azure Dashboard Integration Tests - Snapshots > snapshot tests with io_backend_light spec > should match iobackend_light_no_overrides snapshot exactly 1`] = `
 "
 locals {
-  name                = "\${var.prefix}-\${var.env_short}-PROD-IO/IO_App_Availability"
+  name                = "\${var.prefix}-\${var.env_short}-PROD-IO_IO_App_Availability"
   dashboard_base_addr = "https://portal.azure.com/#@pagopait.onmicrosoft.com/dashboard/arm"
 }
 
@@ -75,7 +75,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "isOptional": true
               },
               {
@@ -137,7 +137,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "PartTitle": "Availability (5m)"
               }
             }
@@ -196,7 +196,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_url = \\"/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "value": "\\nlet api_url = \\"^/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "isOptional": true
               },
               {
@@ -254,7 +254,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_url = \\"/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "Query": "\\nlet api_url = \\"^/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "SpecificChart": "StackedArea",
                 "PartTitle": "Response Codes (5m)",
                 "Dimensions": {
@@ -333,7 +333,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "isOptional": true
               },
               {
@@ -391,7 +391,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "SpecificChart": "Line",
                 "PartTitle": "Percentile Response Time (5m)",
                 "Dimensions": {
@@ -402,7 +402,7 @@ resource "azurerm_portal_dashboard" "this" {
                   "yAxis": [
                     {
                       "name": "watermark",
-                      "type": "long"
+                      "type": "real"
                     },
                     {
                       "name": "duration_percentile_95",
@@ -469,7 +469,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "isOptional": true
               },
               {
@@ -531,7 +531,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "PartTitle": "Availability (5m)"
               }
             }
@@ -590,7 +590,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_url = \\"/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "value": "\\nlet api_url = \\"^/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "isOptional": true
               },
               {
@@ -648,7 +648,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_url = \\"/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "Query": "\\nlet api_url = \\"^/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "SpecificChart": "StackedArea",
                 "PartTitle": "Response Codes (5m)",
                 "Dimensions": {
@@ -727,7 +727,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "isOptional": true
               },
               {
@@ -785,7 +785,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "SpecificChart": "Line",
                 "PartTitle": "Percentile Response Time (5m)",
                 "Dimensions": {
@@ -796,7 +796,7 @@ resource "azurerm_portal_dashboard" "this" {
                   "yAxis": [
                     {
                       "name": "watermark",
-                      "type": "long"
+                      "type": "real"
                     },
                     {
                       "name": "duration_percentile_95",
@@ -839,17 +839,7 @@ resource "azurerm_portal_dashboard" "this" {
               "name": "Local Time",
               "value": "Past 48 hours"
             },
-            "filteredPartIds": [
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432ed",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432ef",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f1",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f3",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f5",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f7",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f9",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432fb",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432fd"
-            ]
+            "filteredPartIds": []
           }
         }
       }
@@ -872,7 +862,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_availability_0" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Availability for /api/v1/services/{service_id} is less than or equal to 99% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Availability for /api/v1/services/{service_id} is below 99% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -883,7 +873,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 0.99;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "/api/v1/services/[^/]+$"
+| where requestUri_s matches regex "^/api/v1/services/[^/]+$"
 | summarize
   Total=count(),
   Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)
@@ -914,7 +904,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_time_0" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Response time for /api/v1/services/{service_id} is less than or equal to 1s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Response time for /api/v1/services/{service_id} is above 1s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -925,7 +915,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 1;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "/api/v1/services/[^/]+$"
+| where requestUri_s matches regex "^/api/v1/services/[^/]+$"
 | summarize
     watermark=threshold,
     duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)
@@ -955,7 +945,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_availability_1" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Availability for /api/v1/services is less than or equal to 99% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Availability for /api/v1/services is below 99% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -966,7 +956,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 0.99;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "/api/v1/services$"
+| where requestUri_s matches regex "^/api/v1/services$"
 | summarize
   Total=count(),
   Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)
@@ -997,7 +987,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_time_1" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Response time for /api/v1/services is less than or equal to 1s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Response time for /api/v1/services is above 1s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -1008,7 +998,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 1;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "/api/v1/services$"
+| where requestUri_s matches regex "^/api/v1/services$"
 | summarize
     watermark=threshold,
     duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)
@@ -1034,7 +1024,7 @@ AzureDiagnostics
 exports[`Azure Dashboard Integration Tests - Snapshots > snapshot tests with io_backend_light spec > should match iobackend_light_overrides snapshot exactly 1`] = `
 "
 locals {
-  name                = "\${var.prefix}-\${var.env_short}-PROD-IO/IO_App_Availability"
+  name                = "\${var.prefix}-\${var.env_short}-PROD-IO_IO_App_Availability"
   dashboard_base_addr = "https://portal.azure.com/#@pagopait.onmicrosoft.com/dashboard/arm"
 }
 
@@ -1106,7 +1096,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.12;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.12;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "isOptional": true
               },
               {
@@ -1168,7 +1158,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.12;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.12;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "PartTitle": "Availability (5m)"
               }
             }
@@ -1227,7 +1217,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_url = \\"/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "value": "\\nlet api_url = \\"^/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "isOptional": true
               },
               {
@@ -1285,7 +1275,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_url = \\"/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "Query": "\\nlet api_url = \\"^/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "SpecificChart": "StackedArea",
                 "PartTitle": "Response Codes (5m)",
                 "Dimensions": {
@@ -1364,7 +1354,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.23;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.23;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "isOptional": true
               },
               {
@@ -1422,7 +1412,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.23;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.23;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "SpecificChart": "Line",
                 "PartTitle": "Percentile Response Time (5m)",
                 "Dimensions": {
@@ -1433,7 +1423,7 @@ resource "azurerm_portal_dashboard" "this" {
                   "yAxis": [
                     {
                       "name": "watermark",
-                      "type": "long"
+                      "type": "real"
                     },
                     {
                       "name": "duration_percentile_95",
@@ -1500,7 +1490,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "isOptional": true
               },
               {
@@ -1562,7 +1552,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "PartTitle": "Availability (5m)"
               }
             }
@@ -1621,7 +1611,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_url = \\"/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "value": "\\nlet api_url = \\"^/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "isOptional": true
               },
               {
@@ -1679,7 +1669,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_url = \\"/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "Query": "\\nlet api_url = \\"^/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "SpecificChart": "StackedArea",
                 "PartTitle": "Response Codes (5m)",
                 "Dimensions": {
@@ -1758,7 +1748,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "isOptional": true
               },
               {
@@ -1816,7 +1806,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "SpecificChart": "Line",
                 "PartTitle": "Percentile Response Time (5m)",
                 "Dimensions": {
@@ -1827,7 +1817,7 @@ resource "azurerm_portal_dashboard" "this" {
                   "yAxis": [
                     {
                       "name": "watermark",
-                      "type": "long"
+                      "type": "real"
                     },
                     {
                       "name": "duration_percentile_95",
@@ -1870,17 +1860,7 @@ resource "azurerm_portal_dashboard" "this" {
               "name": "Local Time",
               "value": "Past 48 hours"
             },
-            "filteredPartIds": [
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432ed",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432ef",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f1",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f3",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f5",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f7",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f9",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432fb",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432fd"
-            ]
+            "filteredPartIds": []
           }
         }
       }
@@ -1903,7 +1883,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_availability_0" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Availability for /api/v1/services/{service_id} is less than or equal to 99% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Availability for /api/v1/services/{service_id} is below 12% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -1914,7 +1894,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 0.12;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "/api/v1/services/[^/]+$"
+| where requestUri_s matches regex "^/api/v1/services/[^/]+$"
 | summarize
   Total=count(),
   Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)
@@ -1945,7 +1925,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_time_0" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Response time for /api/v1/services/{service_id} is less than or equal to 1s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Response time for /api/v1/services/{service_id} is above 0.23s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -1956,7 +1936,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 0.23;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "/api/v1/services/[^/]+$"
+| where requestUri_s matches regex "^/api/v1/services/[^/]+$"
 | summarize
     watermark=threshold,
     duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)
@@ -1986,7 +1966,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_availability_1" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Availability for /api/v1/services is less than or equal to 99% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Availability for /api/v1/services is below 99% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -1997,7 +1977,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 0.99;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "/api/v1/services$"
+| where requestUri_s matches regex "^/api/v1/services$"
 | summarize
   Total=count(),
   Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)
@@ -2028,7 +2008,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_time_1" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Response time for /api/v1/services is less than or equal to 1s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Response time for /api/v1/services is above 1s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -2039,7 +2019,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 1;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "/api/v1/services$"
+| where requestUri_s matches regex "^/api/v1/services$"
 | summarize
     watermark=threshold,
     duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)
@@ -2065,7 +2045,7 @@ AzureDiagnostics
 exports[`Azure Dashboard Integration Tests - Snapshots > snapshot tests with io_backend_light spec > should match iobackend_light_overrides_base_path snapshot exactly 1`] = `
 "
 locals {
-  name                = "\${var.prefix}-\${var.env_short}-PROD-IO/IO_App_Availability"
+  name                = "\${var.prefix}-\${var.env_short}-PROD-IO_IO_App_Availability"
   dashboard_base_addr = "https://portal.azure.com/#@pagopait.onmicrosoft.com/dashboard/arm"
 }
 
@@ -2137,7 +2117,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.12;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"basepath_override/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.12;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^basepath_override/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "isOptional": true
               },
               {
@@ -2199,7 +2179,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.12;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"basepath_override/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.12;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^basepath_override/api/v1/services/[^/]+$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "PartTitle": "Availability (5m)"
               }
             }
@@ -2258,7 +2238,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_url = \\"basepath_override/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "value": "\\nlet api_url = \\"^basepath_override/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "isOptional": true
               },
               {
@@ -2316,7 +2296,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_url = \\"basepath_override/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "Query": "\\nlet api_url = \\"^basepath_override/api/v1/services/[^/]+$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "SpecificChart": "StackedArea",
                 "PartTitle": "Response Codes (5m)",
                 "Dimensions": {
@@ -2395,7 +2375,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.23;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"basepath_override/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.23;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^basepath_override/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "isOptional": true
               },
               {
@@ -2453,7 +2433,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.23;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"basepath_override/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.23;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^basepath_override/api/v1/services/[^/]+$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "SpecificChart": "Line",
                 "PartTitle": "Percentile Response Time (5m)",
                 "Dimensions": {
@@ -2464,7 +2444,7 @@ resource "azurerm_portal_dashboard" "this" {
                   "yAxis": [
                     {
                       "name": "watermark",
-                      "type": "long"
+                      "type": "real"
                     },
                     {
                       "name": "duration_percentile_95",
@@ -2531,7 +2511,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"basepath_override/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^basepath_override/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "isOptional": true
               },
               {
@@ -2593,7 +2573,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"basepath_override/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 0.99;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^basepath_override/api/v1/services$\\"\\n| summarize\\n  Total=count(),\\n  Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)\\n| extend availability=toreal(Success) / Total\\n| project TimeGenerated, availability, watermark=threshold\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"availability(%)\\")\\n",
                 "PartTitle": "Availability (5m)"
               }
             }
@@ -2652,7 +2632,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_url = \\"basepath_override/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "value": "\\nlet api_url = \\"^basepath_override/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "isOptional": true
               },
               {
@@ -2710,7 +2690,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_url = \\"basepath_override/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
+                "Query": "\\nlet api_url = \\"^basepath_override/api/v1/services$\\";\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex api_url\\n| extend HTTPStatus = case(\\n  httpStatus_d between (100 .. 199), \\"1XX\\",\\n  httpStatus_d between (200 .. 299), \\"2XX\\",\\n  httpStatus_d between (300 .. 399), \\"3XX\\",\\n  httpStatus_d between (400 .. 499), \\"4XX\\",\\n  \\"5XX\\")\\n| summarize count() by HTTPStatus, bin(TimeGenerated, 5m)\\n| render areachart with (xtitle = \\"time\\", ytitle= \\"count\\")\\n",
                 "SpecificChart": "StackedArea",
                 "PartTitle": "Response Codes (5m)",
                 "Dimensions": {
@@ -2789,7 +2769,7 @@ resource "azurerm_portal_dashboard" "this" {
               },
               {
                 "name": "Query",
-                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"basepath_override/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "value": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^basepath_override/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "isOptional": true
               },
               {
@@ -2847,7 +2827,7 @@ resource "azurerm_portal_dashboard" "this" {
             "type": "Extension/Microsoft_OperationsManagementSuite_Workspace/PartType/LogsDashboardPart",
             "settings": {
               "content": {
-                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"basepath_override/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
+                "Query": "\\nlet api_hosts = datatable (name: string) [\\"app-backend.io.italia.it\\"];\\nlet threshold = 1;\\nAzureDiagnostics\\n| where originalHost_s in (api_hosts)\\n| where requestUri_s matches regex \\"^basepath_override/api/v1/services$\\"\\n| summarize\\n    watermark=threshold,\\n    duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)\\n| render timechart with (xtitle = \\"time\\", ytitle= \\"response time(s)\\")\\n",
                 "SpecificChart": "Line",
                 "PartTitle": "Percentile Response Time (5m)",
                 "Dimensions": {
@@ -2858,7 +2838,7 @@ resource "azurerm_portal_dashboard" "this" {
                   "yAxis": [
                     {
                       "name": "watermark",
-                      "type": "long"
+                      "type": "real"
                     },
                     {
                       "name": "duration_percentile_95",
@@ -2901,17 +2881,7 @@ resource "azurerm_portal_dashboard" "this" {
               "name": "Local Time",
               "value": "Past 48 hours"
             },
-            "filteredPartIds": [
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432ed",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432ef",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f1",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f3",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f5",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f7",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432f9",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432fb",
-              "StartboardPart-LogsDashboardPart-9badbd78-7607-4131-8fa1-8b85191432fd"
-            ]
+            "filteredPartIds": []
           }
         }
       }
@@ -2934,7 +2904,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_availability_0" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Availability for basepath_override/api/v1/services/{service_id} is less than or equal to 99% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Availability for basepath_override/api/v1/services/{service_id} is below 12% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -2945,7 +2915,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 0.12;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "basepath_override/api/v1/services/[^/]+$"
+| where requestUri_s matches regex "^basepath_override/api/v1/services/[^/]+$"
 | summarize
   Total=count(),
   Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)
@@ -2976,7 +2946,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_time_0" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Response time for basepath_override/api/v1/services/{service_id} is less than or equal to 1s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Response time for basepath_override/api/v1/services/{service_id} is above 0.23s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -2987,7 +2957,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 0.23;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "basepath_override/api/v1/services/[^/]+$"
+| where requestUri_s matches regex "^basepath_override/api/v1/services/[^/]+$"
 | summarize
     watermark=threshold,
     duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)
@@ -3017,7 +2987,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_availability_1" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Availability for basepath_override/api/v1/services is less than or equal to 99% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Availability for basepath_override/api/v1/services is below 99% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -3028,7 +2998,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 0.99;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "basepath_override/api/v1/services$"
+| where requestUri_s matches regex "^basepath_override/api/v1/services$"
 | summarize
   Total=count(),
   Success=count(httpStatus_d < 500) by bin(TimeGenerated, 5m)
@@ -3059,7 +3029,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_time_1" {
   }
 
   data_source_id          = "data_source_id"
-  description             = "Response time for basepath_override/api/v1/services is less than or equal to 1s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Response time for basepath_override/api/v1/services is above 1s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -3070,7 +3040,7 @@ let api_hosts = datatable (name: string) ["app-backend.io.italia.it"];
 let threshold = 1;
 AzureDiagnostics
 | where originalHost_s in (api_hosts)
-| where requestUri_s matches regex "basepath_override/api/v1/services$"
+| where requestUri_s matches regex "^basepath_override/api/v1/services$"
 | summarize
     watermark=threshold,
     duration_percentile_95=percentiles(timeTaken_d, 95) by bin(TimeGenerated, 5m)

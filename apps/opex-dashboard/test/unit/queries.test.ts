@@ -146,3 +146,55 @@ describe("App Gateway Queries", () => {
     });
   });
 });
+
+describe("Status code categories", () => {
+  const baseCtx = {
+    action_groups_ids: ["ag1"],
+    data_source_id: "ds1",
+    endpoint: "/users",
+    endpoints: {},
+    hosts: ["api.example.com"],
+    location: "eastus",
+    name: "test",
+    resource_group: "dashboards",
+    resource_type: "api-management",
+    timespan: "5m",
+  };
+
+  it("should classify every default category when queries is not provided", () => {
+    const result = responseCodesQuery(baseCtx);
+
+    ["1XX", "2XX", "3XX", "4XX", "5XX"].forEach((category) => {
+      expect(result).toContain(`"${category}"`);
+    });
+    expect(result).not.toContain('"Other"');
+  });
+
+  it("should honour configured status code categories", () => {
+    const result = responseCodesQuery({
+      ...baseCtx,
+      queries: {
+        response_time_percentile: 95,
+        status_code_categories: ["2XX", "5XX"],
+      },
+    });
+
+    expect(result).toContain('responseCode_d between (200 .. 299), "2XX"');
+    expect(result).toContain('responseCode_d between (500 .. 599), "5XX"');
+    expect(result).not.toContain('"1XX"');
+    expect(result).toContain('"Other"');
+  });
+
+  it("should use the httpStatus_d field for App Gateway", () => {
+    const result = appGwResponseCodesQuery({
+      ...baseCtx,
+      queries: {
+        response_time_percentile: 95,
+        status_code_categories: ["2XX"],
+      },
+    });
+
+    expect(result).toContain('httpStatus_d between (200 .. 299), "2XX"');
+    expect(result).toContain('"Other"');
+  });
+});

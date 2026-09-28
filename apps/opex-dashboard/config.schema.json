@@ -3,7 +3,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Configuration schema for generating operational dashboards from OpenAPI specifications",
   "title": "OpEx Dashboard Configuration",
-  "version": "0.2.11",
+  "version": "0.2.15",
   "type": "object",
   "properties": {
     "action_groups": {
@@ -115,15 +115,25 @@
               "type": "number"
             },
             "status_code_categories": {
-              "default": ["1XX", "2XX", "3XX", "4XX", "5XX"],
-              "description": "HTTP status code categories for response codes queries",
+              "default": [
+                "1XX",
+                "2XX",
+                "3XX",
+                "4XX",
+                "5XX"
+              ],
+              "description": "HTTP status code categories for response codes queries. Default: 1XX..5XX",
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[1-5]XX$"
               }
             }
           },
-          "required": ["response_time_percentile", "status_code_categories"],
+          "required": [
+            "response_time_percentile",
+            "status_code_categories"
+          ],
           "additionalProperties": false
         }
       },
@@ -139,15 +149,25 @@
           "type": "number"
         },
         "status_code_categories": {
-          "default": ["1XX", "2XX", "3XX", "4XX", "5XX"],
-          "description": "HTTP status code categories for response codes queries",
+          "default": [
+            "1XX",
+            "2XX",
+            "3XX",
+            "4XX",
+            "5XX"
+          ],
+          "description": "HTTP status code categories for response codes queries. Default: 1XX..5XX",
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[1-5]XX$"
           }
         }
       },
-      "required": ["response_time_percentile", "status_code_categories"],
+      "required": [
+        "response_time_percentile",
+        "status_code_categories"
+      ],
       "additionalProperties": false
     },
     "resource_group": {
@@ -159,7 +179,10 @@
       "default": "app-gateway",
       "description": "Type of Azure resource to monitor: app-gateway (Application Gateway) or api-management (API Management). Default: app-gateway",
       "type": "string",
-      "enum": ["app-gateway", "api-management"]
+      "enum": [
+        "app-gateway",
+        "api-management"
+      ]
     },
     "response_time_threshold": {
       "default": 1,
@@ -212,7 +235,10 @@
               "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')"
             }
           },
-          "required": ["env_short", "prefix"],
+          "required": [
+            "env_short",
+            "prefix"
+          ],
           "additionalProperties": false
         },
         {
@@ -264,7 +290,10 @@
                       "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')"
                     }
                   },
-                  "required": ["env_short", "prefix"],
+                  "required": [
+                    "env_short",
+                    "prefix"
+                  ],
                   "additionalProperties": false
                 },
                 "prod": {
@@ -310,7 +339,10 @@
                       "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')"
                     }
                   },
-                  "required": ["env_short", "prefix"],
+                  "required": [
+                    "env_short",
+                    "prefix"
+                  ],
                   "additionalProperties": false
                 },
                 "uat": {
@@ -356,7 +388,10 @@
                       "description": "Project prefix (max 6 chars, e.g., 'io', 'pagopa')"
                     }
                   },
-                  "required": ["env_short", "prefix"],
+                  "required": [
+                    "env_short",
+                    "prefix"
+                  ],
                   "additionalProperties": false
                 }
               },
@@ -364,7 +399,9 @@
               "description": "Environment-specific configurations for dev/uat/prod"
             }
           },
-          "required": ["environments"],
+          "required": [
+            "environments"
+          ],
           "additionalProperties": false
         }
       ]

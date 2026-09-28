@@ -183,6 +183,9 @@ function createResponseTimePart(
     ...props, // Include method and path from queryProps
   });
 
+  const percentile = ctx.queries?.response_time_percentile ?? 95;
+  const responseTimeField = `duration_percentile_${percentile}`;
+
   return {
     [`${partIndex}`]: {
       position: { x: 12, y: yPosition, colSpan: 6, rowSpan: 4 },
@@ -195,7 +198,7 @@ function createResponseTimePart(
           "StackedColumn",
           {
             xAxis: { name: "TimeGenerated", type: "datetime" },
-            yAxis: [{ name: "duration_percentile_95", type: "real" }],
+            yAxis: [{ name: responseTimeField, type: "real" }],
             splitBy: [],
             aggregation: "Sum",
           },
@@ -209,8 +212,8 @@ function createResponseTimePart(
             Dimensions: {
               xAxis: { name: "TimeGenerated", type: "datetime" },
               yAxis: [
-                { name: "watermark", type: "long" },
-                { name: "duration_percentile_95", type: "real" },
+                { name: "watermark", type: "real" },
+                { name: responseTimeField, type: "real" },
               ],
               splitBy: [],
               aggregation: "Sum",
@@ -296,15 +299,10 @@ export function azureDashboardRawTemplate(context: TemplateContext): string {
   // Merge all parts into a single object
   const mergedParts = Object.assign({}, ...parts);
 
-  // Generate filteredPartIds for the first 9 parts (3 endpoints × 3 parts each)
-  // These are referenced in the time range filter
-  const baseUuid = "9badbd78-7607-4131-8fa1-8b85191432";
-  const maxFilteredParts = 9; // Always include first 9 part IDs
-
-  const filteredPartIds = Array.from({ length: maxFilteredParts }, (_, i) => {
-    const hex = (0xed + i * 2).toString(16);
-    return `StartboardPart-LogsDashboardPart-${baseUuid}${hex}`;
-  });
+  // Azure assigns real part IDs at deploy time (they are not present in this
+  // JSON), so a static list would reference non-existent parts. Azure's own
+  // templates leave this empty and rely on each part's TimeRange input.
+  const filteredPartIds: string[] = [];
 
   // Build complete dashboard structure
   const dashboard = {

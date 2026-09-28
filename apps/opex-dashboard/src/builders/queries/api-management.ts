@@ -5,6 +5,7 @@
 import type { TemplateContext } from "../../core/template/context.schema.js";
 
 import { uriToRegex } from "../../core/template/helpers.js";
+import { statusCodeCaseExpression } from "./status-codes.js";
 
 interface QueryContext extends TemplateContext {
   endpoint: string;
@@ -65,12 +66,10 @@ export function responseCodesQuery(ctx: QueryContext): string {
   return `\nlet api_url = "${uriPattern}";
 AzureDiagnostics
 | where url_s matches regex api_url${method ? `\n| where method_s == "${method}"` : ""}
-| extend HTTPStatus = case(
-  responseCode_d between (100 .. 199), "1XX",
-  responseCode_d between (200 .. 299), "2XX",
-  responseCode_d between (300 .. 399), "3XX",
-  responseCode_d between (400 .. 499), "4XX",
-  "5XX")
+| extend HTTPStatus = ${statusCodeCaseExpression(
+    "responseCode_d",
+    ctx.queries?.status_code_categories,
+  )}
 | summarize count() by HTTPStatus, bin(TimeGenerated, ${timespan})
 | render areachart with (xtitle = "time", ytitle= "count")
 `;
