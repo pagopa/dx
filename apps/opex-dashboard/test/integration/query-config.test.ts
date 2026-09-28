@@ -4,6 +4,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { z } from "zod";
 
 import { AzDashboardRawBuilder } from "@/builders/azure-dashboard-raw/index.js";
 import { AzDashboardBuilder } from "@/builders/azure-dashboard/index.js";
@@ -12,6 +13,20 @@ import { OA3Resolver } from "@/core/resolver/index.js";
 const SPEC_PATH = "test/data/io_backend_light.yaml";
 const DATA_SOURCE_ID =
   "/subscriptions/uuid/resourceGroups/io-p-rg-external/providers/Microsoft.Network/applicationGateways/io-p-appgateway";
+
+/**
+ * Minimal shape of the raw dashboard JSON we assert on. Parsing it at runtime
+ * keeps the test honest about the generated structure instead of casting
+ * `JSON.parse()` output with a type assertion.
+ */
+const RawDashboardSchema = z.object({
+  name: z.string(),
+  tags: z.record(z.string(), z.string()),
+});
+
+function parseRawDashboard(json: string) {
+  return RawDashboardSchema.parse(JSON.parse(json));
+}
 
 async function resolveSpec() {
   const resolver = new OA3Resolver(SPEC_PATH);
@@ -108,13 +123,10 @@ describe("Dashboard name sanitization", () => {
       timespan: "5m",
     });
 
-    const dashboard = JSON.parse(builder.produce({})) as {
-      name: string;
-      tags: Record<string, string>;
-    };
+    const dashboard = parseRawDashboard(builder.produce({}));
 
     expect(dashboard.name).toBe("PROD-IO_IO_App_Availability");
-    expect(dashboard.tags["hidden-title"]).toBe("PROD-IO_IO_App_Availability");
+    expect(dashboard.tags["hidden-title"]).toBe("PROD-IO/IO_App.Availability");
   });
 
   it("should only emit valid characters in the Terraform dashboard name", async () => {

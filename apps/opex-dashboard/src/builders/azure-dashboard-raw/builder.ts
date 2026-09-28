@@ -54,6 +54,9 @@ export class AzDashboardRawBuilder extends Builder<TemplateContext> {
       response_time_threshold: options.responseTimeThreshold,
       time_window: options.evaluationTimeWindow,
       timespan: options.timespan,
+      // Keep the configured title for the portal display name; only the Azure
+      // resource name needs to be sanitized.
+      title: options.name,
     });
 
     // Validate OA3 spec structure

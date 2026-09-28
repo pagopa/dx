@@ -350,7 +350,7 @@ export function azureDashboardRawTemplate(context: TemplateContext): string {
     type: "Microsoft.Portal/dashboards",
     location: context.location,
     tags: {
-      "hidden-title": context.name,
+      "hidden-title": context.title ?? context.name,
     },
     apiVersion: "2015-08-01-preview",
   };

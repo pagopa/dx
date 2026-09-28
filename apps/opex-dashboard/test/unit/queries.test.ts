@@ -197,6 +197,20 @@ describe("Status code categories", () => {
     expect(result).toContain('httpStatus_d between (200 .. 299), "2XX"');
     expect(result).toContain('"Other"');
   });
+
+  it("should classify every row as Other when categories are empty", () => {
+    const result = responseCodesQuery({
+      ...baseCtx,
+      queries: {
+        response_time_percentile: 95,
+        status_code_categories: [],
+      },
+    });
+
+    expect(result).toContain('extend HTTPStatus = "Other"');
+    expect(result).not.toContain("between (");
+    expect(result).not.toContain('"1XX"');
+  });
 });
 
 describe("Kusto regex embedding", () => {
@@ -232,7 +246,7 @@ describe("Kusto regex embedding", () => {
     });
 
     expect(result).toContain(
-      'parse_url(url_s)["Path"] matches regex @"^/users$"',
+      'tostring(parse_url(url_s)["Path"]) matches regex @"^/users$"',
     );
   });
 
@@ -245,6 +259,8 @@ describe("Kusto regex embedding", () => {
     });
 
     expect(result).toContain('let api_url = @"^/users$";');
-    expect(result).toContain('parse_url(url_s)["Path"] matches regex api_url');
+    expect(result).toContain(
+      'tostring(parse_url(url_s)["Path"]) matches regex api_url',
+    );
   });
 });

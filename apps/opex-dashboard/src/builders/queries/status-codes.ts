@@ -18,18 +18,20 @@ type StatusCodeCategory = `1XX` | `2XX` | `3XX` | `4XX` | `5XX`;
  * uncategorised value falls into an explicit `"Other"` bucket so that rows are
  * never silently mislabelled.
  *
+ * Defaults are only applied when `categories` is `undefined`. An explicitly
+ * configured empty list means "no class selected", so every row is reported as
+ * `"Other"` rather than silently restoring the defaults.
+ *
  * @param field - Name of the Kusto column holding the numeric status code
  * @param categories - Configured status code categories
- * @returns A Kusto `case(...)` expression
+ * @returns A Kusto `case(...)` expression, or a plain string when no class is
+ * selected
  */
 export function statusCodeCaseExpression(
   field: string,
   categories?: QueryConfig["status_code_categories"],
 ): string {
-  const selected =
-    categories && categories.length > 0
-      ? categories
-      : [...DEFAULT_STATUS_CODE_CATEGORIES];
+  const selected = categories ?? [...DEFAULT_STATUS_CODE_CATEGORIES];
 
   const isExhaustive = DEFAULT_STATUS_CODE_CATEGORIES.every((category) =>
     selected.includes(category),
@@ -40,6 +42,12 @@ export function statusCodeCaseExpression(
     : selected;
 
   const fallback = isExhaustive ? "5XX" : "Other";
+
+  // No configured classes: classify every row as "Other" instead of emitting a
+  // `case()` with a missing predicate (which Kusto rejects).
+  if (conditions.length === 0) {
+    return `"${fallback}"`;
+  }
 
   const arms = conditions.map((category) => {
     const digit = (category as StatusCodeCategory).charAt(0);

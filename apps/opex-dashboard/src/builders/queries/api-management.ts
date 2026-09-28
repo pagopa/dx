@@ -36,7 +36,7 @@ export function availabilityQuery(ctx: QueryContext): string {
 
   return `${isAlarm ? "" : "\n"}let threshold = ${displayThreshold};
 AzureDiagnostics
-| where parse_url(url_s)["Path"] matches regex @"${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
+| where tostring(parse_url(url_s)["Path"]) matches regex @"${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
 | summarize
   Total=count(),
   Success=count(responseCode_d < 500 and responseCode_d != 0) by bin(TimeGenerated, ${timespan})
@@ -65,7 +65,7 @@ export function responseCodesQuery(ctx: QueryContext): string {
 
   return `\nlet api_url = @"${uriPattern}";
 AzureDiagnostics
-| where parse_url(url_s)["Path"] matches regex api_url${method ? `\n| where method_s == "${method}"` : ""}
+| where tostring(parse_url(url_s)["Path"]) matches regex api_url${method ? `\n| where method_s == "${method}"` : ""}
 | extend HTTPStatus = ${statusCodeCaseExpression(
     "responseCode_d",
     ctx.queries?.status_code_categories,
@@ -93,7 +93,7 @@ export function responseTimeQuery(ctx: QueryContext): string {
 
   return `${isAlarm ? "" : "\n"}let threshold = ${threshold};
 AzureDiagnostics
-| where parse_url(url_s)["Path"] matches regex @"${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
+| where tostring(parse_url(url_s)["Path"]) matches regex @"${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
 | summarize
     watermark=threshold,
     duration_percentile_${percentile}=percentiles(todouble(DurationMs)/1000, ${percentile}) by bin(TimeGenerated, ${timespan})
