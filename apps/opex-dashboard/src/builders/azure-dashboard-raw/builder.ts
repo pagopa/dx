@@ -6,7 +6,7 @@
 import type { TemplateContext } from "../../core/template/context.schema.js";
 import type { OA3Spec } from "./builder.schema.js";
 
-import { normalizeEndpointKeys } from "../../utils/index.js";
+import { normalizeEndpointKeys, sanitizeName } from "../../utils/index.js";
 import { Builder } from "../base.js";
 import { OA3SpecSchema } from "./builder.schema.js";
 import { extractEndpoints } from "./endpoints-extractor.js";
@@ -47,7 +47,7 @@ export class AzDashboardRawBuilder extends Builder<TemplateContext> {
       event_occurrences: options.eventOccurrences,
       hosts: [],
       location: options.location,
-      name: options.name,
+      name: sanitizeName(options.name),
       queries: options.queries,
       resource_group: options.resourceGroup,
       resource_type: options.resourceType,
