@@ -4,7 +4,7 @@
 
 import type { TemplateContext } from "../../core/template/context.schema.js";
 
-import { uriToRegex } from "../../core/template/helpers.js";
+import { joinUriPath, uriToRegex } from "../../core/template/helpers.js";
 import { statusCodeCaseExpression } from "./status-codes.js";
 
 interface QueryContext extends TemplateContext {
@@ -24,7 +24,7 @@ export function availabilityQuery(ctx: QueryContext): string {
   const props = ctx.endpoints?.[endpoint];
   const method = props?.method;
   const path = props?.path ?? endpoint;
-  const uriPattern = uriToRegex(basePath + path);
+  const uriPattern = uriToRegex(joinUriPath(basePath, path));
   const timespan = ctx.timespan || "5m";
   const isAlarm = ctx.is_alarm ?? false;
   // NOTE: Threshold inversion logic to match legacy template behavior
@@ -36,7 +36,7 @@ export function availabilityQuery(ctx: QueryContext): string {
 
   return `${isAlarm ? "" : "\n"}let threshold = ${displayThreshold};
 AzureDiagnostics
-| where url_s matches regex "${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
+| where parse_url(url_s)["Path"] matches regex @"${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
 | summarize
   Total=count(),
   Success=count(responseCode_d < 500 and responseCode_d != 0) by bin(TimeGenerated, ${timespan})
@@ -60,12 +60,12 @@ export function responseCodesQuery(ctx: QueryContext): string {
   const props = ctx.endpoints?.[endpoint];
   const method = props?.method;
   const path = props?.path ?? endpoint;
-  const uriPattern = uriToRegex(basePath + path);
+  const uriPattern = uriToRegex(joinUriPath(basePath, path));
   const timespan = ctx.timespan || "5m";
 
-  return `\nlet api_url = "${uriPattern}";
+  return `\nlet api_url = @"${uriPattern}";
 AzureDiagnostics
-| where url_s matches regex api_url${method ? `\n| where method_s == "${method}"` : ""}
+| where parse_url(url_s)["Path"] matches regex api_url${method ? `\n| where method_s == "${method}"` : ""}
 | extend HTTPStatus = ${statusCodeCaseExpression(
     "responseCode_d",
     ctx.queries?.status_code_categories,
@@ -86,14 +86,14 @@ export function responseTimeQuery(ctx: QueryContext): string {
   const props = ctx.endpoints?.[endpoint];
   const method = props?.method;
   const path = props?.path ?? endpoint;
-  const uriPattern = uriToRegex(basePath + path);
+  const uriPattern = uriToRegex(joinUriPath(basePath, path));
   const timespan = ctx.timespan || "5m";
   const isAlarm = ctx.is_alarm ?? false;
   const percentile = ctx.queries?.response_time_percentile ?? 95;
 
   return `${isAlarm ? "" : "\n"}let threshold = ${threshold};
 AzureDiagnostics
-| where url_s matches regex "${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
+| where parse_url(url_s)["Path"] matches regex @"${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
 | summarize
     watermark=threshold,
     duration_percentile_${percentile}=percentiles(todouble(DurationMs)/1000, ${percentile}) by bin(TimeGenerated, ${timespan})

@@ -4,7 +4,7 @@
 
 import { describe, expect, it } from "vitest";
 
-import { uriToRegex } from "@/core/template/helpers.js";
+import { joinUriPath, uriToRegex } from "@/core/template/helpers.js";
 
 describe("uriToRegex", () => {
   it("should convert path parameters into a single-segment pattern", () => {
@@ -24,5 +24,21 @@ describe("uriToRegex", () => {
 
   it("should escape metacharacters while keeping path parameters", () => {
     expect(uriToRegex("/files/{name}.csv")).toBe("^/files/[^/]+\\.csv$");
+  });
+});
+
+describe("joinUriPath", () => {
+  it("should join an empty base path", () => {
+    expect(joinUriPath("", "/api/users")).toBe("/api/users");
+  });
+
+  it("should add a leading slash when the base path has none", () => {
+    expect(joinUriPath("basepath", "/api/users")).toBe("/basepath/api/users");
+  });
+
+  it("should not duplicate slashes", () => {
+    expect(joinUriPath("/basepath/", "/api//users")).toBe(
+      "/basepath/api/users",
+    );
   });
 });

@@ -198,3 +198,53 @@ describe("Status code categories", () => {
     expect(result).toContain('"Other"');
   });
 });
+
+describe("Kusto regex embedding", () => {
+  const baseCtx = {
+    action_groups_ids: ["ag1"],
+    data_source_id: "ds1",
+    hosts: ["api.example.com"],
+    location: "eastus",
+    name: "test",
+    resource_group: "dashboards",
+    timespan: "5m",
+  };
+
+  it("should emit an escaped, verbatim App Gateway pattern", () => {
+    const result = appGwAvailabilityQuery({
+      ...baseCtx,
+      endpoint: "/v1/status.json",
+      endpoints: { "/v1/status.json": {} },
+      is_alarm: false,
+      resource_type: "app-gateway",
+    });
+
+    expect(result).toContain('matches regex @"^/v1/status\\.json$"');
+  });
+
+  it("should match the path of the absolute API Management request URL", () => {
+    const result = availabilityQuery({
+      ...baseCtx,
+      endpoint: "/users",
+      endpoints: {},
+      is_alarm: false,
+      resource_type: "api-management",
+    });
+
+    expect(result).toContain(
+      'parse_url(url_s)["Path"] matches regex @"^/users$"',
+    );
+  });
+
+  it("should match the path of the absolute API Management request URL in response codes", () => {
+    const result = responseCodesQuery({
+      ...baseCtx,
+      endpoint: "/users",
+      endpoints: {},
+      resource_type: "api-management",
+    });
+
+    expect(result).toContain('let api_url = @"^/users$";');
+    expect(result).toContain('parse_url(url_s)["Path"] matches regex api_url');
+  });
+});
