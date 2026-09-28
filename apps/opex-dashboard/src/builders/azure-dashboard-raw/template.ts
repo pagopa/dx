@@ -183,8 +183,9 @@ function createResponseTimePart(
     ...props, // Include method and path from queryProps
   });
 
-  const percentile = ctx.queries?.response_time_percentile ?? 95;
-  const responseTimeField = `duration_percentile_${percentile}`;
+  const responseTimeField = queries.responseTimeFieldName(
+    ctx.queries?.response_time_percentile ?? 95,
+  );
 
   return {
     [`${partIndex}`]: {

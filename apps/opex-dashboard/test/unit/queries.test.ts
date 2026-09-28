@@ -14,6 +14,7 @@ import {
   responseCodesQuery as appGwResponseCodesQuery,
   responseTimeQuery as appGwResponseTimeQuery,
 } from "@/builders/queries/app-gateway.js";
+import { responseTimeFieldName } from "@/builders/queries/percentile-field.js";
 
 describe("API Management Queries", () => {
   const baseCtx = {
@@ -262,5 +263,48 @@ describe("Kusto regex embedding", () => {
     expect(result).toContain(
       'tostring(parse_url(url_s)["Path"]) matches regex api_url',
     );
+  });
+});
+
+describe("Response time percentile field name", () => {
+  const baseCtx = {
+    action_groups_ids: ["ag1"],
+    data_source_id: "ds1",
+    endpoint: "/users",
+    endpoints: {},
+    hosts: ["api.example.com"],
+    location: "eastus",
+    name: "test",
+    resource_group: "dashboards",
+    resource_type: "api-management",
+    timespan: "5m",
+  };
+
+  it.each([
+    [95, "duration_percentile_95"],
+    [99.9, "duration_percentile_99_9"],
+  ])("should build an identifier-safe field for %s", (percentile, expected) => {
+    expect(responseTimeFieldName(percentile)).toBe(expected);
+  });
+
+  it("should use the safe field name in the generated queries", () => {
+    const ctx = {
+      ...baseCtx,
+      queries: {
+        response_time_percentile: 99.9,
+        status_code_categories: ["2XX"],
+      },
+    };
+
+    const apiManagement = responseTimeQuery({ ...ctx, is_alarm: true });
+    const appGateway = appGwResponseTimeQuery({ ...ctx, is_alarm: true });
+
+    for (const query of [apiManagement, appGateway]) {
+      expect(query).toContain("duration_percentile_99_9=percentiles");
+      expect(query).toContain("percentiles(");
+      expect(query).toContain(", 99.9) by bin(TimeGenerated");
+      expect(query).toContain("| where duration_percentile_99_9 > threshold");
+      expect(query).not.toContain("duration_percentile_99.9");
+    }
   });
 });

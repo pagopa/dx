@@ -5,6 +5,7 @@
 import type { TemplateContext } from "../../core/template/context.schema.js";
 
 import { joinUriPath, uriToRegex } from "../../core/template/helpers.js";
+import { responseTimeFieldName } from "./percentile-field.js";
 import { statusCodeCaseExpression } from "./status-codes.js";
 
 interface QueryContext extends TemplateContext {
@@ -90,13 +91,14 @@ export function responseTimeQuery(ctx: QueryContext): string {
   const timespan = ctx.timespan || "5m";
   const isAlarm = ctx.is_alarm ?? false;
   const percentile = ctx.queries?.response_time_percentile ?? 95;
+  const percentileField = responseTimeFieldName(percentile);
 
   return `${isAlarm ? "" : "\n"}let threshold = ${threshold};
 AzureDiagnostics
 | where tostring(parse_url(url_s)["Path"]) matches regex @"${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
 | summarize
     watermark=threshold,
-    duration_percentile_${percentile}=percentiles(todouble(DurationMs)/1000, ${percentile}) by bin(TimeGenerated, ${timespan})
-${isAlarm ? `| where duration_percentile_${percentile} > threshold` : `| render timechart with (xtitle = "time", ytitle= "response time(s)")`}
+    ${percentileField}=percentiles(todouble(DurationMs)/1000, ${percentile}) by bin(TimeGenerated, ${timespan})
+${isAlarm ? `| where ${percentileField} > threshold` : `| render timechart with (xtitle = "time", ytitle= "response time(s)")`}
 `;
 }

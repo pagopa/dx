@@ -60,6 +60,35 @@ describe("Query config propagation (response_time_percentile)", () => {
     expect(output).not.toContain("duration_percentile_95");
   });
 
+  it("should use an identifier-safe field name for fractional percentiles", async () => {
+    const oa3Spec = await resolveSpec();
+
+    const builder = new AzDashboardRawBuilder({
+      evaluationFrequency: 10,
+      evaluationTimeWindow: 20,
+      eventOccurrences: 1,
+      location: "West Europe",
+      name: "Fractional Percentile Dashboard",
+      oa3Spec,
+      queries: {
+        response_time_percentile: 99.9,
+        status_code_categories: ["2XX", "5XX"],
+      },
+      resourceGroup: "dashboards",
+      resources: [DATA_SOURCE_ID],
+      resourceType: "app-gateway",
+      timespan: "5m",
+    });
+
+    const output = builder.produce({});
+
+    // The query alias and the chart metadata must share the same
+    // identifier-safe field name, otherwise the chart stays empty.
+    expect(output).toContain("duration_percentile_99_9=percentiles");
+    expect(output).toContain('"name": "duration_percentile_99_9"');
+    expect(output).not.toContain("duration_percentile_99.9");
+  });
+
   it("should propagate the global percentile to Terraform alarms", async () => {
     const oa3Spec = await resolveSpec();
 
