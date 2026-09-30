@@ -37,6 +37,9 @@ bundled template.
 - Preserve existing Use Case-local `AC-XX` IDs when their meaning remains
   unchanged. Add a new ID only for new acceptance meaning; do not renumber
   existing checks.
+- Return the stable Use Case ID and complete acceptance-check ID set as coverage
+  inputs for downstream `UC-XX::` delivery validation. Do not create projection
+  keys in the child document; `jira-magister` owns slice identities.
 - Write visible content in English unless another language is requested.
   Stable IDs, status values, endpoint names, metric identifiers, and URLs are
   machine-facing and remain unchanged.
@@ -163,6 +166,7 @@ readiness, and change propagation.
 When invoked directly, own the complete child-authoring and parent-sync
 workflow. When invoked by `dr-blacksmith`, return every created or updated child
 path, stable ID, parent index change, unresolved gap, and Confluence URL so
-`dr-blacksmith` can continue the parent document workflow. For published
-children, also return the verified parent-page URL and the synchronized row
-state.
+`dr-blacksmith` can continue the parent document workflow. Include the complete
+stable `AC-XX` ID set for each child so downstream delivery coverage can be
+validated without copying acceptance-check text. For published children, also
+return the verified parent-page URL and the synchronized row state.
