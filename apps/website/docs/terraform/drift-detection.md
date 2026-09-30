@@ -127,5 +127,5 @@ PROD - Drift Detection results:
 ```
 
 Workflow errors also produce a notification with the environment and workflow
-URL, without Terraform resource counts. Environments with no drift do not send
-a notification. No additional inputs or secrets are required for this format.
+URL, without Terraform resource counts. Environments with no drift do not send a
+notification. No additional inputs or secrets are required for this format.
