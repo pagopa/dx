@@ -146,6 +146,20 @@ names use the `ced-p-...` prefix convention.
 Run `add environment` once for each tenant/environment pair you need, changing
 both `--name` and `--prefix` when the tenant changes.
 
+**Repository Terraform configuration**
+
+The command updates `infra/repository/main.tf` in the generated
+`module "github_repository"` by adding the environment to its
+`repository.environments` list. When the list is absent, `prod` is implicit;
+adding another environment also makes `prod` explicit. The command preserves
+other HCL settings and requires a single repository module with a literal
+repository object and a list of unique, literal environment names.
+
+Invalid HCL, ambiguous repository modules, or dynamic `environments` values
+produce an error before this action writes `main.tf` or starts Terraform.
+After a valid edit, a later `terraform init` or `terraform apply` failure does
+not roll back the edited file or any remote changes.
+
 **Initialization and Runner App credentials**
 
 The initialization confirmation and Terraform backend selection are conditional
