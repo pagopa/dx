@@ -36,12 +36,17 @@ variable "use_case" {
 
 variable "subnet_pep_id" {
   type        = string
-  description = "The ID of the subnet used for private endpoints. Required only if `force_public_network_access_enabled` is set to false."
+  description = "The ID of the subnet used for private endpoints. Together with `private_dns_zone_resource_group_name`, enables private endpoints for the subservices in `subservices_enabled`, independently of `force_public_network_access_enabled`. Required when `force_public_network_access_enabled` is false, except for `delegated_access` where public access is forced by the module."
   default     = null
 
   validation {
-    condition     = var.use_case == "delegated_access" || var.force_public_network_access_enabled || (var.subnet_pep_id != null && var.subnet_pep_id != "")
-    error_message = "subnet_pep_id is required when force_public_network_access_enabled is false."
+    condition = alltrue([
+      (var.subnet_pep_id != null) == (var.private_dns_zone_resource_group_name != null),
+      var.subnet_pep_id == null || var.subnet_pep_id != "",
+      var.private_dns_zone_resource_group_name == null || var.private_dns_zone_resource_group_name != "",
+      var.use_case == "delegated_access" || var.force_public_network_access_enabled || var.subnet_pep_id != null
+    ])
+    error_message = "subnet_pep_id and private_dns_zone_resource_group_name must both be set or both be unset; both are required when force_public_network_access_enabled is false, except for delegated_access."
   }
 }
 
@@ -95,7 +100,7 @@ variable "subservices_enabled" {
     queue = optional(bool, false)
     table = optional(bool, false)
   })
-  description = "Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only if force_public_network_access_enabled is false."
+  description = "Enables subservices (blob, file, queue, table). Controls creation of queue/table resources and their diagnostic settings regardless of network configuration, and additionally determines which enabled subservices get Private Endpoints when private endpoints are created (i.e. when subnet_pep_id is set). Defaults to 'blob' only."
   default     = {}
 
   validation {
@@ -183,7 +188,7 @@ EOT
 
 variable "private_dns_zone_resource_group_name" {
   type        = string
-  description = "Resource group for the private DNS zone. Defaults to the virtual network's resource group."
+  description = "Resource group containing the private DNS zone. Must be set together with subnet_pep_id."
   default     = null
 }
 
