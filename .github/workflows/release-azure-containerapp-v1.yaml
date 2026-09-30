@@ -256,6 +256,28 @@ jobs:
             exit 1
           fi
 
+      - name: Assign Staging Label
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
+          steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        uses: pagopa/dx/actions/containerapp-staging-label@main
+        with:
+          operation: add
+          container_app_name: ${{ env.CONTAINER_APP_NAME }}
+          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
+          revision_name: ${{ steps.create_new_revision.outputs.new_revision_name }}
+
+      - name: Remove Failed Staging Label
+        if:
+          ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
+          steps.create_new_revision.outputs.skip_remaining_steps == 'false' &&
+          steps.create_new_revision.outputs.new_revision_name != '' }}
+        uses: pagopa/dx/actions/containerapp-staging-label@main
+        with:
+          operation: remove
+          container_app_name: ${{ env.CONTAINER_APP_NAME }}
+          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
+          revision_name: ${{ steps.create_new_revision.outputs.new_revision_name }}
+
       - name: Deactivate New Revision
         if:
           ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple'
@@ -357,11 +379,28 @@ jobs:
           resource_name: ${{ env.CONTAINER_APP_NAME }}
           resource_type: "containerapp"
 
+      - name: Remove Staging Label
+        uses: pagopa/dx/actions/containerapp-staging-label@main
+        with:
+          operation: remove
+          container_app_name: ${{ env.CONTAINER_APP_NAME }}
+          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
+          revision_name: ${{ env.NEW_REVISION_NAME }}
+
       - name: Deactivate Old Revision
         run: |
           az containerapp revision deactivate \
             --name "$CONTAINER_APP_NAME" \
             --revision "$CURRENT_REVISION_NAME"
+
+      - name: Remove Failed Staging Label
+        if: ${{ failure() }}
+        uses: pagopa/dx/actions/containerapp-staging-label@main
+        with:
+          operation: remove
+          container_app_name: ${{ env.CONTAINER_APP_NAME }}
+          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
+          revision_name: ${{ env.NEW_REVISION_NAME }}
 
       - name: Deactivate New Revision
         if: ${{ failure() }}
