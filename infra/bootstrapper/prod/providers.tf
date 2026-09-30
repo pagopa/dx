@@ -1,5 +1,10 @@
 terraform {
   required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 6.0"
+    }
+
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
@@ -33,6 +38,14 @@ terraform {
 provider "azurerm" {
   features {}
   storage_use_azuread = true
+}
+
+provider "aws" {
+  region = local.aws_environment.region
+
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "dx" {}

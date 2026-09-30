@@ -41,4 +41,6 @@ resource "azurerm_key_vault_secret" "database_url" {
 
   value_wo         = "postgresql://dbadmin:${ephemeral.random_password.db_admin.result}@${module.postgres.postgres.name}.postgres.database.azure.com:5432/postgres?sslmode=verify-full"
   value_wo_version = 2
+
+  tags = var.tags
 }

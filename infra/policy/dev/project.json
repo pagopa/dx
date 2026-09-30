@@ -1,0 +1,24 @@
+{
+  "name": "policy-dev",
+  "targets": {
+    "init-unit-tests": {
+      "cache": false,
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "terraform init -backend=false -input=false -lockfile=readonly",
+        "cwd": "infra/policy/dev"
+      }
+    },
+    "test": {
+      "dependsOn": ["init-unit-tests"],
+      "inputs": [
+        "default",
+        "{projectRoot}/tests/**/*.tftest.hcl",
+        "{workspaceRoot}/infra/policy/_policy_rules/*_v2.json"
+      ],
+      "options": {
+        "args": ["-filter=tests/unit.tftest.hcl"]
+      }
+    }
+  }
+}

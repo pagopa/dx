@@ -1,7 +1,46 @@
 # DX - Azure Policy
 
 This directory contains shared Azure Policy rules that any team can choose to apply to its own Azure subscriptions to ensure consistent governance across different environments.
-Additionally, the `dev` directory contains Terraform code used to deploy the defined Policy Rules to the DX development subscription on Azure.`
+Additionally, the `dev` directory deploys the v2 DevEx tagging policy to the DX development subscription on Azure.
+
+## DevEx Tagging Policy (v2)
+
+DevEx-owned resources require case-sensitive `CostCenter = "TS000 - TECNOLOGIA & SERVIZI"`,
+`Owner = "DevEx"`, `Environment = "Dev"/"Uat"/"Prod"`, and `Source` pointing to the
+Terraform configuration root on the default branch.
+
+The v2 rule and parameters are in `_policy_rules/specific_tags_rule_v2.json` and
+`_policy_rules/specific_tags_parameters_v2.json`. The development assignment sets
+`Environment = "Dev"` and `SourcePrefix = "https://github.com/pagopa/dx/blob/main/infra/"`.
+The policy checks exact tag-name spelling, case-sensitive values, and a nonempty
+configuration path under that source prefix. It does not require the legacy
+`CreatedBy`, `BusinessUnit`, or `ManagementTeam` tags.
+
+Apply `infra/policy/dev` before applying the new tags in the development
+bootstrapper, core, and resources roots: the previous deny policy requires the
+legacy tags. The v2 definition has a new name and `create_before_destroy`, allowing
+Terraform to create it, switch the assignment, and delete the old definition.
+This is necessary because Azure disallows removing parameters from existing
+definitions. The policy does not automatically retag existing resources.
+
+The policy uses `Indexed` mode for taggable Azure resources. DX configures AWS
+provider default tags separately and passes explicit tags to AWS Cloud Control
+resources.
+
+## Backward Compatibility
+
+The shared v1 JSON files remain unchanged for external teams. Registry-published
+Terraform modules and generic CLI templates retain their consumer-defined tags.
+The configuration example below documents the legacy v1 policy, not the DevEx
+v2 assignment.
+
+## Local Regression Checks
+
+Run `pnpm nx test pre_commit_scripts` to check the nine DX root tag maps, AWS
+provider defaults, explicit resource tags, and the v2 policy contract.
+Run `pnpm nx test policy-dev` to check the Terraform assignment with a mocked
+AzureRM provider. This target initializes providers with the remote backend
+disabled; it does not deploy resources or evaluate the rule in Azure.
 
 ## Repository Structure
 

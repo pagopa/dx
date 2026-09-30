@@ -4,11 +4,54 @@ sidebar_position: 4
 
 # Required Resource Tags
 
-All Azure resources created with Terraform must include a standard set of tags.
-These tags are essential for cost tracking, ownership identification, and
-resource management.
+Cloud resources must include the tags agreed for their owning team. These tags
+are essential for cost tracking, ownership identification, and resource
+management.
 
-## Required Tags
+## DevEx Accounts and Subscriptions
+
+Resources in DevEx Azure subscriptions and AWS accounts follow the
+[DevEx cloud resource tagging agreement](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/3366388030/Tag+risorse+cloud+DevEx).
+Tag names and values are **case-sensitive**:
+
+| Tag           | Required value                                                |
+| ------------- | ------------------------------------------------------------- |
+| `CostCenter`  | `TS000 - TECNOLOGIA & SERVIZI`                                |
+| `Owner`       | `DevEx`                                                       |
+| `Environment` | `Dev`, `Uat`, or `Prod`, matching the deployment environment  |
+| `Source`      | URL of the Terraform configuration root on the default branch |
+
+```hcl title="infra/resources/prod/locals.tf"
+locals {
+  tags = {
+    CostCenter  = "TS000 - TECNOLOGIA & SERVIZI"
+    Owner       = "DevEx"
+    Environment = "Prod"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/resources/prod"
+  }
+}
+```
+
+Pass the root's `local.tags` to resources and modules. Internal child modules
+forward `var.tags` unchanged: `Source` identifies the calling configuration
+root, not the child module. Configure `default_tags { tags = local.tags }` on
+every AWS provider, including aliases; AWS Cloud Control resources still need
+explicit tags. Only add tags to resource types that support them.
+
+`CreatedBy`, `BusinessUnit`, and `ManagementTeam` are not required by this DevEx
+contract. Additional resource/module metadata tags may coexist with the four
+required tags.
+
+This agreement does **not** change the tagging interfaces or examples of
+Registry-published Terraform modules, generic CLI scaffolds, or other teams'
+infrastructure. Those consumers retain their own tagging conventions.
+
+## Legacy Shared Convention
+
+The shared v1 Azure tagging policy and the following examples remain available
+for teams that still use this convention. They are not the DevEx contract above.
+
+### Required Tags
 
 | Tag              | Description                                  | Example Values                                                                       |
 | ---------------- | -------------------------------------------- | ------------------------------------------------------------------------------------ |

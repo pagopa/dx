@@ -25,12 +25,10 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
-    CreatedBy      = "Terraform"
+    CostCenter     = "TS000 - TECNOLOGIA & SERVIZI"
     Environment    = "Dev"
     Owner          = "DevEx"
-    Source         = "https://github.com/pagopa/dx/infra/modules/<module_name>/tests"
-    ManagementTeam = "Developer Experience"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/<module_name>"
     Test           = "true"
     TestName       = "<Module Name> unit tests"
   }

@@ -1,18 +1,22 @@
 resource "azurerm_policy_definition" "specific_tags_policy" {
-  name         = "${local.project}-specific-tags-policy"
+  name         = "${local.project}-specific-tags-policy-v2"
   policy_type  = "Custom"
   mode         = "Indexed"
   display_name = "DevEx Enforce specific tags and values on resources"
-  description  = "Ensures that resources have specific tags and values during creation."
+  description  = "Ensures that resources have the case-sensitive CostCenter, Owner, Environment and Source tags."
 
   metadata = jsonencode({
     category = "Custom DevEx"
-    version  = "1.0.0"
+    version  = "2.0.0"
   })
 
-  policy_rule = file("../_policy_rules/specific_tags_rule_v1.json")
+  policy_rule = file("${path.module}/../_policy_rules/specific_tags_rule_v2.json")
 
-  parameters = file("../_policy_rules/specific_tags_parameters_v1.json")
+  parameters = file("${path.module}/../_policy_rules/specific_tags_parameters_v2.json")
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "azurerm_subscription_policy_assignment" "specific_tags_assignment" {
@@ -23,20 +27,16 @@ resource "azurerm_subscription_policy_assignment" "specific_tags_assignment" {
 
   parameters = jsonencode({
     "CostCenter" = {
-      "value" = "TS000 - Tecnologia e Servizi"
+      "value" = "TS000 - TECNOLOGIA & SERVIZI"
     },
-    "BusinessUnit" = {
-      "value" = [
-        "DevEx",
-      ]
+    "Owner" = {
+      "value" = "DevEx"
     },
-    "ManagementTeam" = {
-      "value" = [
-        "Developer Experience",
-      ]
+    "Environment" = {
+      "value" = "Dev"
     },
-    "SourceOrg" = {
-      "value" = "pagopa"
+    "SourcePrefix" = {
+      "value" = "https://github.com/pagopa/dx/blob/main/infra/"
     }
   })
 }

@@ -1,0 +1,37 @@
+{
+  "if": {
+    "anyOf": [
+      {
+        "value": "[and(contains(string(field('tags')), '\"CostCenter\":'), contains(string(field('tags')), '\"Owner\":'), contains(string(field('tags')), '\"Environment\":'), contains(string(field('tags')), '\"Source\":'))]",
+        "equals": false
+      },
+      {
+        "field": "tags['CostCenter']",
+        "notMatch": "[parameters('CostCenter')]"
+      },
+      {
+        "field": "tags['Owner']",
+        "notMatch": "[parameters('Owner')]"
+      },
+      {
+        "field": "tags['Environment']",
+        "notMatch": "[parameters('Environment')]"
+      },
+      {
+        "field": "tags['Source']",
+        "notLike": "[concat(parameters('SourcePrefix'), '*')]"
+      },
+      {
+        "value": "[contains(field('tags[Source]'), parameters('SourcePrefix'))]",
+        "equals": false
+      },
+      {
+        "field": "tags['Source']",
+        "equals": "[parameters('SourcePrefix')]"
+      }
+    ]
+  },
+  "then": {
+    "effect": "deny"
+  }
+}

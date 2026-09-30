@@ -176,7 +176,7 @@ resource "aws_s3vectors_index" "this" {
     sse_type    = "AES256"
   }]
   region             = var.naming_config.region
-  tags               = null
+  tags               = var.tags
   vector_bucket_name = aws_s3vectors_vector_bucket.this.vector_bucket_name
   metadata_configuration {
     non_filterable_metadata_keys = ["AMAZON_BEDROCK_METADATA", "AMAZON_BEDROCK_TEXT"]
