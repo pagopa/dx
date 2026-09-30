@@ -107,11 +107,9 @@ resource "github_actions_secret" "slack_webhook_url" {
 }
 ```
 
-When a drift is detected, a Slack message is sent to the selected channel for
-each affected environment. The environment is displayed in uppercase, and the
-workflow URL links directly to the job that detected the drift. If the job
-cannot be uniquely identified, the URL links to the current workflow run attempt
-instead. Commit metadata is not included.
+When drift is detected, a Slack message is sent to the selected channel for each
+affected environment. The message includes a link to inspect the workflow
+execution, and the Terraform resource counts.
 
 For example, a notification for `prod` appears similar to this:
 
