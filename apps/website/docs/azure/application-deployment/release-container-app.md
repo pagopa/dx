@@ -38,7 +38,7 @@ The workflow performs the following steps:
       - Use a `swap` flag to cut over immediately (100% traffic to new revision)
       - Use `nextPercentage` and `afterMs` to schedule gradual rollouts
    5. If no script is provided, perform a full switch (100% to new revision)
-5. After successful switch, remove `staging` and deactivate the old revision
+5. After successful switch, deactivate the old revision and remove `staging`
 6. In case of failure, the new revision is deactivated, while the old revision
    remains active
 
@@ -49,63 +49,25 @@ rules, deployments are approved automatically by default through the
 `GH_TOKEN_DEPLOYMENT_APPROVAL` repository secret. Set `enable_auto_deploy` to
 `false` to require a manual approval before the new revision receives traffic.
 
-Both the `release` and `swap` jobs use the `${environment}-cd` environment.
-Staging is available only after the release job has been approved and has
-deployed a healthy candidate. If the swap job is waiting for approval, that is
-an opportunity to test the candidate through its staging URL.
+Both the `release` and `swap` jobs use the `${environment}-cd` environment. Test
+the healthy candidate at its staging URL while the swap job waits for approval.
 
 ### Stable Staging URL
 
-In **Multiple revision mode**, tests can use a stable URL instead of discovering
-the new revision suffix after every deployment:
+In **Multiple** mode, test the healthy candidate at this stable URL, even when
+it receives 0% of application traffic:
 
 ```text
-Application: https://my-app.example.azurecontainerapps.io
-Staging:     https://my-app---staging.example.azurecontainerapps.io
+https://my-app---staging.example.azurecontainerapps.io
 ```
 
-The hostname contains **three dashes** before `staging`.
+The app URL remains the production endpoint. After a successful rollout and old
+revision deactivation, the workflow removes `staging`. On release or swap
+failure, cancellation, or rejected approval, the label may remain on the
+candidate until a later deployment.
 
-The label routes directly to the candidate even when that revision receives **0%
-of traffic through the application URL**. Reassigning `staging` transfers it
-from its previous revision; two revisions cannot hold the same label.
-
-The application URL remains the production endpoint. No `production` label is
-created, and the existing revision selection and traffic rollout are unchanged.
-There is no additional testing gate: test while swap approval is pending, or
-integrate tests into your existing canary monitoring script during incremental
-rollout. Without a monitoring script or a pending approval, promotion can be
-immediate.
-
-After a successful rollout reaches 100% and the old revision is deactivated, the
-workflow removes `staging`. These are separate operations, not an atomic slot
-swap. The staging URL is intended only for the candidate's deployment/testing
-window; the promoted revision is accessed through the application URL.
-
-On release failure, the candidate is deactivated through the existing failure
-path, but its staging label may remain until a later deployment transfers the
-label to a new candidate. If the swap fails before cleanup, the label likewise
-remains on the candidate as the existing failure path rolls it back and
-deactivates it. The workflow removes the label without checking its current
-owner, but only after the rollout and old-revision deactivation succeed.
-
-Cancellation or a rejected swap approval can prevent cleanup, especially when
-the swap job never starts. The label may then remain on the candidate until a
-later deployment transfers it. Workflow concurrency and environment approval
-behavior are unchanged; the staging URL is not a promise that a candidate stays
-available.
-
-### Why Single Mode Has No Staging Phase
-
-**Single revision mode** is unchanged. Azure automatically switches application
-traffic to the new revision when it is ready and deactivates the previous one.
-The workflow therefore has no controlled interval in which a healthy candidate
-can be tested at 0% production traffic before promotion.
-
-Revision labels are not inherently unsupported in Single mode, but adding one
-would not provide App Service-like pre-production staging semantics. Use
-Multiple mode for this workflow's stable staging URL and controlled revision
-promotion.
+**Single** mode is unchanged: Azure switches traffic as soon as the new revision
+is ready, so there is no pre-promotion testing window for a staging label.
 
 ### Implementing a Canary Test Script
 
