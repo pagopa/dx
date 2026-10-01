@@ -5,7 +5,9 @@ sidebar_position: 4
 # Required Resource Tags
 
 All cloud resources created with Terraform must be tagged according to the DX
-conventions. The complete list of available tags and their allowed values is
+conventions.
+
+The complete list of available tags and their allowed values is
 available in the
 [tagging strategy documentation](https://pagopa.atlassian.net/wiki/search?xpis=eyJicmlkZ2UiOiJxdWlja0ZpbmQiLCJpZCI6IjE3OTA4NjY2OTUxNzMiLCJzb3VyY2UiOiJjb25mbHVlbmNlIn0%3D&text=tagging%20strategy).
 
