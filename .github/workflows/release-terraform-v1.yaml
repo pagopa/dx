@@ -3,6 +3,12 @@ name: Release Terraform
 on:
   workflow_call:
 
+# Hold the lock through planning, approval and apply, not just during apply.
+concurrency:
+  group: terraform-release
+  cancel-in-progress: false
+  queue: max
+
 env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   ARM_USE_OIDC: true
@@ -218,11 +224,6 @@ jobs:
     if: ${{ needs.assess-affected-projects.outputs.project-targets != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
     environment: ${{ matrix.target.apply-github-environment }}
-    # Serialize applies to the same project so two pushes can't race each
-    # other on the same Terraform state, without cancelling an in-flight apply.
-    concurrency:
-      group: ${{ github.workflow }}-${{ matrix.target.project }}-apply
-      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
