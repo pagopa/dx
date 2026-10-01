@@ -16,7 +16,7 @@ runs:
   using: composite
   steps:
     - name: Download Terraform Plan Artifact
-      uses: pagopa/dx/.github/actions/download-artifact@main
+      uses: pagopa/dx/.github/actions/download-artifact@58e7c53aeee4fb593103e0776d9e99278caa77b8 # main
       with:
         bundle_name: ${{ inputs.artifact-name }}
         file_path: ${{ inputs.working-directory }}

@@ -82,7 +82,7 @@ jobs:
 
       - name: Docker Build and Push
         id: docker_build
-        uses: pagopa/dx/actions/docker-build-push@main
+        uses: pagopa/dx/actions/docker-build-push@58e7c53aeee4fb593103e0776d9e99278caa77b8 # main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -154,7 +154,7 @@ jobs:
           echo "image_ref=$image_ref" >> $GITHUB_OUTPUT
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@58e7c53aeee4fb593103e0776d9e99278caa77b8 # main
 
       - name: Configure AZ CLI
         run: |
@@ -343,7 +343,7 @@ jobs:
 
     steps:
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@58e7c53aeee4fb593103e0776d9e99278caa77b8 # main
 
       - name: Configure AZ CLI
         run: |
@@ -351,7 +351,7 @@ jobs:
           az configure --defaults group="$RESOURCE_GROUP_NAME"
 
       - name: Check for New Revision Errors and Increment Traffic
-        uses: pagopa/dx/actions/incremental-rollout@main
+        uses: pagopa/dx/actions/incremental-rollout@58e7c53aeee4fb593103e0776d9e99278caa77b8 # main
         with:
           resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
           resource_name: ${{ env.CONTAINER_APP_NAME }}

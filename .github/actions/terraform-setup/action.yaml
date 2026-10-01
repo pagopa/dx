@@ -18,7 +18,7 @@ runs:
     - name: Get Terraform Version
       if: ${{ inputs.terraform_version == '' }}
       id: get-version
-      uses: pagopa/dx/.github/actions/get-terraform-version@main
+      uses: pagopa/dx/.github/actions/get-terraform-version@58e7c53aeee4fb593103e0776d9e99278caa77b8 # main
       with:
         override_version: ${{ inputs.terraform_version }}
 

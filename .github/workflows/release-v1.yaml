@@ -42,7 +42,7 @@ jobs:
 
       - name: Setup Node.js
         id: node-setup
-        uses: pagopa/dx/.github/actions/node-setup@main
+        uses: pagopa/dx/.github/actions/node-setup@58e7c53aeee4fb593103e0776d9e99278caa77b8 # main
 
       - name: Update npm (for provenance support)
         shell: bash
