@@ -38,6 +38,9 @@ root, not the child module. Configure `default_tags { tags = local.tags }` on
 every AWS provider, including aliases; AWS Cloud Control resources still need
 explicit tags. Only add tags to resource types that support them.
 
+The development Azure policy does not require these tags to be present. If one
+of the four keys is assigned, the policy validates its name and allowed value.
+
 `CreatedBy`, `BusinessUnit`, and `ManagementTeam` are not required by this DevEx
 contract. Additional resource/module metadata tags may coexist with the four
 required tags.
@@ -46,10 +49,11 @@ This agreement does **not** change the tagging interfaces or examples of
 Registry-published Terraform modules, generic CLI scaffolds, or other teams'
 infrastructure. Those consumers retain their own tagging conventions.
 
-## Legacy Shared Convention
+## Existing Conventions Outside DevEx
 
-The shared v1 Azure tagging policy and the following examples remain available
-for teams that still use this convention. They are not the DevEx contract above.
+The following examples document conventions used by some non-DevEx
+infrastructure. They are not the DevEx contract above and are not enforced by
+the DevEx development policy.
 
 ### Required Tags
 

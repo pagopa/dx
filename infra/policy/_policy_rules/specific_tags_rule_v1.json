@@ -2,36 +2,116 @@
   "if": {
     "anyOf": [
       {
-        "field": "tags.CostCenter",
-        "notEquals": "[parameters('CostCenter')]"
-      },
-      {
-        "field": "tags.CreatedBy",
-        "notIn": ["Terraform", "ARM"]
-      },
-      {
-        "field": "tags.Environment",
-        "notIn": ["Prod", "Dev", "Uat"]
-      },
-      {
-        "field": "tags.BusinessUnit",
-        "notIn": "[parameters('BusinessUnit')]"
-      },
-      {
         "allOf": [
           {
-            "field": "tags.CreatedBy",
-            "equals": "Terraform"
+            "field": "tags['CostCenter']",
+            "exists": true
           },
           {
-            "field": "tags.Source",
-            "notLike": "[concat('https://github.com/', parameters('SourceOrg'), '/*')]"
+            "field": "tags['CostCenter']",
+            "notMatch": "[parameters('CostCenter')]"
           }
         ]
       },
       {
-        "field": "tags.ManagementTeam",
-        "notIn": "[parameters('ManagementTeam')]"
+        "allOf": [
+          {
+            "field": "tags['Owner']",
+            "exists": true
+          },
+          {
+            "field": "tags['Owner']",
+            "notMatch": "DevEx"
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags['Environment']",
+            "exists": true
+          },
+          {
+            "field": "tags['Environment']",
+            "notMatch": "Dev"
+          },
+          {
+            "field": "tags['Environment']",
+            "notMatch": "Uat"
+          },
+          {
+            "field": "tags['Environment']",
+            "notMatch": "Prod"
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags['Source']",
+            "exists": true
+          },
+          {
+            "anyOf": [
+              {
+                "field": "tags['Source']",
+                "notLike": "https://github.com/pagopa/dx/blob/main/infra/*"
+              },
+              {
+                "field": "tags['Source']",
+                "equals": "https://github.com/pagopa/dx/blob/main/infra/"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags['CostCenter']",
+            "exists": true
+          },
+          {
+            "value": "[contains(string(field('tags')), '\"CostCenter\":')]",
+            "equals": false
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags['Owner']",
+            "exists": true
+          },
+          {
+            "value": "[contains(string(field('tags')), '\"Owner\":')]",
+            "equals": false
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags['Environment']",
+            "exists": true
+          },
+          {
+            "value": "[contains(string(field('tags')), '\"Environment\":')]",
+            "equals": false
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags['Source']",
+            "exists": true
+          },
+          {
+            "value": "[contains(string(field('tags')), '\"Source\":')]",
+            "equals": false
+          }
+        ]
       }
     ]
   },

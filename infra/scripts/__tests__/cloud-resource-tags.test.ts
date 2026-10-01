@@ -3,8 +3,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import policyParameters from "../../policy/_policy_rules/specific_tags_parameters_v2.json" with { type: "json" };
-import policyRule from "../../policy/_policy_rules/specific_tags_rule_v2.json" with { type: "json" };
+import policyRule from "../../policy/_policy_rules/specific_tags_rule_v1.json" with { type: "json" };
 
 const infraDirectory = new URL("../../", import.meta.url);
 const stacks = ["bootstrapper", "core", "resources"];
@@ -128,57 +127,80 @@ describe("DevEx cloud resource tags", () => {
   );
 });
 
-describe("DevEx v2 tagging policy", () => {
-  it("only requires the four agreed tags", () => {
-    expect(Object.keys(policyParameters).sort()).toEqual([
-      "CostCenter",
-      "Environment",
-      "Owner",
-      "SourcePrefix",
-    ]);
-    expect(policyParameters.Environment.allowedValues).toEqual([
-      "Dev",
-      "Uat",
-      "Prod",
-    ]);
+describe("DevEx tagging policy", () => {
+  it("only validates tags that are present", () => {
+    for (const tag of ["CostCenter", "Owner", "Environment", "Source"]) {
+      expect(policyRule.if.anyOf).toContainEqual(
+        expect.objectContaining({
+          allOf: expect.arrayContaining([
+            { exists: true, field: `tags['${tag}']` },
+          ]),
+        }),
+      );
+    }
     expect(policyRule.then.effect).toBe("deny");
   });
 
-  it.each(["CostCenter", "Owner", "Environment"])(
-    "checks the %s value case-sensitively",
-    (tag) => {
-      expect(policyRule.if.anyOf).toContainEqual({
-        field: `tags['${tag}']`,
-        notMatch: `[parameters('${tag}')]`,
-      });
-    },
-  );
-
-  it("checks exact tag names instead of relying on case-insensitive Azure lookup", () => {
+  it("limits CostCenter to the assigned value when present", () => {
     expect(policyRule.if.anyOf).toContainEqual({
-      equals: false,
-      value:
-        "[and(contains(string(field('tags')), '\"CostCenter\":'), contains(string(field('tags')), '\"Owner\":'), contains(string(field('tags')), '\"Environment\":'), contains(string(field('tags')), '\"Source\":'))]",
+      allOf: [
+        { exists: true, field: "tags['CostCenter']" },
+        {
+          field: "tags['CostCenter']",
+          notMatch: "[parameters('CostCenter')]",
+        },
+      ],
     });
   });
 
-  it("requires a nonempty source path under the case-sensitive default-branch prefix", () => {
-    expect(policyRule.if.anyOf).toEqual(
-      expect.arrayContaining([
+  it("limits Environment to the three agreed values when present", () => {
+    expect(policyRule.if.anyOf).toContainEqual({
+      allOf: [
+        { exists: true, field: "tags['Environment']" },
+        { field: "tags['Environment']", notMatch: "Dev" },
+        { field: "tags['Environment']", notMatch: "Uat" },
+        { field: "tags['Environment']", notMatch: "Prod" },
+      ],
+    });
+  });
+
+  it("limits Owner and Source when present", () => {
+    expect(policyRule.if.anyOf).toContainEqual({
+      allOf: [
+        { exists: true, field: "tags['Owner']" },
+        { field: "tags['Owner']", notMatch: "DevEx" },
+      ],
+    });
+    expect(policyRule.if.anyOf).toContainEqual({
+      allOf: [
+        { exists: true, field: "tags['Source']" },
         {
-          field: "tags['Source']",
-          notLike: "[concat(parameters('SourcePrefix'), '*')]",
+          anyOf: [
+            {
+              field: "tags['Source']",
+              notLike: "https://github.com/pagopa/dx/blob/main/infra/*",
+            },
+            {
+              equals: "https://github.com/pagopa/dx/blob/main/infra/",
+              field: "tags['Source']",
+            },
+          ],
         },
-        {
-          equals: false,
-          value:
-            "[contains(field('tags[Source]'), parameters('SourcePrefix'))]",
-        },
-        {
-          equals: "[parameters('SourcePrefix')]",
-          field: "tags['Source']",
-        },
-      ]),
-    );
+      ],
+    });
+  });
+
+  it("requires exact tag-name casing only when a tag is present", () => {
+    for (const tag of ["CostCenter", "Owner", "Environment", "Source"]) {
+      expect(policyRule.if.anyOf).toContainEqual({
+        allOf: [
+          { exists: true, field: `tags['${tag}']` },
+          {
+            equals: false,
+            value: `[contains(string(field('tags')), '"${tag}":')]`,
+          },
+        ],
+      });
+    }
   });
 });
