@@ -471,6 +471,10 @@ describe("getProject application initialization and tags", () => {
       expect(targets["apply"]).toEqual(
         expect.objectContaining({
           dependsOn: ["init"],
+          executor: "@pagopa/nx-terraform-plugin:apply",
+          options: {
+            projectRoot: "{projectRoot}",
+          },
         }),
       );
     });

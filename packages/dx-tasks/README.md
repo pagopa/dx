@@ -8,6 +8,7 @@ Reusable task implementations and a small dispatcher for DX orchestration tools.
 | ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `terraformInit`   | Initializes Terraform, optionally locks providers for configured platforms, and enforces the downloaded module lock.                               |
 | `terraformPlan`   | Runs `terraform plan` for a module path, handles common flags, and masks sensitive output before printing it.                                      |
+| `terraformApply`  | Applies a saved plan with masked output; without a plan file, preserves interactive local Terraform apply. |
 | `renderReport`    | Reads the persisted reports under `.dx-tasks` and renders them in a target format (currently `markdown`) to stdout, using per-namespace renderers. |
 | `prComment`       | Adds a comment to a GitHub pull request, optionally replacing existing comments that match a search pattern.                                       |
 | `reportPrComment` | Renders persisted reports and posts the rendered Markdown as a GitHub pull request comment.                                                        |
@@ -54,6 +55,14 @@ This prints the masked Terraform output to stdout and writes the JSON report und
 ```text
 .dx-tasks/terraform-plan/Li9pbmZyYS9tb2R1bGVzL2V4YW1wbGU.json
 ```
+
+Plan logs, reports, and saved-plan apply logs also mask `hidden-link` and
+`APPINSIGHTS_INSTRUMENTATIONKEY`, even when Terraform does not mark them sensitive.
+
+`terraformApply` accepts `modulePath` and an optional `planFile` relative to that
+directory. Saved plans are non-interactive and their output is printed after
+masking. Without a saved plan, output is inherited directly to keep local
+approval prompts visible; this interactive mode does not filter output.
 
 The `terraform-plan` namespace is registered once on the shared report store, so other tasks can safely reuse the same `ReportStore` instance without overwriting each other's reports.
 

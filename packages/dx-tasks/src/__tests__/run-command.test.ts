@@ -84,6 +84,27 @@ describe("runCommand", () => {
     });
   });
 
+  it("inherits output for interactive commands so prompts remain visible", async () => {
+    const child = new MockChildProcess();
+    mockSpawn.mockReturnValue(child);
+
+    const resultPromise = runCommand(
+      "terraform",
+      ["apply"],
+      "/tmp/module",
+      {},
+      true,
+    );
+
+    expect(mockSpawn).toHaveBeenCalledWith(
+      "terraform",
+      ["apply"],
+      expect.objectContaining({ stdio: "inherit" }),
+    );
+    child.emit("close", 0, null);
+    await expect(resultPromise).resolves.toMatchObject({ exitCode: 0 });
+  });
+
   it("rejects when the process closes without an exit code or signal", async () => {
     const child = new MockChildProcess();
     mockSpawn.mockReturnValue(child);
