@@ -11,7 +11,7 @@ management.
 ## DevEx Accounts and Subscriptions
 
 Resources in DevEx Azure subscriptions and AWS accounts follow the
-[DevEx cloud resource tagging agreement](https://pagopa.atlassian.net/wiki/spaces/DevEx/pages/3366388030/Tag+risorse+cloud+DevEx).
+[DevEx cloud resource tagging agreement](https://pagopa.atlassian.net/wiki/search?text=Tag%20risorse%20cloud%20DevEx).
 Tag names and values are **case-sensitive**:
 
 | Tag           | Required value                                                |

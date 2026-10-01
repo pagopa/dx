@@ -25,18 +25,4 @@ when any of its keys are assigned:
 
 Tags are optional: a resource can be created without these tags, or with only
 some of them. If a selected tag is present, its name must use the exact casing
-above and its value must match the allowed value(s). The policy uses
-case-sensitive `notMatch` checks. All values are hardcoded in the policy rule;
-the definition and assignment have no parameters.
-
-The policy uses `Indexed` mode to target resources that support tags. It does
-not retag existing resources automatically or govern AWS resources.
-
-Azure Policy does not allow parameters to be removed from an assigned
-definition. The development policy therefore creates a v2 definition without
-parameters, switches the assignment to it, and then removes the previous
-definition.
-
-Apply `infra/policy/dev` before the updated development bootstrapper, core, and
-resources configurations. The previous deny rule may reject the new tag values
-while it is still active.
+above and its value must match the allowed value(s).

@@ -19,18 +19,6 @@ to a non-empty Terraform root under
 `https://github.com/pagopa/dx/blob/main/infra/`. Tag names and values are
 checked with the agreed casing.
 
-Azure Policy does not allow parameters to be removed from an assigned
-definition, so the development configuration creates a v2 definition with no
-parameters and switches the assignment to it before deleting the previous
-definition. Apply the updated development policy before the development
-bootstrapper, core, and resources configurations, because the previous deny
-rule may reject the new tag values. The policy does not automatically retag
-existing resources.
-
-The policy uses `Indexed` mode for taggable Azure resources. DX configures AWS
-provider default tags separately and passes explicit tags to AWS Cloud Control
-resources.
-
 ## Local Regression Checks
 
 Run `pnpm nx test pre_commit_scripts` to check the nine DX root tag maps, AWS
