@@ -8,7 +8,7 @@ Additionally, the `dev` directory contains Terraform code used to deploy the def
 ```shell
 infra/
 ├── policy/
-│   ├── _policy_rules/        # Contains JSON files defining shared policy rules
+│   ├── _policy_rules/        # Contains JSON files defining shared policy rules and parameters
 │   ├── dev/                  # Policies assigned to the development environment (DEV-ENGINEERING)
 ```
 
@@ -20,8 +20,62 @@ This directory contains JSON files that define policy rules to be used in Azure,
 
 These directory contain Terraform resources that deploys the defined policy rules into the provided Azure resources (e.g., Subscriptions).
 
-## Development Assignment
+## Configuration
 
-The DevEx rule and assignment are configured in `infra/policy/dev`. The
-assignment sets the allowed tag values and keeps the tags optional
-(`requireTags = false`).
+Each repository that needs to apply a policy must replicate the same structure within the `infra` directory, excluding `_policy_rules`. Terraform resources must reference the policy rules and parameters definition from the `dx` repository. For example:
+
+```hcl
+# infra/policy/prod/policy_specific_tags.tf
+
+data "http" "specific_tags_policy_rule" {
+  url = "https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/policy/_policy_rules/specific_tags_rule_v2.json"
+}
+
+data "http" "specific_tags_policy_parameters" {
+  url = "https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/policy/_policy_rules/specific_tags_parameters_v2.json"
+}
+
+
+resource "azurerm_policy_definition" "specific_tags_policy" {
+  name         = "${local.project}-specific-tags-policy-v2"
+  policy_type  = "Custom"
+  mode         = "Indexed"
+  display_name = "DevEx Enforce specific tags and values on resources"
+  description  = "Ensures that resources have specific tags and values during creation."
+
+  metadata = jsonencode({
+    category = "Custom DevEx"
+    version  = "2.0.0"
+  })
+
+  policy_rule = file(data.http.specific_tags_policy_rule.response_body)
+
+  parameters = file(data.http.specific_tags_policy_parameters.response_body)
+}
+
+
+resource "azurerm_subscription_policy_assignment" "specific_tags_assignment" {
+  name                 = "${local.project}-specific-tags-assignment"
+  display_name         = "DevEx Enforce specific tags and values on resources"
+  policy_definition_id = azurerm_policy_definition.specific_tags_policy.id
+  subscription_id      = data.azurerm_subscription.current.id
+
+  parameters = jsonencode({
+    "allowedCostCenters" = {
+      "value" = ["TS000 - TECNOLOGIA & SERVIZI"]
+    },
+    "allowedOwners" = {
+      "value" = ["DevEx"]
+    },
+    "allowedEnvironments" = {
+      "value" = ["Dev", "Uat", "Prod"]
+    },
+    "allowedSourcePattern" = {
+      "value" = "https://github.com/pagopa/dx/blob/main/infra/*"
+    },
+    "requireTags" = {
+      "value" = false
+    }
+  })
+}
+```
