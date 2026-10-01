@@ -17,7 +17,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -26,10 +26,8 @@ variables {
 
   tags = {
     CostCenter     = "TS000 - TECNOLOGIA & SERVIZI"
-    Environment    = "Dev"
-    Owner          = "DevEx"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/<module_name>"
-    Test           = "true"
+    Environment    = "Uat"
+    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/<module_name>/tests"
     TestName       = "<Module Name> unit tests"
   }
 
