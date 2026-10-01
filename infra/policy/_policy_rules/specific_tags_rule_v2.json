@@ -9,7 +9,7 @@
           },
           {
             "field": "tags['CostCenter']",
-            "notMatch": "[parameters('CostCenter')]"
+            "notMatch": "TS000 - TECNOLOGIA & SERVIZI"
           }
         ]
       },

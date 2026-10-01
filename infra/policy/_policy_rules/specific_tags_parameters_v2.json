@@ -1,9 +1,0 @@
-{
-  "CostCenter": {
-    "type": "String",
-    "metadata": {
-      "displayName": "Allowed CostCenter",
-      "description": "Specify the allowed CostCenter value."
-    }
-  }
-}

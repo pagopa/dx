@@ -10,15 +10,13 @@ run "devex_tag_policy_contract" {
   command = plan
 
   assert {
-    condition = jsondecode(azurerm_subscription_policy_assignment.specific_tags_assignment.parameters) == {
-      CostCenter = { value = "TS000 - TECNOLOGIA & SERVIZI" }
-    }
-    error_message = "The development assignment must use only the agreed CostCenter policy parameter."
+    condition     = azurerm_subscription_policy_assignment.specific_tags_assignment.parameters == null
+    error_message = "The development assignment must not require policy parameters."
   }
 
   assert {
-    condition     = toset(keys(jsondecode(azurerm_policy_definition.specific_tags_policy.parameters))) == toset(["CostCenter"])
-    error_message = "The policy definition must contain only the CostCenter parameter."
+    condition     = azurerm_policy_definition.specific_tags_policy.parameters == null
+    error_message = "The policy definition must not declare parameters."
   }
 
   assert {
@@ -29,6 +27,11 @@ run "devex_tag_policy_contract" {
   assert {
     condition     = strcontains(azurerm_policy_definition.specific_tags_policy.policy_rule, "\"exists\": true")
     error_message = "Tag-value checks must be conditional on the tag being assigned."
+  }
+
+  assert {
+    condition     = strcontains(azurerm_policy_definition.specific_tags_policy.policy_rule, "TS000 - TECNOLOGIA & SERVIZI") && !strcontains(azurerm_policy_definition.specific_tags_policy.policy_rule, "parameters(")
+    error_message = "The agreed CostCenter value must be hardcoded in the rule without policy parameters."
   }
 
   assert {

@@ -3,7 +3,6 @@ import { readdir, readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
-import policyParameters from "../../policy/_policy_rules/specific_tags_parameters_v2.json" with { type: "json" };
 import policyRule from "../../policy/_policy_rules/specific_tags_rule_v2.json" with { type: "json" };
 
 const infraDirectory = new URL("../../", import.meta.url);
@@ -129,10 +128,6 @@ describe("DevEx cloud resource tags", () => {
 });
 
 describe("DevEx tagging policy", () => {
-  it("uses only the CostCenter policy parameter", () => {
-    expect(Object.keys(policyParameters)).toEqual(["CostCenter"]);
-  });
-
   it("only validates tags that are present", () => {
     for (const tag of ["CostCenter", "Owner", "Environment", "Source"]) {
       expect(policyRule.if.anyOf).toContainEqual(
@@ -152,7 +147,7 @@ describe("DevEx tagging policy", () => {
         { exists: true, field: "tags['CostCenter']" },
         {
           field: "tags['CostCenter']",
-          notMatch: "[parameters('CostCenter')]",
+          notMatch: "TS000 - TECNOLOGIA & SERVIZI",
         },
       ],
     });

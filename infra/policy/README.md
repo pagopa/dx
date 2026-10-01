@@ -10,21 +10,22 @@ DevEx-owned resources follow the case-sensitive `CostCenter = "TS000 - TECNOLOGI
 `Owner = "DevEx"`, `Environment = "Dev"/"Uat"/"Prod"`, and `Source` pointing to
 the Terraform configuration root on the default branch.
 
-The policy rule and parameters are in `_policy_rules/specific_tags_rule_v2.json`
-and `_policy_rules/specific_tags_parameters_v2.json`. These tags are optional:
-resources may omit them or assign only a subset. When present, `CostCenter` must
-match the assigned DevEx value, `Owner` must be `DevEx`, `Environment` must be
-`Dev`, `Uat`, or `Prod`, and `Source` must point to a non-empty Terraform root
-under `https://github.com/pagopa/dx/blob/main/infra/`. Tag names and values are
+The policy rule is in `_policy_rules/specific_tags_rule_v2.json`. It has no
+parameters: all allowed values are defined directly by the DevEx contract.
+These tags are optional: resources may omit them or assign only a subset. When
+present, `CostCenter` must be `TS000 - TECNOLOGIA & SERVIZI`, `Owner` must be
+`DevEx`, `Environment` must be `Dev`, `Uat`, or `Prod`, and `Source` must point
+to a non-empty Terraform root under
+`https://github.com/pagopa/dx/blob/main/infra/`. Tag names and values are
 checked with the agreed casing.
 
-The development assignment uses only the `CostCenter` parameter. Azure Policy
-does not allow parameters to be removed from an assigned definition, so the
-development configuration creates a v2 definition and switches the assignment
-to it before deleting the previous definition. Apply the updated development
-policy before the development bootstrapper, core, and resources configurations,
-because the previous deny rule may reject the new tag values. The policy does
-not automatically retag existing resources.
+Azure Policy does not allow parameters to be removed from an assigned
+definition, so the development configuration creates a v2 definition with no
+parameters and switches the assignment to it before deleting the previous
+definition. Apply the updated development policy before the development
+bootstrapper, core, and resources configurations, because the previous deny
+rule may reject the new tag values. The policy does not automatically retag
+existing resources.
 
 The policy uses `Indexed` mode for taggable Azure resources. DX configures AWS
 provider default tags separately and passes explicit tags to AWS Cloud Control
@@ -43,7 +44,7 @@ disabled; it does not deploy resources or evaluate the rule in Azure.
 ```shell
 infra/
 ├── policy/
-│   ├── _policy_rules/        # Contains JSON files defining shared policy rules and parameters
+│   ├── _policy_rules/        # Contains JSON files defining shared policy rules
 │   ├── dev/                  # Policies assigned to the development environment (DEV-ENGINEERING)
 ```
 
@@ -57,5 +58,5 @@ These directory contain Terraform resources that deploys the defined policy rule
 
 ## Development Assignment
 
-The DevEx rule and assignment are configured in `infra/policy/dev`. The
-assignment supplies only the `CostCenter` parameter.
+The DevEx rule and assignment are configured in `infra/policy/dev`; the
+assignment requires no parameters.

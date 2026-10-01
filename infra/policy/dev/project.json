@@ -14,7 +14,7 @@
       "inputs": [
         "default",
         "{projectRoot}/tests/**/*.tftest.hcl",
-        "{workspaceRoot}/infra/policy/_policy_rules/*_v2.json"
+        "{workspaceRoot}/infra/policy/_policy_rules/specific_tags_rule_v2.json"
       ],
       "options": {
         "args": ["-filter=tests/unit.tftest.hcl"]

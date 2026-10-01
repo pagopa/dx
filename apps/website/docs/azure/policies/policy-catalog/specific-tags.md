@@ -12,8 +12,6 @@ of tagging rules.
 
 The DX development subscription uses
 [specific_tags_rule_v2.json](https://github.com/pagopa/dx/blob/main/infra/policy/_policy_rules/specific_tags_rule_v2.json)
-and
-[specific_tags_parameters_v2.json](https://github.com/pagopa/dx/blob/main/infra/policy/_policy_rules/specific_tags_parameters_v2.json).
 It validates the
 [DevEx tagging contract](../../../terraform/required-tags.md#devex-accounts-and-subscriptions)
 when any of its keys are assigned:
@@ -28,16 +26,16 @@ when any of its keys are assigned:
 Tags are optional: a resource can be created without these tags, or with only
 some of them. If a selected tag is present, its name must use the exact casing
 above and its value must match the allowed value(s). The policy uses
-case-sensitive `notMatch` checks. The development assignment uses only the
-`CostCenter` policy parameter.
+case-sensitive `notMatch` checks. All values are hardcoded in the policy rule;
+the definition and assignment have no parameters.
 
 The policy uses `Indexed` mode to target resources that support tags. It does
 not retag existing resources automatically or govern AWS resources.
 
 Azure Policy does not allow parameters to be removed from an assigned
-definition. The development policy therefore creates a v2 definition with only
-the current CostCenter parameter, switches the assignment to it, and then
-removes the previous definition.
+definition. The development policy therefore creates a v2 definition without
+parameters, switches the assignment to it, and then removes the previous
+definition.
 
 Apply `infra/policy/dev` before the updated development bootstrapper, core, and
 resources configurations. The previous deny rule may reject the new tag values
