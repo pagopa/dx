@@ -41,9 +41,8 @@ explicit tags. Only add tags to resource types that support them.
 The development Azure policy does not require these tags to be present. If one
 of the four keys is assigned, the policy validates its name and allowed value.
 
-`CreatedBy`, `BusinessUnit`, and `ManagementTeam` are not required by this DevEx
-contract. Additional resource/module metadata tags may coexist with the four
-required tags.
+Additional resource/module metadata tags may coexist with the four required
+tags.
 
 This agreement does **not** change the tagging interfaces or examples of
 Registry-published Terraform modules, generic CLI scaffolds, or other teams'

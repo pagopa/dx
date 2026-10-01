@@ -11,22 +11,19 @@ run "devex_tag_policy_contract" {
 
   assert {
     condition = jsondecode(azurerm_subscription_policy_assignment.specific_tags_assignment.parameters) == {
-      CostCenter     = { value = "TS000 - TECNOLOGIA & SERVIZI" }
-      BusinessUnit   = { value = ["DevEx"] }
-      ManagementTeam = { value = ["Developer Experience"] }
-      SourceOrg      = { value = "pagopa" }
+      CostCenter = { value = "TS000 - TECNOLOGIA & SERVIZI" }
     }
-    error_message = "The development assignment must use the agreed CostCenter value and preserve the existing policy parameters."
+    error_message = "The development assignment must use only the agreed CostCenter policy parameter."
   }
 
   assert {
-    condition     = toset(keys(jsondecode(azurerm_policy_definition.specific_tags_policy.parameters))) == toset(["CostCenter", "BusinessUnit", "ManagementTeam", "SourceOrg"])
-    error_message = "The existing policy parameter schema must remain stable."
+    condition     = toset(keys(jsondecode(azurerm_policy_definition.specific_tags_policy.parameters))) == toset(["CostCenter"])
+    error_message = "The policy definition must contain only the CostCenter parameter."
   }
 
   assert {
-    condition     = azurerm_policy_definition.specific_tags_policy.name == "dx-d-itn-specific-tags-policy"
-    error_message = "The existing policy definition should be updated instead of replacing it with a new version."
+    condition     = azurerm_policy_definition.specific_tags_policy.name == "dx-d-itn-specific-tags-policy-v2"
+    error_message = "A new definition is required to remove parameters from the existing assigned policy."
   }
 
   assert {

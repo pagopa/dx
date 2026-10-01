@@ -39,7 +39,7 @@
           "{workspaceRoot}/infra/bootstrapper/**/*.tf",
           "{workspaceRoot}/infra/core/**/*.tf",
           "{workspaceRoot}/infra/resources/**/*.tf",
-          "{workspaceRoot}/infra/policy/_policy_rules/*_v1.json",
+          "{workspaceRoot}/infra/policy/_policy_rules/*_v2.json",
           "{workspaceRoot}/infra/policy/dev/**/*.tf"
         ]
       }
