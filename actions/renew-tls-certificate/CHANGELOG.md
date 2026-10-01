@@ -1,3 +1,14 @@
+## 0.0.7 (2026-10-01)
+
+### 🩹 Fixes
+
+- Update PyJWT dependency ([#2283](https://github.com/pagopa/dx/pull/2283))
+- Update PyJWT and urllib3 dependencies ([#2285](https://github.com/pagopa/dx/pull/2285))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
 ## 0.0.6 (2026-09-08)
 
 ### 🩹 Fixes

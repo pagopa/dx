@@ -1,3 +1,21 @@
+## 0.2.16 (2026-10-01)
+
+### 🩹 Fixes
+
+- Fix generated alerts and dashboards: ([#2277](https://github.com/pagopa/dx/pull/2277))
+
+  - sanitize dashboard resource names so they are valid Azure resource names (previously names with `/`, `.`, etc. broke `terraform plan`)
+  - propagate the global query config (`response_time_percentile`) to Terraform alarms so they match the dashboard
+  - use the configured percentile in the response time tile metadata instead of hardcoding `duration_percentile_95`
+  - honour `status_code_categories` in the response codes query instead of hardcoding 1XX..5XX
+  - describe the configured availability/response time thresholds in alert descriptions
+  - stop emitting a fabricated `filteredPartIds` list that referenced non-existent parts
+  - match the path component of API Management request URLs (which are absolute) and emit escaped regex patterns as valid Kusto verbatim strings
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.2.15 (2026-09-22)
 
 ### 🧱 Updated Dependencies

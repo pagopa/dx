@@ -1,3 +1,13 @@
+## 2.0.4 (2026-10-01)
+
+### 🩹 Fixes
+
+- Incremented minimum version of pagopa/dx azure provider from 0.0 to 0.1 ([#2248](https://github.com/pagopa/dx/pull/2248))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 2.0.3 (2026-09-16)
 
 ### 🩹 Fixes

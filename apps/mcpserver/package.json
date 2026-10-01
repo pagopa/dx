@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-mcpserver",
-  "version": "0.2.17",
+  "version": "0.2.18",
   "private": true,
   "description": "An MCP server that supports developers using DX tools.",
   "keywords": [

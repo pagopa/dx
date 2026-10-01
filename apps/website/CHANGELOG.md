@@ -1,3 +1,13 @@
+## 0.22.11 (2026-10-01)
+
+### 🩹 Fixes
+
+- Simplify drift detection Slack notifications with environment labels and direct job links, without changing caller configuration. ([#2280](https://github.com/pagopa/dx/pull/2280))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.22.10 (2026-09-24)
 
 ### 🩹 Fixes
