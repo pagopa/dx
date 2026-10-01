@@ -1,31 +1,7 @@
 # DX - Azure Policy
 
-This directory contains Azure Policy rules and assignments used by DX's Azure
-environments. The `dev` directory deploys the DevEx tagging policy to the DX
-development subscription.
-
-## DevEx Tagging Policy
-
-DevEx-owned resources follow the case-sensitive `CostCenter = "TS000 - TECNOLOGIA & SERVIZI"`,
-`Owner = "DevEx"`, `Environment = "Dev"/"Uat"/"Prod"`, and `Source` pointing to
-the Terraform configuration root on the default branch.
-
-The policy rule is in `_policy_rules/specific_tags_rule_v2.json`. It has no
-parameters: all allowed values are defined directly by the DevEx contract.
-These tags are optional: resources may omit them or assign only a subset. When
-present, `CostCenter` must be `TS000 - TECNOLOGIA & SERVIZI`, `Owner` must be
-`DevEx`, `Environment` must be `Dev`, `Uat`, or `Prod`, and `Source` must point
-to a non-empty Terraform root under
-`https://github.com/pagopa/dx/blob/main/infra/`. Tag names and values are
-checked with the agreed casing.
-
-## Local Regression Checks
-
-Run `pnpm nx test pre_commit_scripts` to check the nine DX root tag maps, AWS
-provider defaults, explicit resource tags, and the optional policy contract.
-Run `pnpm nx test policy-dev` to check the Terraform assignment with a mocked
-AzureRM provider. This target initializes providers with the remote backend
-disabled; it does not deploy resources or evaluate the rule in Azure.
+This directory contains shared Azure Policy rules that any team can choose to apply to its own Azure subscriptions to ensure consistent governance across different environments.
+Additionally, the `dev` directory contains Terraform code used to deploy the defined Policy Rules to the DX development subscription on Azure.`
 
 ## Repository Structure
 
