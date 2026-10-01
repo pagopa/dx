@@ -270,28 +270,6 @@ jobs:
             --yes \
             --output none
 
-          app=$(az containerapp show \
-            --name "$CONTAINER_APP_NAME" \
-            --resource-group "$RESOURCE_GROUP_NAME" \
-            --output json)
-          staging_revision=$(jq -er '
-            [.properties.configuration.ingress.traffic[] | select(.label == "staging") | .revisionName] |
-            if length == 1 then .[0] else error("Cannot identify the staging revision") end
-          ' <<< "$app")
-          if [[ "$staging_revision" != "$NEW_REVISION_NAME" ]]; then
-            echo "::error::The staging label does not target candidate revision $NEW_REVISION_NAME."
-            exit 1
-          fi
-
-          app_fqdn=$(jq -er '.properties.configuration.ingress.fqdn' <<< "$app")
-          if [[ "$app_fqdn" != "$CONTAINER_APP_NAME".* ]]; then
-            echo "::error::Cannot derive the staging URL from Container App FQDN: $app_fqdn"
-            exit 1
-          fi
-          staging_url="https://${CONTAINER_APP_NAME}---staging.${app_fqdn#*.}"
-          printf "### Staging revision\n\nRevision: \`%s\`\n\nTest URL: %s\n" \
-            "$NEW_REVISION_NAME" "$staging_url" >> "$GITHUB_STEP_SUMMARY"
-
       - name: Remove Failed Staging Label
         if:
           ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&

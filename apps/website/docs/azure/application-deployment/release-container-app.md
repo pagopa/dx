@@ -64,8 +64,7 @@ Application: https://my-app.example.azurecontainerapps.io
 Staging:     https://my-app---staging.example.azurecontainerapps.io
 ```
 
-The hostname contains **three dashes** before `staging`. The workflow reports
-the candidate revision and its staging URL in the release job summary.
+The hostname contains **three dashes** before `staging`.
 
 The label routes directly to the candidate even when that revision receives **0%
 of traffic through the application URL**. Reassigning `staging` transfers it
