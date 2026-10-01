@@ -38,8 +38,9 @@ root, not the child module. Configure `default_tags { tags = local.tags }` on
 every AWS provider, including aliases; AWS Cloud Control resources still need
 explicit tags. Only add tags to resource types that support them.
 
-The development Azure policy does not require these tags to be present. If one
-of the four keys is assigned, the policy validates its name and allowed value.
+The development Azure policy does not require these tags by default
+(`requireTags = false`). If one of the four keys is assigned, the policy
+validates its name and allowed value.
 
 Additional resource/module metadata tags may coexist with the four required
 tags.

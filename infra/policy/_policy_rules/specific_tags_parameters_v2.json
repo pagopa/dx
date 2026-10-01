@@ -1,0 +1,33 @@
+{
+  "allowedCostCenters": {
+    "type": "Array",
+    "metadata": {
+      "description": "Allowed values for the CostCenter tag."
+    }
+  },
+  "allowedOwners": {
+    "type": "Array",
+    "metadata": {
+      "description": "Allowed values for the Owner tag."
+    }
+  },
+  "allowedEnvironments": {
+    "type": "Array",
+    "metadata": {
+      "description": "Allowed values for the Environment tag."
+    }
+  },
+  "allowedSourcePattern": {
+    "type": "String",
+    "metadata": {
+      "description": "Pattern (supports *) that the Source tag must match."
+    }
+  },
+  "requireTags": {
+    "type": "Boolean",
+    "metadata": {
+      "description": "When true, CostCenter, Owner, Environment and Source tags are mandatory."
+    },
+    "defaultValue": false
+  }
+}

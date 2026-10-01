@@ -8,8 +8,8 @@
             "exists": true
           },
           {
-            "field": "tags['CostCenter']",
-            "notMatch": "TS000 - TECNOLOGIA & SERVIZI"
+            "value": "[contains(parameters('allowedCostCenters'), field('tags[CostCenter]'))]",
+            "equals": false
           }
         ]
       },
@@ -20,8 +20,8 @@
             "exists": true
           },
           {
-            "field": "tags['Owner']",
-            "notMatch": "DevEx"
+            "value": "[contains(parameters('allowedOwners'), field('tags[Owner]'))]",
+            "equals": false
           }
         ]
       },
@@ -32,16 +32,8 @@
             "exists": true
           },
           {
-            "field": "tags['Environment']",
-            "notMatch": "Dev"
-          },
-          {
-            "field": "tags['Environment']",
-            "notMatch": "Uat"
-          },
-          {
-            "field": "tags['Environment']",
-            "notMatch": "Prod"
+            "value": "[contains(parameters('allowedEnvironments'), field('tags[Environment]'))]",
+            "equals": false
           }
         ]
       },
@@ -52,16 +44,8 @@
             "exists": true
           },
           {
-            "anyOf": [
-              {
-                "field": "tags['Source']",
-                "notLike": "https://github.com/pagopa/dx/blob/main/infra/*"
-              },
-              {
-                "field": "tags['Source']",
-                "equals": "https://github.com/pagopa/dx/blob/main/infra/"
-              }
-            ]
+            "field": "tags['Source']",
+            "notLike": "[parameters('allowedSourcePattern')]"
           }
         ]
       },
@@ -110,6 +94,54 @@
           {
             "value": "[contains(string(field('tags')), '\"Source\":')]",
             "equals": false
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags['CostCenter']",
+            "exists": false
+          },
+          {
+            "value": "[parameters('requireTags')]",
+            "equals": true
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags['Owner']",
+            "exists": false
+          },
+          {
+            "value": "[parameters('requireTags')]",
+            "equals": true
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags['Environment']",
+            "exists": false
+          },
+          {
+            "value": "[parameters('requireTags')]",
+            "equals": true
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "field": "tags['Source']",
+            "exists": false
+          },
+          {
+            "value": "[parameters('requireTags')]",
+            "equals": true
           }
         ]
       }

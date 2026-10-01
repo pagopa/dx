@@ -22,5 +22,6 @@ These directory contain Terraform resources that deploys the defined policy rule
 
 ## Development Assignment
 
-The DevEx rule and assignment are configured in `infra/policy/dev`; the
-assignment requires no parameters.
+The DevEx rule and assignment are configured in `infra/policy/dev`. The
+assignment sets the allowed tag values and keeps the tags optional
+(`requireTags = false`).

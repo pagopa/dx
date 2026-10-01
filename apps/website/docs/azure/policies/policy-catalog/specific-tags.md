@@ -8,21 +8,32 @@ sidebar_label: Azure TAGs Policy Rule
 This policy rule ensures that all Azure resources comply with a predefined set
 of tagging rules.
 
+## Parameters
+
+| Parameter              | Type    | Description                                                               |
+| ---------------------- | ------- | ------------------------------------------------------------------------- |
+| `allowedCostCenters`   | Array   | Allowed values for `CostCenter`                                           |
+| `allowedOwners`        | Array   | Allowed values for `Owner`                                                |
+| `allowedEnvironments`  | Array   | Allowed values for `Environment`                                          |
+| `allowedSourcePattern` | String  | Pattern (supports `*`) the `Source` tag must match                        |
+| `requireTags`          | Boolean | When `true`, all four tags are mandatory; default `false` (tags optional) |
+
+Tag names and values are case-sensitive. If a tag is present, its name must use
+the exact casing above and its value must be one of the allowed values.
+
 ## DevEx Policy
 
-The DX development subscription uses
+The DX development subscription assigns
 [specific_tags_rule_v2.json](https://github.com/pagopa/dx/blob/main/infra/policy/_policy_rules/specific_tags_rule_v2.json)
-It validates the
+with the values of the
 [DevEx tagging contract](../../../terraform/required-tags.md#devex-accounts-and-subscriptions)
-when any of its keys are assigned:
+and `requireTags = false`:
 
-| Tag           | Allowed value(s)                                                                     |
-| ------------- | ------------------------------------------------------------------------------------ |
-| `CostCenter`  | `TS000 - TECNOLOGIA & SERVIZI`                                                       |
-| `Owner`       | `DevEx`                                                                              |
-| `Environment` | `Dev`, `Uat`, or `Prod`                                                              |
-| `Source`      | A non-empty Terraform root URL under `https://github.com/pagopa/dx/blob/main/infra/` |
+| Tag           | Allowed value(s)                                 |
+| ------------- | ------------------------------------------------ |
+| `CostCenter`  | `TS000 - TECNOLOGIA & SERVIZI`                   |
+| `Owner`       | `DevEx`                                          |
+| `Environment` | `Dev`, `Uat`, or `Prod`                          |
+| `Source`      | `https://github.com/pagopa/dx/blob/main/infra/*` |
 
-Tags are optional: a resource can be created without these tags, or with only
-some of them. If a selected tag is present, its name must use the exact casing
-above and its value must match the allowed value(s).
+Other teams can reuse the same definition by assigning it with their own values.
