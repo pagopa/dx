@@ -371,28 +371,20 @@ jobs:
           resource_name: ${{ env.CONTAINER_APP_NAME }}
           resource_type: "containerapp"
 
-      - name: Remove Staging Label
-        if: ${{ success() || failure() }}
-        run: |
-          staging_revision=$(az containerapp show \
-            --name "$CONTAINER_APP_NAME" \
-            --resource-group "$RESOURCE_GROUP_NAME" \
-            --query "properties.configuration.ingress.traffic[?label=='staging'].revisionName | [0]" \
-            --output tsv)
-
-          if [[ "$staging_revision" == "$NEW_REVISION_NAME" ]]; then
-            az containerapp revision label remove \
-              --name "$CONTAINER_APP_NAME" \
-              --resource-group "$RESOURCE_GROUP_NAME" \
-              --label staging \
-              --output none
-          fi
-
       - name: Deactivate Old Revision
         run: |
           az containerapp revision deactivate \
             --name "$CONTAINER_APP_NAME" \
             --revision "$CURRENT_REVISION_NAME"
+
+      - name: Remove Staging Label
+        if: ${{ success() }}
+        run: |
+          az containerapp revision label remove \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --label staging \
+            --output none
 
       - name: Deactivate New Revision
         if: ${{ failure() }}

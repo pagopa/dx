@@ -77,24 +77,23 @@ integrate tests into your existing canary monitoring script during incremental
 rollout. Without a monitoring script or a pending approval, promotion can be
 immediate.
 
-After a successful rollout reaches 100%, the workflow removes `staging` and then
-deactivates the old revision. These are separate operations, not an atomic slot
+After a successful rollout reaches 100% and the old revision is deactivated, the
+workflow removes `staging`. These are separate operations, not an atomic slot
 swap. The staging URL is intended only for the candidate's deployment/testing
 window; the promoted revision is accessed through the application URL.
 
 On release failure, the candidate is deactivated through the existing failure
 path, but its staging label may remain until a later deployment transfers the
-label to a new candidate. On swap failure, the workflow removes `staging` only
-if it still belongs to this run's candidate before the existing rollback and
-deactivation steps.
+label to a new candidate. If the swap fails before cleanup, the label likewise
+remains on the candidate as the existing failure path rolls it back and
+deactivates it. The workflow removes the label without checking its current
+owner, but only after the rollout and old-revision deactivation succeed.
 
 Cancellation or a rejected swap approval can prevent cleanup, especially when
 the swap job never starts. The label may then remain on the candidate until a
 later deployment transfers it. Workflow concurrency and environment approval
 behavior are unchanged; the staging URL is not a promise that a candidate stays
-available. Swap cleanup checks label ownership before removal; the ownership
-check and label removal are separate Azure calls, so overlapping runs caused by
-cancellation can still race.
+available.
 
 ### Why Single Mode Has No Staging Phase
 
