@@ -3,7 +3,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "description": "Configuration schema for generating operational dashboards from OpenAPI specifications",
   "title": "OpEx Dashboard Configuration",
-  "version": "0.2.11",
+  "version": "0.2.15",
   "type": "object",
   "properties": {
     "action_groups": {
@@ -116,10 +116,11 @@
             },
             "status_code_categories": {
               "default": ["1XX", "2XX", "3XX", "4XX", "5XX"],
-              "description": "HTTP status code categories for response codes queries",
+              "description": "HTTP status code categories for response codes queries. Default: 1XX..5XX",
               "type": "array",
               "items": {
-                "type": "string"
+                "type": "string",
+                "pattern": "^[1-5]XX$"
               }
             }
           },
@@ -140,10 +141,11 @@
         },
         "status_code_categories": {
           "default": ["1XX", "2XX", "3XX", "4XX", "5XX"],
-          "description": "HTTP status code categories for response codes queries",
+          "description": "HTTP status code categories for response codes queries. Default: 1XX..5XX",
           "type": "array",
           "items": {
-            "type": "string"
+            "type": "string",
+            "pattern": "^[1-5]XX$"
           }
         }
       },
