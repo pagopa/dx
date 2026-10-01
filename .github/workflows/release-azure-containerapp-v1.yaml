@@ -259,24 +259,60 @@ jobs:
       - name: Assign Staging Label
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
           steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
-        uses: pagopa/dx/actions/containerapp-staging-label@main
-        with:
-          operation: add
-          container_app_name: ${{ env.CONTAINER_APP_NAME }}
-          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
-          revision_name: ${{ steps.create_new_revision.outputs.new_revision_name }}
+        env:
+          NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
+        run: |
+          az containerapp revision label add \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --revision "$NEW_REVISION_NAME" \
+            --label staging \
+            --yes \
+            --output none
+
+          app=$(az containerapp show \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --output json)
+          staging_revision=$(jq -er '
+            [.properties.configuration.ingress.traffic[] | select(.label == "staging") | .revisionName] |
+            if length == 1 then .[0] else error("Cannot identify the staging revision") end
+          ' <<< "$app")
+          if [[ "$staging_revision" != "$NEW_REVISION_NAME" ]]; then
+            echo "::error::The staging label does not target candidate revision $NEW_REVISION_NAME."
+            exit 1
+          fi
+
+          app_fqdn=$(jq -er '.properties.configuration.ingress.fqdn' <<< "$app")
+          if [[ "$app_fqdn" != "$CONTAINER_APP_NAME".* ]]; then
+            echo "::error::Cannot derive the staging URL from Container App FQDN: $app_fqdn"
+            exit 1
+          fi
+          staging_url="https://${CONTAINER_APP_NAME}---staging.${app_fqdn#*.}"
+          printf "### Staging revision\n\nRevision: \`%s\`\n\nTest URL: %s\n" \
+            "$NEW_REVISION_NAME" "$staging_url" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Remove Failed Staging Label
         if:
           ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
           steps.create_new_revision.outputs.skip_remaining_steps == 'false' &&
           steps.create_new_revision.outputs.new_revision_name != '' }}
-        uses: pagopa/dx/actions/containerapp-staging-label@main
-        with:
-          operation: remove
-          container_app_name: ${{ env.CONTAINER_APP_NAME }}
-          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
-          revision_name: ${{ steps.create_new_revision.outputs.new_revision_name }}
+        env:
+          NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
+        run: |
+          staging_revision=$(az containerapp show \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --query "properties.configuration.ingress.traffic[?label=='staging'].revisionName | [0]" \
+            --output tsv)
+
+          if [[ "$staging_revision" == "$NEW_REVISION_NAME" ]]; then
+            az containerapp revision label remove \
+              --name "$CONTAINER_APP_NAME" \
+              --resource-group "$RESOURCE_GROUP_NAME" \
+              --label staging \
+              --output none
+          fi
 
       - name: Deactivate New Revision
         if:
@@ -380,27 +416,27 @@ jobs:
           resource_type: "containerapp"
 
       - name: Remove Staging Label
-        uses: pagopa/dx/actions/containerapp-staging-label@main
-        with:
-          operation: remove
-          container_app_name: ${{ env.CONTAINER_APP_NAME }}
-          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
-          revision_name: ${{ env.NEW_REVISION_NAME }}
+        if: ${{ success() || failure() }}
+        run: |
+          staging_revision=$(az containerapp show \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --query "properties.configuration.ingress.traffic[?label=='staging'].revisionName | [0]" \
+            --output tsv)
+
+          if [[ "$staging_revision" == "$NEW_REVISION_NAME" ]]; then
+            az containerapp revision label remove \
+              --name "$CONTAINER_APP_NAME" \
+              --resource-group "$RESOURCE_GROUP_NAME" \
+              --label staging \
+              --output none
+          fi
 
       - name: Deactivate Old Revision
         run: |
           az containerapp revision deactivate \
             --name "$CONTAINER_APP_NAME" \
             --revision "$CURRENT_REVISION_NAME"
-
-      - name: Remove Failed Staging Label
-        if: ${{ failure() }}
-        uses: pagopa/dx/actions/containerapp-staging-label@main
-        with:
-          operation: remove
-          container_app_name: ${{ env.CONTAINER_APP_NAME }}
-          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
-          revision_name: ${{ env.NEW_REVISION_NAME }}
 
       - name: Deactivate New Revision
         if: ${{ failure() }}
