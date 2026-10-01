@@ -7,7 +7,6 @@ Guidelines and architectural context for DevEx initiative development.
 - **No Unsolicited PRs**: NEVER commit or open pull requests without explicit user instructions.
 - **Version Plans Mandatory**: Every PR with user-facing changes MUST include a version plan: `pnpm nx release plan`.
 - **Breaking Changes**: Be extremely cautious with breaking changes for reusable Terraform modules and GitHub workflows. Always provide clear migration paths in version plans. When renaming resources or changing interfaces, try to keep backward compatibility.
-- **DX Cloud Tags**: Resources in DevEx accounts/subscriptions must use case-sensitive `CostCenter = "TS000 - TECNOLOGIA & SERVIZI"`, `Owner = "DevEx"`, `Environment = "Dev"/"Uat"/"Prod"`, and `Source` pointing to their Terraform configuration root on the default branch. Pass the root tag map to internal resources/modules and configure AWS provider defaults. This DevEx-specific contract does not replace external teams' tags in Registry-published modules or generic CLI templates.
 
 ## Repository Map
 
