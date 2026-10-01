@@ -29,7 +29,8 @@ module "container_app" {
     memory = "1Gi"
   }
 
-  container_port = 3000
+  container_port            = 3000
+  log_analytics_workspace_id = var.log_analytics_workspace_id
 
   allow_access_from_environment_only = false
   custom_domain = {
