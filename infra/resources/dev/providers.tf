@@ -12,7 +12,7 @@ terraform {
 
     azuredx = {
       source  = "pagopa-dx/azure"
-      version = "~> 0.0"
+      version = "~> 0.12"
     }
 
     azapi = {
@@ -80,4 +80,3 @@ provider "aws" {
 }
 
 provider "awsdx" {}
-
