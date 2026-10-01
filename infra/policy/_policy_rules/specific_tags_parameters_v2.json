@@ -2,31 +2,49 @@
   "allowedCostCenters": {
     "type": "Array",
     "metadata": {
-      "description": "Allowed values for the CostCenter tag."
-    }
+      "description": "Allowed values for the CostCenter tag. Empty disables the tag."
+    },
+    "defaultValue": []
   },
   "allowedOwners": {
     "type": "Array",
     "metadata": {
-      "description": "Allowed values for the Owner tag."
-    }
+      "description": "Allowed values for the Owner tag. Empty disables the tag."
+    },
+    "defaultValue": []
   },
   "allowedEnvironments": {
     "type": "Array",
     "metadata": {
-      "description": "Allowed values for the Environment tag."
-    }
+      "description": "Allowed values for the Environment tag. Empty disables the tag."
+    },
+    "defaultValue": []
   },
   "allowedSourcePattern": {
     "type": "String",
     "metadata": {
-      "description": "Pattern (supports *) that the Source tag must match."
-    }
+      "description": "Pattern (supports *) that the Source tag must match. Empty disables the tag."
+    },
+    "defaultValue": ""
+  },
+  "allowedBusinessUnits": {
+    "type": "Array",
+    "metadata": {
+      "description": "Allowed values for the BusinessUnit tag. Empty disables the tag."
+    },
+    "defaultValue": []
+  },
+  "allowedManagementTeams": {
+    "type": "Array",
+    "metadata": {
+      "description": "Allowed values for the ManagementTeam tag. Empty disables the tag."
+    },
+    "defaultValue": []
   },
   "requireTags": {
     "type": "Boolean",
     "metadata": {
-      "description": "When true, CostCenter, Owner, Environment and Source tags are mandatory."
+      "description": "When true, every tag enabled through the allowed* parameters is required at resource creation."
     },
     "defaultValue": false
   }

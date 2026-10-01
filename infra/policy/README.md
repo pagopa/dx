@@ -73,6 +73,12 @@ resource "azurerm_subscription_policy_assignment" "specific_tags_assignment" {
     "allowedSourcePattern" = {
       "value" = "https://github.com/pagopa/dx/blob/main/infra/*"
     },
+    "allowedBusinessUnits" = {
+      "value" = []
+    },
+    "allowedManagementTeams" = {
+      "value" = []
+    },
     "requireTags" = {
       "value" = false
     }

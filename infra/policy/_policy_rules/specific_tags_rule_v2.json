@@ -4,144 +4,264 @@
       {
         "allOf": [
           {
-            "field": "tags['CostCenter']",
-            "exists": true
-          },
-          {
-            "value": "[contains(parameters('allowedCostCenters'), field('tags[CostCenter]'))]",
-            "equals": false
-          }
-        ]
-      },
-      {
-        "allOf": [
-          {
-            "field": "tags['Owner']",
-            "exists": true
-          },
-          {
-            "value": "[contains(parameters('allowedOwners'), field('tags[Owner]'))]",
-            "equals": false
-          }
-        ]
-      },
-      {
-        "allOf": [
-          {
-            "field": "tags['Environment']",
-            "exists": true
-          },
-          {
-            "value": "[contains(parameters('allowedEnvironments'), field('tags[Environment]'))]",
-            "equals": false
-          }
-        ]
-      },
-      {
-        "allOf": [
-          {
-            "field": "tags['Source']",
-            "exists": true
-          },
-          {
-            "field": "tags['Source']",
-            "notLike": "[parameters('allowedSourcePattern')]"
-          }
-        ]
-      },
-      {
-        "allOf": [
-          {
-            "field": "tags['CostCenter']",
-            "exists": true
-          },
-          {
-            "value": "[contains(string(field('tags')), '\"CostCenter\":')]",
-            "equals": false
-          }
-        ]
-      },
-      {
-        "allOf": [
-          {
-            "field": "tags['Owner']",
-            "exists": true
-          },
-          {
-            "value": "[contains(string(field('tags')), '\"Owner\":')]",
-            "equals": false
-          }
-        ]
-      },
-      {
-        "allOf": [
-          {
-            "field": "tags['Environment']",
-            "exists": true
-          },
-          {
-            "value": "[contains(string(field('tags')), '\"Environment\":')]",
-            "equals": false
-          }
-        ]
-      },
-      {
-        "allOf": [
-          {
-            "field": "tags['Source']",
-            "exists": true
-          },
-          {
-            "value": "[contains(string(field('tags')), '\"Source\":')]",
-            "equals": false
-          }
-        ]
-      },
-      {
-        "allOf": [
-          {
-            "field": "tags['CostCenter']",
-            "exists": false
-          },
-          {
-            "value": "[parameters('requireTags')]",
+            "value": "[not(empty(parameters('allowedCostCenters')))]",
             "equals": true
+          },
+          {
+            "anyOf": [
+              {
+                "allOf": [
+                  {
+                    "field": "tags['CostCenter']",
+                    "exists": true
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "value": "[contains(parameters('allowedCostCenters'), field('tags[CostCenter]'))]",
+                        "equals": false
+                      },
+                      {
+                        "value": "[contains(string(field('tags')), '\"CostCenter\":')]",
+                        "equals": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "tags['CostCenter']",
+                    "exists": false
+                  },
+                  {
+                    "value": "[parameters('requireTags')]",
+                    "equals": true
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
       {
         "allOf": [
           {
-            "field": "tags['Owner']",
-            "exists": false
+            "value": "[not(empty(parameters('allowedOwners')))]",
+            "equals": true
           },
           {
-            "value": "[parameters('requireTags')]",
-            "equals": true
+            "anyOf": [
+              {
+                "allOf": [
+                  {
+                    "field": "tags['Owner']",
+                    "exists": true
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "value": "[contains(parameters('allowedOwners'), field('tags[Owner]'))]",
+                        "equals": false
+                      },
+                      {
+                        "value": "[contains(string(field('tags')), '\"Owner\":')]",
+                        "equals": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "tags['Owner']",
+                    "exists": false
+                  },
+                  {
+                    "value": "[parameters('requireTags')]",
+                    "equals": true
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
       {
         "allOf": [
           {
-            "field": "tags['Environment']",
-            "exists": false
+            "value": "[not(empty(parameters('allowedEnvironments')))]",
+            "equals": true
           },
           {
-            "value": "[parameters('requireTags')]",
-            "equals": true
+            "anyOf": [
+              {
+                "allOf": [
+                  {
+                    "field": "tags['Environment']",
+                    "exists": true
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "value": "[contains(parameters('allowedEnvironments'), field('tags[Environment]'))]",
+                        "equals": false
+                      },
+                      {
+                        "value": "[contains(string(field('tags')), '\"Environment\":')]",
+                        "equals": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "tags['Environment']",
+                    "exists": false
+                  },
+                  {
+                    "value": "[parameters('requireTags')]",
+                    "equals": true
+                  }
+                ]
+              }
+            ]
           }
         ]
       },
       {
         "allOf": [
           {
-            "field": "tags['Source']",
-            "exists": false
+            "value": "[not(empty(parameters('allowedSourcePattern')))]",
+            "equals": true
           },
           {
-            "value": "[parameters('requireTags')]",
+            "anyOf": [
+              {
+                "allOf": [
+                  {
+                    "field": "tags['Source']",
+                    "exists": true
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "field": "tags['Source']",
+                        "notLike": "[parameters('allowedSourcePattern')]"
+                      },
+                      {
+                        "value": "[contains(string(field('tags')), '\"Source\":')]",
+                        "equals": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "tags['Source']",
+                    "exists": false
+                  },
+                  {
+                    "value": "[parameters('requireTags')]",
+                    "equals": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "value": "[not(empty(parameters('allowedBusinessUnits')))]",
             "equals": true
+          },
+          {
+            "anyOf": [
+              {
+                "allOf": [
+                  {
+                    "field": "tags['BusinessUnit']",
+                    "exists": true
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "value": "[contains(parameters('allowedBusinessUnits'), field('tags[BusinessUnit]'))]",
+                        "equals": false
+                      },
+                      {
+                        "value": "[contains(string(field('tags')), '\"BusinessUnit\":')]",
+                        "equals": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "tags['BusinessUnit']",
+                    "exists": false
+                  },
+                  {
+                    "value": "[parameters('requireTags')]",
+                    "equals": true
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "allOf": [
+          {
+            "value": "[not(empty(parameters('allowedManagementTeams')))]",
+            "equals": true
+          },
+          {
+            "anyOf": [
+              {
+                "allOf": [
+                  {
+                    "field": "tags['ManagementTeam']",
+                    "exists": true
+                  },
+                  {
+                    "anyOf": [
+                      {
+                        "value": "[contains(parameters('allowedManagementTeams'), field('tags[ManagementTeam]'))]",
+                        "equals": false
+                      },
+                      {
+                        "value": "[contains(string(field('tags')), '\"ManagementTeam\":')]",
+                        "equals": false
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "allOf": [
+                  {
+                    "field": "tags['ManagementTeam']",
+                    "exists": false
+                  },
+                  {
+                    "value": "[parameters('requireTags')]",
+                    "equals": true
+                  }
+                ]
+              }
+            ]
           }
         ]
       }

@@ -3,7 +3,7 @@ resource "azurerm_policy_definition" "specific_tags_policy" {
   policy_type  = "Custom"
   mode         = "Indexed"
   display_name = "DevEx Enforce specific tags and values on resources"
-  description  = "Validates the allowed values of the CostCenter, Owner, Environment and Source tags, and optionally requires them."
+  description  = "Validates the allowed values of the CostCenter, Owner, Environment, Source, BusinessUnit and ManagementTeam tags, and optionally requires the enabled ones."
 
   metadata = jsonencode({
     category = "Custom DevEx"
@@ -36,6 +36,12 @@ resource "azurerm_subscription_policy_assignment" "specific_tags_assignment" {
     }
     allowedSourcePattern = {
       value = "https://github.com/pagopa/dx/blob/main/infra/*"
+    }
+    allowedBusinessUnits = {
+      value = []
+    }
+    allowedManagementTeams = {
+      value = []
     }
     requireTags = {
       value = false
