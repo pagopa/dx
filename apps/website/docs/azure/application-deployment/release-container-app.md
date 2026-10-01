@@ -82,17 +82,19 @@ deactivates the old revision. These are separate operations, not an atomic slot
 swap. The staging URL is intended only for the candidate's deployment/testing
 window; the promoted revision is accessed through the application URL.
 
-On deployment or swap failure, cleanup checks that `staging` belongs to this
-run's candidate before removing it, then runs the existing rollback/deactivation
-steps. It never relabels the production fallback as staging. Azure label errors
-fail the job but do not prevent the existing failure cleanup from running.
+On release failure, the candidate is deactivated through the existing failure
+path, but its staging label may remain until a later deployment transfers the
+label to a new candidate. On swap failure, the workflow removes `staging` only
+if it still belongs to this run's candidate before the existing rollback and
+deactivation steps.
 
 Cancellation or a rejected swap approval can prevent cleanup, especially when
 the swap job never starts. The label may then remain on the candidate until a
 later deployment transfers it. Workflow concurrency and environment approval
 behavior are unchanged; the staging URL is not a promise that a candidate stays
-available. The ownership check and label removal are separate Azure calls, so
-overlapping runs caused by cancellation can still race.
+available. Swap cleanup checks label ownership before removal; the ownership
+check and label removal are separate Azure calls, so overlapping runs caused by
+cancellation can still race.
 
 ### Why Single Mode Has No Staging Phase
 
