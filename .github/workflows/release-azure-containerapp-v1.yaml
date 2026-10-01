@@ -378,7 +378,6 @@ jobs:
             --revision "$CURRENT_REVISION_NAME"
 
       - name: Remove Staging Label
-        if: ${{ success() }}
         run: |
           az containerapp revision label remove \
             --name "$CONTAINER_APP_NAME" \
