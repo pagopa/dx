@@ -2,7 +2,7 @@
 "@pagopa/dx-cli": minor
 ---
 
-Store the shared core Terraform state at the root of the `terraform-state` container (`core.tfstate`) instead of scoping it to the workspace domain, since the core is shared by every domain using the same prefix. Workspace-scoped states now use the `domain/scope.tfstate` layout, dropping the prefix already implied by the storage account name. The CLI always generates the canonical core key and no longer supports a `--core-state-key` override or fallback.
+Store the shared core Terraform state at the root of the `terraform-state` container (`core.tfstate`) instead of scoping it to the workspace domain, since the core is shared by every domain using the same prefix. Workspace-scoped states now use the `domain/scope.tfstate` layout, dropping the prefix already implied by the storage account name. The CLI always generates the canonical core key; legacy-key fallback is not part of the generated configuration.
 
 Migration: existing workspaces whose core state lives under a legacy key (`<prefix>.core.<env>.tfstate` or `<prefix>/<domain>/core.tfstate`) require a one-time migration before running `add environment` again:
 
