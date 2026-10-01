@@ -1,48 +1,5 @@
 {
   "name": "pre_commit_scripts",
   "version": "0.1.1",
-  "private": true,
-  "type": "module",
-  "devDependencies": {
-    "@pagopa/eslint-config": "workspace:^",
-    "@types/node": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
-    "eslint": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
-  },
-  "nx": {
-    "implicitDependencies": [
-      "bootstrapper-dev",
-      "bootstrapper-uat",
-      "bootstrapper-prod",
-      "core-dev",
-      "core-uat",
-      "core-prod",
-      "resources-dev",
-      "resources-uat",
-      "resources-prod",
-      "policy-dev"
-    ],
-    "targets": {
-      "typecheck": {
-        "cache": true,
-        "executor": "nx:run-commands",
-        "options": {
-          "command": "tsc --noEmit",
-          "cwd": "infra/scripts"
-        }
-      },
-      "test": {
-        "inputs": [
-          "default",
-          "{workspaceRoot}/infra/bootstrapper/**/*.tf",
-          "{workspaceRoot}/infra/core/**/*.tf",
-          "{workspaceRoot}/infra/resources/**/*.tf",
-          "{workspaceRoot}/infra/policy/_policy_rules/specific_tags_rule_v2.json",
-          "{workspaceRoot}/infra/policy/dev/**/*.tf"
-        ]
-      }
-    }
-  }
+  "private": true
 }
