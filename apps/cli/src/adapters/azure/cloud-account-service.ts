@@ -141,7 +141,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     { name, prefix }: EnvironmentId,
     github: GitHubRepo,
     gitHubService: GitHubService,
-    runnerAppCredentials?: GitHubAppCredentials,
+    runnerAppCredentials: GitHubAppCredentials,
   ): Promise<void> {
     assert.equal(cloudAccount.csp, "azure", "Cloud account must be Azure");
     assert.ok(
@@ -693,7 +693,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     msiClient: ManagedServiceIdentityClient;
     name: EnvironmentId["name"];
     resourceGroupName: BootstrapperResourceGroupName;
-    runnerAppCredentials?: GitHubAppCredentials;
+    runnerAppCredentials: GitHubAppCredentials;
     tenantId: string;
   }): Promise<void> {
     const logger = getLogger(["gen", "env"]);

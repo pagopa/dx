@@ -34,13 +34,20 @@ const writeCache = (key: string, data: unknown): void => {
   dashboardCache.set(key, { data, storedAt: Date.now() });
 };
 
-const buildDashboardQueryString = (params: Record<string, number | string>) => {
+const buildDashboardQueryString = (
+  params: Record<string, number | string | readonly string[]>,
+) => {
   const searchParams = new URLSearchParams();
 
   Object.entries(params)
     .sort(([leftKey], [rightKey]) => leftKey.localeCompare(rightKey))
     .forEach(([key, value]) => {
-      searchParams.set(key, String(value));
+      // Arrays (e.g. the repository selection) travel as a comma-separated
+      // value, matching the API route's `repositories` parameter.
+      searchParams.set(
+        key,
+        Array.isArray(value) ? value.join(",") : String(value),
+      );
     });
 
   return searchParams.toString();
@@ -70,7 +77,7 @@ const extractDashboardErrorMessage = async (response: Response) => {
 
 export function useDashboardData<T>(
   endpoint: string,
-  params: Record<string, number | string>,
+  params: Record<string, number | string | readonly string[]>,
 ) {
   const paramsSerialized = useMemo(
     () =>

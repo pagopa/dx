@@ -42,14 +42,15 @@ interface IacDashboardData {
 
 export default function IacDashboard() {
   const colors = useSeriesColors();
-  const { days, repository, setDays, setRepository } = useDashboardFilters();
+  const { days, repositories, setDays, setRepositories } =
+    useDashboardFilters();
   const { short: formatShortDate } = useDateFormatters();
 
   const { data, error, loading, refetch } = useDashboardData<IacDashboardData>(
     "iac",
     {
       days,
-      repository,
+      repositories,
     },
   );
 
@@ -72,9 +73,9 @@ export default function IacDashboard() {
         />
       </div>
       <DashboardFilters
-        onRepositoryChange={setRepository}
+        onRepositoriesChange={setRepositories}
         onTimeIntervalChange={setDays}
-        repository={repository}
+        repositories={repositories}
         timeInterval={days}
       />
       <DashboardRequestState

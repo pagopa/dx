@@ -1,3 +1,9 @@
+## 2.0.6 (2026-09-30)
+
+### 🧱 Updated Dependencies
+
+- Updated modules-azure-storage-account to 4.1.0
+
 ## 2.0.5 (2026-09-16)
 
 ### 🧱 Updated Dependencies
