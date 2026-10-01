@@ -10,7 +10,12 @@ import {
 
 export const dashboardParamsSchema = z.object({
   days: z.number().int().nonnegative(),
-  fullName: z.string().min(1),
+  /**
+   * Organisation-qualified repository names (`owner/repo`) the dashboard is
+   * scoped to. An empty list is valid and matches nothing, so an empty
+   * repository selection yields an empty dashboard.
+   */
+  fullNames: z.array(z.string().min(1)),
 });
 
 export type DashboardParams = z.infer<typeof dashboardParamsSchema>;

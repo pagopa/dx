@@ -11,8 +11,12 @@ import {
 import type { Insight } from "./types";
 
 export interface DxTeamInsightsInput {
-  readonly commitsByRepo: readonly {
-    readonly fullName: string;
+  /**
+   * DX members' commits on non-DX repositories (the `dxCommits` dataset). Must
+   * already exclude DX-owned repositories, so the bus-factor reading matches
+   * the chart that shares its "non-DX repositories" label.
+   */
+  readonly dxCommits: readonly {
     readonly memberName: string;
     readonly repositoryCommits: number;
   }[];
@@ -61,7 +65,7 @@ const ioInfraExternalInsight = (input: DxTeamInsightsInput): Insight | null => {
 const busFactorInsight = (input: DxTeamInsightsInput): Insight | null => {
   const byMember = new Map<string, number>();
 
-  for (const row of input.commitsByRepo) {
+  for (const row of input.dxCommits) {
     byMember.set(
       row.memberName,
       (byMember.get(row.memberName) ?? 0) + row.repositoryCommits,

@@ -3,6 +3,7 @@
 import {
   Activity,
   BarChart3,
+  Bot,
   ChevronLeft,
   ChevronRight,
   Cloud,
@@ -56,6 +57,7 @@ const navGroups = [
         label: "DX Adoption",
       },
       { href: "/dashboards/dx-team", icon: Users, label: "DX Team" },
+      { href: "/dashboards/copilot", icon: Bot, label: "Copilot" },
     ],
     label: "Adoption",
   },

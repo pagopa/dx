@@ -371,6 +371,7 @@ const addEnvironmentAction = (
   gitHubService: GitHubService,
   presenter: CommandPresenter,
   initialAnswers: DeploymentEnvironmentInitialAnswers = {},
+  nonInteractive = false,
 ): ResultAsync<AddResult, Error> =>
   runAddEnvironmentPreconditions(presenter)
     .andThen(() =>
@@ -390,6 +391,7 @@ const addEnvironmentAction = (
           gitHubService,
           undefined,
           initialAnswers,
+          nonInteractive,
         ),
         asError("Failed to run the deployment environment generator"),
       ),
@@ -510,6 +512,7 @@ export const makeAddCommand = (
                       gitHubService,
                       presenter,
                       initialAnswers,
+                      env.CI,
                     ),
                 ),
               ),

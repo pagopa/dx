@@ -24,7 +24,7 @@ export type CloudAccountService = {
     environment: EnvironmentId,
     github: GitHubRepo,
     gitHubService: GitHubService,
-    runnerAppCredentials?: GitHubAppCredentials,
+    runnerAppCredentials: GitHubAppCredentials,
   ): Promise<void>;
 
   getTerraformBackend(

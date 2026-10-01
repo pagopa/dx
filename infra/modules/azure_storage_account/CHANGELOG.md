@@ -1,3 +1,13 @@
+## 4.1.0 (2026-09-30)
+
+### 🚀 Features
+
+- Allow private endpoints to be created alongside public network access when both subnet_pep_id and private_dns_zone_resource_group_name are set, independently of force_public_network_access_enabled ([#2270](https://github.com/pagopa/dx/pull/2270))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 4.0.5 (2026-09-16)
 
 ### 🩹 Fixes
