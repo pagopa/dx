@@ -45,7 +45,7 @@ resource "azurerm_policy_definition" "specific_tags_policy" {
 
   metadata = jsonencode({
     category = "Custom DevEx"
-    version  = "2.0.0"
+    version  = "1.0.0"
   })
 
   policy_rule = file(data.http.specific_tags_policy_rule.response_body)
