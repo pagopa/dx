@@ -49,10 +49,7 @@ rules, deployments are approved automatically by default through the
 `GH_TOKEN_DEPLOYMENT_APPROVAL` repository secret. Set `enable_auto_deploy` to
 `false` to require a manual approval before the new revision receives traffic.
 
-Both the `release` and `swap` jobs use the `${environment}-cd` environment. Test
-the healthy candidate at its staging URL while the swap job waits for approval.
-
-### Stable Staging URL
+### Staging URL
 
 In **Multiple** mode, test the healthy candidate at this stable URL, even when
 it receives 0% of application traffic:
@@ -62,9 +59,7 @@ https://my-app---staging.example.azurecontainerapps.io
 ```
 
 The app URL remains the production endpoint. After a successful rollout and old
-revision deactivation, the workflow removes `staging`. On release or swap
-failure, cancellation, or rejected approval, the label may remain on the
-candidate until a later deployment.
+revision deactivation, the workflow removes the `staging` endpoint.
 
 **Single** mode is unchanged: Azure switches traffic as soon as the new revision
 is ready, so there is no pre-promotion testing window for a staging label.
