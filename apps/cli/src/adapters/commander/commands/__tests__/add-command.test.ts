@@ -194,6 +194,7 @@ describe("makeAddCommand", () => {
           domain: "payments",
         },
       },
+      false,
     );
     expect(mocks.runDeploymentEnvironmentActions).toHaveBeenCalledWith(
       expect.anything(),
@@ -240,6 +241,7 @@ describe("makeAddCommand", () => {
             },
           },
         },
+        false,
       );
     } finally {
       await rm(tempDir, { force: true, recursive: true });
@@ -313,6 +315,7 @@ describe("makeAddCommand tenant-qualified environments", () => {
           prefix: "ced",
         },
       },
+      false,
     );
   });
 });

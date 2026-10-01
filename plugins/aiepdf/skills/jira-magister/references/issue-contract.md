@@ -2,14 +2,14 @@
 
 ## Portable fields
 
-Project-specific Jira fields vary. Query the project metadata first, then map
-these portable fields to the available schema:
+Project-specific Jira fields vary. Map these portable fields to the schema
+discovered in [persistence.md](./persistence.md):
 
-| Issue | Required content                                                                                                                                                                              |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Epic  | outcome-oriented summary; scope and exclusions; linked PRD and DR/SRS; included `JTBD-XX` and `UC-XX`; KPI target and qualitative guardrail; dependencies, readiness, and lifecycle note      |
-| Story | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; source `UC-XX` and `AC-*`; binary acceptance checks; user-facing links and gaps |
-| Task  | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID; dependency and verification evidence                                                 |
+| Issue | Required content                                                                                                                                                                                                               |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Epic  | outcome-oriented summary; scope and exclusions; linked PRD and DR/SRS; included `JTBD-XX` and `UC-XX`; KPI target and qualitative guardrail; dependencies, readiness, and lifecycle note                                       |
+| Story | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; source `UC-XX` and `AC-*`; binary acceptance checks; user-facing links and gaps                                  |
+| Task  | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID, `open.item-XX` for a spike, or the semantic error identifier for error handling; dependency and verification evidence |
 
 Descriptions may summarize source behavior, but the DR/SRS and Use Case remain
 authoritative. Always include links to the source documents and stable IDs in a
@@ -19,12 +19,22 @@ machine-readable line, for example:
 Source: DR-01 | JTBD-02 | UC-03 | AC-UC-03-01
 ```
 
+For a spike Task or an error-handling Task, carry the decision or the error
+identifier too:
+
+```text
+Source: DR-01 | open.item-007 | blocks UC-03
+Source: DR-01 | UC-01 | AGREEMENT_EXTENSION_INVALID
+```
+
 ## Sizing and decomposition
 
 - An Epic groups related Stories and Tasks for one cohesive outcome and should
   finish in a few two-week sprints.
 - A Story expresses actor value and should fit one two-week sprint.
 - A Task is technical or enabling work and should fit one two-week sprint.
+- A spike Task's deliverable is a decision; size it to one sprint and keep it
+  independent so it can start immediately.
 - Split work when it crosses actors, outcomes, acceptance boundaries, or sprint
   capacity. Flag the split for approval when the source does not define the
   boundary.
@@ -40,13 +50,30 @@ Keep ownership hierarchy separate from delivery dependencies:
 - Use `blocks` from an independent enabling Task to the Story or Task that
   cannot proceed without it. The dependent issue is then `is blocked by` that
   Task.
+- A spike Task derived from a blocking `open.item-XX` uses the same `blocks`
+  direction toward the dependent Story or Task.
 - Use `blocks` between Stories or between Tasks only when the source identifies
   a real sequencing or delivery dependency.
 - Do not create links for ordinary Epic membership, related context, or
   speculative dependencies.
 
-Record each dependency as `blocking issue -> blocked issue -> link type` and
-create the link only after both Jira issues exist.
+Record each dependency as `blocking issue -> blocked issue -> link type`.
+Creation-time mechanics live in [persistence.md](./persistence.md).
+
+## Open questions, spikes, and error handling
+
+- A DR/SRS open question with `Blocking: yes` becomes a spike Task; the items
+  that cannot proceed `are blocked by` it. A non-blocking question stays a gap
+  with its owner and creates no Task and no link.
+- A spike's summary names the decision to take; its description carries the
+  owner, the source `open.item-XX`, and the outcome that unblocks dependents.
+- Use Case errors are defined on the child pages with semantic identifiers and
+  no owner. The same identifier can appear in several Use Cases: create one
+  error-handling Task per identifier, record the identifier in its traceability,
+  and link the affected Stories. Never merge two different conditions.
+- Route concrete Tasks to the repository in the DR/SRS `references.repository`.
+  If the link is missing, record the gap and flag the unroutable Tasks instead
+  of inventing a repository or a branch.
 
 ## Definition of Ready blockers
 
@@ -59,27 +86,16 @@ Block creation when any material item is missing or contradictory:
   accessibility, tracking, support, or rollout evidence;
 - accepted RFC propagation into the DR/SRS.
 
+Unresolved open questions are not Definition of Ready blockers by themselves:
+they are projected as spikes or recorded gaps. The blockers above are missing
+source evidence, not open decisions.
+
 Report each blocker with its source, impact, and required resolution. Do not
 replace it with a guessed Jira value.
 
-## Synchronization matching
+## Persistence mechanics
 
-Use the first unambiguous match:
-
-1. supplied Jira key;
-2. stored Jira URL or source mapping with the stable source ID;
-3. exact stable source ID in the target project;
-4. no match: propose creation;
-5. multiple matches: stop and ask the user to choose.
-
-For updates, show a field-level diff. Preserve issue keys, parent Epic,
-unchanged acceptance IDs, existing status, and content outside the confirmed
-change. Add a new traceability ID only when the source introduces new meaning.
-
-## Confirmation and verification
-
-Confirmation must identify the project, operation, item count, hierarchy,
-material field changes, and any unresolved non-blocking gaps. After confirmation,
-create/update parent items before children, then re-fetch and verify every
-relationship and source marker. A failed verification makes the operation
-incomplete.
+Synchronization matching, field-level updates, confirmation, creation order,
+native and remote links, and verification live in
+[persistence.md](./persistence.md). This contract defines what an item must
+contain; that reference defines how it reaches Jira.

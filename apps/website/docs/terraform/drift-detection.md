@@ -107,19 +107,23 @@ resource "github_actions_secret" "slack_webhook_url" {
 }
 ```
 
-When a drift is detected, a Slack message is sent to the selected channel. It
-appears similar to this:
+When drift is detected, a Slack message is sent to the selected channel for each
+affected environment. The message includes a link to inspect the workflow
+execution, and the Terraform resource counts.
+
+For example, a notification for `prod` appears similar to this:
 
 ```plaintext
 :x: Drift detected by Drift Detection.
 
-Drift Detection results:
-:shipit: Owner: Krusty93
-:diamond_shape_with_a_dot_inside: Commit URL: 877c7f1d7ae22fe1a27db5275c290225d2c0eea4
-:envelope: Commit message: update slack workflow
+PROD - Drift Detection results:
+:diamond_shape_with_a_dot_inside: Workflow URL: https://github.com/pagopa/dx/actions/runs/35197674571/job/105124664209
 :page_with_curl: Terraform plan results:
 :heavy_plus_sign: Resource to add: 1
 :wavy_dash: Resource to change: 4
 :heavy_minus_sign: Resource to destroy: 3
- Linked Repo: pagopa/dx
 ```
+
+Workflow errors also produce a notification with the environment and workflow
+URL, without Terraform resource counts. Environments with no drift do not send a
+notification. No additional inputs or secrets are required for this format.

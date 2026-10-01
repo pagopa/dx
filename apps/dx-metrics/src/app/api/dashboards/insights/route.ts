@@ -2,15 +2,17 @@
  * Executive-summary API route: aggregates the insights computed by every
  * dashboard adapter into a single payload.
  *
- * Previously `/dashboards/overview` fetched all nine dashboard endpoints from
- * the browser, each of which ran its full adapter — nine HTTP round trips plus
- * the full payload of every dashboard just to harvest the `insights` field.
- * Running the adapters server-side in parallel, one request, keeps the same
- * result with a fraction of the round trips and lets the response be cached.
+ * Previously `/dashboards/overview` fetched all dashboard endpoints from the
+ * browser, each of which ran its full adapter — one HTTP round trip per
+ * dashboard plus the full payload of every dashboard just to harvest the
+ * `insights` field. Running the adapters server-side in parallel, one request,
+ * keeps the same result with a fraction of the round trips and lets the
+ * response be cached.
  */
 import { NextRequest, NextResponse } from "next/server";
 
 import { getIacDashboard } from "@/adapters/db/iac/queries";
+import { getCopilotDashboard } from "@/adapters/db/copilot/queries";
 import { fetchDxAdoption } from "@/adapters/db/dx-adoption/queries";
 import { fetchDxTeamDashboard } from "@/adapters/db/dx-team/queries";
 import { fetchPrDashboard } from "@/adapters/db/pull-requests/queries";
@@ -24,10 +26,11 @@ import { jsonWithCache } from "@/lib/api-cache";
 import { ORGANIZATION, REPOSITORIES } from "@/lib/config";
 import { sortInsights } from "@/lib/insights/insight-helpers";
 import type { Insight, WithInsights } from "@/lib/insights/types";
-import { parseDashboardQuery } from "@/lib/query-params";
+import { parseDashboardQuery, resolveRepositories } from "@/lib/query-params";
 
 /** Dashboards whose insights feed the executive summary. */
 const ENDPOINT_LABELS = {
+  copilot: "Copilot",
   "dx-adoption": "DX Adoption",
   "dx-team": "DX Team",
   iac: "IaC PRs",
@@ -52,8 +55,10 @@ const latestReferenceDate = (dates: readonly string[]): null | string =>
 export async function GET(req: NextRequest) {
   const parsed = parseDashboardQuery(req);
   if ("error" in parsed) return parsed.error;
-  const { days, repository = "dx" } = parsed.query;
-  const fullName = `${ORGANIZATION}/${repository}`;
+  const { days } = parsed.query;
+  const fullNames = resolveRepositories(parsed.query, "dx").map(
+    (repository) => `${ORGANIZATION}/${repository}`,
+  );
 
   // Every adapter runs concurrently; each failure degrades the summary instead
   // of failing the whole endpoint, so a single broken dashboard still yields
@@ -63,17 +68,24 @@ export async function GET(req: NextRequest) {
     key: EndpointKey;
     request: Promise<WithInsights & { meta?: unknown }>;
   }[] = [
-    { key: "pull-requests", request: fetchPrDashboard(db, { days, fullName }) },
+    {
+      key: "pull-requests",
+      request: fetchPrDashboard(db, { days, fullNames }),
+    },
     {
       key: "pull-requests-review",
-      request: getPullRequestsReviewDashboard(db, { days, fullName }),
+      request: getPullRequestsReviewDashboard(db, { days, fullNames }),
+    },
+    {
+      key: "copilot",
+      request: getCopilotDashboard(db, { days, fullNames }),
     },
     {
       key: "workflows",
-      request: getWorkflowDashboard(db, { days, fullName }),
+      request: getWorkflowDashboard(db, { days, fullNames }),
     },
-    { key: "iac", request: getIacDashboard(db, { days, fullName }) },
-    { key: "dx-adoption", request: fetchDxAdoption(db, { fullName }) },
+    { key: "iac", request: getIacDashboard(db, { days, fullNames }) },
+    { key: "dx-adoption", request: fetchDxAdoption(db, { fullNames }) },
     {
       key: "techradar",
       request: getTechRadarDashboard(db, {

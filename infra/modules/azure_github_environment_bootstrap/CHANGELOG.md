@@ -1,3 +1,13 @@
+## 6.2.0 (2026-09-24)
+
+### 🚀 Features
+
+- Provision a DX GitHub self-hosted runner Container App Job alongside the legacy runner. ([#2244](https://github.com/pagopa/dx/pull/2244))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 6.1.0 (2026-09-22)
 
 ### 🚀 Features

@@ -1,3 +1,13 @@
+## 0.3.13 (2026-09-24)
+
+### 🩹 Fixes
+
+- Speed up release tag and GitHub Release sync by batching remote lookups ([#2261](https://github.com/pagopa/dx/pull/2261))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.3.12 (2026-09-22)
 
 ### 🩹 Fixes

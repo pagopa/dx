@@ -1,3 +1,13 @@
+## 0.27.10 (2026-09-24)
+
+### 🩹 Fixes
+
+- Fix Runner App secrets for new GitHub environments ([#2229](https://github.com/pagopa/dx/pull/2229))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.27.9 (2026-09-23)
 
 ### 🩹 Fixes

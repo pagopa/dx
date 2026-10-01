@@ -187,33 +187,35 @@ jobs:
           fi
         continue-on-error: true
 
-      - name: Get Workflow Data in order to send notifications
+      - name: Get notification data (${{ inputs.environment }})
         if: ${{ steps.drift.outputs.drift_found == 'true' || failure() }}
         id: workflow_data
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
         with:
           script: |
-            const run = await github.rest.actions.getWorkflowRun({
+            core.setOutput("environment_label", process.env.ENVIRONMENT.toUpperCase());
+            const jobs = await github.paginate(github.rest.actions.listJobsForWorkflowRunAttempt, {
               owner: context.repo.owner,
               repo: context.repo.repo,
-              run_id: context.runId
+              run_id: context.runId,
+              attempt_number: Number(process.env.GITHUB_RUN_ATTEMPT),
+              per_page: 100
             });
-            const data = run.data;
-            // Strip hidden HTML comments from release metadata before posting to Slack.
-            const commitMessageSingleLine = data.head_commit.message
-              .replace(/<!--[\s\S]*?-->/g, ' ')
-              .replace(/\n/g, ' ')
-              .replace(/\s+/g, ' ')
-              .trim();
-            // Set output for each value
-            core.setOutput("workflow_url", data.html_url);
-            core.setOutput("workflow_name", data.display_title);
-            core.setOutput("repo_url", data.repository.html_url);
-            core.setOutput("repo_name", data.repository.full_name);
-            core.setOutput("commit_sha", data.head_sha);
-            core.setOutput("commit_message", commitMessageSingleLine);
-            core.setOutput("commit_url", `${data.repository.html_url}/commit/${data.head_sha}`);
-            core.setOutput("committer_name", data.head_commit.committer.name);
+            const matchingJobs = jobs.filter(job =>
+              job.runner_name === process.env.RUNNER_NAME &&
+              job.steps?.some(step =>
+                step.name === `Get notification data (${process.env.ENVIRONMENT})` &&
+                step.status === "in_progress"
+              )
+            );
+            if (matchingJobs.length === 1) {
+              core.setOutput("workflow_url", matchingJobs[0].html_url);
+            } else {
+              core.warning("Could not uniquely identify the current job; linking to the workflow run instead.");
+              core.setOutput("workflow_url", `${process.env.GITHUB_SERVER_URL}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}/attempts/${process.env.GITHUB_RUN_ATTEMPT}`);
+            }
 
       - name: Drift Notification
         if: ${{ steps.drift.outputs.drift_found == 'true' }}
@@ -221,17 +223,14 @@ jobs:
         uses: pagopa/dx/.github/actions/slack-notification@main
         with:
           id: "Drift Detected"
-          title: ":x: Drift detected by *${{ steps.workflow_data.outputs.workflow_name }}*."
+          title: ":x: Drift detected by *${{ github.workflow }}*."
           text: |-
-            *${{ steps.workflow_data.outputs.workflow_name }}* results:
-            :shipit: *Owner*: ${{ steps.workflow_data.outputs.committer_name }}
-            :diamond_shape_with_a_dot_inside: *Commit URL*: <${{ steps.workflow_data.outputs.commit_url }}|${{ steps.workflow_data.outputs.commit_sha }}>
-            :envelope: *Commit message*: ${{ steps.workflow_data.outputs.commit_message }}
+            *${{ steps.workflow_data.outputs.environment_label }} - ${{ github.workflow }}* results:
+            :diamond_shape_with_a_dot_inside: *Workflow URL*: ${{ steps.workflow_data.outputs.workflow_url }}
             :page_with_curl: *Terraform* plan results:
             :heavy_plus_sign: Resource to add: ${{ env.TO_ADD }}
             :wavy_dash: Resource to change: ${{ env.TO_CHANGE }}
             :heavy_minus_sign: Resource to destroy: ${{ env.TO_DESTROY }}
-             *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>
           slack_webhook_url: ${{ env.SLACK_WEBHOOK_URL }}
 
       - name: Failure Notification
@@ -240,11 +239,10 @@ jobs:
         uses: pagopa/dx/.github/actions/slack-notification@main
         with:
           id: "Workflow Failed"
-          title: ":x: The workflow *${{ steps.workflow_data.outputs.workflow_name }}* has failed."
+          title: ":x: The workflow *${{ github.workflow }}* has failed."
           text: |-
-            Check the Workflow:
-             *URL*: ${{ steps.workflow_data.outputs.workflow_url }}
-             *Linked Repo*: <${{ steps.workflow_data.outputs.repo_url }}|${{ steps.workflow_data.outputs.repo_name }}>
+            *${{ steps.workflow_data.outputs.environment_label || inputs.environment }} - ${{ github.workflow }}* results:
+            :diamond_shape_with_a_dot_inside: *Workflow URL*: ${{ steps.workflow_data.outputs.workflow_url || format('{0}/{1}/actions/runs/{2}/attempts/{3}', github.server_url, github.repository, github.run_id, github.run_attempt) }}
           slack_webhook_url: ${{ env.SLACK_WEBHOOK_URL }}
 
       # Exit with an error if drift is detected, to ensure

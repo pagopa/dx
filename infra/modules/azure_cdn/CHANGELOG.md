@@ -1,3 +1,13 @@
+## 2.1.6 (2026-09-30)
+
+### 🩹 Fixes
+
+- Configure storage account private DNS zone resource groups in examples and test setup ([#2270](https://github.com/pagopa/dx/pull/2270))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 2.1.5 (2026-09-16)
 
 ### 🩹 Fixes

@@ -1,3 +1,13 @@
+## 0.22.10 (2026-09-24)
+
+### 🩹 Fixes
+
+- Add section for Container App workflow auto approval ([#2201](https://github.com/pagopa/dx/pull/2201))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.22.9 (2026-09-23)
 
 ### 🩹 Fixes

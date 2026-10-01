@@ -71,6 +71,38 @@ describe("buildChartCsv", () => {
 
     expect(csv).toBe("week,Value (days)\n2026-01-01,3.67 days");
   });
+
+  it("uses per-series units and lets them override the shared fallback", () => {
+    const csv = buildChartCsv(
+      [{ week: "2026-01-01", commits: 2, lead: 3.6666 }],
+      [
+        { key: "commits", name: "Commits", unit: "commits" },
+        { key: "lead", name: "Lead time", unit: "days" },
+      ],
+      "week",
+      undefined,
+      "fallback",
+    );
+
+    expect(csv).toBe(
+      "week,Commits (commits),Lead time (days)\n2026-01-01,2 commits,3.67 days",
+    );
+  });
+
+  it("falls back to the shared unit for a series without one", () => {
+    const csv = buildChartCsv(
+      [{ week: "2026-01-01", a: 1, b: 2 }],
+      [
+        { key: "a", name: "A", unit: "days" },
+        { key: "b", name: "B" },
+      ],
+      "week",
+      undefined,
+      "shared",
+    );
+
+    expect(csv).toBe("week,A (days),B (shared)\n2026-01-01,1 days,2 shared");
+  });
 });
 
 describe("csvFileName", () => {

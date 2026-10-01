@@ -21,6 +21,8 @@ const getCheckpointKey = (
   repoName: null | string,
 ): string => (repoName ? `${entityType}:${repoName}` : entityType);
 
+export { getCheckpointKey };
+
 const formatSinceDate = (sinceDate: Date): string =>
   sinceDate.toISOString().slice(0, 10);
 
@@ -64,9 +66,10 @@ export async function cleanStaleCheckpoints(
 export async function completeCheckpoint(
   context: CheckpointContext,
   syncRunId: number,
+  cursorAt: Date | null,
 ): Promise<void> {
   await context.db.execute(
-    sql`UPDATE sync_runs SET status = 'done', completed_at = NOW()
+    sql`UPDATE sync_runs SET status = 'done', completed_at = NOW(), cursor_at = ${cursorAt}
         WHERE id = ${syncRunId}`,
   );
 }
@@ -81,20 +84,20 @@ export async function failCheckpoint(
   );
 }
 
-export async function hasCheckpoint(
+/**
+ * Whether an entity/repository was imported recently enough to skip.
+ *
+ * With incremental cursors the `--since` window changes on every run, so the
+ * skip can no longer key on an exact date. Freshness (the 23h window) is the
+ * guard against running the same entity twice in a day; the cursor already
+ * prevents re-downloading data that is present.
+ */
+export async function hasRecentCheckpoint(
   context: CheckpointContext,
   entityType: string,
   repoName: null | string,
-  since: string,
 ): Promise<boolean> {
-  const requestedSinceDate = parseSinceDate(since);
   const checkpointKey = getCheckpointKey(entityType, repoName);
-
-  if (!requestedSinceDate) {
-    return false;
-  }
-
-  const normalizedSinceDate = formatSinceDate(requestedSinceDate);
   const freshCheckpointCutoff = new Date(
     Date.now() - checkpointFreshnessWindowMs,
   );
@@ -104,9 +107,7 @@ export async function hasCheckpoint(
         FROM sync_runs
         WHERE entity_type = ${checkpointKey}
           AND status = 'done'
-          AND since_date IS NOT NULL
           AND completed_at IS NOT NULL
-          AND since_date::date = ${normalizedSinceDate}::date
           AND completed_at >= ${freshCheckpointCutoff}
         LIMIT 1`,
   );

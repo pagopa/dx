@@ -319,6 +319,13 @@ export const config = pgTable("config", {
 // --- Sync Runs ---
 export const syncRuns = pgTable("sync_runs", {
   completedAt: timestamp("completed_at"),
+  /**
+   * Time up to which this entity/repository has been imported, written when the
+   * run completes. The next run resumes from `cursor_at` (minus a safety
+   * overlap) instead of re-downloading the whole `since_date` window, so a newly
+   * added repository is backfilled without touching the others.
+   */
+  cursorAt: timestamp("cursor_at"),
   entityType: text("entity_type").notNull(),
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
   repositoryId: integer("repository_id").references(() => repositories.id),
