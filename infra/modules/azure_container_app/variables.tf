@@ -129,33 +129,22 @@ variable "authentication" {
     })
   })
   default     = null
-  description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. Unauthenticated requests get redirected to the login page. client_secret_key_vault_id must be the versionless_id of the KV secret; the module automatically adds it to the Container App secrets."
+  description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. Unauthenticated requests get redirected to the login page. client_secret_key_vault_id must be an Azure Key Vault secret URI; the module automatically adds it to the Container App secrets."
 
   validation {
-    condition     = var.authentication == null || startswith(var.authentication.azure_active_directory.client_secret_key_vault_id, "https://")
-    error_message = "authentication.azure_active_directory.client_secret_key_vault_id must be a valid Azure Key Vault secret URI (must start with 'https://')."
+    condition     = var.authentication == null || can(regex("^https://[a-z0-9-]+\\.vault\\.azure\\.net/secrets/[a-zA-Z0-9-]+(/[a-zA-Z0-9]+)?$", var.authentication.azure_active_directory.client_secret_key_vault_id))
+    error_message = "authentication.azure_active_directory.client_secret_key_vault_id must be a valid Azure Key Vault secret URI."
   }
-}
-
-variable "secrets" {
-  type = list(object({
-    name                = string
-    key_vault_secret_id = string
-  }))
-  default     = []
-  description = <<-EOT
-  List of Key Vault secret references to define in the Container App.
-  Secrets are exposed to containers only when explicitly referenced in `containers[*].secret_names`.
-  To remove a secret without downtime, first deploy the application version that no longer needs it, then remove it from every container `secret_names` list, and finally remove it from `secrets`.
-  EOT
 }
 
 variable "containers" {
   type = list(object({
-    image        = string
-    name         = optional(string, "")
-    app_settings = optional(map(string), {})
-    secret_names = optional(list(string), [])
+    image = string
+    name  = optional(string, "")
+    environment_variables = optional(list(object({
+      name  = string
+      value = string
+    })), [])
 
     liveness_probe = object({
       failure_count_threshold = optional(number, 3)
@@ -200,10 +189,18 @@ variable "containers" {
   description = <<-EOT
   List of containers and related settings to be deployed in the same Container App.
   The second and subsequent containers in the list will be deployed as sidecars.
-  Each container must specify an image, and can optionally specify a name (if not provided, a name will be generated from the image name), environment variables (app_settings), secrets to be exposed (secret_names) and liveness, readiness and startup probes.
+  Each container must specify an image, and can optionally specify a name (if not provided, a name will be generated from the image name), ordered environment variables, and liveness, readiness and startup probes. Environment variable values that are Azure Key Vault secret URIs, with an optional secret version, are configured as Container App secret references. The generated secret name is the environment variable name lowercased with underscores replaced by hyphens. The Container App identity must be authorized to read the referenced Key Vault secrets.
   Probes are used by Azure to determine container health status and to automatically restart it if necessary.
   For more details on probe configuration, refer to https://learn.microsoft.com/en-us/azure/container-apps/containers#probes.
   EOT
+
+  validation {
+    condition = alltrue([
+      for template in var.containers :
+      length(template.environment_variables) == length(toset([for environment_variable in template.environment_variables : environment_variable.name]))
+    ])
+    error_message = "Each containers[*].environment_variables entry must have a unique name."
+  }
 
   validation {
     condition     = alltrue([for template in var.containers : contains(["HTTP", "TCP", "HTTPS"], template.liveness_probe.transport)])
