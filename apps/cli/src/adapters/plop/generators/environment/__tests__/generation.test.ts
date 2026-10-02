@@ -27,6 +27,7 @@ import setEnvShortHelper from "../../../helpers/env-short.js";
 import setEqHelper from "../../../helpers/eq.js";
 import setResourcePrefixHelper from "../../../helpers/resource-prefix.js";
 import setTerraformStateKeyHelper from "../../../helpers/terraform-state-key.js";
+import setTerraformStringHelper from "../../../helpers/terraform-string.js";
 import { resolveTemplatesPath } from "../../../templates-path.js";
 import {
   cleanupTempDir,
@@ -62,6 +63,7 @@ const registerEnvironmentSetup = (
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
   setTerraformStateKeyHelper(plop);
+  setTerraformStringHelper(plop);
 
   setGetTerraformBackend(plop, mockCloudAccountService);
   setProvisionTerraformBackendAction(plop, mockCloudAccountService);
@@ -191,9 +193,8 @@ describe("environment generator — file generation (no init)", () => {
       key: "test-private-key",
     },
     tags: {
-      BusinessUnit: "Platform",
-      CostCenter: "TS000",
-      ManagementTeam: "Engineering",
+      CostCenter: "TS330 - PDND & INTEROPERABILITA'",
+      Owner: "DX Platform",
     },
     workspace: {
       domain: "payments",
@@ -282,8 +283,9 @@ describe("environment generator — file generation (with init)", () => {
     },
     tags: {
       BusinessUnit: "Platform",
-      CostCenter: "TS000",
+      CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
       ManagementTeam: "Engineering",
+      Owner: "DX Platform",
     },
     workspace: {
       domain: "payments",

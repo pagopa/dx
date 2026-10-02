@@ -39,7 +39,10 @@ export const getPayload = (includeInit = false): Payload => {
       owner: "pagopa",
       repo: "dx",
     },
-    tags: {},
+    tags: {
+      CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+      Owner: "DX Platform",
+    },
     workspace: {
       domain: "mytest",
     },
