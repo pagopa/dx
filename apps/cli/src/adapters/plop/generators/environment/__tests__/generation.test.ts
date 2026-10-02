@@ -233,6 +233,51 @@ describe("environment generator — file generation (no init)", () => {
     expect(generatedFiles).not.toContain("test-private-key");
   });
 
+  it("uses the selected GitHub organization in generated bootstrapper files", async () => {
+    const customPayload: Payload = {
+      ...payload,
+      github: {
+        ...payload.github,
+        owner: "example-org",
+      },
+    };
+    const generatedEnvironment = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload: customPayload,
+      tmpDirPrefix: "dx-cli-env-custom-owner-test-",
+    });
+
+    try {
+      const generatedFiles = await readGeneratedFiles(
+        generatedEnvironment.tmpDir,
+        [
+          `infra/bootstrapper/${customPayload.env.name}/providers.tf`,
+          `infra/bootstrapper/${customPayload.env.name}/main.tf`,
+        ],
+      );
+      const providersFile =
+        generatedFiles[
+          `infra/bootstrapper/${customPayload.env.name}/providers.tf`
+        ];
+      const mainFile =
+        generatedFiles[`infra/bootstrapper/${customPayload.env.name}/main.tf`];
+
+      expect(providersFile).toContain('owner = "example-org"');
+      expect(mainFile).toContain('owner = "example-org"');
+      expect(mainFile).toContain(
+        "https://github.com/example-org/my-project/blob/main/infra/bootstrapper/dev",
+      );
+      expect(mainFile).not.toContain('owner = "pagopa"');
+    } finally {
+      process.chdir(generatedEnvironment.originalCwd);
+      await cleanupTempDir(generatedEnvironment.tmpDir);
+    }
+  });
+
   it("skips init-only side effects and core files when init is absent", async () => {
     const corePath = path.join(tmpDir, "infra", "core", payload.env.name);
     expect(mockCloudAccountService.getTerraformBackend).toHaveBeenCalledWith(

@@ -13,3 +13,20 @@ data "azuread_group" "developers" {
 data "azuread_group" "externals" {
   display_name = local.adgroups.external_name
 }
+
+data "github_organization" "owner" {
+  provider = hashicorpgithub
+
+  count = var.environment.env_short == "u" ? 1 : 0
+
+  name         = var.repository.owner
+  summary_only = true
+}
+
+data "github_repository" "this" {
+  provider = hashicorpgithub
+
+  count = var.environment.env_short == "u" ? 1 : 0
+
+  name = var.repository.name
+}
