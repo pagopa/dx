@@ -3,11 +3,10 @@ name: Release Terraform
 on:
   workflow_call:
 
-# Hold the lock through planning, approval and apply, not just during apply.
 concurrency:
   group: terraform-release
   cancel-in-progress: false
-  queue: max
+  queue: single
 
 env:
   ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
@@ -180,7 +179,7 @@ jobs:
       - name: Terraform Plan
         env:
           PROJECT: ${{ matrix.target.project }}
-        run: pnpm nx run "$PROJECT:plan" --configuration=ci --out="$TFPLAN_FILE"
+        run: pnpm nx run "${PROJECT}:plan:ci" --out="$TFPLAN_FILE"
 
       # Bundle the plan file together with .terraform.lock.hcl and .terraform/modules/
       # and upload it to the same storage backend used for the Terraform state.
@@ -276,32 +275,27 @@ jobs:
         id: plan_outputs
         run: |
           set -euo pipefail
-          FILE=/tmp/plan-outputs/plan-outputs.json
-          echo "provider=$(jq -r .provider "$FILE")" >> "$GITHUB_OUTPUT"
-          echo "plan_path=$(jq -r .plan_path "$FILE")" >> "$GITHUB_OUTPUT"
-          echo "azure_storage_account=$(jq -r .azure_storage_account "$FILE")" >> "$GITHUB_OUTPUT"
-          echo "azure_container=$(jq -r .azure_container "$FILE")" >> "$GITHUB_OUTPUT"
-          echo "aws_bucket=$(jq -r .aws_bucket "$FILE")" >> "$GITHUB_OUTPUT"
-          echo "aws_region=$(jq -r .aws_region "$FILE")" >> "$GITHUB_OUTPUT"
+          plan="$(jq --compact-output . /tmp/plan-outputs/plan-outputs.json)"
+          printf 'plan=%s\n' "$plan" >> "$GITHUB_OUTPUT"
 
       # Download the exact plan bundle uploaded by release-plan and apply it,
       # instead of recomputing a new plan.
       - name: Download Terraform Plan
         uses: pagopa/dx/actions/terraform-plan-storage-download@main
         with:
-          provider: ${{ steps.plan_outputs.outputs.provider }}
-          plan-path: ${{ steps.plan_outputs.outputs.plan_path }}
+          provider: ${{ fromJSON(steps.plan_outputs.outputs.plan).provider }}
+          plan-path: ${{ fromJSON(steps.plan_outputs.outputs.plan).plan_path }}
           working-directory: ${{ matrix.target.root }}
-          azure-storage-account: ${{ steps.plan_outputs.outputs.azure_storage_account }}
-          azure-container: ${{ steps.plan_outputs.outputs.azure_container }}
-          aws-bucket: ${{ steps.plan_outputs.outputs.aws_bucket }}
-          aws-region: ${{ steps.plan_outputs.outputs.aws_region }}
+          azure-storage-account: ${{ fromJSON(steps.plan_outputs.outputs.plan).azure_storage_account }}
+          azure-container: ${{ fromJSON(steps.plan_outputs.outputs.plan).azure_container }}
+          aws-bucket: ${{ fromJSON(steps.plan_outputs.outputs.plan).aws_bucket }}
+          aws-region: ${{ fromJSON(steps.plan_outputs.outputs.plan).aws_region }}
 
       - name: Terraform Apply
         env:
           PROJECT: ${{ matrix.target.project }}
         run: |
-          pnpm nx run "${PROJECT}:apply" --configuration=ci -- \
+          pnpm nx run "${PROJECT}:apply:ci" -- \
             -auto-approve \
             -input=false \
             -lock-timeout=120s \
