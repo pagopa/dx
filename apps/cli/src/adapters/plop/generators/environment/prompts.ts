@@ -47,7 +47,29 @@ const initSchema = z.object({
 
 type InitPayload = z.infer<typeof initSchema>;
 
-const tagsSchema = z.record(z.string(), z.string().min(1));
+export const costCenterValues = [
+  "TS000 - TECNOLOGIA & SERVIZI",
+  "TS100 - TECNOLOGIA",
+  "TS110 - SVILUPPO E ARCHITETTURA",
+  "TS120 - CLIENT E FRONTEND",
+  "TS200 - SICUREZZA",
+  "TS300 - PRODOTTI E SERVIZI",
+  "TS310 - PAGAMENTI & SERVIZI",
+  "TS320 - PIATTAFORMA NOTIFICHE DIGITALI",
+  "TS330 - PDND & INTEROPERABILITA'",
+] as const;
+
+export const costCenterSchema = z.enum(costCenterValues);
+export const ownerSchema = z.string().trim().min(1, "Owner cannot be empty.");
+
+const tagsSchema = z
+  .object({
+    BusinessUnit: z.string().trim().min(1).optional(),
+    CostCenter: costCenterSchema,
+    ManagementTeam: z.string().trim().min(1).optional(),
+    Owner: ownerSchema,
+  })
+  .catchall(z.string().trim().min(1));
 
 const workspaceDomainSchema = z
   .string()
@@ -98,8 +120,10 @@ export const initialAnswersSchema = z.object({
     .optional(),
   tags: z
     .object({
-      BusinessUnit: z.string().trim().min(1).optional(),
-      ManagementTeam: z.string().trim().min(1).optional(),
+      BusinessUnit: z.string().trim().optional(),
+      CostCenter: costCenterSchema.optional(),
+      ManagementTeam: z.string().trim().optional(),
+      Owner: ownerSchema.optional(),
     })
     .optional(),
   workspace: z
@@ -127,8 +151,10 @@ const basePromptAnswersSchema = z.object({
     .optional(),
   tags: z
     .object({
-      BusinessUnit: z.string().trim().min(1).optional(),
-      ManagementTeam: z.string().trim().min(1).optional(),
+      BusinessUnit: z.string().trim().optional(),
+      CostCenter: costCenterSchema.optional(),
+      ManagementTeam: z.string().trim().optional(),
+      Owner: ownerSchema.optional(),
     })
     .optional(),
   workspace: z
@@ -149,7 +175,7 @@ export type PromptsDependencies = {
 
 type BasePromptAnswers = z.infer<typeof basePromptAnswersSchema>;
 
-const DEFAULT_COST_CENTER = "TS000";
+const DEFAULT_COST_CENTER = costCenterValues[0];
 
 const resolveCloudAccounts = (
   availableCloudAccounts: CloudAccount[],
@@ -173,6 +199,7 @@ const getBaseQuestions = (
   availableCloudAccounts: CloudAccount[],
   initialAnswers: InitialAnswers,
   selectedCloudAccounts: CloudAccount[] | undefined,
+  nonInteractive: boolean,
 ): DistinctQuestion[] => {
   const questions: DistinctQuestion[] = [];
 
@@ -221,23 +248,39 @@ const getBaseQuestions = (
     });
   }
 
-  if (initialAnswers.tags?.BusinessUnit === undefined) {
+  if (!nonInteractive && initialAnswers.tags?.CostCenter === undefined) {
+    questions.push({
+      choices: [...costCenterValues],
+      default: DEFAULT_COST_CENTER,
+      message: "Cost center",
+      name: "tags.CostCenter",
+      type: "list",
+    });
+  }
+
+  if (initialAnswers.tags?.Owner === undefined) {
+    questions.push({
+      filter: (value: string) => value.trim(),
+      message: "Owner",
+      name: "tags.Owner",
+      type: "input",
+      validate: validatePrompt(ownerSchema),
+    });
+  }
+
+  if (!nonInteractive && initialAnswers.tags?.BusinessUnit === undefined) {
     questions.push({
       filter: (value) => value.trim(),
       message: "Business unit",
       name: "tags.BusinessUnit",
-      validate: (value) =>
-        value.length > 0 ? true : "Business Unit cannot be empty.",
     });
   }
 
-  if (initialAnswers.tags?.ManagementTeam === undefined) {
+  if (!nonInteractive && initialAnswers.tags?.ManagementTeam === undefined) {
     questions.push({
       filter: (value) => value.trim(),
       message: "Management team",
       name: "tags.ManagementTeam",
-      validate: (value) =>
-        value.length > 0 ? true : "Management Team cannot be empty.",
     });
   }
 
@@ -376,6 +419,7 @@ const collectBaseAnswers = async (
   promptModule: typeof inquirer,
   availableCloudAccounts: CloudAccount[],
   initialAnswers: InitialAnswers,
+  nonInteractive: boolean,
 ): Promise<{
   answers: BasePromptAnswers;
   initialCloudAccounts: CloudAccount[] | undefined;
@@ -388,6 +432,7 @@ const collectBaseAnswers = async (
     availableCloudAccounts,
     initialAnswers,
     initialCloudAccounts,
+    nonInteractive,
   );
   const promptAnswersResult = basePromptAnswersSchema.safeParse(
     baseQuestions.length === 0 ? {} : await promptModule.prompt(baseQuestions),
@@ -397,6 +442,29 @@ const collectBaseAnswers = async (
   return {
     answers: promptAnswersResult.data,
     initialCloudAccounts,
+  };
+};
+
+const buildTags = (
+  initialAnswers: InitialAnswers,
+  answers: BasePromptAnswers,
+): Payload["tags"] => {
+  const businessUnit =
+    initialAnswers.tags?.BusinessUnit ?? answers.tags?.BusinessUnit;
+  const managementTeam =
+    initialAnswers.tags?.ManagementTeam ?? answers.tags?.ManagementTeam;
+  const owner = ownerSchema.parse(
+    initialAnswers.tags?.Owner ?? answers.tags?.Owner,
+  );
+
+  return {
+    ...(businessUnit && { BusinessUnit: businessUnit }),
+    CostCenter:
+      initialAnswers.tags?.CostCenter ??
+      answers.tags?.CostCenter ??
+      DEFAULT_COST_CENTER,
+    ...(managementTeam && { ManagementTeam: managementTeam }),
+    Owner: owner,
   };
 };
 
@@ -418,13 +486,7 @@ const buildPayload = ({
       prefix: initialAnswers.env?.prefix ?? answers.env?.prefix,
     },
     github,
-    tags: {
-      BusinessUnit:
-        initialAnswers.tags?.BusinessUnit ?? answers.tags?.BusinessUnit,
-      CostCenter: DEFAULT_COST_CENTER,
-      ManagementTeam:
-        initialAnswers.tags?.ManagementTeam ?? answers.tags?.ManagementTeam,
-    },
+    tags: buildTags(initialAnswers, answers),
     workspace: {
       domain: initialAnswers.workspace?.domain ?? answers.workspace?.domain,
     },
@@ -460,12 +522,19 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       deps.gitHubService,
     );
     const initialAnswers = parseInitialAnswers(deps.initialAnswers);
+    if (deps.nonInteractive && initialAnswers.tags?.Owner === undefined) {
+      throw new Error(
+        "Owner is required in non-interactive mode. Provide --owner <owner>.",
+      );
+    }
+
     logger.debug("github repo {github}", { github: repository });
     const availableCloudAccounts = await deps.cloudAccountRepository.list();
     const { answers, initialCloudAccounts } = await collectBaseAnswers(
       promptModule,
       availableCloudAccounts,
       initialAnswers,
+      deps.nonInteractive ?? false,
     );
     const selectedCloudAccounts = getSelectedCloudAccounts(
       answers,

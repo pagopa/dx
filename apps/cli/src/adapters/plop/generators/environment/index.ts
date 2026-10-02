@@ -15,6 +15,7 @@ import setEnvShortHelper from "../../helpers/env-short.js";
 import setEqHelper from "../../helpers/eq.js";
 import setResourcePrefixHelper from "../../helpers/resource-prefix.js";
 import setTerraformStateKeyHelper from "../../helpers/terraform-state-key.js";
+import setTerraformStringHelper from "../../helpers/terraform-string.js";
 import getActions from "./actions.js";
 import getPrompts, {
   InitialAnswers,
@@ -39,6 +40,7 @@ export default function (
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
   setTerraformStateKeyHelper(plop);
+  setTerraformStringHelper(plop);
 
   setGetTerraformBackend(plop, cloudAccountService);
   setProvisionTerraformBackendAction(plop, cloudAccountService);

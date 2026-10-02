@@ -49,7 +49,12 @@ const payload: EnvironmentPayload = {
     prefix: "dx",
   },
   github: { owner: "pagopa", repo: "test-repo" },
-  tags: { BusinessUnit: "BU", CostCenter: "TS000", ManagementTeam: "MT" },
+  tags: {
+    BusinessUnit: "BU",
+    CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+    ManagementTeam: "MT",
+    Owner: "DX Platform",
+  },
   workspace: { domain: "" },
 };
 
