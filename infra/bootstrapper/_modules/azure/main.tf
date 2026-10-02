@@ -12,7 +12,8 @@ module "bootstrap" {
   environment = var.environment
 
   entraid_groups = {
-    admins_object_id    = data.azuread_group.admins.object_id
+    # Keep the 6.x-compatible alias until module v7 is published.
+    admins_object_id    = data.azuread_group.admin.object_id
     devs_object_id      = data.azuread_group.developers.object_id
     externals_object_id = data.azuread_group.externals.object_id
   }

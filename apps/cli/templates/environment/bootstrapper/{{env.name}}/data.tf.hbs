@@ -1,14 +1,14 @@
 {{#with cloudAccountsByCsp.azure}}
-data "azuread_group" "admins" {
-  display_name = "{{resourcePrefix @root}}-adgroup-admin"
+data "azuread_group" "admin" {
+  display_name = "{{@root.env.prefix}}-{{envShort @root.env.name}}-adgroup-admin"
 }
 
 data "azuread_group" "developers" {
-  display_name = "{{resourcePrefix @root}}-adgroup-developers"
+  display_name = "{{@root.env.prefix}}-{{envShort @root.env.name}}-adgroup-developers"
 }
 
 data "azuread_group" "externals" {
-  display_name = "{{resourcePrefix @root}}-adgroup-externals"
+  display_name = "{{@root.env.prefix}}-{{envShort @root.env.name}}-adgroup-externals"
 }
 {{/with}}
 

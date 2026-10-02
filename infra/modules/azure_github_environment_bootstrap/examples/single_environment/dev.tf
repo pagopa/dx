@@ -11,8 +11,8 @@ data "azurerm_resource_group" "common_dev" {
   name = format(local.common.resource_group_name, "d")
 }
 
-data "azuread_group" "admins_dev" {
-  display_name = local.adgroups.admins_name
+data "azuread_group" "admin_dev" {
+  display_name = local.adgroups.admin_name
 }
 
 data "azuread_group" "developers_dev" {
@@ -25,12 +25,12 @@ data "azuread_group" "externals_dev" {
 
 module "dev" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 6.0"
+  version = "~> 7.0"
 
   environment = merge(local.environment, { env_short = "u" })
 
   entraid_groups = {
-    admins_object_id    = data.azuread_group.admins_dev.object_id
+    admin_object_id     = data.azuread_group.admin_dev.object_id
     devs_object_id      = data.azuread_group.developers_dev.object_id
     externals_object_id = data.azuread_group.externals_dev.object_id
   }

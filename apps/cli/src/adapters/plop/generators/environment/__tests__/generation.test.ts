@@ -18,6 +18,11 @@ import type { CloudAccountService } from "../../../../../domain/cloud-account.js
 import type { GitHubService } from "../../../../../domain/github.js";
 import type { TerraformBackend } from "../../../../../domain/remote-backend.js";
 
+import { getEnvironmentShort } from "../../../../../domain/environment.js";
+import {
+  DEFAULT_GROUP_SPECS,
+  makeAzureAdGroupName,
+} from "../../../../pagopa-technology/azure-authorization-config.js";
 import setConfigureGitHubEnvironmentsAction from "../../../actions/configure-github-environments.js";
 import setGetTerraformBackend from "../../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../../actions/init-cloud-accounts.js";
@@ -163,6 +168,40 @@ const runEnvironmentGenerator = async ({
   return { originalCwd, tmpDir };
 };
 
+const expectCanonicalAzureGroupLookups = async (
+  tmpDir: string,
+  payload: Payload,
+) => {
+  const bootstrapperPath = path.join(
+    tmpDir,
+    "infra",
+    "bootstrapper",
+    payload.env.name,
+  );
+  const [dataFile, mainFile] = await Promise.all([
+    fs.readFile(path.join(bootstrapperPath, "data.tf"), "utf8"),
+    fs.readFile(path.join(bootstrapperPath, "main.tf"), "utf8"),
+  ]);
+  const expectedGroupNames = DEFAULT_GROUP_SPECS.map((spec) =>
+    makeAzureAdGroupName(
+      payload.env.prefix,
+      getEnvironmentShort(payload.env.name),
+      spec.groupName,
+    ),
+  );
+
+  for (const groupName of expectedGroupNames) {
+    expect(dataFile).toContain(`display_name = "${groupName}"`);
+  }
+
+  expect(dataFile).toContain('data "azuread_group" "admin"');
+  expect(dataFile).not.toContain('data "azuread_group" "admins"');
+  expect(mainFile).toContain(
+    "admin_object_id     = data.azuread_group.admin.object_id",
+  );
+  expect(mainFile).not.toContain("admins_object_id");
+};
+
 describe("environment generator — file generation (no init)", () => {
   let tmpDir: string;
   let originalCwd: string;
@@ -231,6 +270,11 @@ describe("environment generator — file generation (no init)", () => {
 
     expect(generatedFiles).toMatchSnapshot();
     expect(generatedFiles).not.toContain("test-private-key");
+  });
+
+  it("looks up canonical CLI-created Entra groups", async () => {
+    expect.hasAssertions();
+    await expectCanonicalAzureGroupLookups(tmpDir, payload);
   });
 
   it("skips init-only side effects and core files when init is absent", async () => {
@@ -334,5 +378,10 @@ describe("environment generator — file generation (with init)", () => {
     ]);
 
     expect(generatedFiles).toMatchSnapshot();
+  });
+
+  it("looks up canonical CLI-created Entra groups", async () => {
+    expect.hasAssertions();
+    await expectCanonicalAzureGroupLookups(tmpDir, payload);
   });
 });

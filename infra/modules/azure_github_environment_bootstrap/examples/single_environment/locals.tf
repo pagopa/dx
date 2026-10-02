@@ -10,7 +10,7 @@ locals {
   project = "${local.environment.prefix}-%s-${local.environment.location_short}"
 
   adgroups = {
-    admins_name   = "io-d-adgroup-admin"
+    admin_name    = "io-d-adgroup-admin"
     devs_name     = "io-p-adgroup-developers"
     external_name = "io-p-adgroup-externals"
   }
@@ -49,4 +49,3 @@ locals {
     TestName       = "Create Azure Github environment bootstrap for test"
   }
 }
-
