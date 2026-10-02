@@ -7,24 +7,59 @@ discovered in [persistence.md](./persistence.md):
 
 | Issue | Required content                                                                                                                                                                                                               |
 | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Epic  | outcome-oriented summary; scope and exclusions; linked PRD and DR/SRS; included `JTBD-XX` and `UC-XX`; KPI target and qualitative guardrail; dependencies, readiness, and lifecycle note                                       |
-| Story | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; source `UC-XX` and `AC-*`; binary acceptance checks; user-facing links and gaps                                  |
+| Epic  | outcome-oriented summary; scope and exclusions; linked PRD and DR/SRS; included `JTBD-XX` and `UC-XX`; KPI target and qualitative guardrail; dependencies, readiness, and lifecycle note; the fixed dispatchable-item sections |
+| Story | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; source `UC-XX`; acceptance-check IDs under `AC Coverage`; user-facing links and gaps                             |
 | Task  | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID, `open.item-XX` for a spike, or the semantic error identifier for error handling; dependency and verification evidence |
 
 Descriptions may summarize source behavior, but the DR/SRS and Use Case remain
-authoritative. Always include links to the source documents and stable IDs in a
-machine-readable line, for example:
+authoritative. Every dispatchable item uses the fixed section order from
+[`delivery-coverage.md`](./delivery-coverage.md): `Source`, `Slice Scope ID`,
+`Output`, `Checks`, and optional `AC Coverage`. The canonical source and slice
+scope form the stable projection key
+`<canonical-source>::<slice-scope-id>`. For Use Case work, projection keys start
+with `UC-XX::`.
 
-```text
-Source: DR-01 | JTBD-02 | UC-03 | AC-UC-03-01
+Always include links to the source documents and stable IDs. `AC Coverage`
+contains IDs only, never copied acceptance-check text. For example:
+
+```markdown
+## Source
+
+UC-03 — <canonical child URL>
+
+## Slice Scope ID
+
+select-saved-card
+
+## Output
+
+A deployable saved-card selection slice with an executable acceptance-test
+bundle traced to the canonical Use Case.
+
+## Checks
+
+- CI discovers and executes one test tagged `AC-01`, and links its result to the
+  delivery artifact.
+
+## AC Coverage
+
+- AC-01
 ```
+
+Do not turn canonical acceptance-check behavior, guardrails, errors, or
+thresholds into item-local `Checks`, even by paraphrasing them. For example, if
+`AC-01` says that a resident receives one notification within two minutes
+without contact data in logs, an item-local Check can verify that CI executed a
+test tagged `AC-01` and attached its result; it must not mention notification
+delivery, the two-minute threshold, or contact data. The Use Case remains the
+behavioral source of truth.
 
 For a spike Task or an error-handling Task, carry the decision or the error
 identifier too:
 
 ```text
-Source: DR-01 | open.item-007 | blocks UC-03
-Source: DR-01 | UC-01 | AGREEMENT_EXTENSION_INVALID
+DR-01/open.item-007::select-provider
+UC-01::handle-agreement-extension-invalid
 ```
 
 ## Sizing and decomposition
@@ -92,6 +127,11 @@ source evidence, not open decisions.
 
 Report each blocker with its source, impact, and required resolution. Do not
 replace it with a guessed Jira value.
+
+Before confirmation, run the read-only
+[`validate-delivery-coverage`](./delivery-coverage.md) procedure. Missing or
+ambiguous source, duplicate projection identity, empty output, missing
+item-local checks, or incomplete `UC-XX::` coverage blocks persistence.
 
 ## Persistence mechanics
 

@@ -41,12 +41,19 @@ Confluence source page or Figma design artifact. Set the Jira issue as
 page or artifact title as `title`. Keep the machine-readable source line in the
 description as well.
 
+Every confirmed Epic must have a remote link to its canonical DR/SRS page.
+Other source links remain item-specific; the Epic-to-DR/SRS relationship is
+mandatory and is verified after persistence.
+
 ## Confirmation protocol
 
 Before any mutation, state the project, operation, item count, hierarchy,
-material field changes, and any unresolved non-blocking gaps. A request to
-"prepare", "draft", or "show" is not confirmation. One confirmation covers the
-confirmed batch, or the single confirmed item in single-item mode.
+material field changes, delivery-coverage result, projection digest, and any
+unresolved non-blocking gaps. A request to "prepare", "draft", or "show" is not
+confirmation. One confirmation covers only the exact digest shown for the
+confirmed batch, or the single confirmed item in single-item mode. Re-read the
+canonical sources immediately before mutation; if their content or the
+projection digest changed, invalidate the confirmation and return to review.
 
 ## Synchronization matching
 
@@ -87,6 +94,9 @@ Re-fetch every created or updated item and verify:
 - every requested Confluence or Figma remote link is present on the intended
   Jira item; verify with Jira remote-link retrieval when graph-context traversal
   does not expose the relationship.
+- every Epic has a remote link to the canonical DR/SRS page;
+- every persisted projection key is unique and unchanged from the confirmed
+  projection, and the confirmed `UC-XX::` coverage still passes.
 
 A failed verification makes the operation incomplete.
 

@@ -76,6 +76,9 @@ bundled template as a read-only input.
   services and trust boundaries, not IaC, pipeline, or SKU detail, and record the
   repository as a link.
 - Keep evidence traceable to its source artifact or stated input.
+- Include a minimum C4 view: a System Context diagram or link in every DR/SRS,
+  plus a Container or Component view when the solution has an internal
+  decomposition. Record a justified gap rather than inventing boundaries.
 - Separate confirmed facts, proposed design, assumptions, unresolved questions,
   and decisions.
 - Keep detailed flows, edge cases, acceptance checks, and test notes in the Use
@@ -142,7 +145,9 @@ bundled template as a read-only input.
    and its domain entities and typed errors. Downstream backlog generation
    consumes the `ready` children and ignores the rest. A promotion is proposed
    with evidence and confirmed by a human reviewer; never apply it
-   autonomously.
+   autonomously. Return a readiness evidence table that links every review and
+   backlog criterion to its source, gap, or justified `N/A`; prose-only
+   readiness claims do not satisfy the gate.
 
 ## Clarification rules
 
