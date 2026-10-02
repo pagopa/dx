@@ -317,7 +317,8 @@ describe("required tag prompts", () => {
           expect.objectContaining({
             choices: [...costCenterValues],
             default: costCenterValues[0],
-            message: "Cost center",
+            message:
+              "Cost center (Pagopa only; if unsure, check https://pagopa.atlassian.net/wiki/search?text=tagging%20strategy)",
             name: "tags.CostCenter",
             type: "list",
           }),

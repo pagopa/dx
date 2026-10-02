@@ -176,6 +176,8 @@ export type PromptsDependencies = {
 type BasePromptAnswers = z.infer<typeof basePromptAnswersSchema>;
 
 const DEFAULT_COST_CENTER = costCenterValues[0];
+const COST_CENTER_GUIDANCE_URL =
+  "https://pagopa.atlassian.net/wiki/search?text=tagging%20strategy";
 
 const resolveCloudAccounts = (
   availableCloudAccounts: CloudAccount[],
@@ -252,7 +254,7 @@ const getBaseQuestions = (
     questions.push({
       choices: [...costCenterValues],
       default: DEFAULT_COST_CENTER,
-      message: "Cost center",
+      message: `Cost center (Pagopa only; if unsure, check ${COST_CENTER_GUIDANCE_URL})`,
       name: "tags.CostCenter",
       type: "list",
     });
