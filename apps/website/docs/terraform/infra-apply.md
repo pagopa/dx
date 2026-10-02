@@ -67,23 +67,22 @@ Apply** flow, so the plan a reviewer approves is what gets applied:
 
 If no matching Nx project is found, both jobs are skipped.
 
-The workflow serializes complete releases, including planning and approval,
-within each repository. A queued run plans against the state left by the
-previous run. Active releases are never cancelled; GitHub queues up to 100
-pending runs instead of replacing them. Queue order follows when each run
-starts waiting for the lock, not necessarily commit order.
+The complete release is serialized through planning, approval and apply. Active
+runs are never cancelled. Only one run remains pending; a newer run replaces the
+pending one and generates its plan after the active release ends. The queue does
+not guarantee commit order.
 
-When migrating to this wrapper, remove the push triggers from the legacy
-callers that deploy the same states. In this repository, the dev, uat and prod
-legacy resource callers remain available only through `workflow_dispatch`.
-Do not run both deployment flows concurrently against the same state.
+When migrating to this wrapper, remove the push triggers from the legacy callers
+that deploy the same states. In this repository, the dev, uat and prod legacy
+resource callers remain available only through `workflow_dispatch`. Do not run
+both deployment flows concurrently against the same state.
 
 :::warning Shared modules
 
 Until [CES-2353](https://pagopa.atlassian.net/browse/CES-2353) is implemented,
 changes confined to unmanifested `infra/resources/_modules` may not select any
-affected project. Use `workflow_dispatch` for these releases: manual runs
-select all Terraform applications in the discovered environments.
+affected project. Use `workflow_dispatch` for these releases: manual runs select
+all Terraform applications in the discovered environments.
 
 :::
 
