@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.27.10",
+  "version": "0.27.11",
   "description": "A CLI useful to manage DX tools.",
   "keywords": [
     "CLI",
@@ -58,7 +58,7 @@
     "ora": "^9.4.1",
     "replace-in-file": "^8.4.0",
     "semver": "catalog:",
-    "yaml": "^2.9.0",
+    "yaml": "^2.9.1",
     "zod": "catalog:"
   },
   "devDependencies": {

@@ -7,6 +7,14 @@ import {
 } from "./cloud-account.js";
 import { TerraformBackend } from "./remote-backend.js";
 
+/**
+ * Name of the shared core Terraform state scope.
+ *
+ * The core is shared by every workspace domain using the same prefix, so its
+ * state does not belong to a single domain.
+ */
+export const CORE_STATE_SCOPE = "core";
+
 export const baseEnvironmentNames = ["dev", "prod", "uat"] as const;
 
 export const environmentShort = {

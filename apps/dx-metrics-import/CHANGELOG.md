@@ -1,3 +1,13 @@
+## 0.1.16 (2026-10-01)
+
+### 🩹 Fixes
+
+- Fix the js-yaml v5 ESM import ([#2288](https://github.com/pagopa/dx/pull/2288))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
 ## 0.1.15 (2026-09-24)
 
 ### 🚀 Features

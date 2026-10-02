@@ -2,7 +2,7 @@
 
 import * as schema from "@pagopa/dx-metrics-core/schema";
 import { sql } from "drizzle-orm";
-import yaml from "js-yaml";
+import * as yaml from "js-yaml";
 
 import type { ImportContext } from "../import-context";
 

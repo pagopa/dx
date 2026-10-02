@@ -1,3 +1,13 @@
+## 0.2.18 (2026-10-01)
+
+### 🩹 Fixes
+
+- Update YAML, Next.js, and Axios dependencies ([#2288](https://github.com/pagopa/dx/pull/2288))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
 ## 0.2.17 (2026-09-22)
 
 ### 🩹 Fixes

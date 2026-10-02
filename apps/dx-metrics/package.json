@@ -1,6 +1,6 @@
 {
   "name": "dx-metrics",
-  "version": "0.5.23",
+  "version": "0.5.24",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,7 +16,7 @@
     "cmdk": "^1.1.1",
     "drizzle-orm": "catalog:",
     "lucide-react": "^0.577.0",
-    "next": "^16.3.3",
+    "next": "^16.3.6",
     "react": "catalog:react",
     "react-dom": "catalog:react",
     "recharts": "^3.10.1",

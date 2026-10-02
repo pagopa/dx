@@ -14,6 +14,7 @@ import {
   responseCodesQuery as appGwResponseCodesQuery,
   responseTimeQuery as appGwResponseTimeQuery,
 } from "@/builders/queries/app-gateway.js";
+import { responseTimeFieldName } from "@/builders/queries/percentile-field.js";
 
 describe("API Management Queries", () => {
   const baseCtx = {
@@ -144,5 +145,166 @@ describe("App Gateway Queries", () => {
 
       expect(result).toContain("where duration_percentile_95 > threshold");
     });
+  });
+});
+
+describe("Status code categories", () => {
+  const baseCtx = {
+    action_groups_ids: ["ag1"],
+    data_source_id: "ds1",
+    endpoint: "/users",
+    endpoints: {},
+    hosts: ["api.example.com"],
+    location: "eastus",
+    name: "test",
+    resource_group: "dashboards",
+    resource_type: "api-management",
+    timespan: "5m",
+  };
+
+  it("should classify every default category when queries is not provided", () => {
+    const result = responseCodesQuery(baseCtx);
+
+    ["1XX", "2XX", "3XX", "4XX", "5XX"].forEach((category) => {
+      expect(result).toContain(`"${category}"`);
+    });
+    expect(result).not.toContain('"Other"');
+  });
+
+  it("should honour configured status code categories", () => {
+    const result = responseCodesQuery({
+      ...baseCtx,
+      queries: {
+        response_time_percentile: 95,
+        status_code_categories: ["2XX", "5XX"],
+      },
+    });
+
+    expect(result).toContain('responseCode_d between (200 .. 299), "2XX"');
+    expect(result).toContain('responseCode_d between (500 .. 599), "5XX"');
+    expect(result).not.toContain('"1XX"');
+    expect(result).toContain('"Other"');
+  });
+
+  it("should use the httpStatus_d field for App Gateway", () => {
+    const result = appGwResponseCodesQuery({
+      ...baseCtx,
+      queries: {
+        response_time_percentile: 95,
+        status_code_categories: ["2XX"],
+      },
+    });
+
+    expect(result).toContain('httpStatus_d between (200 .. 299), "2XX"');
+    expect(result).toContain('"Other"');
+  });
+
+  it("should classify every row as Other when categories are empty", () => {
+    const result = responseCodesQuery({
+      ...baseCtx,
+      queries: {
+        response_time_percentile: 95,
+        status_code_categories: [],
+      },
+    });
+
+    expect(result).toContain('extend HTTPStatus = "Other"');
+    expect(result).not.toContain("between (");
+    expect(result).not.toContain('"1XX"');
+  });
+});
+
+describe("Kusto regex embedding", () => {
+  const baseCtx = {
+    action_groups_ids: ["ag1"],
+    data_source_id: "ds1",
+    hosts: ["api.example.com"],
+    location: "eastus",
+    name: "test",
+    resource_group: "dashboards",
+    timespan: "5m",
+  };
+
+  it("should emit an escaped, verbatim App Gateway pattern", () => {
+    const result = appGwAvailabilityQuery({
+      ...baseCtx,
+      endpoint: "/v1/status.json",
+      endpoints: { "/v1/status.json": {} },
+      is_alarm: false,
+      resource_type: "app-gateway",
+    });
+
+    expect(result).toContain('matches regex @"^/v1/status\\.json$"');
+  });
+
+  it("should match the path of the absolute API Management request URL", () => {
+    const result = availabilityQuery({
+      ...baseCtx,
+      endpoint: "/users",
+      endpoints: {},
+      is_alarm: false,
+      resource_type: "api-management",
+    });
+
+    expect(result).toContain(
+      'tostring(parse_url(url_s)["Path"]) matches regex @"^/users$"',
+    );
+  });
+
+  it("should match the path of the absolute API Management request URL in response codes", () => {
+    const result = responseCodesQuery({
+      ...baseCtx,
+      endpoint: "/users",
+      endpoints: {},
+      resource_type: "api-management",
+    });
+
+    expect(result).toContain('let api_url = @"^/users$";');
+    expect(result).toContain(
+      'tostring(parse_url(url_s)["Path"]) matches regex api_url',
+    );
+  });
+});
+
+describe("Response time percentile field name", () => {
+  const baseCtx = {
+    action_groups_ids: ["ag1"],
+    data_source_id: "ds1",
+    endpoint: "/users",
+    endpoints: {},
+    hosts: ["api.example.com"],
+    location: "eastus",
+    name: "test",
+    resource_group: "dashboards",
+    resource_type: "api-management",
+    timespan: "5m",
+  };
+
+  it.each([
+    [95, "duration_percentile_95"],
+    [99.9, "duration_percentile_99_9"],
+  ])("should build an identifier-safe field for %s", (percentile, expected) => {
+    expect(responseTimeFieldName(percentile)).toBe(expected);
+  });
+
+  it("should use the safe field name in the generated queries", () => {
+    const ctx = {
+      ...baseCtx,
+      queries: {
+        response_time_percentile: 99.9,
+        status_code_categories: ["2XX"],
+      },
+    };
+
+    const apiManagement = responseTimeQuery({ ...ctx, is_alarm: true });
+    const appGateway = appGwResponseTimeQuery({ ...ctx, is_alarm: true });
+
+    for (const query of [apiManagement, appGateway]) {
+      expect(query).toContain("duration_percentile_99_9=percentiles");
+      expect(query).toContain("percentiles(");
+      expect(query).toContain(", 99.9) by bin(TimeGenerated");
+      expect(query).toContain("| where duration_percentile_99_9 > threshold");
+      expect(query).not.toContain("duration_percentile_99.9");
+    }
   });
 });
