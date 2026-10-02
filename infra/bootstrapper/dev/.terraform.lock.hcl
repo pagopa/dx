@@ -3,7 +3,7 @@
 
 provider "registry.terraform.io/hashicorp/aws" {
   version     = "6.46.0"
-  constraints = ">= 5.0.0, < 7.0.0"
+  constraints = ">= 5.0.0, ~> 6.0, < 7.0.0"
   hashes = [
     "h1:4TQ6PLtOXgRf3ojUYjUkwH2JSmio/pSi75Ok9k0CMDE=",
     "h1:HAB8KLxgUe1Pb+e8ile18AxzhNWeHV9FUBmEM5YHzNM=",
@@ -53,7 +53,7 @@ provider "registry.terraform.io/hashicorp/azuread" {
 
 provider "registry.terraform.io/hashicorp/azurerm" {
   version     = "4.74.0"
-  constraints = ">= 3.0.0, >= 3.110.0, >= 3.114.0, ~> 4.0, < 5.0.0"
+  constraints = ">= 3.114.0, ~> 4.0, ~> 4.60, < 5.0.0"
   hashes = [
     "h1:PBiXTNz3vQjxlmEEO4ZwaEPms8ztbtf+NIIUuyDgtwI=",
     "h1:Zqy2w+Hfn5RrMkjbONtzPGVtzsOxETE4gK8M03u0cig=",
@@ -100,7 +100,7 @@ provider "registry.terraform.io/hashicorp/github" {
 
 provider "registry.terraform.io/integrations/github" {
   version     = "6.12.1"
-  constraints = "~> 6.0"
+  constraints = "~> 6.0, ~> 6.12"
   hashes = [
     "h1:HXXTIvXPBVJ4mBs01fcJk7wG8N3jGvR/4HqjnRGp4Wo=",
     "h1:bGz4LIep/7PVrqy6P8cTYbAJpdxXGrupUJjkCczlzIs=",
@@ -151,7 +151,7 @@ provider "registry.terraform.io/pagopa-dx/aws" {
 
 provider "registry.terraform.io/pagopa-dx/azure" {
   version     = "0.12.0"
-  constraints = "~> 0.0, >= 0.0.6, >= 0.0.7, < 1.0.0"
+  constraints = "~> 0.0, ~> 0.12"
   hashes = [
     "h1:VeJydNI5n+UiUYLGbydl9AL+DeWpyv+7bq/h3Y6p3N8=",
     "h1:Y9PhjNpKzBTaETT3OrjY/S0t1G8KqdivaUMOS/YgJDU=",

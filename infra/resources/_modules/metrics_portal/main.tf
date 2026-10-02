@@ -6,6 +6,8 @@ resource "azurerm_key_vault_secret" "azuread_client_secret" {
 
   value_wo         = "placeholder"
   value_wo_version = 1
+
+  tags = var.tags
 }
 
 

@@ -25,11 +25,9 @@ locals {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
-    CreatedBy      = "Terraform"
-    Owner          = "DevEx"
-    Environment    = "Prod"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/core/prod"
-    ManagementTeam = "Developer Experience"
+    CostCenter  = "TS000 - TECNOLOGIA & SERVIZI"
+    Owner       = "DevEx"
+    Environment = "Prod"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/core/prod"
   }
 }

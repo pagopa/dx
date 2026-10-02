@@ -32,6 +32,8 @@ resource "aws_budgets_budget" "monthly_budget" {
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
 
+  tags = local.tags
+
   cost_types {
     include_tax = true
   }
