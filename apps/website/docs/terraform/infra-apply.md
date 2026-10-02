@@ -63,6 +63,11 @@ Apply** flow, so the plan a reviewer approves is what gets applied:
 
 If no matching Nx project is found, both jobs are skipped.
 
+The complete release is serialized through planning, approval and apply. Active
+runs are never cancelled. Only one run remains pending; a newer run replaces the
+pending one and generates its plan after the active release ends. The queue does
+not guarantee commit order.
+
 ```yaml
 jobs:
   release:
