@@ -21,7 +21,7 @@ module "container_app" {
   container_app_environment_id = var.container_app_env_id
   user_assigned_identity_id    = var.container_app_user_assigned_identity_id
 
-  deployment_strategy = "Latest"
+  deployment_strategy = "Incremental"
   use_case            = "default"
 
   size = {
