@@ -108,6 +108,53 @@ describe("monorepo generator — file generation", () => {
     expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain("allowBuilds:");
   });
 
+  it("resolves the generated tests plugin from the DX marketplace", async () => {
+    const generatedSettings: unknown = JSON.parse(
+      await fs.readFile(
+        path.join(tmpDir, payload.repoName, ".github/copilot/settings.json"),
+        "utf-8",
+      ),
+    );
+    expect(generatedSettings).toStrictEqual({
+      enabledPlugins: {
+        "azure@pagopa-dx": true,
+        "project-management@pagopa-dx": true,
+        "standards@pagopa-dx": true,
+        "terraform@pagopa-dx": true,
+        "tests@pagopa-dx": true,
+        "typescript@pagopa-dx": true,
+      },
+      extraKnownMarketplaces: {
+        "pagopa-dx": {
+          source: { repo: "pagopa/dx", source: "github" },
+        },
+      },
+    });
+
+    const repositoryRoot = path.resolve(
+      resolveTemplatesPath("monorepo"),
+      "../../../..",
+    );
+    const marketplace: unknown = JSON.parse(
+      await fs.readFile(
+        path.join(repositoryRoot, ".github/plugin/marketplace.json"),
+        "utf-8",
+      ),
+    );
+    expect(marketplace).toMatchObject({
+      metadata: { pluginRoot: "plugins" },
+      plugins: expect.arrayContaining([{ name: "tests", source: "tests" }]),
+    });
+
+    const testsManifest: unknown = JSON.parse(
+      await fs.readFile(
+        path.join(repositoryRoot, "plugins/tests/plugin.json"),
+        "utf-8",
+      ),
+    );
+    expect(testsManifest).toMatchObject({ name: "tests" });
+  });
+
   it("includes the mise toolchain configuration", async () => {
     const generatedRoot = path.join(tmpDir, payload.repoName);
     const generatedFiles = await fs.readdir(generatedRoot);
