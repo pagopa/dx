@@ -51,7 +51,7 @@ repository GitHub environments named `infra-<env>-cd` (and the paired
 `infra-<env>-ci` used for planning), and checks which Terraform Nx projects are
 affected for each environment.
 
-Like the legacy `infra_apply` workflow, releases follow a **Plan → Approve →
+Like the current `infra_apply` workflow, releases follow a **Plan → Approve →
 Apply** flow, so the plan a reviewer approves is what gets applied:
 
 1. **Plan** (`release-plan`): runs on the matching self-hosted runner label,
@@ -88,7 +88,7 @@ jobs:
     secrets: inherit
 ```
 
-Keep using `infra_apply.yaml` for the legacy Terraform flow that creates,
+Keep using `infra_apply.yaml` for the current Terraform flow that creates,
 stores, downloads, and applies Terraform plan bundles without relying on Nx
 project discovery.
 
@@ -114,7 +114,7 @@ project discovery.
 
 ## How it Works
 
-The legacy `infra_apply` workflow executes the following steps:
+The current `infra_apply` workflow executes the following steps:
 
 1. Determines the Terraform version to use from the `.terraform-version` file
 2. Detects the Terraform project roots inside `<base_path>/<environment>`
@@ -128,7 +128,7 @@ The legacy `infra_apply` workflow executes the following steps:
 
 ## Project detection rules
 
-The legacy workflow automatically detects which directories must be applied:
+The current workflow automatically detects which directories must be applied:
 
 - **Flat layout**: if Terraform files exist directly in
   `<base_path>/<environment>`, that directory is treated as the single Terraform
