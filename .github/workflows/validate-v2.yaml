@@ -64,7 +64,7 @@ jobs:
         run: pnpm --filter . ci
 
       - name: Warn missing version plan coverage
-        uses: pagopa/dx/actions/nx-release@main
+        uses: pagopa/dx/actions/nx-release@98bd3e01fd466ab8d9f2f7645a7aaa4271d3f265 # main
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
@@ -381,7 +381,7 @@ jobs:
       # lifecycle scripts don't run with an active cloud session. The GitHub
       # App secrets are scoped to this step for the same reason.
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@98bd3e01fd466ab8d9f2f7645a7aaa4271d3f265 # main
         env:
           GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
           GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
@@ -429,7 +429,7 @@ jobs:
           merge-multiple: true
 
       - name: Post Code Review Report
-        uses: pagopa/dx/actions/run-dx-task@main
+        uses: pagopa/dx/actions/run-dx-task@98bd3e01fd466ab8d9f2f7645a7aaa4271d3f265 # main
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:

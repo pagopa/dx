@@ -19,7 +19,7 @@ runs:
   steps:
     - name: Setup Node.js
       id: node-setup
-      uses: pagopa/dx/.github/actions/node-setup@main
+      uses: pagopa/dx/.github/actions/node-setup@98bd3e01fd466ab8d9f2f7645a7aaa4271d3f265 # main
 
     - name: Detect build tool
       id: detect-build-tool
