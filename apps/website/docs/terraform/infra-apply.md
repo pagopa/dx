@@ -77,15 +77,6 @@ that deploy the same states. In this repository, the dev, uat and prod legacy
 resource callers remain available only through `workflow_dispatch`. Do not run
 both deployment flows concurrently against the same state.
 
-:::warning Shared modules
-
-Until [CES-2353](https://pagopa.atlassian.net/browse/CES-2353) is implemented,
-changes confined to unmanifested `infra/resources/_modules` may not select any
-affected project. Use `workflow_dispatch` for these releases: manual runs select
-all Terraform applications in the discovered environments.
-
-:::
-
 ```yaml
 jobs:
   release:

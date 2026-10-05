@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { LocaleProvider } from "@/components/LocaleProvider";
 import { Sidebar } from "@/components/Sidebar";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { writeSidebarCollapsed } from "@/lib/sidebar-state";
 import { cn, focusRing } from "@/lib/utils";
 
@@ -95,14 +96,14 @@ export function ClientLayout({
     <LocaleProvider>
       <TooltipProvider>
         <a
-          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:border focus:border-[#30363d] focus:bg-[#21262d] focus:px-4 focus:py-2 focus:text-sm focus:text-white"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:border focus:border-border focus:bg-muted focus:px-4 focus:py-2 focus:text-sm focus:text-foreground"
           href="#dashboard-content"
           inert={isDrawerOpen}
         >
           Skip to content
         </a>
 
-        <div className="flex min-h-screen bg-[#0a0c10] font-sans">
+        <div className="flex min-h-screen bg-background font-sans">
           <Sidebar
             isCollapsed={isCollapsed}
             isOpen={isDrawerOpen}
@@ -117,14 +118,14 @@ export function ClientLayout({
             )}
             inert={isDrawerOpen}
           >
-            <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-[#30363d] bg-[#0d1117]/80 px-4 py-3 backdrop-blur-md sm:px-6">
+            <header className="sticky top-0 z-10 flex items-center justify-between gap-4 border-b border-border bg-card/80 px-4 py-3 backdrop-blur-md sm:px-6">
               <div className="flex min-w-0 items-center gap-3">
                 <button
                   aria-controls="app-sidebar"
                   aria-expanded={isDrawerOpen}
                   aria-label="Open navigation"
                   className={cn(
-                    "-ml-1 rounded-md border border-[#30363d] p-1.5 text-gray-400 transition-colors hover:bg-[#21262d] hover:text-white lg:hidden",
+                    "-ml-1 rounded-md border border-border p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground lg:hidden",
                     focusRing,
                   )}
                   onClick={() => setIsDrawerOpen(true)}
@@ -134,16 +135,12 @@ export function ClientLayout({
                   <Menu aria-hidden="true" size={18} />
                 </button>
 
-                <h1 className="truncate text-sm font-bold tracking-tight text-[#e6edf3] sm:text-base">
-                  Engineering <span className="text-green-500">Metrics</span>
+                <h1 className="truncate text-sm font-bold tracking-tight text-foreground sm:text-base">
+                  Engineering <span className="text-accent">Metrics</span>
                 </h1>
               </div>
 
-              <div className="hidden shrink-0 rounded-full border border-[#30363d] bg-[#21262d] px-3 py-1.5 sm:block">
-                <span className="text-xs font-medium text-[#e6edf3]">
-                  Anonymous access
-                </span>
-              </div>
+              <ThemeToggle />
             </header>
 
             <main

@@ -9,9 +9,7 @@ version = "0.1.0"
 description = "PagoPA Harbor extensions: custom Copilot CLI agent (CopilotCliMod) used by harbor-bench."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-  "harbor==0.22.0",
-]
+dependencies = ["harbor==0.22.0"]
 classifiers = ["Private :: Do Not Upload"]
 
 [project.optional-dependencies]

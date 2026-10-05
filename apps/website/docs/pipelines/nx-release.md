@@ -65,24 +65,6 @@ creating only the missing tags and releases.
 - npm packages require
   [OIDC Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements)
   configured (`id-token: write` permission must be granted)
-- Public packages must be tagged as public in their Nx project configuration.
-  The `nx-release` workflow treats any tag equal to `public` or ending with
-  `:public` (for example, `npm:public`) as publishable.
-
-### Marking a package as public
-
-To mark a package as public, set `"private": false` in the package's
-`package.json` file. This is necessary for the publish workflow to process the
-package:
-
-```json
-{
-  "name": "@pagopa/my-package",
-  "version": "1.0.0",
-  "private": false,
-  ... other package.json fields
-}
-```
 
 ### nx.json configuration
 

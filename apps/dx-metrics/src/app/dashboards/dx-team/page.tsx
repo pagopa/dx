@@ -1,11 +1,12 @@
 "use client";
 
-import { DataTable, SERIES_COLORS, SimpleBarChart } from "@/components/Charts";
+import { DataTable, SimpleBarChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
 import { ORGANIZATION } from "@/lib/config";
 import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
@@ -33,6 +34,7 @@ interface DxTeamData {
 }
 
 export default function DxTeamDashboard() {
+  const colors = useSeriesColors();
   const { days, setDays } = useDashboardFilters({ mode: "time-only" });
 
   const { data, error, loading, refetch } = useDashboardData<DxTeamData>(
@@ -43,7 +45,7 @@ export default function DxTeamDashboard() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">Team DX Metrics</h2>
+        <h2 className="text-xl font-bold text-foreground">Team DX Metrics</h2>
         <TooltipIcon content={tooltipContent.title} label="Team DX Metrics" />
       </div>
       <DashboardFilters
@@ -75,13 +77,13 @@ export default function DxTeamDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: SERIES_COLORS.blue,
+                  color: colors.blue,
                   key: "dxPr",
                   name: "DX PR",
                   stackId: "a",
                 },
                 {
-                  color: SERIES_COLORS.red,
+                  color: colors.red,
                   key: "nonDxPr",
                   name: "Non DX PR",
                   stackId: "a",
@@ -97,7 +99,7 @@ export default function DxTeamDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: SERIES_COLORS.blue,
+                  color: colors.blue,
                   key: "repositoryCommits",
                   name: "Commits",
                 },
@@ -142,7 +144,7 @@ export default function DxTeamDashboard() {
                     const repository = String(val);
                     return (
                       <a
-                        className="text-blue-600 hover:underline"
+                        className="text-link hover:underline"
                         href={`https://github.com/${repository}`}
                         rel="noopener noreferrer"
                         target="_blank"
@@ -167,7 +169,7 @@ export default function DxTeamDashboard() {
                     const encodedPath = encodeURIComponent(`"${path}"`);
                     return (
                       <a
-                        className="text-blue-600 hover:underline"
+                        className="text-link hover:underline"
                         href={`https://github.com/search?q=org%3A${encodeURIComponent(ORGANIZATION)}+${encodedPath}&type=code`}
                         rel="noopener noreferrer"
                         target="_blank"

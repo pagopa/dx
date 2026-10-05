@@ -20,6 +20,20 @@ export interface EnvironmentOverrides {
   GITHUB_TOKEN?: string;
 }
 
+/**
+ * Days re-scanned before a stored incremental cursor. Catches pull requests or
+ * runs updated just after the previous import without re-downloading history.
+ * Overridable with `IMPORT_OVERLAP_DAYS`.
+ */
+export const DEFAULT_OVERLAP_DAYS = 2;
+
+/** Parses `IMPORT_OVERLAP_DAYS`, falling back to {@link DEFAULT_OVERLAP_DAYS}. */
+export const resolveOverlapDays = (raw?: string): number => {
+  const parsed = parseInt(raw ?? "", 10);
+
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : DEFAULT_OVERLAP_DAYS;
+};
+
 export interface GitHubAppAuthSettings {
   appId: number | string;
   installationId: number;

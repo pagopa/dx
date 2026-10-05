@@ -2,7 +2,6 @@
 
 import {
   DataTable,
-  SERIES_COLORS,
   SimpleBarChart,
   SimpleLineChart,
 } from "@/components/Charts";
@@ -12,6 +11,7 @@ import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { formatNumber } from "@/lib/format";
 import { severityFromTarget } from "@/lib/insights/insight-helpers";
@@ -64,12 +64,14 @@ interface PrReviewDashboardData {
 }
 
 export default function PullRequestsReviewDashboard() {
-  const { days, repository, setDays, setRepository } = useDashboardFilters();
+  const colors = useSeriesColors();
+  const { days, repositories, setDays, setRepositories } =
+    useDashboardFilters();
 
   const { data, error, loading, refetch } =
     useDashboardData<PrReviewDashboardData>("pull-requests-review", {
       days,
-      repository,
+      repositories,
     });
 
   const reviewMatrixWithoutSelfReviews =
@@ -123,21 +125,26 @@ export default function PullRequestsReviewDashboard() {
   const deltaFromPrevious = (
     current: null | number,
     previous: null | number,
-  ) => (current != null && previous != null ? percentChange(current, previous) : null);
+  ) =>
+    current != null && previous != null
+      ? percentChange(current, previous)
+      : null;
 
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">Pull Requests Review</h2>
+        <h2 className="text-xl font-bold text-foreground">
+          Pull Requests Review
+        </h2>
         <TooltipIcon
           content={tooltipContent.title}
           label="Pull Requests Review"
         />
       </div>
       <DashboardFilters
-        onRepositoryChange={setRepository}
+        onRepositoriesChange={setRepositories}
         onTimeIntervalChange={setDays}
-        repository={repository}
+        repositories={repositories}
         timeInterval={days}
       />
       <DashboardRequestState
@@ -226,7 +233,7 @@ export default function PullRequestsReviewDashboard() {
           {(data.timeToFirstReviewTrend.length > 0 ||
             data.timeToMergeTrend.length > 0) && (
             <>
-              <h3 className="mt-2 mb-4 text-base font-semibold text-white">
+              <h3 className="mt-2 mb-4 text-base font-semibold text-foreground">
                 Review Timing
               </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -234,7 +241,7 @@ export default function PullRequestsReviewDashboard() {
                   data={data.timeToFirstReviewTrend}
                   lines={[
                     {
-                      color: SERIES_COLORS.blue,
+                      color: colors.blue,
                       key: "avgHoursToFirstReview",
                       name: "Hours to First Review",
                     },
@@ -255,7 +262,7 @@ export default function PullRequestsReviewDashboard() {
                   data={data.timeToMergeTrend}
                   lines={[
                     {
-                      color: SERIES_COLORS.red,
+                      color: colors.red,
                       key: "avgHoursToMerge",
                       name: "Hours to Merge",
                     },
@@ -272,20 +279,20 @@ export default function PullRequestsReviewDashboard() {
           {/* Code Review Distribution */}
           {data.reviewDistribution.length > 0 && (
             <>
-              <h3 className="mt-8 mb-4 text-base font-semibold text-white">
+              <h3 className="mt-8 mb-4 text-base font-semibold text-foreground">
                 Code Review Distribution
               </h3>
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <SimpleBarChart
                   bars={[
                     {
-                      color: SERIES_COLORS.green,
+                      color: colors.green,
                       key: "approvals",
                       name: "Approvals",
                       stackId: "reviews",
                     },
                     {
-                      color: SERIES_COLORS.red,
+                      color: colors.red,
                       key: "changeRequests",
                       name: "Change Requests",
                       stackId: "reviews",
@@ -327,14 +334,14 @@ export default function PullRequestsReviewDashboard() {
           {/* Merge Ownership */}
           {(data.mergers ?? []).length > 0 && (
             <>
-              <h3 className="mt-8 mb-4 text-base font-semibold text-white">
+              <h3 className="mt-8 mb-4 text-base font-semibold text-foreground">
                 Merge Ownership
               </h3>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 <SimpleBarChart
                   bars={[
                     {
-                      color: SERIES_COLORS.blue,
+                      color: colors.blue,
                       key: "merges",
                       name: "Merges",
                     },
@@ -352,7 +359,7 @@ export default function PullRequestsReviewDashboard() {
                 <SimpleBarChart
                   bars={[
                     {
-                      color: SERIES_COLORS.green,
+                      color: colors.green,
                       key: "mergesOfOthers",
                       name: "Merges of others' PRs",
                     },

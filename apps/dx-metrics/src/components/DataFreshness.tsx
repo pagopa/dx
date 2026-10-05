@@ -49,7 +49,9 @@ export function DataFreshness({
   }, [timestamp]);
 
   const isStale = daysAgo !== null && daysAgo > DATA_STALE_AFTER_DAYS;
-  const textClassName = isStale ? "text-amber-300" : "text-gray-400";
+  const textClassName = isStale
+    ? "text-amber-700 dark:text-amber-300"
+    : "text-muted-foreground";
   const windowStart =
     windowDays !== undefined && windowDays > 0 && !Number.isNaN(timestamp)
       ? new Date(timestamp - windowDays * MS_PER_DAY)
@@ -65,7 +67,7 @@ export function DataFreshness({
         {isStale ? " · data may be stale" : ""}
       </p>
       {windowStart && (
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-subtle-foreground">
           {windowDays}-day window: {short(windowStart)} – {short(referenceDate)}{" "}
           · ends at the latest activity in this view, not today
         </p>

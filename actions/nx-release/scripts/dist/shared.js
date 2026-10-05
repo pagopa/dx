@@ -18279,7 +18279,6 @@ config(en_default());
 // scripts/shared.ts
 var execFileAsync = promisify(execFile);
 var NonEmptyStringSchema = external_exports.string().min(1);
-var ProjectTagsSchema = external_exports.array(external_exports.string());
 var StringArraySchema = external_exports.array(external_exports.string());
 var TagEntrySchema = external_exports.object({
   path: external_exports.string().nullable(),
@@ -18287,8 +18286,7 @@ var TagEntrySchema = external_exports.object({
   version: external_exports.string()
 });
 var ProjectMetadataSchema = external_exports.looseObject({
-  root: NonEmptyStringSchema.optional(),
-  tags: ProjectTagsSchema.optional()
+  root: NonEmptyStringSchema.optional()
 });
 function createOctokit() {
   const token = process.env.GH_TOKEN;
@@ -18310,13 +18308,15 @@ function extractTagEntriesFromPRBody(prBody) {
     return [];
   }
 }
-async function getNxProjectNames() {
+async function getNxProjectNames(targetName) {
   try {
+    const targetArgs = targetName ? ["--withTarget", targetName] : [];
     const { stdout } = await execFileAsync("npx", [
       "nx",
       "show",
       "projects",
-      "--json"
+      "--json",
+      ...targetArgs
     ]);
     let jsonStart = stdout.indexOf('["');
     if (jsonStart === -1) jsonStart = stdout.indexOf("[]");
@@ -18365,15 +18365,6 @@ async function getRepoInfo() {
   }
   throw new Error(
     "Could not determine repository owner/name from GITHUB_REPOSITORY or git remote"
-  );
-}
-async function isPublicProject(projectName) {
-  const metadata = await getNxProjectMetadata(projectName);
-  if (!metadata) return false;
-  const tags = metadata.tags;
-  if (!tags) return false;
-  return tags.some(
-    (tag) => tag === "public" || typeof tag === "string" && tag.endsWith(":public")
   );
 }
 function matchProjectName(tag, projectNames) {
@@ -18443,4 +18434,4 @@ content-type/dist/index.js:
   (* v8 ignore else -- @preserve *)
 */
 
-export { createOctokit, extractTagEntriesFromPRBody, getNxProjectNames, getNxProjectRoot, getRepoInfo, isPublicProject, matchProjectName, parseTagEntries };
+export { createOctokit, extractTagEntriesFromPRBody, getNxProjectNames, getNxProjectRoot, getRepoInfo, matchProjectName, parseTagEntries };

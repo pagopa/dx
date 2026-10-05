@@ -1,3 +1,83 @@
+## 0.27.11 (2026-10-01)
+
+### 🚀 Features
+
+- Store the shared core Terraform state at the root of the `terraform-state` container (`core.tfstate`) instead of scoping it to the workspace domain, since the core is shared by every domain using the same prefix. Workspace-scoped states now use the `domain/scope.tfstate` layout, dropping the prefix already implied by the storage account name. The CLI always generates the canonical core key; legacy-key fallback is not part of the generated configuration. ([#2222](https://github.com/pagopa/dx/pull/2222))
+
+  Migration: existing workspaces whose core state lives under a legacy key (`<prefix>.core.<env>.tfstate` or `<prefix>/<domain>/core.tfstate`) require a one-time migration before running `add environment` again:
+
+  1. Move that blob to `core.tfstate` in the same `terraform-state` container. Because the storage account is already scoped by prefix and environment, this is a blob rename with no Terraform state rewrite.
+  2. Update the `key` in `infra/core/<env>/backend.tf` to `core.tfstate`. The core module is not regenerated when the environment is already initialized, so this file must be updated explicitly.
+  3. Update the `core_state.key` in `infra/bootstrapper/<env>/main.tf` to `core.tfstate`, or run `dx add environment` after moving the blob to regenerate the bootstrapper configuration with the canonical key.
+  4. Run `terraform init -reconfigure` in both `infra/core/<env>` and `infra/bootstrapper/<env>` before the next Terraform operation.
+
+  The CLI does not discover or preserve legacy keys. A workspace with an unmigrated core state will generate configuration that points to `core.tfstate` and fail when Terraform tries to read the missing state.
+
+
+### 🩹 Fixes
+
+- Update YAML, Next.js, and Axios dependencies ([#2288](https://github.com/pagopa/dx/pull/2288))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.27.10 (2026-09-24)
+
+### 🩹 Fixes
+
+- Fix Runner App secrets for new GitHub environments ([#2229](https://github.com/pagopa/dx/pull/2229))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.27.9 (2026-09-23)
+
+### 🩹 Fixes
+
+- Add cloud CLI tools during environment setup ([#2237](https://github.com/pagopa/dx/pull/2237))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.27.8 (2026-09-23)
+
+### 🩹 Fixes
+
+- Require mise for generated repository bootstrap, generate a mise lockfile, and track mise adoption ([#2218](https://github.com/pagopa/dx/pull/2218))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.27.7 (2026-09-22)
+
+### 🚀 Features
+
+- Federate managed identities and IAM roles with GitHub repositories that emit immutable OIDC subject claims (created or renamed after 2026-07-15). The DX CLI and the Azure and AWS Terraform modules now also trust the immutable subject embedding the numeric GitHub owner and repository IDs, keeping the name-based trust for older repositories.  ([#2219](https://github.com/pagopa/dx/pull/2219))
+
+  See https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/
+
+
+### 🩹 Fixes
+
+- Align Azure subscription authorization with the Technology-owned group contract by managing only `admin`, `developers`, and `externals` with `Contributor`, `Reader`, and `Reader` roles while preserving organizational groups. ([#2181](https://github.com/pagopa/dx/pull/2181))
+- Stop generating devcontainers during init ([#2217](https://github.com/pagopa/dx/pull/2217))
+- Reuse the bootstrapper release workflow and configure GitHub App telemetry login centrally ([#2223](https://github.com/pagopa/dx/pull/2223))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+- Updated @pagopa/dx-savemoney to 0.6.7
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
 ## 0.27.6 (2026-09-15)
 
 ### 🩹 Fixes

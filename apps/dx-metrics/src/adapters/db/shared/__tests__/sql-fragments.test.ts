@@ -12,6 +12,7 @@ import {
   isHumanReview,
   notInValues,
   notLikeAll,
+  repositoryIn,
   textArray,
   timeBucket,
   timeBucketInterval,
@@ -19,7 +20,9 @@ import {
 } from "@/adapters/db/shared/sql-fragments";
 import {
   BOT_AUTHORS,
+  DX_REPO,
   EXCLUDED_WORKFLOW_NAMES,
+  ORGANIZATION,
   WEEKLY_BUCKET_THRESHOLD_DAYS,
 } from "@/lib/config";
 
@@ -30,7 +33,7 @@ describe("botAuthorsExclusion", () => {
     const query = dialect.sqlToQuery(botAuthorsExclusion("pr.author"));
 
     expect(query.sql).toBe(
-      "(pr.author NOT IN ($1, $2, $3) AND pr.author NOT LIKE '%[bot]')",
+      "(pr.author NOT IN ($1, $2, $3, $4) AND pr.author NOT LIKE '%[bot]')",
     );
     expect(query.params).toEqual([...BOT_AUTHORS]);
   });
@@ -39,7 +42,7 @@ describe("botAuthorsExclusion", () => {
     const query = dialect.sqlToQuery(botAuthorsExclusion("reviewer"));
 
     expect(query.sql).toBe(
-      "(reviewer NOT IN ($1, $2, $3) AND reviewer NOT LIKE '%[bot]')",
+      "(reviewer NOT IN ($1, $2, $3, $4) AND reviewer NOT LIKE '%[bot]')",
     );
   });
 });
@@ -49,7 +52,7 @@ describe("isHumanReview", () => {
     const query = dialect.sqlToQuery(isHumanReview("rr", "pr"));
 
     expect(query.sql).toBe(
-      "(rr.reviewer NOT IN ($1, $2, $3) AND rr.reviewer NOT LIKE '%[bot]') AND rr.reviewer <> pr.author",
+      "(rr.reviewer NOT IN ($1, $2, $3, $4) AND rr.reviewer NOT LIKE '%[bot]') AND rr.reviewer <> pr.author",
     );
     expect(query.params).toEqual([...BOT_AUTHORS]);
   });
@@ -62,13 +65,18 @@ describe("isHumanReview", () => {
 });
 
 describe("dxPipelineCase", () => {
-  it("classifies DX and non-DX pipelines with literal labels", () => {
-    const query = dialect.sqlToQuery(dxPipelineCase("w.pipeline"));
+  it("classifies the DX repository and DX references as DX pipelines", () => {
+    const query = dialect.sqlToQuery(
+      dxPipelineCase("w.pipeline", "r.full_name"),
+    );
 
     expect(query.sql).toBe(
-      "CASE WHEN w.pipeline LIKE '%pagopa/dx%' THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END",
+      "CASE WHEN r.full_name = $1 OR w.pipeline LIKE $2 THEN 'DX Pipelines' ELSE 'Non-DX Pipelines' END",
     );
-    expect(query.params).toEqual([]);
+    expect(query.params).toEqual([
+      `${ORGANIZATION}/${DX_REPO}`,
+      `%${ORGANIZATION}/${DX_REPO}%`,
+    ]);
   });
 });
 
@@ -134,6 +142,24 @@ describe("textArray", () => {
   });
 });
 
+describe("repositoryIn", () => {
+  it("matches any of the provided repositories", () => {
+    const rendered = dialect.sqlToQuery(
+      repositoryIn("r.full_name", ["pagopa/dx", "pagopa/io-infra"]),
+    );
+
+    expect(rendered.sql).toBe("r.full_name = ANY(ARRAY[$1, $2]::text[])");
+    expect(rendered.params).toEqual(["pagopa/dx", "pagopa/io-infra"]);
+  });
+
+  it("matches nothing for an empty list", () => {
+    const rendered = dialect.sqlToQuery(repositoryIn("r.full_name", []));
+
+    expect(rendered.sql).toBe("r.full_name = ANY(ARRAY[]::text[])");
+    expect(rendered.params).toEqual([]);
+  });
+});
+
 describe("notLikeAll", () => {
   it("joins one NOT LIKE per excluded substring", () => {
     const rendered = dialect.sqlToQuery(
@@ -170,7 +196,7 @@ describe("humanPullRequest", () => {
     const query = dialect.sqlToQuery(humanPullRequest("pr"));
 
     expect(query.sql).toBe(
-      "((pr.author NOT IN ($1, $2, $3) AND pr.author NOT LIKE '%[bot]') AND (pr.draft IS NULL OR pr.draft = 0))",
+      "((pr.author NOT IN ($1, $2, $3, $4) AND pr.author NOT LIKE '%[bot]') AND (pr.draft IS NULL OR pr.draft = 0))",
     );
     expect(query.params).toEqual([...BOT_AUTHORS]);
   });

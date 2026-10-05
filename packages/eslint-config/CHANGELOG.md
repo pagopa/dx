@@ -1,3 +1,14 @@
+# 7.0.0 (2026-09-22)
+
+### ⚠️  Breaking Changes
+
+- Decouple formatting from linting by replacing `eslint-plugin-prettier` with `eslint-config-prettier`. ([#2231](https://github.com/pagopa/dx/pull/2231))
+  Prettier is no longer a peer dependency; consumers must configure their formatter independently.
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 6.2.3 (2026-09-01)
 
 ### 🩹 Fixes

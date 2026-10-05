@@ -118,19 +118,19 @@ describe("add environment command json output", () => {
         status: "success",
         type: "step",
       },
-      { name: "Checking Azure login status...", status: "start", type: "step" },
+      { name: "Checking mise installation...", status: "start", type: "step" },
       {
-        name: "Checking Azure login status...",
+        name: "Checking mise installation...",
         status: "success",
         type: "step",
       },
       {
-        name: "Checking Corepack installation...",
+        name: "Checking Azure login status...",
         status: "start",
         type: "step",
       },
       {
-        name: "Checking Corepack installation...",
+        name: "Checking Azure login status...",
         status: "success",
         type: "step",
       },

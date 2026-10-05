@@ -27,15 +27,15 @@ meaning merely to make publication easier.
 
 Accept the following from the calling skill or user:
 
-| Input            | Required    | Description                                                      |
-| ---------------- | ----------- | ---------------------------------------------------------------- |
-| Source document  | Yes         | Path or content of the prepared page/document artifact           |
-| Operation        | Yes         | Create a new page or update an existing page                     |
-| Title            | Yes         | Page title, inferred only when unambiguous                       |
-| Language         | Yes         | Visible page language; preserve machine-facing IDs               |
-| Space           | Yes         | Target Confluence space, inferred only when safe                 |
-| Parent page     | When needed | Parent page for hierarchical content such as a Use Case          |
-| Existing page ID | For updates | Page ID or URL when updating an existing page                    |
+| Input            | Required    | Description                                             |
+| ---------------- | ----------- | ------------------------------------------------------- |
+| Source document  | Yes         | Path or content of the prepared page/document artifact  |
+| Operation        | Yes         | Create a new page or update an existing page            |
+| Title            | Yes         | Page title, inferred only when unambiguous              |
+| Language         | Yes         | Visible page language; preserve machine-facing IDs      |
+| Space            | Yes         | Target Confluence space, inferred only when safe        |
+| Parent page      | When needed | Parent page for hierarchical content such as a Use Case |
+| Existing page ID | For updates | Page ID or URL when updating an existing page           |
 
 If the source document is not available, ask the user to provide it. Do not
 claim to have published content that was not read.
@@ -74,6 +74,7 @@ claim to have published content that was not read.
 8. **Preserve lifecycle state.** Publication alone must not change a source
    document's status such as `draft` or `review`. Change lifecycle state only
    when the user explicitly requests it and the domain skill permits it.
+
 ## Confirmation protocol
 
 Use this question when a prepared document is ready but publication has not

@@ -1,25 +1,30 @@
 {
   "name": "nx-release",
-  "description": "Action to automate releases of npm packages in an Nx monorepo. It creates a PR with the version changes and changelog updates, and when the PR is merged, it creates git tags and publishes the packages to npm.",
-  "version": "0.3.10",
-  "type": "module",
+  "version": "0.3.13",
   "private": true,
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch"
-  },
+  "description": "Action to automate releases of npm packages in an Nx monorepo. It creates a PR with the version changes and changelog updates, and when the PR is merged, it creates git tags and publishes the packages to npm.",
   "keywords": [
-    "github",
     "action",
+    "github",
     "nx",
     "pr",
     "release"
   ],
   "license": "UNLICENSED",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch"
+  },
+  "dependencies": {
+    "@octokit/rest": "catalog:",
+    "js-yaml": "catalog:",
+    "zod": "catalog:"
+  },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",
-    "@types/js-yaml": "catalog:",
     "@tsconfig/node24": "catalog:",
+    "@types/js-yaml": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
@@ -27,10 +32,5 @@
     "tsup": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  },
-  "dependencies": {
-    "@octokit/rest": "catalog:",
-    "js-yaml": "catalog:",
-    "zod": "catalog:"
   }
 }

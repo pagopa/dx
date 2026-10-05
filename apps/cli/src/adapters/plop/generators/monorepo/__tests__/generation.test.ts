@@ -108,6 +108,46 @@ describe("monorepo generator — file generation", () => {
     expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain("allowBuilds:");
   });
 
+  it("includes the mise toolchain configuration", async () => {
+    const generatedRoot = path.join(tmpDir, payload.repoName);
+    const generatedFiles = await fs.readdir(generatedRoot);
+    expect(generatedFiles).toContain("mise.toml");
+
+    const miseConfig = await fs.readFile(
+      path.join(generatedRoot, "mise.toml"),
+      "utf-8",
+    );
+    expect(miseConfig).toContain('github-cli = { version = "latest" }');
+    expect(miseConfig).toContain('pre-commit = "4.6"');
+    expect(miseConfig).toContain('terraform-docs = "0.24"');
+    expect(miseConfig).toContain('tflint = "0.63"');
+    expect(miseConfig).toContain('trivy = "0.74"');
+    expect(miseConfig).toContain(
+      'idiomatic_version_file_enable_tools = ["node", "terraform"]',
+    );
+    expect(miseConfig).toContain('run = "tflint --init"');
+    for (const removedTool of [
+      "acli",
+      "act",
+      "aws-cli",
+      "azure-cli",
+      "copilot",
+      "go",
+      "golangci-lint",
+      "jq",
+      "npm:nx",
+      "python",
+      "qdns",
+      "ripgrep",
+      "shellcheck",
+      "uv",
+    ]) {
+      expect(miseConfig).not.toMatch(new RegExp(`^${removedTool}\\s*=`, "m"));
+    }
+    expect(miseConfig).not.toContain("postinstall");
+    expect(miseConfig).not.toContain("minimum_release_age_excludes");
+  });
+
   it("applies the repository-specific gitignore customization", async () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),

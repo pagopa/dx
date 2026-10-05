@@ -21,10 +21,10 @@ The following diagram illustrates the architecture and relationships between the
 
 ## Use cases
 
-| Use case      | SKU             | HA       | Public network | Persistence | Diagnostics | Alerts   | Lock     |
-| ------------- | --------------- | -------- | -------------- | ----------- | ----------- | -------- | -------- |
-| `default`     | `Balanced_B3`   | Enabled  | Disabled       | RDB `1h`    | Enabled     | Enabled  | Enabled  |
-| `development` | `Balanced_B0`   | Disabled | Enabled        | Disabled    | Disabled    | Disabled | Disabled |
+| Use case      | SKU           | HA       | Public network | Persistence | Diagnostics | Alerts   | Lock     |
+| ------------- | ------------- | -------- | -------------- | ----------- | ----------- | -------- | -------- |
+| `default`     | `Balanced_B3` | Enabled  | Disabled       | RDB `1h`    | Enabled     | Enabled  | Enabled  |
+| `development` | `Balanced_B0` | Disabled | Enabled        | Disabled    | Disabled    | Disabled | Disabled |
 
 ### Scaling
 
@@ -44,7 +44,7 @@ When `use_case` is `default`, five Azure Monitor metric alerts are provisioned o
 ### Default alert matrix
 
 | Alert                      | Metric                 | Agg     | Window / Freq | Threshold | Sev |
-|----------------------------|------------------------|---------|---------------|-----------|-----|
+| -------------------------- | ---------------------- | ------- | ------------- | --------- | --- |
 | Used memory — warn         | `usedmemorypercentage` | Maximum | PT15M / PT5M  | `> 75`    | 2   |
 | Used memory — critical     | `usedmemorypercentage` | Maximum | PT5M / PT1M   | `> 90`    | 1   |
 | Server load — warn         | `serverLoad`           | Maximum | PT15M / PT5M  | `> 80`    | 2   |
@@ -56,9 +56,9 @@ The connected-clients alert is created only when `alerts.thresholds.connected_cl
 
 ### Why these thresholds
 
-- **`usedmemorypercentage` at 75 (warn) / 90 (critical).** Microsoft recommends scaling up when used memory is consistently over 75% ([memory-management best practices](https://learn.microsoft.com/azure/redis/best-practices-memory-management#monitor-memory-usage), [development best practices](https://learn.microsoft.com/azure/redis/best-practices-development#monitor-memory-usage-cpu-usage-metrics-client-connections-and-network-bandwidth)). 75% gives operators time to scale before the eviction policy starts removing keys. The 90% critical tier (short window, paging severity) catches the imminent OOM/failover scenario documented in [troubleshoot-server#high-memory-usage](https://learn.microsoft.com/azure/redis/troubleshoot-server#high-memory-usage). The module monitors the *percentage* metric so thresholds do not need re-tuning after a SKU change.
+- **`usedmemorypercentage` at 75 (warn) / 90 (critical).** Microsoft recommends scaling up when used memory is consistently over 75% ([memory-management best practices](https://learn.microsoft.com/azure/redis/best-practices-memory-management#monitor-memory-usage), [development best practices](https://learn.microsoft.com/azure/redis/best-practices-development#monitor-memory-usage-cpu-usage-metrics-client-connections-and-network-bandwidth)). 75% gives operators time to scale before the eviction policy starts removing keys. The 90% critical tier (short window, paging severity) catches the imminent OOM/failover scenario documented in [troubleshoot-server#high-memory-usage](https://learn.microsoft.com/azure/redis/troubleshoot-server#high-memory-usage). The module monitors the _percentage_ metric so thresholds do not need re-tuning after a SKU change.
 
-- **`serverLoad` at 80 (warn) / 90 (critical).** Directly from [best-practices-server-load](https://learn.microsoft.com/azure/redis/best-practices-server-load#monitor-server-load-and-cpu): *"keep server load under 80% to avoid negative performance effects. Sustained server load over 80% can lead to unplanned failovers."* The 90% critical tier is treated as near-saturation — scale out or shard.
+- **`serverLoad` at 80 (warn) / 90 (critical).** Directly from [best-practices-server-load](https://learn.microsoft.com/azure/redis/best-practices-server-load#monitor-server-load-and-cpu): _"keep server load under 80% to avoid negative performance effects. Sustained server load over 80% can lead to unplanned failovers."_ The 90% critical tier is treated as near-saturation — scale out or shard.
 
 - **`evictedkeys > 0` (sev 2).** Any non-zero eviction count means the cache is shedding keys under memory pressure, and with the default `volatile-lru` policy the application may be silently losing data ([troubleshoot-data-loss#key-eviction](https://learn.microsoft.com/azure/redis/troubleshoot-data-loss#partial-loss-of-keys)). This is a binary signal, not a percentage — zero is the healthy baseline.
 

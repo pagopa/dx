@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/eslint-config",
-  "version": "6.2.3",
+  "version": "7.0.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",

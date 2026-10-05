@@ -45,6 +45,11 @@ variable "container_app_env_id" {
   description = "ID of the Container App Environment."
 }
 
+variable "log_analytics_workspace_id" {
+  type        = string
+  description = "ID of the Log Analytics workspace for Container App diagnostics."
+}
+
 variable "container_app_user_assigned_identity_id" {
   type        = string
   description = "ID of the user-assigned managed identity for the Container App to access Key Vault."

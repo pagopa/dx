@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 
 import { Inter, JetBrains_Mono } from "next/font/google";
 
+import { ThemeProvider } from "@/components/ThemeProvider";
+import { themeScript } from "@/lib/theme";
+
 import "./globals.css";
 
 const inter = Inter({
@@ -26,11 +29,18 @@ export default function RootLayout({
 }) {
   return (
     <html
-      className={`${inter.variable} ${jetbrainsMono.variable} dark`}
+      className={`${inter.variable} ${jetbrainsMono.variable}`}
       lang="en"
+      suppressHydrationWarning
     >
-      <body className="antialiased bg-[#0a0c10] text-gray-300 font-sans">
-        {children}
+      <body className="antialiased bg-background text-foreground font-sans">
+        {/*
+          Applies the stored/system theme before anything paints, so the first
+          frame already uses the right palette. Must stay the first child of
+          <body> and run synchronously.
+        */}
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
   );

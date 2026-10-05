@@ -12,7 +12,7 @@ resource "azurerm_key_vault_secret" "azuread_client_secret" {
 # Publicly accessible Container App hosting the Next.js application.
 module "container_app" {
   source  = "pagopa-dx/azure-container-app/azurerm"
-  version = "~> 4.2"
+  version = "~> 7.0"
 
   environment         = merge(var.environment, { env_short = var.environment.environment })
   resource_group_name = var.resource_group_name
@@ -21,17 +21,18 @@ module "container_app" {
   container_app_environment_id = var.container_app_env_id
   user_assigned_identity_id    = var.container_app_user_assigned_identity_id
 
-  revision_mode = "Single"
-  use_case      = "default"
+  deployment_strategy = "Incremental"
+  use_case            = "default"
 
   size = {
     cpu    = 0.5
     memory = "1Gi"
   }
 
-  target_port = 3000
+  container_port            = 3000
+  log_analytics_workspace_id = var.log_analytics_workspace_id
 
-  public_access_enabled = true
+  allow_access_from_environment_only = false
   custom_domain = {
     host_name = var.custom_domain_host_name
     dns = {
@@ -55,10 +56,11 @@ module "container_app" {
     }
   ]
 
-  container_app_templates = [
+  containers = [
     {
-      image = var.container_app_image
-      name  = "metrics-portal"
+      image        = var.container_app_image
+      name         = "metrics-portal"
+      secret_names = ["DATABASE_URL"]
 
       app_settings = {
         NODE_ENV = "production"

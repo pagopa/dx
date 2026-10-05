@@ -2,7 +2,6 @@
 
 import {
   DataTable,
-  SERIES_COLORS,
   SimpleBarChart,
   SimpleLineChart,
 } from "@/components/Charts";
@@ -12,6 +11,7 @@ import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
 import {
   INSIGHT_THRESHOLDS,
   METRIC_TARGETS,
@@ -92,13 +92,15 @@ interface PrDashboardData {
 }
 
 export default function PullRequestsDashboard() {
-  const { days, repository, setDays, setRepository } = useDashboardFilters();
+  const colors = useSeriesColors();
+  const { days, repositories, setDays, setRepositories } =
+    useDashboardFilters();
 
   const { data, error, loading, refetch } = useDashboardData<PrDashboardData>(
     "pull-requests",
     {
       days,
-      repository,
+      repositories,
     },
   );
 
@@ -107,7 +109,13 @@ export default function PullRequestsDashboard() {
   const bucketCaption =
     days < WEEKLY_BUCKET_THRESHOLD_DAYS ? "per day" : "per week";
 
-  const repositoryUrl = `https://github.com/${ORGANIZATION}/${repository}`;
+  // Deep links need a single repository: with a multi-repository selection
+  // there is no one repository the rows belong to, so the tables show plain
+  // numbers instead of a wrong link.
+  const repositoryUrl =
+    repositories.length === 1
+      ? `https://github.com/${ORGANIZATION}/${repositories[0]}`
+      : null;
   // A cached payload from before these fields existed must not be rendered as a
   // real zero backlog; the cards only appear when the snapshot is present, so an
   // empty backlog is distinguishable from unavailable data.
@@ -129,7 +137,10 @@ export default function PullRequestsDashboard() {
   const deltaFromPrevious = (
     current: null | number,
     previous: null | number,
-  ) => (current != null && previous != null ? percentChange(current, previous) : null);
+  ) =>
+    current != null && previous != null
+      ? percentChange(current, previous)
+      : null;
 
   // The window is anchored to the latest activity, not to today, so the exact
   // range is shown on the contributor count.
@@ -189,24 +200,24 @@ export default function PullRequestsDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <div className="flex items-center gap-2">
-            <h2 className="text-3xl font-bold tracking-tight text-[#e6edf3]">
-              Pull Request <span className="text-green-500">Insights</span>
+            <h2 className="text-3xl font-bold tracking-tight text-foreground">
+              Pull Request <span className="text-accent">Insights</span>
             </h2>
             <TooltipIcon
               content={tooltipContent.title}
               label="Pull Request Insights"
             />
           </div>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Analyzing engineering velocity and collaboration patterns.
           </p>
         </div>
       </div>
 
       <DashboardFilters
-        onRepositoryChange={setRepository}
+        onRepositoriesChange={setRepositories}
         onTimeIntervalChange={setDays}
-        repository={repository}
+        repositories={repositories}
         timeInterval={days}
       />
       <DashboardRequestState
@@ -217,7 +228,10 @@ export default function PullRequestsDashboard() {
 
       {data && (
         <div className="space-y-8">
-          <DataFreshness referenceDate={data.meta.referenceDate} windowDays={days} />
+          <DataFreshness
+            referenceDate={data.meta.referenceDate}
+            windowDays={days}
+          />
           <InsightsPanel insights={data.insights} periodDays={days} />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -277,14 +291,14 @@ export default function PullRequestsDashboard() {
           </div>
 
           <section className="space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Flow
             </h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.green,
+                    color: colors.green,
                     key: "avgLeadTimeDays",
                     name: "Days",
                   },
@@ -303,9 +317,7 @@ export default function PullRequestsDashboard() {
               <SimpleLineChart
                 caption="per week"
                 data={data.leadTimeTrend}
-                lines={[
-                  { color: SERIES_COLORS.red, key: "trendLine", name: "Trend" },
-                ]}
+                lines={[{ color: colors.red, key: "trendLine", name: "Trend" }]}
                 title="Lead Time Trend (within period)"
                 tooltip={tooltipContent.leadTimeTrend}
                 unit="days"
@@ -315,7 +327,7 @@ export default function PullRequestsDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.blue,
+                    color: colors.blue,
                     key: "prCount",
                     name: "Merged PRs",
                   },
@@ -331,7 +343,7 @@ export default function PullRequestsDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.green,
+                    color: colors.green,
                     key: "prCount",
                     name: "New PRs",
                   },
@@ -348,7 +360,7 @@ export default function PullRequestsDashboard() {
           </section>
 
           <section className="space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Backlog
             </h3>
             {openBacklog && (
@@ -378,7 +390,7 @@ export default function PullRequestsDashboard() {
                 data={data.unmergedPrs}
                 lines={[
                   {
-                    color: SERIES_COLORS.amber,
+                    color: colors.amber,
                     key: "openPrs",
                     name: "Open PRs",
                   },
@@ -393,7 +405,7 @@ export default function PullRequestsDashboard() {
                 data={data.cumulatedNewPrs}
                 lines={[
                   {
-                    color: SERIES_COLORS.purple,
+                    color: colors.purple,
                     key: "cumulativeCount",
                     name: "Cumulated New PRs",
                   },
@@ -410,16 +422,19 @@ export default function PullRequestsDashboard() {
                   {
                     key: "number",
                     label: "#",
-                    renderCell: (value) => (
-                      <a
-                        className="text-blue-600 hover:underline"
-                        href={`${repositoryUrl}/pull/${value}`}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      >
-                        #{value}
-                      </a>
-                    ),
+                    renderCell: (value) =>
+                      repositoryUrl ? (
+                        <a
+                          className="text-link hover:underline"
+                          href={`${repositoryUrl}/pull/${value}`}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        >
+                          #{value}
+                        </a>
+                      ) : (
+                        `#${value}`
+                      ),
                   },
                   { key: "title", label: "Title" },
                   {
@@ -428,7 +443,7 @@ export default function PullRequestsDashboard() {
                     renderCell: (value) =>
                       value ? (
                         <a
-                          className="text-blue-600 hover:underline"
+                          className="text-link hover:underline"
                           href={`https://github.com/${value}`}
                           rel="noopener noreferrer"
                           target="_blank"
@@ -454,14 +469,14 @@ export default function PullRequestsDashboard() {
           </section>
 
           <section className="space-y-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Size &amp; collaboration
             </h3>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.lightBlue,
+                    color: colors.lightBlue,
                     key: "avgAdditions",
                     name: "Avg Additions",
                   },
@@ -476,7 +491,7 @@ export default function PullRequestsDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.lightBlue,
+                    color: colors.lightBlue,
                     key: "avgComments",
                     name: "Avg Comments",
                   },
@@ -491,7 +506,7 @@ export default function PullRequestsDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.lightBlue,
+                    color: colors.lightBlue,
                     key: "avgAdditions",
                     name: "Avg Additions",
                   },
@@ -505,7 +520,7 @@ export default function PullRequestsDashboard() {
               <SimpleBarChart
                 bars={[
                   {
-                    color: SERIES_COLORS.amber,
+                    color: colors.amber,
                     key: "avgLeadTimeDays",
                     name: "Avg Lead Time",
                   },
@@ -529,16 +544,19 @@ export default function PullRequestsDashboard() {
                 {
                   key: "number",
                   label: "#",
-                  renderCell: (value) => (
-                    <a
-                      className="text-blue-600 hover:underline"
-                      href={`${repositoryUrl}/pull/${value}`}
-                      rel="noopener noreferrer"
-                      target="_blank"
-                    >
-                      #{value}
-                    </a>
-                  ),
+                  renderCell: (value) =>
+                    repositoryUrl ? (
+                      <a
+                        className="text-link hover:underline"
+                        href={`${repositoryUrl}/pull/${value}`}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        #{value}
+                      </a>
+                    ) : (
+                      `#${value}`
+                    ),
                 },
                 { key: "createdAt", label: "Created" },
                 { key: "mergedAt", label: "Merged" },
@@ -553,7 +571,7 @@ export default function PullRequestsDashboard() {
             <SimpleBarChart
               bars={[
                 {
-                  color: SERIES_COLORS.blue,
+                  color: colors.blue,
                   key: "prCount",
                   name: "Pull Requests",
                 },
@@ -578,7 +596,7 @@ export default function PullRequestsDashboard() {
                     const author = String(value);
                     return (
                       <a
-                        className="text-blue-600 hover:underline"
+                        className="text-link hover:underline"
                         href={`https://github.com/${author}`}
                         rel="noopener noreferrer"
                         target="_blank"

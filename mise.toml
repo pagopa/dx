@@ -1,10 +1,7 @@
 [tools]
 acli = "latest"
 act = "latest"
-aws-cli = { version = "2.36", symlink_bins = "true" }
-azure-cli = { version = "2.87", uvx_args = "--prerelease=allow", depends = ["uv"] }
 copilot = "latest"
-github-cli = { version = "latest", postinstall = "gh extension install seachicken/gh-poi" }
 go = "1.26"
 golangci-lint = "2.12.2"
 jq = "1.8"
@@ -19,8 +16,21 @@ tflint = "0.63"
 trivy = "0.74"
 uv = "latest"
 
+[tools.aws-cli]
+version = "2.36"
+symlink_bins = "true"
+
+[tools.azure-cli]
+version = "2.87"
+uvx_args = "--prerelease=allow"
+depends = ["uv"]
+
+[tools.github-cli]
+version = "latest"
+postinstall = "gh extension install seachicken/gh-poi"
+
 [env]
-TFLINT_PLUGIN_DIR="{{config_root}}/.tflint.d/plugins"
+TFLINT_PLUGIN_DIR = "{{config_root}}/.tflint.d/plugins"
 
 [tasks]
 install = "uv sync --all-packages"

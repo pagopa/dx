@@ -16,8 +16,8 @@ itself is read-only. Run them deliberately.
 
 ## 1. Obtain the Atlassian OAuth credential (one time)
 
-An Atlassian **API token (Basic `email:token`)** authenticates the *Confluence
-REST API*, but **not** the Atlassian MCP server: MCP tool calls then fail with
+An Atlassian **API token (Basic `email:token`)** authenticates the _Confluence
+REST API_, but **not** the Atlassian MCP server: MCP tool calls then fail with
 `HTTP 403 missing scope claim / Current user not permitted to use Confluence`.
 For the MCP you need an OAuth session for your Atlassian user.
 
@@ -134,7 +134,7 @@ or use `harbor-bench compare` for a base/head skill delta. See the
 ## Troubleshooting
 
 - **`HTTP 403 missing scope claim` / `Current user not permitted to use
-  Confluence`** — the session is authenticated with an API token (Basic), not
+Confluence`** — the session is authenticated with an API token (Basic), not
   OAuth. Re-run step 1 and export `MCP_AUTH_B64` from
   `~/.mcp-auth-atlassian`.
 - **MCP server `failed to initialize` with

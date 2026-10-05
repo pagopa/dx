@@ -1,3 +1,89 @@
+## 0.5.24 (2026-10-01)
+
+### 🩹 Fixes
+
+- Update YAML, Next.js, and Axios dependencies ([#2288](https://github.com/pagopa/dx/pull/2288))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
+## 0.5.23 (2026-09-25)
+
+### 🚀 Features
+
+- Add a Copilot dashboard to the DX Metrics portal. It reports Copilot code review adoption and how it pairs with human review, the Copilot review rate by pull-request size, pull requests opened by the Copilot coding agent, and Copilot co-authored commits, with deterministic insights and a reusable dual-axis bar-and-line chart. ([#2272](https://github.com/pagopa/dx/pull/2272))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.22 (2026-09-24)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.11
+
+## 0.5.21 (2026-09-24)
+
+### 🚀 Features
+
+- Add multi-repository selection to the metrics dashboards ([#2262](https://github.com/pagopa/dx/pull/2262))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.10
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.20 (2026-09-23)
+
+### 🩹 Fixes
+
+- Fix the Workflows dashboard failing to load after the DX pipeline classification change ([#2258](https://github.com/pagopa/dx/pull/2258))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.19 (2026-09-23)
+
+### 🩹 Fixes
+
+- Fix the DX Team bus-factor insight to count only commits on non-DX repositories ([#2247](https://github.com/pagopa/dx/pull/2247))
+- Classify the DX repository's own workflows as DX pipelines in the Workflows dashboard ([#2252](https://github.com/pagopa/dx/pull/2252))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.18 (2026-09-23)
+
+### 🚀 Features
+
+- Add a dark/light theme toggle and light mode to the metrics dashboards ([#2245](https://github.com/pagopa/dx/pull/2245))
+
+### ❤️ Thank You
+
+- Copilot Autofix powered by AI @github-advanced-security[bot]
+- Danilo Spinelli @gunzip
+
+## 0.5.17 (2026-09-22)
+
+### 🩹 Fixes
+
+- Add preceding-window deltas to every summary card, a stale open-PR backlog reading with links to the pull requests, merge-ownership charts, and grouped sidebar navigation. ([#2230](https://github.com/pagopa/dx/pull/2230))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.9
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.16 (2026-09-16)
 
 ### 🚀 Features

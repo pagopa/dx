@@ -22,6 +22,7 @@ interface DxAdoptionData {
     filePath: string;
     moduleName: string;
     moduleType: string;
+    repository: string;
   }[];
   pipelineAdoption: { pipelineCount: number; pipelineType: string }[];
   versionDriftList: {
@@ -29,6 +30,7 @@ interface DxAdoptionData {
     filePath: null | string;
     latestVersion: null | string;
     moduleName: string;
+    repository: string;
     usedVersion: null | string;
   }[];
   versionDriftSummary: {
@@ -37,20 +39,24 @@ interface DxAdoptionData {
     unknown: number;
     upToDate: number;
   };
-  workflowsList: { pipelineType: string; workflowName: string }[];
+  workflowsList: {
+    pipelineType: string;
+    repository: string;
+    workflowName: string;
+  }[];
   insights: Insight[];
   meta: { referenceDate: string };
 }
 
 export default function DxAdoptionDashboard() {
-  const { repository, setRepository } = useDashboardFilters({
+  const { repositories, setRepositories } = useDashboardFilters({
     mode: "repository-only",
   });
 
   const { data, error, loading, refetch } = useDashboardData<DxAdoptionData>(
     "dx-adoption",
     {
-      repository,
+      repositories,
     },
   );
 
@@ -96,7 +102,7 @@ export default function DxAdoptionDashboard() {
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">
+        <h2 className="text-xl font-bold text-foreground">
           DX Tools Adoption Metrics
         </h2>
         <TooltipIcon
@@ -106,8 +112,8 @@ export default function DxAdoptionDashboard() {
       </div>
       <DashboardFilters
         mode="repository-only"
-        onRepositoryChange={setRepository}
-        repository={repository}
+        onRepositoriesChange={setRepositories}
+        repositories={repositories}
       />
       <DashboardRequestState
         error={error}
@@ -138,6 +144,7 @@ export default function DxAdoptionDashboard() {
           <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <DataTable
               columns={[
+                { key: "repository", label: "Repository" },
                 { key: "workflowName", label: "Workflow" },
                 { key: "pipelineType", label: "Type" },
               ]}
@@ -147,6 +154,7 @@ export default function DxAdoptionDashboard() {
             />
             <DataTable
               columns={[
+                { key: "repository", label: "Repository" },
                 { key: "moduleName", label: "Module" },
                 { key: "moduleType", label: "Type" },
                 { key: "filePath", label: "File Path" },
@@ -160,7 +168,7 @@ export default function DxAdoptionDashboard() {
           {/* Version Drift */}
           {data.versionDriftList.length > 0 && (
             <>
-              <h3 className="mt-8 mb-4 text-base font-semibold text-white">
+              <h3 className="mt-8 mb-4 text-base font-semibold text-foreground">
                 Version Drift
               </h3>
               <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -205,6 +213,7 @@ export default function DxAdoptionDashboard() {
               </div>
               <DataTable
                 columns={[
+                  { key: "repository", label: "Repository" },
                   { key: "moduleName", label: "Module" },
                   { key: "usedVersion", label: "Used Version" },
                   { key: "latestVersion", label: "Latest Version" },

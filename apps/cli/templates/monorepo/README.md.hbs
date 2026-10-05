@@ -6,21 +6,17 @@
 
 ### Using local machine
 
-This project uses specific versions of `node`, `pnpm` and `terraform`. To make sure your development setup matches with production follow the recommended installation methods.
+This project uses specific versions of `node`, `pnpm` and `terraform`. The
+resolved toolchain is recorded in `mise.lock`. To make sure your development
+setup matches with production, use [mise](https://mise.jdx.dev/) to install the
+required tools.
 
-1. Install and configure the following tools in your machine
+1. Install [mise](https://mise.jdx.dev/installing-mise.html)
 
-- [nodenv](https://github.com/nodenv/nodenv) - Node version manager
-- [tfenv](https://github.com/tfutils/tfenv) - Terraform version manager
-- [terraform-docs](https://terraform-docs.io/user-guide/installation/) - Generate Terraform modules documentation in various formats
-- [tflint](https://github.com/terraform-linters/tflint) - A Pluggable Terraform Linter
-- [pre-commit](https://pre-commit.com/) - A framework for managing and maintaining multi-language pre-commit hooks
-
-2. Install `node` at the right version used by this project
+2. Install the locked toolchain declared in `mise.toml` and `mise.lock`
 
 ```bash
-cd {{ repoName }}
-nodenv install
+mise install
 ```
 
 3. Install dependencies using `pnpm`

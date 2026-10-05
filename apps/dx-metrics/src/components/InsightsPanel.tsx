@@ -31,7 +31,7 @@ const DeltaBadge = ({ deltaPct }: { deltaPct: number }) => {
   const direction = deltaPct > 0 ? "up" : deltaPct < 0 ? "down" : "flat";
 
   return (
-    <span className="text-xs font-medium text-gray-400 tabular-nums">
+    <span className="text-xs font-medium text-muted-foreground tabular-nums">
       <span aria-hidden="true">
         {direction === "up" ? "↑" : direction === "down" ? "↓" : "→"}
       </span>{" "}
@@ -51,13 +51,13 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
       className={`flex flex-col gap-2 rounded-xl border p-5 shadow-sm ${style.card}`}
     >
       <div className="flex items-start justify-between gap-3">
-        <h3 className="text-sm font-semibold text-white">
+        <h3 className="text-sm font-semibold text-foreground">
           <span aria-hidden="true" className="mr-2">
             {style.icon}
           </span>
           {insight.title}
           {insight.source && (
-            <span className="ml-2 align-middle text-[10px] font-normal uppercase tracking-wider text-gray-500">
+            <span className="ml-2 align-middle text-[10px] font-normal uppercase tracking-wider text-subtle-foreground">
               {insight.source}
             </span>
           )}
@@ -69,12 +69,12 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
         </span>
       </div>
 
-      <p className="text-sm text-gray-300">{insight.detail}</p>
+      <p className="text-sm text-foreground">{insight.detail}</p>
 
       {insight.value && (
         <div>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-bold tracking-tight text-[#e6edf3] tabular-nums">
+            <span className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
               {formatWithUnit(
                 insight.value.current,
                 insight.value.unit,
@@ -86,18 +86,20 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
             )}
           </div>
           {insight.value.label && (
-            <p className="text-xs text-gray-400">{insight.value.label}</p>
+            <p className="text-xs text-muted-foreground">
+              {insight.value.label}
+            </p>
           )}
         </div>
       )}
 
       {(insight.sampleSize !== undefined || insight.confidence === "low") && (
-        <p className="text-xs text-gray-400 tabular-nums">
+        <p className="text-xs text-muted-foreground tabular-nums">
           {insight.sampleSize !== undefined &&
             `n=${formatInteger(insight.sampleSize)}`}
           {insight.confidence === "low" && (
             <span
-              className={`text-amber-300${insight.sampleSize !== undefined ? " ml-2" : ""}`}
+              className={`text-amber-700 dark:text-amber-300${insight.sampleSize !== undefined ? " ml-2" : ""}`}
             >
               low confidence
             </span>
@@ -109,13 +111,13 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
         <ul className="mt-1 space-y-0.5">
           {insight.evidence.map((item, index) => (
             <li
-              className="truncate font-mono text-xs text-gray-400"
+              className="truncate font-mono text-xs text-muted-foreground"
               key={`${index}-${item.label}`}
               title={item.label}
             >
               {item.href ? (
                 <a
-                  className="hover:text-gray-200 hover:underline"
+                  className="hover:text-foreground hover:underline"
                   href={item.href}
                   rel="noreferrer"
                   target="_blank"
@@ -131,8 +133,10 @@ const InsightCard = ({ insight }: { insight: Insight }) => {
       )}
 
       {insight.action && (
-        <p className="mt-auto text-xs font-medium text-gray-400">
-          <span className="uppercase tracking-wider text-gray-400">Next: </span>
+        <p className="mt-auto text-xs font-medium text-muted-foreground">
+          <span className="uppercase tracking-wider text-muted-foreground">
+            Next:{" "}
+          </span>
           {insight.action}
         </p>
       )}
@@ -169,9 +173,7 @@ export function InsightsPanel({
   );
 
   return (
-    <section
-      className={`rounded-xl border border-[#30363d] bg-[#0d1117] ${className}`}
-    >
+    <section className={`rounded-xl border border-border bg-card ${className}`}>
       <button
         aria-controls={panelId}
         aria-expanded={isOpen}
@@ -179,20 +181,20 @@ export function InsightsPanel({
         onClick={() => setIsOpen((open) => !open)}
         type="button"
       >
-        <span className="flex items-center gap-2 text-sm font-semibold text-white">
+        <span className="flex items-center gap-2 text-sm font-semibold text-foreground">
           {isOpen ? (
             <ChevronDown aria-hidden="true" size={16} />
           ) : (
             <ChevronRight aria-hidden="true" size={16} />
           )}
           Insights
-          <span className="rounded bg-[#21262d] px-2 py-0.5 text-xs text-gray-300">
+          <span className="rounded bg-muted px-2 py-0.5 text-xs text-foreground">
             {showAll || !isLimited
               ? insights.length
               : `top ${visible.length} of ${insights.length}`}
           </span>
           {periodDays !== undefined && (
-            <span className="text-xs font-normal text-gray-400">
+            <span className="text-xs font-normal text-muted-foreground">
               last {periodDays} days
             </span>
           )}
@@ -211,13 +213,9 @@ export function InsightsPanel({
         </span>
       </button>
 
-      <div
-        className="border-t border-[#30363d] p-5"
-        hidden={!isOpen}
-        id={panelId}
-      >
+      <div className="border-t border-border p-5" hidden={!isOpen} id={panelId}>
         {visible.length === 0 ? (
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-muted-foreground">
             No insights for the selected period. Try a wider time interval to
             include earlier activity.
           </p>
@@ -232,7 +230,7 @@ export function InsightsPanel({
               <div className="mt-4 flex justify-center">
                 <button
                   aria-expanded={showAll}
-                  className={`rounded-md border border-[#30363d] bg-[#161b22] px-3 py-1.5 text-xs font-medium text-gray-300 transition-colors hover:bg-[#21262d] hover:text-white ${focusRing}`}
+                  className={`rounded-md border border-border bg-subtle px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground ${focusRing}`}
                   onClick={() => setShowAll((all) => !all)}
                   type="button"
                 >

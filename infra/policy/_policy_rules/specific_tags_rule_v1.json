@@ -7,18 +7,11 @@
       },
       {
         "field": "tags.CreatedBy",
-        "notIn": [
-          "Terraform",
-          "ARM"
-        ]
+        "notIn": ["Terraform", "ARM"]
       },
       {
         "field": "tags.Environment",
-        "notIn": [
-          "Prod",
-          "Dev",
-          "Uat"
-        ]
+        "notIn": ["Prod", "Dev", "Uat"]
       },
       {
         "field": "tags.BusinessUnit",

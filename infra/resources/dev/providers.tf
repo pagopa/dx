@@ -12,7 +12,7 @@ terraform {
 
     azuredx = {
       source  = "pagopa-dx/azure"
-      version = "~> 0.0"
+      version = "~> 0.12"
     }
 
     azapi = {
@@ -32,7 +32,7 @@ terraform {
 
     awsdx = {
       source  = "pagopa-dx/aws"
-      version = "~> 0.0"
+      version = "~> 0.1"
     }
 
     random = {
@@ -80,4 +80,3 @@ provider "aws" {
 }
 
 provider "awsdx" {}
-

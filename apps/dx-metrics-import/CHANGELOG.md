@@ -1,3 +1,50 @@
+## 0.1.16 (2026-10-01)
+
+### 🩹 Fixes
+
+- Fix the js-yaml v5 ESM import ([#2288](https://github.com/pagopa/dx/pull/2288))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
+## 0.1.15 (2026-09-24)
+
+### 🚀 Features
+
+- Make the importer incremental by default: persist a per-entity, per-repository cursor in sync_runs.cursor_at and resume from it, so newly added repositories are backfilled without re-downloading data already present. The cursor only advances after a complete window (recoverable failures are retried); in-progress workflow runs are reconciled by id and iac-pr stays on the floor window to keep reviewer sets complete. Add --repo to scope a run to one repository, skipping organization-wide entities. Requires applying the new sync_runs.cursor_at column with drizzle-kit push. ([#2269](https://github.com/pagopa/dx/pull/2269))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.11
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.14 (2026-09-24)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.10
+
+## 0.1.13 (2026-09-23)
+
+### 🩹 Fixes
+
+- Require mise for generated repository bootstrap, generate a mise lockfile, and track mise adoption ([#2218](https://github.com/pagopa/dx/pull/2218))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.1.12 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.9
+- Updated @pagopa/eslint-config to 7.0.0
+
 ## 0.1.11 (2026-09-16)
 
 ### 🚀 Features

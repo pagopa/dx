@@ -1,11 +1,12 @@
 "use client";
 
-import { DataTable, SERIES_COLORS, SimpleLineChart } from "@/components/Charts";
+import { DataTable, SimpleLineChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
 import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 
@@ -45,6 +46,7 @@ interface ReleasesTimeline {
 }
 
 export default function ReleasesDashboard() {
+  const colors = useSeriesColors();
   const { data, error, loading, refetch } =
     useDashboardData<ReleasesDashboardData>("releases", {});
 
@@ -58,10 +60,10 @@ export default function ReleasesDashboard() {
     <div className="space-y-8">
       <div className="flex items-center gap-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-[#e6edf3]">
-            Terraform Registry <span className="text-green-500">Releases</span>
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
+            Terraform Registry <span className="text-accent">Releases</span>
           </h2>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Tracking module evolution and versioning frequency.
           </p>
         </div>
@@ -106,7 +108,7 @@ export default function ReleasesDashboard() {
             data={releasesTimelineChartData}
             lines={[
               {
-                color: SERIES_COLORS.green,
+                color: colors.green,
                 key: "major_versions",
                 name: "New Majors",
               },
@@ -125,7 +127,7 @@ export default function ReleasesDashboard() {
                 label: "Module",
                 renderCell: (value, row) => (
                   <a
-                    className="text-blue-400 font-semibold hover:text-blue-300 hover:underline"
+                    className="text-link font-semibold hover:text-link hover:underline"
                     href={`https://registry.terraform.io/modules/pagopa-dx/${value}/${row.provider}`}
                     rel="noopener noreferrer"
                     target="_blank"

@@ -1,3 +1,55 @@
+## 0.22.11 (2026-10-01)
+
+### 🩹 Fixes
+
+- Simplify drift detection Slack notifications with environment labels and direct job links, without changing caller configuration. ([#2280](https://github.com/pagopa/dx/pull/2280))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.22.10 (2026-09-24)
+
+### 🩹 Fixes
+
+- Add section for Container App workflow auto approval ([#2201](https://github.com/pagopa/dx/pull/2201))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.22.9 (2026-09-23)
+
+### 🩹 Fixes
+
+- Document mise setup requirements ([#2218](https://github.com/pagopa/dx/pull/2218))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.22.8 (2026-09-22)
+
+### 🚀 Features
+
+- Add XState to the technology radar. ([#2193](https://github.com/pagopa/dx/pull/2193))
+- Add @pagopa/eslint-config to the technology radar in the Adopt ring. ([#2226](https://github.com/pagopa/dx/pull/2226))
+- Add Drizzle to the technology radar in the Trial ring. ([#2227](https://github.com/pagopa/dx/pull/2227))
+
+### 🩹 Fixes
+
+- Align DX plugins with Agent Plugins 1.0 ([#2207](https://github.com/pagopa/dx/pull/2207))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- LazyAfternoons @LazyAfternoons
+- Marco Comi @kin0992
+
 ## 0.22.7 (2026-09-16)
 
 ### 🚀 Features

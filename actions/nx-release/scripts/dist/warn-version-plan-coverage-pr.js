@@ -18278,7 +18278,6 @@ var Octokit2 = Octokit.plugin(requestLog, legacyRestEndpointMethods, paginateRes
 );
 var execFileAsync = promisify(execFile);
 var NonEmptyStringSchema = external_exports.string().min(1);
-var ProjectTagsSchema = external_exports.array(external_exports.string());
 external_exports.array(external_exports.string());
 external_exports.object({
   path: external_exports.string().nullable(),
@@ -18286,8 +18285,7 @@ external_exports.object({
   version: external_exports.string()
 });
 external_exports.looseObject({
-  root: NonEmptyStringSchema.optional(),
-  tags: ProjectTagsSchema.optional()
+  root: NonEmptyStringSchema.optional()
 });
 function createOctokit() {
   const token = process.env.GH_TOKEN;

@@ -28,13 +28,16 @@ async function handler(event) {
           enabled: true,
           signingBehavior: "always",
           signingProtocol: "sigv4",
-          originType: "lambda"
-        }
+          originType: "lambda",
+        },
       };
       cf.updateRequestOrigin(origin);
-      request.headers['cache-control'] = { value: 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0' };
-      request.headers['pragma'] = { value: 'no-cache' };
-      request.headers['expires'] = { value: '0' };
+      request.headers["cache-control"] = {
+        value:
+          "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0",
+      };
+      request.headers["pragma"] = { value: "no-cache" };
+      request.headers["expires"] = { value: "0" };
       request.headers["x-forwarded-host"] = request.headers.host;
       return request;
     }
@@ -44,8 +47,8 @@ async function handler(event) {
       statusDescription: "Not Found",
       body: {
         encoding: "text",
-        data: "Preview environment for " + prAlias + " not found."
-      }
+        data: "Preview environment for " + prAlias + " not found.",
+      },
     };
     return event.response;
   }

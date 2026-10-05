@@ -40,8 +40,13 @@ bundled template.
 - Write visible content in English unless another language is requested.
   Stable IDs, status values, endpoint names, metric identifiers, and URLs are
   machine-facing and remain unchanged.
-- Keep the frontmatter `status` and the visible design-maturity value unchanged
-  unless the user explicitly requests a lifecycle transition.
+- Keep the frontmatter `status` (`draft` or `ready`) unchanged unless the user
+  explicitly requests a transition. `ready` means the child is implementable and
+  sliceable; `draft` means detail or acceptance checks are still missing. A
+  promotion is proposed with evidence and confirmed by a human reviewer; never
+  apply it autonomously.
+- Define the Use Case's typed errors locally with stable semantic identifiers
+  and no owner; never centralize an error taxonomy in the DR/SRS.
 - Keep every unknown, contradiction, and unverified claim visible as an
   assumption, open question, proposed value, or justified `N/A`.
 - A published child Use Case is not complete until the parent Confluence
@@ -55,9 +60,11 @@ bundled template.
 2. Treat the linked PRD actor catalog as authoritative. Copy actor names
    exactly, including capitalization, punctuation, singular/plural form, and
    qualifiers. Do not translate, normalize, or substitute an actor name.
-3. Reuse the parent DR/SRS `UC-XX` catalog, linked JTBD IDs, priorities, and
-   known links. Treat conflicts with the PRD, DR/SRS, Service Blueprint, Figma,
-   RFC, or contracts as open questions; do not silently reconcile them.
+3. Reuse the parent DR/SRS `UC-XX` IDs, titles, and child links; take the
+   linked JTBD, priority, and evidence from the PRD and the parent's
+   architecture and contract sections. Treat conflicts with the PRD, DR/SRS,
+   Service Blueprint, Figma, RFC, or contracts as open questions; do not
+   silently reconcile them.
 4. Use accepted RFC decisions only after they have been propagated into the
    parent DR/SRS.
 
@@ -69,12 +76,16 @@ Complete every section in the bundled template:
 - linked JTBD;
 - primary and secondary actors;
 - source artifact, including Call for Task when applicable;
-- Service Blueprint step and design maturity;
+- Service Blueprint step;
+- domain entities touched, by name from the parent `Domain model and glossary`;
 - trigger and preconditions;
 - main, alternate, and exception/edge-case flows;
 - postconditions;
+- typed errors with stable semantic identifiers and no owner;
 - numbered binary acceptance checks local to the Use Case;
 - tracking events;
+- the `solution.components.*` and `contracts.*` IDs the Use Case touches, or a
+  justified `N/A`;
 - relevant Service Blueprint, Figma, endpoint/contract, validation, and
   sequence-diagram references.
 
@@ -91,25 +102,32 @@ readiness, and change propagation.
 1. **Locate the parent.** Find the existing parent DR/SRS and read the complete
    Use Case index. If no parent path is available, ask for it and stop.
 2. **Collect evidence.** Read the linked PRD actor catalog, JTBD, Service
-   Blueprint, Figma, RFC/ADR, APIs/events/data contracts, tracking registry,
-   reviews, tests, and supplied task context. Ask only about contradictions or
-   missing decisions that affect behavior, ownership, contracts, compliance,
-   tracking, or readiness.
+   Blueprint, Figma, RFC/ADR, APIs/events/data contracts, the parent
+   `Domain model and glossary`, tracking registry, reviews, tests, and supplied
+   task context. Ask only about contradictions or missing decisions that affect
+   behavior, ownership, contracts, compliance, tracking, or readiness.
 3. **Select catalog entries.** Match a requested `UC-XX` by ID or unambiguous
    title. When the user requests all Use Cases, select every applicable parent
    catalog entry. For a genuinely new Use Case, allocate the next available
    stable ID without renumbering existing entries.
 4. **Draft or update each child.** Fill the complete template for every selected
-   entry. Reuse PRD actor names exactly, preserve stable IDs, and distinguish
-   confirmed behavior from proposed behavior, assumptions, and open questions.
+   entry. Reuse PRD actor names exactly, preserve stable IDs, name the domain
+   entities it touches, define its typed errors with semantic identifiers, and
+   distinguish confirmed behavior from proposed behavior, assumptions, and open
+   questions.
 5. **Validate each child.** Check that flows are coherent, acceptance checks are
    binary and traceable, tracking is explicit or justified `N/A`, a sequence
-   diagram is supplied inline or by link, links and IDs are consistent, and no
-   unsupported decision was invented.
+   diagram is supplied inline or by link, links and IDs are consistent, errors
+   use semantic identifiers and each exception flow references one, open
+   questions do not repeat a parent `open.item-XX`, and no unsupported decision
+   was invented.
 6. **Synchronize the parent.** Update every selected row in the existing parent
-   DR/SRS Use Case index in the same workflow. Keep each row's ID, title,
-   linked JTBD, priority, child-document link, and status/gap aligned. Preserve
-   the parent's catalog-only boundary.
+   DR/SRS Use Case index in the same workflow. The parent row is only the stable
+   ID, the title, and the child-document link; keep those aligned and keep
+   status, priority, JTBD, components, contracts, and behavior out of the
+   catalog. Name the parent's `solution.components.*` and `contracts.*` IDs
+   inside the child and report any the parent is missing instead of inventing
+   them.
 7. **Record propagation.** When a Use Case changes confirmed behavior,
    contracts, tracking, privacy/security, or acceptance checks, update the
    parent open-question/decision propagation area when the change requires
@@ -130,6 +148,10 @@ readiness, and change propagation.
 - Ask rather than infer actors, JTBD links, priority, ownership, behavior,
   targets, contracts, tracking, or approval/lifecycle status.
 - Prefer an explicit open question over a plausible flow or acceptance check.
+- Prefer a semantic error identifier over a numeric one; an error carries no
+  owner.
+- Do not repeat a parent open question: reference its `open.item-XX`. Put
+  cross-Use-Case or initiative questions in the parent document.
 - Use `N/A — <confirmed reason>` only when the source or user confirms that a
   section does not apply.
 - Do not turn a user story into a Use Case without defining the observable

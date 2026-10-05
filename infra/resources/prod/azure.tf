@@ -1,18 +1,18 @@
 module "azure_core_values" {
   source  = "pagopa-dx/azure-core-values-exporter/azurerm"
-  version = "~> 0.0"
+  version = "~> 2.0"
 
   core_state = local.core_state
 }
 
-# Generate available CIDR block for Container App subnet (/24 provides 256 addresses for multiple container apps)
+# Keep the existing CAE subnet and user-assigned identity to avoid replacing
+# infrastructure as part of this module upgrade.
 resource "dx_available_subnet_cidr" "container_app" {
   provider           = azuredx
   virtual_network_id = module.azure_core_values.common_vnet.id
   prefix_length      = 24
 }
 
-# Container App Environment with dedicated subnet using pagopa-dx module
 module "container_app_infra" {
   source  = "pagopa-dx/azure-container-app-environment/azurerm"
   version = "~> 1.2"
@@ -56,6 +56,7 @@ module "metrics_portal" {
   container_app_user_assigned_identity_id           = module.container_app_infra.user_assigned_identity.id
   container_app_user_assigned_identity_principal_id = module.container_app_infra.user_assigned_identity.principal_id
   container_app_image                               = "ghcr.io/pagopa/dx-metrics:latest"
+  log_analytics_workspace_id                        = module.azure_core_values.common_log_analytics_workspace.id
 
   network_resource_group_name = module.azure_core_values.network_resource_group_name
 }

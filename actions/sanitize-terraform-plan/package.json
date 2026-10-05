@@ -1,15 +1,15 @@
 {
   "name": "sanitize-terraform-plan",
-  "description": "A GitHub action to run and sanitize terraform plan output.",
   "version": "0.1.0",
-  "type": "module",
   "private": true,
+  "description": "A GitHub action to run and sanitize terraform plan output.",
   "keywords": [
-    "github",
     "action",
-    "terraform",
-    "plan"
+    "github",
+    "plan",
+    "terraform"
   ],
+  "type": "module",
   "scripts": {
     "test": "sh test.sh"
   }

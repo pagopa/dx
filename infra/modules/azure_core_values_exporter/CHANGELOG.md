@@ -1,3 +1,13 @@
+## 2.0.2 (2026-09-22)
+
+### 🩹 Fixes
+
+- Raise an actionable error when the configured core remote state does not expose the `values` output. ([#2221](https://github.com/pagopa/dx/pull/2221))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 2.0.1 (2026-09-08)
 
 ### 🩹 Fixes

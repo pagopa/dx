@@ -108,12 +108,12 @@ describe("init command json output", () => {
         type: "step",
       },
       {
-        name: "Checking Corepack installation...",
+        name: "Checking mise installation...",
         status: "start",
         type: "step",
       },
       {
-        name: "Checking Corepack installation...",
+        name: "Checking mise installation...",
         status: "success",
         type: "step",
       },

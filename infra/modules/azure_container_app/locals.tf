@@ -1,5 +1,6 @@
 locals {
-  container_app_name = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app" }))
+  container_app_name           = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app" }))
+  key_vault_secret_uri_pattern = "^https://[a-z0-9-]+\\.vault\\.azure\\.net/secrets/[a-zA-Z0-9-]+(/[a-zA-Z0-9]+)?$"
 
   tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/module.json")).name, basename(path.module)) })
 
@@ -37,4 +38,11 @@ locals {
   container_app_secret_identity = (
     var.user_assigned_identity_id == null ? "System" : var.user_assigned_identity_id
   )
+
+  key_vault_secret_ids_by_name = {
+    for environment_variable in flatten([
+      for container in var.containers : container.environment_variables
+    ]) : replace(lower(environment_variable.name), "_", "-") => environment_variable.value...
+    if can(regex(local.key_vault_secret_uri_pattern, environment_variable.value))
+  }
 }

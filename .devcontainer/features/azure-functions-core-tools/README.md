@@ -1,4 +1,3 @@
-
 # Azure Functions Core Tools (azure-functions-core-tools)
 
 Installs the Azure Functions Core Tools
@@ -13,12 +12,10 @@ Installs the Azure Functions Core Tools
 
 ## Options
 
-| Options Id | Description | Type | Default Value |
-|-----|-----|-----|-----|
-| version | The version of Azure Functions Core Tools to install | string | latest |
-
-
+| Options Id | Description                                          | Type   | Default Value |
+| ---------- | ---------------------------------------------------- | ------ | ------------- |
+| version    | The version of Azure Functions Core Tools to install | string | latest        |
 
 ---
 
-_Note: This file was auto-generated from the [devcontainer-feature.json](devcontainer-feature.json).  Add additional notes to a `NOTES.md`._
+_Note: This file was auto-generated from the [devcontainer-feature.json](devcontainer-feature.json). Add additional notes to a `NOTES.md`._

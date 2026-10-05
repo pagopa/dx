@@ -1,3 +1,17 @@
+## 0.2.6 (2026-09-22)
+
+### 🩹 Fixes
+
+- Add configurable Terraform provider lock platforms to the init task. ([#2203](https://github.com/pagopa/dx/pull/2203))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.2.5 (2026-09-02)
 
 ### 🚀 Features

@@ -321,7 +321,7 @@ describe("makeInitCommand", () => {
       expect.any(Function),
     );
     expect(mocks.trackStepMock).toHaveBeenCalledWith(
-      "Checking Corepack installation...",
+      "Checking mise installation...",
       expect.any(Function),
     );
     expect(mocks.reportResult).toHaveBeenCalledWith(

@@ -1,5 +1,6 @@
 {
   "name": "@pagopa/dx",
+  "type": "module",
   "scripts": {
     "dx": "node ./apps/cli/bin/index.js",
     "validate": "nx affected --targets=build,test,lint,shellcheck,typecheck,docker:build --configuration=ci"

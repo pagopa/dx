@@ -45,7 +45,24 @@ describe("init preconditions", () => {
     const result = await runInitPreconditions(presenter);
 
     expect(result.isOk()).toBe(true);
-    expect(calledCommands()).toEqual(["terraform -version", "corepack -v"]);
+    expect(calledCommands()).toEqual(["terraform -version", "mise --version"]);
+  });
+
+  it("returns mise installation guidance when mise is unavailable", async () => {
+    const miseError = new Error("mise is not installed");
+    mocks.tf$
+      .mockResolvedValueOnce({ stdout: "Terraform v1.0.0" })
+      .mockRejectedValueOnce(miseError);
+
+    const result = await runInitPreconditions(presenter);
+
+    expect(result.isErr()).toBe(true);
+    const error = result._unsafeUnwrapErr();
+    expect(error.message).toBe(
+      "Please install mise before running this command. See https://mise.jdx.dev/installing-mise.html",
+    );
+    expect(error.cause).toBe(miseError);
+    expect(calledCommands()).toEqual(["terraform -version", "mise --version"]);
   });
 
   it("runAddEnvironmentPreconditions requires Azure login", async () => {
@@ -54,9 +71,9 @@ describe("init preconditions", () => {
     expect(result.isOk()).toBe(true);
     expect(calledCommands()).toEqual([
       "terraform -version",
+      "mise --version",
       "az account show",
       "az group list",
-      "corepack -v",
     ]);
   });
 
@@ -66,6 +83,7 @@ describe("init preconditions", () => {
       "ERROR: Please run 'az login' to setup account.";
     mocks.tf$
       .mockResolvedValueOnce({ stdout: "Terraform v1.0.0" })
+      .mockResolvedValueOnce({ stdout: "mise 2026.1.0" })
       .mockRejectedValueOnce(accountError);
 
     const result = await runAddEnvironmentPreconditions(presenter);
@@ -76,7 +94,11 @@ describe("init preconditions", () => {
       "Please log in to Azure CLI using `az login` before running this command.",
     );
     expect(error.cause).toBe(accountError);
-    expect(calledCommands()).toEqual(["terraform -version", "az account show"]);
+    expect(calledCommands()).toEqual([
+      "terraform -version",
+      "mise --version",
+      "az account show",
+    ]);
   });
 
   it("returns the Azure access error when listing resource groups fails", async () => {
@@ -85,6 +107,7 @@ describe("init preconditions", () => {
       "ERROR: The client does not have authorization to perform action 'Microsoft.Resources/subscriptions/resourcegroups/read'.";
     mocks.tf$
       .mockResolvedValueOnce({ stdout: "Terraform v1.0.0" })
+      .mockResolvedValueOnce({ stdout: "mise 2026.1.0" })
       .mockResolvedValueOnce({ stdout: '{"user":{"name":"test@example.com"}}' })
       .mockRejectedValueOnce(groupListError);
 
@@ -97,6 +120,7 @@ describe("init preconditions", () => {
     expect(error.cause).toBe(groupListError);
     expect(calledCommands()).toEqual([
       "terraform -version",
+      "mise --version",
       "az account show",
       "az group list",
     ]);
@@ -105,6 +129,7 @@ describe("init preconditions", () => {
   it("returns an explicit error when Azure account JSON is invalid", async () => {
     mocks.tf$
       .mockResolvedValueOnce({ stdout: "Terraform v1.0.0" })
+      .mockResolvedValueOnce({ stdout: "mise 2026.1.0" })
       .mockResolvedValueOnce({ stdout: "{not-json" })
       .mockResolvedValueOnce({ stdout: "[]" });
 
@@ -115,6 +140,7 @@ describe("init preconditions", () => {
     expect(error.message).toBe("Azure CLI returned invalid account JSON.");
     expect(calledCommands()).toEqual([
       "terraform -version",
+      "mise --version",
       "az account show",
       "az group list",
     ]);
@@ -123,6 +149,7 @@ describe("init preconditions", () => {
   it("returns an explicit error when Azure account payload is unexpected", async () => {
     mocks.tf$
       .mockResolvedValueOnce({ stdout: "Terraform v1.0.0" })
+      .mockResolvedValueOnce({ stdout: "mise 2026.1.0" })
       .mockResolvedValueOnce({ stdout: '{"subscription":"dev"}' })
       .mockResolvedValueOnce({ stdout: "[]" });
 
@@ -135,6 +162,7 @@ describe("init preconditions", () => {
     );
     expect(calledCommands()).toEqual([
       "terraform -version",
+      "mise --version",
       "az account show",
       "az group list",
     ]);
