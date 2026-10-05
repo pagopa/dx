@@ -24,11 +24,18 @@ The following diagram illustrates the architecture and relationships between the
 | Use case      | SKU           | HA       | Public network | Persistence | Diagnostics | Alerts   | Lock     |
 | ------------- | ------------- | -------- | -------------- | ----------- | ----------- | -------- | -------- |
 | `default`     | `Balanced_B3` | Enabled  | Disabled       | RDB `1h`    | Enabled     | Enabled  | Enabled  |
+| `cache-only`  | `Balanced_B3` | Enabled  | Disabled       | Disabled    | Enabled     | Enabled  | Enabled  |
 | `development` | `Balanced_B0` | Disabled | Enabled        | Disabled    | Disabled    | Disabled | Disabled |
+
+Use `cache-only` for disposable data that still needs production availability.
+It preserves the production security and operations baseline: high
+availability, private networking, Entra-only authentication, diagnostics,
+alerts, and a management lock. Unlike `default`, it does not restore data
+after a catastrophic cache failure because persistence is disabled.
 
 ### Scaling
 
-Both presets default to `Balanced` SKUs. To scale up — for example to a ComputeOptimized SKU for high-throughput workloads — set `sku_name_override` while keeping `use_case = "default"`:
+All use cases default to `Balanced` SKUs. To scale up — for example to a ComputeOptimized SKU for high-throughput workloads — set `sku_name_override` while keeping `use_case = "default"`:
 
 ```hcl
 use_case          = "default"
@@ -112,12 +119,20 @@ module "managed_redis" {
 ## Key defaults
 
 - **Authentication:** Entra-only. Data-plane access policy assignments are the consumer's responsibility; use the `id` and `principal_id` outputs to wire them externally.
+- **Managed identities:** the module assigns an identity to the Redis resource, but it does not authenticate client workloads. Grant each client managed identity a Redis data-plane access policy assignment before it can connect with Entra authentication.
 - **Networking:** private by default. `development` provisions a public-only instance to simplify local iterations.
 - **Database (fully opinionated, not configurable):** `client_protocol = Encrypted` (TLS), `clustering_policy = OSSCluster`, `eviction_policy = VolatileLRU`. No Redis modules are installed.
 - **PEP subnet:** the module synthesizes the private-endpoint subnet ID from `var.virtual_network_id` and the DX naming convention (`snet-<prefix>-<env>-pep-<loc>-01`); the subnet must exist in the provided VNet.
 - **DNS zone:** the `privatelink.redis.azure.net` private DNS zone is resolved from the virtual network's resource group (extracted from `virtual_network_id` using `parse_resource_id`) unless `private_dns_zone_resource_group_name` is set.
-- **Persistence:** RDB with a `1h` frequency. AOF is not supported by this module.
+- **Persistence:** the `default` use case uses RDB with a `1h` frequency; `cache-only` and `development` disable persistence. AOF is not supported by this module.
 - **Endpoint:** consumers connect via the `endpoint` output (`hostname:port`); the default database listens on port `10000`.
+
+## Capacity and lifecycle considerations
+
+- **Network performance:** Azure Managed Redis has no independent `network_performance` setting. Available bandwidth is determined by the selected SKU and cluster policy. Monitor `Cache Read` and `Cache Write`; if bandwidth, CPU, or client connections approach the SKU limits, scale to a larger SKU or a more compute-oriented tier.
+- **Scaling:** changing `sku_name_override` updates the Azure resource in place. Azure permits all scale-ups, but only compatible scale-downs where current memory fits the target SKU. With HA disabled, a scale operation makes the cache unavailable and loses its data; clients must use the DNS endpoint because an underlying IP address can change.
+- **HA and persistence:** persistence requires HA, but HA does not require persistence. The `cache-only` use case retains HA and its SLA eligibility while disabling data restoration. Azure can enable HA on an existing cache, but cannot disable it later.
+- **Redis modules:** Redis modules remain unsupported by this module. Azure requires them to be selected at cache creation and changing them later requires recreating the cache; their compatibility also varies by SKU and clustering policy.
 
 ## Unsupported on purpose
 
@@ -176,13 +191,13 @@ No modules.
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_alerts"></a> [alerts](#input\_alerts) | Metric alert configuration. Alerts are enabled by default for the 'default' use case with sensible thresholds. | <pre>object({<br/>    action_group_id = optional(string, null)<br/>    thresholds = optional(object({<br/>      used_memory_percentage          = optional(number, 75)<br/>      used_memory_percentage_critical = optional(number, 90)<br/>      server_load                     = optional(number, 80)<br/>      server_load_critical            = optional(number, 90)<br/>      evicted_keys                    = optional(number, 0)<br/>      connected_clients               = optional(number, null)<br/>    }), {})<br/>  })</pre> | `{}` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and derive short location names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
-| <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to send diagnostics to. Required when use\_case is 'default'. | `string` | `null` | no |
+| <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to send diagnostics to. Required unless use\_case is 'development'. | `string` | `null` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The resource group name containing the 'privatelink.redis.azure.net' private DNS zone. Defaults to the virtual network resource group. | `string` | `null` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where resources will be deployed. | `string` | n/a | yes |
-| <a name="input_sku_name_override"></a> [sku\_name\_override](#input\_sku\_name\_override) | Optional explicit SKU name override. Only Balanced\_* SKUs (B0-B250) are supported. Balanced\_B0 is restricted to the 'development' use\_case because it does not support HA or data persistence. | `string` | `null` | no |
+| <a name="input_sku_name_override"></a> [sku\_name\_override](#input\_sku\_name\_override) | Optional explicit SKU name override. Only Balanced\_* SKUs (B0-B250) are supported. Balanced\_B0 is restricted to the 'development' use case because it does not support HA or data persistence. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | DX preset for Azure Managed Redis. Allowed values are 'default' and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access. To scale beyond the default SKU (e.g. ComputeOptimized for high-throughput workloads), set sku\_name\_override. | `string` | `"default"` | no |
-| <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id) | The resource ID of the virtual network hosting the private endpoint. Required when use\_case is 'default'; used to locate the 'privatelink.redis.azure.net' DNS zone. | `string` | `null` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | DX preset for Azure Managed Redis. Allowed values are 'default', 'cache-only', and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access. To scale beyond the default SKU (e.g. ComputeOptimized for high-throughput workloads), set sku\_name\_override. | `string` | `"default"` | no |
+| <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id) | The resource ID of the virtual network hosting the private endpoint. Required unless use\_case is 'development'; used to locate the 'privatelink.redis.azure.net' DNS zone. | `string` | `null` | no |
 
 ## Outputs
 

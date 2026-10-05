@@ -170,6 +170,54 @@ run "managed_redis_development_use_case" {
   }
 }
 
+run "managed_redis_cache_only_use_case" {
+  command = plan
+
+  variables {
+    use_case = "cache-only"
+  }
+
+  assert {
+    condition     = azurerm_managed_redis.this.sku_name == "Balanced_B3"
+    error_message = "Cache-only use case must resolve to Balanced_B3"
+  }
+
+  assert {
+    condition     = azurerm_managed_redis.this.high_availability_enabled == true
+    error_message = "Cache-only use case must enable high availability"
+  }
+
+  assert {
+    condition     = azurerm_managed_redis.this.public_network_access == "Disabled"
+    error_message = "Cache-only use case must disable public network access"
+  }
+
+  assert {
+    condition     = local.use_case_features.persistence_mode == "disabled" && local.persistence_frequency == null
+    error_message = "Cache-only use case must disable persistence"
+  }
+
+  assert {
+    condition     = length(azurerm_management_lock.this) == 1
+    error_message = "Cache-only use case must create a management lock"
+  }
+
+  assert {
+    condition     = length(azurerm_private_endpoint.redis) == 1
+    error_message = "Cache-only use case must create a private endpoint"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Cache-only use case must enable diagnostic settings"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 5
+    error_message = "Cache-only use case must create the five default metric alerts"
+  }
+}
+
 run "managed_redis_sku_override" {
   command = plan
 
