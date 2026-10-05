@@ -4,3 +4,5 @@ module "azure_core_values" {
 
   core_state = local.core_state
 }
+
+# Force UAT changes for terraform apply Test
