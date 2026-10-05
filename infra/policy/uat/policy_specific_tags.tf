@@ -44,7 +44,7 @@ resource "azurerm_subscription_policy_assignment" "specific_tags_assignment" {
       value = []
     }
     requireTags = {
-      value = false
+      value = true
     }
   })
 }

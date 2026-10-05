@@ -28,16 +28,16 @@ Each repository that needs to apply a policy must replicate the same structure w
 # infra/policy/prod/policy_specific_tags.tf
 
 data "http" "specific_tags_policy_rule" {
-  url = "https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/policy/_policy_rules/specific_tags_rule_v1.json"
+  url = "https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/policy/_policy_rules/specific_tags_rule_v2.json"
 }
 
 data "http" "specific_tags_policy_parameters" {
-  url = "https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/policy/_policy_rules/specific_tags_paramenters_v1.json"
+  url = "https://raw.githubusercontent.com/pagopa/dx/refs/heads/main/infra/policy/_policy_rules/specific_tags_parameters_v2.json"
 }
 
 
 resource "azurerm_policy_definition" "specific_tags_policy" {
-  name         = "${local.project}-specific-tags-policy"
+  name         = "${local.project}-specific-tags-policy-v2"
   policy_type  = "Custom"
   mode         = "Indexed"
   display_name = "DevEx Enforce specific tags and values on resources"
@@ -61,30 +61,26 @@ resource "azurerm_subscription_policy_assignment" "specific_tags_assignment" {
   subscription_id      = data.azurerm_subscription.current.id
 
   parameters = jsonencode({
-    "CostCenter" = {
-      "value" = "TS000 - Tecnologia e Servizi"
+    "allowedCostCenters" = {
+      "value" = ["TS000 - TECNOLOGIA & SERVIZI"]
     },
-    "BusinessUnit" = {
-      "value" = [
-        "App IO",
-        "CGN",
-        "Carta della Cultura",
-        "IT Wallet",
-      ]
+    "allowedOwners" = {
+      "value" = ["DevEx"]
     },
-    "ManagementTeam" = {
-      "value" = [
-        "IO Enti & Servizi",
-        "IO Platform",
-        "IO Wallet",
-        "IO Comunicazione",
-        "IO Autenticazione",
-        "IO Bonus & Pagamenti",
-        "IO Firma",
-      ]
+    "allowedEnvironments" = {
+      "value" = ["Dev", "Uat", "Prod"]
     },
-    "SourceOrg" = {
-      "value" = "pagopa"
+    "allowedSourcePattern" = {
+      "value" = "https://github.com/pagopa/dx/blob/main/infra/*"
+    },
+    "allowedBusinessUnits" = {
+      "value" = []
+    },
+    "allowedManagementTeams" = {
+      "value" = []
+    },
+    "requireTags" = {
+      "value" = false
     }
   })
 }

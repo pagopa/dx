@@ -57,11 +57,19 @@ provider "azapi" {}
 
 provider "aws" {
   region = "eu-south-1"
+
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "aws" {
   alias  = "eu-central-1"
   region = "eu-central-1"
+
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "awscc" {

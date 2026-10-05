@@ -50,6 +50,8 @@ resource "aws_iam_policy" "docs_knowledge_base_policy" {
   name        = "dx-${var.environment.env_short}-euc1-docs-kb-policy-01"
   description = "IAM policy for MCP Server Docs Knowledge Base S3 access"
   policy      = data.aws_iam_policy_document.rw_docs_knowledge_base_policy.json
+
+  tags = var.tags
 }
 
 # Attach the docs knowledge base policy to the continuous deployment (CD) role
@@ -76,6 +78,8 @@ resource "aws_iam_policy" "list_tags_for_resources" {
   name        = "dx-${var.environment.env_short}-euc1-list-tags-for-resources-01"
   description = "IAM policy to allow access to resource tags"
   policy      = data.aws_iam_policy_document.list_tags_for_resources.json
+
+  tags = var.tags
 }
 
 resource "aws_iam_role_policy_attachment" "list_tags_for_resources_infra_ci" {
@@ -153,6 +157,8 @@ resource "aws_iam_policy" "bedrock_cloud_control" {
   name        = "dx-${var.environment.env_short}-euc1-bedrock-cloud-control-01"
   description = "IAM policy for Bedrock Knowledge Base management via Cloud Control API"
   policy      = data.aws_iam_policy_document.bedrock_cloud_control.json
+
+  tags = var.tags
 }
 
 # Attach Bedrock Cloud Control policy to infrastructure CI role
