@@ -108,6 +108,18 @@ describe("monorepo generator — file generation", () => {
     expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain("allowBuilds:");
   });
 
+  it("configures Renovate not to pin internal DX actions", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["renovate.json"],
+    );
+
+    expect(generatedFiles["renovate.json"]).toContain(
+      '"matchPackageNames": ["pagopa/dx"]',
+    );
+    expect(generatedFiles["renovate.json"]).toContain('"pinDigests": false');
+  });
+
   it("includes the mise toolchain configuration", async () => {
     const generatedRoot = path.join(tmpDir, payload.repoName);
     const generatedFiles = await fs.readdir(generatedRoot);
