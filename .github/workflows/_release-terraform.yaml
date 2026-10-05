@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+      - feat-align-infra-apply-nx-test
     paths:
       - "infra/resources/**"
       - ".github/workflows/_release-terraform.yaml"
