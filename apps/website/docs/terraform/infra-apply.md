@@ -41,6 +41,10 @@ repositories that manage Terraform projects through Nx and
 `@pagopa/nx-terraform-plugin`. Like `_validate.yaml`, this wrapper only invokes
 the versioned reusable workflow implementation.
 
+The masked plan/apply targets require `@pagopa/nx-terraform-plugin` 0.6.0 or
+newer, which bundles the shared task implementations. Update the consuming
+repository's dependency lockfile before adopting this flow.
+
 `release-terraform-v1.yaml` contains the release logic and follows the same
 environment discovery approach used by `validate-v2.yaml`: it reads the
 repository GitHub environments named `infra-<env>-cd` (and the paired
@@ -68,9 +72,18 @@ runs are never cancelled. Only one run remains pending; a newer run replaces the
 pending one and generates its plan after the active release ends. The queue does
 not guarantee commit order.
 
+When migrating to this wrapper, remove the push triggers from the legacy callers
+that deploy the same states. In this repository, the dev, uat and prod legacy
+resource callers remain available only through `workflow_dispatch`. Do not run
+both deployment flows concurrently against the same state.
+
 ```yaml
 jobs:
   release:
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
     uses: pagopa/dx/.github/workflows/release-terraform-v1.yaml@main
     secrets: inherit
 ```
