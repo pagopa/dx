@@ -53,9 +53,8 @@ terraform {
   tags = {
     CreatedBy   = "Terraform"
     Environment = "Dev"
-    BusinessUnit    = "Platform"
-    CostCenter    = "TS000"
-    ManagementTeam    = "Engineering"
+    CostCenter    = "TS330 - PDND & INTEROPERABILITA'"
+    Owner    = "DX Platform"
   }
 }
 ",

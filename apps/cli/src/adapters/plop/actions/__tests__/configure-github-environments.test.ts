@@ -37,7 +37,10 @@ const createMockPayload = (overrides: Partial<Payload> = {}): Payload => ({
     owner: "pagopa",
     repo: "dx",
   },
-  tags: {},
+  tags: {
+    CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+    Owner: "DX Platform",
+  },
   workspace: {
     domain: "test",
   },

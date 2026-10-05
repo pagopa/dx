@@ -37,7 +37,11 @@ import {
   isAzureLocation,
   locationShort,
 } from "../../azure/locations.js";
-import { workspaceSchema } from "../../plop/generators/environment/prompts.js";
+import {
+  costCenterSchema,
+  ownerSchema,
+  workspaceSchema,
+} from "../../plop/generators/environment/prompts.js";
 import {
   collectDeploymentEnvironmentPayload,
   getPlopInstance,
@@ -93,6 +97,7 @@ const addEnvironmentCommandOptionsSchema = z
       .min(1, "Business unit cannot be empty")
       .optional(),
     clientId: z.string().trim().min(1, "Client id cannot be empty").optional(),
+    costCenter: costCenterSchema.optional(),
     domain: workspaceSchema.shape.domain.optional(),
     installationId: z
       .string()
@@ -106,6 +111,7 @@ const addEnvironmentCommandOptionsSchema = z
       .min(1, "Management team cannot be empty")
       .optional(),
     name: environmentSchema.shape.name.optional(),
+    owner: ownerSchema.optional(),
     prefix: environmentSchema.shape.prefix.optional(),
     privateKeyPath: z
       .string()
@@ -184,7 +190,9 @@ const buildBaseEnvironmentInitialAnswers = (
 
   const tags = {
     ...(options.businessUnit && { BusinessUnit: options.businessUnit }),
+    ...(options.costCenter && { CostCenter: options.costCenter }),
     ...(options.managementTeam && { ManagementTeam: options.managementTeam }),
+    ...(options.owner && { Owner: options.owner }),
   };
 
   return {
@@ -446,12 +454,14 @@ export const makeAddCommand = (
         .addOption(
           new Option("--business-unit <business-unit>", "Business unit tag"),
         )
+        .addOption(new Option("--cost-center <cost-center>", "Cost center tag"))
         .addOption(
           new Option(
             "--management-team <management-team>",
             "Management team tag",
           ),
         )
+        .addOption(new Option("--owner <owner>", "Owner tag"))
         .addOption(
           new Option(
             "-y, --yes",
