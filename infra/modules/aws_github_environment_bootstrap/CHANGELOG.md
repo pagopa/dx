@@ -1,3 +1,14 @@
+## 2.1.1 (2026-10-05)
+
+### 🩹 Fixes
+
+- Update the CodeBuild self-hosted runner dependency to version 3. ([#2256](https://github.com/pagopa/dx/pull/2256))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Christian Calabrese
+
 ## 2.1.0 (2026-09-22)
 
 ### 🚀 Features
