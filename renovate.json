@@ -10,6 +10,11 @@
       "schedule": ["* 0-8 * * 1"]
     },
     {
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["pagopa/dx"],
+      "pinDigests": false
+    },
+    {
       "matchManagers": ["terraform"],
       "matchDatasources": ["terraform-provider"],
       "matchPackageNames": ["!/^pagopa-dx\\//"],
