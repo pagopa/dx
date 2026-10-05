@@ -294,4 +294,4 @@ jobs:
       - name: Terraform Apply
         env:
           PROJECT: ${{ matrix.target.project }}
-        run: pnpm nx run "${PROJECT}:apply" --configuration=ci --planFile="$TFPLAN_FILE"
+        run: pnpm nx run "${PROJECT}:apply:ci" --planFile="$TFPLAN_FILE"
