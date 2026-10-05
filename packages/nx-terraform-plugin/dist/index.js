@@ -152,12 +152,15 @@ const getTestTargets = (opts, cwd, testCapabilities) => {
 	}]);
 	return targets;
 };
-const getInitTarget = (projectType, initTargetName, cwd) => [initTargetName, projectType === "application" ? {
+const getInitTarget = (opts, projectType, initTargetName, cwd) => [initTargetName, projectType === "application" ? {
 	cache: false,
 	configurations: { ci: { frozenLockfile: true } },
 	executor: "@pagopa/nx-terraform-plugin:init",
 	inputs: ["default"],
-	options: { projectRoot: "{projectRoot}" },
+	options: {
+		platforms: opts.initTarget.platforms,
+		projectRoot: "{projectRoot}"
+	},
 	outputs: [
 		"{projectRoot}/.terraform",
 		"{projectRoot}/.terraform.lock.hcl",
@@ -194,7 +197,7 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 	const formatArgs = ["-list=true", "-recursive=true"];
 	const cwd = "{projectRoot}";
 	const initTargetName = getTargetName(opts, "init");
-	const targets = [getInitTarget(projectType, initTargetName, cwd), [getTargetName(opts, "fmt"), {
+	const targets = [getInitTarget(opts, projectType, initTargetName, cwd), [getTargetName(opts, "fmt"), {
 		cache: true,
 		command: `terraform fmt`,
 		configurations: { ci: { args: [...formatArgs, "-check=true"] } },
@@ -277,12 +280,9 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 		}
 	}], [getTargetName(opts, "apply"), {
 		cache: false,
-		command: `terraform apply`,
 		dependsOn: [initTargetName],
-		options: {
-			cwd,
-			tty: true
-		}
+		executor: "@pagopa/nx-terraform-plugin:apply",
+		options: { projectRoot: "{projectRoot}" }
 	}]);
 	return Object.fromEntries(targets);
 };
@@ -352,13 +352,16 @@ const publishOptionsSchema = z.object({
 	github: pluginPublishOptionsSchema.shape.github,
 	mode: z.literal("github")
 });
+const initTargetOptionsSchema = z.object({ platforms: z.array(z.string()).default([]) });
 const terraformPluginOptionsSchema = z.object({
 	additionalEnvironments: z.array(environmentNameSchema),
+	initTarget: initTargetOptionsSchema.default({ platforms: [] }),
 	publish: publishOptionsSchema,
 	targetNamePrefix: z.string()
 });
 const defaultOptions = {
 	additionalEnvironments: [],
+	initTarget: { platforms: [] },
 	publish: { mode: "github" },
 	targetNamePrefix: ""
 };
@@ -373,6 +376,10 @@ const parseOptions = (options) => {
 	return {
 		...defaultOptions,
 		...parseResult.data,
+		initTarget: {
+			...defaultOptions.initTarget,
+			...parseResult.data.initTarget
+		},
 		publish: {
 			...defaultOptions.publish,
 			...parseResult.data.publish,
