@@ -1,6 +1,6 @@
 {
   "name": "run-dx-task",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "private": true,
   "description": "GitHub Action that dispatches dx-tasks tasks",
   "keywords": [

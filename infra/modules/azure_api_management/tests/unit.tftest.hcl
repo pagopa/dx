@@ -250,6 +250,51 @@ run "azure_api_management_high_load_autoscale_defaults" {
   }
 }
 
+run "azure_api_management_overrides_selected_default_alert_thresholds" {
+  command = plan
+
+  variables {
+    metric_alert_thresholds = {
+      failed_requests       = 500
+      unauthorized_requests = 250
+      response_time         = 1000
+    }
+  }
+
+  assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].threshold == 500 &&
+      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].threshold == 250 &&
+      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 1000 &&
+      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 10000
+    )
+    error_message = "Threshold overrides must update only the selected built-in alert thresholds."
+  }
+}
+
+run "azure_api_management_disables_selected_default_alerts" {
+  command = plan
+
+  variables {
+    metric_alert_thresholds = {
+      failed_requests     = null
+      cpu_percent_gateway = null
+      response_time       = 1000
+    }
+  }
+
+  assert {
+    condition = (
+      length(azurerm_monitor_metric_alert.this) == 5 &&
+      !contains(keys(azurerm_monitor_metric_alert.this), "failed_requests") &&
+      !contains(keys(azurerm_monitor_metric_alert.this), "cpu_percent_gateway") &&
+      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 1000 &&
+      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 10000
+    )
+    error_message = "Null thresholds must disable only the selected alerts while numeric thresholds override other alerts."
+  }
+}
+
 run "azure_api_management_explicitly_disables_default_alerts" {
   command = plan
 
