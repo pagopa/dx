@@ -395,7 +395,7 @@ describe("createNodesV2 shared module inputs", () => {
       ],
       [
         path.join("infra", "resources", "dev", "main.tf"),
-        'module "alpha" { for_each = { dev = "dev" } source = "../_modules/alpha" }',
+        'locals { text = "${replace("}", "}", "")}" }\nmodule "alpha" {\n for_each = { dev = "dev" }\n source = "../_modules/alpha"\n}',
       ],
       [
         path.join("infra", "resources", "prod", "main.tf"),

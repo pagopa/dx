@@ -22,15 +22,38 @@ function getLocalModuleSource(
   ) {
     return undefined;
   }
-  const source = tokens[index + 2].value;
+  const source = tokens[index + 2].value.replace(
+    /\\(u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8}|[nrt"\\])/g,
+    (escape) => {
+      const character = escape.slice(1);
+      if (character[0] === "u" || character[0] === "U") {
+        return String.fromCodePoint(Number.parseInt(character.slice(1), 16));
+      }
+      switch (character) {
+        case '"':
+          return '"';
+        case "n":
+          return "\n";
+        case "r":
+          return "\r";
+        case "t":
+          return "\t";
+        default:
+          return "\\";
+      }
+    },
+  );
   return source.startsWith(".") ? source : undefined;
 }
 
 function isModuleHeader(tokens: HclToken[], index: number): boolean {
+  const label = tokens[index + 1];
   return (
     !tokens[index].quoted &&
     tokens[index].value === "module" &&
-    tokens[index + 1]?.quoted === true &&
+    (label?.quoted === true ||
+      (!!label &&
+        /^[\p{ID_Start}_][\p{ID_Continue}_-]*$/u.test(label.value))) &&
     !tokens[index + 2]?.quoted &&
     tokens[index + 2]?.value === "{"
   );
@@ -40,18 +63,91 @@ function readHeredocEnd(
   fileContent: string,
   index: number,
 ): number | undefined {
-  const header = /^<<-?[ \t]*([A-Za-z_][A-Za-z0-9_]*)[^\S\r\n]*\r?\n/.exec(
-    fileContent.slice(index),
-  );
+  const header =
+    /^<<-?[ \t]*([\p{ID_Start}_][\p{ID_Continue}_-]*)[^\S\r\n]*\r?\n/u.exec(
+      fileContent.slice(index),
+    );
   if (!header) return undefined;
 
   const delimiter = header[1];
   let cursor = index + header[0].length;
   while (cursor < fileContent.length) {
     const end = fileContent.indexOf("\n", cursor);
-    const line = fileContent.slice(cursor, end < 0 ? undefined : end);
-    cursor = end < 0 ? fileContent.length : end + 1;
-    if (line.trim() === delimiter) break;
+    const lineStart = fileContent.lastIndexOf("\n", cursor - 1) + 1;
+    const line = fileContent.slice(lineStart, end < 0 ? undefined : end);
+    if (line.trim() === delimiter) {
+      return end < 0 ? fileContent.length : end + 1;
+    }
+    const lineEnd = end < 0 ? fileContent.length : end;
+    while (cursor < lineEnd) {
+      if (
+        fileContent.startsWith("$${", cursor) ||
+        fileContent.startsWith("%%{", cursor)
+      ) {
+        cursor += 3;
+      } else if (
+        fileContent.startsWith("${", cursor) ||
+        fileContent.startsWith("%{", cursor)
+      ) {
+        cursor = skipTemplateExpression(fileContent, cursor + 2);
+      } else {
+        cursor++;
+      }
+    }
+    cursor = end < 0 ? fileContent.length : Math.max(cursor, end + 1);
+  }
+  return cursor;
+}
+
+function readQuotedTemplateEnd(fileContent: string, start: number): number {
+  let index = start + 1;
+  while (index < fileContent.length && fileContent[index] !== '"') {
+    if (fileContent[index] === "\\") {
+      index += 2;
+    } else if (
+      fileContent.startsWith("$${", index) ||
+      fileContent.startsWith("%%{", index)
+    ) {
+      index += 3;
+    } else if (
+      fileContent.startsWith("${", index) ||
+      fileContent.startsWith("%{", index)
+    ) {
+      index = skipTemplateExpression(fileContent, index + 2);
+    } else {
+      index++;
+    }
+  }
+  return Math.min(index + 1, fileContent.length);
+}
+
+function skipTemplateExpression(fileContent: string, index: number): number {
+  let depth = 0;
+  let cursor = index;
+  while (cursor < fileContent.length) {
+    if (
+      fileContent[cursor] === "#" ||
+      fileContent.startsWith("//", cursor) ||
+      fileContent.startsWith("/*", cursor)
+    ) {
+      const block = fileContent.startsWith("/*", cursor);
+      const start = cursor + (block ? 2 : fileContent[cursor] === "#" ? 1 : 2);
+      const end = fileContent.indexOf(block ? "*/" : "\n", start);
+      cursor = end < 0 ? fileContent.length : end + (block ? 2 : 1);
+    } else if (fileContent[cursor] === '"') {
+      cursor = readQuotedTemplateEnd(fileContent, cursor);
+    } else if (fileContent.startsWith("<<", cursor)) {
+      cursor = readHeredocEnd(fileContent, cursor) ?? cursor + 2;
+    } else if (fileContent[cursor] === "{") {
+      depth++;
+      cursor++;
+    } else if (fileContent[cursor] === "}") {
+      if (depth === 0) return cursor + 1;
+      depth--;
+      cursor++;
+    } else {
+      cursor++;
+    }
   }
   return cursor;
 }
@@ -59,20 +155,25 @@ function readHeredocEnd(
 function tokenizeHcl(fileContent: string): HclToken[] {
   const tokens: HclToken[] = [];
   const lexer =
-    /"(?:\\.|[^"\\])*"|#[^\r\n]*|\/\/[^\r\n]*|\/\*[\s\S]*?\*\/|\s+|[A-Za-z_][A-Za-z0-9_-]*|[{}=]|./gy;
+    /#[^\r\n]*|\/\/[^\r\n]*|\/\*[\s\S]*?\*\/|\s+|[\p{ID_Start}_][\p{ID_Continue}_-]*|[{}=]|./guy;
   let match: null | RegExpExecArray;
 
   while ((match = lexer.exec(fileContent)) !== null) {
     const token = match[0];
-    if (token.startsWith('"')) {
-      tokens.push({ quoted: true, value: token.slice(1, -1) });
+    if (token === '"') {
+      const end = readQuotedTemplateEnd(fileContent, match.index);
+      tokens.push({
+        quoted: true,
+        value: fileContent.slice(match.index + 1, end - 1),
+      });
+      lexer.lastIndex = end;
     } else if (token === "<" && fileContent[lexer.lastIndex] === "<") {
       const heredocEnd = readHeredocEnd(fileContent, match.index);
       if (heredocEnd !== undefined) {
         tokens.push({ quoted: true, value: "" });
         lexer.lastIndex = heredocEnd;
       }
-    } else if (/^[A-Za-z_]/.test(token)) {
+    } else if (/^[\p{ID_Start}_]/u.test(token)) {
       tokens.push({ value: token });
     } else if ("{}=".includes(token)) {
       tokens.push({ value: token });
