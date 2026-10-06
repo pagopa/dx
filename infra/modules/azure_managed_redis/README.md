@@ -10,10 +10,10 @@ The following diagram illustrates the architecture and relationships between the
 
 ## Features
 
-- Two `use_case` presets that drive SKU, HA, persistence, diagnostics, alerts, lock, and public/private networking. Use `sku_name_override` to scale beyond the default SKU (e.g. ComputeOptimized for high-throughput workloads).
+- Three `use_case` presets that drive SKU, HA, persistence, diagnostics, alerts, lock, and public/private networking. Use `sku_name_override` to select a supported Balanced SKU.
 - Microsoft Entra authentication only. Access keys are permanently disabled on the default database.
 - System-assigned managed identity, provisioned automatically.
-- Private endpoint on the `redisEnterprise` subresource with DNS integration via `privatelink.redis.azure.net` (for the `default` use case).
+- Private endpoint on the `redisEnterprise` subresource with DNS integration via `privatelink.redis.azure.net` for non-development use cases.
 - Diagnostic settings streaming `AllMetrics` to a Log Analytics workspace.
 - Five built-in metric alerts (memory warn/critical, server load warn/critical, evicted keys) with MS-backed default thresholds, plus an opt-in `connected_clients` alert.
 - Management lock (`CanNotDelete`) on all non-development instances.
@@ -35,18 +35,22 @@ after a catastrophic cache failure because persistence is disabled.
 
 ### Scaling
 
-All use cases default to `Balanced` SKUs. To scale up — for example to a ComputeOptimized SKU for high-throughput workloads — set `sku_name_override` while keeping `use_case = "default"`:
+All use cases default to `Balanced` SKUs. To scale up, set `sku_name_override` to a supported Balanced SKU while keeping `use_case = "default"`:
 
 ```hcl
 use_case          = "default"
-sku_name_override = "ComputeOptimized_X3"
+sku_name_override = "Balanced_B10"
 ```
 
-`sku_name_override` accepts any `Balanced_*` or `ComputeOptimized_*` SKU. `Balanced_B0` is restricted to `use_case = "development"` because it does not support HA or data persistence.
+`sku_name_override` accepts `Balanced_B0`, `Balanced_B1`, `Balanced_B3`,
+`Balanced_B5`, `Balanced_B10`, `Balanced_B20`, `Balanced_B50`,
+`Balanced_B100`, `Balanced_B150`, and `Balanced_B250`. `Balanced_B0` is
+restricted to `use_case = "development"` because it does not support HA or
+data persistence.
 
 ## Alerts
 
-When `use_case` is `default`, five Azure Monitor metric alerts are provisioned on the AMR resource. The `development` use case disables them entirely — percentage-based metrics are noisy on 2-vCPU SKUs (see the MS [small-SKU guidance](https://learn.microsoft.com/azure/redis/best-practices-server-load#recommendations-for-smaller-skus)).
+When `use_case` is `default` or `cache-only`, five Azure Monitor metric alerts are provisioned on the AMR resource. The `development` use case disables them entirely — percentage-based metrics are noisy on 2-vCPU SKUs (see the MS [small-SKU guidance](https://learn.microsoft.com/azure/redis/best-practices-server-load#recommendations-for-smaller-skus)).
 
 ### Default alert matrix
 
@@ -129,7 +133,7 @@ module "managed_redis" {
 
 ## Capacity and lifecycle considerations
 
-- **Network performance:** Azure Managed Redis has no independent `network_performance` setting. Available bandwidth is determined by the selected SKU and cluster policy. Monitor `Cache Read` and `Cache Write`; if bandwidth, CPU, or client connections approach the SKU limits, scale to a larger SKU or a more compute-oriented tier.
+- **Network performance:** Azure Managed Redis has no independent `network_performance` setting. Available bandwidth is determined by the selected SKU and cluster policy. Monitor `Cache Read` and `Cache Write`; if bandwidth, CPU, or client connections approach the SKU limits, scale to a larger supported SKU.
 - **Scaling:** changing `sku_name_override` updates the Azure resource in place. Azure permits all scale-ups, but only compatible scale-downs where current memory fits the target SKU. With HA disabled, a scale operation makes the cache unavailable and loses its data; clients must use the DNS endpoint because an underlying IP address can change.
 - **HA and persistence:** persistence requires HA, but HA does not require persistence. The `cache-only` use case retains HA and its SLA eligibility while disabling data restoration. Azure can enable HA on an existing cache, but cannot disable it later.
 - **Redis modules:** Redis modules remain unsupported by this module. Azure requires them to be selected at cache creation and changing them later requires recreating the cache; their compatibility also varies by SKU and clustering policy.
@@ -189,14 +193,14 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_alerts"></a> [alerts](#input\_alerts) | Metric alert configuration. Alerts are enabled by default for the 'default' use case with sensible thresholds. | <pre>object({<br/>    action_group_id = optional(string, null)<br/>    thresholds = optional(object({<br/>      used_memory_percentage          = optional(number, 75)<br/>      used_memory_percentage_critical = optional(number, 90)<br/>      server_load                     = optional(number, 80)<br/>      server_load_critical            = optional(number, 90)<br/>      evicted_keys                    = optional(number, 0)<br/>      connected_clients               = optional(number, null)<br/>    }), {})<br/>  })</pre> | `{}` | no |
+| <a name="input_alerts"></a> [alerts](#input\_alerts) | Metric alert configuration. Alerts are enabled by default for the 'default' and 'cache-only' use cases with sensible thresholds. | <pre>object({<br/>    action_group_id = optional(string, null)<br/>    thresholds = optional(object({<br/>      used_memory_percentage          = optional(number, 75)<br/>      used_memory_percentage_critical = optional(number, 90)<br/>      server_load                     = optional(number, 80)<br/>      server_load_critical            = optional(number, 90)<br/>      evicted_keys                    = optional(number, 0)<br/>      connected_clients               = optional(number, null)<br/>    }), {})<br/>  })</pre> | `{}` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and derive short location names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to send diagnostics to. Required unless use\_case is 'development'. | `string` | `null` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The resource group name containing the 'privatelink.redis.azure.net' private DNS zone. Defaults to the virtual network resource group. | `string` | `null` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where resources will be deployed. | `string` | n/a | yes |
 | <a name="input_sku_name_override"></a> [sku\_name\_override](#input\_sku\_name\_override) | Optional explicit SKU name override. Only Balanced\_* SKUs (B0-B250) are supported. Balanced\_B0 is restricted to the 'development' use case because it does not support HA or data persistence. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | DX preset for Azure Managed Redis. Allowed values are 'default', 'cache-only', and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access. To scale beyond the default SKU (e.g. ComputeOptimized for high-throughput workloads), set sku\_name\_override. | `string` | `"default"` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | DX preset for Azure Managed Redis. Allowed values are 'default', 'cache-only', and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access. | `string` | `"default"` | no |
 | <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id) | The resource ID of the virtual network hosting the private endpoint. Required unless use\_case is 'development'; used to locate the 'privatelink.redis.azure.net' DNS zone. | `string` | `null` | no |
 
 ## Outputs

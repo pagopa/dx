@@ -30,7 +30,7 @@ variable "virtual_network_id" {
 
   validation {
     condition     = var.use_case == "development" || var.virtual_network_id != null
-    error_message = "virtual_network_id is required when use_case is 'default'."
+    error_message = "virtual_network_id is required unless use_case is 'development'."
   }
 
   validation {
@@ -48,7 +48,7 @@ variable "private_dns_zone_resource_group_name" {
 # ------------ REDIS ------------ #
 variable "use_case" {
   type        = string
-  description = "DX preset for Azure Managed Redis. Allowed values are 'default', 'cache-only', and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access. To scale beyond the default SKU (e.g. ComputeOptimized for high-throughput workloads), set sku_name_override."
+  description = "DX preset for Azure Managed Redis. Allowed values are 'default', 'cache-only', and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access."
   default     = "default"
 
   validation {
@@ -92,12 +92,12 @@ variable "log_analytics_workspace_id" {
 
   validation {
     condition     = var.use_case == "development" || var.log_analytics_workspace_id != null
-    error_message = "log_analytics_workspace_id is required when use_case is 'default'."
+    error_message = "log_analytics_workspace_id is required unless use_case is 'development'."
   }
 }
 
 variable "alerts" {
-  description = "Metric alert configuration. Alerts are enabled by default for the 'default' use case with sensible thresholds."
+  description = "Metric alert configuration. Alerts are enabled by default for the 'default' and 'cache-only' use cases with sensible thresholds."
   type = object({
     action_group_id = optional(string, null)
     thresholds = optional(object({
