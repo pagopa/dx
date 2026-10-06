@@ -1,5 +1,5 @@
 /**
- * Category helpers for the nx-terraform-plugin LogTape logger tree.
+ * Category helpers for the nx-terraform LogTape logger tree.
  */
 
 import {
@@ -11,13 +11,13 @@ import {
 } from "@logtape/logtape";
 
 export const getPackageLogger = (category: string[]): Logger =>
-  getLogger(["nx-terraform-plugin", ...category]);
+  getLogger(["nx-terraform", ...category]);
 
 export const configureLogger = () =>
   configure({
     loggers: [
       {
-        category: ["nx-terraform-plugin"],
+        category: ["nx-terraform"],
         lowestLevel: "info",
         sinks: ["console"],
       },

@@ -1,7 +1,6 @@
 {
-  "name": "@pagopa/nx-terraform-plugin",
-  "version": "0.5.10",
-  "private": true,
+  "name": "@pagopa/nx-terraform",
+  "version": "0.5.11",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
@@ -25,6 +24,9 @@
       "require": "./src/release/version-actions.ts",
       "default": "./dist/release/version-actions.js"
     }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   },
   "scripts": {
     "build": "tsdown",

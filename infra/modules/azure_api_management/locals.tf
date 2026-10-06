@@ -259,6 +259,10 @@ locals {
     })
   }
 
+  metric_alert_names = toset(flatten([
+    for alerts in values(local.default_metric_alerts) : keys(alerts)
+  ]))
+
   metric_alerts = var.metric_alerts != null ? var.metric_alerts : {
     for alert_name, alert in local.default_metric_alerts[var.use_case] :
     alert_name => merge(alert, {

@@ -94,7 +94,7 @@
       }
     },
     {
-      "plugin": "@pagopa/nx-terraform-plugin",
+      "plugin": "@pagopa/nx-terraform",
       "include": ["infra/**"],
       "options": {
         "initTarget": {

@@ -1,3 +1,13 @@
+## 0.5.11 (2026-10-06)
+
+### 🚀 Features
+
+- Rename the Nx Terraform plugin to `@pagopa/nx-terraform` and publish it to GitHub Packages. Replace the old package dependency, Nx plugin registration, executor prefixes, and release version-actions references with the new name. ([#2301](https://github.com/pagopa/dx/pull/2301))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.5.10 (2026-10-06)
 
 ### 🚀 Features

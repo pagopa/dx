@@ -90,6 +90,7 @@ This action automates the Nx release flow in three phases:
 - `gh` CLI available in the runner
 - A pre-generated GitHub App token plus app slug, with `contents:write` and `pull-requests:write` permissions on the repository
 - npm packages require [OIDC Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements) configured to enable provenance signing (`id-token: write` permission must be granted)
+- GitHub Packages npm releases require the publishing job's `GITHUB_TOKEN` to have `packages: write` permission; the action configures that token for the GitHub Packages registry
 
 ## Usage in Workflow
 
@@ -110,6 +111,7 @@ concurrency: ${{ github.workflow }}-${{ github.ref }}
 permissions:
   contents: write
   id-token: write
+  packages: write
   pull-requests: write
 
 jobs:

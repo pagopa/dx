@@ -15,7 +15,7 @@ import { VersionActions } from "nx/release";
  * - Does NOT manage module dependencies (explicit no-op)
  *
  * Used via project-level
- * `release.version.versionActions: "@pagopa/nx-terraform-plugin/release/version-actions"`
+ * `release.version.versionActions: "@pagopa/nx-terraform/release/version-actions"`
  * in inferred Terraform project configuration.
  */
 export default class TerraformVersionActions extends VersionActions {
