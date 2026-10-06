@@ -1,3 +1,15 @@
+## 0.27.12 (2026-10-06)
+
+### 🚀 Features
+
+- Add mandatory owner and cost center tags to environment creation ([#2289](https://github.com/pagopa/dx/pull/2289))
+- Add Renovate configuration to generated monorepos ([#2294](https://github.com/pagopa/dx/pull/2294))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Christian Calabrese
+
 ## 0.27.11 (2026-10-01)
 
 ### 🚀 Features
