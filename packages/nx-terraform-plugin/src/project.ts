@@ -434,6 +434,7 @@ export const getProject = (
   hasRootTflintConfig = false,
   publishManifest: ModulePublishManifest | undefined = undefined,
   testCapabilities: TerraformTestCapabilities = noTerraformTestCapabilities,
+  sharedInputs: readonly string[] = [],
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
   const isPublishableLibrary =
@@ -459,7 +460,10 @@ export const getProject = (
   const config: ProjectConfiguration = {
     name: getProjectNameFromRoot(root),
     namedInputs: {
-      default: ["{projectRoot}/*.{tf,tfvars}"],
+      default: [
+        "{projectRoot}/*.{tf,tfvars}",
+        ...(projectType === "application" ? sharedInputs : []),
+      ],
       examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
     },
     projectType,

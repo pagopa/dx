@@ -2,10 +2,33 @@ import { DependencyType } from "@nx/devkit";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
-import { getStaticDependencies } from "../hcl.ts";
+import { getLocalModuleSourceRoots, getStaticDependencies } from "../hcl.ts";
 import { ProjectFile } from "../project-file.ts";
 
 describe("getStaticDependencies", () => {
+  it("extracts only local module source roots", () => {
+    const fileContent = `
+module "foo" {
+  source = "../_modules/foo"
+}
+
+module "foo_again" {
+  source = "../_modules/foo"
+}
+
+module "remote" {
+  source = "git::https://example.com/terraform/modules.git//foo"
+}
+`;
+
+    expect(
+      getLocalModuleSourceRoots(
+        path.join("infra", "resources", "dev", "main.tf"),
+        fileContent,
+      ),
+    ).toEqual([path.join("infra", "resources", "_modules", "foo")]);
+  });
+
   it("extracts a dependency from a relative module source", () => {
     const file: ProjectFile = {
       fileName: path.join("infra", "resources", "dev", "main.tf"),

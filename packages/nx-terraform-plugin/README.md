@@ -12,6 +12,12 @@ library projects only when their own root contains a `module.json` file. This
 keeps nested implementation modules, such as `modules/<module>/modules/<child>`,
 from becoming standalone projects.
 
+Consumer projects also inherit Nx inputs for each unmanifested shared `_modules`
+tree they reference, including transitive relative module sources under those
+trees. That keeps `nx affected` focused on the Terraform projects that actually
+consume a shared module, while changes to any file under the shared module root
+still invalidate those consumers.
+
 ## Trivy
 
 The inferred `trivy` target scans each Terraform project with the workspace

@@ -49,6 +49,11 @@ const createWorkspaceRoot = async () => {
   return workspaceRoot;
 };
 
+type CreateNodesResult = Awaited<ReturnType<(typeof createNodesV2)[1]>>;
+
+const getProjectsFromCreateNodesResult = (result: CreateNodesResult) =>
+  new Map(result.flatMap(([, node]) => Object.entries(node.projects ?? {})));
+
 afterEach(() => {
   vi.clearAllMocks();
 });
@@ -289,5 +294,178 @@ describe("createNodesV2 publish inference", () => {
         path: expect.stringContaining("module.json"),
       }),
     );
+  });
+});
+
+describe("createNodesV2 shared module inputs", () => {
+  it("adds transitive shared module files to consuming projects only", async () => {
+    const workspaceRoot = await createWorkspaceRoot();
+    const files: [string, string][] = [
+      [
+        path.join(
+          "infra",
+          "resources",
+          "_modules",
+          "alpha",
+          "examples",
+          "unused",
+          "main.tf",
+        ),
+        'module "omega" { source = "../../omega" }',
+      ],
+      [
+        path.join("infra", "resources", "_modules", "alpha", "main.tf"),
+        'module "beta" { source = "../beta" }\nmodule "declared_valid" { source = "../declared-valid" }\nmodule "declared_invalid" { source = "../declared-invalid" }\nmodule "nested_child" { source = "./modules/child" }\nmodule "ignored_example" { source = "./examples/unused" }\nmodule "ignored_test" { source = "./tests/unused" }\nmodule "local" { source = "../../local" }',
+      ],
+      [
+        path.join(
+          "infra",
+          "resources",
+          "_modules",
+          "alpha",
+          "modules",
+          "child",
+          "main.tf",
+        ),
+        'module "delta" { source = "../../../delta" }',
+      ],
+      [
+        path.join("infra", "resources", "_modules", "alpha", "README.md"),
+        "# alpha",
+      ],
+      [
+        path.join(
+          "infra",
+          "resources",
+          "_modules",
+          "alpha",
+          "tests",
+          "unused.tf",
+        ),
+        'module "sigma" { source = "../../sigma" }',
+      ],
+      [
+        path.join("infra", "resources", "_modules", "beta", "main.tf"),
+        'module "gamma" { source = "../gamma" }',
+      ],
+      [
+        path.join(
+          "infra",
+          "resources",
+          "_modules",
+          "declared-invalid",
+          "main.tf",
+        ),
+        'module "epsilon" { source = "../epsilon" }',
+      ],
+      [
+        path.join(
+          "infra",
+          "resources",
+          "_modules",
+          "declared-invalid",
+          "module.json",
+        ),
+        `{"description":"Terraform module without provider","version":"1.2.3"}`,
+      ],
+      [
+        path.join(
+          "infra",
+          "resources",
+          "_modules",
+          "declared-valid",
+          "main.tf",
+        ),
+        'module "zeta" { source = "../zeta" }',
+      ],
+      [
+        path.join(
+          "infra",
+          "resources",
+          "_modules",
+          "declared-valid",
+          "module.json",
+        ),
+        `{"description":"Terraform module description","provider":"aws","version":"1.2.3"}`,
+      ],
+      [path.join("infra", "resources", "_modules", "delta", "main.tf"), ""],
+      [
+        path.join("infra", "resources", "_modules", "gamma", "main.tf"),
+        'module "child" { source = "../alpha/modules/child" }',
+      ],
+      [
+        path.join("infra", "resources", "dev", "main.tf"),
+        'module "alpha" { source = "../_modules/alpha" }',
+      ],
+      [
+        path.join("infra", "resources", "prod", "main.tf"),
+        'module "beta" { source = "../_modules/beta" }',
+      ],
+      [path.join("infra", "resources", "uat", "main.tf"), ""],
+    ];
+
+    await Promise.all(
+      files.map(async ([fileName, content]) => {
+        await fs.mkdir(path.join(workspaceRoot, path.dirname(fileName)), {
+          recursive: true,
+        });
+        await fs.writeFile(
+          path.join(workspaceRoot, fileName),
+          content,
+          "utf-8",
+        );
+      }),
+    );
+
+    const result = await createNodesV2[1](
+      files.map(([fileName]) => fileName),
+      parseOptions(undefined),
+      {
+        nxJsonConfiguration: {},
+        workspaceRoot,
+      },
+    );
+    const projects = getProjectsFromCreateNodesResult(result);
+    const expectInputs = (root: string, expected: string[]) => {
+      expect(
+        [...(projects.get(root)?.namedInputs?.default ?? [])].sort(),
+      ).toEqual([...expected].sort());
+    };
+
+    expect(Array.from(projects.keys()).sort()).toEqual(
+      [
+        path.join("infra", "resources", "dev"),
+        path.join("infra", "resources", "prod"),
+        path.join("infra", "resources", "_modules", "declared-invalid"),
+        path.join("infra", "resources", "_modules", "declared-valid"),
+        path.join("infra", "resources", "uat"),
+      ].sort(),
+    );
+    expectInputs(path.join("infra", "resources", "dev"), [
+      "{projectRoot}/*.{tf,tfvars}",
+      "{workspaceRoot}/infra/resources/_modules/alpha/**/*",
+      "{workspaceRoot}/infra/resources/_modules/beta/**/*",
+      "{workspaceRoot}/infra/resources/_modules/gamma/**/*",
+      "{workspaceRoot}/infra/resources/_modules/alpha/modules/child/**/*",
+      "{workspaceRoot}/infra/resources/_modules/delta/**/*",
+    ]);
+    expectInputs(path.join("infra", "resources", "prod"), [
+      "{projectRoot}/*.{tf,tfvars}",
+      "{workspaceRoot}/infra/resources/_modules/beta/**/*",
+      "{workspaceRoot}/infra/resources/_modules/gamma/**/*",
+      "{workspaceRoot}/infra/resources/_modules/alpha/modules/child/**/*",
+      "{workspaceRoot}/infra/resources/_modules/delta/**/*",
+    ]);
+    expectInputs(
+      path.join("infra", "resources", "_modules", "declared-valid"),
+      ["{projectRoot}/*.{tf,tfvars}"],
+    );
+    expectInputs(
+      path.join("infra", "resources", "_modules", "declared-invalid"),
+      ["{projectRoot}/*.{tf,tfvars}"],
+    );
+    expectInputs(path.join("infra", "resources", "uat"), [
+      "{projectRoot}/*.{tf,tfvars}",
+    ]);
   });
 });
