@@ -6,6 +6,33 @@ import { getLocalModuleSourceRoots, getStaticDependencies } from "../hcl.ts";
 import { ProjectFile } from "../project-file.ts";
 
 describe("getStaticDependencies", () => {
+  it.each([
+    [
+      "attributes after an object expression",
+      'module "alpha" { for_each = { dev = "dev" } source = "../alpha" }',
+      ["infra/resources/alpha"],
+    ],
+    [
+      "only direct source attributes",
+      'module "alpha" { settings = { source = "../wrong" } source = "../right" }',
+      ["infra/resources/right"],
+    ],
+    [
+      "quoted braces, comments, and heredoc contents",
+      'module "alpha" { note = "}" # source = "../comment"\n // source = "../line-comment"\n /* } source = "../block-comment" */\n template = <<_EOF\nmodule "fake" { source = "../heredoc" }\n_EOF\n source = "../right" }',
+      ["infra/resources/right"],
+    ],
+    [
+      "a later module source does not belong to an earlier block",
+      'module "remote" { source = "terraform-aws-modules/vpc/aws" }\nmodule "local" { source = "../local" }',
+      ["infra/resources/local"],
+    ],
+  ])("extracts local roots with %s", (_description, content, roots) => {
+    expect(
+      getLocalModuleSourceRoots("infra/resources/dev/main.tf", content),
+    ).toEqual(roots);
+  });
+
   it("extracts only local module source roots", () => {
     const fileContent = `
 module "foo" {
