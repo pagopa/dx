@@ -181,7 +181,7 @@ const getExpectedPublishTarget = (
   useGitHubAppAuthentication: boolean,
 ) => ({
   cache: false,
-  executor: "@pagopa/nx-terraform-plugin:publish",
+  executor: "@pagopa/nx-terraform:publish",
   options: {
     description: "Terraform module description",
     github: {
@@ -418,7 +418,7 @@ describe("getProject application initialization and tags", () => {
             frozenLockfile: true,
           },
         },
-        executor: "@pagopa/nx-terraform-plugin:init",
+        executor: "@pagopa/nx-terraform:init",
         inputs: ["default"],
         options: {
           platforms: [],
@@ -471,7 +471,7 @@ describe("getProject application initialization and tags", () => {
       expect(targets["apply"]).toEqual(
         expect.objectContaining({
           dependsOn: ["init"],
-          executor: "@pagopa/nx-terraform-plugin:apply",
+          executor: "@pagopa/nx-terraform:apply",
           options: {
             projectRoot: "{projectRoot}",
           },
@@ -892,7 +892,7 @@ describe("getProject release configuration", () => {
       expect(project.release?.version).toEqual({
         currentVersionResolver: "disk",
         manifestRootsToUpdate: ["{projectRoot}"],
-        versionActions: "@pagopa/nx-terraform-plugin/release/version-actions",
+        versionActions: "@pagopa/nx-terraform/release/version-actions",
       });
     });
 

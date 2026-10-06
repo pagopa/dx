@@ -38,10 +38,10 @@ environments.
 
 Use `_release-terraform.yaml` as the repository-level release workflow for
 repositories that manage Terraform projects through Nx and
-`@pagopa/nx-terraform-plugin`. Like `_validate.yaml`, this wrapper only invokes
+`@pagopa/nx-terraform`. Like `_validate.yaml`, this wrapper only invokes
 the versioned reusable workflow implementation.
 
-The masked plan/apply targets require `@pagopa/nx-terraform-plugin` 0.6.0 or
+The masked plan/apply targets require `@pagopa/nx-terraform` 0.6.0 or
 newer, which bundles the shared task implementations. Update the consuming
 repository's dependency lockfile before adopting this flow.
 
