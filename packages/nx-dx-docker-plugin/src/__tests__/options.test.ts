@@ -10,7 +10,7 @@ const workspaceRoots: string[] = [];
 
 const createWorkspaceRoot = async () => {
   const workspaceRoot = await fs.mkdtemp(
-    path.join(os.tmpdir(), "nx-dx-docker-plugin-options-"),
+    path.join(os.tmpdir(), "nx-docker-options-"),
   );
   workspaceRoots.push(workspaceRoot);
   await fs.writeFile(

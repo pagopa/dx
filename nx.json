@@ -109,7 +109,7 @@
       }
     },
     {
-      "plugin": "@pagopa/nx-dx-docker-plugin",
+      "plugin": "@pagopa/nx-docker",
       "options": {
         "buildTarget": {
           "name": "docker:build",

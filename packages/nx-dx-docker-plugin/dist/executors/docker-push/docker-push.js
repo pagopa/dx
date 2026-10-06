@@ -1,4 +1,4 @@
-const require_docker_run = require('../../docker-run-CJXwapPp.js');
+const require_docker_run = require('../../docker-run-DjndByYQ.js');
 
 //#region src/executors/docker-push/schema.ts
 const dockerPushExecutorSchema = require_docker_run.dockerRunOptionsSchema;
@@ -8,7 +8,7 @@ const dockerPushExecutorSchema = require_docker_run.dockerRunOptionsSchema;
 const runExecutor = async (options, context) => {
 	const parseResult = dockerPushExecutorSchema.safeParse(options);
 	if (!parseResult.success) {
-		console.warn("[@pagopa/nx-dx-docker-plugin] Invalid docker:push options:", parseResult.error.issues);
+		console.warn("[@pagopa/nx-docker] Invalid docker:push options:", parseResult.error.issues);
 		return { success: false };
 	}
 	return require_docker_run.runDockerCommand("push", parseResult.data, context.root);
