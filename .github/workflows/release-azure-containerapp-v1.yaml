@@ -371,6 +371,14 @@ jobs:
           resource_name: ${{ env.CONTAINER_APP_NAME }}
           resource_type: "containerapp"
 
+      - name: Remove Staging Label
+        run: |
+          az containerapp revision label remove \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --label staging \
+            --output none
+
       - name: Deactivate Old Revision
         run: |
           az containerapp revision deactivate \
