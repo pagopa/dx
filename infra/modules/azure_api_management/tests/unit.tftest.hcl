@@ -295,6 +295,31 @@ run "azure_api_management_disables_selected_default_alerts" {
   }
 }
 
+run "azure_api_management_accepts_null_thresholds_for_other_sku_alerts" {
+  command = plan
+
+  variables {
+    use_case                      = "high_load"
+    public_ip_address_id          = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/publicIPAddresses/pip-test"
+    virtual_network_type_internal = true
+    metric_alert_thresholds = {
+      total_requests         = null
+      successful_requests    = null
+      failed_requests        = null
+      unauthorized_requests  = null
+      response_time          = null
+      cpu_percent_gateway    = null
+      memory_percent_gateway = null
+      capacity               = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 0
+    error_message = "Null overrides for built-in alerts must be accepted even when an alert is not available for the selected SKU."
+  }
+}
+
 run "azure_api_management_explicitly_disables_default_alerts" {
   command = plan
 
