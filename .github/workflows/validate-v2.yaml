@@ -268,8 +268,8 @@ jobs:
       # "code-review-with-environment" job.
       - name: Run code quality checks on affected projects
         run: |
-          EXCLUDE=$(nx show projects --affected --type=app --sep=, -p=tag:terraform)
-          nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci
+          EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
+          pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
