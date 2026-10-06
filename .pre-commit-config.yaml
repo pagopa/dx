@@ -1,9 +1,0 @@
-repos:
-  - repo: local
-    hooks:
-      - id: terraform_providers_lock_staged
-        name: Terraform Providers Lock (on staged .terraform.lock.hcl files)
-        entry: infra/scripts/terraform_lock_precommit.sh
-        language: script
-        pass_filenames: false
-        verbose: true
