@@ -1,4 +1,4 @@
-import { n as getPackageLogger, t as configureLogger } from "./logger-DZ1KFLzv.js";
+import { n as getPackageLogger, t as configureLogger } from "./logger-C2K7hHjS.js";
 import { i as publishSchema, n as mergePublishOptions, r as pluginPublishOptionsSchema, t as PublishOptionsError } from "./publish-options-DI4KrjU0.js";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -88,7 +88,7 @@ const getPublishTarget = (opts, root, publishManifest) => {
 		const publishOptions = mergePublishOptions(opts.publish, publishManifest);
 		return ["nx-release-publish", {
 			cache: false,
-			executor: "@pagopa/nx-terraform-plugin:publish",
+			executor: "@pagopa/nx-terraform:publish",
 			options: {
 				...publishOptions,
 				githubOwner: publishOptions.github.owner,
@@ -155,7 +155,7 @@ const getTestTargets = (opts, cwd, testCapabilities) => {
 const getInitTarget = (opts, projectType, initTargetName, cwd) => [initTargetName, projectType === "application" ? {
 	cache: false,
 	configurations: { ci: { frozenLockfile: true } },
-	executor: "@pagopa/nx-terraform-plugin:init",
+	executor: "@pagopa/nx-terraform:init",
 	inputs: ["default"],
 	options: {
 		platforms: opts.initTarget.platforms,
@@ -271,7 +271,7 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 			verbose: false
 		} },
 		dependsOn: [initTargetName],
-		executor: "@pagopa/nx-terraform-plugin:plan",
+		executor: "@pagopa/nx-terraform:plan",
 		options: {
 			projectRoot: "{projectRoot}",
 			refresh: true,
@@ -281,7 +281,7 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 	}], [getTargetName(opts, "apply"), {
 		cache: false,
 		dependsOn: [initTargetName],
-		executor: "@pagopa/nx-terraform-plugin:apply",
+		executor: "@pagopa/nx-terraform:apply",
 		options: { projectRoot: "{projectRoot}" }
 	}]);
 	return Object.fromEntries(targets);
@@ -307,7 +307,7 @@ const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publ
 	if (isPublishableLibrary) config.release = { version: {
 		currentVersionResolver: "disk",
 		manifestRootsToUpdate: ["{projectRoot}"],
-		versionActions: "@pagopa/nx-terraform-plugin/release/version-actions"
+		versionActions: "@pagopa/nx-terraform/release/version-actions"
 	} };
 	return config;
 };

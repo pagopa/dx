@@ -170,12 +170,15 @@ runs:
       shell: bash
       env:
         NPM_CONFIG_PROVENANCE: true
+        GITHUB_TOKEN: ${{ github.token }}
         GH_TOKEN: ${{ inputs.github-token }}
         ACTION_PATH: ${{ github.action_path }}
         BASE_BRANCH: ${{ inputs.base-branch }}
         RELEASE_MODE: ${{ steps.release-mode.outputs.mode }}
       run: |
         set -euo pipefail
+
+        printf '%s\n' '//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}' >> "$HOME/.npmrc"
 
         if [[ "$RELEASE_MODE" == "publish-all" ]]; then
           # workflow_dispatch: publish every project with an Nx Release publisher.

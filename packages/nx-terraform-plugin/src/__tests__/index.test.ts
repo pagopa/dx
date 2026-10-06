@@ -192,7 +192,7 @@ describe("Terraform project discovery", () => {
       version: "1.2.3",
     });
     expect(logtapeMocks.getLogger).toHaveBeenCalledWith([
-      "nx-terraform-plugin",
+      "nx-terraform",
       "discovery",
     ]);
     expect(logtapeMocks.warn).toHaveBeenCalledWith(

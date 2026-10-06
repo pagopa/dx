@@ -198,7 +198,7 @@ importers:
       '@pagopa/nx-dx-docker-plugin':
         specifier: workspace:^
         version: link:packages/nx-dx-docker-plugin
-      '@pagopa/nx-terraform-plugin':
+      '@pagopa/nx-terraform':
         specifier: workspace:^
         version: link:packages/nx-terraform-plugin
       '@swc-node/register':
