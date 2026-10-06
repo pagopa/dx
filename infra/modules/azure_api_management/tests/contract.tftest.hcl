@@ -78,6 +78,55 @@ run "azure_api_management_rejects_invalid_application_insights" {
   expect_failures = [var.application_insights]
 }
 
+run "azure_api_management_rejects_unknown_metric_alert_thresholds" {
+  command = plan
+
+  variables {
+    metric_alert_thresholds = {
+      failed_request = 500
+    }
+  }
+
+  expect_failures = [var.metric_alert_thresholds]
+}
+
+run "azure_api_management_rejects_non_positive_metric_alert_thresholds" {
+  command = plan
+
+  variables {
+    metric_alert_thresholds = {
+      failed_requests = 0
+    }
+  }
+
+  expect_failures = [var.metric_alert_thresholds]
+}
+
+run "azure_api_management_rejects_threshold_overrides_with_custom_alerts" {
+  command = plan
+
+  variables {
+    metric_alerts = {}
+    metric_alert_thresholds = {
+      failed_requests = 500
+    }
+  }
+
+  expect_failures = [var.metric_alert_thresholds]
+}
+
+run "azure_api_management_rejects_unknown_disabled_metric_alerts" {
+  command = plan
+
+  variables {
+    metric_alert_thresholds = {
+      failed_request = null
+    }
+  }
+
+  expect_failures = [var.metric_alert_thresholds]
+}
+
 run "azure_api_management_rejects_out_of_range_autoscale_default" {
   command = plan
 
