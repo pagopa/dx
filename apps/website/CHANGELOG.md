@@ -1,3 +1,13 @@
+## 0.22.13 (2026-10-06)
+
+### 🩹 Fixes
+
+- Make the tests plugin available in the DX marketplace ([#2268](https://github.com/pagopa/dx/pull/2268))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.22.12 (2026-10-06)
 
 ### 🩹 Fixes
