@@ -414,11 +414,10 @@ const getTargets = (
         getTargetName(opts, "apply"),
         {
           cache: false,
-          command: `terraform apply`,
           dependsOn: [initTargetName],
+          executor: "@pagopa/nx-terraform-plugin:apply",
           options: {
-            cwd,
-            tty: true,
+            projectRoot: "{projectRoot}",
           },
         },
       ],

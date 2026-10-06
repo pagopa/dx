@@ -2,9 +2,9 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import * as z$1 from "zod/mini";
 import { Octokit } from "octokit";
+import { z } from "zod/v4";
 import childProcess from "node:child_process";
 import { createHash } from "node:crypto";
-import { z } from "zod/v4";
 import util from "node:util";
 
 //#region ../dx-tasks/src/dispatcher.ts
@@ -107,7 +107,7 @@ const prCommentPayloadShape = {
 	searchPattern: z$1.optional(nonEmptyStringSchema$1),
 	title: z$1.optional(nonEmptyStringSchema$1)
 };
-const payloadSchema$4 = z$1.object(prCommentPayloadShape);
+const payloadSchema$5 = z$1.object(prCommentPayloadShape);
 const githubCommentShape = {
 	body: z$1.optional(z$1.nullable(z$1.string())),
 	id: z$1.number().check(z$1.int(), z$1.positive())
@@ -190,7 +190,7 @@ async function prComment({ commentBody, footer, githubToken, issueNumber, owner,
 //#region ../dx-tasks/src/render-report.ts
 /** This module renders persisted dx-tasks reports and prints them to stdout. */
 const renderReportPayloadShape = { format: z$1._default(z$1.literal("markdown"), "markdown") };
-const payloadSchema$3 = z$1.object(renderReportPayloadShape);
+const payloadSchema$4 = z$1.object(renderReportPayloadShape);
 async function renderReport({ format = "markdown" }, context = {}) {
 	if (!context.reports) throw new Error("renderReport requires reports in the task context");
 	const renderedReport = await context.reports.render(format);
@@ -212,7 +212,7 @@ const reportPrCommentPayloadShape = {
 	sourceUrl: z$1.optional(nonEmptyStringSchema),
 	title: z$1.optional(nonEmptyStringSchema)
 };
-const payloadSchema$2 = z$1.object(reportPrCommentPayloadShape);
+const payloadSchema$3 = z$1.object(reportPrCommentPayloadShape);
 async function reportPrComment({ footer, format = "markdown", githubToken, issueNumber, owner, repo, searchPattern, sourceUrl, title }, context = {}, createClient) {
 	if (!context.reports) throw new Error("reportPrComment requires reports in the task context");
 	const renderedReport = await context.reports.render(format, { sourceUrl });
@@ -232,7 +232,7 @@ async function reportPrComment({ footer, format = "markdown", githubToken, issue
 //#endregion
 //#region ../dx-tasks/src/run-command.ts
 /** This module wraps child-process execution for dx-tasks Terraform commands. */
-const runCommand = async (command, args, cwd, env) => {
+const runCommand = async (command, args, cwd, env, inheritOutput = false) => {
 	const { promise, reject, resolve } = Promise.withResolvers();
 	const child = childProcess.spawn(command, args, {
 		cwd,
@@ -240,7 +240,7 @@ const runCommand = async (command, args, cwd, env) => {
 			...process.env,
 			...env
 		},
-		stdio: [
+		stdio: inheritOutput ? "inherit" : [
 			"inherit",
 			"pipe",
 			"pipe"
@@ -279,6 +279,70 @@ const runCommand = async (command, args, cwd, env) => {
 		reject(/* @__PURE__ */ new Error(`${command} closed without an exit code or signal`));
 	});
 	return promise;
+};
+
+//#endregion
+//#region ../dx-tasks/src/terraform/mask-output.ts
+/** This module masks sensitive Terraform output before dx-tasks prints it. */
+const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const beginPemMarker = "-----BEGIN ";
+const endPemMarker = "-----END ";
+const pemDelimiter = "-----";
+const maskPemBlocks = (input) => {
+	const normalizedInput = input.toUpperCase();
+	let masked = "";
+	let cursor = 0;
+	while (cursor < input.length) {
+		const beginIndex = normalizedInput.indexOf(beginPemMarker, cursor);
+		if (beginIndex === -1) return `${masked}${input.slice(cursor)}`;
+		const beginTypeEnd = normalizedInput.indexOf(pemDelimiter, beginIndex + 11);
+		if (beginTypeEnd === -1) return `${masked}${input.slice(cursor)}`;
+		const endIndex = normalizedInput.indexOf(endPemMarker, beginTypeEnd + 5);
+		if (endIndex === -1) return `${masked}${input.slice(cursor)}`;
+		const endTypeEnd = normalizedInput.indexOf(pemDelimiter, endIndex + 9);
+		if (endTypeEnd === -1) return `${masked}${input.slice(cursor)}`;
+		masked += `${input.slice(cursor, beginIndex)}[REDACTED]`;
+		cursor = endTypeEnd + 5;
+	}
+	return masked;
+};
+const maskOutput = (input, additionalKeys = ["hidden-link", "APPINSIGHTS_INSTRUMENTATIONKEY"]) => {
+	const keys = additionalKeys.map((k) => k.trim()).filter((k) => k.length > 0);
+	let masked = input;
+	for (const key of keys) {
+		const escapedKey = escapeRegExp(key);
+		const diffRegex = new RegExp(`("?${escapedKey}[^"]*"?\\s*=\\s*)"[^"]*"(\\s*->\\s*)"[^"]*"`, "ig");
+		masked = masked.replace(diffRegex, "$1\"[REDACTED]\"$2\"[REDACTED]\"");
+		const normalRegex = new RegExp(`("?${escapedKey}[^"]*"?\\s*=\\s*)"[^"]*"`, "ig");
+		masked = masked.replace(normalRegex, "$1\"[REDACTED]\"");
+	}
+	masked = maskPemBlocks(masked);
+	const knownSecretsPattern = "(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|apiKey|api_key|connection_string)";
+	const hardcodedDiffRegex = new RegExp(`("?[^"\\s]*${knownSecretsPattern}([^A-Za-z0-9]|$)"?\\s*[:=]\\s*)"([^"]{12,})"(\\s*->\\s*)"([^"]{12,})"`, "ig");
+	masked = masked.replace(hardcodedDiffRegex, "$1\"[REDACTED]\"$5\"[REDACTED]\"");
+	const hardcodedNormalRegex = new RegExp(`("?[^"\\s]*${knownSecretsPattern}([^A-Za-z0-9]|$)"?\\s*[:=]\\s*)"([^"]{12,})"`, "ig");
+	masked = masked.replace(hardcodedNormalRegex, "$1\"[REDACTED]\"");
+	return masked;
+};
+
+//#endregion
+//#region ../dx-tasks/src/terraform/apply.ts
+/** Runs Terraform applies, masking saved-plan output while preserving interactive local applies. */
+const payloadSchema$2 = z.object({
+	modulePath: z.string().min(1),
+	planFile: z.string().min(1).optional()
+});
+const terraformApply = async ({ modulePath, planFile }) => {
+	const result = await runCommand("terraform", planFile ? [
+		"apply",
+		"-input=false",
+		"-no-color",
+		"-lock-timeout=120s",
+		planFile
+	] : ["apply"], modulePath, {}, !planFile);
+	if (planFile) console.log(maskOutput([result.stdout, result.stderr].join("\n").trim()));
+	if (result.signal) throw new Error(`Terraform apply terminated by signal ${result.signal}`);
+	if (result.exitCode !== 0) throw new Error(`Terraform apply exited with code ${result.exitCode}`);
 };
 
 //#endregion
@@ -461,28 +525,58 @@ const normalizeTerraformInitArguments = (args) => {
 const terraformInitPayloadShape = {
 	args: z$1._default(z$1.array(z$1.string()).check(z$1.refine((args) => !disablesModuleDownloads(args), incompatibleGetArgumentError)), []),
 	frozenLockfile: z$1._default(z$1.boolean(), false),
-	modulePath: z$1.string().check(z$1.minLength(1))
+	modulePath: z$1.string().check(z$1.minLength(1)),
+	platforms: z$1._default(z$1.array(z$1.string()), [])
 };
 const payloadSchema$1 = z$1.object(terraformInitPayloadShape);
 const printTerraformOutput = (result) => {
 	if (result.stdout.length > 0) console.log(result.stdout);
 	if (result.stderr.length > 0) console.error(result.stderr);
 };
-const getInitFailureMessage = (result) => {
+const getTerraformFailureMessage = (command, result) => {
 	const termination = result.signal === null ? `exit code ${result.exitCode}` : `signal ${result.signal}`;
 	const details = [result.stderr.trim(), result.stdout.trim()].filter((output) => output.length > 0).join("\n");
-	return `terraform init failed with ${termination}${details ? `\n${details}` : ""}`;
+	return `${command} failed with ${termination}${details ? `\n${details}` : ""}`;
+};
+const providerLockFileName = ".terraform.lock.hcl";
+const readProviderLock = async (modulePath) => {
+	try {
+		return await fs.readFile(path.join(modulePath, providerLockFileName), "utf8");
+	} catch (error) {
+		if (error !== null && typeof error === "object" && "code" in error && error.code === "ENOENT") return;
+		throw error;
+	}
 };
 const getLockChangeSummary = (changes, formatVersion) => formatVersion === 1 ? "legacy module lock format (version 1)" : changes.length > 0 ? changes.map(({ key, status }) => `${status}: ${key}`).join(", ") : "no module hash changes";
-async function terraformInit({ args = [], frozenLockfile = false, modulePath }) {
+const runTerraformCommand = (args, modulePath) => {
+	console.log(`$ terraform ${args.join(" ")}`);
+	return runCommand("terraform", args, modulePath, {});
+};
+async function terraformInit({ args = [], frozenLockfile = false, modulePath, platforms = [] }) {
 	if (disablesModuleDownloads(args)) throw new Error(incompatibleGetArgumentError);
-	const result = await runCommand("terraform", [
+	const providerLockPath = path.join(modulePath, providerLockFileName);
+	const providerLockBeforeInit = await readProviderLock(modulePath);
+	const result = await runTerraformCommand([
 		"init",
 		...normalizeTerraformInitArguments(args),
+		...frozenLockfile ? ["-lockfile=readonly"] : [],
 		"-get=true"
-	], modulePath, {});
+	], modulePath);
 	printTerraformOutput(result);
-	if (result.exitCode !== 0) throw new Error(getInitFailureMessage(result));
+	if (result.exitCode !== 0) throw new Error(getTerraformFailureMessage("terraform init", result));
+	if (platforms.length > 0) {
+		const providerLockResult = await runTerraformCommand([
+			"providers",
+			"lock",
+			"-enable-plugin-cache",
+			...platforms.map((platform) => `-platform=${platform}`)
+		], modulePath);
+		printTerraformOutput(providerLockResult);
+		if (providerLockResult.exitCode !== 0) throw new Error(getTerraformFailureMessage("terraform providers lock", providerLockResult));
+	}
+	if (frozenLockfile) {
+		if (providerLockBeforeInit !== await readProviderLock(modulePath)) throw new Error(`Terraform provider lock is frozen and out of date at ${providerLockPath}`);
+	}
 	const comparison = await compareModuleLock(modulePath);
 	if (frozenLockfile && comparison.isDifferent) {
 		const summary = getLockChangeSummary(comparison.changes, comparison.formatVersion);
@@ -507,50 +601,6 @@ async function terraformInit({ args = [], frozenLockfile = false, modulePath }) 
 		console.log(`Updated Terraform module lock at ${comparison.path}`);
 	}
 }
-
-//#endregion
-//#region ../dx-tasks/src/terraform/mask-output.ts
-/** This module masks sensitive Terraform output before dx-tasks prints it. */
-const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-const beginPemMarker = "-----BEGIN ";
-const endPemMarker = "-----END ";
-const pemDelimiter = "-----";
-const maskPemBlocks = (input) => {
-	const normalizedInput = input.toUpperCase();
-	let masked = "";
-	let cursor = 0;
-	while (cursor < input.length) {
-		const beginIndex = normalizedInput.indexOf(beginPemMarker, cursor);
-		if (beginIndex === -1) return `${masked}${input.slice(cursor)}`;
-		const beginTypeEnd = normalizedInput.indexOf(pemDelimiter, beginIndex + 11);
-		if (beginTypeEnd === -1) return `${masked}${input.slice(cursor)}`;
-		const endIndex = normalizedInput.indexOf(endPemMarker, beginTypeEnd + 5);
-		if (endIndex === -1) return `${masked}${input.slice(cursor)}`;
-		const endTypeEnd = normalizedInput.indexOf(pemDelimiter, endIndex + 9);
-		if (endTypeEnd === -1) return `${masked}${input.slice(cursor)}`;
-		masked += `${input.slice(cursor, beginIndex)}[REDACTED]`;
-		cursor = endTypeEnd + 5;
-	}
-	return masked;
-};
-const maskOutput = (input, additionalKeys = []) => {
-	const keys = additionalKeys.map((k) => k.trim()).filter((k) => k.length > 0);
-	let masked = input;
-	for (const key of keys) {
-		const escapedKey = escapeRegExp(key);
-		const diffRegex = new RegExp(`("?${escapedKey}[^"]*"?\\s*=\\s*)"[^"]*"(\\s*->\\s*)"[^"]*"`, "ig");
-		masked = masked.replace(diffRegex, "$1\"[REDACTED]\"$2\"[REDACTED]\"");
-		const normalRegex = new RegExp(`("?${escapedKey}[^"]*"?\\s*=\\s*)"[^"]*"`, "ig");
-		masked = masked.replace(normalRegex, "$1\"[REDACTED]\"");
-	}
-	masked = maskPemBlocks(masked);
-	const knownSecretsPattern = "(AccessKey|AccountKey|Password|secret|SecretToken|AuthToken|auth_token|access_key|apiKey|api_key|connection_string)";
-	const hardcodedDiffRegex = new RegExp(`("?[^"\\s]*${knownSecretsPattern}([^A-Za-z0-9]|$)"?\\s*[:=]\\s*)"([^"]{12,})"(\\s*->\\s*)"([^"]{12,})"`, "ig");
-	masked = masked.replace(hardcodedDiffRegex, "$1\"[REDACTED]\"$5\"[REDACTED]\"");
-	const hardcodedNormalRegex = new RegExp(`("?[^"\\s]*${knownSecretsPattern}([^A-Za-z0-9]|$)"?\\s*[:=]\\s*)"([^"]{12,})"`, "ig");
-	masked = masked.replace(hardcodedNormalRegex, "$1\"[REDACTED]\"");
-	return masked;
-};
 
 //#endregion
 //#region ../dx-tasks/src/terraform/plan.ts
@@ -696,19 +746,24 @@ const terraformPlanTask = {
 	payloadSchema,
 	run: terraformPlan
 };
+const terraformApplyTask = {
+	name: "terraformApply",
+	payloadSchema: payloadSchema$2,
+	run: terraformApply
+};
 const renderReportTask = {
 	name: "renderReport",
-	payloadSchema: payloadSchema$3,
+	payloadSchema: payloadSchema$4,
 	run: renderReport
 };
 const reportPrCommentTask = {
 	name: "reportPrComment",
-	payloadSchema: payloadSchema$2,
+	payloadSchema: payloadSchema$3,
 	run: reportPrComment
 };
 const prCommentTask = {
 	name: "prComment",
-	payloadSchema: payloadSchema$4,
+	payloadSchema: payloadSchema$5,
 	run: prComment
 };
 
@@ -720,6 +775,7 @@ const createDefaultTaskDispatcher = ({ reports = createDefaultReportStore() } = 
 	const dispatcher = createTaskDispatcher({ context: { reports } });
 	dispatcher.registerTask(terraformInitTask);
 	dispatcher.registerTask(terraformPlanTask);
+	dispatcher.registerTask(terraformApplyTask);
 	dispatcher.registerTask(renderReportTask);
 	dispatcher.registerTask(reportPrCommentTask);
 	dispatcher.registerTask(prCommentTask);
