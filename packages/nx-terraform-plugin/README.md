@@ -1,8 +1,17 @@
 # Nx Terraform Plugin
 
-`@pagopa/nx-terraform-plugin` is an Nx plugin that discovers Terraform
+`@pagopa/nx-terraform` is an Nx plugin that discovers Terraform
 configurations and infers targets for formatting, testing, validation, planning,
 applying, security scanning, documentation, and module publishing.
+
+## Package name migration
+
+The plugin is now named `@pagopa/nx-terraform` and published to GitHub Packages.
+Replace the previous package dependency and update the plugin entry in
+`nx.json`, any explicit executor prefixes, and the
+`release.version.versionActions` path to use `@pagopa/nx-terraform`.
+Regenerate your package-manager lockfile after updating the dependency.
+The source directory remains `packages/nx-terraform-plugin`.
 
 ## Terraform project discovery
 
@@ -67,7 +76,7 @@ customizable:
 {
   "plugins": [
     {
-      "plugin": "@pagopa/nx-terraform-plugin",
+      "plugin": "@pagopa/nx-terraform",
       "include": ["infra/**"],
       "options": {
         "targetNamePrefix": "tf"
@@ -152,7 +161,7 @@ through the plugin options:
 {
   "plugins": [
     {
-      "plugin": "@pagopa/nx-terraform-plugin",
+      "plugin": "@pagopa/nx-terraform",
       "include": ["infra/**"],
       "options": {
         "initTarget": {

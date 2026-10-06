@@ -93,7 +93,7 @@ const getPublishTarget = (
       "nx-release-publish",
       {
         cache: false,
-        executor: "@pagopa/nx-terraform-plugin:publish",
+        executor: "@pagopa/nx-terraform:publish",
         options: {
           ...publishOptions,
           githubOwner: publishOptions.github.owner,
@@ -202,7 +202,7 @@ const getInitTarget = (
             frozenLockfile: true,
           },
         },
-        executor: "@pagopa/nx-terraform-plugin:init",
+        executor: "@pagopa/nx-terraform:init",
         inputs: ["default"],
         options: {
           platforms: opts.initTarget.platforms,
@@ -401,7 +401,7 @@ const getTargets = (
             },
           },
           dependsOn: [initTargetName],
-          executor: "@pagopa/nx-terraform-plugin:plan",
+          executor: "@pagopa/nx-terraform:plan",
           options: {
             projectRoot: "{projectRoot}",
             refresh: true,
@@ -415,7 +415,7 @@ const getTargets = (
         {
           cache: false,
           dependsOn: [initTargetName],
-          executor: "@pagopa/nx-terraform-plugin:apply",
+          executor: "@pagopa/nx-terraform:apply",
           options: {
             projectRoot: "{projectRoot}",
           },
@@ -481,7 +481,7 @@ export const getProject = (
       version: {
         currentVersionResolver: "disk",
         manifestRootsToUpdate: ["{projectRoot}"],
-        versionActions: "@pagopa/nx-terraform-plugin/release/version-actions",
+        versionActions: "@pagopa/nx-terraform/release/version-actions",
       },
     };
   }

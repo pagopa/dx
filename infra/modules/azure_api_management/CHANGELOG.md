@@ -1,3 +1,13 @@
+## 4.2.1 (2026-10-06)
+
+### 🩹 Fixes
+
+- Accept null overrides for built-in APIM alerts across SKUs ([#2305](https://github.com/pagopa/dx/pull/2305))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 4.2.0 (2026-10-06)
 
 ### 🚀 Features

@@ -1,4 +1,4 @@
-import { n as getPackageLogger, t as configureLogger } from "../../logger-DZ1KFLzv.js";
+import { n as getPackageLogger, t as configureLogger } from "../../logger-C2K7hHjS.js";
 import { i as publishSchema } from "../../publish-options-DI4KrjU0.js";
 import { cp, mkdtemp, readdir, rm } from "node:fs/promises";
 import { basename, join } from "node:path";
