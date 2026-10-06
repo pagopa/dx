@@ -102,6 +102,21 @@ run "azure_api_management_rejects_non_positive_metric_alert_thresholds" {
   expect_failures = [var.metric_alert_thresholds]
 }
 
+run "azure_api_management_rejects_threshold_overrides_for_unsupported_alerts" {
+  command = plan
+
+  variables {
+    use_case                      = "high_load"
+    public_ip_address_id          = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/publicIPAddresses/pip-test"
+    virtual_network_type_internal = true
+    metric_alert_thresholds = {
+      cpu_percent_gateway = 80
+    }
+  }
+
+  expect_failures = [var.metric_alert_thresholds]
+}
+
 run "azure_api_management_rejects_threshold_overrides_with_custom_alerts" {
   command = plan
 
