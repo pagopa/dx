@@ -1,3 +1,15 @@
+## 0.22.12 (2026-10-06)
+
+### 🩹 Fixes
+
+- Align infra_apply workflow to Nx orchestration ([#2232](https://github.com/pagopa/dx/pull/2232))
+- CSP tags documentation has been updated to the agreed tags ([#2282](https://github.com/pagopa/dx/pull/2282))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 0.22.11 (2026-10-01)
 
 ### 🩹 Fixes

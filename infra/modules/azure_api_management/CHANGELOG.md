@@ -1,3 +1,13 @@
+## 4.2.0 (2026-10-06)
+
+### 🚀 Features
+
+- Allow APIM consumers to override built-in metric alert thresholds individually or disable selected alerts by setting their threshold to null, without replacing the complete alert configuration. ([#2299](https://github.com/pagopa/dx/pull/2299))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 4.1.0 (2026-09-23)
 
 ### 🚀 Features

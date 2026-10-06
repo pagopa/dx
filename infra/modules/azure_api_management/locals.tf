@@ -259,7 +259,17 @@ locals {
     })
   }
 
-  metric_alerts = var.metric_alerts != null ? var.metric_alerts : local.default_metric_alerts[var.use_case]
+  metric_alerts = var.metric_alerts != null ? var.metric_alerts : {
+    for alert_name, alert in local.default_metric_alerts[var.use_case] :
+    alert_name => merge(alert, {
+      criteria = [
+        for criterion in alert.criteria : merge(criterion, {
+          threshold = lookup(var.metric_alert_thresholds, alert_name, criterion.threshold)
+        })
+      ]
+    })
+    if lookup(var.metric_alert_thresholds, alert_name, 1) != null
+  }
 
   virtual_network_type                  = var.virtual_network_type_internal != null ? (var.virtual_network_type_internal ? "Internal" : "None") : local.use_case_features.virtual_network_type
   virtual_network_configuration_enabled = local.virtual_network_type == "Internal" || var.use_case == "cost_optimized" ? true : false

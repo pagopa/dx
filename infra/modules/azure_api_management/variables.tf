@@ -394,6 +394,20 @@ variable "metric_alerts" {
   }))
 }
 
+variable "metric_alert_thresholds" {
+  type        = map(number)
+  default     = {}
+  description = "Optional overrides for built-in metric alerts. Set a positive threshold to override it or null to disable that alert; omitted alerts keep their defaults."
+
+  validation {
+    condition = var.metric_alerts == null ? alltrue([
+      for alert_name, threshold in var.metric_alert_thresholds :
+      contains(keys(local.default_metric_alerts[var.use_case]), alert_name) && (threshold == null || threshold > 0)
+    ]) : length(var.metric_alert_thresholds) == 0
+    error_message = "metric_alert_thresholds can only override built-in alerts in the selected use_case with positive numbers or null to disable an alert. Use metric_alerts for custom alert definitions."
+  }
+}
+
 variable "action_group_id" {
   description = "The ID of the custom string properties Action Group to include with the post webhook operation."
   type        = string
