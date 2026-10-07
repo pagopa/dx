@@ -22,6 +22,25 @@ performance, skill authoring and report internals live in
 
 ## Install
 
+### From git (outside the repo)
+
+The public repo ships `harbor-bench` as an installable CLI. `uv` fetches the
+source, resolves the sibling `harbor-copilot` package from the same commit, and
+installs the executable — no clone needed:
+
+```bash
+uv tool install "git+https://github.com/pagopa/dx@harbor-bench%400.1.2#subdirectory=apps/harbor-bench"
+harbor-bench --help
+```
+
+- The ref after `@` is a release tag (`harbor-bench@<version>`, with the tag's
+  `@` percent-encoded as `%40`); bump it to a newer tag to upgrade. `@main`
+  tracks the latest code instead. `uv tool uninstall harbor-bench` removes it.
+- One-off runs without installing:
+  `uvx --from "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench" harbor-bench --help`.
+
+### From the workspace (contributors)
+
 The CLI installs and runs from this workspace through `uv` — no virtualenv
 activation needed:
 
@@ -29,6 +48,9 @@ activation needed:
 mise run install
 uv run --package harbor-bench harbor-bench --help
 ```
+
+The examples below use the workspace prefix `uv run --package harbor-bench`;
+with an external install, drop it (`harbor-bench ...`).
 
 ## Quick start: compare two skill versions
 
@@ -62,6 +84,10 @@ export COPILOT_GITHUB_TOKEN=$(gh auth token)
   a tag or commit SHA — `main` moves between runs.
 - `-t/--task-pattern` is a glob over task names; without it, only the tasks
   matching the two skill names are run.
+- `--skill <source>` (repeatable) injects an **auxiliary skill** — e.g. a
+  dependency like `uc-engraver` for `dr-blacksmith`, even one without
+  `evals.json` — into both runs, with the same source grammar as the base/head
+  arguments. The tested skill always wins on name collisions.
 - The two runs execute in sequence (base first, then head) with live output in
   the terminal; their job directories are `runs/<run-id>/base` and
   `runs/<run-id>/head`. The delta report is written next to them at

@@ -105,7 +105,7 @@ there is no equivalent CLI flag for a `--config`-based run.
 `convert` bakes the **Copilot model** and **reasoning effort** into the
 generated `config.yaml`. The defaults are:
 
-- model: `gpt-5.6-luna` (`harbor_bench.convert.config.DEFAULT_MODEL`)
+- model: `gpt-6-luna` (`harbor_bench.convert.config.DEFAULT_MODEL`)
 - effort: `high` (`harbor_bench.convert.config.DEFAULT_AGENT_KWARGS`)
 
 so the emitted agent entry looks like:
@@ -113,7 +113,7 @@ so the emitted agent entry looks like:
 ```yaml
 agents:
   - import_path: harbor_copilot.agents.copilot_cli_mod:CopilotCliMod
-    model_name: gpt-5.6-luna # -> copilot --model=gpt-5.6-luna
+    model_name: gpt-6-luna # -> copilot --model=gpt-6-luna
     kwargs:
       reasoning_effort: high # -> copilot --effort high
     skills: [...]
@@ -182,7 +182,7 @@ config file, pass them directly to `harbor run`:
 ```bash
 uv run --package harbor-bench harbor \
   --agent harbor_copilot.agents.copilot_cli_mod:CopilotCliMod \
-  --model gpt-5.6-luna --ak reasoning_effort=high ...
+  --model gpt-6-luna --ak reasoning_effort=high ...
 ```
 
 ## Reusing the environment image (faster startup)
@@ -599,19 +599,43 @@ generated tasks when no name is derivable.
 
 Flags:
 
-| Flag                         | Meaning                                                                |
-| ---------------------------- | ---------------------------------------------------------------------- |
-| `-t, --task-pattern PATTERN` | run only tasks matching `PATTERN` (glob); repeatable                   |
-| `--scan-root DIR`            | evals.json scan root (default: `plugins`)                              |
-| `--out DIR`                  | convert output dir (default: `.harbor`)                                |
-| `--runs-dir DIR`             | parent dir for the two job runs (default: `runs`)                      |
-| `--run-id ID`                | stable run id (default: a fresh timestamp)                             |
-| `--task-glob GLOBS`          | explicit task globs, space-separated; used only when `-t` is not given |
-| `--model MODEL`              | Copilot model passed to the agent (default: `gpt-5.6-luna`)            |
-| `--environment TYPE`         | `docker` (default) or `apple-container`                                |
-| `--n-concurrent N`           | `n_concurrent_trials` (default: `4`)                                   |
-| `--format FORMAT`            | report format: `markdown` (default), `html`, or `json`                 |
-| `--token TOKEN`              | GitHub token passed to the agent (`--ae COPILOT_GITHUB_TOKEN=...`)     |
+| Flag                         | Meaning                                                                                             |
+| ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| `-t, --task-pattern PATTERN` | run only tasks matching `PATTERN` (glob); repeatable                                                |
+| `--skill SOURCE`             | auxiliary skill injected into both runs (repeatable): local path, root of skill dirs, or git source |
+| `--scan-root DIR`            | evals.json scan root (default: `plugins`)                                                           |
+| `--out DIR`                  | convert output dir (default: `.harbor`)                                                             |
+| `--runs-dir DIR`             | parent dir for the two job runs (default: `runs`)                                                   |
+| `--run-id ID`                | stable run id (default: a fresh timestamp)                                                          |
+| `--task-glob GLOBS`          | explicit task globs, space-separated; used only when `-t` is not given                              |
+| `--model MODEL`              | Copilot model passed to the agent (default: `gpt-6-luna`)                                           |
+| `--environment TYPE`         | `docker` (default) or `apple-container`                                                             |
+| `--n-concurrent N`           | `n_concurrent_trials` (default: `4`)                                                                |
+| `--format FORMAT`            | report format: `markdown` (default), `html`, or `json`                                              |
+| `--token TOKEN`              | GitHub token passed to the agent (`--ae COPILOT_GITHUB_TOKEN=...`)                                  |
+
+**Auxiliary skills.** `convert` already injects every skill that has an
+`evals/evals.json` under the scan root, so an aux skill like `uc-engraver` is
+usually present without any flag. `--skill` covers the remaining cases: a
+dependency **without** evals, a skill from another repo, or a pinned git ref
+for a dependency. Each source is validated in the preflight exactly like
+base/head (local path or git source, same grammar) and passed to **both**
+`harbor run` invocations, so aux skills stay a constant of the comparison.
+They are ordered before the tested skill, so a source that itself contains the
+skill under test (e.g. the `plugins/aiepdf/skills` root) can never clobber the
+base/head version — Harbor resolves duplicate names last-wins. Aux skills
+appear in the report's run-configuration section like every other injected
+skill, `(git: <repo>@<sha>)` when loaded from git.
+
+```bash
+uv run --package harbor-bench harbor-bench compare \
+  plugins/aiepdf/skills/dr-blacksmith \
+  https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills/dr-blacksmith \
+  -t 'dr-blacksmith-*-intake-*' \
+  --skill plugins/aiepdf/skills/uc-engraver \
+  --format html \
+  --token $COPILOT_GITHUB_TOKEN
+```
 
 ## Baseline: with vs without the skill
 

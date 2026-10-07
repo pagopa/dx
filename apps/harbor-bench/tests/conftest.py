@@ -68,7 +68,7 @@ def write_session_db(db_path: Path, rows: list[tuple] | None = None) -> None:
         for row in (rows if rows is not None else [DEFAULT_USAGE_ROW]):
             con.execute(
                 "INSERT INTO assistant_usage_events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                ("s1", 0, "gpt-5.6-luna", *row),
+                ("s1", 0, "gpt-6-luna", *row),
             )
         con.commit()
     finally:
@@ -80,7 +80,7 @@ def write_copilot_jsonl(
 ) -> None:
     """Write a minimal Copilot CLI JSONL with usage checkpoint + messages."""
     jsonl_path.parent.mkdir(parents=True, exist_ok=True)
-    events = [{"type": "model.call_start", "data": {"model": "gpt-5.6-luna"}}]
+    events = [{"type": "model.call_start", "data": {"model": "gpt-6-luna"}}]
     events += [
         {"type": "assistant.message", "data": {"outputTokens": tokens}}
         for tokens in output_tokens

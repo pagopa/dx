@@ -2,8 +2,9 @@
 
 ``harbor-bench compare <base-skill> <head-skill>`` runs the same eval set twice
 on the same generated config — the base skill injected into the first
-``harbor run``, the head skill into the second (per-skill last-wins) — then
-writes a delta report between the two job directories.
+``harbor run``, the head skill into the second (per-skill last-wins), with any
+``--skill`` auxiliary skills injected into both — then writes a delta report
+between the two job directories.
 
 The workflow lives behind one entry point:
 
@@ -93,12 +94,16 @@ class CompareOptions:
     Defaults mirror the ``harbor-bench compare`` CLI defaults. ``task_globs``
     carries the ``--task-glob`` value (used only when ``task_patterns`` is
     empty) and ``token`` the ``--token`` value (passed to the agent as
-    ``--ae COPILOT_GITHUB_TOKEN=...``). ``report_format`` selects the adapter
-    and resulting ``comparison.<ext>`` file.
+    ``--ae COPILOT_GITHUB_TOKEN=...``). ``aux_skills`` carries the repeated
+    ``--skill`` values: auxiliary skills (dependencies, even without evals)
+    injected into **both** runs, in the same source grammar as base/head and
+    validated the same way. ``report_format`` selects the adapter and resulting
+    ``comparison.<ext>`` file.
     """
 
     base_skill: str
     head_skill: str
+    aux_skills: tuple[str, ...] = ()
     task_patterns: tuple[str, ...] = ()
     scan_root: Path = DEFAULT_SCAN_ROOT
     out: Path = DEFAULT_OUT
@@ -172,8 +177,15 @@ def _run_command(
     label: str,
     skill: SkillSource,
     token: str | None,
+    aux_skills: tuple[SkillSource, ...] = (),
 ) -> list[str]:
-    """The ``harbor run`` command line for one job (base or head)."""
+    """The ``harbor run`` command line for one job (base or head).
+
+    Auxiliary skills are passed **before** the tested skill: Harbor resolves
+    duplicate skill names last-wins, so an auxiliary source that also contains
+    the skill under test (e.g. a skills root) can never clobber the base/head
+    version.
+    """
     command = [
         harbor,
         "run",
@@ -187,6 +199,8 @@ def _run_command(
     ]
     if token:
         command += ["--ae", f"COPILOT_GITHUB_TOKEN={token}"]
+    for aux in aux_skills:
+        command += ["--skill", aux.reference]
     command += ["--skill", skill.reference]
     return command
 
@@ -198,14 +212,20 @@ def _run_job(
     label: str,
     skill: SkillSource,
     token: str | None,
+    aux_skills: tuple[SkillSource, ...] = (),
 ) -> None:
     """Run one job, streaming ``harbor run`` output to the terminal.
 
     Harbor's own progress is passed through untransformed so the two sequential
     runs give live feedback; a non-zero exit raises :class:`HarborRunError`.
     """
-    command = _run_command(harbor, config, jobs_dir, label, skill, token)
-    _log(f"[{label}] harbor run --skill {skill.reference}")
+    command = _run_command(harbor, config, jobs_dir, label, skill, token, aux_skills)
+    aux_note = (
+        f" (aux: {', '.join(aux.reference for aux in aux_skills)})"
+        if aux_skills
+        else ""
+    )
+    _log(f"[{label}] harbor run --skill {skill.reference}{aux_note}")
     result = subprocess.run(command)
     if result.returncode != 0:
         raise HarborRunError(label, result.returncode)
@@ -233,11 +253,11 @@ def _write_report(
 def run_compare(options: CompareOptions) -> CompareResult:
     """Run the full comparison workflow.
 
-    Preflight — harbor CLI present, host can run the environment, both skills
-    resolve (local paths validated, git sources resolved to real skills via
-    :func:`validate_git_source`), evals found — happens before anything is
-    written, so an invalid base/head reference fails immediately instead of
-    after the first ``harbor run``. Raises
+    Preflight — harbor CLI present, host can run the environment, base/head and
+    every auxiliary skill resolve (local paths validated, git sources resolved
+    to real skills via :func:`validate_git_source`), evals found — happens
+    before anything is written, so an invalid reference fails immediately
+    instead of after the first ``harbor run``. Raises
     ``CompareError``/``ValueError``/``DiscoverError``/``WorkspaceError`` on
     failure; the CLI maps them to exit codes.
     """
@@ -257,12 +277,18 @@ def run_compare(options: CompareOptions) -> CompareResult:
 
     base = parse_skill(opts.base_skill, Path.cwd())
     head = parse_skill(opts.head_skill, Path.cwd())
+    aux_skills = tuple(parse_skill(value, Path.cwd()) for value in opts.aux_skills)
 
     # Fail fast before any conversion or run: git references must resolve to
     # real skills. Local paths were already validated by parse_skill above.
     for label, skill in (("base", base), ("head", head)):
         if error := validate_git_source(skill):
             raise CompareError(f"[{label}] invalid skill source: {error}")
+    for skill in aux_skills:
+        if error := validate_git_source(skill):
+            raise CompareError(
+                f"invalid auxiliary skill source {skill.reference!r}: {error}"
+            )
 
     evals_paths = find_evals_files(opts.scan_root)
     if not evals_paths:
@@ -290,6 +316,11 @@ def run_compare(options: CompareOptions) -> CompareResult:
     run_config = opts.out / "config.run.yaml"
     _write_run_config(plan.config_out, run_config, globs)
     _log(f"task filter: {' '.join(globs)}")
+    if aux_skills:
+        _log(
+            "auxiliary skills: "
+            + " ".join(skill.reference for skill in aux_skills)
+        )
 
     # 3. two sequential harbor runs (base and head skill injection)
     run_dir = opts.runs_dir / opts.run_id
@@ -305,7 +336,15 @@ def run_compare(options: CompareOptions) -> CompareResult:
 
     jobs = tuple(zip(JOB_LABELS, (base, head)))
     for label, skill in jobs:
-        _run_job(opts.harbor, run_config, run_dir, label, skill, opts.token)
+        _run_job(
+            opts.harbor,
+            run_config,
+            run_dir,
+            label,
+            skill,
+            opts.token,
+            aux_skills,
+        )
 
     # 4. delta report (reuses the diff seam)
     report_path = run_dir / f"comparison.{REPORT_EXTENSIONS[opts.report_format]}"

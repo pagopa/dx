@@ -5,7 +5,7 @@
 #        LiteLLM `openai` provider (see [verifier.env] in task.toml:
 #        OPENAI_API_BASE=https://api.githubcopilot.com,
 #        OPENAI_API_KEY=${COPILOT_GITHUB_TOKEN}).
-#        gpt-5.x models (e.g. gpt-5.6-luna) are Responses-API-only and are
+#        gpt-5.x models (e.g. gpt-6-luna) are Responses-API-only and are
 #        rejected by the Copilot bridge /chat/completions endpoint
 #        (unsupported_api_for_model); the verifier sets
 #        LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES=true so LiteLLM routes

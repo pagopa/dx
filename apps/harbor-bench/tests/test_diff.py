@@ -111,7 +111,7 @@ def test_job_seam_serves_metrics_and_meta(tmp_path):
     _write_meta_trial(
         job,
         "task-b",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith"],
     )
@@ -123,7 +123,7 @@ def test_job_seam_serves_metrics_and_meta(tmp_path):
     assert set(metrics) == {"task-a", "task-b"}
     assert metrics["task-a"].input_tokens == 1000
     assert meta is not None
-    assert meta.agent_model == "gpt-5.6-luna"
+    assert meta.agent_model == "gpt-6-luna"
     assert meta.agent_effort == "high"
     assert meta.skills and meta.skills[0].name == "dr-blacksmith"
 
@@ -149,7 +149,7 @@ def test_job_reads_result_json_once_across_metrics_and_meta(tmp_path, monkeypatc
     _write_meta_trial(
         job,
         "task-b",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith"],
     )
@@ -159,7 +159,7 @@ def test_job_reads_result_json_once_across_metrics_and_meta(tmp_path, monkeypatc
     meta = read.meta()
 
     assert set(metrics) == {"task-a", "task-b"}
-    assert meta is not None and meta.agent_model == "gpt-5.6-luna"
+    assert meta is not None and meta.agent_model == "gpt-6-luna"
     assert calls == 2  # one parse per trial, shared by both derivations
 
 
@@ -234,10 +234,10 @@ def test_trial_metrics_and_meta_typed_interface(tmp_path):
     _write_meta_trial(
         job,
         "task-b",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith"],
-        judge_model="openai/gpt-5.6-luna",
+        judge_model="openai/gpt-6-luna",
         judge_effort="medium",
     )
     by_task = {trial.task_name: trial for trial in Job(job).iter_trials()}
@@ -254,9 +254,9 @@ def test_trial_metrics_and_meta_typed_interface(tmp_path):
     assert metrics.rewards["quality"] == 0.9
 
     meta = by_task["task-b"].meta()
-    assert meta.agent_model == "gpt-5.6-luna"
+    assert meta.agent_model == "gpt-6-luna"
     assert meta.agent_effort == "high"
-    assert meta.judge_model == "openai/gpt-5.6-luna"
+    assert meta.judge_model == "openai/gpt-6-luna"
     assert meta.judge_effort == "medium"
     assert meta.skills and meta.skills[0].name == "dr-blacksmith"
 
@@ -298,10 +298,10 @@ def test_build_document_computes_specs_summary_and_diffs_once(tmp_path, monkeypa
     _write_meta_trial(
         job,
         "task-meta",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith", git_skill],
-        judge_model="openai/gpt-5.6-luna",
+        judge_model="openai/gpt-6-luna",
         judge_effort="medium",
     )
     meta = Job(job).meta()
@@ -785,16 +785,16 @@ def test_job_meta_models_and_skill_versions(tmp_path, monkeypatch):
     _write_meta_trial(
         job,
         "task-a",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith", git_skill],
-        judge_model="openai/gpt-5.6-luna",
+        judge_model="openai/gpt-6-luna",
         judge_effort="medium",
     )
     meta = Job(job).meta()
-    assert meta.agent_model == "gpt-5.6-luna"
+    assert meta.agent_model == "gpt-6-luna"
     assert meta.agent_effort == "high"
-    assert meta.judge_model == "openai/gpt-5.6-luna"
+    assert meta.judge_model == "openai/gpt-6-luna"
     assert meta.judge_effort == "medium"
     local, git = meta.skills
     assert local.kind == "local"
@@ -816,10 +816,10 @@ def test_render_markdown_run_config_section(tmp_path, monkeypatch):
     _write_meta_trial(
         job,
         "task-a",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith", git_skill],
-        judge_model="openai/gpt-5.6-luna",
+        judge_model="openai/gpt-6-luna",
         judge_effort="medium",
     )
     meta = Job(job).meta()
@@ -839,8 +839,8 @@ def test_render_markdown_run_config_section(tmp_path, monkeypatch):
     )
     assert "## Run configuration" in md
     assert "agent model" in md
-    assert "gpt-5.6-luna (effort: high)" in md
-    assert "openai/gpt-5.6-luna (effort: medium)" in md
+    assert "gpt-6-luna (effort: high)" in md
+    assert "openai/gpt-6-luna (effort: medium)" in md
     assert "dr-blacksmith (local)" in md
     assert "plugins/aiepdf/skills (git: pagopa/dx@42a33a17)" in md
     assert (
@@ -957,10 +957,10 @@ def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
     _write_meta_trial(
         job,
         "task-a",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith", git_skill],
-        judge_model="openai/gpt-5.6-luna",
+        judge_model="openai/gpt-6-luna",
         judge_effort="medium",
     )
     meta = Job(job).meta()
@@ -979,9 +979,9 @@ def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
         )
     ))
     rc = doc["run_config"]
-    assert rc["agent"]["base"]["model"] == "gpt-5.6-luna"
+    assert rc["agent"]["base"]["model"] == "gpt-6-luna"
     assert rc["agent"]["base"]["effort"] == "high"
-    assert rc["judge"]["head"]["model"] == "openai/gpt-5.6-luna"
+    assert rc["judge"]["head"]["model"] == "openai/gpt-6-luna"
     assert rc["skills"]["base"][0]["name"] == "dr-blacksmith"
     assert rc["skills"]["base"][0]["kind"] == "local"
     assert rc["skills"]["base"][1]["kind"] == "git"

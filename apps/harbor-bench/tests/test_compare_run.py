@@ -51,12 +51,13 @@ def options(tmp_path: Path, **overrides) -> CompareOptions:
     base = dict(
         base_skill=str(make_skill(tmp_path, "base-skill")),
         head_skill=str(make_skill(tmp_path, "head-skill")),
+        aux_skills=(),
         scan_root=tmp_path / "plugins",
         out=tmp_path / "out",
         runs_dir=tmp_path / "runs",
         run_id="run-1",
         environment="docker",
-        model="gpt-5.6-luna",
+        model="gpt-6-luna",
         n_concurrent=4,
         task_patterns=(),
         task_globs=(),
@@ -170,6 +171,40 @@ def test_run_command_without_token_omits_ae(tmp_path: Path):
     assert "--ae" not in cmd
 
 
+def test_run_command_injects_aux_skills_before_tested_skill(tmp_path: Path):
+    """Auxiliary skills ride along, ordered before the tested skill: Harbor's
+    last-wins resolution keeps the base/head version authoritative."""
+    aux_local = SkillSource(
+        value="plugins/aiepdf/skills/uc-engraver",
+        kind="local",
+        reference=str(tmp_path / "uc-engraver"),
+        name="uc-engraver",
+    )
+    aux_git = SkillSource(
+        value="pagopa/dx@main",
+        kind="git",
+        reference="pagopa/dx@main",
+        name=None,
+    )
+    tested = SkillSource(
+        value="plugins/aiepdf/skills/dr-blacksmith",
+        kind="local",
+        reference=str(tmp_path / "dr-blacksmith"),
+        name="dr-blacksmith",
+    )
+    cmd = _run_command(
+        "harbor",
+        tmp_path / "config.yaml",
+        tmp_path / "runs",
+        "head",
+        tested,
+        None,
+        (aux_local, aux_git),
+    )
+    skill_values = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "--skill"]
+    assert skill_values == [aux_local.reference, aux_git.reference, tested.reference]
+
+
 # --- sequential run ------------------------------------------------------
 
 
@@ -271,6 +306,48 @@ def test_run_compare_preflights_invalid_base_git_source(
         run_compare(options(tmp_path, base_skill=git_base))
 
 
+def test_run_compare_preflights_invalid_aux_git_source(tmp_path: Path, monkeypatch):
+    """An unresolvable auxiliary skill fails before any convert/run work."""
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment", lambda environment: None
+    )
+
+    def fail_git(source):
+        if source.kind == "git":
+            return "No matching ref 'foobar' found in https://github.com/pagopa/dx"
+        return None
+
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.validate_git_source", fail_git
+    )
+
+    def should_not_plan(opts):
+        raise AssertionError("convert must not run before source preflight")
+
+    monkeypatch.setattr("harbor_bench.compare.run.plan_run", should_not_plan)
+
+    aux = (
+        "https://github.com/pagopa/dx/tree/foobar/"
+        "plugins/aiepdf/skills/uc-engraver"
+    )
+    with pytest.raises(CompareError, match="invalid auxiliary skill source"):
+        run_compare(options(tmp_path, aux_skills=(aux,)))
+
+
+def test_run_compare_rejects_missing_aux_local_path(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment", lambda environment: None
+    )
+    with pytest.raises(ValueError, match="skill path does not exist"):
+        run_compare(options(tmp_path, aux_skills=("missing-aux-skill",)))
+
+
 def test_run_compare_valid_git_source_proceeds(tmp_path: Path, monkeypatch):
     """A resolvable git source passes the preflight and reaches the flow."""
     monkeypatch.setattr(
@@ -301,7 +378,7 @@ def test_run_compare_valid_git_source_proceeds(tmp_path: Path, monkeypatch):
     monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
     monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token):
+    def fake_run_job(harbor, config, jobs_dir, label, skill, token, aux_skills=()):
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
 
     monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
@@ -341,7 +418,7 @@ def test_run_compare_full_flow(tmp_path: Path, monkeypatch, capsys):
     monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
     monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token):
+    def fake_run_job(harbor, config, jobs_dir, label, skill, token, aux_skills=()):
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8 if label == "base" else 0.95)
 
     monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
@@ -403,7 +480,7 @@ def test_run_compare_writes_selected_report_format(
         fake_apply_run,
     )
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token):
+    def fake_run_job(harbor, config, jobs_dir, label, skill, token, aux_skills=()):
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
 
     monkeypatch.setattr(
@@ -440,17 +517,55 @@ def test_run_compare_sequential_uses_one_run_per_job(tmp_path: Path, monkeypatch
     monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
     monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
 
-    calls: list[tuple[str, str]] = []
+    calls: list[tuple[str, str, tuple[str, ...]]] = []
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token):
-        calls.append((label, skill.reference))
+    def fake_run_job(harbor, config, jobs_dir, label, skill, token, aux_skills=()):
+        calls.append((label, skill.reference, tuple(s.reference for s in aux_skills)))
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
 
     monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
 
     result = run_compare(options(tmp_path, task_patterns=("test-skill-*",)))
     assert calls == [
-        ("base", str(tmp_path / "base-skill")),
-        ("head", str(tmp_path / "head-skill")),
+        ("base", str(tmp_path / "base-skill"), ()),
+        ("head", str(tmp_path / "head-skill"), ()),
     ]
     assert result.globs == ("test-skill-*",)
+
+
+def test_run_compare_passes_aux_skills_to_both_runs(tmp_path: Path, monkeypatch):
+    """``--skill`` sources are injected identically into base and head, so they
+    stay a constant of the comparison."""
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment", lambda environment: None
+    )
+    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    write_evals(skill_dir)
+
+    out = tmp_path / "out"
+
+    class FakePlan:
+        tasks = ("t1",)
+        config_out = out / "config.yaml"
+
+    def fake_apply_run(plan):
+        plan.config_out.parent.mkdir(parents=True, exist_ok=True)
+        plan.config_out.write_text("datasets:\n  - path: tasks\n", encoding="utf-8")
+
+    monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
+    monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
+
+    calls: list[tuple[str, tuple[str, ...]]] = []
+
+    def fake_run_job(harbor, config, jobs_dir, label, skill, token, aux_skills=()):
+        calls.append((label, tuple(s.reference for s in aux_skills)))
+        write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
+
+    monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
+
+    aux = make_skill(tmp_path, "uc-engraver")
+    run_compare(options(tmp_path, aux_skills=(str(aux),)))
+    assert calls == [("base", (str(aux),)), ("head", (str(aux),))]

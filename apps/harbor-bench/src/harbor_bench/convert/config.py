@@ -10,7 +10,7 @@ from harbor_copilot.agents.copilot_cli_mod import AGENT_IMPORT_PATH
 
 #: Default Copilot model used to run the agent tasks. Overridable at convert
 #: time with ``harbor-bench convert --model ...``.
-DEFAULT_MODEL = "gpt-5.6-luna"
+DEFAULT_MODEL = "gpt-6-luna"
 
 #: Default agent kwargs (the ``--ak``/``AgentConfig.kwargs`` contract) merged
 #: into the generated config. User-supplied kwargs win over these defaults.
