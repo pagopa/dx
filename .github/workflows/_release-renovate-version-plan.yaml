@@ -1,7 +1,8 @@
 name: Renovate Version Plan
 
+# Keep the workflow definition and Nx execution on the trusted base; fetch the PR head only as diff input.
 on:
-  pull_request:
+  pull_request_target:
     types:
       - opened
       - synchronize
@@ -24,12 +25,32 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Check out the Renovate branch
+      - name: Check out the trusted base commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.base.sha }}
           persist-credentials: false
+
+      - name: Fetch Renovate commit for the project diff
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! git check-ref-format "refs/heads/${PR_HEAD_REF}"; then
+            echo "::error::The Renovate branch name is invalid."
+            exit 1
+          fi
+
+          git fetch --no-tags origin "refs/heads/${PR_HEAD_REF}"
+          fetched_head="$(git rev-parse --verify FETCH_HEAD)"
+          if [[ "$fetched_head" != "$PR_HEAD_SHA" ]]; then
+            echo "::error::The Renovate branch changed while preparing the project diff."
+            exit 1
+          fi
 
       - name: Set up Node.js and pnpm
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
@@ -55,13 +76,41 @@ jobs:
             rm -- "$stable_plan"
           fi
 
+          shopt -s nullglob
+          existing_plans=()
+          for plan in "$plan_dir"/version-plan-*.md; do
+            [[ -f "$plan" ]] || continue
+            if ! git ls-files --error-unmatch -- "$plan" >/dev/null 2>&1; then
+              existing_plans+=("$plan")
+            fi
+          done
+
           pnpm nx release plan patch \
             --base="$PR_BASE_SHA" \
             --head="$PR_HEAD_SHA" \
             --message "Bump dependencies"
 
-          shopt -s nullglob
-          generated_plans=("$plan_dir"/version-plan-*.md)
+          generated_plans=()
+          for plan in "$plan_dir"/version-plan-*.md; do
+            [[ -f "$plan" ]] || continue
+            if git ls-files --error-unmatch -- "$plan" >/dev/null 2>&1; then
+              continue
+            fi
+
+            is_new_plan=true
+            if ((${#existing_plans[@]})); then
+              for existing_plan in "${existing_plans[@]}"; do
+                if [[ "$plan" == "$existing_plan" ]]; then
+                  is_new_plan=false
+                  break
+                fi
+              done
+            fi
+            if [[ "$is_new_plan" == true ]]; then
+              generated_plans+=("$plan")
+            fi
+          done
+
           if ((${#generated_plans[@]} > 1)); then
             echo "::error::Expected at most one generated version plan."
             exit 1
@@ -92,28 +141,60 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Check out the Renovate branch
+      - name: Check out the base commit
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          ref: ${{ github.event.pull_request.head.ref }}
+          ref: ${{ github.event.pull_request.base.sha }}
 
       - name: Prepare version-plan directory
         env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           set -euo pipefail
 
           stable_plan=".nx/version-plans/renovate-pr-${PR_NUMBER}.md"
+          if ! git check-ref-format "refs/heads/${PR_HEAD_REF}"; then
+            echo "::error::The Renovate branch name is invalid."
+            exit 1
+          fi
+
           if [[ -L .nx || -L .nx/version-plans || -L "$stable_plan" ]]; then
             echo "::error::The version-plan path must not contain symbolic links."
             exit 1
           fi
-          if [[ -e "$stable_plan" && ! -f "$stable_plan" ]]; then
-            echo "::error::The version-plan path must be a regular file."
+          if [[ (-e .nx && ! -d .nx) ||
+            (-e .nx/version-plans && ! -d .nx/version-plans) ||
+            (-e "$stable_plan" && ! -f "$stable_plan") ]]; then
+            echo "::error::The version-plan path must contain directories and a regular file."
             exit 1
           fi
           mkdir -p .nx/version-plans
+
+          git fetch --no-tags origin "refs/heads/${PR_HEAD_REF}"
+          fetched_head="$(git rev-parse --verify FETCH_HEAD)"
+          if [[ "$fetched_head" != "$PR_HEAD_SHA" ]]; then
+            echo "::error::The Renovate branch changed while generating the version plan."
+            exit 1
+          fi
+
+          for path in .nx .nx/version-plans; do
+            mode="$(git ls-tree "$PR_HEAD_SHA" -- "$path" | awk 'NR == 1 { print $1 }')"
+            if [[ -n "$mode" && "$mode" != "040000" ]]; then
+              echo "::error::The version-plan path must not contain symbolic links or non-directory entries."
+              exit 1
+            fi
+          done
+
+          mode="$(git ls-tree "$PR_HEAD_SHA" -- "$stable_plan" | awk 'NR == 1 { print $1 }')"
+          if [[ -n "$mode" && "$mode" != "100644" && "$mode" != "100755" ]]; then
+            echo "::error::The version plan must be a regular file."
+            exit 1
+          fi
+
+          git read-tree "$PR_HEAD_SHA"
 
       - name: Download version-plan payload
         if: needs.generate-plan.outputs.plan_exists == 'true'
@@ -125,6 +206,7 @@ jobs:
       - name: Commit version plan
         env:
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
           PLAN_EXISTS: ${{ needs.generate-plan.outputs.plan_exists }}
         shell: bash
@@ -132,27 +214,33 @@ jobs:
           set -euo pipefail
 
           stable_plan=".nx/version-plans/renovate-pr-${PR_NUMBER}.md"
+          if [[ -L .nx || -L .nx/version-plans || -L "$stable_plan" ]]; then
+            echo "::error::The version-plan path must not contain symbolic links."
+            exit 1
+          fi
 
           if [[ "$PLAN_EXISTS" == "true" ]]; then
-            if [[ ! -f "$stable_plan" ]]; then
+            if [[ ! -f "$stable_plan" || -L "$stable_plan" ]]; then
               echo "::error::The generated version plan was not downloaded."
               exit 1
             fi
-          else
-            rm -f -- "$stable_plan"
+            plan_blob="$(git hash-object -w -- "$stable_plan")"
+            git update-index --add --cacheinfo "100644,${plan_blob},${stable_plan}"
+          elif git ls-files --error-unmatch -- "$stable_plan" >/dev/null 2>&1; then
+            git update-index --force-remove -- "$stable_plan"
           fi
 
-          if [[ -f "$stable_plan" ]]; then
-            git add -- "$stable_plan"
-          elif git ls-files --error-unmatch "$stable_plan" >/dev/null 2>&1; then
-            git add -u -- "$stable_plan"
-          fi
-          if git diff --cached --quiet; then
+          tree="$(git write-tree)"
+          head_tree="$(git rev-parse "${PR_HEAD_SHA}^{tree}")"
+          if [[ "$tree" == "$head_tree" ]]; then
             echo "::notice::No new version-plan changes; no touched release projects were found."
             exit 0
           fi
 
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -m "Bump dependencies"
-          git push origin "HEAD:${PR_HEAD_REF}"
+          commit_sha="$(
+            git \
+              -c user.name="github-actions[bot]" \
+              -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+              commit-tree "$tree" -p "$PR_HEAD_SHA" -m "Bump dependencies"
+          )"
+          git push origin "${commit_sha}:refs/heads/${PR_HEAD_REF}"
