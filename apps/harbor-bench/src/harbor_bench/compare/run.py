@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
@@ -133,13 +134,43 @@ def _log(message: str) -> None:
     print(f">> {message}")
 
 
+def default_harbor() -> str:
+    """The Harbor console script bundled in harbor-bench's own environment.
+
+    ``harbor-bench`` depends on ``harbor`` and ``harbor-copilot``, so the
+    ``harbor`` script next to the running interpreter runs Harbor from the same
+    venv where ``harbor_copilot`` is importable. A bare ``harbor`` name is kept
+    as a fallback for installs where the interpreter has no sibling script.
+    """
+    for name in ("harbor", "harbor.exe"):
+        candidate = Path(sys.executable).with_name(name)
+        if candidate.is_file():
+            return str(candidate)
+    return "harbor"
+
+
+def resolve_harbor(harbor: str) -> str:
+    """Resolve the Harbor executable, preferring the bundled one.
+
+    Only the default ``harbor`` name is resolved: an explicit path or
+    alternative executable name is honored as-is.
+    """
+    if harbor != "harbor":
+        return harbor
+    return default_harbor()
+
+
 def check_harbor_cli(harbor: str) -> str | None:
-    """Return an error message when the ``harbor`` CLI is not on PATH."""
+    """Return an error message when the ``harbor`` CLI cannot be found.
+
+    ``harbor`` is expected to be already resolved by :func:`resolve_harbor`;
+    an absolute path is checked directly.
+    """
     if shutil.which(harbor) is not None:
         return None
     return (
-        f"'{harbor}' CLI not found on PATH "
-        "(run with: uv run --package harbor-bench harbor)"
+        f"'{harbor}' CLI not found: harbor-bench runs Harbor from its own "
+        "environment — reinstall harbor-bench and retry"
     )
 
 
@@ -257,6 +288,9 @@ def run_compare(options: CompareOptions) -> CompareResult:
     failure; the CLI maps them to exit codes.
     """
     opts = _normalize_options(options)
+    # Run Harbor from harbor-bench's own environment: that is the venv where
+    # `harbor-copilot` (the agent the generated config imports) is installed.
+    opts = replace(opts, harbor=resolve_harbor(opts.harbor))
 
     if error := check_harbor_cli(opts.harbor):
         raise CompareError(error)

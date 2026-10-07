@@ -19,6 +19,7 @@ from harbor_bench.compare.run import (
     CompareOptions,
     HarborRunError,
     check_harbor_cli,
+    resolve_harbor,
     run_compare,
 )
 from harbor_bench.compare.run import _run_command, _run_job, _write_run_config
@@ -84,7 +85,37 @@ def test_check_harbor_cli_missing(monkeypatch):
         "harbor_bench.compare.run.shutil.which", lambda name: None
     )
     err = check_harbor_cli("harbor")
-    assert err is not None and "not found on PATH" in err
+    assert err is not None and "not found" in err
+
+
+# --- harbor resolution ----------------------------------------------------
+
+
+def test_resolve_harbor_prefers_bundled_console_script(monkeypatch, tmp_path: Path):
+    """The ``harbor`` script next to the running interpreter wins over PATH."""
+    python = tmp_path / "bin" / "python"
+    python.parent.mkdir(parents=True)
+    python.write_text("")
+    harbor = python.parent / "harbor"
+    harbor.write_text("")
+    monkeypatch.setattr("harbor_bench.compare.run.sys.executable", str(python))
+    assert resolve_harbor("harbor") == str(harbor)
+
+
+def test_resolve_harbor_falls_back_to_bare_name(monkeypatch, tmp_path: Path):
+    """Without a sibling script the bare name is kept (resolved via PATH)."""
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.sys.executable", str(tmp_path / "python")
+    )
+    assert resolve_harbor("harbor") == "harbor"
+
+
+def test_resolve_harbor_keeps_explicit_value(monkeypatch):
+    """An explicit executable path or name is never overridden."""
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.sys.executable", "/nonexistent/python"
+    )
+    assert resolve_harbor("/opt/harbor") == "/opt/harbor"
 
 
 # --- config filter -------------------------------------------------------
@@ -464,6 +495,50 @@ def test_run_compare_full_flow(tmp_path: Path, monkeypatch, capsys):
     captured = capsys.readouterr().out
     assert ">> found 1 evals.json" in captured
     assert ">> task filter: base-skill-* head-skill-*" in captured
+
+
+def test_run_compare_runs_bundled_harbor(tmp_path: Path, monkeypatch):
+    """The harbor resolved from harbor-bench's environment is the one executed.
+
+    Regression guard: resolving via PATH alone can pick a standalone harbor
+    install without ``harbor-copilot`` (``No module named 'harbor_copilot'``).
+    """
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment", lambda environment: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.resolve_harbor",
+        lambda harbor: "/bundled/bin/harbor",
+    )
+    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    write_evals(skill_dir)
+
+    out = tmp_path / "out"
+
+    class FakePlan:
+        tasks = ("t1",)
+        config_out = out / "config.yaml"
+
+    def fake_apply_run(plan):
+        plan.config_out.parent.mkdir(parents=True, exist_ok=True)
+        plan.config_out.write_text("datasets:\n  - path: tasks\n", encoding="utf-8")
+
+    monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
+    monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
+
+    seen: list[str] = []
+
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
+        seen.append(harbor)
+        write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
+
+    monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
+
+    run_compare(options(tmp_path))
+    assert seen == ["/bundled/bin/harbor", "/bundled/bin/harbor"]
 
 
 def test_run_compare_writes_selected_report_format(

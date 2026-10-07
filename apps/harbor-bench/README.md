@@ -48,7 +48,11 @@ uv run --package harbor-bench harbor-bench --help
 ```
 
 The examples below use the workspace prefix `uv run --package harbor-bench`;
-with an external install, drop it (`harbor-bench ...`).
+with an external install, drop it for `harbor-bench` commands (`harbor-bench
+...`). Commands that run Harbor itself (`harbor run`, `harbor view`) must use
+the `harbor` bundled with `harbor-bench`: another `harbor` on `PATH` can lack
+`harbor-copilot` and fail with `No module named 'harbor_copilot'` — see
+[Install from git](docs/advanced-usage.md#install-from-git).
 
 ## Quick start: compare two skill versions
 
@@ -120,6 +124,14 @@ uv run --package harbor-bench harbor-bench convert \
   --scan-root plugins --out .harbor --config-out .harbor/config.yaml
 
 uv run --package harbor-bench harbor run \
+  -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...
+```
+
+With an external install, `convert` becomes `harbor-bench convert ...` and the
+run uses the bundled Harbor (not another `harbor` on `PATH`):
+
+```bash
+"$(uv tool dir)/harbor-bench/bin/harbor" run \
   -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...
 ```
 

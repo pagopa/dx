@@ -50,6 +50,19 @@ To switch to another version, reinstall with `--force` and the new ref;
 uvx --from "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench" harbor-bench --help
 ```
 
+`harbor-bench` runs Harbor through the `harbor` console script of its own
+environment — the tool venv ships `harbor` together with `harbor-copilot`, and
+`compare` resolves that executable automatically. To invoke Harbor directly,
+use the bundled script too; a separate `harbor` on `PATH` (e.g. `uv tool
+install harbor`) has no `harbor-copilot` and fails to import the agent
+(`ValueError: Failed to import module 'harbor_copilot.agents.copilot_cli_mod':
+No module named 'harbor_copilot'`):
+
+```bash
+"$(uv tool dir)/harbor-bench/bin/harbor" run -c .harbor/config.yaml -y \
+  --ae COPILOT_GITHUB_TOKEN=...
+```
+
 ## Apple Container
 
 Harbor 0.22.0 ships an `AppleContainerEnvironment` (`EnvironmentType`

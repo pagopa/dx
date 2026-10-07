@@ -40,6 +40,7 @@ from .compare.run import (
     DEFAULT_RUNS_DIR,
     CompareError,
     CompareOptions,
+    resolve_harbor,
     run_compare,
 )
 from .diff import build_document, build_report
@@ -107,9 +108,8 @@ def cmd_convert(args: argparse.Namespace) -> int:
     if options.without_skill:
         print(">> without-skill: agent skills omitted (baseline comparison)")
     print(
-        ">> run:   uv run --package harbor-bench harbor run -c %s "
-        "-y --ae COPILOT_GITHUB_TOKEN=..."
-        % result.config_written
+        ">> run:   %s run -c %s -y --ae COPILOT_GITHUB_TOKEN=..."
+        % (resolve_harbor("harbor"), result.config_written)
     )
     return 0
 
@@ -186,7 +186,7 @@ def cmd_compare(args: argparse.Namespace) -> int:
     print(f">>   head: {result.head_job}")
     print(f">>   report: {result.report}")
     print(
-        f">>   browse: uv run --package harbor-bench harbor view {result.run_dir}"
+        f">>   browse: {resolve_harbor('harbor')} view {result.run_dir}"
     )
     return 0
 
