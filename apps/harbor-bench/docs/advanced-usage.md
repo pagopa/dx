@@ -5,6 +5,7 @@ selecting tasks and tuning the agent, speeding up repeated runs, authoring
 skills for the benchmark, and the exact semantics of the comparison reports.
 
 - [harbor-bench: advanced usage](#harbor-bench-advanced-usage)
+  - [Install from git](#install-from-git)
   - [Apple Container](#apple-container)
   - [Running a subset of tasks](#running-a-subset-of-tasks)
   - [Agent model and reasoning effort](#agent-model-and-reasoning-effort)
@@ -25,6 +26,29 @@ skills for the benchmark, and the exact semantics of the comparison reports.
   - [One-command comparison: harbor-bench compare](#one-command-comparison-harbor-bench-compare)
   - [Baseline: with vs without the skill](#baseline-with-vs-without-the-skill)
   - [Gotchas](#gotchas)
+
+## Install from git
+
+The README installs the CLI from `main`:
+
+```bash
+uv tool install "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench"
+```
+
+To pin a **released version** instead, use the release tag
+(`harbor-bench@<version>`); the tag's `@` must be percent-encoded as `%40` in
+the git URL, otherwise `uv` rejects the URL as ambiguous:
+
+```bash
+uv tool install "git+https://github.com/pagopa/dx@harbor-bench%400.1.2#subdirectory=apps/harbor-bench"
+```
+
+To switch to another version, reinstall with `--force` and the new ref;
+`uv tool uninstall harbor-bench` removes the CLI. One-off runs need no install:
+
+```bash
+uvx --from "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench" harbor-bench --help
+```
 
 ## Apple Container
 

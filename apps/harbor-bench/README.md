@@ -25,19 +25,16 @@ performance, skill authoring and report internals live in
 ### From git (outside the repo)
 
 The public repo ships `harbor-bench` as an installable CLI. `uv` fetches the
-source, resolves the sibling `harbor-copilot` package from the same commit, and
-installs the executable — no clone needed:
+latest source, resolves the sibling `harbor-copilot` package from the same
+commit, and installs the executable — no clone needed:
 
 ```bash
-uv tool install "git+https://github.com/pagopa/dx@harbor-bench%400.1.2#subdirectory=apps/harbor-bench"
+uv tool install "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench"
 harbor-bench --help
 ```
 
-- The ref after `@` is a release tag (`harbor-bench@<version>`, with the tag's
-  `@` percent-encoded as `%40`); bump it to a newer tag to upgrade. `@main`
-  tracks the latest code instead. `uv tool uninstall harbor-bench` removes it.
-- One-off runs without installing:
-  `uvx --from "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench" harbor-bench --help`.
+Pinning a release, switching versions, and one-off runs (`uvx`) are covered in
+[Advanced usage](docs/advanced-usage.md#install-from-git).
 
 ### From the workspace (contributors)
 
