@@ -28,5 +28,5 @@ resource "azurerm_federated_identity_credential" "infra_cd_integration_tests_imm
   audience                  = ["api://AzureADTokenExchange"]
   issuer                    = "https://token.actions.githubusercontent.com"
   user_assigned_identity_id = azurerm_user_assigned_identity.integration_tests[0].id
-  subject                   = "repo:${var.repository.owner}@${data.github_organization.owner[0].id}/${var.repository.name}@${data.github_repository.this[0].repo_id}:environment:${github_actions_environment_secret.integration_tests_client_id[0].environment}"
+  subject                   = "repo:${var.repository.owner}@${var.repository.owner_id != null ? tostring(var.repository.owner_id) : data.github_organization.owner[0].id}/${var.repository.name}@${data.github_repository.this[0].repo_id}:environment:${github_actions_environment_secret.integration_tests_client_id[0].environment}"
 }

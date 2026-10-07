@@ -46,11 +46,12 @@ variable "opex_resource_group_id" {
 
 variable "repository" {
   type = object({
-    owner = optional(string, "pagopa")
-    name  = string
+    owner    = optional(string, "pagopa")
+    name     = string
+    owner_id = optional(number)
   })
 
-  description = "Details about the GitHub repository, including owner and name."
+  description = "Details about the GitHub repository, including owner, optional numeric owner ID, and name. Set owner_id for repositories owned by a personal GitHub account."
 }
 
 variable "github_private_runner" {

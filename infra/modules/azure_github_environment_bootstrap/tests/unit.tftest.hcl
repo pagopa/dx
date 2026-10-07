@@ -458,3 +458,25 @@ run "azure_github_environment_bootstrap_custom_owner_identities" {
     error_message = "The immutable Opex CD subject must use the configured GitHub owner"
   }
 }
+
+run "azure_github_environment_bootstrap_user_owner_identities" {
+  command = plan
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      name     = "dx-test-monorepo-starter-pack"
+      owner_id = 54321
+    }
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.github_infra_ci_immutable.subject == "repo:example-user@54321/dx-test-monorepo-starter-pack@1373623344:environment:infra-uat-ci"
+    error_message = "The immutable Infra CI subject must use the supplied numeric GitHub owner ID"
+  }
+
+  assert {
+    condition     = length(data.github_organization.owner) == 0
+    error_message = "User-owned repositories must not query the GitHub organization data source"
+  }
+}

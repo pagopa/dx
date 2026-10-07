@@ -150,6 +150,37 @@ run "bootstrapper_custom_owner_integration_test_subject" {
 
 }
 
+run "bootstrapper_user_owner_immutable_integration_test_subject" {
+  command = plan
+
+  module {
+    source = "../../../_modules/azure"
+  }
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      owner_id = 54321
+      name     = "dx-test-repo"
+    }
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.infra_cd_integration_tests[0].subject == "repo:example-user/dx-test-repo:environment:automation-uat-cd"
+    error_message = "The name-based Integration Tests subject must preserve the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.infra_cd_integration_tests_immutable[0].subject == "repo:example-user@54321/dx-test-repo@67890:environment:automation-uat-cd"
+    error_message = "The immutable Integration Tests subject must use the numeric GitHub owner ID"
+  }
+
+  assert {
+    condition     = length(data.github_organization.owner) == 0
+    error_message = "User-owned repositories must not query the GitHub organization data source"
+  }
+}
+
 run "bootstrapper_default_owner_integration_test_subject" {
   command = plan
 

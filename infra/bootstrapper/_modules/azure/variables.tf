@@ -13,11 +13,12 @@ variable "environment" {
 
 variable "repository" {
   type = object({
-    owner = optional(string, "pagopa")
-    name  = string
+    owner    = optional(string, "pagopa")
+    name     = string
+    owner_id = optional(number)
   })
 
-  description = "Details about the GitHub repository, including owner, name."
+  description = "Details about the GitHub repository, including owner, optional numeric owner ID, and name."
 }
 
 variable "core_state" {
