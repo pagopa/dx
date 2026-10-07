@@ -15,7 +15,7 @@ locals {
       alerts_enabled            = true
       persistence_mode          = "rdb"
     }
-    "cache-only" = {
+    ephemeral = {
       sku_name                  = "Balanced_B3"
       high_availability_enabled = true
       private_network_enabled   = true

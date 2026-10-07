@@ -48,12 +48,12 @@ variable "private_dns_zone_resource_group_name" {
 # ------------ REDIS ------------ #
 variable "use_case" {
   type        = string
-  description = "DX preset for Azure Managed Redis. Allowed values are 'default', 'cache-only', and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access."
+  description = "DX preset for Azure Managed Redis. Allowed values are 'default', 'ephemeral', and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access."
   default     = "default"
 
   validation {
-    condition     = contains(["default", "cache-only", "development"], var.use_case)
-    error_message = "Allowed values for use_case are 'default', 'cache-only', and 'development'."
+    condition     = contains(["default", "ephemeral", "development"], var.use_case)
+    error_message = "Allowed values for use_case are 'default', 'ephemeral', and 'development'."
   }
 }
 
@@ -97,7 +97,7 @@ variable "log_analytics_workspace_id" {
 }
 
 variable "alerts" {
-  description = "Metric alert configuration. Alerts are enabled by default for the 'default' and 'cache-only' use cases with sensible thresholds."
+  description = "Metric alert configuration. Alerts are enabled by default for the 'default' and 'ephemeral' use cases with sensible thresholds."
   type = object({
     action_group_id = optional(string, null)
     thresholds = optional(object({

@@ -121,11 +121,11 @@ run "balanced_b0_rejected_for_default_use_case" {
   ]
 }
 
-run "balanced_b0_rejected_for_cache_only_use_case" {
+run "balanced_b0_rejected_for_ephemeral_use_case" {
   command = plan
 
   variables {
-    use_case          = "cache-only"
+    use_case          = "ephemeral"
     sku_name_override = "Balanced_B0"
   }
 
