@@ -110,13 +110,19 @@ class TaskPresentation:
     head_side: TaskSidePresentation | None
 
 
-@dataclass(frozen=True)
-class OutcomePresentation:
-    """One task-outcome category."""
-
-    key: str
-    label: str
-    count: int
+#: The task-outcome taxonomy: outcome key -> display label, in distribution
+#: order. Declared once here; per-task classification, the distribution, and
+#: the outcome badge all read this table.
+OUTCOMES: dict[str, str] = {
+    "improved": "Improved",
+    "regressed": "Regressed",
+    "mixed": "Criteria changed",
+    "failed": "Both failed",
+    "unchanged": "Unchanged",
+    "incomplete": "Incomplete",
+    "new": "New task",
+    "removed": "Only in base",
+}
 
 
 @dataclass(frozen=True)
@@ -201,7 +207,7 @@ class ComparisonPresentation:
     population: PopulationPresentation
     comparable: ComparablePresentation
     signals: tuple[SignalPresentation, ...]
-    outcomes: tuple[OutcomePresentation, ...]
+    outcomes: dict[str, int]
     summary_metrics: tuple[MetricPresentation, ...]
     comparison_metrics: tuple[MetricPresentation, ...]
     run_cards: tuple[RunPresentation, ...]
@@ -429,7 +435,6 @@ class _TaskEvaluation:
     base_criteria: tuple[CriterionResult, ...]
     head_criteria: tuple[CriterionResult, ...]
     outcome: str
-    outcome_label: str
 
 
 def _evaluate(
@@ -451,17 +456,15 @@ def _evaluate(
         base_criteria=base.criteria if base is not None else (),
         head_criteria=head.criteria if head is not None else (),
         outcome="",
-        outcome_label="",
     )
-    outcome, outcome_label = _classify(evaluation, primary_score)
-    return replace(evaluation, outcome=outcome, outcome_label=outcome_label)
+    return replace(evaluation, outcome=_classify(evaluation, primary_score))
 
 
 def _classify(
     evaluation: _TaskEvaluation,
     primary_score: MetricSpec | None,
-) -> tuple[str, str]:
-    """Classify one evaluated task pair.
+) -> str:
+    """Classify one evaluated task pair into an :data:`OUTCOMES` key.
 
     A verifier-gate flip wins, then the primary score direction, then
     criterion-level changes. When both sides fail the gate, tied scores with
@@ -470,23 +473,15 @@ def _classify(
     """
     base, head = evaluation.row.base, evaluation.row.head
     if base is None:
-        return "new", "New task"
+        return "new"
     if head is None:
-        return "removed", "Only in base"
+        return "removed"
     if base.status == "incomplete" or head.status == "incomplete":
         if base.status == head.status:
-            return "incomplete", "Incomplete"
-        return (
-            ("improved", "Improved")
-            if base.status == "incomplete"
-            else ("regressed", "Regressed")
-        )
+            return "incomplete"
+        return "improved" if base.status == "incomplete" else "regressed"
     if evaluation.base_pass != evaluation.head_pass:
-        return (
-            ("improved", "Improved")
-            if evaluation.head_pass
-            else ("regressed", "Regressed")
-        )
+        return "improved" if evaluation.head_pass else "regressed"
     if primary_score is not None:
         direction = _direction(
             primary_score.read(base),
@@ -494,20 +489,20 @@ def _classify(
             primary_score,
         )
         if direction == "positive":
-            return "improved", "Improved"
+            return "improved"
         if direction == "negative":
-            return "regressed", "Regressed"
+            return "regressed"
     if not evaluation.base_pass and not evaluation.head_pass:
         if evaluation.head_gained or evaluation.base_gained:
-            return "mixed", "Criteria changed"
-        return "failed", "Both failed"
+            return "mixed"
+        return "failed"
     if evaluation.head_gained and evaluation.base_gained:
-        return "mixed", "Criteria changed"
+        return "mixed"
     if evaluation.head_gained:
-        return "improved", "Improved"
+        return "improved"
     if evaluation.base_gained:
-        return "regressed", "Regressed"
-    return "unchanged", "Unchanged"
+        return "regressed"
+    return "unchanged"
 
 
 def _paired_metric(
@@ -549,7 +544,8 @@ def _task(
     primary_score: MetricSpec | None,
 ) -> TaskPresentation:
     row = evaluation.row
-    outcome, outcome_label = evaluation.outcome, evaluation.outcome_label
+    outcome = evaluation.outcome
+    outcome_label = OUTCOMES[outcome]
     threshold = next(
         (
             metrics.scoring.threshold
@@ -643,21 +639,63 @@ def _fraction(passed: int, total: int) -> str:
     return f"{passed} / {total}" if total else "—"
 
 
+@dataclass(frozen=True)
+class _OutcomeLedger:
+    """Everything the verdict and the outcome distribution read, folded once.
+
+    ``counts`` counts every task pair by :data:`OUTCOMES` key; the criterion
+    fields and ``all_failed`` consider only the evaluated pairs (both sides
+    completed), matching the comparable statistics.
+    """
+
+    counts: dict[str, int]
+    criteria_head_gained: int
+    criteria_base_gained: int
+    all_failed: bool
+
+    @property
+    def criteria_mixed(self) -> bool:
+        return self.criteria_head_gained > 0 and self.criteria_base_gained > 0
+
+    @property
+    def criteria_direction(self) -> str:
+        if self.criteria_head_gained and not self.criteria_base_gained:
+            return "positive"
+        if self.criteria_base_gained and not self.criteria_head_gained:
+            return "negative"
+        return "neutral"
+
+
+def _fold_outcomes(
+    evaluations: tuple[_TaskEvaluation, ...],
+    evaluated: tuple[_TaskEvaluation, ...],
+) -> _OutcomeLedger:
+    """Fold every task pair into the outcome distribution and verdict inputs."""
+    counts = {key: 0 for key in OUTCOMES}
+    for evaluation in evaluations:
+        counts[evaluation.outcome] += 1
+    return _OutcomeLedger(
+        counts=counts,
+        criteria_head_gained=sum(1 for e in evaluated if e.head_gained),
+        criteria_base_gained=sum(1 for e in evaluated if e.base_gained),
+        all_failed=bool(evaluated)
+        and not any(e.base_pass or e.head_pass for e in evaluated),
+    )
+
+
 def _verdict(
     comparable_tasks: int,
     evaluated_tasks: int,
     score_direction: str,
     pass_direction: str,
-    all_failed: bool,
-    criteria_mixed: bool,
-    criteria_direction: str,
+    ledger: _OutcomeLedger,
 ) -> tuple[str, str]:
     if comparable_tasks == 0:
         return "No comparable results", "neutral"
     if evaluated_tasks == 0:
         return "No completed comparable results", "neutral"
-    if all_failed:
-        if criteria_mixed or criteria_direction != "neutral":
+    if ledger.all_failed:
+        if ledger.criteria_mixed or ledger.criteria_direction != "neutral":
             return "Both runs failed — criteria changed", "negative"
         return "Both runs failed every comparable task", "negative"
     directions = {
@@ -671,11 +709,11 @@ def _verdict(
         return "Base performs better", "negative"
     if len(directions) > 1:
         return "Results are mixed", "mixed"
-    if criteria_mixed:
+    if ledger.criteria_mixed:
         return "Results are mixed — criteria changed", "mixed"
-    if criteria_direction == "positive":
+    if ledger.criteria_direction == "positive":
         return "Head performs better", "positive"
-    if criteria_direction == "negative":
+    if ledger.criteria_direction == "negative":
         return "Base performs better", "negative"
     return "No clear change", "neutral"
 
@@ -734,21 +772,8 @@ def build_presentation(document: ReportDocument) -> ComparisonPresentation:
     )
     head_criteria_total = sum(len(e.head_criteria) for e in evaluated)
 
-    criteria_head_gained = sum(1 for e in evaluated if e.head_gained)
-    criteria_base_gained = sum(1 for e in evaluated if e.base_gained)
-    criteria_mixed = criteria_head_gained > 0 and criteria_base_gained > 0
-    criteria_direction = (
-        "positive"
-        if criteria_head_gained and not criteria_base_gained
-        else "negative"
-        if criteria_base_gained and not criteria_head_gained
-        else "neutral"
-    )
-    all_failed = (
-        evaluated_tasks > 0
-        and comparable_base_gate_passed == 0
-        and comparable_head_gate_passed == 0
-    )
+    ledger = _fold_outcomes(evaluations, evaluated)
+
     criteria_sets_match = all(
         {c.name for c in e.base_criteria} == {c.name for c in e.head_criteria}
         for e in evaluated
@@ -835,44 +860,9 @@ def build_presentation(document: ReportDocument) -> ComparisonPresentation:
         evaluated_tasks,
         score.direction,
         pass_direction,
-        all_failed,
-        criteria_mixed,
-        criteria_direction,
+        ledger,
     )
-    counts = {
-        key: 0
-        for key in (
-            "improved",
-            "regressed",
-            "mixed",
-            "failed",
-            "unchanged",
-            "incomplete",
-            "new",
-            "removed",
-        )
-    }
-    for task in tasks:
-        counts[task.outcome] += 1
-    outcome_labels = (
-        ("improved", "Improved"),
-        ("regressed", "Regressed"),
-        ("mixed", "Criteria changed"),
-        ("failed", "Both failed"),
-        ("unchanged", "Unchanged"),
-        ("incomplete", "Incomplete"),
-        ("new", "New"),
-        ("removed", "Only in base"),
-    )
-    outcomes = tuple(
-        OutcomePresentation(
-            key=key,
-            label=label,
-            count=counts[key],
-        )
-        for key, label in outcome_labels
-        if counts[key]
-    )
+    outcomes = {key: count for key, count in ledger.counts.items() if count}
     return ComparisonPresentation(
         base_job=document.base_job,
         head_job=document.head_job,

@@ -239,10 +239,7 @@ def render_json(document: ReportDocument) -> str:
                 _metric_dict(metric, "comparable_tasks")
                 for metric in presentation.comparison_metrics
             ],
-            "outcomes": {
-                outcome.key: outcome.count
-                for outcome in presentation.outcomes
-            },
+            "outcomes": presentation.outcomes,
             "signals": [
                 {
                     "group": card.group,

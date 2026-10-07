@@ -110,7 +110,9 @@ key-signal cards — gate, criteria, completion — are presentation values too
 (`signals`): formatted values, delta, direction, and the comparability note
 are computed once for all three adapters, and the criteria delta is
 suppressed unless every evaluated task has the same criterion names on both
-sides. Task
+sides. One `OUTCOMES` table declares the outcome taxonomy once: classification
+and the outcome distribution both read it, and each task's badge prints its
+label. Task
 outcomes distinguish verifier-gate flips, primary-score moves, and
 criterion-level changes (the criteria come from the verifier artifact
 `reward-details.json`; the recorded `scoring.json` gate is display-only,

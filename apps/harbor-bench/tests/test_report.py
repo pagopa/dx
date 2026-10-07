@@ -276,6 +276,36 @@ def test_criteria_card_suppresses_delta_when_criterion_sets_differ():
     assert criteria.note == "different criterion sets"
 
 
+def test_outcome_taxonomy_is_declared_once():
+    """Classification, the distribution, and the badges all read OUTCOMES."""
+    document = _document(
+        {
+            "same": _metrics("same", 0.8),
+            "flip": _metrics("flip", 0.0),
+            "gone": _metrics("gone", 0.8),
+        },
+        {
+            "same": _metrics("same", 0.8),
+            "flip": _metrics("flip", 1.0),
+            "new": _metrics("new", 0.5),
+        },
+    )
+    presentation = build_presentation(document)
+
+    assert presentation.outcomes == {
+        "improved": 1,
+        "unchanged": 1,
+        "new": 1,
+        "removed": 1,
+    }
+    labels = {task.name: task.outcome_label for task in presentation.tasks}
+    assert labels["gone"] == "Only in base"
+    assert labels["new"] == "New task"
+    assert json.loads(render_report(document, "json"))["comparison"]["outcomes"] == (
+        presentation.outcomes
+    )
+
+
 def test_render_report_json_exposes_criteria_and_gate():
     value = json.loads(
         render_report(

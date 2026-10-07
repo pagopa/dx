@@ -316,8 +316,7 @@
           <summary>
             <span class="task-summary-main">
               <span class="status-badge {{ task.outcome }}">
-                {% if task.outcome == "removed" %}Only in base
-                {% else %}{{ task.outcome_label }}{% endif %}
+                {{ task.outcome_label }}
               </span>
               <span class="task-name">{{ task.name }}</span>
             </span>
