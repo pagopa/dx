@@ -56,7 +56,10 @@ const payload: Payload = {
     prefix: "dx",
   },
   github: { owner: "pagopa", repo: "my-project" },
-  tags: {},
+  tags: {
+    CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+    Owner: "DX Platform",
+  },
   workspace: { domain: "payments" },
 };
 
@@ -454,6 +457,72 @@ describe("syncRepositoryEnvironments", () => {
         await expect(fs.readdir(directory)).resolves.toEqual(["main.tf"]);
         expect(terraformValidator).toHaveBeenCalledTimes(2);
         expect(terraformCommand).toHaveBeenCalledTimes(2);
+      },
+    );
+  });
+
+  it("does not replace main.tf when its path changes before the atomic replacement", async () => {
+    const concurrentContent = "# concurrent replacement\n";
+    await inTemporaryRepository(
+      repositoryConfig,
+      async (mainFile, directory) => {
+        const originalMainFile = path.join(directory, "original-main.tf");
+        const createTemporaryDirectory = fs.mkdtemp.bind(fs);
+        const mkdtemp = vi.spyOn(fs, "mkdtemp");
+        mkdtemp.mockImplementationOnce(async (prefix) => {
+          const temporaryDirectory = await createTemporaryDirectory(prefix);
+          await fs.rename(mainFile, originalMainFile);
+          await fs.writeFile(mainFile, concurrentContent);
+          return temporaryDirectory;
+        });
+        try {
+          await expect(syncRepositoryEnvironments(payload)).rejects.toThrow(
+            "Cannot safely update infra/repository/main.tf",
+          );
+        } finally {
+          mkdtemp.mockRestore();
+        }
+
+        await expect(fs.readFile(mainFile, "utf8")).resolves.toBe(
+          concurrentContent,
+        );
+        await expect(fs.readFile(originalMainFile, "utf8")).resolves.toBe(
+          repositoryConfig,
+        );
+        expect((await fs.readdir(directory)).sort()).toEqual([
+          "main.tf",
+          "original-main.tf",
+        ]);
+        expect(terraformCommand).not.toHaveBeenCalled();
+      },
+    );
+  });
+
+  it("does not overwrite in-place changes made during synchronization", async () => {
+    const concurrentContent = `${repositoryConfig}# concurrent update\n`;
+    await inTemporaryRepository(
+      repositoryConfig,
+      async (mainFile, directory) => {
+        const createTemporaryDirectory = fs.mkdtemp.bind(fs);
+        const mkdtemp = vi.spyOn(fs, "mkdtemp");
+        mkdtemp.mockImplementationOnce(async (prefix) => {
+          const temporaryDirectory = await createTemporaryDirectory(prefix);
+          await fs.writeFile(mainFile, concurrentContent);
+          return temporaryDirectory;
+        });
+        try {
+          await expect(syncRepositoryEnvironments(payload)).rejects.toThrow(
+            "Cannot safely update infra/repository/main.tf",
+          );
+        } finally {
+          mkdtemp.mockRestore();
+        }
+
+        await expect(fs.readFile(mainFile, "utf8")).resolves.toBe(
+          concurrentContent,
+        );
+        await expect(fs.readdir(directory)).resolves.toEqual(["main.tf"]);
+        expect(terraformCommand).not.toHaveBeenCalled();
       },
     );
   });
