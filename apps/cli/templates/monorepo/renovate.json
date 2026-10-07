@@ -6,6 +6,11 @@
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["pagopa/dx"],
       "pinDigests": false
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "groupName": "Docker images",
+      "prCreation": "immediate"
     }
   ]
 }

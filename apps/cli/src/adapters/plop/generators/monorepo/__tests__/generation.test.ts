@@ -108,7 +108,7 @@ describe("monorepo generator — file generation", () => {
     expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain("allowBuilds:");
   });
 
-  it("configures Renovate not to pin internal DX actions", async () => {
+  it("configures Renovate for DX actions and Docker images", async () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),
       ["renovate.json"],
@@ -118,6 +118,12 @@ describe("monorepo generator — file generation", () => {
       '"matchPackageNames": ["pagopa/dx"]',
     );
     expect(generatedFiles["renovate.json"]).toContain('"pinDigests": false');
+    expect(generatedFiles["renovate.json"]).toContain(
+      '"matchManagers": ["dockerfile"]',
+    );
+    expect(generatedFiles["renovate.json"]).toContain(
+      '"prCreation": "immediate"',
+    );
   });
 
   it("resolves the generated tests plugin from the DX marketplace", async () => {
