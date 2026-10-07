@@ -15,6 +15,12 @@
       "pinDigests": false
     },
     {
+      "matchManagers": ["dockerfile"],
+      "matchPackageNames": ["ghcr.io/actions/actions-runner"],
+      "groupName": "GitHub Actions runner image",
+      "prCreation": "immediate"
+    },
+    {
       "matchManagers": ["terraform"],
       "matchDatasources": ["terraform-provider"],
       "matchPackageNames": ["!/^pagopa-dx\\//"],
