@@ -186,6 +186,42 @@ def test_criteria_changes_surface_when_gate_scores_tie():
     assert criteria_card.delta == "+0"
 
 
+def test_gate_note_reports_each_side_threshold_when_configs_differ():
+    """The standalone report can compare jobs gated by different thresholds."""
+    document = _document(
+        {"t": _gated_metrics("t", 0.0, {"language": True}, threshold=0.4)},
+        {"t": _gated_metrics("t", 0.0, {"language": True}, threshold=0.6)},
+    )
+    presentation = build_presentation(document)
+    task = presentation.tasks[0]
+
+    assert task.gate_note == "Base below the 0.4 gate; Head below the 0.6 gate"
+    assert task.threshold is None
+    assert json.loads(render_report(document, "json"))["tasks"][0]["threshold"] is None
+
+
+def test_gate_note_names_only_the_failing_side_with_its_own_gate():
+    presentation = build_presentation(
+        _document(
+            {"t": _gated_metrics("t", 0.0, {"language": True}, threshold=0.4)},
+            {"t": _gated_metrics("t", 1.0, {"language": True}, threshold=0.6)},
+        )
+    )
+
+    assert presentation.tasks[0].gate_note == "Base below the 0.4 gate"
+
+
+def test_gate_note_skips_sides_without_a_recorded_threshold():
+    presentation = build_presentation(
+        _document(
+            {"t": _gated_metrics("t", 0.0, {"language": True}, threshold=0.8)},
+            {"t": _gated_metrics("t", 0.0, {"language": True}, threshold=None)},
+        )
+    )
+
+    assert presentation.tasks[0].gate_note == "Base below the 0.8 gate"
+
+
 def test_both_failing_runs_are_not_unchanged():
     presentation = build_presentation(
         _document(

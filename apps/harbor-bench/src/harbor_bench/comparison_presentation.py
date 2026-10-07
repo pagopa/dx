@@ -398,21 +398,46 @@ def _criterion_rows(
     return tuple(rows)
 
 
+def _recorded_threshold(metrics: TrialMetrics | None) -> float | None:
+    """The gate threshold one side recorded, when the verifier saved it."""
+    if metrics is None or metrics.scoring is None:
+        return None
+    return metrics.scoring.threshold
+
+
 def _gate_note(
     base_pass: bool,
     head_pass: bool,
-    threshold: float | None,
+    base_threshold: float | None,
+    head_threshold: float | None,
 ) -> str | None:
-    if threshold is None:
-        return None
-    below = [
-        label
-        for label, passed in (("Base", base_pass), ("Head", head_pass))
-        if not passed
-    ]
-    if not below:
-        return None
-    return f"{' and '.join(below)} below the {threshold:g} gate"
+    """Name the failing sides against their own recorded threshold.
+
+    The two jobs can come from different scoring configs (the standalone
+    ``report`` command compares arbitrary runs), so a shared note is truthful
+    only when both sides recorded the same threshold; otherwise each failing
+    side names its own gate.
+    """
+    if base_threshold is not None and base_threshold == head_threshold:
+        below = [
+            label
+            for label, passed in (("Base", base_pass), ("Head", head_pass))
+            if not passed
+        ]
+        if not below:
+            return None
+        return f"{' and '.join(below)} below the {base_threshold:g} gate"
+    return (
+        "; ".join(
+            f"{label} below the {threshold:g} gate"
+            for label, passed, threshold in (
+                ("Base", base_pass, base_threshold),
+                ("Head", head_pass, head_threshold),
+            )
+            if threshold is not None and not passed
+        )
+        or None
+    )
 
 
 @dataclass(frozen=True)
@@ -546,18 +571,23 @@ def _task(
     row = evaluation.row
     outcome = evaluation.outcome
     outcome_label = OUTCOMES[outcome]
-    threshold = next(
-        (
-            metrics.scoring.threshold
-            for metrics in (row.head, row.base)
-            if metrics is not None
-            and metrics.scoring is not None
-            and metrics.scoring.threshold is not None
-        ),
-        None,
-    )
+    base_threshold = _recorded_threshold(row.base)
+    head_threshold = _recorded_threshold(row.head)
+    if row.base is None or row.head is None:
+        # One-sided task: the surviving side's gate is the only one on record.
+        threshold = head_threshold if head_threshold is not None else base_threshold
+    elif base_threshold == head_threshold:
+        threshold = base_threshold
+    else:
+        # Different scoring configs: no single threshold describes both sides.
+        threshold = None
     gate_note = (
-        _gate_note(evaluation.base_pass, evaluation.head_pass, threshold)
+        _gate_note(
+            evaluation.base_pass,
+            evaluation.head_pass,
+            base_threshold,
+            head_threshold,
+        )
         if row.base is not None and row.head is not None
         else None
     )
