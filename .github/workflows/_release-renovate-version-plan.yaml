@@ -1,0 +1,158 @@
+name: Renovate Version Plan
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+
+permissions:
+  contents: read
+
+concurrency:
+  group: renovate-version-plan-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  generate-plan:
+    outputs:
+      plan_exists: ${{ steps.create-plan.outputs.plan_exists }}
+    if: >-
+      github.event.pull_request.user.login == 'renovate-pagopa[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    steps:
+      - name: Check out the Renovate branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: false
+
+      - name: Set up Node.js and pnpm
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: "node pnpm"
+          minimum_release_age: 7d
+
+      - name: Install root dependencies
+        run: pnpm --filter . ci --ignore-scripts
+
+      - name: Create patch version plans
+        id: create-plan
+        env:
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          plan_dir=.nx/version-plans
+          stable_plan="$plan_dir/renovate-pr-${PR_NUMBER}.md"
+          if [[ -f "$stable_plan" ]]; then
+            rm -- "$stable_plan"
+          fi
+
+          pnpm nx release plan patch \
+            --base="$PR_BASE_SHA" \
+            --head="$PR_HEAD_SHA" \
+            --message "Bump dependencies"
+
+          shopt -s nullglob
+          generated_plans=("$plan_dir"/version-plan-*.md)
+          if ((${#generated_plans[@]} > 1)); then
+            echo "::error::Expected at most one generated version plan."
+            exit 1
+          fi
+          if ((${#generated_plans[@]} == 1)); then
+            mv -- "${generated_plans[0]}" "$stable_plan"
+            echo "plan_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "plan_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload version-plan payload
+        if: steps.create-plan.outputs.plan_exists == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: renovate-version-plan-${{ github.event.pull_request.number }}
+          path: .nx/version-plans/renovate-pr-${{ github.event.pull_request.number }}.md
+          if-no-files-found: error
+          retention-days: 1
+
+  # Never execute code from the PR in this write-enabled job.
+  commit-plan:
+    needs: generate-plan
+    if: >-
+      github.event.pull_request.user.login == 'renovate-pagopa[bot]' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: write
+    steps:
+      - name: Check out the Renovate branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Prepare version-plan directory
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+
+          stable_plan=".nx/version-plans/renovate-pr-${PR_NUMBER}.md"
+          if [[ -L .nx || -L .nx/version-plans || -L "$stable_plan" ]]; then
+            echo "::error::The version-plan path must not contain symbolic links."
+            exit 1
+          fi
+          if [[ -e "$stable_plan" && ! -f "$stable_plan" ]]; then
+            echo "::error::The version-plan path must be a regular file."
+            exit 1
+          fi
+          mkdir -p .nx/version-plans
+
+      - name: Download version-plan payload
+        if: needs.generate-plan.outputs.plan_exists == 'true'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: renovate-version-plan-${{ github.event.pull_request.number }}
+          path: .nx/version-plans
+
+      - name: Commit version plan
+        env:
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PLAN_EXISTS: ${{ needs.generate-plan.outputs.plan_exists }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          stable_plan=".nx/version-plans/renovate-pr-${PR_NUMBER}.md"
+
+          if [[ "$PLAN_EXISTS" == "true" ]]; then
+            if [[ ! -f "$stable_plan" ]]; then
+              echo "::error::The generated version plan was not downloaded."
+              exit 1
+            fi
+          else
+            rm -f -- "$stable_plan"
+          fi
+
+          if [[ -f "$stable_plan" ]]; then
+            git add -- "$stable_plan"
+          elif git ls-files --error-unmatch "$stable_plan" >/dev/null 2>&1; then
+            git add -u -- "$stable_plan"
+          fi
+          if git diff --cached --quiet; then
+            echo "::notice::No new version-plan changes; no touched release projects were found."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "Bump dependencies"
+          git push origin "HEAD:${PR_HEAD_REF}"
