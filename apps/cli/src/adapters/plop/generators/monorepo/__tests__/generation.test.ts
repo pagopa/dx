@@ -122,6 +122,9 @@ describe("monorepo generator — file generation", () => {
       '"matchManagers": ["dockerfile"]',
     );
     expect(generatedFiles["renovate.json"]).toContain(
+      '"minimumReleaseAge": "7 days"',
+    );
+    expect(generatedFiles["renovate.json"]).toContain(
       '"prCreation": "immediate"',
     );
   });
