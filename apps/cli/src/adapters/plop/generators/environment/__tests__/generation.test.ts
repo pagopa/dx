@@ -268,11 +268,46 @@ describe("environment generator — file generation (no init)", () => {
         generatedFiles[`infra/bootstrapper/${customPayload.env.name}/main.tf`];
 
       expect(providersFile).toContain('owner = "example-org"');
-      expect(mainFile).toContain('owner = "example-org"');
+      expect(mainFile).toContain('owner    = "example-org"');
       expect(mainFile).toContain(
         "https://github.com/example-org/my-project/blob/main/infra/bootstrapper/dev",
       );
-      expect(mainFile).not.toContain('owner = "pagopa"');
+      expect(mainFile).not.toContain('owner    = "pagopa"');
+    } finally {
+      process.chdir(generatedEnvironment.originalCwd);
+      await cleanupTempDir(generatedEnvironment.tmpDir);
+    }
+  });
+
+  it("passes the selected GitHub owner ID into generated bootstrapper Terraform", async () => {
+    const userPayload: Payload = {
+      ...payload,
+      github: {
+        ...payload.github,
+        owner: "example-user",
+        ownerId: 54321,
+      },
+    };
+    const generatedEnvironment = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload: userPayload,
+      tmpDirPrefix: "dx-cli-env-user-owner-test-",
+    });
+
+    try {
+      const generatedFiles = await readGeneratedFiles(
+        generatedEnvironment.tmpDir,
+        [`infra/bootstrapper/${userPayload.env.name}/main.tf`],
+      );
+      const mainFile =
+        generatedFiles[`infra/bootstrapper/${userPayload.env.name}/main.tf`];
+
+      expect(mainFile).toContain('owner    = "example-user"');
+      expect(mainFile).toContain("owner_id = 54321");
     } finally {
       process.chdir(generatedEnvironment.originalCwd);
       await cleanupTempDir(generatedEnvironment.tmpDir);

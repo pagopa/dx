@@ -28,8 +28,9 @@ module "azure-{{displayName}}_bootstrap" {
   }
 
   repository = {
-    owner = "{{@root.github.owner}}"
-    name  = "{{@root.github.repo}}"
+    owner    = "{{@root.github.owner}}"
+    name     = "{{@root.github.repo}}"
+    owner_id = {{#if @root.github.ownerId}}{{@root.github.ownerId}}{{else}}null{{/if}}
   }
 
   github_private_runner = {
@@ -86,8 +87,9 @@ module "azure-{{displayName}}_bootstrap" {
   }
 
   repository = {
-    owner = "{{@root.github.owner}}"
-    name  = "{{@root.github.repo}}"
+    owner    = "{{@root.github.owner}}"
+    name     = "{{@root.github.repo}}"
+    owner_id = {{#if @root.github.ownerId}}{{@root.github.ownerId}}{{else}}null{{/if}}
   }
 
   github_private_runner = {
@@ -136,5 +138,4 @@ resource "azurerm_role_assignment" "infra_ci_kv_secrets_user_common_{{displayNam
 {{/if}}
 {{/if}}
 {{/each}}
-
 

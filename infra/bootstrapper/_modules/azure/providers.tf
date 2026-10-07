@@ -6,7 +6,7 @@ terraform {
 
     github = {
       source  = "integrations/github"
-      version = "~> 6.12"
+      version = "~> 6.13"
     }
 
     hashicorpgithub = {

@@ -103,8 +103,9 @@ module "azure-DEV-DX_bootstrap" {
   }
 
   repository = {
-    owner = "pagopa"
-    name  = "my-project"
+    owner    = "pagopa"
+    name     = "my-project"
+    owner_id = null
   }
 
   github_private_runner = {
@@ -125,7 +126,6 @@ module "azure-DEV-DX_bootstrap" {
 
   tags = local.bootstrapper_tags
 }
-
 
 
 ",
@@ -222,8 +222,9 @@ module "azure-DEV-DX_bootstrap" {
   }
 
   repository = {
-    owner = "pagopa"
-    name  = "my-project"
+    owner    = "pagopa"
+    name     = "my-project"
+    owner_id = null
   }
 
   github_private_runner = {
@@ -268,7 +269,6 @@ resource "azurerm_role_assignment" "infra_ci_kv_secrets_user_common_DEV-DX" {
   role_definition_name = "Key Vault Secrets User"
   principal_id         = module.azure-DEV-DX_bootstrap.identities.infra.ci.principal_id
 }
-
 
 ",
   "infra/core/dev/backend.tf": "
