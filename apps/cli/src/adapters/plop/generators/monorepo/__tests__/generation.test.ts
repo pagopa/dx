@@ -240,8 +240,8 @@ describe("monorepo generator — file generation", () => {
     expect(testsManifest).toMatchObject({ name: "tests" });
   });
 
-  registerMiseToolchainConfigurationTest(
-    () => path.join(tmpDir, payload.repoName),
+  registerMiseToolchainConfigurationTest(() =>
+    path.join(tmpDir, payload.repoName),
   );
 
   it("applies the repository-specific gitignore customization", async () => {
