@@ -20,9 +20,5 @@ terraform {
       version = "~> 6.13"
     }
 
-    hashicorpgithub = {
-      source  = "hashicorp/github"
-      version = "~> 6.12"
-    }
   }
 }

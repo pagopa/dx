@@ -31,8 +31,7 @@ variables {
 mock_provider "azurerm" {}
 mock_provider "azuread" {}
 mock_provider "dx" {}
-mock_provider "github" {}
-mock_provider "hashicorpgithub" {
+mock_provider "github" {
   mock_data "github_organization" {
     defaults = {
       id = "12345"

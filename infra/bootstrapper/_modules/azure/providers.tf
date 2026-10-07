@@ -9,17 +9,9 @@ terraform {
       version = "~> 6.13"
     }
 
-    hashicorpgithub = {
-      source  = "hashicorp/github"
-      version = "~> 6.12"
-    }
   }
 }
 
 provider "github" {
-  owner = var.repository.owner
-}
-
-provider "hashicorpgithub" {
   owner = var.repository.owner
 }
