@@ -96,9 +96,13 @@ on a live trial. The rows, metric specs, aggregated summary, and
 run-configuration skill diffs are folded into one `ReportDocument` by
 `build_document`. The `comparison_presentation` module is the report's
 interpretation seam: it computes comparable-task-only verdicts and metrics,
-task outcomes, display values, and per-skill source associations once. The
-Markdown, HTML, and JSON adapters serialize that shared presentation through
-the `render_report` interface. Whole-job totals remain separate from
+task outcomes, display values, and per-skill source associations once. Task
+outcomes distinguish verifier-gate flips, primary-score moves, and
+criterion-level changes (the criteria and the recorded scoring gate come from
+the verifier artifacts `reward-details.json` / `scoring.json`), so a tied
+aggregate score cannot hide a local regression. The Markdown, HTML, and JSON
+adapters serialize that shared presentation through the `render_report`
+interface. Whole-job totals remain separate from
 comparable-task statistics, so added or removed tasks cannot skew the verdict.
 Harbor trial directories with a `trial.log` but no `result.json` are retained
 as `incomplete` results; their attempt suffix is removed before joining the two

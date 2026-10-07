@@ -15,7 +15,9 @@ the run produced:
 - cost: agent execution cost in USD
 - duration: agent execution, total trial and verifier wall-clock
 - steps: agent trajectory steps and model request count
-- pass/fail: whether the trial completed without an exception
+- pass/fail: ``completed`` (finished without an exception) and ``eval_passed``
+  (the verifier's gate passed — RewardKit writes the already-gated reward);
+  per-criterion outcomes come from ``verifier/reward-details.json``
 
 Token/cost values that ``result.json`` cannot report (GPT runs leave input/cache
 tokens and cost unset) are backfilled from the trial's raw artifacts when they
@@ -80,15 +82,20 @@ class SummaryLine:
 class ReportSummary:
     """The aggregated numbers behind the report's summary section.
 
-    ``lines`` holds one aggregate per metric (base/head side); the counts
-    summarize the two jobs. Rendering is a pure function of this value, so any
-    consumer (Markdown, JSON, …) shares the same numbers.
+    ``base_completed``/``head_completed`` count trials that finished without an
+    exception; ``base_passed``/``head_passed`` count trials whose verifier gate
+    passed (``eval_passed``, falling back to completed when no reward was
+    recorded). ``lines`` holds one aggregate per metric (base/head side); the
+    counts summarize the two jobs. Rendering is a pure function of this value,
+    so any consumer (Markdown, JSON, …) shares the same numbers.
     """
 
     base_tasks: int
     head_tasks: int
     base_only: int
     head_only: int
+    base_completed: int
+    head_completed: int
     base_passed: int
     head_passed: int
     lines: tuple[SummaryLine, ...] = ()
@@ -210,27 +217,64 @@ def build_report(
     )
 
 
+def primary_score_spec(specs: list[MetricSpec] | tuple[MetricSpec, ...]) -> MetricSpec | None:
+    """The metric that carries a task's quality signal.
+
+    Prefers ``score.quality`` (the legacy judge key) over the first score spec,
+    which ``metric_specs`` orders first; RewardKit jobs use ``score.reward``.
+    """
+    score_specs = tuple(spec for spec in specs if spec.key.startswith("score."))
+    return next(
+        (spec for spec in score_specs if spec.key == "score.quality"),
+        score_specs[0] if score_specs else None,
+    )
+
+
+def eval_passed(metrics: TrialMetrics, spec: MetricSpec | None) -> bool | None:
+    """Whether the verifier's gate passed for one trial, or ``None``.
+
+    RewardKit applies the task's ``[scoring]`` gate (usually ``threshold``)
+    before writing the reward: 0.0 fails, >0 passes. ``None`` means no primary
+    score was recorded, so callers fall back to
+    :attr:`~harbor_bench.jobs.TrialMetrics.passed` (completed without an
+    exception).
+    """
+    if spec is None:
+        return None
+    value = spec.read(metrics)
+    if value is None:
+        return None
+    return float(value) > 0.0
+
+
 def summarize(report: Report, specs: list[MetricSpec]) -> ReportSummary:
     """Aggregate per-task metrics into the report's summary numbers.
 
     For each spec, the base/head sides are aggregated via
     :meth:`MetricSpec.aggregate` (mean for scores and durations, sum for
-    totals). The task and pass counts are derived from the rows once, so the
-    renderer and any other consumer share the same numbers.
+    totals). The task, completed, and gate-passed counts are derived from the
+    rows once, so the renderer and any other consumer share the same numbers.
     """
     base_metrics = [r.base for r in report.rows if r.base]
     head_metrics = [r.head for r in report.rows if r.head]
+    primary = primary_score_spec(specs)
 
     def _values(metrics: list[TrialMetrics], spec: MetricSpec) -> list[Any]:
         return [value for m in metrics if (value := spec.read(m)) is not None]
+
+    def _passed(metrics: TrialMetrics) -> bool:
+        value = eval_passed(metrics, primary)
+        return metrics.passed if value is None else value
 
     return ReportSummary(
         base_tasks=len(base_metrics),
         head_tasks=len(head_metrics),
         base_only=sum(1 for r in report.rows if r.base and not r.head),
         head_only=sum(1 for r in report.rows if r.head and not r.base),
-        base_passed=sum(1 for m in base_metrics if m.passed),
-        head_passed=sum(1 for m in head_metrics if m.passed),
+        base_completed=sum(1 for m in base_metrics if m.passed),
+        head_completed=sum(1 for m in head_metrics if m.passed),
+        base_passed=sum(1 for m in base_metrics if _passed(m)),
+        head_passed=sum(1 for m in head_metrics if _passed(m)),
         lines=tuple(
             SummaryLine(
                 spec=spec,

@@ -11,7 +11,13 @@ import pytest
 
 from harbor_bench.comparison_presentation import build_presentation
 from harbor_bench.diff import build_document, build_report
-from harbor_bench.jobs import JobMeta, SkillVersion, TrialMetrics
+from harbor_bench.jobs import (
+    CriterionResult,
+    JobMeta,
+    ScoringGate,
+    SkillVersion,
+    TrialMetrics,
+)
 from harbor_bench.report import render_report
 
 
@@ -27,6 +33,31 @@ def _metrics(
         rewards={"quality": quality},
         cost_usd=cost,
         passed=passed,
+    )
+
+
+def _gated_metrics(
+    task: str,
+    reward: float,
+    criteria: dict[str, bool],
+    *,
+    passed: bool = True,
+    threshold: float | None = 0.8,
+) -> TrialMetrics:
+    """Metrics with RewardKit criterion outcomes and a recorded gate."""
+    return TrialMetrics(
+        task_name=task,
+        rewards={"reward": reward},
+        passed=passed,
+        criteria=tuple(
+            CriterionResult(
+                name=name,
+                description=f"{name} criterion",
+                value=1.0 if outcome else 0.0,
+            )
+            for name, outcome in criteria.items()
+        ),
+        scoring=ScoringGate(aggregation="threshold", threshold=threshold),
     )
 
 
@@ -113,6 +144,175 @@ def test_headline_falls_back_to_success_rate_without_paired_scores():
     assert presentation.score.base == "0%"
     assert presentation.score.head == "100%"
     assert presentation.verdict == "Head performs better"
+
+
+def test_criteria_changes_surface_when_gate_scores_tie():
+    """A local regression inside a tied, failing score must not read as "Unchanged"."""
+    presentation = build_presentation(
+        _document(
+            {
+                "dr-blacksmith-5": _gated_metrics(
+                    "dr-blacksmith-5",
+                    0.0,
+                    {"language": False, "catalog": False, "no-fabrication": True},
+                )
+            },
+            {
+                "dr-blacksmith-5": _gated_metrics(
+                    "dr-blacksmith-5",
+                    0.0,
+                    {"language": True, "catalog": False, "no-fabrication": False},
+                )
+            },
+        )
+    )
+    task = presentation.tasks[0]
+
+    assert presentation.verdict == "Both runs failed — criteria changed"
+    assert task.outcome == "mixed"
+    assert task.criteria_changed == 2
+    assert task.head_gained == ("language criterion",)
+    assert task.base_gained == ("no-fabrication criterion",)
+    assert task.gate_note == "Base and Head below the 0.8 gate"
+    assert presentation.comparable.base_passed == 0
+    assert presentation.comparable.head_passed == 0
+    assert presentation.comparable.base_completed == 1
+    assert presentation.comparable.head_completed == 1
+    assert presentation.comparable.base_criteria == "1 / 3"
+    assert presentation.comparable.head_criteria == "1 / 3"
+
+
+def test_both_failing_runs_are_not_unchanged():
+    presentation = build_presentation(
+        _document(
+            {"t": TrialMetrics(task_name="t", rewards={"reward": 0.0})},
+            {"t": TrialMetrics(task_name="t", rewards={"reward": 0.0})},
+        )
+    )
+
+    assert presentation.verdict == "Both runs failed every comparable task"
+    assert presentation.tasks[0].outcome == "failed"
+    assert presentation.comparable.base_passed == 0
+    assert presentation.comparable.head_passed == 0
+    assert presentation.comparable.base_rate == "0%"
+
+
+def test_gate_flip_beats_completion_status():
+    """Two completed trials still regress/improve when the gate flips."""
+    presentation = build_presentation(
+        _document(
+            {"t": TrialMetrics(task_name="t", rewards={"reward": 0.0}, passed=True)},
+            {"t": TrialMetrics(task_name="t", rewards={"reward": 1.0}, passed=True)},
+        )
+    )
+
+    assert presentation.tasks[0].outcome == "improved"
+    assert presentation.verdict == "Head performs better"
+    assert presentation.comparable.base_passed == 0
+    assert presentation.comparable.head_passed == 1
+    assert presentation.comparable.base_completed == 1
+    assert presentation.comparable.head_completed == 1
+
+
+def test_render_report_json_exposes_criteria_and_gate():
+    value = json.loads(
+        render_report(
+            _document(
+                {
+                    "dr-blacksmith-5": _gated_metrics(
+                        "dr-blacksmith-5",
+                        0.0,
+                        {"language": False, "catalog": False, "no-fabrication": True},
+                    )
+                },
+                {
+                    "dr-blacksmith-5": _gated_metrics(
+                        "dr-blacksmith-5",
+                        0.0,
+                        {"language": True, "catalog": False, "no-fabrication": False},
+                    )
+                },
+            ),
+            "json",
+        )
+    )
+
+    comparison = value["comparison"]
+    assert comparison["base_passed"] == 0
+    assert comparison["base_completed"] == 1
+    assert comparison["base_criteria_passed"] == 1
+    assert comparison["base_criteria_total"] == 3
+    task = value["tasks"][0]
+    assert task["outcome"] == "mixed"
+    assert task["criteria_changed"] == 2
+    assert task["threshold"] == 0.8
+    assert task["base"]["completed"] is True
+    assert task["base"]["eval_passed"] is False
+    directions = {c["name"]: c["direction"] for c in task["criteria"]}
+    assert directions == {
+        "language": "positive",
+        "catalog": "neutral",
+        "no-fabrication": "negative",
+    }
+
+
+def test_render_html_shows_criteria_table_and_gate_note():
+    html = render_report(
+        _document(
+            {
+                "dr-blacksmith-5": _gated_metrics(
+                    "dr-blacksmith-5",
+                    0.0,
+                    {"language": False, "catalog": False},
+                )
+            },
+            {
+                "dr-blacksmith-5": _gated_metrics(
+                    "dr-blacksmith-5",
+                    0.0,
+                    {"language": True, "catalog": False},
+                )
+            },
+        ),
+        "html",
+    )
+
+    assert "Tasks passed" in html
+    assert "Criteria passed" in html
+    assert "Both runs failed — criteria changed" in html
+    assert "Verifier criteria" in html
+    assert "Head gained" in html
+    assert "criteria changed" in html
+    assert "below the 0.8 gate" in html
+
+
+def test_render_html_merges_cards_into_key_signals():
+    """One Key signals grid: gate + execution cards, score rows in the table."""
+    html = render_report(
+        _document(
+            {"t": _gated_metrics("t", 0.0, {"language": False})},
+            {"t": _gated_metrics("t", 1.0, {"language": True})},
+        ),
+        "html",
+    )
+    start = html.find("Key signals")
+    grid = html[start : html.find("</section>", start)]
+
+    assert "What changed between Base and Head?" not in html
+    assert "kpi-grid" not in html
+    assert "signals-grid" not in html
+    assert "Key score signals" not in html
+    assert "score.reward" not in grid  # score rows stay in the task table
+    assert "score.reward" in html
+    assert grid.count('class="metric-values kpi-values"') == 3
+    assert "Tasks passed" in grid
+    assert "Criteria passed" in grid
+    assert "Completed" in grid
+    assert "Verifier gate" in grid
+    assert "Execution" in grid
+    assert "kpi-note" in grid
+    assert "Primary metric" not in html
+    assert '<details class="task-card" open>' in html
 
 
 def test_each_skill_keeps_its_own_source_link(tmp_path: Path):

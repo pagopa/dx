@@ -534,13 +534,22 @@ uv run --package harbor-bench harbor-bench report \
 open comparison.html
 ```
 
-The HTML report presents a plain-language verdict, headline score and
-success-rate changes, task outcome counts, visual metric bars, and expandable
-technical details for each task. Headline comparisons use only tasks present
-in both runs, so newly added or removed tasks remain visible without skewing
-the verdict. Interrupted Harbor trials that have a `trial.log` but no
+The HTML report presents a plain-language verdict, one Key signals grid with
+the verifier-gate and execution cards, and per-task details open by default;
+per-task score rows (including `score.reward`) live in the task table.
+**Completed** counts trials that finished without an exception; **Tasks
+passed** counts trials whose verifier reward met its gate (RewardKit writes
+the already-gated reward). When the verifier recorded per-criterion outcomes
+(`verifier/reward-details.json`), each task shows a criterion table and which
+criteria each side gained, so a tied score that hides a local regression
+reads as `Criteria changed` instead of `Unchanged`; the task's `quality.toml`
+`[scoring]` gate recorded by new runs in `verifier/scoring.json` is shown
+next to a failing score. Headline comparisons use only tasks present in both
+runs, so newly added or removed tasks remain visible without skewing the
+verdict. Interrupted Harbor trials that have a `trial.log` but no
 `result.json` are shown as `Incomplete` instead of disappearing from the
-report. Markdown remains the default for terminal and source-control workflows.
+report. Markdown remains the default for terminal and source-control
+workflows.
 
 Without `--job-name`/`--jobs-dir`, each run lands in `jobs/<timestamp>/`; the
 two `--job-name` flags above give stable, human-readable paths so the `report`

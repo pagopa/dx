@@ -5,6 +5,29 @@
 {{ skill.name }}
 {%- endif -%}
 {%- endmacro -%}
+{%- macro kpi_card(card) -%}
+<article class="metric-card kpi">
+  <div class="metric-card-heading">
+    <div>
+      <span class="metric-group">{{ card.group }}</span>
+      <h3>{{ card.label }}</h3>
+    </div>
+    <span class="delta {{ card.direction }}">{{ card.delta }}</span>
+  </div>
+  <div class="metric-values kpi-values">
+    <div>
+      <span class="metric-side">Base</span>
+      <strong>{{ card.base }}</strong>
+    </div>
+    <div class="metric-arrow" aria-hidden="true">→</div>
+    <div class="metric-head-value">
+      <span class="metric-side">Head</span>
+      <strong>{{ card.head }}</strong>
+    </div>
+  </div>
+  {% if card.note %}<p class="kpi-note">{{ card.note }}</p>{% endif %}
+</article>
+{%- endmacro -%}
 {%- macro metric_card(card) -%}
 <article class="metric-card">
   <div class="metric-card-heading">
@@ -117,37 +140,19 @@
     .section-heading { display: flex; align-items: end; justify-content: space-between; gap: 18px; margin-bottom: 14px; }
     .section-heading h2 { margin-bottom: 2px; font-size: 21px; letter-spacing: -.02em; }
     .section-heading p { margin: 0; color: var(--muted); font-size: 13px; }
-    .kpi-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px; margin-top: 20px; }
-    .kpi, .metric-card, .run-card, .task-card, .outcome-panel, .technical-details {
+    .kpi, .metric-card, .run-card, .task-card, .technical-details {
       border: 1px solid var(--line);
       background: var(--surface);
       box-shadow: var(--shadow);
     }
-    .kpi { min-height: 126px; padding: 19px; border-radius: 17px; }
-    .kpi-label { display: block; color: var(--muted); font-size: 12px; font-weight: 700; }
-    .kpi-value { display: block; margin: 8px 0 2px; font-size: 29px; line-height: 1.1; letter-spacing: -.035em; }
-    .kpi-sub { color: var(--muted); font-size: 12px; }
-    .kpi-sub strong { color: var(--ink); }
+    .kpi { min-height: 126px; }
+    .kpi-values { margin: 16px 0 0; }
+    .kpi-note { margin: 10px 0 0; color: var(--muted); font-size: 11px; }
     .delta { display: inline-flex; align-items: center; justify-content: center; min-height: 23px; padding: 2px 8px; border-radius: 999px; background: #eef1f6; color: var(--muted); font-size: 12px; font-weight: 750; white-space: nowrap; }
     .delta.positive { background: var(--positive-soft); color: var(--positive); }
     .delta.negative { background: var(--negative-soft); color: var(--negative); }
     .delta.neutral { background: #f0effb; color: var(--neutral); }
-    .outcome-panel { padding: 20px; border-radius: 19px; }
-    .outcome-summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 18px; color: var(--muted); font-size: 12px; }
-    .outcome-summary strong { color: var(--ink); font-size: 14px; }
-    .outcome-bar { display: flex; overflow: hidden; height: 13px; margin: 16px 0 12px; border-radius: 999px; background: #edf1f6; }
-    .outcome-segment { min-width: 3px; transition: width .2s ease; }
-    .outcome-segment.improved, .legend-dot.improved { background: var(--positive); }
-    .outcome-segment.regressed, .legend-dot.regressed { background: var(--negative); }
-    .outcome-segment.unchanged, .legend-dot.unchanged { background: #9aa7ba; }
-    .outcome-segment.incomplete, .legend-dot.incomplete { background: #d97706; }
-    .outcome-segment.new, .legend-dot.new { background: var(--brand); }
-    .outcome-segment.removed, .legend-dot.removed { background: #e1a44e; }
-    .outcome-legend { display: flex; flex-wrap: wrap; gap: 10px 19px; color: var(--muted); font-size: 12px; }
-    .outcome-legend span { display: inline-flex; align-items: center; gap: 6px; }
-    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
     .metric-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
-    .signals-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
     .metric-card { padding: 18px; border-radius: 17px; }
     .metric-card-heading { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
     .metric-group { display: block; margin-bottom: 3px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
@@ -195,10 +200,20 @@
     .status-badge { flex: 0 0 auto; padding: 3px 7px; border-radius: 6px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
     .status-badge.improved { background: var(--positive-soft); color: var(--positive); }
     .status-badge.regressed { background: var(--negative-soft); color: var(--negative); }
+    .status-badge.mixed { background: #f3efff; color: #6d28d9; }
+    .status-badge.failed { background: #fdecec; color: #b42318; }
     .status-badge.unchanged { background: #eef1f6; color: var(--muted); }
     .status-badge.incomplete { background: #fff5e6; color: #a5691d; }
     .status-badge.new { background: #eeedff; color: var(--brand-dark); }
     .status-badge.removed { background: #fff5e6; color: #a5691d; }
+    .gate-note { color: var(--muted); font-size: 11px; }
+    .task-subheading { margin: 18px 0 4px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .task-subheading span { margin-left: 6px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+    .criteria-table th.criterion-name { max-width: 460px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .criteria-note { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 10px 0 0; }
+    .criteria-gain { font-size: 12px; }
+    .criteria-gain.positive { color: var(--positive); }
+    .criteria-gain.negative { color: var(--negative); }
     .task-card-body { padding: 0 17px 17px; }
     .task-table { width: 100%; border-collapse: collapse; font-size: 12px; }
     .task-table th, .task-table td { padding: 9px 8px; border-top: 1px solid var(--line); text-align: right; }
@@ -212,13 +227,12 @@
     .empty-state { padding: 28px; border: 1px dashed #cbd5e1; border-radius: 15px; color: var(--muted); text-align: center; }
     footer { margin-top: 30px; color: var(--muted); font-size: 11px; text-align: center; }
     @media (max-width: 850px) {
-      .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .metric-grid, .signals-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 620px) {
       .page { padding: 14px 12px 40px; }
       .hero { padding: 28px 23px; border-radius: 19px; }
-      .kpi-grid, .metric-grid, .run-grid { grid-template-columns: 1fr; }
+      .metric-grid, .run-grid { grid-template-columns: 1fr; }
       .section-heading { align-items: start; flex-direction: column; }
       .task-card summary { align-items: start; flex-wrap: wrap; }
       .task-summary-score { width: 100%; margin-left: 0; }
@@ -235,71 +249,16 @@
       <div class="verdict {{ verdict_kind }}">
         {{ verdict }}
       </div>
-      <p class="hero-note">This report compares only tasks present in both runs when calculating the headline verdict and key signals. Green highlights better scores and success outcomes; for execution signals, lower cost, time, and activity are treated as favorable. New and removed tasks remain visible below without influencing the verdict.</p>
+      <p class="hero-note">This report compares only tasks present in both runs when calculating the headline verdict and key signals. <strong>Tasks passed</strong> counts tasks whose verifier reward met its gate; <strong>Completed</strong> counts trials that finished without an exception; <strong>Criteria passed</strong> comes from the verifier's reward details, so a tied score below the gate still shows which criteria changed. Green highlights better outcomes; for execution signals, lower cost, time, and activity are treated as favorable.</p>
     </header>
 
-    <section class="kpi-grid" aria-label="At a glance">
-      <article class="kpi">
-        <span class="kpi-label">{{ score.label }}</span>
-        <strong class="kpi-value">{{ score.head }}</strong>
-        <span class="kpi-sub">Base {{ score.base }} · <span class="delta {{ score.direction }}">{{ score.delta }}</span></span>
-      </article>
-      <article class="kpi">
-        <span class="kpi-label">Successful tasks</span>
-        <strong class="kpi-value">{{ comparable.head_passed }} / {{ comparable.evaluated_tasks }}</strong>
-        <span class="kpi-sub">Base {{ comparable.base_passed }} / {{ comparable.evaluated_tasks }} · <strong>{{ comparable.head_rate }}</strong> success rate</span>
-      </article>
-      <article class="kpi">
-        <span class="kpi-label">Tasks compared</span>
-        <strong class="kpi-value">{{ comparable.tasks }}</strong>
-        <span class="kpi-sub">{{ population.base_only }} only in base · {{ population.head_only }} only in head</span>
-      </article>
-      <article class="kpi">
-        <span class="kpi-label">Success rate</span>
-        <strong class="kpi-value">{{ comparable.head_rate }}</strong>
-        <span class="kpi-sub">Base {{ comparable.base_rate }} · <span class="delta {{ comparable.pass_rate_direction }}">{{ comparable.pass_rate_delta }}</span></span>
-      </article>
-    </section>
-
     <section class="section">
       <div class="section-heading">
-        <div><h2>What changed between Base and Head?</h2><p>Each task is classified once: Improved or Regressed when its pass status or primary score moves; Unchanged when neither changes; New when it appears only in Head, or Only in base when it appears only there.</p></div>
+        <div><h2>Key signals</h2><p><strong>Verifier gate</strong> shows whether the reward met its gate and which criteria passed; <strong>Execution signals</strong> show the resources used to produce it. Per-task score rows are in the task table below.</p></div>
       </div>
-      <div class="outcome-panel">
-        <div class="outcome-summary">
-          <strong>{{ comparable.tasks }} comparable task(s)</strong>
-          <span>{{ population.base_only }} only in base · {{ population.head_only }} only in head</span>
-        </div>
-        <div class="outcome-bar" aria-label="Task outcome distribution">
-          {% if outcome_segments %}
-          {% for segment in outcome_segments %}<span class="outcome-segment {{ segment.key }}" style="width: {{ segment.width }}%" title="{{ segment.count }} {{ segment.key }}"></span>{% endfor %}
-          {% else %}
-          <span class="outcome-segment unchanged" style="width: 100%"></span>
-          {% endif %}
-        </div>
-        <div class="outcome-legend">
-          {% if outcome_legend %}
-          {% for item in outcome_legend %}
-          <span><i class="legend-dot {{ item.key }}"></i>
-            {% if item.key == "removed" %}Only in base
-            {% else %}{{ item.label }}{% endif %}
-            <strong>{{ item.count }}</strong>
-          </span>
-          {% endfor %}
-          {% else %}
-          <span>No task outcomes available</span>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-
-    <section class="section">
-      <div class="section-heading">
-        <div><h2>Key signals</h2><p><strong>Key score signals</strong> show outcome quality; <strong>Execution signals</strong> show the resources used to produce it.</p></div>
-      </div>
-      <div class="metric-grid signals-grid">
-        {% if score_cards or signal_cards %}
-        {% for card in score_cards %}{{ metric_card(card) }}{% endfor %}
+      <div class="metric-grid">
+        {% if kpi_cards or signal_cards %}
+        {% for card in kpi_cards %}{{ kpi_card(card) }}{% endfor %}
         {% for card in signal_cards %}{{ metric_card(card) }}{% endfor %}
         {% else %}
         <div class="empty-state">No execution metrics were recorded.</div>
@@ -349,11 +308,11 @@
 
     <section class="section">
       <div class="section-heading">
-        <div><h2>Task-by-task details</h2><p>{{ tasks|length }} task(s) · Open one to inspect every recorded signal.</p></div>
+        <div><h2>Task-by-task details</h2><p>{{ tasks|length }} task(s) · Every recorded signal, open by default.</p></div>
       </div>
       <div class="task-list">
         {% for task in tasks %}
-        <details class="task-card">
+        <details class="task-card" open>
           <summary>
             <span class="task-summary-main">
               <span class="status-badge {{ task.outcome }}">
@@ -365,6 +324,8 @@
             <span class="task-summary-score">
               <span>{{ task.score_label }}: Base {{ task.base_score }} → Head {{ task.head_score }}</span>
               <span class="delta {{ task.score_direction }}">{{ task.score_delta }}</span>
+              {% if task.criteria_changed %}<span class="delta mixed">{{ task.criteria_changed }} criteria changed</span>{% endif %}
+              {% if task.gate_note %}<span class="gate-note">{{ task.gate_note }}</span>{% endif %}
             </span>
           </summary>
           <div class="task-card-body">
@@ -381,6 +342,32 @@
                 {% endfor %}
               </tbody>
             </table>
+            {% if task.criteria %}
+            <h4 class="task-subheading">Verifier criteria <span>{{ task.criteria|length }} compared · {{ task.criteria_changed }} changed</span></h4>
+            <table class="task-table criteria-table">
+              <thead><tr><th scope="col">Criterion</th><th scope="col">Base</th><th scope="col">Head</th><th scope="col">Change</th></tr></thead>
+              <tbody>
+                {% for criterion in task.criteria %}
+                <tr>
+                  <th scope="row" class="criterion-name" title="{{ criterion.label }}">{{ criterion.label }}</th>
+                  <td>{{ criterion.base }}</td>
+                  <td>{{ criterion.head }}</td>
+                  <td class="{{ criterion.direction }}">
+                    {% if criterion.direction == "positive" %}Head gained
+                    {% elif criterion.direction == "negative" %}Base gained
+                    {% else %}—{% endif %}
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+            {% if task.head_gained or task.base_gained %}
+            <p class="criteria-note">
+              {% for label in task.head_gained %}<span class="criteria-gain positive">Head gained: {{ label }}</span>{% endfor %}
+              {% for label in task.base_gained %}<span class="criteria-gain negative">Base gained: {{ label }}</span>{% endfor %}
+            </p>
+            {% endif %}
+            {% endif %}
           </div>
         </details>
         {% else %}

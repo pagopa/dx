@@ -16,7 +16,7 @@ from harbor_bench.diff import (
     metric_specs,
     summarize,
 )
-from harbor_bench.jobs import Job, JobMeta, SkillVersion
+from harbor_bench.jobs import CriterionResult, Job, JobMeta, ScoringGate, SkillVersion
 from harbor_bench.report import render_html, render_json, render_markdown
 
 from tests.conftest import DEFAULT_USAGE_ROW, write_copilot_jsonl, write_session_db
@@ -97,6 +97,61 @@ def test_job_metrics_marks_exception_as_failed(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "skill-task-1", exception=True)
     assert Job(job).metrics()["skill-task-1"].passed is False
+
+
+def test_job_metrics_reads_criteria_and_scoring_gate(tmp_path):
+    """Reward-details criteria and the recorded scoring gate reach the metrics."""
+    job = _make_job(tmp_path, "run-a")
+    _write_trial(job, "task-a", rewards={"reward": 0.0})
+    verifier = job / "task-a" / "verifier"
+    verifier.mkdir()
+    (verifier / "reward-details.json").write_text(
+        json.dumps(
+            {
+                "reward": {
+                    "criteria": [
+                        {
+                            "name": "language",
+                            "description": "Writes in Italian",
+                            "value": 0.0,
+                            "raw": "no",
+                            "weight": 1.0,
+                            "reasoning": "The document is in French.",
+                        }
+                    ]
+                }
+            }
+        )
+    )
+    (verifier / "scoring.json").write_text(
+        json.dumps({"aggregation": "threshold", "threshold": 0.8})
+    )
+
+    metrics = Job(job).metrics()["task-a"]
+
+    assert metrics.criteria == (
+        CriterionResult(
+            name="language",
+            description="Writes in Italian",
+            value=0.0,
+            weight=1.0,
+            reasoning="The document is in French.",
+        ),
+    )
+    assert metrics.scoring == ScoringGate(
+        aggregation="threshold",
+        threshold=0.8,
+    )
+
+
+def test_job_metrics_tolerates_missing_criteria_artifacts(tmp_path):
+    job = _make_job(tmp_path, "run-a")
+    _write_trial(job, "task-a", rewards={"reward": 1.0})
+
+    metrics = Job(job).metrics()["task-a"]
+
+    assert metrics.criteria == ()
+    assert metrics.scoring is None
 
 
 def test_job_metrics_missing_dir_raises(tmp_path):
@@ -507,7 +562,8 @@ def test_render_markdown_includes_deltas(tmp_path):
     assert "0.95" in md  # head quality value
     assert "+0.150" in md or "+0.15" in md  # quality delta
     assert "+100" in md  # input token delta
-    assert "passed trials" in md
+    assert "tasks passed (verifier gate)" in md
+    assert "completed without error" in md
 
 
 def test_render_html_is_visual_and_self_contained(tmp_path):
@@ -534,9 +590,9 @@ def test_render_html_is_visual_and_self_contained(tmp_path):
     assert "<style>" in html
     assert "<script>" not in html
     assert "Which skill performed better?" in html
-    assert "Key score signals" in html
+    assert "Verifier gate" in html
     assert "Execution signals" in html
-    assert "signals-grid" in html
+    assert "metric-grid" in html
     assert "Filter tasks" not in html
     assert "Improved" in html
     assert "Regressed" in html

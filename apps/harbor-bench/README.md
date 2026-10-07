@@ -12,7 +12,8 @@ The CLI provides three commands:
    single source of truth: re-running `convert` regenerates tasks, removes
    stale ones, and never overwrites job results.
 2. **`report`** — reads two Harbor job directories and prints a per-task delta
-   report (score, tokens, cost, steps, duration) with the run configuration.
+   report (score, tokens, cost, steps, duration, gate and criterion changes)
+   with the run configuration.
 3. **`compare`** — the everyday flow: runs the same eval set against two skill
    versions and writes the delta report for you.
 
