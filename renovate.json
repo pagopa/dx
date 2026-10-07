@@ -16,6 +16,7 @@
     },
     {
       "matchManagers": ["dockerfile"],
+      "matchFileNames": ["containers/self-hosted-runner/Dockerfile"],
       "matchPackageNames": ["ghcr.io/actions/actions-runner"],
       "groupName": "GitHub Actions runner image",
       "prCreation": "immediate"
