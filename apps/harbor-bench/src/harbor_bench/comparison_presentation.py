@@ -139,7 +139,9 @@ class ComparablePresentation:
 
     ``*_gate_passed`` counts trials whose verifier gate passed; ``*_completed``
     counts trials that finished without an exception; the criteria counts sum
-    the per-criterion outcomes RewardKit recorded.
+    the per-criterion outcomes RewardKit recorded. The formatted key-signal
+    cards are built once into :class:`SignalPresentation`, so no adapter
+    reformats these counts.
     """
 
     tasks: int
@@ -150,16 +152,29 @@ class ComparablePresentation:
     head_completed: int
     base_rate_value: float | None
     head_rate_value: float | None
-    base_rate: str
-    head_rate: str
-    pass_rate_direction: str
-    pass_rate_delta: str
     base_criteria_passed: int
     base_criteria_total: int
     head_criteria_passed: int
     head_criteria_total: int
-    base_criteria: str
-    head_criteria: str
+
+
+@dataclass(frozen=True)
+class SignalPresentation:
+    """One derived key-signal card, formatted once for every adapter.
+
+    ``base``/``head`` are display strings; ``delta`` and ``direction`` are
+    suppressed (``—`` / ``neutral``) when the underlying statistic is not
+    comparable across the runs (the criterion sets differ, or nothing was
+    recorded), with ``note`` saying which.
+    """
+
+    group: str
+    label: str
+    base: str
+    head: str
+    delta: str
+    direction: str
+    note: str | None
 
 
 @dataclass(frozen=True)
@@ -185,6 +200,7 @@ class ComparisonPresentation:
     score: MetricPresentation
     population: PopulationPresentation
     comparable: ComparablePresentation
+    signals: tuple[SignalPresentation, ...]
     outcomes: tuple[OutcomePresentation, ...]
     summary_metrics: tuple[MetricPresentation, ...]
     comparison_metrics: tuple[MetricPresentation, ...]
@@ -616,6 +632,13 @@ def _percentage(value: float | None) -> str:
     return "—" if value is None else f"{value:.0%}"
 
 
+def _rate_delta(base: float | None, head: float | None) -> str:
+    """The percentage-point delta of two rates, e.g. ``+25%``."""
+    if base is None or head is None:
+        return "—"
+    return f"{(head - base) * 100:+.0f}%"
+
+
 def _fraction(passed: int, total: int) -> str:
     return f"{passed} / {total}" if total else "—"
 
@@ -726,6 +749,53 @@ def build_presentation(document: ReportDocument) -> ComparisonPresentation:
         and comparable_base_gate_passed == 0
         and comparable_head_gate_passed == 0
     )
+    criteria_sets_match = all(
+        {c.name for c in e.base_criteria} == {c.name for c in e.head_criteria}
+        for e in evaluated
+    )
+    no_criteria = base_criteria_total == 0 and head_criteria_total == 0
+    criteria_comparable = criteria_sets_match and not no_criteria
+    signals = (
+        SignalPresentation(
+            group="Verifier gate",
+            label="Tasks passed",
+            base=f"{comparable_base_gate_passed} / {evaluated_tasks}",
+            head=f"{comparable_head_gate_passed} / {evaluated_tasks}",
+            delta=_rate_delta(base_rate, head_rate),
+            direction=pass_direction,
+            note="verifier reward met its gate",
+        ),
+        SignalPresentation(
+            group="Verifier gate",
+            label="Criteria passed",
+            base=_fraction(base_criteria_passed, base_criteria_total)
+            if not no_criteria
+            else "—",
+            head=_fraction(head_criteria_passed, head_criteria_total)
+            if not no_criteria
+            else "—",
+            delta=_delta(base_criteria_passed, head_criteria_passed)
+            if criteria_comparable
+            else "—",
+            direction=_direction(base_criteria_passed, head_criteria_passed)
+            if criteria_comparable
+            else "neutral",
+            note="not recorded by the verifier"
+            if no_criteria
+            else "from verifier reward details"
+            if criteria_sets_match
+            else "different criterion sets",
+        ),
+        SignalPresentation(
+            group="Execution",
+            label="Completed",
+            base=f"{comparable_base_completed} / {evaluated_tasks}",
+            head=f"{comparable_head_completed} / {evaluated_tasks}",
+            delta=_delta(comparable_base_completed, comparable_head_completed),
+            direction="neutral",
+            note="finished without an exception",
+        ),
+    )
 
     summary_metrics = tuple(
         _metric(line.spec, line.base, line.head) for line in document.summary.lines
@@ -830,17 +900,12 @@ def build_presentation(document: ReportDocument) -> ComparisonPresentation:
             head_completed=comparable_head_completed,
             base_rate_value=base_rate,
             head_rate_value=head_rate,
-            base_rate=_percentage(base_rate),
-            head_rate=_percentage(head_rate),
-            pass_rate_direction=pass_direction,
-            pass_rate_delta=_delta(base_rate, head_rate),
             base_criteria_passed=base_criteria_passed,
             base_criteria_total=base_criteria_total,
             head_criteria_passed=head_criteria_passed,
             head_criteria_total=head_criteria_total,
-            base_criteria=_fraction(base_criteria_passed, base_criteria_total),
-            head_criteria=_fraction(head_criteria_passed, head_criteria_total),
         ),
+        signals=signals,
         outcomes=outcomes,
         summary_metrics=summary_metrics,
         comparison_metrics=comparison_metrics,

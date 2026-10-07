@@ -105,7 +105,12 @@ task pair is first evaluated once into a per-task value (both sides' gate
 facts, the criteria join, the outcome); the task cards and the comparable
 aggregates are folds over it, so no rule is derived twice. Counts name the two
 axes explicitly: `gate_passed` counts trials whose verifier reward met its
-gate, `completed` counts trials that finished without an exception. Task
+gate, `completed` counts trials that finished without an exception. The
+key-signal cards — gate, criteria, completion — are presentation values too
+(`signals`): formatted values, delta, direction, and the comparability note
+are computed once for all three adapters, and the criteria delta is
+suppressed unless every evaluated task has the same criterion names on both
+sides. Task
 outcomes distinguish verifier-gate flips, primary-score moves, and
 criterion-level changes (the criteria come from the verifier artifact
 `reward-details.json`; the recorded `scoring.json` gate is display-only,

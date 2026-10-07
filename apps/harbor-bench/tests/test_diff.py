@@ -595,8 +595,8 @@ def test_render_markdown_includes_deltas(tmp_path):
     assert "0.95" in md  # head quality value
     assert "+0.150" in md or "+0.15" in md  # quality delta
     assert "+100" in md  # input token delta
-    assert "tasks passed (verifier gate)" in md
-    assert "completed without error" in md
+    assert "Tasks passed (verifier reward met its gate):" in md
+    assert "Completed (finished without an exception):" in md
 
 
 def test_render_html_is_visual_and_self_contained(tmp_path):

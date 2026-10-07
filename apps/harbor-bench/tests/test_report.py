@@ -178,8 +178,12 @@ def test_criteria_changes_surface_when_gate_scores_tie():
     assert presentation.comparable.head_gate_passed == 0
     assert presentation.comparable.base_completed == 1
     assert presentation.comparable.head_completed == 1
-    assert presentation.comparable.base_criteria == "1 / 3"
-    assert presentation.comparable.head_criteria == "1 / 3"
+    criteria_card = next(
+        card for card in presentation.signals if card.label == "Criteria passed"
+    )
+    assert criteria_card.base == "1 / 3"
+    assert criteria_card.head == "1 / 3"
+    assert criteria_card.delta == "+0"
 
 
 def test_both_failing_runs_are_not_unchanged():
@@ -194,7 +198,10 @@ def test_both_failing_runs_are_not_unchanged():
     assert presentation.tasks[0].outcome == "failed"
     assert presentation.comparable.base_gate_passed == 0
     assert presentation.comparable.head_gate_passed == 0
-    assert presentation.comparable.base_rate == "0%"
+    tasks_passed = next(
+        card for card in presentation.signals if card.label == "Tasks passed"
+    )
+    assert tasks_passed.base == "0 / 1"
 
 
 def test_gate_flip_beats_completion_status():
@@ -212,6 +219,61 @@ def test_gate_flip_beats_completion_status():
     assert presentation.comparable.head_gate_passed == 1
     assert presentation.comparable.base_completed == 1
     assert presentation.comparable.head_completed == 1
+
+
+def test_signal_cards_are_formatted_once_for_every_adapter():
+    """The three key-signal cards are presentation values, not adapter logic."""
+    presentation = build_presentation(
+        _document(
+            {
+                "t": _gated_metrics("t", 0.0, {"language": True}),
+                "u": _gated_metrics("u", 0.0, {"language": True}),
+            },
+            {
+                "t": _gated_metrics("t", 1.0, {"language": True}),
+                "u": _gated_metrics("u", 1.0, {"language": True}),
+            },
+        )
+    )
+    cards = {card.label: card for card in presentation.signals}
+
+    assert [card.label for card in presentation.signals] == [
+        "Tasks passed",
+        "Criteria passed",
+        "Completed",
+    ]
+    passed = cards["Tasks passed"]
+    assert passed.group == "Verifier gate"
+    assert (passed.base, passed.head) == ("0 / 2", "2 / 2")
+    assert passed.delta == "+100%"
+    assert passed.direction == "positive"
+    assert passed.note == "verifier reward met its gate"
+    criteria = cards["Criteria passed"]
+    assert (criteria.base, criteria.head, criteria.delta) == ("2 / 2", "2 / 2", "+0")
+    assert criteria.note == "from verifier reward details"
+    completed = cards["Completed"]
+    assert completed.group == "Execution"
+    assert completed.direction == "neutral"
+    assert completed.note == "finished without an exception"
+
+
+def test_criteria_card_suppresses_delta_when_criterion_sets_differ():
+    """Equal totals with different criterion names must not produce a delta."""
+    presentation = build_presentation(
+        _document(
+            {"t": _gated_metrics("t", 0.0, {"language": False, "catalog": True})},
+            {"t": _gated_metrics("t", 0.0, {"language": True, "format": True})},
+        )
+    )
+    criteria = next(
+        card for card in presentation.signals if card.label == "Criteria passed"
+    )
+
+    assert criteria.base == "1 / 2"
+    assert criteria.head == "2 / 2"
+    assert criteria.delta == "—"
+    assert criteria.direction == "neutral"
+    assert criteria.note == "different criterion sets"
 
 
 def test_render_report_json_exposes_criteria_and_gate():
@@ -242,6 +304,12 @@ def test_render_report_json_exposes_criteria_and_gate():
     assert comparison["base_completed"] == 1
     assert comparison["base_criteria_passed"] == 1
     assert comparison["base_criteria_total"] == 3
+    assert [card["label"] for card in comparison["signals"]] == [
+        "Tasks passed",
+        "Criteria passed",
+        "Completed",
+    ]
+    assert comparison["signals"][1]["note"] == "from verifier reward details"
     task = value["tasks"][0]
     assert task["outcome"] == "mixed"
     assert task["criteria_changed"] == 2

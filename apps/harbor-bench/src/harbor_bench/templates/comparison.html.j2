@@ -257,8 +257,8 @@
         <div><h2>Key signals</h2><p><strong>Verifier gate</strong> shows whether the reward met its gate and which criteria passed; <strong>Execution signals</strong> show the resources used to produce it. Per-task score rows are in the task table below.</p></div>
       </div>
       <div class="metric-grid">
-        {% if kpi_cards or signal_cards %}
-        {% for card in kpi_cards %}{{ kpi_card(card) }}{% endfor %}
+        {% if signals or signal_cards %}
+        {% for card in signals %}{{ kpi_card(card) }}{% endfor %}
         {% for card in signal_cards %}{{ metric_card(card) }}{% endfor %}
         {% else %}
         <div class="empty-state">No execution metrics were recorded.</div>

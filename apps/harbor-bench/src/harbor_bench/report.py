@@ -73,19 +73,14 @@ def render_markdown(document: ReportDocument) -> str:
             f"- completed task pairs: {comparable.evaluated_tasks}",
             f"- {presentation.score.label}: {presentation.score.base} → "
             f"{presentation.score.head} ({presentation.score.delta})",
-            f"- tasks passed (verifier gate): {comparable.base_gate_passed}/"
-            f"{comparable.evaluated_tasks} → "
-            f"{comparable.head_gate_passed}/{comparable.evaluated_tasks}",
-            f"- verifier criteria passed: {comparable.base_criteria} → "
-            f"{comparable.head_criteria}",
-            f"- completed without error: {comparable.base_completed}/"
-            f"{comparable.evaluated_tasks} → "
-            f"{comparable.head_completed}/{comparable.evaluated_tasks}",
-            "",
-            "## Per-task delta",
-            "",
         ]
     )
+    for card in presentation.signals:
+        note = f" ({card.note})" if card.note else ""
+        lines.append(
+            f"- {card.label}{note}: {card.base} → {card.head} ({card.delta})"
+        )
+    lines.extend(["", "## Per-task delta", ""])
     for task in presentation.tasks:
         lines.extend(
             [
@@ -248,6 +243,18 @@ def render_json(document: ReportDocument) -> str:
                 outcome.key: outcome.count
                 for outcome in presentation.outcomes
             },
+            "signals": [
+                {
+                    "group": card.group,
+                    "label": card.label,
+                    "base": card.base,
+                    "head": card.head,
+                    "delta": card.delta,
+                    "direction": card.direction,
+                    "note": card.note,
+                }
+                for card in presentation.signals
+            ],
         },
         "tasks": [
             {

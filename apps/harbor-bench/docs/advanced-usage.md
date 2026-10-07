@@ -515,8 +515,10 @@ tasks present in both runs, while `summary` contains whole-job totals; each
 metric records its population explicitly. Counts name the two outcome axes
 explicitly: `base_gate_passed`/`head_gate_passed` count trials whose verifier
 reward met its gate, while `base_completed`/`head_completed` count trials that
-finished without an exception. Per-task metrics remain keyed by the metric
-registry, and run configuration is included. Write it to stdout or
+finished without an exception. The same formatted key-signal cards shown by
+the HTML and Markdown reports are exposed as `comparison.signals`. Per-task
+metrics remain keyed by the metric registry, and run configuration is
+included. Write it to stdout or
 `--report out.json`:
 
 ```bash
