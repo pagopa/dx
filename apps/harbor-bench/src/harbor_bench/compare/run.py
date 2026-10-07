@@ -51,7 +51,7 @@ from harbor_bench.jobs import Job
 from harbor_bench.report import ReportFormat, render_report
 
 from .sources import (
-    SkillSource,
+    SkillInjection,
     derive_globs,
     parse_skill,
     validate_git_source,
@@ -175,16 +175,13 @@ def _run_command(
     config: Path,
     jobs_dir: Path,
     label: str,
-    skill: SkillSource,
+    injection: SkillInjection,
     token: str | None,
-    aux_skills: tuple[SkillSource, ...] = (),
 ) -> list[str]:
     """The ``harbor run`` command line for one job (base or head).
 
-    Auxiliary skills are passed **before** the tested skill: Harbor resolves
-    duplicate skill names last-wins, so an auxiliary source that also contains
-    the skill under test (e.g. a skills root) can never clobber the base/head
-    version.
+    The ``--skill`` flags follow :meth:`SkillInjection.references` (last-wins
+    order): auxiliary skills first, the tested skill last.
     """
     command = [
         harbor,
@@ -199,9 +196,8 @@ def _run_command(
     ]
     if token:
         command += ["--ae", f"COPILOT_GITHUB_TOKEN={token}"]
-    for aux in aux_skills:
-        command += ["--skill", aux.reference]
-    command += ["--skill", skill.reference]
+    for reference in injection.references():
+        command += ["--skill", reference]
     return command
 
 
@@ -210,22 +206,21 @@ def _run_job(
     config: Path,
     jobs_dir: Path,
     label: str,
-    skill: SkillSource,
+    injection: SkillInjection,
     token: str | None,
-    aux_skills: tuple[SkillSource, ...] = (),
 ) -> None:
     """Run one job, streaming ``harbor run`` output to the terminal.
 
     Harbor's own progress is passed through untransformed so the two sequential
     runs give live feedback; a non-zero exit raises :class:`HarborRunError`.
     """
-    command = _run_command(harbor, config, jobs_dir, label, skill, token, aux_skills)
+    command = _run_command(harbor, config, jobs_dir, label, injection, token)
     aux_note = (
-        f" (aux: {', '.join(aux.reference for aux in aux_skills)})"
-        if aux_skills
+        f" (aux: {', '.join(skill.reference for skill in injection.aux)})"
+        if injection.aux
         else ""
     )
-    _log(f"[{label}] harbor run --skill {skill.reference}{aux_note}")
+    _log(f"[{label}] harbor run --skill {injection.tested.reference}{aux_note}")
     result = subprocess.run(command)
     if result.returncode != 0:
         raise HarborRunError(label, result.returncode)
@@ -281,14 +276,14 @@ def run_compare(options: CompareOptions) -> CompareResult:
 
     # Fail fast before any conversion or run: git references must resolve to
     # real skills. Local paths were already validated by parse_skill above.
-    for label, skill in (("base", base), ("head", head)):
+    labelled_sources = (
+        ("base", base),
+        ("head", head),
+        *((f"aux {skill.reference!r}", skill) for skill in aux_skills),
+    )
+    for label, skill in labelled_sources:
         if error := validate_git_source(skill):
             raise CompareError(f"[{label}] invalid skill source: {error}")
-    for skill in aux_skills:
-        if error := validate_git_source(skill):
-            raise CompareError(
-                f"invalid auxiliary skill source {skill.reference!r}: {error}"
-            )
 
     evals_paths = find_evals_files(opts.scan_root)
     if not evals_paths:
@@ -316,11 +311,6 @@ def run_compare(options: CompareOptions) -> CompareResult:
     run_config = opts.out / "config.run.yaml"
     _write_run_config(plan.config_out, run_config, globs)
     _log(f"task filter: {' '.join(globs)}")
-    if aux_skills:
-        _log(
-            "auxiliary skills: "
-            + " ".join(skill.reference for skill in aux_skills)
-        )
 
     # 3. two sequential harbor runs (base and head skill injection)
     run_dir = opts.runs_dir / opts.run_id
@@ -334,16 +324,18 @@ def run_compare(options: CompareOptions) -> CompareResult:
             "the agent may fail to authenticate"
         )
 
-    jobs = tuple(zip(JOB_LABELS, (base, head)))
-    for label, skill in jobs:
+    jobs = (
+        (JOB_LABELS[0], SkillInjection(tested=base, aux=aux_skills)),
+        (JOB_LABELS[1], SkillInjection(tested=head, aux=aux_skills)),
+    )
+    for label, injection in jobs:
         _run_job(
             opts.harbor,
             run_config,
             run_dir,
             label,
-            skill,
+            injection,
             opts.token,
-            aux_skills,
         )
 
     # 4. delta report (reuses the diff seam)

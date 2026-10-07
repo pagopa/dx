@@ -18,6 +18,14 @@ A plugin directory under evaluation (`plugins/**/skills/*/`), identified by
 `SKILL.md`; its `evals/evals.json` is the source of truth for the benchmark.
 _Avoid_: plugin
 
+**Skill injection**:
+The ordered set of skills handed to one `harbor run`: the tested skill (base
+or head) plus the auxiliary `--skill` sources that ride along in both runs.
+The tested skill is injected last, matching Harbor's per-name last-wins
+resolution, so an auxiliary source that also contains the skill under test
+can never clobber the tested version (`SkillInjection.references()`).
+_Avoid_: skill list, skill args
+
 **Eval case**:
 One test case in `evals.json`: a prompt, an expected output, and optional
 expectations and fixtures.

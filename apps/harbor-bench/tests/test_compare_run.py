@@ -22,7 +22,7 @@ from harbor_bench.compare.run import (
     run_compare,
 )
 from harbor_bench.compare.run import _run_command, _run_job, _write_run_config
-from harbor_bench.compare.sources import SkillSource
+from harbor_bench.compare.sources import SkillInjection, SkillSource
 
 from tests.conftest import write_evals
 
@@ -127,7 +127,12 @@ def test_run_command_construction(tmp_path: Path):
         name=None,
     )
     cmd = _run_command(
-        "harbor", tmp_path / "config.yaml", tmp_path / "runs", "base", skill, None
+        "harbor",
+        tmp_path / "config.yaml",
+        tmp_path / "runs",
+        "base",
+        SkillInjection(tested=skill),
+        None,
     )
     assert cmd == [
         "harbor",
@@ -152,7 +157,12 @@ def test_run_command_injects_token(tmp_path: Path):
         name=None,
     )
     cmd = _run_command(
-        "harbor", tmp_path / "config.yaml", tmp_path / "runs", "head", skill, "gh-tok"
+        "harbor",
+        tmp_path / "config.yaml",
+        tmp_path / "runs",
+        "head",
+        SkillInjection(tested=skill),
+        "gh-tok",
     )
     assert "--ae" in cmd
     assert "COPILOT_GITHUB_TOKEN=gh-tok" in cmd
@@ -166,14 +176,18 @@ def test_run_command_without_token_omits_ae(tmp_path: Path):
         name=None,
     )
     cmd = _run_command(
-        "harbor", tmp_path / "config.yaml", tmp_path / "runs", "base", skill, None
+        "harbor",
+        tmp_path / "config.yaml",
+        tmp_path / "runs",
+        "base",
+        SkillInjection(tested=skill),
+        None,
     )
     assert "--ae" not in cmd
 
 
-def test_run_command_injects_aux_skills_before_tested_skill(tmp_path: Path):
-    """Auxiliary skills ride along, ordered before the tested skill: Harbor's
-    last-wins resolution keeps the base/head version authoritative."""
+def test_run_command_emits_injection_references_in_order(tmp_path: Path):
+    """The ``--skill`` flags follow the injection (aux first, tested last)."""
     aux_local = SkillSource(
         value="plugins/aiepdf/skills/uc-engraver",
         kind="local",
@@ -192,14 +206,15 @@ def test_run_command_injects_aux_skills_before_tested_skill(tmp_path: Path):
         reference=str(tmp_path / "dr-blacksmith"),
         name="dr-blacksmith",
     )
+    injection = SkillInjection(tested=tested, aux=(aux_local, aux_git))
+
     cmd = _run_command(
         "harbor",
         tmp_path / "config.yaml",
         tmp_path / "runs",
         "head",
-        tested,
+        injection,
         None,
-        (aux_local, aux_git),
     )
     skill_values = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "--skill"]
     assert skill_values == [aux_local.reference, aux_git.reference, tested.reference]
@@ -222,7 +237,14 @@ def test_run_job_streams_output_and_raises_on_failure(tmp_path: Path, monkeypatc
         name=None,
     )
     with pytest.raises(HarborRunError, match=r"\[base\] harbor run failed \(exit 7\)"):
-        _run_job("harbor", tmp_path / "config.yaml", tmp_path / "runs", "base", skill, None)
+        _run_job(
+            "harbor",
+            tmp_path / "config.yaml",
+            tmp_path / "runs",
+            "base",
+            SkillInjection(tested=skill),
+            None,
+        )
     assert not (tmp_path / "runs" / "base.log").exists()
     assert ">> [base] harbor run --skill pagopa/dx@main" in capsys.readouterr().out
 
@@ -333,7 +355,7 @@ def test_run_compare_preflights_invalid_aux_git_source(tmp_path: Path, monkeypat
         "https://github.com/pagopa/dx/tree/foobar/"
         "plugins/aiepdf/skills/uc-engraver"
     )
-    with pytest.raises(CompareError, match="invalid auxiliary skill source"):
+    with pytest.raises(CompareError, match=r"\[aux .*\] invalid skill source"):
         run_compare(options(tmp_path, aux_skills=(aux,)))
 
 
@@ -378,7 +400,7 @@ def test_run_compare_valid_git_source_proceeds(tmp_path: Path, monkeypatch):
     monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
     monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token, aux_skills=()):
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
 
     monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
@@ -418,7 +440,7 @@ def test_run_compare_full_flow(tmp_path: Path, monkeypatch, capsys):
     monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
     monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token, aux_skills=()):
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8 if label == "base" else 0.95)
 
     monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
@@ -480,7 +502,7 @@ def test_run_compare_writes_selected_report_format(
         fake_apply_run,
     )
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token, aux_skills=()):
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
 
     monkeypatch.setattr(
@@ -519,8 +541,14 @@ def test_run_compare_sequential_uses_one_run_per_job(tmp_path: Path, monkeypatch
 
     calls: list[tuple[str, str, tuple[str, ...]]] = []
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token, aux_skills=()):
-        calls.append((label, skill.reference, tuple(s.reference for s in aux_skills)))
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
+        calls.append(
+            (
+                label,
+                injection.tested.reference,
+                tuple(skill.reference for skill in injection.aux),
+            )
+        )
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
 
     monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
@@ -560,8 +588,8 @@ def test_run_compare_passes_aux_skills_to_both_runs(tmp_path: Path, monkeypatch)
 
     calls: list[tuple[str, tuple[str, ...]]] = []
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token, aux_skills=()):
-        calls.append((label, tuple(s.reference for s in aux_skills)))
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
+        calls.append((label, tuple(skill.reference for skill in injection.aux)))
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
 
     monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
