@@ -63,24 +63,24 @@ def render_markdown(document: ReportDocument) -> str:
         "",
     ]
     lines.extend(_render_run_config(presentation))
+    comparable = presentation.comparable
     lines.extend(
         [
             "## Comparable-task result",
             "",
             f"- verdict: **{presentation.verdict}**",
-            f"- tasks compared: {presentation.comparable.tasks}",
-            f"- completed task pairs: {presentation.comparable.evaluated_tasks}",
+            f"- tasks compared: {comparable.tasks}",
+            f"- completed task pairs: {comparable.evaluated_tasks}",
             f"- {presentation.score.label}: {presentation.score.base} → "
             f"{presentation.score.head} ({presentation.score.delta})",
-            f"- passed trials: {presentation.comparable.base_passed}/"
-            f"{presentation.comparable.evaluated_tasks} → "
-            f"{presentation.comparable.head_passed}/"
-            f"{presentation.comparable.evaluated_tasks}",
-            "",
-            "## Per-task delta",
-            "",
         ]
     )
+    for card in presentation.signals:
+        note = f" ({card.note})" if card.note else ""
+        lines.append(
+            f"- {card.label}{note}: {card.base} → {card.head} ({card.delta})"
+        )
+    lines.extend(["", "## Per-task delta", ""])
     for task in presentation.tasks:
         lines.extend(
             [
@@ -95,6 +95,18 @@ def render_markdown(document: ReportDocument) -> str:
                 f"| {metric.label} | {metric.base} | {metric.head} | "
                 f"{metric.delta} |"
             )
+        if task.criteria:
+            lines.append("")
+            lines.append(
+                f"- verifier criteria: {len(task.criteria)} compared, "
+                f"{task.criteria_changed} changed"
+            )
+        for label in task.head_gained:
+            lines.append(f"  - gained by Head: {label}")
+        for label in task.base_gained:
+            lines.append(f"  - gained by Base: {label}")
+        if task.gate_note:
+            lines.append(f"- gate: {task.gate_note}")
         lines.append("")
 
     population = presentation.population
@@ -115,8 +127,12 @@ def render_markdown(document: ReportDocument) -> str:
         )
     lines.extend(
         [
-            f"- passed trials: {population.base_passed}/{population.base_tasks} → "
-            f"{population.head_passed}/{population.head_tasks}",
+            f"- completed trials: {population.base_completed}/"
+            f"{population.base_tasks} → "
+            f"{population.head_completed}/{population.head_tasks}",
+            f"- gate-passed trials: {population.base_gate_passed}/"
+            f"{population.base_tasks} → "
+            f"{population.head_gate_passed}/{population.head_tasks}",
             "",
         ]
     )
@@ -143,7 +159,8 @@ def _side_dict(side: TaskSidePresentation | None) -> dict[str, Any] | None:
         return None
     return {
         **side.values,
-        "passed": side.passed,
+        "completed": side.completed,
+        "eval_passed": side.eval_passed,
         "status": side.status,
     }
 
@@ -204,10 +221,16 @@ def render_json(document: ReportDocument) -> str:
             "verdict": presentation.verdict,
             "comparable_tasks": presentation.comparable.tasks,
             "completed_task_pairs": presentation.comparable.evaluated_tasks,
-            "base_passed": presentation.comparable.base_passed,
-            "head_passed": presentation.comparable.head_passed,
+            "base_gate_passed": presentation.comparable.base_gate_passed,
+            "head_gate_passed": presentation.comparable.head_gate_passed,
+            "base_completed": presentation.comparable.base_completed,
+            "head_completed": presentation.comparable.head_completed,
             "base_success_rate": presentation.comparable.base_rate_value,
             "head_success_rate": presentation.comparable.head_rate_value,
+            "base_criteria_passed": presentation.comparable.base_criteria_passed,
+            "base_criteria_total": presentation.comparable.base_criteria_total,
+            "head_criteria_passed": presentation.comparable.head_criteria_passed,
+            "head_criteria_total": presentation.comparable.head_criteria_total,
             "primary_metric": _metric_dict(
                 presentation.score,
                 "comparable_tasks",
@@ -216,15 +239,38 @@ def render_json(document: ReportDocument) -> str:
                 _metric_dict(metric, "comparable_tasks")
                 for metric in presentation.comparison_metrics
             ],
-            "outcomes": {
-                outcome.key: outcome.count
-                for outcome in presentation.outcomes
-            },
+            "outcomes": presentation.outcomes,
+            "signals": [
+                {
+                    "group": card.group,
+                    "label": card.label,
+                    "base": card.base,
+                    "head": card.head,
+                    "delta": card.delta,
+                    "direction": card.direction,
+                    "note": card.note,
+                }
+                for card in presentation.signals
+            ],
         },
         "tasks": [
             {
                 "task": task.name,
                 "outcome": task.outcome,
+                "criteria_changed": task.criteria_changed,
+                "head_gained": list(task.head_gained),
+                "base_gained": list(task.base_gained),
+                "threshold": task.threshold,
+                "criteria": [
+                    {
+                        "name": criterion.name,
+                        "label": criterion.label,
+                        "base": criterion.base,
+                        "head": criterion.head,
+                        "direction": criterion.direction,
+                    }
+                    for criterion in task.criteria
+                ],
                 "base": _side_dict(task.base_side),
                 "head": _side_dict(task.head_side),
             }
@@ -235,8 +281,10 @@ def render_json(document: ReportDocument) -> str:
             "head_tasks": presentation.population.head_tasks,
             "base_only": presentation.population.base_only,
             "head_only": presentation.population.head_only,
-            "base_passed": presentation.population.base_passed,
-            "head_passed": presentation.population.head_passed,
+            "base_gate_passed": presentation.population.base_gate_passed,
+            "head_gate_passed": presentation.population.head_gate_passed,
+            "base_completed": presentation.population.base_completed,
+            "head_completed": presentation.population.head_completed,
             "metrics": [
                 _metric_dict(metric, "whole_job")
                 for metric in presentation.summary_metrics

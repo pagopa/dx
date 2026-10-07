@@ -45,8 +45,9 @@ class MetricSpec:
     ``score.<k>`` document name) or ``"field"`` for a direct attribute.
     ``preference`` tells the comparison presentation whether higher, lower,
     or neither direction is favorable. ``headline_group`` opts a metric into
-    the compact HTML signal cards. ``passed`` is a trial-level flag and is
-    reported separately, not as a metric.
+    the compact HTML signal cards. ``completed`` (and the verifier gate
+    derived from a primary score) is a trial-level flag and is reported
+    separately, not as a metric.
     """
 
     key: str

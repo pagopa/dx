@@ -16,7 +16,14 @@ from harbor_bench.diff import (
     metric_specs,
     summarize,
 )
-from harbor_bench.jobs import Job, JobMeta, SkillVersion
+from harbor_bench.jobs import (
+    CriterionResult,
+    Job,
+    JobMeta,
+    ScoringGate,
+    SkillVersion,
+    TrialMetrics,
+)
 from harbor_bench.report import render_html, render_json, render_markdown
 
 from tests.conftest import DEFAULT_USAGE_ROW, write_copilot_jsonl, write_session_db
@@ -90,13 +97,92 @@ def test_job_metrics_parses_metrics(tmp_path):
     assert m.cost_usd == 0.05
     assert m.agent_duration_sec == 300.0
     assert m.total_duration_sec == 420.0
-    assert m.passed is True
+    assert m.completed is True
 
 
 def test_job_metrics_marks_exception_as_failed(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "skill-task-1", exception=True)
-    assert Job(job).metrics()["skill-task-1"].passed is False
+    assert Job(job).metrics()["skill-task-1"].completed is False
+
+
+def test_job_metrics_reads_criteria_and_scoring_gate(tmp_path):
+    """Reward-details criteria and the recorded scoring gate reach the metrics."""
+    job = _make_job(tmp_path, "run-a")
+    _write_trial(job, "task-a", rewards={"reward": 0.0})
+    verifier = job / "task-a" / "verifier"
+    verifier.mkdir()
+    (verifier / "reward-details.json").write_text(
+        json.dumps(
+            {
+                "reward": {
+                    "criteria": [
+                        {
+                            "name": "language",
+                            "description": "Writes in Italian",
+                            "value": 0.0,
+                            "raw": "no",
+                            "weight": 1.0,
+                            "reasoning": "The document is in French.",
+                        }
+                    ]
+                }
+            }
+        )
+    )
+    (verifier / "scoring.json").write_text(
+        json.dumps({"aggregation": "threshold", "threshold": 0.8})
+    )
+
+    metrics = Job(job).metrics()["task-a"]
+
+    assert metrics.criteria == (
+        CriterionResult(
+            name="language",
+            description="Writes in Italian",
+            value=0.0,
+            weight=1.0,
+            reasoning="The document is in French.",
+        ),
+    )
+    assert metrics.scoring == ScoringGate(
+        aggregation="threshold",
+        threshold=0.8,
+    )
+
+
+def test_job_metrics_tolerates_missing_criteria_artifacts(tmp_path):
+    job = _make_job(tmp_path, "run-a")
+    _write_trial(job, "task-a", rewards={"reward": 1.0})
+
+    metrics = Job(job).metrics()["task-a"]
+
+    assert metrics.criteria == ()
+    assert metrics.scoring is None
+
+
+def test_trial_metrics_owns_the_gate_rule():
+    """The gate rule is a derivation of TrialMetrics: reward > 0, else completed."""
+    primary = MetricSpec("score.reward", "score", source="reward")
+    passed = TrialMetrics(task_name="t", rewards={"reward": 1.0})
+    failed = TrialMetrics(task_name="t", rewards={"reward": 0.0})
+    no_reward = TrialMetrics(task_name="t", rewards={})
+    errored = TrialMetrics(task_name="t", rewards={}, completed=False)
+
+    assert passed.eval_passed(primary) is True
+    assert passed.gate_passed(primary) is True
+    assert failed.eval_passed(primary) is False
+    assert failed.gate_passed(primary) is False
+    assert no_reward.eval_passed(primary) is None
+    assert no_reward.gate_passed(primary) is True  # falls back to completed
+    assert errored.gate_passed(primary) is False
+    assert no_reward.gate_passed(None) is True  # no primary score: fallback
+
+
+def test_criterion_result_owns_its_pass_rule():
+    assert CriterionResult(name="c", value=1.0).passed is True
+    assert CriterionResult(name="c", value=0.0).passed is False
+    assert CriterionResult(name="c").passed is None
 
 
 def test_job_metrics_missing_dir_raises(tmp_path):
@@ -111,7 +197,7 @@ def test_job_seam_serves_metrics_and_meta(tmp_path):
     _write_meta_trial(
         job,
         "task-b",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith"],
     )
@@ -123,7 +209,7 @@ def test_job_seam_serves_metrics_and_meta(tmp_path):
     assert set(metrics) == {"task-a", "task-b"}
     assert metrics["task-a"].input_tokens == 1000
     assert meta is not None
-    assert meta.agent_model == "gpt-5.6-luna"
+    assert meta.agent_model == "gpt-6-luna"
     assert meta.agent_effort == "high"
     assert meta.skills and meta.skills[0].name == "dr-blacksmith"
 
@@ -149,7 +235,7 @@ def test_job_reads_result_json_once_across_metrics_and_meta(tmp_path, monkeypatc
     _write_meta_trial(
         job,
         "task-b",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith"],
     )
@@ -159,7 +245,7 @@ def test_job_reads_result_json_once_across_metrics_and_meta(tmp_path, monkeypatc
     meta = read.meta()
 
     assert set(metrics) == {"task-a", "task-b"}
-    assert meta is not None and meta.agent_model == "gpt-5.6-luna"
+    assert meta is not None and meta.agent_model == "gpt-6-luna"
     assert calls == 2  # one parse per trial, shared by both derivations
 
 
@@ -234,10 +320,10 @@ def test_trial_metrics_and_meta_typed_interface(tmp_path):
     _write_meta_trial(
         job,
         "task-b",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith"],
-        judge_model="openai/gpt-5.6-luna",
+        judge_model="openai/gpt-6-luna",
         judge_effort="medium",
     )
     by_task = {trial.task_name: trial for trial in Job(job).iter_trials()}
@@ -250,13 +336,13 @@ def test_trial_metrics_and_meta_typed_interface(tmp_path):
     assert metrics.cost_usd == 0.05
     assert metrics.agent_duration_sec == 300.0
     assert metrics.total_duration_sec == 420.0
-    assert metrics.passed is True
+    assert metrics.completed is True
     assert metrics.rewards["quality"] == 0.9
 
     meta = by_task["task-b"].meta()
-    assert meta.agent_model == "gpt-5.6-luna"
+    assert meta.agent_model == "gpt-6-luna"
     assert meta.agent_effort == "high"
-    assert meta.judge_model == "openai/gpt-5.6-luna"
+    assert meta.judge_model == "openai/gpt-6-luna"
     assert meta.judge_effort == "medium"
     assert meta.skills and meta.skills[0].name == "dr-blacksmith"
 
@@ -298,10 +384,10 @@ def test_build_document_computes_specs_summary_and_diffs_once(tmp_path, monkeypa
     _write_meta_trial(
         job,
         "task-meta",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith", git_skill],
-        judge_model="openai/gpt-5.6-luna",
+        judge_model="openai/gpt-6-luna",
         judge_effort="medium",
     )
     meta = Job(job).meta()
@@ -321,7 +407,7 @@ def test_build_document_computes_specs_summary_and_diffs_once(tmp_path, monkeypa
     assert [s.key for s in document.specs][:1] == ["score.quality"]
     assert "input_tokens" in [s.key for s in document.specs]
     assert document.summary.head_tasks == 1
-    assert document.summary.base_passed == 1
+    assert document.summary.base_gate_passed == 1
     # both sides carry the same git-loaded skill, so each produces a diff row
     assert len(document.skill_diffs) == 2
     assert document.skill_diffs[0].command.startswith("git -C ")
@@ -347,8 +433,10 @@ def test_summarize_aggregates_numbers(tmp_path):
     assert summary.head_tasks == 1
     assert summary.base_only == 1  # task-b ran only in base
     assert summary.head_only == 0
-    assert summary.base_passed == 2
-    assert summary.head_passed == 1
+    assert summary.base_completed == 2
+    assert summary.head_completed == 1
+    assert summary.base_gate_passed == 2
+    assert summary.head_gate_passed == 1
 
     by_key = {line.spec.key: line for line in summary.lines}
     assert by_key["input_tokens"].base == 3000  # summed, int
@@ -507,7 +595,8 @@ def test_render_markdown_includes_deltas(tmp_path):
     assert "0.95" in md  # head quality value
     assert "+0.150" in md or "+0.15" in md  # quality delta
     assert "+100" in md  # input token delta
-    assert "passed trials" in md
+    assert "Tasks passed (verifier reward met its gate):" in md
+    assert "Completed (finished without an exception):" in md
 
 
 def test_render_html_is_visual_and_self_contained(tmp_path):
@@ -534,9 +623,9 @@ def test_render_html_is_visual_and_self_contained(tmp_path):
     assert "<style>" in html
     assert "<script>" not in html
     assert "Which skill performed better?" in html
-    assert "Key score signals" in html
+    assert "Verifier gate" in html
     assert "Execution signals" in html
-    assert "signals-grid" in html
+    assert "metric-grid" in html
     assert "Filter tasks" not in html
     assert "Improved" in html
     assert "Regressed" in html
@@ -785,16 +874,16 @@ def test_job_meta_models_and_skill_versions(tmp_path, monkeypatch):
     _write_meta_trial(
         job,
         "task-a",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith", git_skill],
-        judge_model="openai/gpt-5.6-luna",
+        judge_model="openai/gpt-6-luna",
         judge_effort="medium",
     )
     meta = Job(job).meta()
-    assert meta.agent_model == "gpt-5.6-luna"
+    assert meta.agent_model == "gpt-6-luna"
     assert meta.agent_effort == "high"
-    assert meta.judge_model == "openai/gpt-5.6-luna"
+    assert meta.judge_model == "openai/gpt-6-luna"
     assert meta.judge_effort == "medium"
     local, git = meta.skills
     assert local.kind == "local"
@@ -816,10 +905,10 @@ def test_render_markdown_run_config_section(tmp_path, monkeypatch):
     _write_meta_trial(
         job,
         "task-a",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith", git_skill],
-        judge_model="openai/gpt-5.6-luna",
+        judge_model="openai/gpt-6-luna",
         judge_effort="medium",
     )
     meta = Job(job).meta()
@@ -839,8 +928,8 @@ def test_render_markdown_run_config_section(tmp_path, monkeypatch):
     )
     assert "## Run configuration" in md
     assert "agent model" in md
-    assert "gpt-5.6-luna (effort: high)" in md
-    assert "openai/gpt-5.6-luna (effort: medium)" in md
+    assert "gpt-6-luna (effort: high)" in md
+    assert "openai/gpt-6-luna (effort: medium)" in md
     assert "dr-blacksmith (local)" in md
     assert "plugins/aiepdf/skills (git: pagopa/dx@42a33a17)" in md
     assert (
@@ -874,7 +963,9 @@ def test_render_json_shares_report_numbers(tmp_path):
     assert task["head"]["score.quality"] == 0.95
     assert task["base"]["input_tokens"] == 1000
     assert task["head"]["input_tokens"] == 1100
-    assert task["base"]["passed"] is True
+    assert task["base"]["completed"] is True
+    assert task["base"]["eval_passed"] is True
+    assert "passed" not in task["base"]
     summary = doc["summary"]
     assert summary["base_tasks"] == 1
     assert summary["head_tasks"] == 1
@@ -957,10 +1048,10 @@ def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
     _write_meta_trial(
         job,
         "task-a",
-        agent_model="gpt-5.6-luna",
+        agent_model="gpt-6-luna",
         agent_effort="high",
         skills=["/some/local/dr-blacksmith", git_skill],
-        judge_model="openai/gpt-5.6-luna",
+        judge_model="openai/gpt-6-luna",
         judge_effort="medium",
     )
     meta = Job(job).meta()
@@ -979,9 +1070,9 @@ def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
         )
     ))
     rc = doc["run_config"]
-    assert rc["agent"]["base"]["model"] == "gpt-5.6-luna"
+    assert rc["agent"]["base"]["model"] == "gpt-6-luna"
     assert rc["agent"]["base"]["effort"] == "high"
-    assert rc["judge"]["head"]["model"] == "openai/gpt-5.6-luna"
+    assert rc["judge"]["head"]["model"] == "openai/gpt-6-luna"
     assert rc["skills"]["base"][0]["name"] == "dr-blacksmith"
     assert rc["skills"]["base"][0]["kind"] == "local"
     assert rc["skills"]["base"][1]["kind"] == "git"

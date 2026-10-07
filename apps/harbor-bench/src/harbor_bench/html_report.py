@@ -8,7 +8,6 @@ from typing import Any
 
 from harbor_bench.comparison_presentation import (
     MetricPresentation,
-    OutcomePresentation,
     build_presentation,
 )
 from harbor_bench.diff import ReportDocument
@@ -59,39 +58,14 @@ def _metric_context(metric: MetricPresentation, group: str) -> dict[str, Any]:
     }
 
 
-def _outcome_context(
-    outcome: OutcomePresentation,
-    total: int,
-) -> dict[str, Any]:
-    return {
-        **asdict(outcome),
-        "width": f"{outcome.count / total * 100:.1f}" if total else "0.0",
-    }
-
-
 def render_html(document: ReportDocument) -> str:
     """Render a self-contained visual report from the packaged template."""
     presentation = build_presentation(document)
     context = asdict(presentation)
-    context["score"] = _metric_context(presentation.score, "")
-    context["score_cards"] = [
-        _metric_context(metric, "Key score signals")
-        for metric in presentation.comparison_metrics
-        if metric.key.startswith("score.")
-        and (metric.base_value is not None or metric.head_value is not None)
-    ]
     context["signal_cards"] = [
         _metric_context(metric, metric.headline_group)
         for metric in presentation.comparison_metrics
         if metric.headline_group is not None
         and (metric.base_value is not None or metric.head_value is not None)
-    ]
-    total_outcomes = sum(outcome.count for outcome in presentation.outcomes)
-    context["outcome_segments"] = [
-        _outcome_context(outcome, total_outcomes)
-        for outcome in presentation.outcomes
-    ]
-    context["outcome_legend"] = [
-        asdict(outcome) for outcome in presentation.outcomes
     ]
     return _template().render(**context)

@@ -12,7 +12,8 @@ The CLI provides three commands:
    single source of truth: re-running `convert` regenerates tasks, removes
    stale ones, and never overwrites job results.
 2. **`report`** — reads two Harbor job directories and prints a per-task delta
-   report (score, tokens, cost, steps, duration) with the run configuration.
+   report (score, tokens, cost, steps, duration, gate and criterion changes)
+   with the run configuration.
 3. **`compare`** — the everyday flow: runs the same eval set against two skill
    versions and writes the delta report for you.
 
@@ -22,6 +23,22 @@ performance, skill authoring and report internals live in
 
 ## Install
 
+### From git (outside the repo)
+
+The public repo ships `harbor-bench` as an installable CLI. `uv` fetches the
+latest source, resolves the sibling `harbor-copilot` package from the same
+commit, and installs the executable — no clone needed:
+
+```bash
+uv tool install "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench"
+harbor-bench --help
+```
+
+Pinning a release, switching versions, and one-off runs (`uvx`) are covered in
+[Advanced usage](docs/advanced-usage.md#install-from-git).
+
+### From the workspace (contributors)
+
 The CLI installs and runs from this workspace through `uv` — no virtualenv
 activation needed:
 
@@ -29,6 +46,13 @@ activation needed:
 mise run install
 uv run --package harbor-bench harbor-bench --help
 ```
+
+The examples below use the workspace prefix `uv run --package harbor-bench`;
+with an external install, drop it for `harbor-bench` commands (`harbor-bench
+...`). Commands that run Harbor itself (`harbor run`, `harbor view`) must use
+the `harbor` bundled with `harbor-bench`: another `harbor` on `PATH` can lack
+`harbor-copilot` and fail with `No module named 'harbor_copilot'` — see
+[Install from git](docs/advanced-usage.md#install-from-git).
 
 ## Quick start: compare two skill versions
 
@@ -62,6 +86,10 @@ export COPILOT_GITHUB_TOKEN=$(gh auth token)
   a tag or commit SHA — `main` moves between runs.
 - `-t/--task-pattern` is a glob over task names; without it, only the tasks
   matching the two skill names are run.
+- `--skill <source>` (repeatable) injects an **auxiliary skill** — e.g. a
+  dependency like `uc-engraver` for `dr-blacksmith`, even one without
+  `evals.json` — into both runs, with the same source grammar as the base/head
+  arguments. The tested skill always wins on name collisions.
 - The two runs execute in sequence (base first, then head) with live output in
   the terminal; their job directories are `runs/<run-id>/base` and
   `runs/<run-id>/head`. The delta report is written next to them at
@@ -96,6 +124,14 @@ uv run --package harbor-bench harbor-bench convert \
   --scan-root plugins --out .harbor --config-out .harbor/config.yaml
 
 uv run --package harbor-bench harbor run \
+  -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...
+```
+
+With an external install, `convert` becomes `harbor-bench convert ...` and the
+run uses the bundled Harbor (not another `harbor` on `PATH`):
+
+```bash
+"$(uv tool dir)/harbor-bench/bin/harbor" run \
   -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=...
 ```
 

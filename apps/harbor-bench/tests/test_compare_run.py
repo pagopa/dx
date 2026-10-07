@@ -19,10 +19,11 @@ from harbor_bench.compare.run import (
     CompareOptions,
     HarborRunError,
     check_harbor_cli,
+    resolve_harbor,
     run_compare,
 )
 from harbor_bench.compare.run import _run_command, _run_job, _write_run_config
-from harbor_bench.compare.sources import SkillSource
+from harbor_bench.compare.sources import SkillInjection, SkillSource
 
 from tests.conftest import write_evals
 
@@ -51,12 +52,13 @@ def options(tmp_path: Path, **overrides) -> CompareOptions:
     base = dict(
         base_skill=str(make_skill(tmp_path, "base-skill")),
         head_skill=str(make_skill(tmp_path, "head-skill")),
+        aux_skills=(),
         scan_root=tmp_path / "plugins",
         out=tmp_path / "out",
         runs_dir=tmp_path / "runs",
         run_id="run-1",
         environment="docker",
-        model="gpt-5.6-luna",
+        model="gpt-6-luna",
         n_concurrent=4,
         task_patterns=(),
         task_globs=(),
@@ -83,7 +85,37 @@ def test_check_harbor_cli_missing(monkeypatch):
         "harbor_bench.compare.run.shutil.which", lambda name: None
     )
     err = check_harbor_cli("harbor")
-    assert err is not None and "not found on PATH" in err
+    assert err is not None and "not found" in err
+
+
+# --- harbor resolution ----------------------------------------------------
+
+
+def test_resolve_harbor_prefers_bundled_console_script(monkeypatch, tmp_path: Path):
+    """The ``harbor`` script next to the running interpreter wins over PATH."""
+    python = tmp_path / "bin" / "python"
+    python.parent.mkdir(parents=True)
+    python.write_text("")
+    harbor = python.parent / "harbor"
+    harbor.write_text("")
+    monkeypatch.setattr("harbor_bench.compare.run.sys.executable", str(python))
+    assert resolve_harbor("harbor") == str(harbor)
+
+
+def test_resolve_harbor_falls_back_to_bare_name(monkeypatch, tmp_path: Path):
+    """Without a sibling script the bare name is kept (resolved via PATH)."""
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.sys.executable", str(tmp_path / "python")
+    )
+    assert resolve_harbor("harbor") == "harbor"
+
+
+def test_resolve_harbor_keeps_explicit_value(monkeypatch):
+    """An explicit executable path or name is never overridden."""
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.sys.executable", "/nonexistent/python"
+    )
+    assert resolve_harbor("/opt/harbor") == "/opt/harbor"
 
 
 # --- config filter -------------------------------------------------------
@@ -126,7 +158,12 @@ def test_run_command_construction(tmp_path: Path):
         name=None,
     )
     cmd = _run_command(
-        "harbor", tmp_path / "config.yaml", tmp_path / "runs", "base", skill, None
+        "harbor",
+        tmp_path / "config.yaml",
+        tmp_path / "runs",
+        "base",
+        SkillInjection(tested=skill),
+        None,
     )
     assert cmd == [
         "harbor",
@@ -151,7 +188,12 @@ def test_run_command_injects_token(tmp_path: Path):
         name=None,
     )
     cmd = _run_command(
-        "harbor", tmp_path / "config.yaml", tmp_path / "runs", "head", skill, "gh-tok"
+        "harbor",
+        tmp_path / "config.yaml",
+        tmp_path / "runs",
+        "head",
+        SkillInjection(tested=skill),
+        "gh-tok",
     )
     assert "--ae" in cmd
     assert "COPILOT_GITHUB_TOKEN=gh-tok" in cmd
@@ -165,9 +207,48 @@ def test_run_command_without_token_omits_ae(tmp_path: Path):
         name=None,
     )
     cmd = _run_command(
-        "harbor", tmp_path / "config.yaml", tmp_path / "runs", "base", skill, None
+        "harbor",
+        tmp_path / "config.yaml",
+        tmp_path / "runs",
+        "base",
+        SkillInjection(tested=skill),
+        None,
     )
     assert "--ae" not in cmd
+
+
+def test_run_command_emits_injection_references_in_order(tmp_path: Path):
+    """The ``--skill`` flags follow the injection (aux first, tested last)."""
+    aux_local = SkillSource(
+        value="plugins/aiepdf/skills/uc-engraver",
+        kind="local",
+        reference=str(tmp_path / "uc-engraver"),
+        name="uc-engraver",
+    )
+    aux_git = SkillSource(
+        value="pagopa/dx@main",
+        kind="git",
+        reference="pagopa/dx@main",
+        name=None,
+    )
+    tested = SkillSource(
+        value="plugins/aiepdf/skills/dr-blacksmith",
+        kind="local",
+        reference=str(tmp_path / "dr-blacksmith"),
+        name="dr-blacksmith",
+    )
+    injection = SkillInjection(tested=tested, aux=(aux_local, aux_git))
+
+    cmd = _run_command(
+        "harbor",
+        tmp_path / "config.yaml",
+        tmp_path / "runs",
+        "head",
+        injection,
+        None,
+    )
+    skill_values = [cmd[i + 1] for i, arg in enumerate(cmd) if arg == "--skill"]
+    assert skill_values == [aux_local.reference, aux_git.reference, tested.reference]
 
 
 # --- sequential run ------------------------------------------------------
@@ -187,7 +268,14 @@ def test_run_job_streams_output_and_raises_on_failure(tmp_path: Path, monkeypatc
         name=None,
     )
     with pytest.raises(HarborRunError, match=r"\[base\] harbor run failed \(exit 7\)"):
-        _run_job("harbor", tmp_path / "config.yaml", tmp_path / "runs", "base", skill, None)
+        _run_job(
+            "harbor",
+            tmp_path / "config.yaml",
+            tmp_path / "runs",
+            "base",
+            SkillInjection(tested=skill),
+            None,
+        )
     assert not (tmp_path / "runs" / "base.log").exists()
     assert ">> [base] harbor run --skill pagopa/dx@main" in capsys.readouterr().out
 
@@ -271,6 +359,48 @@ def test_run_compare_preflights_invalid_base_git_source(
         run_compare(options(tmp_path, base_skill=git_base))
 
 
+def test_run_compare_preflights_invalid_aux_git_source(tmp_path: Path, monkeypatch):
+    """An unresolvable auxiliary skill fails before any convert/run work."""
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment", lambda environment: None
+    )
+
+    def fail_git(source):
+        if source.kind == "git":
+            return "No matching ref 'foobar' found in https://github.com/pagopa/dx"
+        return None
+
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.validate_git_source", fail_git
+    )
+
+    def should_not_plan(opts):
+        raise AssertionError("convert must not run before source preflight")
+
+    monkeypatch.setattr("harbor_bench.compare.run.plan_run", should_not_plan)
+
+    aux = (
+        "https://github.com/pagopa/dx/tree/foobar/"
+        "plugins/aiepdf/skills/uc-engraver"
+    )
+    with pytest.raises(CompareError, match=r"\[aux .*\] invalid skill source"):
+        run_compare(options(tmp_path, aux_skills=(aux,)))
+
+
+def test_run_compare_rejects_missing_aux_local_path(tmp_path: Path, monkeypatch):
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment", lambda environment: None
+    )
+    with pytest.raises(ValueError, match="skill path does not exist"):
+        run_compare(options(tmp_path, aux_skills=("missing-aux-skill",)))
+
+
 def test_run_compare_valid_git_source_proceeds(tmp_path: Path, monkeypatch):
     """A resolvable git source passes the preflight and reaches the flow."""
     monkeypatch.setattr(
@@ -301,7 +431,7 @@ def test_run_compare_valid_git_source_proceeds(tmp_path: Path, monkeypatch):
     monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
     monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token):
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
 
     monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
@@ -341,7 +471,7 @@ def test_run_compare_full_flow(tmp_path: Path, monkeypatch, capsys):
     monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
     monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token):
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8 if label == "base" else 0.95)
 
     monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
@@ -365,6 +495,50 @@ def test_run_compare_full_flow(tmp_path: Path, monkeypatch, capsys):
     captured = capsys.readouterr().out
     assert ">> found 1 evals.json" in captured
     assert ">> task filter: base-skill-* head-skill-*" in captured
+
+
+def test_run_compare_runs_bundled_harbor(tmp_path: Path, monkeypatch):
+    """The harbor resolved from harbor-bench's environment is the one executed.
+
+    Regression guard: resolving via PATH alone can pick a standalone harbor
+    install without ``harbor-copilot`` (``No module named 'harbor_copilot'``).
+    """
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment", lambda environment: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.resolve_harbor",
+        lambda harbor: "/bundled/bin/harbor",
+    )
+    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    write_evals(skill_dir)
+
+    out = tmp_path / "out"
+
+    class FakePlan:
+        tasks = ("t1",)
+        config_out = out / "config.yaml"
+
+    def fake_apply_run(plan):
+        plan.config_out.parent.mkdir(parents=True, exist_ok=True)
+        plan.config_out.write_text("datasets:\n  - path: tasks\n", encoding="utf-8")
+
+    monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
+    monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
+
+    seen: list[str] = []
+
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
+        seen.append(harbor)
+        write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
+
+    monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
+
+    run_compare(options(tmp_path))
+    assert seen == ["/bundled/bin/harbor", "/bundled/bin/harbor"]
 
 
 def test_run_compare_writes_selected_report_format(
@@ -403,7 +577,7 @@ def test_run_compare_writes_selected_report_format(
         fake_apply_run,
     )
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token):
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
 
     monkeypatch.setattr(
@@ -440,17 +614,61 @@ def test_run_compare_sequential_uses_one_run_per_job(tmp_path: Path, monkeypatch
     monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
     monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
 
-    calls: list[tuple[str, str]] = []
+    calls: list[tuple[str, str, tuple[str, ...]]] = []
 
-    def fake_run_job(harbor, config, jobs_dir, label, skill, token):
-        calls.append((label, skill.reference))
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
+        calls.append(
+            (
+                label,
+                injection.tested.reference,
+                tuple(skill.reference for skill in injection.aux),
+            )
+        )
         write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
 
     monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
 
     result = run_compare(options(tmp_path, task_patterns=("test-skill-*",)))
     assert calls == [
-        ("base", str(tmp_path / "base-skill")),
-        ("head", str(tmp_path / "head-skill")),
+        ("base", str(tmp_path / "base-skill"), ()),
+        ("head", str(tmp_path / "head-skill"), ()),
     ]
     assert result.globs == ("test-skill-*",)
+
+
+def test_run_compare_passes_aux_skills_to_both_runs(tmp_path: Path, monkeypatch):
+    """``--skill`` sources are injected identically into base and head, so they
+    stay a constant of the comparison."""
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None
+    )
+    monkeypatch.setattr(
+        "harbor_bench.compare.run.check_host_environment", lambda environment: None
+    )
+    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    write_evals(skill_dir)
+
+    out = tmp_path / "out"
+
+    class FakePlan:
+        tasks = ("t1",)
+        config_out = out / "config.yaml"
+
+    def fake_apply_run(plan):
+        plan.config_out.parent.mkdir(parents=True, exist_ok=True)
+        plan.config_out.write_text("datasets:\n  - path: tasks\n", encoding="utf-8")
+
+    monkeypatch.setattr("harbor_bench.compare.run.plan_run", lambda opts: FakePlan())
+    monkeypatch.setattr("harbor_bench.compare.run.apply_run", fake_apply_run)
+
+    calls: list[tuple[str, tuple[str, ...]]] = []
+
+    def fake_run_job(harbor, config, jobs_dir, label, injection, token):
+        calls.append((label, tuple(skill.reference for skill in injection.aux)))
+        write_result(jobs_dir / label, "test-skill-1-case-one", 0.8)
+
+    monkeypatch.setattr("harbor_bench.compare.run._run_job", fake_run_job)
+
+    aux = make_skill(tmp_path, "uc-engraver")
+    run_compare(options(tmp_path, aux_skills=(str(aux),)))
+    assert calls == [("base", (str(aux),)), ("head", (str(aux),))]

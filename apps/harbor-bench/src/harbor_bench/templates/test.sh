@@ -96,6 +96,21 @@ PYEOF
     --output {{REWARD_JSON}} \
     || true
 
+  # Record the scoring gate (quality.toml [scoring]) next to the reward.
+  # RewardKit 0.2.0 does not persist its scoring config, and Harbor downloads
+  # the whole {{VERIFIER_LOG_DIR}} directory: this file is how a comparison
+  # report on a copied run directory shows a score against its gate. Absent
+  # when the task declares no scoring block.
+  python3 - <<'PYEOF' || true
+import json
+import tomllib
+with open("/tests/quality.toml", "rb") as fh:
+    scoring = (tomllib.load(fh) or {}).get("scoring") or {}
+if scoring:
+    with open("{{SCORING_JSON}}", "w", encoding="utf-8") as fh:
+        json.dump(scoring, fh, indent=2)
+PYEOF
+
   # Harbor reads reward.json by default and falls back to reward.txt. Only
   # write the text fallback when RewardKit produced no usable reward.json.
   if [ ! -s {{REWARD_JSON}} ]; then

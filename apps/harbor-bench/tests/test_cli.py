@@ -213,13 +213,14 @@ def compare_args(base: str, head: str, **overrides) -> argparse.Namespace:
     base_args = dict(
         base=base,
         head=head,
+        aux_skills=[],
         task_patterns=[],
         scan_root=None,
         out=None,
         runs_dir=None,
         run_id=None,
         environment="docker",
-        model="gpt-5.6-luna",
+        model="gpt-6-luna",
         n_concurrent=4,
         task_glob=None,
         token=None,
@@ -299,13 +300,17 @@ def test_compare_flags_map_to_options(tmp_path, monkeypatch, capsys):
             "--task-glob",
             "skill-a-* skill-b-*",
             "--model",
-            "gpt-5.6-luna",
+            "gpt-6-luna",
             "--n-concurrent",
             "8",
             "--format",
             "json",
             "--token",
             "tok-cli",
+            "--skill",
+            "plugins/aiepdf/skills/uc-engraver",
+            "--skill",
+            "pagopa/dx@main",
             "base",
             "head",
         ]
@@ -320,3 +325,7 @@ def test_compare_flags_map_to_options(tmp_path, monkeypatch, capsys):
     assert opts.n_concurrent == 8
     assert opts.report_format == "json"
     assert opts.token == "tok-cli"
+    assert opts.aux_skills == (
+        "plugins/aiepdf/skills/uc-engraver",
+        "pagopa/dx@main",
+    )
