@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 from urllib.parse import quote
 
@@ -10,10 +10,9 @@ from harbor_bench.diff import (
     JobMeta,
     ReportDocument,
     TrialComparison,
-    eval_passed,
     primary_score_spec,
 )
-from harbor_bench.jobs import SkillVersion, TrialMetrics
+from harbor_bench.jobs import CriterionResult, SkillVersion, TrialMetrics
 from harbor_copilot.metrics import MetricSpec
 
 
@@ -122,14 +121,14 @@ class OutcomePresentation:
 
 @dataclass(frozen=True)
 class PopulationPresentation:
-    """Whole-job task and pass counts."""
+    """Whole-job task, gate, and completion counts."""
 
     base_tasks: int
     head_tasks: int
     base_only: int
     head_only: int
-    base_passed: int
-    head_passed: int
+    base_gate_passed: int
+    head_gate_passed: int
     base_completed: int
     head_completed: int
 
@@ -138,15 +137,15 @@ class PopulationPresentation:
 class ComparablePresentation:
     """Statistics calculated only from tasks present in both jobs.
 
-    ``*_passed`` counts trials whose verifier gate passed; ``*_completed``
+    ``*_gate_passed`` counts trials whose verifier gate passed; ``*_completed``
     counts trials that finished without an exception; the criteria counts sum
     the per-criterion outcomes RewardKit recorded.
     """
 
     tasks: int
     evaluated_tasks: int
-    base_passed: int
-    head_passed: int
+    base_gate_passed: int
+    head_gate_passed: int
     base_completed: int
     head_completed: int
     base_rate_value: float | None
@@ -334,13 +333,6 @@ def _pass_fmt(value: bool | None) -> str:
     return "pass" if value else "fail"
 
 
-def _criterion_pass(criterion: Any) -> bool | None:
-    value = getattr(criterion, "value", None)
-    if value is None:
-        return None
-    return float(value) > 0.0
-
-
 def _criterion_rows(
     base: TrialMetrics | None,
     head: TrialMetrics | None,
@@ -349,7 +341,8 @@ def _criterion_rows(
 
     A criterion pass in one side and fail in the other is the criterion-level
     change the aggregate score can hide; ``direction`` reads head − base, so
-    ``positive`` is a criterion Head gained and Base lost.
+    ``positive`` is a criterion Head gained and Base lost. Each outcome comes
+    from :attr:`~harbor_bench.jobs.CriterionResult.passed`.
     """
     if base is None and head is None:
         return ()
@@ -357,10 +350,10 @@ def _criterion_rows(
     head_by_name = {c.name: c for c in (head.criteria if head else ())}
     rows: list[CriterionComparison] = []
     for name in (*base_by_name, *(n for n in head_by_name if n not in base_by_name)):
-        base_criterion = base_by_name.get(name)
-        head_criterion = head_by_name.get(name)
-        base_value = _criterion_pass(base_criterion)
-        head_value = _criterion_pass(head_criterion)
+        base_criterion: CriterionResult | None = base_by_name.get(name)
+        head_criterion: CriterionResult | None = head_by_name.get(name)
+        base_value = base_criterion.passed if base_criterion is not None else None
+        head_value = head_criterion.passed if head_criterion is not None else None
         direction = "neutral"
         if (
             base_value is not None
@@ -383,15 +376,6 @@ def _criterion_rows(
     return tuple(rows)
 
 
-def _effective_pass(
-    metrics: TrialMetrics,
-    primary_score: MetricSpec | None,
-) -> bool:
-    """Gate pass, falling back to completed when no reward was recorded."""
-    value = eval_passed(metrics, primary_score)
-    return metrics.passed if value is None else value
-
-
 def _gate_note(
     base_pass: bool,
     head_pass: bool,
@@ -409,39 +393,66 @@ def _gate_note(
     return f"{' and '.join(below)} below the {threshold:g} gate"
 
 
-def _paired_metric(
-    rows: tuple[TrialComparison, ...],
-    spec: MetricSpec,
-) -> tuple[Any, Any]:
-    pairs = [
-        (base_value, head_value)
-        for row in rows
-        if row.base is not None and row.head is not None
-        if (base_value := spec.read(row.base)) is not None
-        if (head_value := spec.read(row.head)) is not None
-    ]
-    return (
-        spec.aggregate([base for base, _ in pairs]),
-        spec.aggregate([head for _, head in pairs]),
-    )
+@dataclass(frozen=True)
+class _TaskEvaluation:
+    """One task pair's comparison semantics, derived once for every consumer.
+
+    Carries both sides' gate facts, the criteria join, and the outcome, so the
+    per-task presentation and the comparable aggregates fold the same value
+    instead of re-deriving pass or criteria state from the rows.
+    """
+
+    row: TrialComparison
+    base_eval: bool | None
+    head_eval: bool | None
+    base_pass: bool
+    head_pass: bool
+    criteria: tuple[CriterionComparison, ...]
+    head_gained: tuple[str, ...]
+    base_gained: tuple[str, ...]
+    base_criteria: tuple[CriterionResult, ...]
+    head_criteria: tuple[CriterionResult, ...]
+    outcome: str
+    outcome_label: str
 
 
-def _task_outcome(
-    base: TrialMetrics | None,
-    head: TrialMetrics | None,
+def _evaluate(
+    row: TrialComparison,
     primary_score: MetricSpec | None,
-    base_pass: bool,
-    head_pass: bool,
-    head_gained: tuple[str, ...],
-    base_gained: tuple[str, ...],
+) -> _TaskEvaluation:
+    """Derive one task pair's semantics exactly once (sides, criteria, outcome)."""
+    base, head = row.base, row.head
+    criteria = _criterion_rows(base, head)
+    evaluation = _TaskEvaluation(
+        row=row,
+        base_eval=base.eval_passed(primary_score) if base is not None else None,
+        head_eval=head.eval_passed(primary_score) if head is not None else None,
+        base_pass=base.gate_passed(primary_score) if base is not None else False,
+        head_pass=head.gate_passed(primary_score) if head is not None else False,
+        criteria=criteria,
+        head_gained=tuple(c.label for c in criteria if c.direction == "positive"),
+        base_gained=tuple(c.label for c in criteria if c.direction == "negative"),
+        base_criteria=base.criteria if base is not None else (),
+        head_criteria=head.criteria if head is not None else (),
+        outcome="",
+        outcome_label="",
+    )
+    outcome, outcome_label = _classify(evaluation, primary_score)
+    return replace(evaluation, outcome=outcome, outcome_label=outcome_label)
+
+
+def _classify(
+    evaluation: _TaskEvaluation,
+    primary_score: MetricSpec | None,
 ) -> tuple[str, str]:
-    """Classify one task pair.
+    """Classify one evaluated task pair.
 
     A verifier-gate flip wins, then the primary score direction, then
     criterion-level changes. When both sides fail the gate, tied scores with
     any criterion change are ``mixed`` and without one are ``failed`` — never
     ``unchanged``, which would read as "the runs produced the same result".
     """
+    base, head = evaluation.row.base, evaluation.row.head
     if base is None:
         return "new", "New task"
     if head is None:
@@ -454,8 +465,12 @@ def _task_outcome(
             if base.status == "incomplete"
             else ("regressed", "Regressed")
         )
-    if base_pass != head_pass:
-        return ("improved", "Improved") if head_pass else ("regressed", "Regressed")
+    if evaluation.base_pass != evaluation.head_pass:
+        return (
+            ("improved", "Improved")
+            if evaluation.head_pass
+            else ("regressed", "Regressed")
+        )
     if primary_score is not None:
         direction = _direction(
             primary_score.read(base),
@@ -466,17 +481,35 @@ def _task_outcome(
             return "improved", "Improved"
         if direction == "negative":
             return "regressed", "Regressed"
-    if not base_pass and not head_pass:
-        if head_gained or base_gained:
+    if not evaluation.base_pass and not evaluation.head_pass:
+        if evaluation.head_gained or evaluation.base_gained:
             return "mixed", "Criteria changed"
         return "failed", "Both failed"
-    if head_gained and base_gained:
+    if evaluation.head_gained and evaluation.base_gained:
         return "mixed", "Criteria changed"
-    if head_gained:
+    if evaluation.head_gained:
         return "improved", "Improved"
-    if base_gained:
+    if evaluation.base_gained:
         return "regressed", "Regressed"
     return "unchanged", "Unchanged"
+
+
+def _paired_metric(
+    evaluations: tuple[_TaskEvaluation, ...],
+    spec: MetricSpec,
+) -> tuple[Any, Any]:
+    pairs = [
+        (base_value, head_value)
+        for evaluation in evaluations
+        if (base := evaluation.row.base) is not None
+        if (head := evaluation.row.head) is not None
+        if (base_value := spec.read(base)) is not None
+        if (head_value := spec.read(head)) is not None
+    ]
+    return (
+        spec.aggregate([base for base, _ in pairs]),
+        spec.aggregate([head for _, head in pairs]),
+    )
 
 
 def _task_side(
@@ -488,37 +521,19 @@ def _task_side(
         return None
     return TaskSidePresentation(
         values={spec.key: spec.read(metrics) for spec in specs},
-        completed=metrics.passed,
+        completed=metrics.completed,
         eval_passed=eval_value,
         status=metrics.status,
     )
 
 
 def _task(
-    row: TrialComparison,
+    evaluation: _TaskEvaluation,
     specs: tuple[MetricSpec, ...],
     primary_score: MetricSpec | None,
 ) -> TaskPresentation:
-    base_eval = eval_passed(row.base, primary_score) if row.base is not None else None
-    head_eval = eval_passed(row.head, primary_score) if row.head is not None else None
-    base_pass = (
-        _effective_pass(row.base, primary_score) if row.base is not None else False
-    )
-    head_pass = (
-        _effective_pass(row.head, primary_score) if row.head is not None else False
-    )
-    criteria = _criterion_rows(row.base, row.head)
-    head_gained = tuple(c.label for c in criteria if c.direction == "positive")
-    base_gained = tuple(c.label for c in criteria if c.direction == "negative")
-    outcome, outcome_label = _task_outcome(
-        row.base,
-        row.head,
-        primary_score,
-        base_pass,
-        head_pass,
-        head_gained,
-        base_gained,
-    )
+    row = evaluation.row
+    outcome, outcome_label = evaluation.outcome, evaluation.outcome_label
     threshold = next(
         (
             metrics.scoring.threshold
@@ -530,7 +545,7 @@ def _task(
         None,
     )
     gate_note = (
-        _gate_note(base_pass, head_pass, threshold)
+        _gate_note(evaluation.base_pass, evaluation.head_pass, threshold)
         if row.base is not None and row.head is not None
         else None
     )
@@ -555,8 +570,8 @@ def _task(
         )
     elif primary_score is None:
         score_label = "Pass status"
-        base_score = row.base.passed if row.base else None
-        head_score = row.head.passed if row.head else None
+        base_score = row.base.completed if row.base else None
+        head_score = row.head.completed if row.head else None
         if base_score is None or head_score is None or base_score == head_score:
             score_direction = "neutral"
         else:
@@ -586,14 +601,14 @@ def _task(
             )
             for spec in specs
         ),
-        criteria=criteria,
-        criteria_changed=len(head_gained) + len(base_gained),
-        head_gained=head_gained,
-        base_gained=base_gained,
+        criteria=evaluation.criteria,
+        criteria_changed=len(evaluation.head_gained) + len(evaluation.base_gained),
+        head_gained=evaluation.head_gained,
+        base_gained=evaluation.base_gained,
         threshold=threshold,
         gate_note=gate_note,
-        base_side=_task_side(row.base, specs, base_eval),
-        head_side=_task_side(row.head, specs, head_eval),
+        base_side=_task_side(row.base, specs, evaluation.base_eval),
+        head_side=_task_side(row.head, specs, evaluation.head_eval),
     )
 
 
@@ -643,73 +658,61 @@ def _verdict(
 
 
 def build_presentation(document: ReportDocument) -> ComparisonPresentation:
-    """Build all comparison semantics once for Markdown, HTML, and JSON."""
-    comparable_rows = tuple(
-        row for row in document.rows if row.base is not None and row.head is not None
-    )
-    comparable_tasks = len(comparable_rows)
-    evaluated_rows = tuple(
-        row
-        for row in comparable_rows
-        if row.base is not None
-        and row.head is not None
-        and row.base.status != "incomplete"
-        and row.head.status != "incomplete"
-    )
-    evaluated_tasks = len(evaluated_rows)
+    """Build all comparison semantics once for Markdown, HTML, and JSON.
+
+    Each row is evaluated once into a :class:`_TaskEvaluation` (sides, gate
+    facts, criteria, outcome); the per-task cards and every comparable-only
+    aggregate below are folds over those evaluations, so no pass or criteria
+    state is derived twice.
+    """
     primary_score = primary_score_spec(document.specs)
-
+    evaluations = tuple(_evaluate(row, primary_score) for row in document.rows)
+    comparable_tasks = sum(
+        1
+        for evaluation in evaluations
+        if evaluation.row.base is not None and evaluation.row.head is not None
+    )
+    evaluated = tuple(
+        evaluation
+        for evaluation in evaluations
+        if evaluation.row.base is not None
+        and evaluation.row.head is not None
+        and evaluation.row.base.status != "incomplete"
+        and evaluation.row.head.status != "incomplete"
+    )
+    evaluated_tasks = len(evaluated)
     tasks = tuple(
-        _task(row, document.specs, primary_score) for row in document.rows
-    )
-    evaluated_names = {row.task for row in evaluated_rows}
-    evaluated_task_rows = tuple(
-        task for task in tasks if task.name in evaluated_names
+        _task(evaluation, document.specs, primary_score)
+        for evaluation in evaluations
     )
 
-    comparable_base_passed = sum(
-        1
-        for row in evaluated_rows
-        if row.base is not None and _effective_pass(row.base, primary_score)
-    )
-    comparable_head_passed = sum(
-        1
-        for row in evaluated_rows
-        if row.head is not None and _effective_pass(row.head, primary_score)
-    )
+    comparable_base_gate_passed = sum(1 for e in evaluated if e.base_pass)
+    comparable_head_gate_passed = sum(1 for e in evaluated if e.head_pass)
     comparable_base_completed = sum(
-        1 for row in evaluated_rows if row.base is not None and row.base.passed
+        1 for e in evaluated if e.row.base is not None and e.row.base.completed
     )
     comparable_head_completed = sum(
-        1 for row in evaluated_rows if row.head is not None and row.head.passed
+        1 for e in evaluated if e.row.head is not None and e.row.head.completed
     )
     base_rate = (
-        comparable_base_passed / evaluated_tasks if evaluated_tasks else None
+        comparable_base_gate_passed / evaluated_tasks if evaluated_tasks else None
     )
     head_rate = (
-        comparable_head_passed / evaluated_tasks if evaluated_tasks else None
+        comparable_head_gate_passed / evaluated_tasks if evaluated_tasks else None
     )
     pass_direction = _direction(base_rate, head_rate)
 
     base_criteria_passed = sum(
-        sum(1 for c in row.base.criteria if _criterion_pass(c))
-        for row in evaluated_rows
-        if row.base is not None
+        1 for e in evaluated for c in e.base_criteria if c.passed
     )
-    base_criteria_total = sum(
-        len(row.base.criteria) for row in evaluated_rows if row.base is not None
-    )
+    base_criteria_total = sum(len(e.base_criteria) for e in evaluated)
     head_criteria_passed = sum(
-        sum(1 for c in row.head.criteria if _criterion_pass(c))
-        for row in evaluated_rows
-        if row.head is not None
+        1 for e in evaluated for c in e.head_criteria if c.passed
     )
-    head_criteria_total = sum(
-        len(row.head.criteria) for row in evaluated_rows if row.head is not None
-    )
+    head_criteria_total = sum(len(e.head_criteria) for e in evaluated)
 
-    criteria_head_gained = sum(1 for task in evaluated_task_rows if task.head_gained)
-    criteria_base_gained = sum(1 for task in evaluated_task_rows if task.base_gained)
+    criteria_head_gained = sum(1 for e in evaluated if e.head_gained)
+    criteria_base_gained = sum(1 for e in evaluated if e.base_gained)
     criteria_mixed = criteria_head_gained > 0 and criteria_base_gained > 0
     criteria_direction = (
         "positive"
@@ -720,15 +723,15 @@ def build_presentation(document: ReportDocument) -> ComparisonPresentation:
     )
     all_failed = (
         evaluated_tasks > 0
-        and comparable_base_passed == 0
-        and comparable_head_passed == 0
+        and comparable_base_gate_passed == 0
+        and comparable_head_gate_passed == 0
     )
 
     summary_metrics = tuple(
         _metric(line.spec, line.base, line.head) for line in document.summary.lines
     )
     comparison_metrics = tuple(
-        _metric(spec, *_paired_metric(evaluated_rows, spec))
+        _metric(spec, *_paired_metric(evaluated, spec))
         for spec in document.specs
     )
     primary_metric = next(
@@ -813,16 +816,16 @@ def build_presentation(document: ReportDocument) -> ComparisonPresentation:
             head_tasks=document.summary.head_tasks,
             base_only=document.summary.base_only,
             head_only=document.summary.head_only,
-            base_passed=document.summary.base_passed,
-            head_passed=document.summary.head_passed,
+            base_gate_passed=document.summary.base_gate_passed,
+            head_gate_passed=document.summary.head_gate_passed,
             base_completed=document.summary.base_completed,
             head_completed=document.summary.head_completed,
         ),
         comparable=ComparablePresentation(
             tasks=comparable_tasks,
             evaluated_tasks=evaluated_tasks,
-            base_passed=comparable_base_passed,
-            head_passed=comparable_head_passed,
+            base_gate_passed=comparable_base_gate_passed,
+            head_gate_passed=comparable_head_gate_passed,
             base_completed=comparable_base_completed,
             head_completed=comparable_head_completed,
             base_rate_value=base_rate,

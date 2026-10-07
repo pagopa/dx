@@ -145,8 +145,8 @@ def _kpi_cards(presentation: ComparisonPresentation) -> list[dict[str, Any]]:
         _kpi_card(
             "Verifier gate",
             "Tasks passed",
-            f"{comparable.base_passed} / {evaluated}",
-            f"{comparable.head_passed} / {evaluated}",
+            f"{comparable.base_gate_passed} / {evaluated}",
+            f"{comparable.head_gate_passed} / {evaluated}",
             delta=_percentage_delta(
                 comparable.base_rate_value,
                 comparable.head_rate_value,

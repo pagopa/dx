@@ -73,9 +73,9 @@ def render_markdown(document: ReportDocument) -> str:
             f"- completed task pairs: {comparable.evaluated_tasks}",
             f"- {presentation.score.label}: {presentation.score.base} → "
             f"{presentation.score.head} ({presentation.score.delta})",
-            f"- tasks passed (verifier gate): {comparable.base_passed}/"
+            f"- tasks passed (verifier gate): {comparable.base_gate_passed}/"
             f"{comparable.evaluated_tasks} → "
-            f"{comparable.head_passed}/{comparable.evaluated_tasks}",
+            f"{comparable.head_gate_passed}/{comparable.evaluated_tasks}",
             f"- verifier criteria passed: {comparable.base_criteria} → "
             f"{comparable.head_criteria}",
             f"- completed without error: {comparable.base_completed}/"
@@ -135,9 +135,9 @@ def render_markdown(document: ReportDocument) -> str:
             f"- completed trials: {population.base_completed}/"
             f"{population.base_tasks} → "
             f"{population.head_completed}/{population.head_tasks}",
-            f"- eval-passed trials: {population.base_passed}/"
+            f"- gate-passed trials: {population.base_gate_passed}/"
             f"{population.base_tasks} → "
-            f"{population.head_passed}/{population.head_tasks}",
+            f"{population.head_gate_passed}/{population.head_tasks}",
             "",
         ]
     )
@@ -166,8 +166,6 @@ def _side_dict(side: TaskSidePresentation | None) -> dict[str, Any] | None:
         **side.values,
         "completed": side.completed,
         "eval_passed": side.eval_passed,
-        #: Deprecated alias of ``completed`` (kept for older consumers).
-        "passed": side.completed,
         "status": side.status,
     }
 
@@ -228,8 +226,8 @@ def render_json(document: ReportDocument) -> str:
             "verdict": presentation.verdict,
             "comparable_tasks": presentation.comparable.tasks,
             "completed_task_pairs": presentation.comparable.evaluated_tasks,
-            "base_passed": presentation.comparable.base_passed,
-            "head_passed": presentation.comparable.head_passed,
+            "base_gate_passed": presentation.comparable.base_gate_passed,
+            "head_gate_passed": presentation.comparable.head_gate_passed,
             "base_completed": presentation.comparable.base_completed,
             "head_completed": presentation.comparable.head_completed,
             "base_success_rate": presentation.comparable.base_rate_value,
@@ -279,8 +277,8 @@ def render_json(document: ReportDocument) -> str:
             "head_tasks": presentation.population.head_tasks,
             "base_only": presentation.population.base_only,
             "head_only": presentation.population.head_only,
-            "base_passed": presentation.population.base_passed,
-            "head_passed": presentation.population.head_passed,
+            "base_gate_passed": presentation.population.base_gate_passed,
+            "head_gate_passed": presentation.population.head_gate_passed,
             "base_completed": presentation.population.base_completed,
             "head_completed": presentation.population.head_completed,
             "metrics": [

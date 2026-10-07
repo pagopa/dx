@@ -156,6 +156,17 @@ class CriterionResult:
     weight: float = 1.0
     reasoning: str = ""
 
+    @property
+    def passed(self) -> bool | None:
+        """Whether the judge marked this criterion passed, or ``None``.
+
+        RewardKit's criterion values are 1.0 (passed) and 0.0 (failed); the
+        ``value > 0`` rule lives here, next to the value it interprets.
+        """
+        if self.value is None:
+            return None
+        return self.value > 0.0
+
 
 @dataclass(frozen=True)
 class ScoringGate:
@@ -177,7 +188,10 @@ class TrialMetrics:
 
     ``rewards`` carries the verifier rewards keyed by criterion; ``criteria``
     and ``scoring`` carry the verifier's per-criterion detail and gate when
-    the run recorded them; ``status`` distinguishes completed, errored, and
+    the run recorded them; ``completed`` is the trial-level flag (finished
+    without an exception) and :meth:`gate_passed` is the verifier's gate
+    (RewardKit writes the already-gated reward; the recorded ``scoring.json``
+    gate is display-only); ``status`` distinguishes completed, errored, and
     interrupted trials; the other fields mirror the reportable metrics. Values
     are read by the metric registry (:data:`harbor_bench.metrics.METRIC_SPECS`)
     through its :class:`~harbor_bench.metrics.MetricSpec` (a reward key or a
@@ -197,11 +211,30 @@ class TrialMetrics:
     agent_duration_sec: float | None = None
     total_duration_sec: float | None = None
     verifier_duration_sec: float | None = None
-    passed: bool = True
+    completed: bool = True
     trial_name: str | None = None
     status: TrialStatus = "completed"
     criteria: tuple[CriterionResult, ...] = ()
     scoring: ScoringGate | None = None
+
+    def eval_passed(self, primary: MetricSpec | None) -> bool | None:
+        """Whether the verifier's gate passed for this trial, or ``None``.
+
+        RewardKit applies the task's ``[scoring]`` gate (usually ``threshold``)
+        before writing the reward: 0.0 fails, >0 passes. ``None`` means no
+        primary score was recorded.
+        """
+        if primary is None:
+            return None
+        value = primary.read(self)
+        if value is None:
+            return None
+        return float(value) > 0.0
+
+    def gate_passed(self, primary: MetricSpec | None) -> bool:
+        """Gate pass, falling back to :attr:`completed` when no reward exists."""
+        value = self.eval_passed(primary)
+        return self.completed if value is None else value
 
 
 @dataclass
@@ -328,7 +361,7 @@ class Trial:
     def metrics(self) -> TrialMetrics:
         """The typed metrics for this trial, derived from the trial facts.
 
-        Reads the reward, token, cost, duration, and pass/fail numbers out of
+        Reads the reward, token, cost, duration, and completion flag out of
         ``result.json`` and backfills the values the file cannot report (steps,
         GPT token/cost) from the trial's raw artifacts. A missing
         ``result.json`` produces an incomplete result with any available
@@ -348,7 +381,7 @@ class Trial:
                     },
                     n_steps=facts.trajectory_steps,
                     verifier_tokens=self._verifier_tokens(facts),
-                    passed=False,
+                    completed=False,
                     status="incomplete",
                     criteria=self._criteria(facts.reward_details),
                     scoring=facts.scoring,
@@ -390,7 +423,7 @@ class Trial:
                 (data.get("verifier") or {}).get("started_at"),
                 (data.get("verifier") or {}).get("finished_at"),
             ),
-            passed=data.get("exception_info") is None,
+            completed=data.get("exception_info") is None,
             status="error" if data.get("exception_info") is not None else "completed",
             criteria=self._criteria(facts.reward_details),
             scoring=facts.scoring,

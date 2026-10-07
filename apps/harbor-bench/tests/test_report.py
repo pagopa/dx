@@ -25,14 +25,14 @@ def _metrics(
     task: str,
     quality: float,
     *,
-    passed: bool = True,
+    completed: bool = True,
     cost: float | None = None,
 ) -> TrialMetrics:
     return TrialMetrics(
         task_name=task,
         rewards={"quality": quality},
         cost_usd=cost,
-        passed=passed,
+        completed=completed,
     )
 
 
@@ -41,14 +41,14 @@ def _gated_metrics(
     reward: float,
     criteria: dict[str, bool],
     *,
-    passed: bool = True,
+    completed: bool = True,
     threshold: float | None = 0.8,
 ) -> TrialMetrics:
     """Metrics with RewardKit criterion outcomes and a recorded gate."""
     return TrialMetrics(
         task_name=task,
         rewards={"reward": reward},
-        passed=passed,
+        completed=completed,
         criteria=tuple(
             CriterionResult(
                 name=name,
@@ -82,7 +82,7 @@ def test_one_sided_tasks_do_not_change_comparable_verdict():
         _document(
             {
                 "common": _metrics("common", 1.0),
-                "base-only": _metrics("base-only", 0.0, passed=False),
+                "base-only": _metrics("base-only", 0.0, completed=False),
             },
             {"common": _metrics("common", 1.0)},
         )
@@ -126,7 +126,7 @@ def test_headline_falls_back_to_success_rate_without_paired_scores():
                 "common": TrialMetrics(
                     task_name="common",
                     rewards={},
-                    passed=False,
+                    completed=False,
                 ),
                 "base-only": _metrics("base-only", 0.1),
             },
@@ -134,7 +134,7 @@ def test_headline_falls_back_to_success_rate_without_paired_scores():
                 "common": TrialMetrics(
                     task_name="common",
                     rewards={},
-                    passed=True,
+                    completed=True,
                 )
             },
         )
@@ -174,8 +174,8 @@ def test_criteria_changes_surface_when_gate_scores_tie():
     assert task.head_gained == ("language criterion",)
     assert task.base_gained == ("no-fabrication criterion",)
     assert task.gate_note == "Base and Head below the 0.8 gate"
-    assert presentation.comparable.base_passed == 0
-    assert presentation.comparable.head_passed == 0
+    assert presentation.comparable.base_gate_passed == 0
+    assert presentation.comparable.head_gate_passed == 0
     assert presentation.comparable.base_completed == 1
     assert presentation.comparable.head_completed == 1
     assert presentation.comparable.base_criteria == "1 / 3"
@@ -192,8 +192,8 @@ def test_both_failing_runs_are_not_unchanged():
 
     assert presentation.verdict == "Both runs failed every comparable task"
     assert presentation.tasks[0].outcome == "failed"
-    assert presentation.comparable.base_passed == 0
-    assert presentation.comparable.head_passed == 0
+    assert presentation.comparable.base_gate_passed == 0
+    assert presentation.comparable.head_gate_passed == 0
     assert presentation.comparable.base_rate == "0%"
 
 
@@ -201,15 +201,15 @@ def test_gate_flip_beats_completion_status():
     """Two completed trials still regress/improve when the gate flips."""
     presentation = build_presentation(
         _document(
-            {"t": TrialMetrics(task_name="t", rewards={"reward": 0.0}, passed=True)},
-            {"t": TrialMetrics(task_name="t", rewards={"reward": 1.0}, passed=True)},
+            {"t": TrialMetrics(task_name="t", rewards={"reward": 0.0}, completed=True)},
+            {"t": TrialMetrics(task_name="t", rewards={"reward": 1.0}, completed=True)},
         )
     )
 
     assert presentation.tasks[0].outcome == "improved"
     assert presentation.verdict == "Head performs better"
-    assert presentation.comparable.base_passed == 0
-    assert presentation.comparable.head_passed == 1
+    assert presentation.comparable.base_gate_passed == 0
+    assert presentation.comparable.head_gate_passed == 1
     assert presentation.comparable.base_completed == 1
     assert presentation.comparable.head_completed == 1
 
@@ -238,7 +238,7 @@ def test_render_report_json_exposes_criteria_and_gate():
     )
 
     comparison = value["comparison"]
-    assert comparison["base_passed"] == 0
+    assert comparison["base_gate_passed"] == 0
     assert comparison["base_completed"] == 1
     assert comparison["base_criteria_passed"] == 1
     assert comparison["base_criteria_total"] == 3
@@ -248,6 +248,7 @@ def test_render_report_json_exposes_criteria_and_gate():
     assert task["threshold"] == 0.8
     assert task["base"]["completed"] is True
     assert task["base"]["eval_passed"] is False
+    assert "passed" not in task["base"]
     directions = {c["name"]: c["direction"] for c in task["criteria"]}
     assert directions == {
         "language": "positive",
@@ -367,7 +368,7 @@ def test_render_report_json_exposes_comparable_result():
         _document(
             {
                 "common": _metrics("common", 0.8),
-                "base-only": _metrics("base-only", 0.0, passed=False),
+                "base-only": _metrics("base-only", 0.0, completed=False),
             },
             {"common": _metrics("common", 0.9)},
         ),

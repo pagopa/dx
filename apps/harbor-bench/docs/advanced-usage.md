@@ -512,8 +512,11 @@ uv run --package harbor-bench harbor-bench report \
 The report is rendered as Markdown by default; pass `--format json` for a
 machine-readable document. Its `comparison` object is calculated only from
 tasks present in both runs, while `summary` contains whole-job totals; each
-metric records its population explicitly. Per-task metrics remain keyed by the
-metric registry, and run configuration is included. Write it to stdout or
+metric records its population explicitly. Counts name the two outcome axes
+explicitly: `base_gate_passed`/`head_gate_passed` count trials whose verifier
+reward met its gate, while `base_completed`/`head_completed` count trials that
+finished without an exception. Per-task metrics remain keyed by the metric
+registry, and run configuration is included. Write it to stdout or
 `--report out.json`:
 
 ```bash

@@ -16,7 +16,14 @@ from harbor_bench.diff import (
     metric_specs,
     summarize,
 )
-from harbor_bench.jobs import CriterionResult, Job, JobMeta, ScoringGate, SkillVersion
+from harbor_bench.jobs import (
+    CriterionResult,
+    Job,
+    JobMeta,
+    ScoringGate,
+    SkillVersion,
+    TrialMetrics,
+)
 from harbor_bench.report import render_html, render_json, render_markdown
 
 from tests.conftest import DEFAULT_USAGE_ROW, write_copilot_jsonl, write_session_db
@@ -90,13 +97,13 @@ def test_job_metrics_parses_metrics(tmp_path):
     assert m.cost_usd == 0.05
     assert m.agent_duration_sec == 300.0
     assert m.total_duration_sec == 420.0
-    assert m.passed is True
+    assert m.completed is True
 
 
 def test_job_metrics_marks_exception_as_failed(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "skill-task-1", exception=True)
-    assert Job(job).metrics()["skill-task-1"].passed is False
+    assert Job(job).metrics()["skill-task-1"].completed is False
 
 
 def test_job_metrics_reads_criteria_and_scoring_gate(tmp_path):
@@ -152,6 +159,30 @@ def test_job_metrics_tolerates_missing_criteria_artifacts(tmp_path):
 
     assert metrics.criteria == ()
     assert metrics.scoring is None
+
+
+def test_trial_metrics_owns_the_gate_rule():
+    """The gate rule is a derivation of TrialMetrics: reward > 0, else completed."""
+    primary = MetricSpec("score.reward", "score", source="reward")
+    passed = TrialMetrics(task_name="t", rewards={"reward": 1.0})
+    failed = TrialMetrics(task_name="t", rewards={"reward": 0.0})
+    no_reward = TrialMetrics(task_name="t", rewards={})
+    errored = TrialMetrics(task_name="t", rewards={}, completed=False)
+
+    assert passed.eval_passed(primary) is True
+    assert passed.gate_passed(primary) is True
+    assert failed.eval_passed(primary) is False
+    assert failed.gate_passed(primary) is False
+    assert no_reward.eval_passed(primary) is None
+    assert no_reward.gate_passed(primary) is True  # falls back to completed
+    assert errored.gate_passed(primary) is False
+    assert no_reward.gate_passed(None) is True  # no primary score: fallback
+
+
+def test_criterion_result_owns_its_pass_rule():
+    assert CriterionResult(name="c", value=1.0).passed is True
+    assert CriterionResult(name="c", value=0.0).passed is False
+    assert CriterionResult(name="c").passed is None
 
 
 def test_job_metrics_missing_dir_raises(tmp_path):
@@ -305,7 +336,7 @@ def test_trial_metrics_and_meta_typed_interface(tmp_path):
     assert metrics.cost_usd == 0.05
     assert metrics.agent_duration_sec == 300.0
     assert metrics.total_duration_sec == 420.0
-    assert metrics.passed is True
+    assert metrics.completed is True
     assert metrics.rewards["quality"] == 0.9
 
     meta = by_task["task-b"].meta()
@@ -376,7 +407,7 @@ def test_build_document_computes_specs_summary_and_diffs_once(tmp_path, monkeypa
     assert [s.key for s in document.specs][:1] == ["score.quality"]
     assert "input_tokens" in [s.key for s in document.specs]
     assert document.summary.head_tasks == 1
-    assert document.summary.base_passed == 1
+    assert document.summary.base_gate_passed == 1
     # both sides carry the same git-loaded skill, so each produces a diff row
     assert len(document.skill_diffs) == 2
     assert document.skill_diffs[0].command.startswith("git -C ")
@@ -402,8 +433,10 @@ def test_summarize_aggregates_numbers(tmp_path):
     assert summary.head_tasks == 1
     assert summary.base_only == 1  # task-b ran only in base
     assert summary.head_only == 0
-    assert summary.base_passed == 2
-    assert summary.head_passed == 1
+    assert summary.base_completed == 2
+    assert summary.head_completed == 1
+    assert summary.base_gate_passed == 2
+    assert summary.head_gate_passed == 1
 
     by_key = {line.spec.key: line for line in summary.lines}
     assert by_key["input_tokens"].base == 3000  # summed, int
@@ -930,7 +963,9 @@ def test_render_json_shares_report_numbers(tmp_path):
     assert task["head"]["score.quality"] == 0.95
     assert task["base"]["input_tokens"] == 1000
     assert task["head"]["input_tokens"] == 1100
-    assert task["base"]["passed"] is True
+    assert task["base"]["completed"] is True
+    assert task["base"]["eval_passed"] is True
+    assert "passed" not in task["base"]
     summary = doc["summary"]
     assert summary["base_tasks"] == 1
     assert summary["head_tasks"] == 1
