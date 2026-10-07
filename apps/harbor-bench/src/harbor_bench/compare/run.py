@@ -103,7 +103,6 @@ class CompareOptions:
 
     base_skill: str
     head_skill: str
-    aux_skills: tuple[str, ...] = ()
     task_patterns: tuple[str, ...] = ()
     scan_root: Path = DEFAULT_SCAN_ROOT
     out: Path = DEFAULT_OUT
@@ -116,6 +115,7 @@ class CompareOptions:
     token: str | None = None
     harbor: str = "harbor"
     report_format: ReportFormat = "markdown"
+    aux_skills: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

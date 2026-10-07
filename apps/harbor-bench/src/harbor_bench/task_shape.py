@@ -70,9 +70,9 @@ HARBOR_ARTIFACTS: tuple = (
 
 #: Judge-bridge env written into ``[verifier].env``: route GitHub Copilot
 #: through LiteLLM's ``openai`` provider so the judge can run headless with
-#: COPILOT_GITHUB_TOKEN as the key. gpt-5.x models are Responses-API-only, so
-#: LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES sends all openai/* judge calls
-#: to https://api.githubcopilot.com/responses.
+#: COPILOT_GITHUB_TOKEN as the key. Some models (e.g. gpt-6-luna) are
+#: Responses-API-only, so LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES sends
+#: all openai/* judge calls to https://api.githubcopilot.com/responses.
 JUDGE_BRIDGE_ENV: dict = {
     "OPENAI_API_BASE": "https://api.githubcopilot.com",
     "OPENAI_API_KEY": "${COPILOT_GITHUB_TOKEN}",
