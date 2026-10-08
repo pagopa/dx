@@ -1,3 +1,10 @@
+## 0.5.12 (2026-10-08)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+- Updated @pagopa/dx-tasks to 0.2.8
+
 ## 0.5.11 (2026-10-06)
 
 ### 🚀 Features

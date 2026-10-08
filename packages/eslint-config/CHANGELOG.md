@@ -1,3 +1,13 @@
+## 7.0.1 (2026-10-08)
+
+### 🩹 Fixes
+
+- Update dependencies ([#2319](https://github.com/pagopa/dx/pull/2319))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 # 7.0.0 (2026-09-22)
 
 ### ⚠️  Breaking Changes

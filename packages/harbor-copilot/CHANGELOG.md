@@ -1,3 +1,13 @@
+## 0.1.2 (2026-10-08)
+
+### 🩹 Fixes
+
+- Document trial completion and the verifier gate as trial-level flags, not metrics, in the metrics specification. ([#2309](https://github.com/pagopa/dx/pull/2309))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.1.1 (2026-09-08)
 
 ### 🚀 Features
