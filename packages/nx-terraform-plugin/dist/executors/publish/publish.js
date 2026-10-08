@@ -66,7 +66,8 @@ const ensureGitHubRepository = async (owner, repo, octokit) => {
 //#endregion
 //#region src/adapters/github/publisher.ts
 const getRepoNameFromProjectRoot = (projectRoot, provider) => {
-	return `terraform-${provider}-${basename(projectRoot.replace(/\\/g, "/")).replaceAll("_", "-")}`;
+	const normalizedPath = projectRoot.replace(/\\/g, "/");
+	return `terraform-${provider}-${basename(normalizedPath).replaceAll("_", "-")}`;
 };
 const copyModuleDirectoryContents = async (sourceDirectory, targetDirectory) => {
 	await cp(sourceDirectory, targetDirectory, {

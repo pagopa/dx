@@ -22,7 +22,7 @@
     "@docusaurus/theme-mermaid": "^3.10.2",
     "@easyops-cn/docusaurus-search-local": "^0.55.3",
     "@mdx-js/react": "^3.1.1",
-    "@microsoft/applicationinsights-web": "^3.4.3",
+    "@microsoft/applicationinsights-web": "^3.4.4",
     "@microsoft/docusaurus-plugin-application-insights": "^4.0.1",
     "gray-matter": "^4.0.3",
     "prism-react-renderer": "^2.4.1",
