@@ -4,6 +4,21 @@
 
 This Terraform module provisions an Azure Storage Account with optional configurations for advanced features, networking, and monitoring.
 
+## Provider Compatibility
+
+AzureRM **4.81 or later within v4** is required for the migration to
+`storage_account_id` on tables and queues and `key_vault_key_id` on
+customer-managed keys. Although table account IDs are available from 4.77,
+versions 4.77-4.80 mark the account selector change for replacement. Version 4.81
+supports the in-place transition for the same storage account. When upgrading
+from an older locked provider, run `terraform init -upgrade`.
+
+Module inputs and outputs are unchanged. Customer-managed keys still use
+versionless URLs for automatic rotation, and static websites remain managed by
+the storage account's inline configuration. No manual state migration is
+required by these configuration changes. This release does not add AzureRM v5
+support.
+
 ## Diagram
 
 The following diagram illustrates the architecture and relationships between the main components of this module:
@@ -241,7 +256,7 @@ This variable was introduced as a temporary workaround to prevent storage accoun
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.81 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules
