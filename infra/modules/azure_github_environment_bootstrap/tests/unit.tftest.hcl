@@ -480,3 +480,45 @@ run "azure_github_environment_bootstrap_user_owner_identities" {
     error_message = "User-owned repositories must not query the GitHub organization data source"
   }
 }
+
+run "azure_github_environment_bootstrap_rejects_zero_owner_id" {
+  command = plan
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      name     = "dx-test-monorepo-starter-pack"
+      owner_id = 0
+    }
+  }
+
+  expect_failures = [var.repository]
+}
+
+run "azure_github_environment_bootstrap_rejects_negative_owner_id" {
+  command = plan
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      name     = "dx-test-monorepo-starter-pack"
+      owner_id = -1
+    }
+  }
+
+  expect_failures = [var.repository]
+}
+
+run "azure_github_environment_bootstrap_rejects_fractional_owner_id" {
+  command = plan
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      name     = "dx-test-monorepo-starter-pack"
+      owner_id = 1.5
+    }
+  }
+
+  expect_failures = [var.repository]
+}

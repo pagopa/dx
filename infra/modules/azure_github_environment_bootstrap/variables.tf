@@ -51,7 +51,15 @@ variable "repository" {
     owner_id = optional(number)
   })
 
-  description = "Details about the GitHub repository, including owner, optional numeric owner ID, and name. Set owner_id for repositories owned by a personal GitHub account."
+  description = "Details about the GitHub repository, including owner, optional positive integer owner ID, and name. Set owner_id for repositories owned by a personal GitHub account."
+
+  validation {
+    condition = var.repository.owner_id == null ? true : (
+      var.repository.owner_id > 0 &&
+      floor(var.repository.owner_id) == var.repository.owner_id
+    )
+    error_message = "repository.owner_id must be a positive integer when set."
+  }
 }
 
 variable "github_private_runner" {

@@ -216,3 +216,57 @@ run "bootstrapper_non_uat_omits_integration_test_credentials" {
     error_message = "Integration Tests credentials should only be created for UAT"
   }
 }
+
+run "bootstrapper_rejects_zero_owner_id" {
+  command = plan
+
+  module {
+    source = "../../../_modules/azure"
+  }
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      name     = "dx-test-repo"
+      owner_id = 0
+    }
+  }
+
+  expect_failures = [var.repository]
+}
+
+run "bootstrapper_rejects_negative_owner_id" {
+  command = plan
+
+  module {
+    source = "../../../_modules/azure"
+  }
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      name     = "dx-test-repo"
+      owner_id = -1
+    }
+  }
+
+  expect_failures = [var.repository]
+}
+
+run "bootstrapper_rejects_fractional_owner_id" {
+  command = plan
+
+  module {
+    source = "../../../_modules/azure"
+  }
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      name     = "dx-test-repo"
+      owner_id = 1.5
+    }
+  }
+
+  expect_failures = [var.repository]
+}
