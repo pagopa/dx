@@ -196,9 +196,10 @@ The DR/SRS is ready for review when:
 - each selected Use Case meets the minimum core or records a gap with an owner;
 - Figma/Service Blueprint links exist for user-facing work, or a gap is
   recorded;
-- privacy, security, accessibility, tracking, and support readiness are
-  addressed, justified, or recorded as gaps with an owner; privacy and security
-  gaps block the production launch, not the drafting of the document;
+- privacy, security, accessibility, logging, metrics/alerting, tracking, and
+  support readiness are addressed, justified, or recorded as gaps with an owner;
+  privacy and security gaps block the production launch, not the drafting of the
+  document;
 - OpenAPI/AsyncAPI/Data Contracts are linked when APIs, events, or data exist,
   or are recorded as explicit gaps with an owner;
 - open or accepted RFCs are linked and accepted decisions are propagated for the

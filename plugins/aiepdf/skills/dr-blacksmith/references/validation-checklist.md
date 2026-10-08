@@ -40,6 +40,8 @@ criterion, the model wins.
       are internally consistent.
 - [ ] Relevant non-functional requirements and compliance concerns have targets,
       evidence, owners, or explicit gaps.
+- [ ] Logging states what is recorded, retained, and who may access it; metrics
+      and alerting state the signals, thresholds, and who is paged.
 - [ ] Relevant APIs, events, data contracts, integrations, and audit behavior are
       linked or explicitly unresolved.
 - [ ] Accepted RFC decisions are reflected in the DR/SRS for the impacted slices

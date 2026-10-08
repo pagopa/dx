@@ -150,16 +150,23 @@ _Describe build-vs-buy decisions and the main cross-Use-Case trade-offs. Mark
 
 ## Non-functional requirements and compliance — `Always`
 
-| ID       | Area                                    | Requirement / target              | Verification evidence   | Owner     | Status     |
-| -------- | --------------------------------------- | --------------------------------- | ----------------------- | --------- | ---------- |
-| `NFR-01` | Performance                             | _<target or TBD>_                 | _<test / metric>_       | _<owner>_ | _<status>_ |
-| `NFR-02` | Availability / SLO                      | _<target or TBD>_                 | _<monitoring / report>_ | _<owner>_ | _<status>_ |
-| `NFR-03` | Scalability                             | _<target or N/A — reason>_        | _<evidence>_            | _<owner>_ | _<status>_ |
-| `NFR-04` | Security                                | _<requirement>_                   | _<review / control>_    | _<owner>_ | _<status>_ |
-| `NFR-05` | Legal / privacy                         | _<requirement or N/A — reason>_   | _<DPIA / review>_       | _<owner>_ | _<status>_ |
-| `NFR-06` | Business continuity / disaster recovery | _<RPO/RTO or N/A — reason>_       | _<exercise / plan>_     | _<owner>_ | _<status>_ |
-| `NFR-07` | Monitoring / observability              | _<logs, metrics, traces, alerts>_ | _<dashboard / runbook>_ | _<owner>_ | _<status>_ |
-| `NFR-08` | Accessibility / UX                      | _<requirement or N/A — reason>_   | _<audit / test>_        | _<owner>_ | _<status>_ |
+_Logging and metrics/alerting each take a row. Logging covers the events the
+system records, their levels, retention, and access. Metrics and alerting cover
+the metrics and traces measured, the dashboards that expose them, the thresholds
+that fire, and who is paged. Write `N/A — <confirmed reason>` when the
+initiative has no runtime surface._
+
+| ID       | Area                                    | Requirement / target            | Verification evidence   | Owner     | Status     |
+| -------- | --------------------------------------- | ------------------------------- | ----------------------- | --------- | ---------- |
+| `NFR-01` | Performance                             | _<target or TBD>_               | _<test / metric>_       | _<owner>_ | _<status>_ |
+| `NFR-02` | Availability / SLO                      | _<target or TBD>_               | _<monitoring / report>_ | _<owner>_ | _<status>_ |
+| `NFR-03` | Scalability                             | _<target or N/A — reason>_      | _<evidence>_            | _<owner>_ | _<status>_ |
+| `NFR-04` | Security                                | _<requirement>_                 | _<review / control>_    | _<owner>_ | _<status>_ |
+| `NFR-05` | Legal / privacy                         | _<requirement or N/A — reason>_ | _<DPIA / review>_       | _<owner>_ | _<status>_ |
+| `NFR-06` | Business continuity / disaster recovery | _<RPO/RTO or N/A — reason>_     | _<exercise / plan>_     | _<owner>_ | _<status>_ |
+| `NFR-07` | Logging                                 | _<events, retention, access>_   | _<log pipeline>_        | _<owner>_ | _<status>_ |
+| `NFR-08` | Metrics and alerting                    | _<SLIs, thresholds, on-call>_   | _<dashboard / alerts>_  | _<owner>_ | _<status>_ |
+| `NFR-09` | Accessibility / UX                      | _<requirement or N/A — reason>_ | _<audit / test>_        | _<owner>_ | _<status>_ |
 
 <!-- id: use-case-index -->
 

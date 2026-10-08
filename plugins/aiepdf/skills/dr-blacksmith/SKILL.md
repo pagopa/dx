@@ -98,9 +98,9 @@ bundled template as a read-only input.
    boundaries and components, the domain model and glossary, technology profile,
    deployment architecture, assumptions and trade-offs, non-functional
    requirements, compliance, technical contracts, Use Case index, rollout and
-   rollback, validation, monitoring, and readiness. Address every template
-   section: populate it, mark it `N/A — <confirmed reason>`, or record it as a
-   gap.
+   rollback, validation, logging, metrics and alerting, and readiness. Address
+   every template section: populate it, mark it `N/A — <confirmed reason>`, or
+   record it as a gap.
 4. **Clarify selectively.** Ask targeted questions about every contradiction or
    missing fact that touches a _material dimension_ — scope, behavior,
    ownership, priority, targets, architecture, compliance, contracts, or
