@@ -7,6 +7,7 @@ env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
   PNPM_CONFIG_STORE_DIR: ~/.local/share/pnpm/store
   MISE_ENV: ""
+  TFLINT_PLUGIN_DIR: ${{ github.workspace }}/.tflint.d/plugins
 
 jobs:
   gate:
@@ -244,6 +245,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
 
+      - name: Cache TFLint plugins
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.TFLINT_PLUGIN_DIR }}
+          key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
+
       - name: Install dependencies
         run: mise deps
 
@@ -330,6 +337,12 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
+
+      - name: Cache TFLint plugins
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.TFLINT_PLUGIN_DIR }}
+          key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
       - name: Install dependencies
         run: |
