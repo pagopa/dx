@@ -231,6 +231,12 @@ jobs:
         run: |
           terraform init -input=false
 
+      - name: Check Terraform provider support
+        continue-on-error: true
+        uses: pagopa/dx/actions/terraform-provider-lifecycle@main
+        with:
+          working-directory: ${{ matrix.dir }}
+
       - name: Terraform Plan
         uses: pagopa/dx/actions/sanitize-terraform-plan@main
         with:
@@ -357,6 +363,12 @@ jobs:
         working-directory: ${{ matrix.dir }}
         run: |
           terraform init -input=false
+
+      - name: Check Terraform provider support
+        continue-on-error: true
+        uses: pagopa/dx/actions/terraform-provider-lifecycle@main
+        with:
+          working-directory: ${{ matrix.dir }}
 
       - name: Start Terraform Apply telemetry span
         uses: pagopa/dx/actions/log-telemetry-event@main
