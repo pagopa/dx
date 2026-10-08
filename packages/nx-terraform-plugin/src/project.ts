@@ -434,9 +434,12 @@ export const getProject = (
   hasRootTflintConfig = false,
   publishManifest: ModulePublishManifest | undefined = undefined,
   testCapabilities: TerraformTestCapabilities = noTerraformTestCapabilities,
-  sharedInputs: readonly string[] = [],
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
+  const sharedModulesInput = path
+    .join(path.dirname(root), "_modules", "**", "*")
+    .split(path.sep)
+    .join("/");
   const isPublishableLibrary =
     projectType === "library" && publishManifest !== undefined;
   const targets = getTargets(
@@ -462,7 +465,9 @@ export const getProject = (
     namedInputs: {
       default: [
         "{projectRoot}/*.{tf,tfvars}",
-        ...(projectType === "application" ? sharedInputs : []),
+        ...(projectType === "application"
+          ? [`{workspaceRoot}/${sharedModulesInput}`]
+          : []),
       ],
       examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
     },

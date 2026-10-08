@@ -8,7 +8,6 @@ import path from "node:path";
 
 import { readModulePublishManifest } from "./discovery.ts";
 import { getStaticDependenciesFromFile } from "./fs.ts";
-import { getLocalModuleSourceRoots } from "./hcl.ts";
 import { configureLogger } from "./logger.ts";
 import { ModulePublishManifest } from "./manifest.ts";
 import { parseOptions, TerraformPluginOptions } from "./options.ts";
@@ -56,85 +55,6 @@ const fileExists = async (filePath: string) => {
     }
     throw error;
   }
-};
-
-const toWorkspaceGlob = (root: string) =>
-  `{workspaceRoot}/${root.split(path.sep).join("/")}/**/*`;
-
-const isWorkspaceRelativeRoot = (root: string) =>
-  !path.isAbsolute(root) && root !== ".." && !root.startsWith(`..${path.sep}`);
-
-const isTraversableSharedModuleRoot = (
-  root: string,
-  moduleManifestRoots: ReadonlySet<string>,
-) =>
-  !isIgnoredRoot(root) &&
-  root.split(path.sep).includes("_modules") &&
-  !moduleManifestRoots.has(root);
-
-const getSharedModuleInputsByProjectRoot = async (
-  configFiles: readonly string[],
-  workspaceRoot: string,
-  moduleManifestRoots: ReadonlySet<string>,
-) => {
-  const sourceRootsByRoot = new Map<string, Set<string>>();
-
-  for (const configFile of configFiles) {
-    const root = path.dirname(configFile);
-    if (isIgnoredRoot(root)) {
-      continue;
-    }
-
-    if (
-      path.basename(configFile) === moduleManifestFileName ||
-      !configFile.endsWith(".tf")
-    ) {
-      continue;
-    }
-
-    const sourceRoots = sourceRootsByRoot.get(root) ?? new Set<string>();
-    const fileContent = await fs.readFile(
-      path.join(workspaceRoot, configFile),
-      "utf-8",
-    );
-    for (const sourceRoot of getLocalModuleSourceRoots(
-      configFile,
-      fileContent,
-    )) {
-      if (isWorkspaceRelativeRoot(sourceRoot)) {
-        sourceRoots.add(sourceRoot);
-      }
-    }
-    sourceRootsByRoot.set(root, sourceRoots);
-  }
-
-  const sharedInputsByProjectRoot = new Map<string, string[]>();
-
-  for (const projectRoot of sourceRootsByRoot.keys()) {
-    const reachableRoots = new Set<string>([projectRoot]);
-
-    for (const currentRoot of reachableRoots) {
-      for (const sourceRoot of sourceRootsByRoot.get(currentRoot) ?? []) {
-        if (
-          !isTraversableSharedModuleRoot(sourceRoot, moduleManifestRoots) ||
-          reachableRoots.has(sourceRoot)
-        ) {
-          continue;
-        }
-
-        reachableRoots.add(sourceRoot);
-      }
-    }
-
-    sharedInputsByProjectRoot.set(
-      projectRoot,
-      Array.from(reachableRoots)
-        .filter((root) => root !== projectRoot)
-        .map(toWorkspaceGlob),
-    );
-  }
-
-  return sharedInputsByProjectRoot;
 };
 
 export const getDiscoveryState = (configFiles: readonly string[]) => {
@@ -225,7 +145,6 @@ export const getDiscoveryStateWithValidation = async (
   );
 
   return {
-    moduleManifestRoots,
     publishableManifestByRoot,
     terraformConfigFiles,
     testCapabilitiesByRoot,
@@ -242,18 +161,12 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
       path.join(context.workspaceRoot, ".tflint.hcl"),
     );
     const {
-      moduleManifestRoots,
       publishableManifestByRoot,
       terraformConfigFiles,
       testCapabilitiesByRoot,
     } = await getDiscoveryStateWithValidation(
       configFiles,
       context.workspaceRoot,
-    );
-    const sharedModuleInputsByRoot = await getSharedModuleInputsByProjectRoot(
-      configFiles,
-      context.workspaceRoot,
-      moduleManifestRoots,
     );
 
     return createNodesFromFiles(
@@ -264,18 +177,16 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
             projects: {},
           };
         }
-        const project = getProject(
-          opts,
-          context.workspaceRoot,
-          root,
-          hasRootTflintConfig,
-          publishableManifestByRoot.get(root),
-          testCapabilitiesByRoot.get(root),
-          sharedModuleInputsByRoot.get(root),
-        );
         return {
           projects: {
-            [root]: project,
+            [root]: getProject(
+              opts,
+              context.workspaceRoot,
+              root,
+              hasRootTflintConfig,
+              publishableManifestByRoot.get(root),
+              testCapabilitiesByRoot.get(root),
+            ),
           },
         };
       },

@@ -288,6 +288,7 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 };
 const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publishManifest = void 0, testCapabilities = noTerraformTestCapabilities) => {
 	const projectType = getProjectType(root);
+	const sharedModulesInput = path.join(path.dirname(root), "_modules", "**", "*").split(path.sep).join("/");
 	const isPublishableLibrary = projectType === "library" && publishManifest !== void 0;
 	const targets = getTargets(opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest, testCapabilities);
 	const environmentTag = projectType === "application" ? getEnvironmentTag(root, opts.additionalEnvironments) : void 0;
@@ -296,7 +297,7 @@ const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publ
 	const config = {
 		name: getProjectNameFromRoot(root),
 		namedInputs: {
-			default: ["{projectRoot}/*.{tf,tfvars}"],
+			default: ["{projectRoot}/*.{tf,tfvars}", ...projectType === "application" ? [`{workspaceRoot}/${sharedModulesInput}`] : []],
 			examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"]
 		},
 		projectType,

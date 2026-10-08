@@ -299,7 +299,13 @@ describe("getProject applications", () => {
       expect(project.name).toBe("resources-prod-my-stack");
       expect(project.projectType).toBe("application");
       expect(project.root).toBe(root);
-      expect(project.namedInputs).toEqual(expectedNamedInputs);
+      expect(project.namedInputs).toEqual({
+        ...expectedNamedInputs,
+        default: [
+          "{projectRoot}/*.{tf,tfvars}",
+          "{workspaceRoot}/infra/resources/prod/_modules/**/*",
+        ],
+      });
       expect(project.tags).toEqual(["terraform", "env:prod"]);
       expect(Object.keys(targets)).toEqual([
         "init",
