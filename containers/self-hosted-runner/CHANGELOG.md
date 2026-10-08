@@ -1,3 +1,13 @@
+## 0.0.11 (2026-10-08)
+
+### 🩹 Fixes
+
+- Upgrade GitHub base image to v2.338.0 ([#2312](https://github.com/pagopa/dx/pull/2312))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.0.10 (2026-09-02)
 
 ### 🩹 Fixes

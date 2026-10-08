@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/azure-tracing",
-  "version": "0.5.9",
+  "version": "0.5.10",
   "description": "A package that contains some utilities to enable Azure tracing on Node.js applications.",
   "keywords": [
     "azure",

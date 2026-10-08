@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-savemoney",
-  "version": "0.6.7",
+  "version": "0.6.8",
   "description": "Azure resource analyzer for finding unused or cost-inefficient resources.",
   "keywords": [
     "DX",
