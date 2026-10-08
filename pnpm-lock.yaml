@@ -27,7 +27,7 @@ catalogs:
       specifier: ^1.32.0
       version: 1.32.0
     '@nx/devkit':
-      specifier: ~23.2.1
+      specifier: ^23.2.1
       version: 23.2.1
     '@octokit/auth-app':
       specifier: ^8.3.1
@@ -69,7 +69,7 @@ catalogs:
       specifier: ^8.2.0
       version: 8.2.0
     nx:
-      specifier: ~23.2.1
+      specifier: ^23.2.1
       version: 23.2.1
     octokit:
       specifier: ^5.0.5
@@ -187,19 +187,19 @@ importers:
         specifier: ^0.88.0
         version: 0.88.0
       '@nx/docker':
-        specifier: ~23.2.1
+        specifier: ^23.2.1
         version: 23.2.1(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.9.3))(@swc/core@1.16.1(@swc/helpers@0.5.23)))
       '@nx/eslint':
-        specifier: ~23.2.1
+        specifier: ^23.2.1
         version: 23.2.1(a50edaec707b50d239ab35ae55f6af13)
       '@nx/js':
-        specifier: ~23.2.1
+        specifier: ^23.2.1
         version: 23.2.1(@babel/traverse@7.29.8(supports-color@7.2.0))(@swc-node/register@1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.9.3))(@swc/core@1.16.1(@swc/helpers@0.5.23))(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.9.3))(@swc/core@1.16.1(@swc/helpers@0.5.23)))(supports-color@7.2.0)
       '@nx/plugin':
-        specifier: ~23.2.1
+        specifier: ^23.2.1
         version: 23.2.1(a0a3e5a0ffe9b08f92b5ca7323ebd9ac)
       '@nx/vitest':
-        specifier: ~23.2.1
+        specifier: ^23.2.1
         version: 23.2.1(@babel/traverse@7.29.8(supports-color@7.2.0))(@nx/eslint@23.2.1(a50edaec707b50d239ab35ae55f6af13))(@swc-node/register@1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.9.3))(@swc/core@1.16.1(@swc/helpers@0.5.23))(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.9.3))(@swc/core@1.16.1(@swc/helpers@0.5.23)))(supports-color@7.2.0)(typescript@5.9.3)(vite@7.3.5(@types/node@26.6.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(vitest@4.1.11)
       '@pagopa/nx-dx-docker-plugin':
         specifier: workspace:^
@@ -211,7 +211,7 @@ importers:
         specifier: ^1.12.1
         version: 1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.9.3)
       '@swc/core':
-        specifier: 1.16.1
+        specifier: ^1.16.1
         version: 1.16.1(@swc/helpers@0.5.23)
       '@swc/helpers':
         specifier: ~0.5.23
@@ -226,7 +226,7 @@ importers:
         specifier: 'catalog:'
         version: 23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.9.3))(@swc/core@1.16.1(@swc/helpers@0.5.23))
       oxfmt:
-        specifier: ~0.71.0
+        specifier: ^0.71.0
         version: 0.71.0
       prettier:
         specifier: 'catalog:'
