@@ -18,7 +18,7 @@ The action checks for environment variables to determine which cloud provider to
 2. **AWS**: If `ROLE_ARN` is set and non-empty
 3. **GitHub**: If `GH_APP_CLIENT_ID`, `GH_APP_KEY`, and `GH_APP_INSTALLATION_ID` are all set and non-empty
 
-If both sets of variables are available, both login steps will execute. If neither is available, no login will occur.
+Any provider whose complete credential set is available will be logged in; providers without complete credentials are skipped.
 
 ## Environment Variables
 
@@ -41,7 +41,7 @@ If both sets of variables are available, both login steps will execute. If neith
 
 When all three are set, the action creates a GitHub App token and exports it as `GITHUB_TOKEN`. Otherwise, the GitHub login is skipped and `GITHUB_TOKEN` is left unchanged.
 
-These variables must be set at the **job** level (`jobs.<job>.env`) or as action inputs of the caller. Step-level `env:` on the `uses:` line does not reach the action's internal steps.
+These variables can be set at the workflow or job level, or in `env:` on the step that invokes this composite action. Prefer step-level `env:` to limit secret exposure.
 
 ## Example Usage
 
