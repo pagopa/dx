@@ -27,6 +27,11 @@ This Terraform module provisions an Azure Cosmos DB Account with configurable se
 
 ## Usage Example
 
+AzureRM **4.78 or later within v4** is required for
+`local_authentication_enabled`. When upgrading from an older locked provider,
+run `terraform init -upgrade`. Local authentication remains disabled, and module
+inputs and outputs are unchanged. This release does not add AzureRM v5 support.
+
 For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/terraform-azurerm-azure-cosmos-account/tree/main/examples), which includes:
 
 - A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-cosmos-account/tree/main/examples/complete) demonstrating all features.
