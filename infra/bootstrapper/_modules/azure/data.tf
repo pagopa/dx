@@ -15,16 +15,16 @@ data "azuread_group" "externals" {
 }
 
 data "github_organization" "owner" {
-  provider = hashicorpgithub
+  provider = github
 
-  count = var.environment.env_short == "u" ? 1 : 0
+  count = var.environment.env_short == "u" && var.repository.owner_id == null ? 1 : 0
 
   name         = var.repository.owner
   summary_only = true
 }
 
 data "github_repository" "this" {
-  provider = hashicorpgithub
+  provider = github
 
   count = var.environment.env_short == "u" ? 1 : 0
 

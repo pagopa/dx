@@ -31,8 +31,7 @@ variables {
 mock_provider "azurerm" {}
 mock_provider "azuread" {}
 mock_provider "dx" {}
-mock_provider "github" {}
-mock_provider "hashicorpgithub" {
+mock_provider "github" {
   mock_data "github_organization" {
     defaults = {
       id = "12345"
@@ -150,6 +149,37 @@ run "bootstrapper_custom_owner_integration_test_subject" {
 
 }
 
+run "bootstrapper_user_owner_immutable_integration_test_subject" {
+  command = plan
+
+  module {
+    source = "../../../_modules/azure"
+  }
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      owner_id = 54321
+      name     = "dx-test-repo"
+    }
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.infra_cd_integration_tests[0].subject == "repo:example-user/dx-test-repo:environment:automation-uat-cd"
+    error_message = "The name-based Integration Tests subject must preserve the configured GitHub owner"
+  }
+
+  assert {
+    condition     = azurerm_federated_identity_credential.infra_cd_integration_tests_immutable[0].subject == "repo:example-user@54321/dx-test-repo@67890:environment:automation-uat-cd"
+    error_message = "The immutable Integration Tests subject must use the numeric GitHub owner ID"
+  }
+
+  assert {
+    condition     = length(data.github_organization.owner) == 0
+    error_message = "User-owned repositories must not query the GitHub organization data source"
+  }
+}
+
 run "bootstrapper_default_owner_integration_test_subject" {
   command = plan
 
@@ -185,4 +215,58 @@ run "bootstrapper_non_uat_omits_integration_test_credentials" {
     condition     = length(azurerm_federated_identity_credential.infra_cd_integration_tests) == 0 && length(azurerm_federated_identity_credential.infra_cd_integration_tests_immutable) == 0
     error_message = "Integration Tests credentials should only be created for UAT"
   }
+}
+
+run "bootstrapper_rejects_zero_owner_id" {
+  command = plan
+
+  module {
+    source = "../../../_modules/azure"
+  }
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      name     = "dx-test-repo"
+      owner_id = 0
+    }
+  }
+
+  expect_failures = [var.repository]
+}
+
+run "bootstrapper_rejects_negative_owner_id" {
+  command = plan
+
+  module {
+    source = "../../../_modules/azure"
+  }
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      name     = "dx-test-repo"
+      owner_id = -1
+    }
+  }
+
+  expect_failures = [var.repository]
+}
+
+run "bootstrapper_rejects_fractional_owner_id" {
+  command = plan
+
+  module {
+    source = "../../../_modules/azure"
+  }
+
+  variables {
+    repository = {
+      owner    = "example-user"
+      name     = "dx-test-repo"
+      owner_id = 1.5
+    }
+  }
+
+  expect_failures = [var.repository]
 }

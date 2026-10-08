@@ -39,6 +39,8 @@ data "azurerm_role_definition" "dx_infra_cd_private_networking" {
 # (`repo:OWNER@OWNER-ID/REPO@REPO-ID:...`). `summary_only` avoids listing
 # repositories and members when reading the organization.
 data "github_organization" "owner" {
+  count = var.repository.owner_id == null ? 1 : 0
+
   name         = var.repository.owner
   summary_only = true
 }
