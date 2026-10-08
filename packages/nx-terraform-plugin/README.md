@@ -21,11 +21,23 @@ library projects only when their own root contains a `module.json` file. This
 keeps nested implementation modules, such as `modules/<module>/modules/<child>`,
 from becoming standalone projects.
 
-Consumer projects also inherit Nx inputs for each unmanifested shared `_modules`
-tree they reference, including transitive relative module sources under those
-trees. That keeps `nx affected` focused on the Terraform projects that actually
-consume a shared module, while changes to any file under the shared module root
-still invalidate those consumers.
+Applications do not depend on the whole sibling `_modules` tree. Instead, the
+plugin asks Terraform which local `_modules` directories each application uses
+and adds only those as Nx inputs, including transitive local modules. Changing a
+module that an application does not reference does not affect it. Remote modules
+and directories outside the workspace are ignored.
+
+Inference runs `terraform get -no-color` and `terraform modules -json` in a
+temporary `TF_DATA_DIR` per application, so no `init`, `plan`, or `apply` runs
+and the user's `.terraform` state is untouched. Requirements and costs:
+
+- The `terraform` binary must be on `PATH`, version 1.10 or later
+  (`terraform modules` was added in 1.10). Missing binaries, unsupported
+  versions, command failures, and invalid output fail the Nx graph build with an
+  actionable error instead of silently producing empty inputs.
+- `terraform get` downloads remote modules and may read the credentials they
+  need, and it runs once per application. Graph builds are therefore slower when
+  there are many applications and may use the network.
 
 ## Trivy
 

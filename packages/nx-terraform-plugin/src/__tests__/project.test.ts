@@ -62,6 +62,7 @@ const getProject = (
     | typeof publishManifestWithOwner
     | undefined = undefined,
   testCapabilities = allTestCapabilities,
+  sharedModuleDirectories: readonly string[] = [],
 ) =>
   getProjectDefinition(
     opts,
@@ -70,6 +71,7 @@ const getProject = (
     hasRootTflintConfig,
     manifest,
     testCapabilities,
+    sharedModuleDirectories,
   );
 
 const getExpectedLintTarget = () => ({
@@ -291,15 +293,39 @@ describe("getProjectNameFromRoot", () => {
 
 describe("getProject applications", () => {
   describe("when the root is an application", () => {
+    it("adds no shared module input when none were inferred", () => {
+      const project = getProject(
+        defaultOptions,
+        path.join("infra", "resources", "prod", "my_stack"),
+      );
+
+      expect(project.namedInputs?.default).toEqual([
+        "{projectRoot}/*.{tf,tfvars}",
+      ]);
+    });
+
     it("returns an application project with all targets", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
-      const project = getProject(defaultOptions, root);
+      const project = getProject(
+        defaultOptions,
+        root,
+        false,
+        undefined,
+        allTestCapabilities,
+        ["infra/resources/prod/_modules/shared"],
+      );
       const targets = getTargetsOrThrow(project);
 
       expect(project.name).toBe("resources-prod-my-stack");
       expect(project.projectType).toBe("application");
       expect(project.root).toBe(root);
-      expect(project.namedInputs).toEqual(expectedNamedInputs);
+      expect(project.namedInputs).toEqual({
+        ...expectedNamedInputs,
+        default: [
+          "{projectRoot}/*.{tf,tfvars}",
+          "{workspaceRoot}/infra/resources/prod/_modules/shared/**/*",
+        ],
+      });
       expect(project.tags).toEqual(["terraform", "env:prod"]);
       expect(Object.keys(targets)).toEqual([
         "init",
