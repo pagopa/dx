@@ -75,7 +75,7 @@
       "name": "Terraform Providers",
       "category": "infra",
       "communicationChannels": [
-        "GitHub Actions warnings and job summaries in Terraform plan/apply reusable workflows"
+        "GitHub Actions warnings and PR comments in the Terraform plan reusable workflow; job summaries during the plan phase of the Terraform apply reusable workflow"
       ],
       "lifecyclePolicy": "Only the provider versions pinned in DX modules are actively supported. Check each module's required_providers block for the exact constraints.",
       "vendorLifecycleUrl": "https://registry.terraform.io/browse/providers",
