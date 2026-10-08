@@ -15,8 +15,6 @@ data "azuread_group" "externals" {
 }
 
 data "github_organization" "owner" {
-  provider = github
-
   count = var.environment.env_short == "u" && var.repository.owner_id == null ? 1 : 0
 
   name         = var.repository.owner
@@ -24,8 +22,6 @@ data "github_organization" "owner" {
 }
 
 data "github_repository" "this" {
-  provider = github
-
   count = var.environment.env_short == "u" ? 1 : 0
 
   name = var.repository.name
