@@ -28,9 +28,14 @@ If the selected version cannot be read, the action emits a diagnostic warning.
 Keep `continue-on-error: true` on the calling step so an unexpected check failure
 cannot block an otherwise valid plan or apply.
 
-The notice is shared by `infra_plan.yaml` and both the plan and apply jobs in
-`infra_apply.yaml`. Update `check-support.sh` alongside the website lifecycle
-page and data when the support policy changes.
+The action exposes the Markdown notice through its `notice` output.
+`infra_plan.yaml` sets `write-summary: "false"` and posts that notice as a PR
+comment, identified by the project directory so subsequent runs update the
+corresponding comment. `infra_apply.yaml` writes the notice to the job summary
+during its plan phase only; its apply phase does not run this action.
+
+Update `check-support.sh` alongside the website lifecycle data when the support
+policy changes.
 
 ## Tests
 
