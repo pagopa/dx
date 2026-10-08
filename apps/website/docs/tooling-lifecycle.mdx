@@ -44,6 +44,29 @@ Lifecycle transitions are communicated through:
 
 ## Current Support Status
 
+### AzureRM v4 support ends on 31 December 2026
+
+:::warning[Plan your AzureRM v5 migration]
+
+DX tooling will drop support for the Terraform `azurerm` provider **v4 on 31
+December 2026**. This is the DX support deadline, not a vendor end-of-life
+announcement. AzureRM v4 remains supported until that date, but is now
+deprecated.
+
+Plan your migration to AzureRM v5 and compatible DX module versions before the
+deadline. Check each module's `required_providers` constraints before upgrading;
+this announcement does not change the provider versions accepted by existing
+module releases.
+
+:::
+
+The DX Terraform plan and apply reusable workflows check the selected provider
+version after `terraform init`. When a project uses AzureRM v4, they emit a
+GitHub Actions warning and add the deadline to the job summary. These notices
+are advisory: they do not block plans or applies or change provider constraints.
+Projects using other AzureRM major versions, or no AzureRM provider, do not
+receive this notice.
+
 <LifecycleTable />
 
 ## Related Resources

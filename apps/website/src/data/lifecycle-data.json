@@ -75,15 +75,16 @@
       "name": "Terraform Providers",
       "category": "infra",
       "communicationChannels": [
-        "GitHub Actions warnings/errors in terraform plan/apply reusable workflows"
+        "GitHub Actions warnings and job summaries in Terraform plan/apply reusable workflows"
       ],
       "lifecyclePolicy": "Only the provider versions pinned in DX modules are actively supported. Check each module's required_providers block for the exact constraints.",
       "vendorLifecycleUrl": "https://registry.terraform.io/browse/providers",
       "versions": [
         {
           "version": "azurerm (~> 4.x)",
-          "status": "active",
-          "notes": "Primary Azure provider used across core/resources/bootstrapper"
+          "status": "deprecated",
+          "eolDate": "2026-12-31",
+          "notes": "DX tooling drops AzureRM v4 support on 31 December 2026. Plan migration to AzureRM v5 and compatible DX module versions before this date; check each module's required_providers constraints."
         },
         {
           "version": "azapi (2.8.0)",
