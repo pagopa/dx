@@ -10,5 +10,5 @@
     "types": ["node"]
   },
   "include": ["scripts/**/*.ts"],
-  "exclude": ["tsup.config.ts"]
+  "exclude": ["tsup.config.ts", "scripts/dist"]
 }

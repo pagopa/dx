@@ -38,7 +38,7 @@
     "@logtape/logtape": "catalog:",
     "cli-table3": "^0.6.5",
     "js-yaml": "catalog:",
-    "p-limit": "^7.3.1",
+    "p-limit": "^7.3.3",
     "zod": "catalog:"
   },
   "devDependencies": {

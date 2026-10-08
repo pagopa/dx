@@ -24,9 +24,9 @@
     "version": "node ./scripts/generate-server-manifest.js"
   },
   "dependencies": {
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.1117.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1146.0",
     "@aws-sdk/client-s3": "catalog:aws",
-    "@aws-sdk/s3-request-presigner": "^3.1117.0",
+    "@aws-sdk/s3-request-presigner": "^3.1146.0",
     "@logtape/logtape": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",
     "@octokit/rest": "catalog:",

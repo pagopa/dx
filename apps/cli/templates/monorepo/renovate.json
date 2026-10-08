@@ -6,6 +6,13 @@
       "matchManagers": ["github-actions"],
       "matchPackageNames": ["pagopa/dx"],
       "pinDigests": false
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "groupName": "Docker images",
+      "minimumReleaseAge": "7 days",
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
+      "prCreation": "immediate"
     }
   ]
 }
