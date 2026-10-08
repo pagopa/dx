@@ -413,6 +413,14 @@ run "storage_account_blob_retention" {
 run "storage_account_containers_subresources" {
   command = plan
 
+  override_resource {
+    target          = azurerm_storage_account.this
+    override_during = plan
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/dxuitnmodulessa01"
+    }
+  }
+
   variables {
     subservices_enabled = {
       blob  = true
@@ -441,11 +449,29 @@ run "storage_account_containers_subresources" {
     condition     = length(azurerm_storage_queue.this) == 2
     error_message = "2 queues must be created"
   }
+
+  assert {
+    condition     = alltrue([for table in azurerm_storage_table.this : table.storage_account_id == azurerm_storage_account.this.id])
+    error_message = "Tables must target the existing storage account by ARM ID"
+  }
+
+  assert {
+    condition     = alltrue([for queue in azurerm_storage_queue.this : queue.storage_account_id == azurerm_storage_account.this.id])
+    error_message = "Queues must target the existing storage account by ARM ID"
+  }
 }
 
 # ── 12. Container-level immutability policy ─────────────────────────────────
 run "storage_account_container_immutability" {
   command = plan
+
+  override_resource {
+    target          = azurerm_storage_container.this["container-with-policy"]
+    override_during = plan
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/dxuitnmodulessa01/blobServices/default/containers/container-with-policy"
+    }
+  }
 
   variables {
     blob_features = {
@@ -472,6 +498,11 @@ run "storage_account_container_immutability" {
   assert {
     condition     = length(azurerm_storage_container_immutability_policy.this) == 1
     error_message = "container_immutability_policy must be created only for containers with a policy defined"
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.this["container-with-policy"].storage_container_resource_manager_id == azurerm_storage_container.this["container-with-policy"].id
+    error_message = "Container immutability policies must keep targeting the same ARM resource"
   }
 }
 
@@ -503,6 +534,14 @@ run "storage_account_no_alerts_development" {
 run "storage_account_cmk_system_identity" {
   command = plan
 
+  override_resource {
+    target          = azurerm_key_vault_key.key["kv"]
+    override_during = plan
+    values = {
+      versionless_id = "https://kv-common.vault.azure.net/keys/storage-cmk"
+    }
+  }
+
   variables {
     customer_managed_key = {
       enabled      = true
@@ -514,6 +553,43 @@ run "storage_account_cmk_system_identity" {
   assert {
     condition     = azurerm_storage_account.this.identity[0].type == "SystemAssigned"
     error_message = "identity type must be SystemAssigned when no user_assigned_identity_id is provided"
+  }
+
+  assert {
+    condition     = azurerm_storage_account_customer_managed_key.kv["kv"].key_vault_key_id == "https://kv-common.vault.azure.net/keys/storage-cmk"
+    error_message = "Generated CMKs must use a versionless key URL to preserve automatic key rotation"
+  }
+}
+
+run "storage_account_existing_cmk_rotation" {
+  command = plan
+
+  variables {
+    customer_managed_key = {
+      enabled      = true
+      type         = "kv"
+      key_vault_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-common/providers/Microsoft.KeyVault/vaults/kv-common"
+      key_name     = "existing-cmk"
+    }
+  }
+
+  override_data {
+    target          = data.azurerm_key_vault.this["kv"]
+    override_during = plan
+    values = {
+      vault_uri                  = "https://kv-common.vault.azure.net/"
+      rbac_authorization_enabled = false
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_key_vault_key.key) == 0
+    error_message = "Supplying an existing CMK must not create a new key"
+  }
+
+  assert {
+    condition     = azurerm_storage_account_customer_managed_key.kv["kv"].key_vault_key_id == "https://kv-common.vault.azure.net/keys/existing-cmk"
+    error_message = "Existing CMKs must keep using the supplied vault and key without pinning a version"
   }
 }
 
