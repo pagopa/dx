@@ -13,7 +13,7 @@
   "release": {
     "version": {
       "currentVersionResolver": "disk",
-      "versionActions": "@pagopa/nx-dx-docker-plugin/release/version-actions"
+      "versionActions": "@pagopa/nx-docker/release/version-actions"
     }
   },
   "targets": {

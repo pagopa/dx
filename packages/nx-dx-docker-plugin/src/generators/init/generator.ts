@@ -13,7 +13,7 @@ type NxPlugin =
     };
 
 const dxDockerPlugin = {
-  plugin: "@pagopa/nx-dx-docker-plugin",
+  plugin: "@pagopa/nx-docker",
 };
 
 const getPluginName = (plugin: NxPlugin): string =>
@@ -27,7 +27,7 @@ export default async function initGenerator(tree: Tree): Promise<void> {
     const plugins = (nxJson.plugins ?? []).filter(
       (plugin) => getPluginName(plugin) !== "@nx/docker",
     );
-    if (!hasPlugin(plugins, "@pagopa/nx-dx-docker-plugin")) {
+    if (!hasPlugin(plugins, "@pagopa/nx-docker")) {
       plugins.push(dxDockerPlugin);
     }
     return { ...nxJson, plugins };

@@ -16,7 +16,7 @@ const runExecutor: PromiseExecutor<DockerBuildExecutorInput> = async (
   const parseResult = dockerBuildExecutorSchema.safeParse(options);
   if (!parseResult.success) {
     console.warn(
-      "[@pagopa/nx-dx-docker-plugin] Invalid docker:build options:",
+      "[@pagopa/nx-docker] Invalid docker:build options:",
       parseResult.error.issues,
     );
     return { success: false };

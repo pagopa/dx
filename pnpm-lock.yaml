@@ -201,7 +201,7 @@ importers:
       '@nx/vitest':
         specifier: ^23.2.1
         version: 23.2.1(@babel/traverse@7.29.8(supports-color@7.2.0))(@nx/eslint@23.2.1(a50edaec707b50d239ab35ae55f6af13))(@swc-node/register@1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.9.3))(@swc/core@1.16.1(@swc/helpers@0.5.23))(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.9.3))(@swc/core@1.16.1(@swc/helpers@0.5.23)))(supports-color@7.2.0)(typescript@5.9.3)(vite@7.3.5(@types/node@26.6.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(vitest@4.1.11)
-      '@pagopa/nx-dx-docker-plugin':
+      '@pagopa/nx-docker':
         specifier: workspace:^
         version: link:packages/nx-dx-docker-plugin
       '@pagopa/nx-terraform':
@@ -21697,11 +21697,11 @@ snapshots:
 
   '@types/bonjour@3.5.13':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
 
   '@types/bunyan@1.8.11':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
 
   '@types/chai@5.2.3':
     dependencies:
@@ -21711,7 +21711,7 @@ snapshots:
   '@types/connect-history-api-fallback@1.5.4':
     dependencies:
       '@types/express-serve-static-core': 4.19.9
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
 
   '@types/connect@3.4.38':
     dependencies:
@@ -21842,13 +21842,13 @@ snapshots:
 
   '@types/docker-modem@3.0.6':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       '@types/ssh2': 1.15.6
 
   '@types/dockerode@4.0.1':
     dependencies:
       '@types/docker-modem': 3.0.6
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       '@types/ssh2': 1.15.6
 
   '@types/esquery@1.5.4':
@@ -21865,7 +21865,7 @@ snapshots:
 
   '@types/express-serve-static-core@4.19.9':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       '@types/qs': 6.15.1
       '@types/range-parser': 1.2.7
       '@types/send': 1.2.1
@@ -21938,7 +21938,7 @@ snapshots:
   '@types/liftoff@4.0.3':
     dependencies:
       '@types/fined': 1.1.5
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
 
   '@types/mdast@4.0.4':
     dependencies:
@@ -21952,7 +21952,7 @@ snapshots:
 
   '@types/mysql@2.15.27':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
 
   '@types/node@17.0.45': {}
 
@@ -21980,7 +21980,7 @@ snapshots:
 
   '@types/pg@8.15.6':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       pg-protocol: 1.16.1
       pg-types: 2.2.0
 
@@ -22049,7 +22049,7 @@ snapshots:
   '@types/serve-static@1.15.10':
     dependencies:
       '@types/http-errors': 2.0.5
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       '@types/send': 0.17.6
 
   '@types/serve-static@2.2.0':
@@ -22059,7 +22059,7 @@ snapshots:
 
   '@types/sockjs@0.3.36':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
 
   '@types/ssh2-streams@0.1.13':
     dependencies:
@@ -22067,7 +22067,7 @@ snapshots:
 
   '@types/ssh2@0.5.52':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       '@types/ssh2-streams': 0.1.13
 
   '@types/ssh2@1.15.6':
@@ -22078,7 +22078,7 @@ snapshots:
 
   '@types/through@0.0.33':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
 
   '@types/tmp@0.2.6': {}
 
@@ -22095,7 +22095,7 @@ snapshots:
 
   '@types/ws@8.18.2':
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
 
   '@types/yargs-parser@21.0.3': {}
 
@@ -24934,7 +24934,7 @@ snapshots:
 
   eval@0.1.8:
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       require-like: 0.1.2
 
   event-target-shim@5.0.1: {}
@@ -26556,7 +26556,7 @@ snapshots:
 
   jest-worker@29.7.0:
     dependencies:
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       jest-util: 29.7.0
       merge-stream: 2.0.0
       supports-color: 8.1.1
@@ -29003,7 +29003,7 @@ snapshots:
       '@protobufjs/path': 1.1.2
       '@protobufjs/pool': 1.1.0
       '@protobufjs/utf8': 1.1.2
-      '@types/node': 22.20.5
+      '@types/node': 26.6.4
       long: 5.3.2
 
   proxy-addr@2.0.8:
