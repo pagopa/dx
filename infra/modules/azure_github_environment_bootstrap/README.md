@@ -64,9 +64,13 @@ module "bootstrap" {
 ```
 
 For repositories owned by a personal GitHub account, set `repository.owner_id`
-to the positive integer owner ID returned by GitHub. The DX CLI passes this ID into
-generated bootstrapper Terraform automatically. Organization-owned repositories
-can omit it; the module resolves the organization ID from GitHub.
+to the positive integer owner ID returned by GitHub. To look it up manually, call
+`GET /repos/{owner}/{repo}` and use `owner.id`, or run
+`gh api repos/OWNER/REPO --jq '.owner.id'`; see GitHub's
+[Get a repository](https://docs.github.com/en/rest/repos/repos#get-a-repository)
+REST API documentation. The DX CLI passes this ID into generated bootstrapper
+Terraform automatically. Organization-owned repositories can omit it; the module
+resolves the organization ID from GitHub.
 
 ## Using with Core Values Exporter
 

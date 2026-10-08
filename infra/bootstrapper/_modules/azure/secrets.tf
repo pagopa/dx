@@ -1,5 +1,4 @@
 resource "github_actions_secret" "codecov_token" {
-  provider    = github
   count       = var.environment.env_short == "p" ? 1 : 0
   repository  = var.repository.name
   secret_name = "CODECOV_TOKEN"
@@ -11,7 +10,6 @@ resource "github_actions_secret" "codecov_token" {
 }
 
 resource "github_actions_environment_secret" "appi_instrumentation_key" {
-  provider    = github
   repository  = var.repository.name
   environment = "app-${local.env_long}-cd"
   secret_name = "APPLICATIONINSIGHTS_INSTRUMENTATION_KEY"
