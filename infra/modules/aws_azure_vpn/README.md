@@ -28,6 +28,11 @@ For detailed usage examples, refer to the [examples folder](./examples/) that in
 
 ## Prerequisites
 
+AzureRM **4.62 or later within v4** is required for the `bgp_enabled` argument.
+When upgrading from an older locked provider, run `terraform init -upgrade`.
+BGP remains enabled for the gateway and both tunnels; module inputs and outputs
+are unchanged. This release does not add AzureRM v5 support.
+
 Before using this module, ensure you have:
 
 ✅ **AWS VPC** with private subnets and route tables  
@@ -36,6 +41,12 @@ Before using this module, ensure you have:
 ✅ **Appropriate permissions** in both AWS and Azure accounts
 
 **Important:** For development use case, ensure your AWS core infrastructure has `nat_gateway_count` set to at least 1.
+
+## Local Tests
+
+Run `pnpm nx test modules-aws-azure-vpn` from the DX repository root. Mocked plan
+tests cover BGP on development, high-availability, and existing-gateway
+configurations without provisioning cloud resources.
 
 ## Use Cases
 
@@ -114,7 +125,7 @@ Before using this module, ensure you have:
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 | <a name="requirement_awsdx"></a> [awsdx](#requirement\_awsdx) | ~> 0.1 |
 | <a name="requirement_azuredx"></a> [azuredx](#requirement\_azuredx) | ~> 0.12 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.62 |
 
 ## Modules
 
