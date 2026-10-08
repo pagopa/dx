@@ -1,121 +1,17 @@
 import { DependencyType } from "@nx/devkit";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { getLocalModuleSourceRoots, getStaticDependencies } from "../hcl.ts";
 import { ProjectFile } from "../project-file.ts";
 
+const loggerMocks = vi.hoisted(() => ({ warn: vi.fn() }));
+
+vi.mock("../logger.ts", () => ({
+  getPackageLogger: () => ({ warn: loggerMocks.warn }),
+}));
+
 describe("getStaticDependencies", () => {
-  it.each([
-    [
-      "attributes after an object expression",
-      'module "alpha" {\n for_each = { dev = "dev" }\n source = "../alpha"\n}',
-      ["infra/resources/alpha"],
-    ],
-    [
-      "only direct source attributes",
-      'module "alpha" {\n settings = { source = "../wrong" }\n source = "../right"\n}',
-      ["infra/resources/right"],
-    ],
-    [
-      "quoted braces, comments, and heredoc contents",
-      'module "alpha" {\n note = "}" # source = "../comment"\n // source = "../line-comment"\n /* } source = "../block-comment" */\n template = <<_EOF\nmodule "fake" { source = "../heredoc" }\n_EOF\n source = "../right"\n}',
-      ["infra/resources/right"],
-    ],
-    [
-      "a later module source does not belong to an earlier block",
-      'module "remote" { source = "terraform-aws-modules/vpc/aws" }\nmodule "local" { source = "../local" }',
-      ["infra/resources/local"],
-    ],
-    [
-      "hyphenated heredocs",
-      'module "alpha" {\n note = <<EOF-TEXT\n}\nmodule "fake" { source = "../fake" }\nEOF-TEXT\n source = "../alpha"\n}\nmodule "beta" { source = "../beta" }',
-      ["infra/resources/alpha", "infra/resources/beta"],
-    ],
-    [
-      "Unicode indented CRLF heredocs",
-      'module "alpha" {\r\n note = <<-ÉND_1\r\n  }\r\n ÉND_1\r\n source = "../alpha"\r\n}',
-      ["infra/resources/alpha"],
-    ],
-    [
-      "nested quoted interpolation strings",
-      'locals { text = "${replace("}", "}", "")}" }\nmodule "alpha" { source = "../alpha" }',
-      ["infra/resources/alpha"],
-    ],
-    [
-      "nested template interpolation strings",
-      'locals { text = "${replace("${format("%s", "}")}", "}", "")}" }\nmodule "alpha" { source = "../alpha" }',
-      ["infra/resources/alpha"],
-    ],
-    [
-      "quoted directive expressions",
-      'locals { text = "%{ if replace("}", "}", "") == "" }yes%{ endif }" }\nmodule "alpha" { source = "../alpha" }',
-      ["infra/resources/alpha"],
-    ],
-    [
-      "escaped template introducers",
-      'locals { text = "$${module.fake} %%{ if true } }" }\nmodule "alpha" { source = "../alpha" }',
-      ["infra/resources/alpha"],
-    ],
-    [
-      "braces and comments in interpolation expressions",
-      'locals { text = "${jsonencode({ value = "}" /* } */ })}" }\nmodule "alpha" { source = "../alpha" }',
-      ["infra/resources/alpha"],
-    ],
-    [
-      "heredocs inside interpolation expressions",
-      'locals { text = "${replace(<<EOF\n}\nEOF\n, "}", "")}" }\nmodule "alpha" { source = "../alpha" }',
-      ["infra/resources/alpha"],
-    ],
-    [
-      "same-delimiter heredocs nested in a heredoc interpolation",
-      'locals {\n text = <<EOF\n${trimspace(<<EOF\n}\nEOF\n)}\nEOF\n}\nmodule "actual" { source = "../_modules/actual" }',
-      ["infra/resources/_modules/actual"],
-    ],
-    [
-      "heredoc delimiters after a multiline interpolation",
-      'locals {\n text = <<EOF\n${jsonencode({\n value = "}"\n})}EOF\n}\nEOF\n}\nmodule "actual" { source = "../_modules/actual" }',
-      ["infra/resources/_modules/actual"],
-    ],
-    [
-      "unquoted module labels",
-      'module actual { source = "../_modules/actual" }',
-      ["infra/resources/_modules/actual"],
-    ],
-    [
-      "Unicode escapes in source paths",
-      'module actual { source = "../_modules/\\u0061ctual" }\nmodule other { source = "../_modules/\\U00000061ctual" }',
-      ["infra/resources/_modules/actual"],
-    ],
-  ])("extracts local roots with %s", (_description, content, roots) => {
-    expect(
-      getLocalModuleSourceRoots("infra/resources/dev/main.tf", content),
-    ).toEqual(roots);
-  });
-
-  it("extracts only local module source roots", () => {
-    const fileContent = `
-module "foo" {
-  source = "../_modules/foo"
-}
-
-module "foo_again" {
-  source = "../_modules/foo"
-}
-
-module "remote" {
-  source = "git::https://example.com/terraform/modules.git//foo"
-}
-`;
-
-    expect(
-      getLocalModuleSourceRoots(
-        path.join("infra", "resources", "dev", "main.tf"),
-        fileContent,
-      ),
-    ).toEqual([path.join("infra", "resources", "_modules", "foo")]);
-  });
-
   it("extracts a dependency from a relative module source", () => {
     const file: ProjectFile = {
       fileName: path.join("infra", "resources", "dev", "main.tf"),
@@ -193,5 +89,91 @@ module "git" {
     const dependencies = getStaticDependencies(file, fileContent);
 
     expect(dependencies).toEqual([]);
+  });
+});
+
+describe("getLocalModuleSourceRoots", () => {
+  const fileName = path.join("infra", "resources", "dev", "main.tf");
+
+  beforeEach(() => {
+    loggerMocks.warn.mockClear();
+  });
+
+  it("resolves quoted and bare labels relative to the file directory", () => {
+    const roots = getLocalModuleSourceRoots(
+      fileName,
+      `
+module "quoted" {
+  source = "../_modules/foo"
+}
+
+module bare {
+  source = "../_modules/bar"
+}
+`,
+    );
+
+    expect(roots).toEqual([
+      path.join("infra", "resources", "_modules", "foo"),
+      path.join("infra", "resources", "_modules", "bar"),
+    ]);
+  });
+
+  it("decodes static escapes and ignores interpolated or non-local sources", () => {
+    const content = [
+      'module "escaped" {',
+      '  source = "../_modules/\\u0061\\"b\\\\"',
+      "}",
+      'module "dollar" {',
+      '  source = "../_modules/$${x}%%{y}"',
+      "}",
+      'module "interpolated" {',
+      '  source = "${var.dir}/_modules/foo"',
+      "}",
+      'module "registry" {',
+      '  source = "terraform-aws-modules/vpc/aws"',
+      "}",
+    ].join("\n");
+
+    const roots = getLocalModuleSourceRoots(fileName, content);
+
+    expect(roots).toEqual([
+      path.join("infra", "resources", "_modules", 'a"b\\'),
+      path.join("infra", "resources", "_modules", "${x}%{y}"),
+    ]);
+  });
+
+  it("drops references that leave the workspace", () => {
+    const roots = getLocalModuleSourceRoots(
+      path.join("main.tf"),
+      `module "out" {\n  source = "../../outside"\n}\n`,
+    );
+
+    expect(roots).toEqual([]);
+  });
+
+  it("skips files whose valid Unicode heredoc the grammar cannot parse", () => {
+    const roots = getLocalModuleSourceRoots(
+      fileName,
+      [
+        "locals {",
+        "  text = <<ÉOF",
+        "body",
+        "ÉOF",
+        "}",
+        "",
+        'module "a" {',
+        '  source = "../_modules/a"',
+        "}",
+        "",
+      ].join("\n"),
+    );
+
+    expect(roots).toEqual([]);
+    expect(loggerMocks.warn).toHaveBeenCalledWith(
+      expect.stringContaining("unsupported HCL syntax"),
+      // The grammar reports the error where it recovers, after the heredoc block.
+      expect.objectContaining({ fileName, line: 10 }),
+    );
   });
 });

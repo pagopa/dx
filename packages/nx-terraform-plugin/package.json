@@ -36,9 +36,11 @@
     "@logtape/logtape": "catalog:",
     "@nx/devkit": "catalog:",
     "@octokit/auth-app": "catalog:",
+    "@tree-sitter-grammars/tree-sitter-hcl": "1.2.0",
     "execa": "catalog:",
     "octokit": "catalog:",
     "semver": "catalog:",
+    "tree-sitter": "0.25.1",
     "tslib": "catalog:",
     "zod": "catalog:"
   },

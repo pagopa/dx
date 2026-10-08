@@ -41,6 +41,9 @@ const isIgnoredRoot = (root: string) => {
   return ignoreModules.some((module) => rootSegments.has(module));
 };
 
+const isSharedModuleRoot = (root: string) =>
+  root.split(path.sep).includes("_modules");
+
 const fileExists = async (filePath: string) => {
   try {
     await fs.access(filePath);
@@ -56,85 +59,6 @@ const fileExists = async (filePath: string) => {
     }
     throw error;
   }
-};
-
-const toWorkspaceGlob = (root: string) =>
-  `{workspaceRoot}/${root.split(path.sep).join("/")}/**/*`;
-
-const isWorkspaceRelativeRoot = (root: string) =>
-  !path.isAbsolute(root) && root !== ".." && !root.startsWith(`..${path.sep}`);
-
-const isTraversableSharedModuleRoot = (
-  root: string,
-  moduleManifestRoots: ReadonlySet<string>,
-) =>
-  !isIgnoredRoot(root) &&
-  root.split(path.sep).includes("_modules") &&
-  !moduleManifestRoots.has(root);
-
-const getSharedModuleInputsByProjectRoot = async (
-  configFiles: readonly string[],
-  workspaceRoot: string,
-  moduleManifestRoots: ReadonlySet<string>,
-) => {
-  const sourceRootsByRoot = new Map<string, Set<string>>();
-
-  for (const configFile of configFiles) {
-    const root = path.dirname(configFile);
-    if (isIgnoredRoot(root)) {
-      continue;
-    }
-
-    if (
-      path.basename(configFile) === moduleManifestFileName ||
-      !configFile.endsWith(".tf")
-    ) {
-      continue;
-    }
-
-    const sourceRoots = sourceRootsByRoot.get(root) ?? new Set<string>();
-    const fileContent = await fs.readFile(
-      path.join(workspaceRoot, configFile),
-      "utf-8",
-    );
-    for (const sourceRoot of getLocalModuleSourceRoots(
-      configFile,
-      fileContent,
-    )) {
-      if (isWorkspaceRelativeRoot(sourceRoot)) {
-        sourceRoots.add(sourceRoot);
-      }
-    }
-    sourceRootsByRoot.set(root, sourceRoots);
-  }
-
-  const sharedInputsByProjectRoot = new Map<string, string[]>();
-
-  for (const projectRoot of sourceRootsByRoot.keys()) {
-    const reachableRoots = new Set<string>([projectRoot]);
-
-    for (const currentRoot of reachableRoots) {
-      for (const sourceRoot of sourceRootsByRoot.get(currentRoot) ?? []) {
-        if (
-          !isTraversableSharedModuleRoot(sourceRoot, moduleManifestRoots) ||
-          reachableRoots.has(sourceRoot)
-        ) {
-          continue;
-        }
-
-        reachableRoots.add(sourceRoot);
-      }
-    }
-
-    sharedInputsByProjectRoot.set(
-      projectRoot,
-      Array.from(reachableRoots)
-        .filter((root) => root !== projectRoot)
-        .map(toWorkspaceGlob),
-    );
-  }
-
-  return sharedInputsByProjectRoot;
 };
 
 export const getDiscoveryState = (configFiles: readonly string[]) => {
@@ -232,6 +156,59 @@ export const getDiscoveryStateWithValidation = async (
   };
 };
 
+// Maps each application root to the globs of the unmanifested `_modules` roots
+// it reaches through local module sources, transitively.
+const getSharedModuleInputsByRoot = async (
+  configFiles: readonly string[],
+  moduleManifestRoots: ReadonlySet<string>,
+  applicationRoots: readonly string[],
+  workspaceRoot: string,
+): Promise<Map<string, string[]>> => {
+  const tfFilesByRoot = new Map<string, string[]>();
+  for (const configFile of configFiles) {
+    const root = path.dirname(configFile);
+    if (!configFile.endsWith(".tf") || isIgnoredRoot(root)) {
+      continue;
+    }
+    tfFilesByRoot.set(root, [...(tfFilesByRoot.get(root) ?? []), configFile]);
+  }
+
+  const inputsByRoot = new Map<string, string[]>();
+  for (const applicationRoot of applicationRoots) {
+    const reachedRoots = new Set<string>([applicationRoot]);
+    for (const root of reachedRoots) {
+      for (const file of tfFilesByRoot.get(root) ?? []) {
+        const content = await fs.readFile(
+          path.join(workspaceRoot, file),
+          "utf-8",
+        );
+        for (const target of getLocalModuleSourceRoots(file, content)) {
+          if (
+            reachedRoots.has(target) ||
+            !isSharedModuleRoot(target) ||
+            isIgnoredRoot(target) ||
+            moduleManifestRoots.has(target) ||
+            !tfFilesByRoot.has(target)
+          ) {
+            continue;
+          }
+          reachedRoots.add(target);
+        }
+      }
+    }
+    inputsByRoot.set(
+      applicationRoot,
+      [...reachedRoots]
+        .filter((root) => root !== applicationRoot)
+        .sort()
+        .map(
+          (root) => `{workspaceRoot}/${root.split(path.sep).join("/")}/**/*`,
+        ),
+    );
+  }
+  return inputsByRoot;
+};
+
 export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
   // Test files participate in graph invalidation without becoming projects.
   "**/{*.tf,module.json,tests/*.tftest.hcl,tests/*_test.go}",
@@ -250,10 +227,14 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
       configFiles,
       context.workspaceRoot,
     );
-    const sharedModuleInputsByRoot = await getSharedModuleInputsByProjectRoot(
+    const applicationRoots = Array.from(
+      new Set(terraformConfigFiles.map((file) => path.dirname(file))),
+    ).filter((root) => !isTerraformLibraryRoot(root));
+    const sharedModuleInputsByRoot = await getSharedModuleInputsByRoot(
       configFiles,
-      context.workspaceRoot,
       moduleManifestRoots,
+      applicationRoots,
+      context.workspaceRoot,
     );
 
     return createNodesFromFiles(
@@ -264,18 +245,17 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
             projects: {},
           };
         }
-        const project = getProject(
-          opts,
-          context.workspaceRoot,
-          root,
-          hasRootTflintConfig,
-          publishableManifestByRoot.get(root),
-          testCapabilitiesByRoot.get(root),
-          sharedModuleInputsByRoot.get(root),
-        );
         return {
           projects: {
-            [root]: project,
+            [root]: getProject(
+              opts,
+              context.workspaceRoot,
+              root,
+              hasRootTflintConfig,
+              publishableManifestByRoot.get(root),
+              testCapabilitiesByRoot.get(root),
+              sharedModuleInputsByRoot.get(root),
+            ),
           },
         };
       },

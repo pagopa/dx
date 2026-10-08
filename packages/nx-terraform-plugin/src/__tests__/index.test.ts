@@ -49,11 +49,6 @@ const createWorkspaceRoot = async () => {
   return workspaceRoot;
 };
 
-type CreateNodesResult = Awaited<ReturnType<(typeof createNodesV2)[1]>>;
-
-const getProjectsFromCreateNodesResult = (result: CreateNodesResult) =>
-  new Map(result.flatMap(([, node]) => Object.entries(node.projects ?? {})));
-
 afterEach(() => {
   vi.clearAllMocks();
 });
@@ -297,175 +292,103 @@ describe("createNodesV2 publish inference", () => {
   });
 });
 
-describe("createNodesV2 shared module inputs", () => {
-  it("adds transitive shared module files to consuming projects only", async () => {
-    const workspaceRoot = await createWorkspaceRoot();
-    const files: [string, string][] = [
-      [
-        path.join(
-          "infra",
-          "resources",
-          "_modules",
-          "alpha",
-          "examples",
-          "unused",
-          "main.tf",
-        ),
-        'module "omega" { source = "../../omega" }',
-      ],
-      [
-        path.join("infra", "resources", "_modules", "alpha", "main.tf"),
-        'module "beta" { source = "../beta" }\nmodule "declared_valid" { source = "../declared-valid" }\nmodule "declared_invalid" { source = "../declared-invalid" }\nmodule "nested_child" { source = "./modules/child" }\nmodule "ignored_example" { source = "./examples/unused" }\nmodule "ignored_test" { source = "./tests/unused" }\nmodule "local" { source = "../../local" }',
-      ],
-      [
-        path.join(
-          "infra",
-          "resources",
-          "_modules",
-          "alpha",
-          "modules",
-          "child",
-          "main.tf",
-        ),
-        'module "delta" { source = "../../../delta" }',
-      ],
-      [
-        path.join("infra", "resources", "_modules", "alpha", "README.md"),
-        "# alpha",
-      ],
-      [
-        path.join(
-          "infra",
-          "resources",
-          "_modules",
-          "alpha",
-          "tests",
-          "unused.tf",
-        ),
-        'module "sigma" { source = "../../sigma" }',
-      ],
-      [
-        path.join("infra", "resources", "_modules", "beta", "main.tf"),
-        'module "gamma" { source = "../gamma" }',
-      ],
-      [
-        path.join(
-          "infra",
-          "resources",
-          "_modules",
-          "declared-invalid",
-          "main.tf",
-        ),
-        'module "epsilon" { source = "../epsilon" }',
-      ],
-      [
-        path.join(
-          "infra",
-          "resources",
-          "_modules",
-          "declared-invalid",
-          "module.json",
-        ),
-        `{"description":"Terraform module without provider","version":"1.2.3"}`,
-      ],
-      [
-        path.join(
-          "infra",
-          "resources",
-          "_modules",
-          "declared-valid",
-          "main.tf",
-        ),
-        'module "zeta" { source = "../zeta" }',
-      ],
-      [
-        path.join(
-          "infra",
-          "resources",
-          "_modules",
-          "declared-valid",
-          "module.json",
-        ),
-        `{"description":"Terraform module description","provider":"aws","version":"1.2.3"}`,
-      ],
-      [path.join("infra", "resources", "_modules", "delta", "main.tf"), ""],
-      [
-        path.join("infra", "resources", "_modules", "gamma", "main.tf"),
-        'module "child" { source = "../alpha/modules/child" }',
-      ],
-      [
-        path.join("infra", "resources", "dev", "main.tf"),
-        'locals { text = "${replace("}", "}", "")}" }\nmodule "alpha" {\n for_each = { dev = "dev" }\n source = "../_modules/alpha"\n}',
-      ],
-      [
-        path.join("infra", "resources", "prod", "main.tf"),
-        'module "beta" { source = "../_modules/beta" }',
-      ],
-      [path.join("infra", "resources", "uat", "main.tf"), ""],
-    ];
-
+describe("createNodesV2 inferred shared module inputs", () => {
+  const writeFiles = async (
+    workspaceRoot: string,
+    files: Record<string, string>,
+  ) => {
     await Promise.all(
-      files.map(async ([fileName, content]) => {
-        await fs.mkdir(path.join(workspaceRoot, path.dirname(fileName)), {
-          recursive: true,
-        });
-        await fs.writeFile(
-          path.join(workspaceRoot, fileName),
-          content,
-          "utf-8",
-        );
+      Object.entries(files).map(async ([file, content]) => {
+        const target = path.join(workspaceRoot, file);
+        await fs.mkdir(path.dirname(target), { recursive: true });
+        await fs.writeFile(target, content);
       }),
     );
+    return Object.keys(files);
+  };
 
+  const inputsFor = async (workspaceRoot: string, configFiles: string[]) => {
     const result = await createNodesV2[1](
-      files.map(([fileName]) => fileName),
+      configFiles,
       parseOptions(undefined),
       {
         nxJsonConfiguration: {},
         workspaceRoot,
       },
     );
-    const projects = getProjectsFromCreateNodesResult(result);
-    const expectInputs = (root: string, expected: string[]) => {
-      expect(
-        [...(projects.get(root)?.namedInputs?.default ?? [])].sort(),
-      ).toEqual([...expected].sort());
-    };
+    return new Map(
+      result.flatMap(([, node]) =>
+        Object.entries(node.projects ?? {}).map(([root, project]) => [
+          root,
+          project.namedInputs?.default,
+        ]),
+      ),
+    );
+  };
 
-    expect(Array.from(projects.keys()).sort()).toEqual(
-      [
-        path.join("infra", "resources", "dev"),
-        path.join("infra", "resources", "prod"),
-        path.join("infra", "resources", "_modules", "declared-invalid"),
-        path.join("infra", "resources", "_modules", "declared-valid"),
-        path.join("infra", "resources", "uat"),
-      ].sort(),
-    );
-    expectInputs(path.join("infra", "resources", "dev"), [
+  const sharedInput = (root: string) =>
+    `{workspaceRoot}/${root.split(path.sep).join("/")}/**/*`;
+
+  it("follows local module sources transitively, once per root, through cycles", async () => {
+    const workspaceRoot = await createWorkspaceRoot();
+    const app = path.join("infra", "resources", "dev");
+    const shared = path.join("infra", "resources", "_modules", "shared");
+    const nested = path.join("infra", "resources", "_modules", "nested");
+    const configFiles = await writeFiles(workspaceRoot, {
+      [path.join(app, "main.tf")]: [
+        'module "a" { source = "../_modules/shared" }',
+        'module "b" { source = "../_modules/shared" }',
+      ].join("\n"),
+      [path.join(nested, "main.tf")]: 'module "s" { source = "../shared" }',
+      [path.join(shared, "main.tf")]: [
+        'module "n" { source = "../nested" }',
+        'module "self" { source = "../shared" }',
+      ].join("\n"),
+    });
+
+    const inputs = await inputsFor(workspaceRoot, configFiles);
+
+    expect(inputs.get(app)).toEqual([
       "{projectRoot}/*.{tf,tfvars}",
-      "{workspaceRoot}/infra/resources/_modules/alpha/**/*",
-      "{workspaceRoot}/infra/resources/_modules/beta/**/*",
-      "{workspaceRoot}/infra/resources/_modules/gamma/**/*",
-      "{workspaceRoot}/infra/resources/_modules/alpha/modules/child/**/*",
-      "{workspaceRoot}/infra/resources/_modules/delta/**/*",
+      sharedInput(nested),
+      sharedInput(shared),
     ]);
-    expectInputs(path.join("infra", "resources", "prod"), [
+  });
+
+  it("excludes manifested libraries, ignored roots, unreachable roots and other areas", async () => {
+    const workspaceRoot = await createWorkspaceRoot();
+    const app = path.join("infra", "resources", "prod");
+    const other = path.join("infra", "resources", "dev");
+    const published = path.join("infra", "resources", "_modules", "published");
+    const testsRoot = path.join("infra", "resources", "_modules", "tests");
+    const unreachable = path.join("infra", "resources", "_modules", "unused");
+    const devOnly = path.join("infra", "resources", "_modules", "dev-only");
+    const configFiles = await writeFiles(workspaceRoot, {
+      [path.join(app, "main.tf")]: [
+        'module "p" { source = "../_modules/published" }',
+        'module "t" { source = "../_modules/tests" }',
+        'module "o" { source = "../../../../outside" }',
+      ].join("\n"),
+      [path.join(devOnly, "main.tf")]: "",
+      [path.join(other, "main.tf")]:
+        'module "d" { source = "../_modules/dev-only" }',
+      [path.join(published, "main.tf")]:
+        'module "x" { source = "../dev-only" }',
+      [path.join(published, "module.json")]: JSON.stringify({
+        description: "Terraform module description",
+        provider: "aws",
+        version: "1.2.3",
+      }),
+      [path.join(testsRoot, "main.tf")]: "",
+      [path.join(unreachable, "main.tf")]: "",
+    });
+
+    const inputs = await inputsFor(workspaceRoot, configFiles);
+
+    expect(inputs.get(app)).toEqual(["{projectRoot}/*.{tf,tfvars}"]);
+    expect(inputs.get(other)).toEqual([
       "{projectRoot}/*.{tf,tfvars}",
-      "{workspaceRoot}/infra/resources/_modules/beta/**/*",
-      "{workspaceRoot}/infra/resources/_modules/gamma/**/*",
-      "{workspaceRoot}/infra/resources/_modules/alpha/modules/child/**/*",
-      "{workspaceRoot}/infra/resources/_modules/delta/**/*",
-    ]);
-    expectInputs(
-      path.join("infra", "resources", "_modules", "declared-valid"),
-      ["{projectRoot}/*.{tf,tfvars}"],
-    );
-    expectInputs(
-      path.join("infra", "resources", "_modules", "declared-invalid"),
-      ["{projectRoot}/*.{tf,tfvars}"],
-    );
-    expectInputs(path.join("infra", "resources", "uat"), [
-      "{projectRoot}/*.{tf,tfvars}",
+      sharedInput(devOnly),
     ]);
   });
 });

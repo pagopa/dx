@@ -21,11 +21,12 @@ library projects only when their own root contains a `module.json` file. This
 keeps nested implementation modules, such as `modules/<module>/modules/<child>`,
 from becoming standalone projects.
 
-Consumer projects also inherit Nx inputs for each unmanifested shared `_modules`
-tree they reference, including transitive relative module sources under those
-trees. That keeps `nx affected` focused on the Terraform projects that actually
-consume a shared module, while changes to any file under the shared module root
-still invalidate those consumers.
+Applications also get Nx inputs for the unmanifested `_modules` directories they
+reach through local `module` sources, followed transitively. Sources are parsed
+with tree-sitter, and only top-level `module` blocks with literal local sources
+are considered. Files that tree-sitter cannot parse are logged with a warning
+and skipped, so their module references are not tracked. Manifested libraries
+still become standalone projects and are not added as inputs.
 
 ## Trivy
 

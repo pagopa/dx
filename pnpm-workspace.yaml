@@ -22,6 +22,7 @@ overrides:
 
 allowBuilds:
   "@swc/core": true
+  "@tree-sitter-grammars/tree-sitter-hcl": true
   core-js: false
   cpu-features: true
   esbuild: false
@@ -29,6 +30,7 @@ allowBuilds:
   protobufjs: false
   sharp: false
   ssh2: true
+  tree-sitter: true
   unrs-resolver: false
 
 catalog:
