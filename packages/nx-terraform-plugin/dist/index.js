@@ -335,7 +335,8 @@ function getStaticDependencies(file, fileContent) {
 const getStaticDependenciesFromFile = async (file) => {
 	const logger = getPackageLogger(["fs"]);
 	try {
-		return getStaticDependencies(file, await fs.readFile(file.fileName, "utf-8"));
+		const fileContent = await fs.readFile(file.fileName, "utf-8");
+		return getStaticDependencies(file, fileContent);
 	} catch (error) {
 		logger.error("Error reading file {fileName}", {
 			error,
@@ -474,7 +475,8 @@ const getDiscoveryState = (configFiles) => {
 };
 const getPublishableManifestByRoot = async (moduleManifestRoots, workspaceRoot) => {
 	const validationResults = await Promise.all(moduleManifestRoots.map(async (root) => {
-		const manifest = await readModulePublishManifest(path.join(workspaceRoot, root));
+		const absoluteRoot = path.join(workspaceRoot, root);
+		const manifest = await readModulePublishManifest(absoluteRoot);
 		return manifest ? [root, manifest] : null;
 	}));
 	return new Map(validationResults.filter((rootManifest) => rootManifest !== null));
