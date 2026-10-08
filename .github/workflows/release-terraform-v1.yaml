@@ -116,6 +116,10 @@ jobs:
                   project_plan_env="bootstrapper-$env_name-ci"
                   project_apply_env="bootstrapper-$env_name-cd"
                   ;;
+                infra/repository)
+                  project_plan_env="bootstrapper-$env_name-ci"
+                  project_apply_env="bootstrapper-$env_name-cd"
+                  ;;
               esac
               project_targets="$(
                 jq --compact-output \
