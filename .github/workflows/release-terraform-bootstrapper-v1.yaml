@@ -28,12 +28,6 @@ jobs:
     permissions:
       id-token: write
       contents: read
-    env:
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
-      GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
-      GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
-      GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -48,6 +42,12 @@ jobs:
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+          GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
+          GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
 
       - name: Terraform Setup
         uses: pagopa/dx/.github/actions/terraform-setup@main
