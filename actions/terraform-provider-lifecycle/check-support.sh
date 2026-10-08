@@ -13,7 +13,8 @@ fi
 
 echo "::warning title=AzureRM v4 support::DX tooling will drop support for AzureRM v4 on 31 December 2026. Plan migration to AzureRM v5 and compatible DX module versions before this date. See https://dx.pagopa.it/docs/tooling-lifecycle."
 
-cat >> "$GITHUB_STEP_SUMMARY" <<'EOF'
+render_notice() {
+  cat <<'EOF'
 ## AzureRM v4 support
 
 DX tooling will drop support for AzureRM v4 on **31 December 2026**.
@@ -22,3 +23,16 @@ Plan migration to AzureRM v5 and compatible DX module versions before this date.
 
 This notice is advisory and does not block Terraform plan or apply.
 EOF
+}
+
+NOTICE=$(render_notice)
+
+{
+  echo "notice<<DX_LIFECYCLE_NOTICE"
+  printf '%s\n' "$NOTICE"
+  echo "DX_LIFECYCLE_NOTICE"
+} >> "$GITHUB_OUTPUT"
+
+if [[ "$WRITE_SUMMARY" == "true" ]]; then
+  printf '%s\n' "$NOTICE" >> "$GITHUB_STEP_SUMMARY"
+fi

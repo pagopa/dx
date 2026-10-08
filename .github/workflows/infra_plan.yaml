@@ -283,10 +283,23 @@ jobs:
           terraform init -input=false
 
       - name: Check Terraform provider support
+        id: provider-support
         continue-on-error: true
         uses: pagopa/dx/actions/terraform-provider-lifecycle@main
         with:
           working-directory: ${{ matrix.dir }}
+          write-summary: "false"
+
+      - name: Post Terraform provider warning on PR
+        if: ${{ github.event_name == 'pull_request' && steps.provider-support.outputs.notice != '' }}
+        continue-on-error: true
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body: |
+            ### Terraform provider support (${{ matrix.dir }})
+
+            ${{ steps.provider-support.outputs.notice }}
+          search-pattern: "Terraform provider support (${{ matrix.dir }})"
 
       - name: Generate Cache Key
         if: github.event_name == 'pull_request'
