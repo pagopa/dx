@@ -90,6 +90,11 @@ run "cosmos_account_basics" {
   }
 
   assert {
+    condition     = !azurerm_cosmosdb_account.this.local_authentication_enabled
+    error_message = "Cosmos DB must keep local authentication disabled when using local_authentication_enabled"
+  }
+
+  assert {
     condition     = length(azurerm_cosmosdb_account.this.capabilities) == 0
     error_message = "Cosmos DB must not enable Serverless capability when use_case = 'default'"
   }
