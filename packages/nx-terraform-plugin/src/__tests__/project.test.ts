@@ -303,7 +303,7 @@ describe("getProject applications", () => {
         ...expectedNamedInputs,
         default: [
           "{projectRoot}/*.{tf,tfvars}",
-          "{workspaceRoot}/infra/resources/prod/_modules/**/*",
+          "{workspaceRoot}/infra/resources/_modules/**/*",
         ],
       });
       expect(project.tags).toEqual(["terraform", "env:prod"]);
@@ -499,6 +499,9 @@ describe("getProject application initialization and tags", () => {
       const project = getProject(defaultOptions, root);
 
       expect(project.tags).toEqual(["terraform", "env:prod"]);
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/infra/resources/_modules/**/*",
+      );
     });
 
     it("adds the environment tag from non-resources application paths", () => {
@@ -518,6 +521,17 @@ describe("getProject application initialization and tags", () => {
       );
 
       expect(project.tags).toEqual(["terraform", "env:sandbox"]);
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/infra/core/_modules/**/*",
+      );
+    });
+
+    it("normalizes the shared input when the environment is the root segment", () => {
+      const project = getProject(defaultOptions, path.join("prod", "network"));
+
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/_modules/**/*",
+      );
     });
 
     it("defaults the environment tag to prod when no environment is found", () => {
@@ -525,6 +539,9 @@ describe("getProject application initialization and tags", () => {
       const project = getProject(defaultOptions, root);
 
       expect(project.tags).toEqual(["terraform", "env:prod"]);
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/infra/core/_modules/**/*",
+      );
     });
   });
 });

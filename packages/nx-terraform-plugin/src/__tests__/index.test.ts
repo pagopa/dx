@@ -299,17 +299,17 @@ describe("createNodesV2 static shared module inputs", () => {
       path.join("infra", "resources", "dev"),
       path.join("infra", "resources", "prod"),
       path.join("infra", "resources", "uat"),
+      path.join("infra", "resources", "prod", "networking"),
       path.join("infra", "network", "dev"),
     ];
-    const sharedRoots = applicationRoots.map((root) =>
-      path.join(path.dirname(root), "_modules"),
-    );
+    const resourcesSharedRoot = path.join("infra", "resources", "_modules");
+    const networkSharedRoot = path.join("infra", "network", "_modules");
     const libraryRoot = path.join("infra", "modules", "published");
     const moduleManifestPath = path.join(libraryRoot, "module.json");
     const configFiles = [
       ...applicationRoots.map((root) => path.join(root, "main.tf")),
-      path.join(sharedRoots[0], "shared", "main.tf"),
-      path.join(sharedRoots[0], "shared", "new-module", "outputs.tf"),
+      path.join(resourcesSharedRoot, "shared", "main.tf"),
+      path.join(resourcesSharedRoot, "shared", "new-module", "outputs.tf"),
       path.join(libraryRoot, "main.tf"),
       moduleManifestPath,
     ];
@@ -345,15 +345,15 @@ describe("createNodesV2 static shared module inputs", () => {
     expect(Array.from(projects.keys()).sort()).toEqual(
       [...applicationRoots, libraryRoot].sort(),
     );
-    for (const root of applicationRoots.slice(0, 3)) {
+    for (const root of applicationRoots.slice(0, 4)) {
       expect(projects.get(root)?.namedInputs?.default).toEqual([
         "{projectRoot}/*.{tf,tfvars}",
-        sharedInput(sharedRoots[0]),
+        sharedInput(resourcesSharedRoot),
       ]);
     }
-    expect(projects.get(applicationRoots[3])?.namedInputs?.default).toEqual([
+    expect(projects.get(applicationRoots[4])?.namedInputs?.default).toEqual([
       "{projectRoot}/*.{tf,tfvars}",
-      sharedInput(sharedRoots[3]),
+      sharedInput(networkSharedRoot),
     ]);
     expect(projects.get(libraryRoot)?.namedInputs?.default).toEqual([
       "{projectRoot}/*.{tf,tfvars}",

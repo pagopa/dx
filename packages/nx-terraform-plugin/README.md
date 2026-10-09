@@ -21,11 +21,13 @@ library projects only when their own root contains a `module.json` file. This
 keeps nested implementation modules, such as `modules/<module>/modules/<child>`,
 from becoming standalone projects.
 
-Every application includes the sibling `_modules` tree as a static Nx input.
-Therefore, any file added or changed in that tree affects all application
-projects in the same area, whether or not they reference that module. The input
-is scoped to the application's area; unmanifested `_modules` directories still
-do not become standalone projects.
+Every application includes the `_modules` tree beside the first recognized
+environment directory in its root as a static Nx input. For example,
+`infra/resources/prod/networking` uses `infra/resources/_modules`, so any file
+added or changed there affects all applications in that area, whether or not
+they reference that module. If no supported environment segment is present,
+the input remains beside the application root. Unmanifested `_modules`
+directories still do not become standalone projects.
 
 ## Trivy
 

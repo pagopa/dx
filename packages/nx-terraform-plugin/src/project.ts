@@ -66,20 +66,17 @@ const getProjectType = (root: string): ProjectType =>
 
 const defaultEnvironments = ["prod", "uat", "dev"];
 
-const getEnvironmentTag = (
-  root: string,
+const getEnvironmentIndex = (
+  rootSegments: string[],
   additionalEnvironments: readonly string[],
-): string => {
-  const rootSegments = root.split(path.sep);
+): number => {
   const supportedEnvironments = new Set([
     ...defaultEnvironments,
     ...additionalEnvironments,
   ]);
-  const environment = rootSegments.find((segment) =>
+  return rootSegments.findIndex((segment) =>
     supportedEnvironments.has(segment),
   );
-
-  return `env:${environment ?? "prod"}`;
 };
 
 const getPublishTarget = (
@@ -436,8 +433,17 @@ export const getProject = (
   testCapabilities: TerraformTestCapabilities = noTerraformTestCapabilities,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
+  const rootSegments = root.split(path.sep);
+  const environmentIndex = getEnvironmentIndex(
+    rootSegments,
+    opts.additionalEnvironments,
+  );
+  const sharedModulesRoot =
+    environmentIndex < 0
+      ? path.dirname(root)
+      : rootSegments.slice(0, environmentIndex).join(path.sep);
   const sharedModulesInput = path
-    .join(path.dirname(root), "_modules", "**", "*")
+    .join(sharedModulesRoot, "_modules", "**", "*")
     .split(path.sep)
     .join("/");
   const isPublishableLibrary =
@@ -453,7 +459,7 @@ export const getProject = (
   );
   const environmentTag =
     projectType === "application"
-      ? getEnvironmentTag(root, opts.additionalEnvironments)
+      ? `env:${rootSegments[environmentIndex] ?? "prod"}`
       : undefined;
   const tags = ["terraform", ...(environmentTag ? [environmentTag] : [])];
   if (isPublishableLibrary) {
