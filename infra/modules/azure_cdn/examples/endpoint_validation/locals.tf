@@ -10,21 +10,18 @@ locals {
 
   virtual_network = {
     name = provider::dx::resource_name(merge(local.environment, {
-      app_name      = "common",
+      app_name      = "",
       resource_type = "virtual_network"
     }))
     resource_group_name = provider::dx::resource_name(merge(local.environment, {
-      app_name      = "network",
+      app_name      = "",
       resource_type = "resource_group"
     }))
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    BusinessUnit   = "DevEx"
-    ManagementTeam = "Developer Experience"
-    Source         = "https://github.com/pagopa/dx/modules/azure_cdn/examples/endpoint_validation"
+    CostCenter  = "TS000 - TECNOLOGIA & SERVIZI"
+    Environment = "Uat"
+    Source      = "https://github.com/pagopa/dx/modules/azure_cdn/examples/endpoint_validation"
   }
 }

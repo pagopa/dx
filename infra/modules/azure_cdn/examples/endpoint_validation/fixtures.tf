@@ -5,6 +5,7 @@ resource "azurerm_resource_group" "e2e" {
     domain        = "e2e",
     app_name      = "cdn",
     resource_type = "resource_group"
+    domain        = ""
   }))
   location = local.environment.location
 }
@@ -13,6 +14,7 @@ data "azurerm_subnet" "pep" {
   name = provider::dx::resource_name(merge(local.environment, {
     app_name      = "pep",
     resource_type = "subnet"
+    domain        = ""
   }))
   virtual_network_name = local.virtual_network.name
   resource_group_name  = local.virtual_network.resource_group_name
@@ -25,10 +27,14 @@ module "storage_account" {
 
   environment = local.environment
 
-  resource_group_name                  = azurerm_resource_group.e2e.name
-  use_case                             = "default"
-  subnet_pep_id                        = data.azurerm_subnet.pep.id
-  private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
+  resource_group_name = azurerm_resource_group.e2e.name
+  use_case            = "default"
+  subnet_pep_id       = data.azurerm_subnet.pep.id
+  private_dns_zone_resource_group_name = provider::dx::resource_name(merge(local.environment, {
+    app_name      = "network",
+    domain        = ""
+    resource_type = "resource_group"
+  }))
 
   force_public_network_access_enabled = true # Public network access enabled for CDN origin reachability
 
