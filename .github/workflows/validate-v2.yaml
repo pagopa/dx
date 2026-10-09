@@ -57,6 +57,9 @@ jobs:
 
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        # Mise self-update runs before mise-action exports its token.
+        env:
+          MISE_GITHUB_TOKEN: ${{ github.token }}
         with:
           install_args: "node pnpm"
           minimum_release_age: 7d
@@ -87,6 +90,8 @@ jobs:
 
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        env:
+          MISE_GITHUB_TOKEN: ${{ github.token }}
         with:
           install_args: "node pnpm"
           minimum_release_age: 7d
@@ -120,6 +125,8 @@ jobs:
 
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        env:
+          MISE_GITHUB_TOKEN: ${{ github.token }}
         with:
           install_args: "node pnpm"
           minimum_release_age: 7d
@@ -230,6 +237,8 @@ jobs:
       - name: Setup repository tools
         if: ${{ hashFiles('mise.toml') != '' }}
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        env:
+          MISE_GITHUB_TOKEN: ${{ github.token }}
         with:
           experimental: true
           minimum_release_age: 7d
@@ -316,34 +325,30 @@ jobs:
           fetch-depth: 0
           filter: tree:0
 
-      # Azure/AWS CLIs come from the repository mise.toml, not from the
-      # self-hosted runner image. Install them before Cloud Login so
-      # azure/login and aws-actions/configure-aws-credentials can find az/aws.
-      - name: Setup repository tools
+      # Keep the Terraform-only cache independent of tools baked into the image.
+      - name: Configure Terraform tool directory
+        run: echo "MISE_DATA_DIR=$RUNNER_TEMP/mise-terraform" >> "$GITHUB_ENV"
+
+      # Locked Python graph installs need an interpreter before Azure CLI resolves.
+      - name: Setup Python for Azure CLI
         if: ${{ hashFiles('mise.toml') != '' }}
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        env:
+          MISE_GITHUB_TOKEN: ${{ github.token }}
         with:
+          install_args: "python uv"
+          cache: false
           # Enable experimental features to use "mise deps"
           experimental: true
           minimum_release_age: 7d
 
+      - name: Install Terraform tools
+        if: ${{ hashFiles('mise.toml') != '' }}
+        run: mise install --locked node pnpm terraform tflint trivy azure-cli aws-cli github-cli jq
+
       # Mise deps for pnpm only performs a global "pnpm install".
       # Here we want to install only the root workspace dependencies,
       # so we handle it manually.
-      - name: Cache pnpm dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.PNPM_CONFIG_STORE_DIR }}
-          key: ${{ runner.os }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
-
-      - name: Cache TFLint plugins
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.TFLINT_PLUGIN_DIR }}
-          key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
-
       - name: Install dependencies
         run: |
           mise deps --skip pnpm
@@ -400,13 +405,16 @@ jobs:
           GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
           GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
 
+      - name: Run Terraform checks on affected environment projects
+        env:
+          EXCLUDE: ${{ matrix.target.exclude }}
+        run: pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" --outputStyle=stream
+
       - name: Run Terraform plan on affected environment projects
         env:
           EXCLUDE: ${{ matrix.target.exclude }}
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
-        run: |
-          pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" && \
-            pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
+        run: pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE" --outputStyle=stream
 
       - name: Upload Terraform plan report
         if: ${{ always() && hashFiles('.dx-tasks/**/*.json') != '' }}
