@@ -291,3 +291,72 @@ describe("createNodesV2 publish inference", () => {
     );
   });
 });
+
+describe("createNodesV2 static shared module inputs", () => {
+  it("includes the sibling _modules tree for applications only", async () => {
+    const workspaceRoot = await createWorkspaceRoot();
+    const applicationRoots = [
+      path.join("infra", "resources", "dev"),
+      path.join("infra", "resources", "prod"),
+      path.join("infra", "resources", "uat"),
+      path.join("infra", "resources", "prod", "networking"),
+      path.join("infra", "network", "dev"),
+    ];
+    const resourcesSharedRoot = path.join("infra", "resources", "_modules");
+    const networkSharedRoot = path.join("infra", "network", "_modules");
+    const libraryRoot = path.join("infra", "modules", "published");
+    const moduleManifestPath = path.join(libraryRoot, "module.json");
+    const configFiles = [
+      ...applicationRoots.map((root) => path.join(root, "main.tf")),
+      path.join(resourcesSharedRoot, "shared", "main.tf"),
+      path.join(resourcesSharedRoot, "shared", "new-module", "outputs.tf"),
+      path.join(libraryRoot, "main.tf"),
+      moduleManifestPath,
+    ];
+
+    await Promise.all(
+      applicationRoots.map(async (root) => {
+        const mainFile = path.join(workspaceRoot, root, "main.tf");
+        await fs.mkdir(path.dirname(mainFile), { recursive: true });
+        await fs.writeFile(mainFile, 'module "broken" { source =');
+      }),
+    );
+    await fs.mkdir(path.join(workspaceRoot, libraryRoot), { recursive: true });
+    await fs.writeFile(
+      path.join(workspaceRoot, moduleManifestPath),
+      JSON.stringify({
+        description: "Terraform module description",
+        provider: "aws",
+        version: "1.2.3",
+      }),
+    );
+
+    const result = await createNodesV2[1](
+      configFiles,
+      parseOptions(undefined),
+      { nxJsonConfiguration: {}, workspaceRoot },
+    );
+    const projects = new Map(
+      result.flatMap(([, node]) => Object.entries(node.projects ?? {})),
+    );
+    const sharedInput = (root: string) =>
+      `{workspaceRoot}/${path.join(root, "**", "*").split(path.sep).join("/")}`;
+
+    expect(Array.from(projects.keys()).sort()).toEqual(
+      [...applicationRoots, libraryRoot].sort(),
+    );
+    for (const root of applicationRoots.slice(0, 4)) {
+      expect(projects.get(root)?.namedInputs?.default).toEqual([
+        "{projectRoot}/*.{tf,tfvars}",
+        sharedInput(resourcesSharedRoot),
+      ]);
+    }
+    expect(projects.get(applicationRoots[4])?.namedInputs?.default).toEqual([
+      "{projectRoot}/*.{tf,tfvars}",
+      sharedInput(networkSharedRoot),
+    ]);
+    expect(projects.get(libraryRoot)?.namedInputs?.default).toEqual([
+      "{projectRoot}/*.{tf,tfvars}",
+    ]);
+  });
+});
