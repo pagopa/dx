@@ -46,11 +46,20 @@ variable "opex_resource_group_id" {
 
 variable "repository" {
   type = object({
-    owner = optional(string, "pagopa")
-    name  = string
+    owner    = optional(string, "pagopa")
+    name     = string
+    owner_id = optional(number)
   })
 
-  description = "Details about the GitHub repository, including owner and name."
+  description = "Details about the GitHub repository. `owner` is the GitHub login or organization name; `owner_id` is the positive numeric GitHub owner ID used in immutable OIDC subjects. For personal-account repositories, set `owner_id` to `owner.id` from `GET /repos/{owner}/{repo}`."
+
+  validation {
+    condition = var.repository.owner_id == null ? true : (
+      var.repository.owner_id > 0 &&
+      floor(var.repository.owner_id) == var.repository.owner_id
+    )
+    error_message = "repository.owner_id must be a positive integer when set."
+  }
 }
 
 variable "github_private_runner" {
