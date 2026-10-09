@@ -13,8 +13,8 @@ data "azurerm_log_analytics_workspace" "e2e" {
 }
 
 data "azurerm_user_assigned_identity" "integration_github" {
-  name                = "dx-d-itn-devex-integration-id-01"
-  resource_group_name = "dx-d-itn-devex-rg-01"
+  name                = "dx-u-itn-devex-integration-id-01"
+  resource_group_name = "dx-u-itn-devex-rg-01"
 }
 
 data "azurerm_virtual_network" "e2e" {
