@@ -51,7 +51,7 @@ variable "repository" {
     owner_id = optional(number)
   })
 
-  description = "Details about the GitHub repository, including owner, optional positive integer owner ID, and name. Set owner_id for repositories owned by a personal GitHub account."
+  description = "Details about the GitHub repository. `owner` is the GitHub login or organization name; `owner_id` is the positive numeric GitHub owner ID used in immutable OIDC subjects. For personal-account repositories, set `owner_id` to `owner.id` from `GET /repos/{owner}/{repo}`."
 
   validation {
     condition = var.repository.owner_id == null ? true : (
