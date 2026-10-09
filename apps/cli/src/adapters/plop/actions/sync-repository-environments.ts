@@ -7,134 +7,179 @@
  * changes the module's `repository.environments` input, then runs Terraform from
  * infra/repository to create or update the environments on GitHub.
  */
+import { execa } from "execa";
 import { type NodePlopAPI } from "node-plop";
-import fs from "node:fs/promises";
+import fs, { type FileHandle } from "node:fs/promises";
 import path from "node:path";
 
-import type { Environment } from "../../../domain/environment.js";
-
 import { tf$ } from "../../execa/terraform.js";
+import { updateRepositoryEnvironmentsHcl } from "../../terraform/hcl-repository-environments.js";
 import {
   type Payload,
   payloadSchema,
 } from "../generators/environment/prompts.js";
 
-const KNOWN_ENVIRONMENTS = ["dev", "uat", "prod"] as const;
-const KNOWN_ENVIRONMENT_NAMES: readonly string[] = KNOWN_ENVIRONMENTS;
+type OpenRepositoryConfig = {
+  content: string;
+  fileHandle: FileHandle;
+  info: RepositoryFileInfo;
+};
+type RepositoryFileInfo = Awaited<ReturnType<typeof fs.lstat>>;
 
-const environmentList = (environments: Set<string>): string =>
-  `[${[
-    // Keep the historical lifecycle environments first for stable diffs, then
-    // append tenant-qualified names in their existing insertion order.
-    ...KNOWN_ENVIRONMENTS.filter((environment) =>
-      environments.has(environment),
-    ),
-    ...Array.from(environments).filter(
-      (environment) => !KNOWN_ENVIRONMENT_NAMES.includes(environment),
-    ),
-  ]
-    .map((environment) => `"${environment}"`)
-    .join(", ")}]`;
-
-/**
- * Returns the inner body of the `repository = { ... }` object.
- *
- * Example input:
- * repository = {
- *   name = "repo"
- * }
- *
- * Example output:
- *   name = "repo"
- */
-const findRepositoryBlock = (
-  content: string,
-): { block: string; end: number; start: number } => {
-  const match =
-    /(?:^|\n)(?<indent>[^\S\r\n]*)repository[^\S\r\n]*=[^\S\r\n]*\{\n/.exec(
-      content,
+const readFileHandle = async (fileHandle: FileHandle): Promise<string> => {
+  const chunks: Buffer[] = [];
+  let position = 0;
+  while (true) {
+    const buffer = Buffer.alloc(64 * 1024);
+    const { bytesRead } = await fileHandle.read(
+      buffer,
+      0,
+      buffer.length,
+      position,
     );
-  if (!match) {
-    throw new Error(
-      "Cannot find the repository configuration in infra/repository/main.tf",
-    );
+    if (bytesRead === 0) {
+      break;
+    }
+    chunks.push(buffer.subarray(0, bytesRead));
+    position += bytesRead;
   }
-
-  const blockStart = match.index + match[0].length;
-  const closingMatch = new RegExp(`\\n${match.groups?.indent ?? ""}\\}`).exec(
-    content.slice(blockStart),
-  );
-  if (!closingMatch) {
-    throw new Error(
-      "Cannot find the end of the repository configuration in infra/repository/main.tf",
-    );
-  }
-
-  const end = blockStart + closingMatch.index;
-  return { block: content.slice(blockStart, end), end, start: blockStart };
+  return Buffer.concat(chunks).toString("utf8");
 };
 
-const repositoryPropertyIndent = (block: string): string => {
-  const propertyMatch = /^(?<indent>\s*)\w+\s*=/m.exec(block);
-  return propertyMatch?.groups?.indent ?? "    ";
+const isSameRegularFile = (
+  openedFileInfo: RepositoryFileInfo,
+  pathInfo: RepositoryFileInfo,
+): boolean =>
+  openedFileInfo.isFile() &&
+  pathInfo.isFile() &&
+  openedFileInfo.dev === pathInfo.dev &&
+  openedFileInfo.ino === pathInfo.ino;
+
+const assertRepositoryFilePath = async (
+  repositoryMainPath: string,
+  openedFileInfo: RepositoryFileInfo,
+): Promise<void> => {
+  const pathInfo = await fs.lstat(repositoryMainPath);
+  if (!isSameRegularFile(openedFileInfo, pathInfo)) {
+    throw new Error(
+      "infra/repository/main.tf changed during synchronization; refusing to overwrite it",
+    );
+  }
 };
 
-const readRepositoryConfig = async (repositoryMainPath: string) => {
+const closeFileHandleAfterError = async (
+  fileHandle: FileHandle,
+  error: unknown,
+): Promise<never> => {
   try {
-    return await fs.readFile(repositoryMainPath, "utf8");
+    await fileHandle.close();
+  } catch (closeCause) {
+    throw new AggregateError(
+      [error, closeCause],
+      "Repository environment synchronization failed and its file handle could not be closed",
+      { cause: closeCause },
+    );
+  }
+  throw error;
+};
+
+const readRepositoryConfig = async (
+  repositoryMainPath: string,
+): Promise<OpenRepositoryConfig> => {
+  let fileHandle: FileHandle;
+  try {
+    fileHandle = await fs.open(repositoryMainPath, "r");
   } catch (cause) {
     throw new Error(
       `Cannot synchronize GitHub repository environments because ${path.relative(process.cwd(), repositoryMainPath)} does not exist or is not readable.`,
       { cause },
     );
   }
+
+  try {
+    const info = await fileHandle.stat();
+    await assertRepositoryFilePath(repositoryMainPath, info);
+    const content = await readFileHandle(fileHandle);
+    return { content, fileHandle, info };
+  } catch (cause) {
+    return closeFileHandleAfterError(
+      fileHandle,
+      new Error(
+        `Cannot safely read ${path.relative(process.cwd(), repositoryMainPath)}.`,
+        { cause },
+      ),
+    );
+  }
 };
 
-export const syncRepositoryTerraformEnvironments = (
-  content: string,
-  environmentName: Environment["name"],
-): string => {
-  const repositoryBlock = findRepositoryBlock(content);
-  const environmentsMatch =
-    /^(?<indent>\s*)environments\s*=\s*\[(?<values>[\s\S]*?)\]\s*$/m.exec(
-      repositoryBlock.block,
+export const syncRepositoryTerraformEnvironments =
+  updateRepositoryEnvironmentsHcl;
+
+const validateTerraformSource = async (content: string): Promise<void> => {
+  try {
+    await execa({ input: content })("terraform", ["fmt", "-"]);
+  } catch (cause) {
+    throw new Error(
+      "Cannot validate Terraform HCL in infra/repository/main.tf; no changes were written",
+      { cause },
     );
+  }
+};
 
-  if (!environmentsMatch) {
-    if (environmentName === "prod") {
-      return content;
+const replaceRepositoryConfig = async (
+  repositoryMainPath: string,
+  repositoryConfig: OpenRepositoryConfig,
+  updated: string,
+): Promise<void> => {
+  const info = await repositoryConfig.fileHandle.stat();
+  if (!isSameRegularFile(repositoryConfig.info, info)) {
+    throw new Error(
+      "infra/repository/main.tf changed during synchronization; refusing to overwrite it",
+    );
+  }
+  await assertRepositoryFilePath(repositoryMainPath, info);
+
+  const temporaryDirectory = await fs.mkdtemp(
+    path.join(path.dirname(repositoryMainPath), ".main-tf-"),
+  );
+  const temporaryFile = path.join(temporaryDirectory, "main.tf");
+  try {
+    await fs.writeFile(temporaryFile, updated, {
+      encoding: "utf8",
+      mode: info.mode,
+    });
+    await fs.chmod(temporaryFile, info.mode);
+    if (
+      (await readFileHandle(repositoryConfig.fileHandle)) !==
+      repositoryConfig.content
+    ) {
+      throw new Error(
+        "infra/repository/main.tf changed during synchronization; refusing to overwrite it",
+      );
     }
-
-    // Without an explicit list, the Terraform module manages prod by default.
-    // Adding a non-prod environment must also keep prod explicit.
-    const environments = new Set<string>([environmentName, "prod"]);
-    const propertyIndent = repositoryPropertyIndent(repositoryBlock.block);
-    const separator = repositoryBlock.block.endsWith("\n") ? "" : "\n";
-    const updatedBlock = `${repositoryBlock.block}${separator}${propertyIndent}environments           = ${environmentList(environments)}`;
-    return `${content.slice(0, repositoryBlock.start)}${updatedBlock}${content.slice(repositoryBlock.end)}`;
+    const latestInfo = await repositoryConfig.fileHandle.stat();
+    if (!isSameRegularFile(repositoryConfig.info, latestInfo)) {
+      throw new Error(
+        "infra/repository/main.tf changed during synchronization; refusing to overwrite it",
+      );
+    }
+    await assertRepositoryFilePath(repositoryMainPath, latestInfo);
+    await fs.rename(temporaryFile, repositoryMainPath);
+  } catch (cause) {
+    try {
+      await fs.rm(temporaryDirectory, { force: true, recursive: true });
+    } catch (cleanupCause) {
+      throw new AggregateError(
+        [cause, cleanupCause],
+        "Cannot update infra/repository/main.tf or clean up its temporary file",
+        { cause: cleanupCause },
+      );
+    }
+    throw new Error("Cannot safely update infra/repository/main.tf", {
+      cause,
+    });
   }
-
-  const existingEnvironments = new Set(
-    Array.from((environmentsMatch.groups?.values ?? "").matchAll(/"([^"]+)"/g))
-      .map((match) => match[1])
-      .filter((environment) => environment.length > 0),
-  );
-  const hasSelectedEnvironment = existingEnvironments.has(environmentName);
-  const hasProdEnvironment = existingEnvironments.has("prod");
-  if (hasSelectedEnvironment && hasProdEnvironment) {
-    return content;
-  }
-
-  existingEnvironments.add(environmentName);
-  existingEnvironments.add("prod");
-  const indent = environmentsMatch.groups?.indent ?? "    ";
-  const updatedLine = `${indent}environments           = ${environmentList(existingEnvironments)}`;
-  const updatedBlock = repositoryBlock.block.replace(
-    environmentsMatch[0],
-    updatedLine,
-  );
-
-  return `${content.slice(0, repositoryBlock.start)}${updatedBlock}${content.slice(repositoryBlock.end)}`;
+  await fs.rm(temporaryDirectory, { force: true, recursive: true });
 };
 
 export const syncRepositoryEnvironments = async (
@@ -143,16 +188,26 @@ export const syncRepositoryEnvironments = async (
   const repositoryPath = path.join(process.cwd(), "infra", "repository");
   const repositoryMainPath = path.join(repositoryPath, "main.tf");
 
-  const currentRepositoryConfig =
-    await readRepositoryConfig(repositoryMainPath);
-  const updatedRepositoryConfig = syncRepositoryTerraformEnvironments(
-    currentRepositoryConfig,
-    payload.env.name,
-  );
+  const repositoryConfig = await readRepositoryConfig(repositoryMainPath);
+  try {
+    const updatedRepositoryConfig = await syncRepositoryTerraformEnvironments(
+      repositoryConfig.content,
+      payload.env.name,
+    );
 
-  if (updatedRepositoryConfig !== currentRepositoryConfig) {
-    await fs.writeFile(repositoryMainPath, updatedRepositoryConfig, "utf8");
+    await validateTerraformSource(repositoryConfig.content);
+    if (updatedRepositoryConfig !== repositoryConfig.content) {
+      await validateTerraformSource(updatedRepositoryConfig);
+      await replaceRepositoryConfig(
+        repositoryMainPath,
+        repositoryConfig,
+        updatedRepositoryConfig,
+      );
+    }
+  } catch (cause) {
+    return closeFileHandleAfterError(repositoryConfig.fileHandle, cause);
   }
+  await repositoryConfig.fileHandle.close();
 
   const repositoryTerraform = tf$({ cwd: repositoryPath });
   await repositoryTerraform`terraform init`;
