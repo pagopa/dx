@@ -28,11 +28,8 @@ locals {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    BusinessUnit   = "DevEx"
-    ManagementTeam = "Developer Experience"
-    Source         = "https://github.com/pagopa/dx/modules/azure_cdn/examples/advanced"
+    CostCenter  = "TS000 - TECNOLOGIA & SERVIZI"
+    Environment = "Uat"
+    Source      = "https://github.com/pagopa/dx/modules/azure_cdn/examples/endpoint_validation"
   }
 }

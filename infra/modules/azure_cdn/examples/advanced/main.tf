@@ -29,8 +29,12 @@ module "storage_account" {
   # subservices below, in addition to the public endpoint used by the CDN
   # origin, so the storage account is reachable both publicly (via Front
   # Door/CDN) and privately from workloads inside the network.
-  subnet_pep_id                        = data.azurerm_subnet.pep.id
-  private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
+  subnet_pep_id = data.azurerm_subnet.pep.id
+  private_dns_zone_resource_group_name = provider::dx::resource_name(merge(local.environment, {
+    app_name      = "network",
+    domain        = ""
+    resource_type = "resource_group"
+  }))
 
   force_public_network_access_enabled = true # Public network access enabled for CDN origin reachability
 
