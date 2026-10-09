@@ -144,7 +144,7 @@ resource "azurerm_storage_container" "this" {
 resource "azurerm_storage_container_immutability_policy" "this" {
   for_each = local.immutability_policy_enabled ? { for c in var.containers : c.name => c if c.immutability_policy != null } : {}
 
-  storage_container_resource_manager_id = azurerm_storage_container.this[each.key].resource_manager_id
+  storage_container_resource_manager_id = azurerm_storage_container.this[each.key].id
   immutability_period_in_days           = each.value.immutability_policy.period_in_days
   locked                                = each.value.immutability_policy.locked
 
@@ -153,16 +153,16 @@ resource "azurerm_storage_container_immutability_policy" "this" {
 
 # Tables
 resource "azurerm_storage_table" "this" {
-  for_each             = var.subservices_enabled.table ? toset(var.tables) : []
-  name                 = each.value
-  storage_account_name = azurerm_storage_account.this.name
+  for_each           = var.subservices_enabled.table ? toset(var.tables) : []
+  name               = each.value
+  storage_account_id = azurerm_storage_account.this.id
 }
 
 # Queues
 resource "azurerm_storage_queue" "this" {
-  for_each             = var.subservices_enabled.queue ? toset(var.queues) : []
-  name                 = each.value
-  storage_account_name = azurerm_storage_account.this.name
+  for_each           = var.subservices_enabled.queue ? toset(var.queues) : []
+  name               = each.value
+  storage_account_id = azurerm_storage_account.this.id
 
   metadata = { for k, v in local.tags : lower(k) => lower(v) }
 }
