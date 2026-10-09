@@ -25,6 +25,8 @@ Azure CLI graph is resolved. The first environment matrix job saves the complete
 tool cache; the other environment jobs only restore it. Mise runtime selection
 retains the seven-day minimum release age, independently of the tool versions
 and release-age policy in the repository configuration.
+The job token is available before Mise setup so runtime self-updates use
+authenticated GitHub requests.
 
 The No environment job writes the shared pnpm and TFLint caches. Terraform jobs
 restore them without attempting duplicate saves.
