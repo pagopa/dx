@@ -17,25 +17,22 @@ CI initialization verifies the committed provider and module locks. Plan refresh
 is enabled unless the workflow finds a refresh marker for the same pull request
 and environment in the current ten-minute window.
 
-## CI caches
+## CI setup
 
 Terraform jobs install only the tools needed for validation and cloud login in
 an isolated Mise data directory. Python and `uv` are installed before the locked
-Azure CLI graph is resolved. The first environment matrix job saves the complete
-tool cache; the other environment jobs only restore it. Mise runtime selection
-retains the seven-day minimum release age, independently of the tool versions
-and release-age policy in the repository configuration.
+Azure CLI graph is resolved. Mise runtime selection retains the seven-day
+minimum release age, independently of the tool versions and release-age policy
+in the repository configuration.
 The job token is available before Mise setup so runtime self-updates use
 authenticated GitHub requests.
 
-The No environment job writes the shared pnpm and TFLint caches. Terraform jobs
-restore them without attempting duplicate saves.
-
-Provider caches contain only each root's `.terraform/providers` directory.
-Their keys include the environment, runner OS and architecture, Terraform
-version files, and provider lockfiles. Backend configuration, credentials,
-Terraform state, and plan results are not cached. Each root has a separate
-provider installation directory, preserving parallel initialization.
+Terraform jobs do not restore or save tool, dependency, or provider archives.
+On the self-hosted runner, installing the selected toolset and root workspace
+dependencies is cheaper than transferring and compressing those caches. The
+No environment job retains its caches for the larger non-Terraform workload.
+The small pull-request refresh marker remains cached; backend configuration,
+credentials, Terraform state, and plan results are not cached.
 
 ## Measuring performance
 
@@ -43,6 +40,6 @@ When comparing workflow performance, use the same Terraform configuration and
 refresh setting. Report runner scheduling separately from job execution, and
 distinguish cache misses from warm-cache runs.
 
-Checks and plans are separate workflow steps. Static Nx output exposes
+Checks and plans are separate workflow steps. Streamed Nx output exposes
 initialization output and task timings without changing the plan executor's
 output masking or the validation targets.

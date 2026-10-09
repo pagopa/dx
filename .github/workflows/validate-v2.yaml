@@ -329,14 +329,6 @@ jobs:
       - name: Configure Terraform tool directory
         run: echo "MISE_DATA_DIR=$RUNNER_TEMP/mise-terraform" >> "$GITHUB_ENV"
 
-      - name: Restore Terraform tools
-        id: terraform-tools
-        if: ${{ hashFiles('mise.toml') != '' }}
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/mise-terraform
-          key: mise-terraform-v2-${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ hashFiles('**/mise*.toml', '**/mise*.lock', '**/.tool-versions', '**/.node-version', '**/.python-version', '**/.terraform-version', '**/package.json', '.mise/**') }}
-
       # Locked Python graph installs need an interpreter before Azure CLI resolves.
       - name: Setup Python for Azure CLI
         if: ${{ hashFiles('mise.toml') != '' }}
@@ -354,43 +346,13 @@ jobs:
         if: ${{ hashFiles('mise.toml') != '' }}
         run: mise install --locked node pnpm terraform tflint trivy azure-cli aws-cli github-cli jq
 
-      - name: Save Terraform tools
-        if: ${{ strategy.job-index == 0 && steps.terraform-tools.outputs.cache-hit != 'true' && hashFiles('mise.toml') != '' }}
-        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ runner.temp }}/mise-terraform
-          key: ${{ steps.terraform-tools.outputs.cache-primary-key }}
-
       # Mise deps for pnpm only performs a global "pnpm install".
       # Here we want to install only the root workspace dependencies,
       # so we handle it manually.
-      # The No environment job is the sole writer of these shared caches.
-      - name: Restore pnpm dependencies
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.PNPM_CONFIG_STORE_DIR }}
-          key: ${{ runner.os }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
-
-      - name: Restore TFLint plugins
-        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.TFLINT_PLUGIN_DIR }}
-          key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
-
       - name: Install dependencies
         run: |
           mise deps --skip pnpm
           pnpm --filter . ci
-
-      # Cache only provider binaries, never backend configuration or state.
-      # Each root keeps its own install directory so parallel init remains safe.
-      - name: Cache Terraform providers
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: "**/.terraform/providers"
-          key: ${{ runner.os }}-${{ runner.arch }}-terraform-providers-${{ github.workflow }}-${{ matrix.target.github-environment }}-${{ hashFiles('**/.terraform-version', '**/.terraform.lock.hcl') }}
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -446,13 +408,13 @@ jobs:
       - name: Run Terraform checks on affected environment projects
         env:
           EXCLUDE: ${{ matrix.target.exclude }}
-        run: pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" --outputStyle=static
+        run: pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" --outputStyle=stream
 
       - name: Run Terraform plan on affected environment projects
         env:
           EXCLUDE: ${{ matrix.target.exclude }}
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
-        run: pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE" --outputStyle=static
+        run: pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE" --outputStyle=stream
 
       - name: Upload Terraform plan report
         if: ${{ always() && hashFiles('.dx-tasks/**/*.json') != '' }}
