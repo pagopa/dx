@@ -20,9 +20,11 @@ and environment in the current ten-minute window.
 ## CI caches
 
 Terraform jobs install only the tools needed for validation and cloud login in
-an isolated Mise data directory. The first environment matrix job saves this
-tool cache; the other environment jobs only restore it. The Mise runtime is
-pinned independently of the tool versions in the repository lockfile.
+an isolated Mise data directory. Python and `uv` are installed before the locked
+Azure CLI graph is resolved. The first environment matrix job saves the complete
+tool cache; the other environment jobs only restore it. Mise runtime selection
+retains the seven-day minimum release age, independently of the tool versions
+and release-age policy in the repository configuration.
 
 The No environment job writes the shared pnpm and TFLint caches. Terraform jobs
 restore them without attempting duplicate saves.

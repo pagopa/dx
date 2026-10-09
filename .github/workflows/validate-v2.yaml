@@ -58,8 +58,8 @@ jobs:
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
-          version: 2026.9.18
           install_args: "node pnpm"
+          minimum_release_age: 7d
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -88,8 +88,8 @@ jobs:
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
-          version: 2026.9.18
           install_args: "node pnpm"
+          minimum_release_age: 7d
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -121,8 +121,8 @@ jobs:
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
-          version: 2026.9.18
           install_args: "node pnpm"
+          minimum_release_age: 7d
 
       - name: Set base and head SHAs for affected commands
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -231,8 +231,8 @@ jobs:
         if: ${{ hashFiles('mise.toml') != '' }}
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
-          version: 2026.9.18
           experimental: true
+          minimum_release_age: 7d
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -320,19 +320,35 @@ jobs:
       - name: Configure Terraform tool directory
         run: echo "MISE_DATA_DIR=$RUNNER_TEMP/mise-terraform" >> "$GITHUB_ENV"
 
-      # Azure/AWS CLIs come from the repository mise.toml, not from the
-      # self-hosted runner image. Install them before Cloud Login so
-      # azure/login and aws-actions/configure-aws-credentials can find az/aws.
-      - name: Setup repository tools
+      - name: Restore Terraform tools
+        id: terraform-tools
+        if: ${{ hashFiles('mise.toml') != '' }}
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/mise-terraform
+          key: mise-terraform-v2-${{ runner.os }}-${{ runner.arch }}-${{ runner.environment }}-${{ hashFiles('**/mise*.toml', '**/mise*.lock', '**/.tool-versions', '**/.node-version', '**/.python-version', '**/.terraform-version', '**/package.json', '.mise/**') }}
+
+      # Locked Python graph installs need an interpreter before Azure CLI resolves.
+      - name: Setup Python for Azure CLI
         if: ${{ hashFiles('mise.toml') != '' }}
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
-          version: 2026.9.18
-          install_args: "node pnpm terraform tflint trivy azure-cli aws-cli github-cli jq"
-          cache_key_prefix: mise-terraform-v1
-          cache_save: ${{ strategy.job-index == 0 }}
+          install_args: "python uv"
+          cache: false
           # Enable experimental features to use "mise deps"
           experimental: true
+          minimum_release_age: 7d
+
+      - name: Install Terraform tools
+        if: ${{ hashFiles('mise.toml') != '' }}
+        run: mise install --locked node pnpm terraform tflint trivy azure-cli aws-cli github-cli jq
+
+      - name: Save Terraform tools
+        if: ${{ strategy.job-index == 0 && steps.terraform-tools.outputs.cache-hit != 'true' && hashFiles('mise.toml') != '' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ runner.temp }}/mise-terraform
+          key: ${{ steps.terraform-tools.outputs.cache-primary-key }}
 
       # Mise deps for pnpm only performs a global "pnpm install".
       # Here we want to install only the root workspace dependencies,
