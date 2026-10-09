@@ -1,3 +1,15 @@
+## 0.27.14 (2026-10-09)
+
+### 🩹 Fixes
+
+- Support personal GitHub owners in generated bootstrapper configurations ([#2266](https://github.com/pagopa/dx/pull/2266))
+- Honor the selected GitHub organization in bootstrapper configuration ([#2266](https://github.com/pagopa/dx/pull/2266))
+
+### ❤️ Thank You
+
+- Copilot @github-copilot
+- Marco Comi @kin0992
+
 ## 0.27.13 (2026-10-08)
 
 ### 🚀 Features

@@ -1,3 +1,14 @@
+## 6.2.1 (2026-10-09)
+
+### 🩹 Fixes
+
+- Support personal GitHub owners in generated bootstrapper configurations ([#2266](https://github.com/pagopa/dx/pull/2266))
+
+### ❤️ Thank You
+
+- Copilot @github-copilot
+- Marco Comi @kin0992
+
 ## 6.2.0 (2026-09-24)
 
 ### 🚀 Features
