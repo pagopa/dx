@@ -93,6 +93,11 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
     assert toml["artifacts"] == list(task_shape.HARBOR_ARTIFACTS)
     # verifier image Dockerfile built from tests/
     assert (task_root / "tests" / "Dockerfile").is_file()
+    verifier_script = (task_root / "tests" / "test.sh").read_text()
+    assert '\\"restrictedProperties\\"' in verifier_script
+    assert '\\"skillName\\" *: *\\"${SKILL_NAME}\\"' in verifier_script
+    assert '\\"success\\" *: *true' in verifier_script
+    assert "grep -q '<skill-context'" not in verifier_script
 
     quality = tomllib.loads((task_root / "tests" / "quality.toml").read_text())
     assert quality["judge"]["judge"] == "openai/gpt-6-luna"

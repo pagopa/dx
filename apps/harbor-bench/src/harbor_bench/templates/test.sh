@@ -18,12 +18,13 @@ fi
 if [ "${SKILL_EVAL_ENFORCE_SKILL_USE:-true}" = "true" ]; then
   SKILL_NAME="${SKILL_EVAL_SKILL_NAME:-{{SKILL_NAME}}}"
   if [ -n "$TRANSCRIPT" ]; then
-    # load: skill context injected into the user turn
-    if ! grep -q '<skill-context' "$TRANSCRIPT" 2>/dev/null; then
-      SKILL_OK=0
-    fi
     # invoke: at least one tool call to the `skill` tool
     if ! grep -q '"name" *: *"skill"' "$TRANSCRIPT" 2>/dev/null; then
+      SKILL_OK=0
+    fi
+    # load: the target skill completed successfully. Current Copilot CLI JSONL
+    # records the skill name in tool telemetry, not on the completion event.
+    if ! grep -Eq "\"type\" *: *\"tool.execution_complete\".*\"success\" *: *true.*\"restrictedProperties\" *: *\\{\"skillName\" *: *\"${SKILL_NAME}\"" "$TRANSCRIPT" 2>/dev/null; then
       SKILL_OK=0
     fi
   else

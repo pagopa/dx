@@ -26,6 +26,10 @@ criterion, the model wins.
 
 - [ ] Context, outcome, scope, non-goals, constraints, and ownership are clear
       enough for the requested lifecycle state.
+- [ ] A C4 System Context diagram or link identifies the system boundary and
+      external dependencies; a Container or Component view is present when the
+      solution has an internal decomposition, or an owned gap explains why it
+      cannot yet be produced.
 - [ ] The `Domain model and glossary` section describes the solution entities,
       relations, states, invariants, and shared terms by name, without
       identifiers, or records `N/A — <confirmed reason>`.
@@ -81,6 +85,9 @@ criterion, the model wins.
 
 - [ ] The review gate and the backlog gate in `dr-srs-model.md` are assessed
       separately, each with linked evidence rather than prose.
+- [ ] Readiness is returned as criterion-by-criterion evidence linking to a
+      source, owned gap, or justified `N/A`; an unreferenced readiness claim is
+      not accepted.
 - [ ] At least one Use Case page may be `ready` while the document stays
       `draft`; document gaps do not block ready Use Cases.
 - [ ] A status promotion (`draft` → `review`/`baseline`, or Use Case

@@ -107,6 +107,51 @@
         "Re-fetches and verifies the updated item after mutation."
       ],
       "files": []
+    },
+    {
+      "id": 8,
+      "name": "validate-cross-domain-delivery-coverage",
+      "prompt": "Prepare, but do not persist, a Jira backlog projection for a municipal service-status DR/SRS. UC-01 Subscribe to service updates has AC-01 and AC-02; UC-02 Publish a disruption update has AC-01. Draft one resident-facing Story for subscription, one operator-facing Story for publication, one technical Task for notification delivery, and their outcome Epics. Run validate-delivery-coverage before asking for confirmation and show its item-by-item and UC-prefix evidence tables. Use stable projection identities and do not copy or paraphrase acceptance-check text into Jira Checks.",
+      "expected_output": "A cross-domain Jira projection where every Epic, Story, and Task has Source, Slice Scope ID, observable Output, item-local Checks, and optional AC Coverage IDs; projection keys are unique, evidence shows coverage passing for UC-01:: and UC-02::, and no Jira mutation occurs.",
+      "expectations": [
+        "Uses unique projection keys beginning with UC-01:: or UC-02:: for Use Case delivery slices.",
+        "Gives every Epic, Story, and Task the fixed Source, Slice Scope ID, Output, and Checks sections in order.",
+        "Lists only stable AC IDs in AC Coverage and never copies acceptance-check text.",
+        "Runs validate-delivery-coverage and shows one evidence row per item plus coverage rows for both UC-01:: and UC-02:: prefixes.",
+        "Keeps item-local Checks distinct from canonical acceptance-check satisfaction and does not paraphrase Given/When/Then behavior.",
+        "Does not reuse CED, signed-agreement, CAdES, Practice, or Document assumptions and does not mutate Jira."
+      ],
+      "files": []
+    },
+    {
+      "id": 9,
+      "name": "digest-confirmation-and-epic-remote-link",
+      "prompt": "A complete backlog projection has passed validate-delivery-coverage. Show the final review for project SERV, including its digest, then wait for an explicit confirmation bound to that digest. The canonical DR/SRS is https://example.atlassian.net/wiki/spaces/SERV/pages/123/service-status-design-review. If the source changes after confirmation, handle it safely. Describe the persistence verification requirements.",
+      "expected_output": "A non-mutating review bound to a projection digest; source or projection changes invalidate confirmation; persistence requires the Epic remote link to the canonical DR/SRS and post-write verification of links, identities, and coverage.",
+      "expectations": [
+        "Shows the project, operations, item count, hierarchy, material changes, delivery-coverage result, unresolved gaps, and exact projection digest before mutation.",
+        "Treats confirmation as valid only for the reviewed digest and invalidates it when canonical sources or projection content change.",
+        "Requires every Epic to receive a remote link to the canonical DR/SRS URL.",
+        "Requires re-fetch and verification of hierarchy, dependency direction, remote links, unique projection keys, and UC-prefix coverage.",
+        "Does not mutate Jira before an explicit confirmation for the current digest."
+      ],
+      "files": []
+    },
+    {
+      "id": 10,
+      "name": "end-to-end-approved-requirements-to-jira-preview",
+      "prompt": "Test the complete planning process without mutating Jira. Start from these approved requirements for a municipal service-status capability: owner Municipal Digital Services; actor \"Resident subscriber\" subscribes to disruption notifications for one service; actor \"Service operator\" publishes disruption and recovery updates; JTBD-01 is timely awareness of disruption; KPI is 90% of published updates delivered within two minutes; privacy guardrail is no subscriber contact data in operational logs; target repository is https://github.com/example/municipal-status; Jira project is SERV. Use dr-blacksmith to draft the DR/SRS with minimum C4 and readiness evidence, use uc-engraver to create ready child Use Cases with binary AC IDs, then use jira-magister to produce and validate the Jira projection. Give every Epic, Story, and Task the fixed dispatchable-item sections. Show validate-delivery-coverage with one evidence row per item and one row per selected UC prefix, the final digest, and the confirmation request. Item-local Checks must verify delivery artifacts and must not copy or paraphrase the canonical acceptance-check behavior. Stop before any Jira mutation.",
+      "expected_output": "An end-to-end, non-CED planning result containing a DR/SRS with minimum C4 and evidence-based readiness, link-first UC catalog plus complete child Use Cases and stable AC sets, and a Jira preview whose Epics, Stories, and Tasks satisfy the delivery contract and whose item and UC-prefix evidence passes before a digest-bound confirmation request.",
+      "expectations": [
+        "Produces a DR/SRS with a C4 System Context and appropriate Container or Component view, and reports review readiness with linked evidence.",
+        "Creates separate child Use Cases for subscription and operator publication, keeps the parent catalog link-first, and returns each stable AC ID set.",
+        "Produces every Epic, Story, and Task with a unique Projection Key and the fixed Source, Slice Scope ID, Output, Checks, and optional AC Coverage sections.",
+        "Runs validate-delivery-coverage and shows one evidence row per item plus one row for every selected UC-XX:: prefix; any blocking gap is explicit and owned instead of hidden behind PASS.",
+        "Keeps item-local Checks distinct from AC Coverage and never copies or paraphrases acceptance-check behavior into Jira items.",
+        "Shows the exact projection digest and requests explicit confirmation bound to it.",
+        "Does not use signed-agreement or CED concepts and does not mutate Jira."
+      ],
+      "files": []
     }
   ]
 }

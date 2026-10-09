@@ -123,6 +123,20 @@
         "Names the domain entities it touches by name."
       ],
       "files": []
+    },
+    {
+      "id": 9,
+      "name": "cross-domain-coverage-handoff",
+      "prompt": "Using the existing municipal service-status DR/SRS and approved PRD, create UC-01 for a resident subscribing to disruption notifications. The exact actor is \"Resident subscriber\". Define AC-01 for a successful subscription and AC-02 for rejecting an unsupported delivery channel, keep the parent catalog link-first, and return the coverage handoff needed by the backlog skill. Do not create Jira projection keys.",
+      "expected_output": "A complete service-status Use Case child with stable AC-01 and AC-02 identifiers, a synchronized link-first parent row, and a handoff containing UC-01 plus the complete acceptance-check ID set without copied acceptance-check text or Jira slice identities.",
+      "expectations": [
+        "Uses the exact actor name \"Resident subscriber\" and service-status domain concepts only.",
+        "Creates binary AC-01 and AC-02 checks and preserves their local stable identifiers.",
+        "Synchronizes the parent catalog with only UC-01, title, and child link.",
+        "Returns UC-01 and the complete AC-01/AC-02 identifier set as downstream coverage inputs.",
+        "Does not create a Projection Key or Slice Scope ID because jira-magister owns delivery slice identity."
+      ],
+      "files": []
     }
   ]
 }

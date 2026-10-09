@@ -151,6 +151,20 @@
         "Does not centralize typed errors or an error taxonomy in the DR/SRS."
       ],
       "files": []
+    },
+    {
+      "id": 11,
+      "name": "cross-domain-c4-and-readiness-evidence",
+      "prompt": "Create a DR/SRS from an approved PRD for a municipal service-status subscription. A resident subscribes to disruption notifications for one municipal service; a service operator publishes disruption and recovery events. The PRD confirms the actors, JTBD, outcome metric, privacy guardrail, owner, and scope. Produce the minimum C4 views, a link-first catalog for UC-01 Subscribe to service updates and UC-02 Publish a disruption update, and evidence-based review and backlog readiness. Do not reuse document-upload assumptions or CED terminology.",
+      "expected_output": "A cross-domain DR/SRS with a C4 System Context and an appropriate Container or Component view, two link-first Use Case entries, and criterion-by-criterion readiness evidence linked to sources, gaps, or justified N/A values.",
+      "expectations": [
+        "Produces a C4 System Context view and a Container or Component view appropriate to the notification solution.",
+        "Uses only the municipal service-status actors, domain entities, outcomes, and constraints supplied by the scenario.",
+        "Keeps UC-01 and UC-02 catalog rows to stable ID, title, and child link.",
+        "Separately reports review readiness and per-Use-Case backlog readiness with source evidence, owned gaps, or justified N/A values.",
+        "Does not import agreement-upload, CAdES, Practice, Document, REQUEST, or PENDING concepts from another fixture."
+      ],
+      "files": []
     }
   ]
 }
