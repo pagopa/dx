@@ -1,3 +1,13 @@
+## 0.2.1 (2026-10-09)
+
+### 🩹 Fixes
+
+- Fix GitHub App login in csp-login. Bootstrapper Plan and Apply jobs now run in the bootstrapper-<env>-ci and bootstrapper-<env>-cd environments, which hold the GH_APP_* secrets, and pass them at job level. The action no longer writes an empty GITHUB_TOKEN when GitHub login is skipped. ([#2321](https://github.com/pagopa/dx/pull/2321))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.2.0 (2026-06-30)
 
 ### 🚀 Features
