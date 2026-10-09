@@ -34,13 +34,6 @@ To start using DX tooling, conventions and best practices, refer to the [getting
 
 If you want to contribute to the project, read the [contribution guide](https://dx.pagopa.it/docs/#contributing).
 
-**Native macOS on Intel Macs is no longer supported by the repository's Mise
-toolchain.** pnpm now uses the Aqua backend, and pnpm 11.23.0 does not publish a
-macOS x64 binary. Apple Silicon Macs remain supported; Linux x64, including
-Intel-hosted Linux development containers, is unaffected. See the
-[local environment setup guide](apps/website/docs/contributing/local-environment-setup.md)
-for supported platforms and migration instructions.
-
 ## Motivation to Create
 
 Imagine being able to release the first API for a new digital service into production in minutes instead of weeks, having fewer decisions to make, less code to interpret and maintain, onboarding new team members with zero downtime: this is the goal we set for ourselves.
