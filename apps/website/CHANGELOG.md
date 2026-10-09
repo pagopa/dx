@@ -1,3 +1,13 @@
+## 0.22.16 (2026-10-09)
+
+### 🩹 Fixes
+
+- Document stable staging URLs for healthy Multiple-mode Container App releases. ([#2281](https://github.com/pagopa/dx/pull/2281))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.22.15 (2026-10-08)
 
 ### 🩹 Fixes

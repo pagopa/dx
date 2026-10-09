@@ -1,3 +1,13 @@
+## 0.5.13 (2026-10-09)
+
+### 🩹 Fixes
+
+- Include shared Terraform module files in all application affected inputs ([#2303](https://github.com/pagopa/dx/pull/2303))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.5.12 (2026-10-08)
 
 ### 🧱 Updated Dependencies
