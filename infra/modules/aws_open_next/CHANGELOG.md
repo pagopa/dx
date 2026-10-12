@@ -1,3 +1,13 @@
+## 2.1.0 (2026-10-12)
+
+### 🚀 Features
+
+- Route font requests through the CloudFront assets origin ([#2336](https://github.com/pagopa/dx/pull/2336))
+
+### ❤️ Thank You
+
+- Walter Traspadini @uolter
+
 ## 2.0.1 (2026-09-15)
 
 ### 🩹 Fixes
