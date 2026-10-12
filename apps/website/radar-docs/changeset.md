@@ -1,6 +1,6 @@
 ---
 title: "Changeset"
-ring: adopt
+ring: hold
 tags: [typescript, monorepo, frontend, backend, dx, tool]
 ---
 
@@ -18,6 +18,19 @@ Changeset helps with:
 - Versioning of software artifacts
 - Publishing of packages
 - GitHub releases
+
+## Why we put Changeset on hold
+
+We are consolidating release automation on
+[`nx release`](https://nx.dev/features/manage-releases), which runs versioning,
+changelog generation, and publishing inside the same workspace graph we already
+use to build, test, and lint. Keeping releases in [Nx](./nx.md) removes a
+separate tool and its configuration from the stack, and integrates versioning
+with the project graph and affected-based workflows.
+
+For new monorepo initiatives, prefer Nx with its built-in release automation.
+Existing repositories should migrate their release pipelines to `nx release`
+too.
 
 ## Reference of usage in our organization
 
