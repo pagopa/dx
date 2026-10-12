@@ -24,9 +24,10 @@ type RepositoryTarget = {
 
 let languagePromise: Promise<Language> | undefined;
 
-const createParser = async (): Promise<Parser> => {
+const loadLanguage = async (): Promise<Language> => {
+  let pendingLanguage: Promise<Language> | undefined;
   try {
-    languagePromise ??= Parser.init().then(() =>
+    pendingLanguage = languagePromise ??= Parser.init().then(() =>
       Language.load(
         fileURLToPath(
           import.meta
@@ -34,7 +35,19 @@ const createParser = async (): Promise<Parser> => {
         ),
       ),
     );
-    const language = await languagePromise;
+    return await pendingLanguage;
+  } catch (error) {
+    if (pendingLanguage !== undefined && languagePromise === pendingLanguage) {
+      // Do not clear a newer retry started after this load failed.
+      languagePromise = undefined;
+    }
+    throw error;
+  }
+};
+
+const createParser = async (): Promise<Parser> => {
+  try {
+    const language = await loadLanguage();
     const parser = new Parser();
     parser.setLanguage(language);
     return parser;
