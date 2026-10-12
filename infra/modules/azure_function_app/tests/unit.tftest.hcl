@@ -121,6 +121,25 @@ run "azure_function_app_external_subnet" {
   }
 }
 
+run "azure_function_app_service_endpoints" {
+  command = plan
+  variables {
+    subnet_service_endpoints = { cosmos = true, web = true, storage = true }
+  }
+  assert {
+    condition     = toset([for endpoint in azurerm_subnet.this[0].service_endpoint : endpoint.service]) == toset(["Microsoft.AzureCosmosDB", "Microsoft.Web", "Microsoft.Storage"])
+    error_message = "The v5 subnet blocks must preserve all requested service endpoints."
+  }
+}
+
+run "azure_function_app_no_service_endpoints" {
+  command = plan
+  assert {
+    condition     = length(azurerm_subnet.this[0].service_endpoint) == 0
+    error_message = "Service endpoints must remain disabled by default."
+  }
+}
+
 run "azure_function_app_durable_functions" {
   command = plan
 
@@ -131,6 +150,11 @@ run "azure_function_app_durable_functions" {
   assert {
     condition     = length(azurerm_storage_account.durable_function) == 1
     error_message = "Durable Functions must create their dedicated storage account."
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.public_network_access == "Disabled" && azurerm_storage_account.durable_function[0].public_network_access == "Disabled"
+    error_message = "Both Function storage accounts must retain disabled public network access."
   }
 
   assert {

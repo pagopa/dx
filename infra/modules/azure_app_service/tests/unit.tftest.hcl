@@ -87,6 +87,25 @@ run "azure_app_service_existing_subnet" {
   }
 }
 
+run "azure_app_service_service_endpoints" {
+  command = plan
+  variables {
+    subnet_service_endpoints = { cosmos = true, web = true, storage = true }
+  }
+  assert {
+    condition     = toset([for endpoint in azurerm_subnet.this[0].service_endpoint : endpoint.service]) == toset(["Microsoft.AzureCosmosDB", "Microsoft.Web", "Microsoft.Storage"])
+    error_message = "The v5 subnet blocks must preserve all requested service endpoints."
+  }
+}
+
+run "azure_app_service_no_service_endpoints" {
+  command = plan
+  assert {
+    condition     = length(azurerm_subnet.this[0].service_endpoint) == 0
+    error_message = "Service endpoints must remain disabled by default."
+  }
+}
+
 run "azure_app_service_custom_plan_sizes" {
   command = plan
 

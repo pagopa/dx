@@ -2,15 +2,14 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 5.8.0, < 6.0.0"
     }
   }
 }
 
 
 module "azure_app_service" {
-  source  = "pagopa-dx/azure-app-service/azurerm"
-  version = "~> 5.0"
+  source = "../../../azure_app_service"
 
   environment         = var.environment
   use_case            = "default"

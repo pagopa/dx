@@ -14,7 +14,7 @@ resource "azurerm_storage_account" "this" {
   account_kind             = "StorageV2"
   account_replication_type = local.use_case_features.replication_type
 
-  public_network_access_enabled   = false
+  public_network_access           = "Disabled"
   shared_access_key_enabled       = false
   default_to_oauth_authentication = true
   allow_nested_items_to_be_public = false
@@ -35,7 +35,7 @@ resource "azurerm_storage_account" "durable_function" {
   account_kind             = "StorageV2"
   account_replication_type = local.use_case_features.replication_type
 
-  public_network_access_enabled   = false
+  public_network_access           = "Disabled"
   shared_access_key_enabled       = false
   default_to_oauth_authentication = true
   allow_nested_items_to_be_public = false

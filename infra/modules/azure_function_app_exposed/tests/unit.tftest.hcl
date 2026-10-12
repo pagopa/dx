@@ -64,6 +64,11 @@ run "azure_function_app_exposed_durable_functions" {
   }
 
   assert {
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled" && azurerm_storage_account.durable_function[0].public_network_access == "Enabled"
+    error_message = "Both exposed Function storage accounts must retain enabled public network access."
+  }
+
+  assert {
     condition     = azurerm_role_assignment.durable_function_storage_table_data_contributor[0] != null
     error_message = "Durable Functions must receive table data contributor access."
   }

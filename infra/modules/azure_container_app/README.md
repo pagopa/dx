@@ -4,6 +4,16 @@
 
 This Terraform module deploys an Azure Container App in a provided Azure Container App Environment. It supports System Assigned Managed Identity and configurable scaling options.
 
+## Provider Compatibility
+
+This major release requires **AzureRM >= 5.8.0, < 6.0.0**; AzureRM v4 is no
+longer accepted. Earlier v4-compatible module releases remain supported through
+**31 December 2026**. Upgrade all AzureRM-dependent modules in the same Terraform
+root together and review the
+[AzureRM v5 migration guide](https://github.com/pagopa/dx/blob/main/infra/modules/AZURERM_V5_MIGRATION.md)
+before applying, including provider registration prerequisites and storage
+static website state import.
+
 ## Diagram
 
 The following diagram illustrates the architecture and relationships between the main components of this module:
@@ -177,7 +187,7 @@ A complete usage example can be found in the [example/complete](https://github.c
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | ~> 2.9 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.70 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.8.0, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.14 |
 

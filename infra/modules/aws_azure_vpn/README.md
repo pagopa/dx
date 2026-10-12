@@ -2,6 +2,16 @@
 
 This Terraform module establishes a Site-to-Site VPN connection between AWS and Azure, enabling secure communication between resources in both cloud environments. The module supports both development and high-availability configurations and includes DNS resolution across clouds.
 
+## Provider Compatibility
+
+This major release requires **AzureRM >= 5.8.0, < 6.0.0**; AzureRM v4 is no
+longer accepted. Earlier v4-compatible module releases remain supported through
+**31 December 2026**. Upgrade all AzureRM-dependent modules in the same Terraform
+root together and review the
+[AzureRM v5 migration guide](https://github.com/pagopa/dx/blob/main/infra/modules/AZURERM_V5_MIGRATION.md)
+before applying, including provider registration prerequisites and storage
+static website state import.
+
 ## Features
 
 ✅ **Secure connectivity** between your AWS VPC and Azure Virtual Network  
@@ -27,11 +37,6 @@ The module creates secure IPSec tunnels between your AWS and Azure networks with
 For detailed usage examples, refer to the [examples folder](./examples/) that includes both a cheaper and less reliable [development example](./examples/development/) and a more expensive [high availability example](./examples/high_availability/) that demonstrates all features and configuration.
 
 ## Prerequisites
-
-AzureRM **4.62 or later within v4** is required for the `bgp_enabled` argument.
-When upgrading from an older locked provider, run `terraform init -upgrade`.
-BGP remains enabled for the gateway and both tunnels; module inputs and outputs
-are unchanged. This release does not add AzureRM v5 support.
 
 Before using this module, ensure you have:
 
@@ -125,7 +130,7 @@ configurations without provisioning cloud resources.
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 | <a name="requirement_awsdx"></a> [awsdx](#requirement\_awsdx) | ~> 0.1 |
 | <a name="requirement_azuredx"></a> [azuredx](#requirement\_azuredx) | ~> 0.12 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.62 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.8.0, < 6.0.0 |
 
 ## Modules
 

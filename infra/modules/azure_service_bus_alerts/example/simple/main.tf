@@ -17,15 +17,15 @@ resource "azurerm_monitor_action_group" "dx" {
 }
 
 module "sbns" {
-  source  = "pagopa-dx/azure-service-bus-namespace/azurerm"
-  version = "~> 2.0"
+  source = "../../../azure_service_bus_namespace"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
 
   use_case = "default"
 
-  allowed_ips = ["127.0.0.1"]
+  private_dns_zone_resource_group_name = var.private_dns_zone_resource_group_name
+  subnet_pep_id                        = var.subnet_pep_id
 
   tags = local.tags
 }
@@ -41,8 +41,7 @@ resource "azurerm_servicebus_topic" "example" {
 }
 
 module "sbns_alert" {
-  source  = "pagopa-dx/azure-service-bus-alerts/azurerm"
-  version = "~> 2.0"
+  source = "../.."
 
   environment = local.environment
 

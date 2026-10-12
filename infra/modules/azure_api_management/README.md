@@ -6,6 +6,16 @@ This module deploys an Azure API Management instance with optional configuration
 
 ![diagram](diagram.svg)
 
+## Provider Compatibility
+
+This major release requires **AzureRM >= 5.8.0, < 6.0.0**; AzureRM v4 is no
+longer accepted. Earlier v4-compatible module releases remain supported through
+**31 December 2026**. Upgrade all AzureRM-dependent modules in the same Terraform
+root together and review the
+[AzureRM v5 migration guide](https://github.com/pagopa/dx/blob/main/infra/modules/AZURERM_V5_MIGRATION.md)
+before applying, including provider registration prerequisites and storage
+static website state import.
+
 ## Features
 
 - **Azure API Management Instance**: Manage APIs, policies, and configurations.
@@ -19,11 +29,11 @@ This module deploys an Azure API Management instance with optional configuration
 
 ## Use Cases and Configurations
 
-| Use case         | Description                                     | SLA  | Scalability      | Autoscaling | Zones Configured | Metric Alerts |
-| ---------------- | ----------------------------------------------- | ---- | ---------------- | ----------- | ---------------- | ------------- |
-| `development`    | Development and testing.           | None | Limited          | No  | No           | Disabled by default |
-| `cost_optimized` | Production workloads.              | Yes  | Moderate         | No  | No           | StandardV2 alerts |
-| `high_load`      | High-load production workloads.    | Yes  | High (Autoscale) | Yes | `["1", "2"]` | Premium alerts |
+| Use case         | Description                     | SLA  | Scalability      | Autoscaling | Zones Configured | Metric Alerts       |
+| ---------------- | ------------------------------- | ---- | ---------------- | ----------- | ---------------- | ------------------- |
+| `development`    | Development and testing.        | None | Limited          | No          | No               | Disabled by default |
+| `cost_optimized` | Production workloads.           | Yes  | Moderate         | No          | No               | StandardV2 alerts   |
+| `high_load`      | High-load production workloads. | Yes  | High (Autoscale) | Yes         | `["1", "2"]`     | Premium alerts      |
 
 ## Monitoring
 
@@ -32,10 +42,10 @@ This module deploys an Azure API Management instance with optional configuration
 The module creates five-minute alerts with the following defaults, selected by
 `use_case`/SKU:
 
-| Use case | SKU | Alerts | Thresholds |
-|----------|-----|--------|------------|
-| `cost_optimized` | `StandardV2_1` | `Requests` (total, successful, failed, unauthorized), `Duration`, `CpuPercent_Gateway`, `MemoryPercent_Gateway` | Requests total/success/5xx/unauthorized: 10000/9500/100/50; `Duration`: 500 ms; CPU/memory: 80% |
-| `high_load` | `Premium_2` | `Requests` (total, successful, failed, unauthorized), `Duration`, `Capacity` | Requests total/success/5xx/unauthorized: 20000/19000/200/100; `Duration`: 500 ms; `Capacity`: 80% |
+| Use case         | SKU            | Alerts                                                                                                          | Thresholds                                                                                        |
+| ---------------- | -------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| `cost_optimized` | `StandardV2_1` | `Requests` (total, successful, failed, unauthorized), `Duration`, `CpuPercent_Gateway`, `MemoryPercent_Gateway` | Requests total/success/5xx/unauthorized: 10000/9500/100/50; `Duration`: 500 ms; CPU/memory: 80%   |
+| `high_load`      | `Premium_2`    | `Requests` (total, successful, failed, unauthorized), `Duration`, `Capacity`                                    | Requests total/success/5xx/unauthorized: 20000/19000/200/100; `Duration`: 500 ms; `Capacity`: 80% |
 
 Request thresholds are absolute counts within each five-minute window. Set
 `metric_alert_thresholds` to adjust selected built-in thresholds, or
@@ -103,7 +113,7 @@ After that, submit a new _Pull Request_ to update the variable to `false` and ap
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.1 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.8.0, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules

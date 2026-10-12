@@ -276,7 +276,12 @@ jobs:
       - name: Run code quality checks on affected projects
         run: |
           EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
-          pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci
+          pnpm nx affected --exclude=$EXCLUDE -t=docs -c=ci
+          if [ "$GITHUB_REPOSITORY" = "pagopa/dx" ]; then
+            python3 .github/scripts/test_use_local_terraform_modules.py
+            python3 .github/scripts/use-local-terraform-modules.py infra/modules
+          fi
+          pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy -c=ci
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}

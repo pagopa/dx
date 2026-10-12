@@ -2,23 +2,23 @@
 
 ## Requirements
 
-| Name                                                               | Version |
-| ------------------------------------------------------------------ | ------- |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement_azurerm) | ~> 4.62 |
+| Name                                                               | Version           |
+| ------------------------------------------------------------------ | ----------------- |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement_azurerm) | >= 5.8.0, < 6.0.0 |
 
 ## Modules
 
 | Name                                                                                                                                        | Source                              | Version |
 | ------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ------- |
-| <a name="module_dx_app_cd_resource_group_deploy"></a> [dx\_app\_cd\_resource\_group\_deploy](#module_dx_app_cd_resource_group_deploy)       | pagopa-dx/azure-merge-roles/azurerm | ~> 0.1  |
-| <a name="module_dx_app_ci_resource_group_reader"></a> [dx\_app\_ci\_resource\_group\_reader](#module_dx_app_ci_resource_group_reader)       | pagopa-dx/azure-merge-roles/azurerm | ~> 0.1  |
-| <a name="module_dx_function_durable_storage"></a> [dx\_function\_durable\_storage](#module_dx_function_durable_storage)                     | pagopa-dx/azure-merge-roles/azurerm | ~> 0.1  |
-| <a name="module_dx_function_host_storage"></a> [dx\_function\_host\_storage](#module_dx_function_host_storage)                              | pagopa-dx/azure-merge-roles/azurerm | ~> 0.1  |
-| <a name="module_dx_infra_cd_private_networking"></a> [dx\_infra\_cd\_private\_networking](#module_dx_infra_cd_private_networking)           | pagopa-dx/azure-merge-roles/azurerm | ~> 0.1  |
-| <a name="module_dx_infra_cd_resource_group_deploy"></a> [dx\_infra\_cd\_resource\_group\_deploy](#module_dx_infra_cd_resource_group_deploy) | pagopa-dx/azure-merge-roles/azurerm | ~> 0.1  |
-| <a name="module_dx_infra_cd_subscription_admin"></a> [dx\_infra\_cd\_subscription\_admin](#module_dx_infra_cd_subscription_admin)           | pagopa-dx/azure-merge-roles/azurerm | ~> 0.1  |
-| <a name="module_dx_infra_ci_resource_group_reader"></a> [dx\_infra\_ci\_resource\_group\_reader](#module_dx_infra_ci_resource_group_reader) | pagopa-dx/azure-merge-roles/azurerm | ~> 0.1  |
-| <a name="module_dx_infra_ci_subscription_reader"></a> [dx\_infra\_ci\_subscription\_reader](#module_dx_infra_ci_subscription_reader)        | pagopa-dx/azure-merge-roles/azurerm | ~> 0.1  |
+| <a name="module_dx_app_cd_resource_group_deploy"></a> [dx\_app\_cd\_resource\_group\_deploy](#module_dx_app_cd_resource_group_deploy)       | pagopa-dx/azure-merge-roles/azurerm | ~> 3.0  |
+| <a name="module_dx_app_ci_resource_group_reader"></a> [dx\_app\_ci\_resource\_group\_reader](#module_dx_app_ci_resource_group_reader)       | pagopa-dx/azure-merge-roles/azurerm | ~> 3.0  |
+| <a name="module_dx_function_durable_storage"></a> [dx\_function\_durable\_storage](#module_dx_function_durable_storage)                     | pagopa-dx/azure-merge-roles/azurerm | ~> 3.0  |
+| <a name="module_dx_function_host_storage"></a> [dx\_function\_host\_storage](#module_dx_function_host_storage)                              | pagopa-dx/azure-merge-roles/azurerm | ~> 3.0  |
+| <a name="module_dx_infra_cd_private_networking"></a> [dx\_infra\_cd\_private\_networking](#module_dx_infra_cd_private_networking)           | pagopa-dx/azure-merge-roles/azurerm | ~> 3.0  |
+| <a name="module_dx_infra_cd_resource_group_deploy"></a> [dx\_infra\_cd\_resource\_group\_deploy](#module_dx_infra_cd_resource_group_deploy) | pagopa-dx/azure-merge-roles/azurerm | ~> 3.0  |
+| <a name="module_dx_infra_cd_subscription_admin"></a> [dx\_infra\_cd\_subscription\_admin](#module_dx_infra_cd_subscription_admin)           | pagopa-dx/azure-merge-roles/azurerm | ~> 3.0  |
+| <a name="module_dx_infra_ci_resource_group_reader"></a> [dx\_infra\_ci\_resource\_group\_reader](#module_dx_infra_ci_resource_group_reader) | pagopa-dx/azure-merge-roles/azurerm | ~> 3.0  |
+| <a name="module_dx_infra_ci_subscription_reader"></a> [dx\_infra\_ci\_subscription\_reader](#module_dx_infra_ci_subscription_reader)        | pagopa-dx/azure-merge-roles/azurerm | ~> 3.0  |
 
 ## Resources
 

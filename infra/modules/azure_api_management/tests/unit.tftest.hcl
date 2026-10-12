@@ -66,6 +66,15 @@ override_data {
 run "azure_api_management_cost_optimized_defaults" {
   command = plan
 
+  assert {
+    condition = (
+      azurerm_private_dns_a_record.apim_azure_api_net[0].private_dns_zone_id == data.azurerm_private_dns_zone.azure_api_net[0].id &&
+      azurerm_private_dns_a_record.apim_management_azure_api_net[0].private_dns_zone_id == data.azurerm_private_dns_zone.management_azure_api_net[0].id &&
+      azurerm_private_dns_a_record.apim_scm_azure_api_net[0].private_dns_zone_id == data.azurerm_private_dns_zone.scm_azure_api_net[0].id
+    )
+    error_message = "All APIM records must target the same DNS zones through their v5 resource IDs."
+  }
+
   variables {
     application_insights = {
       enabled             = true

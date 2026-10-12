@@ -10,8 +10,7 @@ resource "azurerm_resource_group" "example" {
 }
 
 module "azure_function_app" {
-  source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 7.0"
+  source = "../../../azure_function_app"
 
   environment         = local.environment
   use_case            = "default"
@@ -34,8 +33,7 @@ module "azure_function_app" {
 
 
 module "func_autoscaler" {
-  source  = "pagopa-dx/azure-app-service-plan-autoscaler/azurerm"
-  version = "~> 4.0"
+  source = "../.."
 
   resource_group_name = module.azure_function_app.function_app.resource_group_name
   location            = local.environment.location

@@ -11,7 +11,7 @@ locals {
 
   subnet = {
     enable_service_endpoints = var.subnet_service_endpoints != null ? concat(
-      var.subnet_service_endpoints.cosmos ? ["Microsoft.CosmosDB"] : [],
+      var.subnet_service_endpoints.cosmos ? ["Microsoft.AzureCosmosDB"] : [],
       var.subnet_service_endpoints.web ? ["Microsoft.Web"] : [],
       var.subnet_service_endpoints.storage ? ["Microsoft.Storage"] : [],
     ) : []

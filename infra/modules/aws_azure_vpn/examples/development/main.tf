@@ -1,6 +1,5 @@
 module "azure" {
-  source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 6.0"
+  source = "../../../azure_core_infra"
 
   environment = local.azure_environment
 
@@ -26,8 +25,7 @@ module "aws" {
 }
 
 module "vpn" {
-  source  = "pagopa-dx/aws-azure-vpn/aws"
-  version = "~> 2.0"
+  source = "../.."
 
   environment = {
     prefix          = local.azure_environment.prefix

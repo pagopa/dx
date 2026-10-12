@@ -4,6 +4,16 @@
 
 This module deploys an AppService with a strong opinionated configuration in terms of deployment strategy. This module is ideal when you need your AppService to remain accessible from the public internet.
 
+## Provider Compatibility
+
+This major release requires **AzureRM >= 5.8.0, < 6.0.0**; AzureRM v4 is no
+longer accepted. Earlier v4-compatible module releases remain supported through
+**31 December 2026**. Upgrade all AzureRM-dependent modules in the same Terraform
+root together and review the
+[AzureRM v5 migration guide](https://github.com/pagopa/dx/blob/main/infra/modules/AZURERM_V5_MIGRATION.md)
+before applying, including provider registration prerequisites and storage
+static website state import.
+
 ## Features
 
 - **AppService**: An AppService instance running Java or TypeScript code
@@ -41,7 +51,7 @@ For a complete example of how to use this module, refer to the [examples/complet
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.58 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.8.0, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules

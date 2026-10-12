@@ -4,6 +4,16 @@
 
 This Terraform module deploys an Azure Service Bus namespace. Currently it supports `Premium` SKUs only.
 
+## Provider Compatibility
+
+This major release requires **AzureRM >= 5.8.0, < 6.0.0**; AzureRM v4 is no
+longer accepted. Earlier v4-compatible module releases remain supported through
+**31 December 2026**. Upgrade all AzureRM-dependent modules in the same Terraform
+root together and review the
+[AzureRM v5 migration guide](https://github.com/pagopa/dx/blob/main/infra/modules/AZURERM_V5_MIGRATION.md)
+before applying, including provider registration prerequisites and storage
+static website state import.
+
 ## Diagram
 
 ![diagram](https://raw.githubusercontent.com/pagopa/dx/main/infra/modules/azure_service_bus_namespace/diagram.svg)
@@ -35,7 +45,7 @@ A [complete example](https://github.com/pagopa-dx/terraform-azurerm-azure-servic
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.8.0, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules

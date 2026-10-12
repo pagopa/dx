@@ -12,7 +12,7 @@ resource "azurerm_storage_account" "secondary_replica" {
   account_tier                    = local.tier_features.account_tier
   account_replication_type        = "LRS"
   access_tier                     = var.access_tier
-  public_network_access_enabled   = local.force_public_network_access_enabled
+  public_network_access           = local.force_public_network_access_enabled ? "Enabled" : "Disabled"
   allow_nested_items_to_be_public = local.force_public_network_access_enabled
   shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 

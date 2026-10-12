@@ -69,7 +69,7 @@ run "apply_default" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == false
+    condition     = azurerm_storage_account.this.public_network_access == "Disabled"
     error_message = "public_network_access_enabled must be false for default use case"
   }
 
@@ -97,7 +97,7 @@ run "apply_development" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
     error_message = "public_network_access_enabled must be true for development use case with force_public=true"
   }
 
@@ -124,7 +124,7 @@ run "apply_delegated_access" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
     error_message = "public_network_access_enabled must be true for delegated_access use case"
   }
 
@@ -147,7 +147,7 @@ run "apply_public_network" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
     error_message = "public_network_access_enabled must be true when force_public=true"
   }
 

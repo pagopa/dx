@@ -75,15 +75,21 @@
       "name": "Terraform Providers",
       "category": "infra",
       "communicationChannels": [
-        "GitHub Actions warnings/errors in terraform plan/apply reusable workflows"
+        "GitHub Actions warnings and PR comments in the Terraform plan reusable workflow; job summaries during the plan phase of the Terraform apply reusable workflow"
       ],
       "lifecyclePolicy": "Only the provider versions pinned in DX modules are actively supported. Check each module's required_providers block for the exact constraints.",
       "vendorLifecycleUrl": "https://registry.terraform.io/browse/providers",
       "versions": [
         {
           "version": "azurerm (~> 4.x)",
+          "status": "deprecated",
+          "eolDate": "2026-12-31",
+          "notes": "Earlier v4-compatible DX module releases remain supported through 31 December 2026. New v5-only module majors do not accept v4; upgrade all dependent modules together and follow the AzureRM v5 migration guide before applying."
+        },
+        {
+          "version": "azurerm (>= 5.8.0, < 6.0.0)",
           "status": "active",
-          "notes": "Primary Azure provider used across core/resources/bootstrapper"
+          "notes": "Required by the new v5-only DX module majors. Earlier v4-only releases cannot be mixed with these majors in the same Terraform root. See https://github.com/pagopa/dx/blob/main/infra/modules/AZURERM_V5_MIGRATION.md for prerequisites and state migration."
         },
         {
           "version": "azapi (2.8.0)",

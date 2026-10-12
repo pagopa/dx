@@ -204,11 +204,30 @@ variable "static_website" {
     index_document     = optional(string, null)
     error_404_document = optional(string, null)
   })
-  description = "Configures static website hosting with index and error documents."
+  description = "Configures static website hosting. When enabled, at least one document is required. index_document must be 3-255 characters without '/' and error_404_document must be nonempty. Existing inline websites must be imported into the standalone resource when upgrading to this major; see the AzureRM v5 migration guide."
   default = {
     enabled            = false
     index_document     = null
     error_404_document = null
+  }
+
+  validation {
+    condition     = !var.static_website.enabled || var.static_website.index_document != null || var.static_website.error_404_document != null
+    error_message = "An enabled static website requires index_document or error_404_document; no default document is inferred."
+  }
+
+  validation {
+    condition = !var.static_website.enabled || (var.static_website.index_document == null ? true : (
+      length(var.static_website.index_document) >= 3 &&
+      length(var.static_website.index_document) <= 255 &&
+      !strcontains(var.static_website.index_document, "/")
+    ))
+    error_message = "static_website.index_document must contain 3-255 characters and must not contain '/'."
+  }
+
+  validation {
+    condition     = !var.static_website.enabled || (var.static_website.error_404_document == null ? true : length(var.static_website.error_404_document) > 0)
+    error_message = "static_website.error_404_document must not be empty when supplied."
   }
 }
 

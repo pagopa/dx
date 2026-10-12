@@ -10,7 +10,7 @@ resource "azurerm_storage_account" "this" {
   account_tier                    = local.tier_features.account_tier
   account_replication_type        = local.tier_features.replication_type
   access_tier                     = var.access_tier
-  public_network_access_enabled   = local.force_public_network_access_enabled
+  public_network_access           = local.force_public_network_access_enabled ? "Enabled" : "Disabled"
   allow_nested_items_to_be_public = local.force_public_network_access_enabled
   shared_access_key_enabled       = local.tier_features.shared_access_key_enabled
 
@@ -39,15 +39,6 @@ resource "azurerm_storage_account" "this" {
       content {
         days = var.blob_features.restore_policy_days
       }
-    }
-  }
-
-  dynamic "static_website" {
-    for_each = var.static_website.enabled ? [1] : []
-
-    content {
-      index_document     = var.static_website.index_document
-      error_404_document = var.static_website.error_404_document
     }
   }
 
@@ -82,6 +73,22 @@ resource "azurerm_storage_account" "this" {
       customer_managed_key
     ]
   }
+}
+
+resource "azurerm_storage_account_static_website" "this" {
+  count = var.static_website.enabled ? 1 : 0
+
+  storage_account_id = azurerm_storage_account.this.id
+  index_document     = var.static_website.index_document
+  error_404_document = var.static_website.error_404_document
+}
+
+data "azurerm_storage_account" "static_website" {
+  count = var.static_website.enabled ? 1 : 0
+
+  name                = azurerm_storage_account.this.name
+  resource_group_name = azurerm_storage_account.this.resource_group_name
+  depends_on          = [azurerm_storage_account_static_website.this]
 }
 
 resource "azurerm_security_center_storage_defender" "this" {

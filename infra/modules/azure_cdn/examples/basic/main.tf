@@ -18,8 +18,7 @@ data "azurerm_subnet" "pep" {
 
 
 module "storage_account" {
-  source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 4.0"
+  source = "../../../azure_storage_account"
 
   environment = local.environment
 
@@ -59,8 +58,7 @@ data "azurerm_key_vault_certificate" "cert" {
 }
 
 module "azure_cdn" {
-  source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 2.0"
+  source = "../.."
 
   resource_group_name = azurerm_resource_group.example.name
 
@@ -111,25 +109,24 @@ resource "azurerm_cdn_frontdoor_rule" "example" {
   name                      = "examplerule"
   cdn_frontdoor_rule_set_id = module.azure_cdn.rule_set_id
   order                     = 1
-  behavior_on_match         = "Continue"
+  behaviour_on_match        = "Continue"
 
   actions {
-    url_redirect_action {
-      redirect_type        = "PermanentRedirect"
-      redirect_protocol    = "MatchRequest"
-      query_string         = "clientIp={client_ip}"
-      destination_path     = "/exampleredirection"
-      destination_hostname = "contoso.com"
-      destination_fragment = "UrlRedirect"
+    url_redirect {
+      redirect_type         = "PermanentRedirect"
+      redirect_protocol     = "MatchRequest"
+      query_string          = "clientIp={client_ip}"
+      destination_path      = "/exampleredirection"
+      destination_host_name = "contoso.com"
+      destination_fragment  = "UrlRedirect"
     }
   }
 
   conditions {
-    host_name_condition {
-      operator         = "Equal"
-      negate_condition = false
-      match_values     = ["www.contoso.com", "images.contoso.com", "video.contoso.com"]
-      transforms       = ["Lowercase", "Trim"]
+    host_name {
+      operator   = "Equal"
+      values     = ["www.contoso.com", "images.contoso.com", "video.contoso.com"]
+      transforms = ["Lowercase", "Trim"]
     }
   }
 }

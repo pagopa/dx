@@ -23,7 +23,7 @@ resource "azurerm_storage_account" "external" {
   account_kind             = "StorageV2"
   account_replication_type = "LRS"
 
-  public_network_access_enabled   = false
+  public_network_access           = "Disabled"
   default_to_oauth_authentication = true
 
   tags = local.tags
@@ -36,8 +36,7 @@ resource "azurerm_storage_account_network_rules" "external" {
 }
 
 module "azure_function_app" {
-  source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 7.0"
+  source = "../.."
 
   environment         = local.environment
   use_case            = "default"

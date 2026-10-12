@@ -16,6 +16,16 @@ The module performs the following actions:
 - Creates an Azure **resource group** tied with the Cloud Resources defined
   within the repository.
 
+## Provider Compatibility
+
+This major release requires **AzureRM >= 5.8.0, < 6.0.0**; AzureRM v4 is no
+longer accepted. Earlier v4-compatible module releases remain supported through
+**31 December 2026**. Upgrade all AzureRM-dependent modules in the same Terraform
+root together and review the
+[AzureRM v5 migration guide](https://github.com/pagopa/dx/blob/main/infra/modules/AZURERM_V5_MIGRATION.md)
+before applying, including provider registration prerequisites and storage
+static website state import.
+
 ## Quick Start
 
 Here's a minimal example to get started:
@@ -23,7 +33,7 @@ Here's a minimal example to get started:
 ```hcl
 module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 7.0"
 
   environment = {
     prefix          = "dx"
@@ -90,7 +100,7 @@ First, retrieve core infrastructure values from the shared state
 ```hcl
 module "core_values" {
   source  = "pagopa-dx/azure-core-values-exporter/azurerm"
-  version = "~> 0.4"
+  version = "~> 3.0"
 
   core_state = {
     resource_group_name  = "dx-u-itn-tfstate-rg-01"
@@ -106,7 +116,7 @@ Then use the exported values in the bootstrap module:
 ```hcl
 module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 7.0"
 
   # ... other required variables ...
 
@@ -360,7 +370,7 @@ resource "azurerm_resource_group" "myapp" {
 
 module "bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 4.0"
+  version = "~> 7.0"
 
   # ... other required variables ...
 
@@ -449,7 +459,7 @@ This module includes practical examples to help you get started quickly:
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.8.0, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.13 |
 
@@ -457,8 +467,8 @@ This module includes practical examples to help you get started quickly:
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
-| <a name="module_github_runner_dx"></a> [github\_runner\_dx](#module\_github\_runner\_dx) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
+| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 4.0 |
+| <a name="module_github_runner_dx"></a> [github\_runner\_dx](#module\_github\_runner\_dx) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 4.0 |
 
 ## Resources
 

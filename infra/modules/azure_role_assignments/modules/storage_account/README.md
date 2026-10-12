@@ -121,9 +121,9 @@ module "role_assignments" {
 
 ## Requirements
 
-| Name                                                               | Version         |
-| ------------------------------------------------------------------ | --------------- |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement_azurerm) | >= 3.114, < 5.0 |
+| Name                                                               | Version           |
+| ------------------------------------------------------------------ | ----------------- |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement_azurerm) | >= 5.8.0, < 6.0.0 |
 
 ## Modules
 

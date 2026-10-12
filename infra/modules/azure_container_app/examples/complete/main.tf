@@ -27,8 +27,7 @@ data "azurerm_log_analytics_workspace" "common" {
 }
 
 module "container_app_environment" {
-  source  = "pagopa-dx/azure-container-app-environment/azurerm"
-  version = "~> 4.0"
+  source = "../../../azure_container_app_environment"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
@@ -43,8 +42,7 @@ module "container_app_environment" {
 }
 
 module "container_app" {
-  source  = "pagopa-dx/azure-container-app/azurerm"
-  version = "~> 8.0"
+  source = "../.."
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name

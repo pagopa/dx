@@ -7,7 +7,7 @@ This example demonstrates how to configure the Azure Storage Account module for 
 ```hcl
 module "audit_storage" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.0"
+  version = "~> 5.0"
 
   environment = {
     prefix          = "myorg"
@@ -82,7 +82,7 @@ For scenarios requiring litigation hold or investigation capabilities:
 ```hcl
 module "audit_storage_with_legal_hold" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.0"
+  version = "~> 5.0"
 
   # ... basic configuration same as above ...
 

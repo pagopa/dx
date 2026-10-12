@@ -29,6 +29,87 @@ variables {
 
 mock_provider "azurerm" {}
 
+run "static_website_requires_document" {
+  command = plan
+  variables {
+    static_website = { enabled = true }
+  }
+  expect_failures = [var.static_website]
+}
+
+run "static_website_rejects_index_path" {
+  command = plan
+  variables {
+    static_website = { enabled = true, index_document = "pages/index.html" }
+  }
+  expect_failures = [var.static_website]
+}
+
+run "static_website_rejects_short_index" {
+  command = plan
+  variables {
+    static_website = { enabled = true, index_document = "ab" }
+  }
+  expect_failures = [var.static_website]
+}
+
+run "static_website_rejects_long_index" {
+  command = plan
+  variables {
+    static_website = { enabled = true, index_document = join("", [for i in range(256) : "a"]) }
+  }
+  expect_failures = [var.static_website]
+}
+
+run "static_website_rejects_empty_error_document" {
+  command = plan
+  variables {
+    static_website = { enabled = true, error_404_document = "" }
+  }
+  expect_failures = [var.static_website]
+}
+
+run "static_website_accepts_error_document_only" {
+  command = plan
+  variables {
+    static_website = { enabled = true, error_404_document = "errors/404.html" }
+  }
+  assert {
+    condition     = azurerm_storage_account_static_website.this[0].index_document == null && azurerm_storage_account_static_website.this[0].error_404_document == "errors/404.html"
+    error_message = "Error-only websites must preserve the supplied document without inferring an index."
+  }
+}
+
+run "static_website_accepts_index_length_boundaries" {
+  command = plan
+  variables {
+    static_website = { enabled = true, index_document = join("", [for i in range(255) : "a"]) }
+  }
+  assert {
+    condition     = length(azurerm_storage_account_static_website.this[0].index_document) == 255
+    error_message = "The maximum valid index length must be accepted."
+  }
+}
+
+run "static_website_accepts_minimum_index_length" {
+  command = plan
+  variables {
+    static_website = { enabled = true, index_document = "abc" }
+  }
+  assert {
+    condition     = azurerm_storage_account_static_website.this[0].index_document == "abc"
+    error_message = "The minimum valid index length must be accepted."
+  }
+}
+
+run "static_website_disabled_does_not_manage_website" {
+  command = plan
+  assert {
+    condition     = length(azurerm_storage_account_static_website.this) == 0
+    error_message = "Disabled websites must not create a standalone website resource."
+  }
+}
+
 override_data {
   target = data.azurerm_subscription.current
   values = {

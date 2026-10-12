@@ -6,18 +6,13 @@ This Terraform module provisions an Azure Storage Account with optional configur
 
 ## Provider Compatibility
 
-AzureRM **4.81 or later within v4** is required for the migration to
-`storage_account_id` on tables and queues and `key_vault_key_id` on
-customer-managed keys. Although table account IDs are available from 4.77,
-versions 4.77-4.80 mark the account selector change for replacement. Version 4.81
-supports the in-place transition for the same storage account. When upgrading
-from an older locked provider, run `terraform init -upgrade`.
-
-Module inputs and outputs are unchanged. Customer-managed keys still use
-versionless URLs for automatic rotation, and static websites remain managed by
-the storage account's inline configuration. No manual state migration is
-required by these configuration changes. This release does not add AzureRM v5
-support.
+This major release requires **AzureRM >= 5.8.0, < 6.0.0**; AzureRM v4 is no
+longer accepted. Earlier v4-compatible module releases remain supported through
+**31 December 2026**. Upgrade all AzureRM-dependent modules in the same Terraform
+root together and review the
+[AzureRM v5 migration guide](https://github.com/pagopa/dx/blob/main/infra/modules/AZURERM_V5_MIGRATION.md)
+before applying, including provider registration prerequisites and storage
+static website state import.
 
 ## Diagram
 
@@ -132,7 +127,7 @@ The `audit` use case is specifically designed for storing audit logs with **full
 ```hcl
 module "audit_storage" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.0"
+  version = "~> 5.0"
 
   environment = {
     prefix          = "myorg"
@@ -200,7 +195,7 @@ For granular control over retention policies, you can configure immutability at 
 ```hcl
 module "audit_storage" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.0"
+  version = "~> 5.0"
 
   # ... basic configuration ...
 
@@ -256,7 +251,7 @@ This variable was introduced as a temporary workaround to prevent storage accoun
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.81 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.8.0, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules
@@ -282,6 +277,7 @@ No modules.
 | [azurerm_storage_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account) | resource |
 | [azurerm_storage_account_customer_managed_key.kv](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account_customer_managed_key) | resource |
 | [azurerm_storage_account_network_rules.network_rules](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account_network_rules) | resource |
+| [azurerm_storage_account_static_website.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_account_static_website) | resource |
 | [azurerm_storage_container.replica](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container) | resource |
 | [azurerm_storage_container.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container) | resource |
 | [azurerm_storage_container_immutability_policy.replica](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container_immutability_policy) | resource |
@@ -295,6 +291,7 @@ No modules.
 | [azurerm_storage_table.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_table) | resource |
 | [azurerm_key_vault.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
 | [azurerm_private_dns_zone.storage_account](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/private_dns_zone) | data source |
+| [azurerm_storage_account.static_website](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/storage_account) | data source |
 | [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 
 ## Inputs
@@ -318,7 +315,7 @@ No modules.
 | <a name="input_queues"></a> [queues](#input\_queues) | Queues to be created. | `list(string)` | `[]` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where the storage account and related resources will be deployed. | `string` | n/a | yes |
 | <a name="input_secondary_location"></a> [secondary\_location](#input\_secondary\_location) | Secondary location for geo-redundant storage accounts. Used if `use_case` need a replication\_type like GRS or GZRS. | `string` | `null` | no |
-| <a name="input_static_website"></a> [static\_website](#input\_static\_website) | Configures static website hosting with index and error documents. | <pre>object({<br/>    enabled            = optional(bool, false)<br/>    index_document     = optional(string, null)<br/>    error_404_document = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "error_404_document": null,<br/>  "index_document": null<br/>}</pre> | no |
+| <a name="input_static_website"></a> [static\_website](#input\_static\_website) | Configures static website hosting. When enabled, at least one document is required. index\_document must be 3-255 characters without '/' and error\_404\_document must be nonempty. Existing inline websites must be imported into the standalone resource when upgrading to this major; see the AzureRM v5 migration guide. | <pre>object({<br/>    enabled            = optional(bool, false)<br/>    index_document     = optional(string, null)<br/>    error_404_document = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "error_404_document": null,<br/>  "index_document": null<br/>}</pre> | no |
 | <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet used for private endpoints. Together with `private_dns_zone_resource_group_name`, enables private endpoints for the subservices in `subservices_enabled`, independently of `force_public_network_access_enabled`. Required when `force_public_network_access_enabled` is false, except for `delegated_access` where public access is forced by the module. | `string` | `null` | no |
 | <a name="input_subservices_enabled"></a> [subservices\_enabled](#input\_subservices\_enabled) | Enables subservices (blob, file, queue, table). Controls creation of queue/table resources and their diagnostic settings regardless of network configuration, and additionally determines which enabled subservices get Private Endpoints when private endpoints are created (i.e. when subnet\_pep\_id is set). Defaults to 'blob' only. | <pre>object({<br/>    blob  = optional(bool, true)<br/>    file  = optional(bool, false)<br/>    queue = optional(bool, false)<br/>    table = optional(bool, false)<br/>  })</pre> | `{}` | no |
 | <a name="input_tables"></a> [tables](#input\_tables) | Tables to be created. | `list(string)` | `[]` | no |

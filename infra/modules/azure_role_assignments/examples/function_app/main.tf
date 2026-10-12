@@ -4,8 +4,7 @@ resource "azurerm_resource_group" "example" {
 }
 
 module "function" {
-  source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 7.0"
+  source = "../../../azure_function_app"
 
   environment = local.environment
 
@@ -28,8 +27,7 @@ module "function" {
 }
 
 module "roles" {
-  source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 4.0"
+  source = "../.."
 
   principal_id    = module.function.function_app.function_app.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id

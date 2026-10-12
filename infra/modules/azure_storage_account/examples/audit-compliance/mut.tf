@@ -2,8 +2,7 @@
 # Supporting infrastructure is defined in fixtures.tf.
 
 module "azure_storage_account" {
-  source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 4.0"
+  source = "../.."
 
   environment         = local.environment
   use_case            = "audit"

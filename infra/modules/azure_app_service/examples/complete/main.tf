@@ -22,8 +22,7 @@ resource "azurerm_user_assigned_identity" "example" {
 }
 
 module "azure_app_service" {
-  source  = "pagopa-dx/azure-app-service/azurerm"
-  version = "~> 5.0"
+  source = "../.."
 
   environment         = local.environment
   use_case            = "default"

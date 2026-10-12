@@ -27,8 +27,7 @@ data "azurerm_virtual_network" "this" {
 }
 
 module "container_app_environment" {
-  source  = "pagopa-dx/azure-container-app-environment/azurerm"
-  version = "~> 4.0"
+  source = "../.."
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name

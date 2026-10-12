@@ -39,8 +39,7 @@ data "azurerm_resource_group" "network" {
 }
 
 module "storage_account" {
-  source      = "pagopa-dx/azure-storage-account/azurerm"
-  version     = "~> 4.0"
+  source      = "../../../azure_storage_account"
   environment = var.environment
 
   resource_group_name                  = azurerm_resource_group.rg.name

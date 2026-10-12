@@ -165,7 +165,7 @@ run "storage_account_delegated_access_use_case" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
     error_message = "public_network_access_enabled must be true for delegated_access use case"
   }
 
@@ -226,6 +226,11 @@ run "storage_account_audit_use_case" {
   }
 
   assert {
+    condition     = azurerm_storage_account.secondary_replica[0].public_network_access == azurerm_storage_account.this.public_network_access
+    error_message = "The secondary replica must preserve the primary account's public network access mode."
+  }
+
+  assert {
     condition     = length(azurerm_monitor_diagnostic_setting.storage_account) == 1
     error_message = "diagnostic_setting must be created for audit use case"
   }
@@ -266,7 +271,7 @@ run "storage_account_public_network" {
   command = plan
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
     error_message = "public_network_access_enabled must be true when force_public=true"
   }
 
@@ -300,7 +305,7 @@ run "storage_account_private_network" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == false
+    condition     = azurerm_storage_account.this.public_network_access == "Disabled"
     error_message = "public_network_access_enabled must be false when force_public=false"
   }
 
@@ -329,7 +334,7 @@ run "storage_account_public_network_with_subnet_pep_id" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
     error_message = "public_network_access_enabled must remain true when force_public=true, even with private endpoint inputs set"
   }
 
@@ -626,17 +631,44 @@ run "storage_account_static_website" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.static_website[0].index_document == "index.html"
+    condition     = azurerm_storage_account_static_website.this[0].index_document == "index.html"
     error_message = "static_website index_document must be set correctly"
   }
 
   assert {
-    condition     = azurerm_storage_account.this.static_website[0].error_404_document == "404.html"
+    condition     = azurerm_storage_account_static_website.this[0].error_404_document == "404.html"
     error_message = "static_website error_404_document must be set correctly"
   }
 }
 
 # ── 18. Override infrastructure encryption (deprecated) ─────────────────────
+run "storage_account_static_website_refreshed_endpoint" {
+  command   = apply
+  state_key = "static_website_endpoint"
+
+  variables {
+    static_website = { enabled = true, index_document = "index.html" }
+  }
+
+  override_resource {
+    target = azurerm_storage_account.this
+    values = {
+      id               = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/testwebsite"
+      primary_web_host = ""
+    }
+  }
+
+  override_data {
+    target = data.azurerm_storage_account.static_website[0]
+    values = { primary_web_host = "website.z6.web.core.windows.net" }
+  }
+
+  assert {
+    condition     = output.primary_web_host == "website.z6.web.core.windows.net"
+    error_message = "The web host must be read after standalone website setup, not from the account's pre-website state."
+  }
+}
+
 run "storage_account_override_infrastructure_encryption" {
   command = plan
 

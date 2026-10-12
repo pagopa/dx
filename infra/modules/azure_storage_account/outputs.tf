@@ -1,11 +1,13 @@
 output "name" {
   value       = azurerm_storage_account.this.name
   description = "The name of the Azure Storage Account."
+  depends_on  = [azurerm_storage_account_static_website.this]
 }
 
 output "id" {
   value       = azurerm_storage_account.this.id
   description = "The ID of the Azure Storage Account."
+  depends_on  = [azurerm_storage_account_static_website.this]
 }
 
 output "resource_group_name" {
@@ -25,8 +27,9 @@ output "primary_connection_string" {
 }
 
 output "primary_web_host" {
-  value       = azurerm_storage_account.this.primary_web_host
+  value       = var.static_website.enabled ? data.azurerm_storage_account.static_website[0].primary_web_host : azurerm_storage_account.this.primary_web_host
   description = "The primary web host URL for the Azure Storage Account."
+  depends_on  = [azurerm_storage_account_static_website.this]
 }
 
 output "secondary_replica" {

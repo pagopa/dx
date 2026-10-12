@@ -13,8 +13,7 @@ resource "azurerm_user_assigned_identity" "example" {
 }
 
 module "azure_function_app_exposed" {
-  source  = "pagopa-dx/azure-function-app-exposed/azurerm"
-  version = "~> 5.0"
+  source = "../.."
 
   environment         = local.environment
   use_case            = "default"

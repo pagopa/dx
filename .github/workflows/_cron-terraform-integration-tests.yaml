@@ -68,10 +68,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-cache-
 
+      - name: Use checkout-local AzureRM module dependencies
+        run: |
+          python3 .github/scripts/test_use_local_terraform_modules.py
+          python3 .github/scripts/use-local-terraform-modules.py infra/modules
+
       - name: Run Terraform Integration Tests
         timeout-minutes: 120
         run: |
-          pnpm nx run-many --target test-integration
+          pnpm nx run-many --target test-integration --skipNxCache
 
       - name: Notify Slack on failure
         if: failure() && github.event_name == 'schedule'
