@@ -143,6 +143,12 @@ describe("init command json output", () => {
         data: {
           gitHubRepoCreationSkipped: true,
           payload,
+          repositoryState: {
+            nextStep:
+              "Apply infra/repository manually, then run dx add environment",
+            path: "infra/repository/terraform.tfstate",
+            status: "not-created",
+          },
         },
         ok: true,
       },

@@ -54,6 +54,15 @@ Next Steps:
 After the command completes, you will have a new GitHub repository with an open
 Pull Request to merge the initial project structure.
 
+:::warning[Temporary repository state]
+
+`init` creates local Terraform state at `infra/repository/terraform.tfstate`
+when it publishes the repository. Preserve it and do not run repository apply
+from another device until `add environment` migrates it. If publishing is
+deferred, this warning applies after the manual Terraform apply.
+
+:::
+
 ## `add` - Scaffold New Components
 
 Scaffold new components in your project following DevEx guidelines.
@@ -194,6 +203,39 @@ CI=1 npx @pagopa/dx-cli add environment \
 
 If any Runner App value is missing in `CI=1` mode, the command stops with an
 explicit error before configuring the GitHub environment.
+
+#### Shared repository state
+
+The first `add environment` displays the environment, Azure subscription,
+Resource Group, Storage Account, container and key before asking you to confirm
+the permanent repository-state destination. It reuses the selected environment's
+Terraform backend and stores repository state in container `terraform-state`
+under `<prefix>/<domain>/repository.tfstate`. In non-interactive mode, `--yes`
+also confirms this placement.
+
+State migration and verification happen **before** the CLI updates GitHub
+environments. After verifying the repository identity, copied resources and
+Terraform's active backend, it removes local state and backups and reports
+**Repository state: remote and verified**. Commit all `infra/repository`
+changes, including the backend in `providers.tf` and environments in `main.tf`,
+before another operator adds an environment; all subsequent environment
+additions reuse that destination, including other tenants and subscriptions. The
+core and bootstrapper state-key conventions do not change.
+
+When local state is missing on another device, the CLI recovers the existing
+GitHub resources with declarative imports in
+`infra/repository/repository-state-imports.tf`. Recovery refuses resource
+destruction or replacement. The module's non-importable workflow-permissions
+resource reasserts its declared permissions. Generated imports are removed after
+successful recovery and remote-state verification. A retry completes pending
+imports before changing environments, including when a previous attempt imported
+only part of the repository.
+
+If migration or recovery fails, the CLI stops before applying GitHub
+environments. Preserve local state, the migration backup, backend configuration
+and generated imports; retry from the repository root using the same command
+arguments. Conflicting remote state is never overwritten automatically.
+Investigate identity or lineage conflicts instead of manually forcing a copy.
 
 #### Example Usage
 
