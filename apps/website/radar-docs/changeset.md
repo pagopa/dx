@@ -29,8 +29,6 @@ separate tool and its configuration from the stack, and integrates versioning
 with the project graph and affected-based workflows.
 
 For new monorepo initiatives, prefer Nx with its built-in release automation.
-Existing repositories should migrate their release pipelines to `nx release`
-too.
 
 ## Reference of usage in our organization
 
