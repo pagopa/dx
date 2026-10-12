@@ -22,6 +22,9 @@ the team without extra plugins.
 - Automatically install the right tool versions when entering a project
   directory, avoiding "works on my machine" issues
 - Use it in CI pipelines to provision the exact toolchain used locally
+- Provision the exact toolchain inside the sandboxed environments where AI
+  coding agents run, so agent sessions start from the same pinned versions as
+  local development and CI
 - Run project tasks through its built-in task runner
 
 ## Reference of usage in our organization
