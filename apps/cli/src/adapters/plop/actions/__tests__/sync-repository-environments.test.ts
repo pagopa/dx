@@ -5,6 +5,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Language } from "web-tree-sitter";
 
 import type { Payload } from "../../generators/environment/prompts.js";
 
@@ -83,6 +84,23 @@ const inTemporaryRepository = async (
 };
 
 describe("syncRepositoryTerraformEnvironments", () => {
+  it("retries loading the HCL grammar after a transient failure", async () => {
+    const loadLanguage = vi
+      .spyOn(Language, "load")
+      .mockRejectedValueOnce(new Error("temporary grammar load failure"));
+    try {
+      await expect(
+        syncRepositoryTerraformEnvironments(repositoryConfig, "dev"),
+      ).rejects.toThrow(/HCL parser/);
+      await expect(
+        syncRepositoryTerraformEnvironments(repositoryConfig, "dev"),
+      ).resolves.toContain('    environments           = ["dev", "prod"]');
+      expect(loadLanguage).toHaveBeenCalledTimes(2);
+    } finally {
+      loadLanguage.mockRestore();
+    }
+  });
+
   it("adds a non-prod environment while preserving the implicit prod default", async () => {
     const result = await syncRepositoryTerraformEnvironments(
       repositoryConfig,
