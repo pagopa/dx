@@ -51,7 +51,9 @@ Use this fixed description order:
 `Output` is not a source link or an activity description. `Checks` validate the
 item's own output; they do not claim that a Use Case acceptance check passed.
 `AC Coverage` contains identifiers only and never copies acceptance-check text.
-Omit `AC Coverage` when the item covers no Use Case acceptance check.
+A Story sourced from a Use Case must have non-empty `AC Coverage` for its own
+slice; another item's coverage cannot replace that Story's traceability.
+Epics and Tasks may omit `AC Coverage` when they cover no acceptance check.
 
 When `AC Coverage` is present, do not copy or paraphrase any domain outcome,
 guardrail, error condition, numeric threshold, or Given/When/Then clause from
@@ -82,8 +84,10 @@ For each proposed dispatchable item:
 4. Verify that `Output` is present, non-empty, observable, and distinct from the
    source.
 5. Verify that `Checks` contains at least one item-local binary check.
-6. Verify that every `AC Coverage` entry exists in the referenced Use Case and
-   contains only an ID.
+6. Require non-empty `AC Coverage` on every Use-Case-sourced Story, even when
+   another item covers the same IDs. Verify that every entry exists in the
+   referenced Use Case and contains only an ID. Epics and Tasks without
+   acceptance-check coverage may omit this section.
 7. When `AC Coverage` is present, compare `Checks` with the canonical
    acceptance checks and reject copied or paraphrased behavior, guardrails,
    errors, and thresholds.

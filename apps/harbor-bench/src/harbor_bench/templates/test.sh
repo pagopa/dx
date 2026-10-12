@@ -18,13 +18,47 @@ fi
 if [ "${SKILL_EVAL_ENFORCE_SKILL_USE:-true}" = "true" ]; then
   SKILL_NAME="${SKILL_EVAL_SKILL_NAME:-{{SKILL_NAME}}}"
   if [ -n "$TRANSCRIPT" ]; then
-    # invoke: at least one tool call to the `skill` tool
-    if ! grep -q '"name" *: *"skill"' "$TRANSCRIPT" 2>/dev/null; then
-      SKILL_OK=0
-    fi
-    # load: the target skill completed successfully. Current Copilot CLI JSONL
-    # records the skill name in tool telemetry, not on the completion event.
-    if ! grep -Eq "\"type\" *: *\"tool.execution_complete\".*\"success\" *: *true.*\"restrictedProperties\" *: *\\{\"skillName\" *: *\"${SKILL_NAME}\"" "$TRANSCRIPT" 2>/dev/null; then
+    # Match the target invocation and successful completion by tool call ID.
+    if ! python3 - "$TRANSCRIPT" "$SKILL_NAME" << 'PYEOF'
+import json
+import sys
+
+invocations = set()
+loaded = False
+with open(sys.argv[1], encoding="utf-8") as transcript:
+    for number, line in enumerate(transcript, 1):
+        if not line.strip():
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            print(f"Invalid Copilot CLI JSONL on line {number}", file=sys.stderr)
+            sys.exit(1)
+        if not isinstance(event, dict):
+            continue
+        data = event.get("data")
+        if not isinstance(data, dict):
+            continue
+        call_id = data.get("toolCallId")
+        if not isinstance(call_id, str) or not call_id:
+            continue
+        if event.get("type") == "tool.execution_start":
+            arguments = data.get("arguments")
+            if (data.get("toolName") == "skill"
+                    and isinstance(arguments, dict)
+                    and arguments.get("skill") == sys.argv[2]):
+                invocations.add(call_id)
+        elif event.get("type") == "tool.execution_complete":
+            telemetry = data.get("toolTelemetry")
+            properties = (telemetry.get("restrictedProperties")
+                          if isinstance(telemetry, dict) else None)
+            if (call_id in invocations and data.get("success") is True
+                    and isinstance(properties, dict)
+                    and properties.get("skillName") == sys.argv[2]):
+                loaded = True
+sys.exit(0 if loaded else 1)
+PYEOF
+    then
       SKILL_OK=0
     fi
   else

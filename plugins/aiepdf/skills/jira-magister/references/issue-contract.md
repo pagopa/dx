@@ -14,10 +14,16 @@ discovered in [persistence.md](./persistence.md):
 Descriptions may summarize source behavior, but the DR/SRS and Use Case remain
 authoritative. Every dispatchable item uses the fixed section order from
 [`delivery-coverage.md`](./delivery-coverage.md): `Source`, `Slice Scope ID`,
-`Output`, `Checks`, and optional `AC Coverage`. The canonical source and slice
+`Output`, `Checks`, and `AC Coverage` (mandatory and non-empty for a
+Use-Case-sourced Story; optional for Epics and Tasks covering no acceptance
+checks). The canonical source and slice
 scope form the stable projection key
 `<canonical-source>::<slice-scope-id>`. For Use Case work, projection keys start
 with `UC-XX::`.
+
+In single-item mode, use only the supplied source context. A self-contained Epic
+does not require upstream PRD/DR/SRS/JTBD/UC artifacts it does not depend on;
+do not invent those links or IDs to fill the backlog-mode fields above.
 
 Always include links to the source documents and stable IDs. `AC Coverage`
 contains IDs only, never copied acceptance-check text. For example:

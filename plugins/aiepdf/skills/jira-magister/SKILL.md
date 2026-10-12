@@ -1,6 +1,6 @@
 ---
 name: jira-magister
-description: Project approved DR/SRS and Use Case contracts into a reviewable Jira backlog, and format or persist a single already-specified Jira item. Use whenever a user asks to create, decompose, refine, synchronize, or update Jira Epics, User Stories, or technical Tasks — from a PRD, DR/SRS, Use Case, JTBD, acceptance check, RFC, or requirements document, or from one item the user has already specified. Propose multiple cohesive Epics that fit a few sprints, write actor-facing Stories sized for one two-week sprint, separate enabling work into Tasks, preserve source traceability, and require explicit confirmation before Jira mutations.
+description: Project approved DR/SRS and Use Case contracts into a reviewable Jira backlog, audit delivery coverage, and format or persist a single already-specified Jira item. Use whenever a user asks to create, decompose, refine, audit, synchronize, or update Jira Epics, User Stories, or technical Tasks — from a PRD, DR/SRS, Use Case, JTBD, acceptance check, RFC, or requirements document, or from one item the user has already specified. Propose cohesive Epics, write actor-facing Stories sized for one two-week sprint, separate enabling work into Tasks, preserve source traceability, and require explicit confirmation before Jira mutations.
 ---
 
 # Jira Magister
@@ -18,6 +18,7 @@ Use this skill when the user asks to:
 - refine a Jira projection after a Use Case, acceptance check, contract, or
   readiness decision changes;
 - synchronize existing Jira items with stable PRD, JTBD, UC, or AC identifiers;
+- audit an existing draft's delivery coverage without repairing or persisting it;
 - prepare Jira work for a sprint or ask whether requirements are ready for Jira;
 - format and create or update one Jira item the user has already specified,
   without generating a full backlog.
@@ -68,8 +69,9 @@ request is ambiguous.
    remote links. When a source has a Confluence or Figma URL, link that page or
    design artifact to the Jira item instead of relying only on prose references.
    Give every dispatchable item a stable projection identity and the fixed
-   `Source`, `Slice Scope ID`, `Output`, `Checks`, and optional `AC Coverage`
-   sections defined in
+   `Source`, `Slice Scope ID`, `Output`, and `Checks` sections. `AC Coverage` is
+   mandatory and non-empty for Use-Case-sourced Stories; Epics and Tasks may
+   omit it when they cover no acceptance checks. Follow
    [`delivery-coverage.md`](./references/delivery-coverage.md).
 7. Treat open questions as projection input. A question flagged `Blocking: yes`
    becomes an independent spike Task that the dependent Story or Task
@@ -192,8 +194,11 @@ Show a complete human-readable draft before any Jira mutation:
 - the repository target and any Task that cannot be routed;
 - proposed creates, updates, splits, and unchanged items.
 
-Include the delivery-coverage result and a digest of the exact reviewed
-projection. Ask for explicit confirmation bound to that digest. A request to
+Include the delivery-coverage result and the SHA-256 digest of the complete
+review manifest defined in [persistence.md](./references/persistence.md),
+including all write payloads, relationships, remote links and source-content
+digests. Use its bundled script; do not hash a prose summary. Ask for explicit
+confirmation bound to that digest. A request to
 “prepare”, “draft”, or “show” the backlog is not confirmation to create or
 update Jira. If source content or the projection changes after review, invalidate
 the confirmation, show the new diff and digest, and ask again.
@@ -227,9 +232,13 @@ of requirements.
    field; never infer the actor, gain, acceptance checks, parent, project, or
    source ID.
 2. **Review the item.** Show the complete item — type, summary, description,
-   project, parent, links, labels, source IDs, and acceptance checks — and ask
-   for explicit confirmation. A request to "prepare", "draft", or "show" is not
+   project, parent, links, labels, source IDs, and acceptance checks — with the
+   complete review-manifest digest from [persistence.md](./references/persistence.md),
+   and ask for explicit confirmation bound to it. A request to "prepare", "draft", or "show" is not
    confirmation.
+   If schema discovery or another required input prevents computing the
+   manifest, label the preview incomplete and explicitly require a new review
+   and digest-bound confirmation after that gap is resolved, before any write.
 3. **Persist.** After confirmation, create or update the one item following
    [persistence.md](./references/persistence.md), and attach its source remote
    links.
