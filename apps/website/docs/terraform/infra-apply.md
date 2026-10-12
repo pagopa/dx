@@ -16,7 +16,21 @@ sidebar_position: 6
 This document describes the GitHub workflows that automate Terraform apply
 operations.
 
-## Overview
+## Choose an apply workflow
+
+The two workflows are alternatives, not steps of one flow. Use the one that
+matches whether the target repository adopts Nx, and do not combine them.
+
+| Repository                          | Workflow                                                                                                      | Terraform projects are found by                                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| Does not use Nx                     | [Infrastructure Apply](#infrastructure-apply-without-nx) (`infra_apply.yaml`)                                 | Folder layout and changed files under `<base_path>/<environment>` |
+| Uses Nx with `@pagopa/nx-terraform` | [Nx Terraform Infrastructure Apply](#nx-terraform-infrastructure-apply-with-nx) (`release-terraform-v1.yaml`) | Nx projects tagged `terraform` that are affected by the change    |
+
+Keep using `infra_apply.yaml` for the current Terraform flow that creates,
+stores, downloads, and applies Terraform plan bundles without relying on Nx
+project discovery.
+
+## Infrastructure Apply (without Nx)
 
 The `infra_apply` workflow is part of the Infrastructure as Code (IaC) solution
 and is responsible for executing a `terraform apply` to implement infrastructure
@@ -33,64 +47,6 @@ The workflow supports both of these repository layouts under
 
 This allows one apply pipeline to work for both single-state and multi-state
 environments.
-
-## Nx-based Terraform apply
-
-Use `_release-terraform.yaml` as the repository-level release workflow for
-repositories that manage Terraform projects through Nx and
-`@pagopa/nx-terraform`. Like `_validate.yaml`, this wrapper only invokes
-the versioned reusable workflow implementation.
-
-The masked plan/apply targets require `@pagopa/nx-terraform` 0.6.0 or
-newer, which bundles the shared task implementations. Update the consuming
-repository's dependency lockfile before adopting this flow.
-
-`release-terraform-v1.yaml` contains the release logic and follows the same
-environment discovery approach used by `validate-v2.yaml`: it reads the
-repository GitHub environments named `infra-<env>-cd` (and the paired
-`infra-<env>-ci` used for planning), and checks which Terraform Nx projects are
-affected for each environment.
-
-Like the current `infra_apply` workflow, releases follow a **Plan → Approve →
-Apply** flow, so the plan a reviewer approves is what gets applied:
-
-1. **Plan** (`release-plan`): runs on the matching self-hosted runner label,
-   under the `infra-<env>-ci` GitHub environment (no required reviewers). Runs
-   the Terraform Nx `plan` target for each affected project and uploads the
-   resulting plan bundle to the same storage backend used for the Terraform
-   state.
-2. **Apply** (`release-apply`): runs under the `infra-<env>-cd` GitHub
-   environment, so any required reviewers configured on it must approve the run
-   before it proceeds. Downloads the plan bundle uploaded by `release-plan` and
-   runs the Terraform Nx `apply` target against that exact plan file, instead of
-   recomputing a new plan.
-
-If no matching Nx project is found, both jobs are skipped.
-
-The complete release is serialized through planning, approval and apply. Active
-runs are never cancelled. Only one run remains pending; a newer run replaces the
-pending one and generates its plan after the active release ends. The queue does
-not guarantee commit order.
-
-When migrating to this wrapper, remove the push triggers from the legacy callers
-that deploy the same states. In this repository, the dev, uat and prod legacy
-resource callers remain available only through `workflow_dispatch`. Do not run
-both deployment flows concurrently against the same state.
-
-```yaml
-jobs:
-  release:
-    permissions:
-      contents: read
-      actions: read
-      id-token: write
-    uses: pagopa/dx/.github/workflows/release-terraform-v1.yaml@main
-    secrets: inherit
-```
-
-Keep using `infra_apply.yaml` for the current Terraform flow that creates,
-stores, downloads, and applies Terraform plan bundles without relying on Nx
-project discovery.
 
 ## Use Cases
 
@@ -202,6 +158,70 @@ you may need to customize how the workflow runs:
 These options are particularly useful for projects with complex deployment
 strategies across multiple cloud providers or subscriptions.
 
+## Nx Terraform Infrastructure Apply (with Nx)
+
+Use `release-terraform-v1.yaml` as the repository-level release workflow for
+repositories that manage Terraform projects through Nx and
+`@pagopa/nx-terraform`. Like `_validate.yaml`, this wrapper only invokes the
+versioned reusable workflow implementation.
+
+The masked plan/apply targets require `@pagopa/nx-terraform` 0.6.0 or newer,
+which bundles the shared task implementations. Update the consuming repository's
+dependency lockfile before adopting this flow.
+
+`release-terraform-v1.yaml` contains the release logic and follows the same
+environment discovery approach used by `validate-v2.yaml`: it reads the
+repository GitHub environments named `infra-<env>-cd` (and the paired
+`infra-<env>-ci` used for planning), and checks which Terraform Nx projects are
+affected for each environment.
+
+Projects under `infra/bootstrapper/` and the `infra/repository` project are the
+exception. They use the paired `bootstrapper-<env>-ci` environment for planning
+and `bootstrapper-<env>-cd` for apply, because those environments hold the
+GitHub App secrets (`GH_APP_*`) needed by the GitHub provider. Their approval
+rules are those of the `bootstrapper-<env>-cd` environment, not
+`infra-<env>-cd`. All other projects keep using `infra-<env>-ci` and
+`infra-<env>-cd`.
+
+Like the current `infra_apply` workflow, releases follow a **Plan → Approve →
+Apply** flow, so the plan a reviewer approves is what gets applied:
+
+1. **Plan** (`release-plan`): runs on the matching self-hosted runner label,
+   under the `infra-<env>-ci` GitHub environment (or `bootstrapper-<env>-ci` for
+   the bootstrapper and repository projects; no required reviewers). Runs the
+   Terraform Nx `plan` target for each affected project and uploads the
+   resulting plan bundle to the same storage backend used for the Terraform
+   state.
+2. **Apply** (`release-apply`): runs under the `infra-<env>-cd` GitHub
+   environment (or `bootstrapper-<env>-cd` for the bootstrapper and repository
+   projects), so any required reviewers configured on it must approve the run
+   before it proceeds. Downloads the plan bundle uploaded by `release-plan` and
+   runs the Terraform Nx `apply` target against that exact plan file, instead of
+   recomputing a new plan.
+
+If no matching Nx project is found, both jobs are skipped.
+
+The complete release is serialized through planning, approval and apply. Active
+runs are never cancelled. Only one run remains pending; a newer run replaces the
+pending one and generates its plan after the active release ends. The queue does
+not guarantee commit order.
+
+When migrating to this wrapper, remove the push triggers from the legacy callers
+that deploy the same states. In this repository, the dev, uat and prod legacy
+resource callers remain available only through `workflow_dispatch`. Do not run
+both deployment flows concurrently against the same state.
+
+```yaml
+jobs:
+  release:
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    uses: pagopa/dx/.github/workflows/release-terraform-v1.yaml@main
+    secrets: inherit
+```
+
 ## Complete Workflow
 
 The typical execution flow in a CI/CD process includes:
@@ -211,5 +231,6 @@ The typical execution flow in a CI/CD process includes:
 2. **Review & Approval**: reviewers examine the plan output for each affected
    Terraform project and approve the changes
 3. **Merge**: after approval, the PR is merged into the main branch
-4. **Deploy**: `infra_apply` or `_release-terraform` is triggered to implement
-   the changes in the desired environment
+4. **Deploy**: the apply workflow used by the repository is triggered to
+   implement the changes in the desired environment: `infra_apply` without Nx,
+   or `release-terraform-v1` with Nx

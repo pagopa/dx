@@ -108,11 +108,24 @@ jobs:
             while IFS= read -r project; do
               [ -z "$project" ] && continue
               root="$(pnpm nx show project "$project" --json | jq --raw-output '.root')"
+              # Bootstrapper GitHub App secrets live in bootstrapper-<env>-{ci,cd}, not infra-<env>-{ci,cd}.
+              project_plan_env="$plan_env"
+              project_apply_env="$apply_env"
+              case "$root" in
+                infra/bootstrapper/*)
+                  project_plan_env="bootstrapper-$env_name-ci"
+                  project_apply_env="bootstrapper-$env_name-cd"
+                  ;;
+                infra/repository)
+                  project_plan_env="bootstrapper-$env_name-ci"
+                  project_apply_env="bootstrapper-$env_name-cd"
+                  ;;
+              esac
               project_targets="$(
                 jq --compact-output \
                   --arg env_name "$env_name" \
-                  --arg plan_env "$plan_env" \
-                  --arg apply_env "$apply_env" \
+                  --arg plan_env "$project_plan_env" \
+                  --arg apply_env "$project_apply_env" \
                   --arg project "$project" \
                   --arg root "$root" \
                   '. + [{
@@ -143,9 +156,7 @@ jobs:
       actions: read
       contents: read
       id-token: write
-    env:
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -175,6 +186,9 @@ jobs:
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       - name: Terraform Plan
         env:
@@ -231,9 +245,7 @@ jobs:
       actions: read
       contents: read
       id-token: write
-    env:
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -263,6 +275,9 @@ jobs:
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
+        env:
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       # Download plan outputs artifact from release-plan
       - name: Download plan outputs artifact
