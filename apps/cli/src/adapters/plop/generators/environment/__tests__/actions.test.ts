@@ -2,9 +2,8 @@ import { type ActionConfig } from "node-plop";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 import { z } from "zod";
 
-import { CloudAccount } from "../../../../../domain/cloud-account.js";
 import getActions from "../actions.js";
-import { Payload } from "../prompts.js";
+import { getPayload } from "./fixtures.js";
 
 const loggerMocks = vi.hoisted(() => ({
   debug: vi.fn(),
@@ -20,51 +19,6 @@ const terraformBackendActionSchema = z.object({
   }),
   type: z.literal("addMany"),
 });
-
-export const getPayload = (includeInit = false): Payload => {
-  const cloudAccount: CloudAccount = {
-    csp: "azure",
-    defaultLocation: "westeurope",
-    displayName: "Test-Account",
-    id: "test-subscription-id",
-  };
-
-  const payload: Payload = {
-    env: {
-      cloudAccounts: [cloudAccount],
-      name: "dev",
-      prefix: "dx",
-    },
-    github: {
-      owner: "pagopa",
-      repo: "dx",
-    },
-    tags: {
-      CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
-      Owner: "DX Platform",
-    },
-    workspace: {
-      domain: "mytest",
-    },
-  };
-
-  if (includeInit) {
-    payload.init = {
-      cloudAccountsToInitialize: [cloudAccount],
-      runnerAppCredentials: {
-        clientId: "test-app-client-id",
-        id: "test-app-id",
-        installationId: "test-installation-id",
-        key: "test-private-key",
-      },
-      terraformBackend: {
-        cloudAccount,
-      },
-    };
-  }
-
-  return payload;
-};
 
 describe("actions", () => {
   beforeEach(() => {
@@ -98,6 +52,7 @@ describe("actions", () => {
     const actionsOrder = [
       "getTerraformBackend",
       "syncNxAdditionalEnvironments",
+      "prepareRepositoryState",
       "syncRepositoryEnvironments",
       "configureGitHubEnvironments",
       "addMany",
@@ -106,10 +61,11 @@ describe("actions", () => {
     ];
 
     if (payload.init) {
-      actionsOrder.unshift(
-        "setupCloudTools",
+      actionsOrder.unshift("setupCloudTools", "provisionTerraformBackend");
+      actionsOrder.splice(
+        actionsOrder.indexOf("configureGitHubEnvironments"),
+        0,
         "initCloudAccounts",
-        "provisionTerraformBackend",
       );
       actionsOrder.push("addMany", "addMany");
     } else {

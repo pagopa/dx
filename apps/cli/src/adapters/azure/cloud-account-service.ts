@@ -525,6 +525,9 @@ export class AzureCloudAccountService implements CloudAccountService {
       this.#credential,
       cloudAccount.id,
     );
+    // Backend provisioning now precedes bootstrap initialization, which used
+    // to register Storage along with the other required resource providers.
+    await resourceManagementClient.providers.register("Microsoft.Storage");
 
     const short = {
       env: getEnvironmentShort(name),
@@ -593,13 +596,10 @@ export class AzureCloudAccountService implements CloudAccountService {
       blobServiceClient.getContainerClient("terraform-state");
 
     try {
-      await containerClient.create();
+      await containerClient.createIfNotExists();
     } catch (e) {
-      // Cleanup resource group if blob container creation fails
-      // resource group deletion also deletes all contained resources
-      await resourceManagementClient.resourceGroups.beginDeleteAndWait(
-        resourceGroupName,
-      );
+      // Keep the backend available for retry: the resource group can already
+      // contain shared states, especially after an interrupted migration.
       throw new Error(`Error during the creation of the blob container`, {
         cause: e,
       });

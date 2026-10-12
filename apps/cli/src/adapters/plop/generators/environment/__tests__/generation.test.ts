@@ -36,6 +36,7 @@ import {
 } from "../../__tests__/temp-dir.js";
 import getActions from "../actions.js";
 import { Payload, PLOP_ENVIRONMENT_GENERATOR_NAME } from "../index.js";
+import { getPayload } from "./fixtures.js";
 
 const terraformValidator = vi.hoisted(() => vi.fn(async () => undefined));
 
@@ -44,6 +45,32 @@ vi.mock("../../../../execa/terraform.js", () => {
   const tf$ = vi.fn(() => terraformCommand);
 
   return { tf$, validateTerraformSource: terraformValidator };
+});
+
+describe("repository state failure gate", () => {
+  it("does not initialize cloud accounts or write GitHub secrets after a migration failure", async () => {
+    const cloud = createMockCloudAccountService(mockTerraformBackend, false);
+    const github = createMockGitHubService();
+    const plop = await nodePlop();
+    registerEnvironmentSetup(plop, cloud, github);
+    plop.setActionType("prepareRepositoryState", async () => {
+      throw new Error("State migration failed");
+    });
+    plop.setGenerator("blocked-environment", {
+      actions: getActions(resolveTemplatesPath("environment")),
+      prompts: [],
+    });
+    const result = await plop
+      .getGenerator("blocked-environment")
+      .runActions(getPayload(true));
+    expect(result.failures[0]).toMatchObject({
+      error: "State migration failed",
+      type: "prepareRepositoryState",
+    });
+    expect(cloud.initialize).not.toHaveBeenCalled();
+    expect(cloud.configureGitHubEnvironment).not.toHaveBeenCalled();
+    expect(github.createOrUpdateEnvironmentSecret).not.toHaveBeenCalled();
+  });
 });
 
 /**
@@ -59,6 +86,17 @@ const registerEnvironmentSetup = (
     "setupCloudTools",
     async () => "Cloud CLI tools configured",
   );
+  plop.setActionType("prepareRepositoryState", async (data) => {
+    data.repositoryState = {
+      destination: {
+        backend: mockTerraformBackend,
+        containerName: "terraform-state",
+        key: "dx/mytest/repository.tfstate",
+      },
+      status: "remote-verified",
+    };
+    return "Repository state: remote and verified";
+  });
   // The formatting pass shells out to the repository Nx tasks: it is covered
   // by its own test, and stubbed here to keep the generated files untouched.
   plop.setActionType(

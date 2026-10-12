@@ -10,6 +10,7 @@ import { Language } from "web-tree-sitter";
 
 import type { Payload } from "../../generators/environment/prompts.js";
 
+import { getPayload } from "../../generators/environment/__tests__/fixtures.js";
 import { updateRepositoryEnvironmentsHcl } from "../../../terraform/hcl-repository-environments.js";
 import { syncRepositoryEnvironments } from "../sync-repository-environments.js";
 
@@ -50,6 +51,19 @@ const payload: Payload = {
     prefix: "dx",
   },
   github: { owner: "pagopa", repo: "my-project" },
+  repositoryState: {
+    destination: {
+      backend: {
+        resourceGroupName: "state-rg",
+        storageAccountName: "statest",
+        subscriptionId: "test-subscription",
+        type: "azurerm",
+      },
+      containerName: "terraform-state",
+      key: "dx/payments/repository.tfstate",
+    },
+    status: "remote-verified",
+  },
   tags: {
     CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
     Owner: "DX Platform",
@@ -75,6 +89,14 @@ const inTemporaryRepository = async (
     await fs.rm(directory, { force: true, recursive: true });
   }
 };
+
+describe("repository state verification", () => {
+  it("refuses to update GitHub environments before remote state verification", async () => {
+    await expect(syncRepositoryEnvironments(getPayload())).rejects.toThrow(
+      "Repository state has not been verified remotely",
+    );
+  });
+});
 
 describe("updateRepositoryEnvironmentsHcl", () => {
   it("retries loading the HCL grammar after a transient failure", async () => {
