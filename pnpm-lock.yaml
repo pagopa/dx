@@ -617,6 +617,9 @@ importers:
       ora:
         specifier: ^9.4.1
         version: 9.4.1
+      proper-lockfile:
+        specifier: ^4.1.2
+        version: 4.1.2
       replace-in-file:
         specifier: ^8.4.0
         version: 8.4.0
@@ -648,6 +651,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.5
+      '@types/proper-lockfile':
+        specifier: ^4.1.4
+        version: 4.1.4
       '@types/semver':
         specifier: 'catalog:'
         version: 7.8.0
@@ -6890,6 +6896,9 @@ packages:
 
   '@types/prismjs@1.26.6':
     resolution: {integrity: sha512-vqlvI7qlMvcCBbVe0AKAb4f97//Hy0EBTaiW8AalRnG/xAN5zOiWWyrNqNXeq8+KAuvRewjCVY1+IPxk4RdNYw==}
+
+  '@types/proper-lockfile@4.1.4':
+    resolution: {integrity: sha512-uo2ABllncSqg9F1D4nugVl9v93RmjxF6LJzQLMLDdPaXCUIDPeOJ21Gbqi43xNKzBi/WQ0Q0dICqufzQbMjipQ==}
 
   '@types/qs@6.15.1':
     resolution: {integrity: sha512-GZHUBZR9hckSUhrxmp1nG6NwdpM9fCunJwyThLW1X3AyHgd9IlHb6VANpQQqDr2o/qQp6McZ3y/IA2rVzKzSbw==}
@@ -22023,6 +22032,10 @@ snapshots:
   '@types/picomatch@4.0.3': {}
 
   '@types/prismjs@1.26.6': {}
+
+  '@types/proper-lockfile@4.1.4':
+    dependencies:
+      '@types/retry': 0.12.2
 
   '@types/qs@6.15.1': {}
 
