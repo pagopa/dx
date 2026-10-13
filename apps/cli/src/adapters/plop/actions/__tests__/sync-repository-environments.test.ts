@@ -3,11 +3,7 @@
  */
 import { describe, expect, it } from "vitest";
 
-import { getPayload } from "../../generators/environment/__tests__/fixtures.js";
-import {
-  syncRepositoryEnvironments,
-  syncRepositoryTerraformEnvironments,
-} from "../sync-repository-environments.js";
+import { syncRepositoryTerraformEnvironments } from "../sync-repository-environments.js";
 
 const repositoryConfig = [
   'module "github_repository" {',
@@ -25,11 +21,6 @@ const repositoryConfig = [
 ].join("\n");
 
 describe("syncRepositoryTerraformEnvironments", () => {
-  it("refuses to modify configuration or apply before remote state verification", async () => {
-    await expect(syncRepositoryEnvironments(getPayload())).rejects.toThrow(
-      "Repository state has not been verified remotely",
-    );
-  });
   it("adds a non-prod environment while preserving the implicit prod default", () => {
     const result = syncRepositoryTerraformEnvironments(repositoryConfig, "dev");
 

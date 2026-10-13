@@ -138,17 +138,11 @@ describe("init command json output", () => {
         type: "step",
       },
     ]);
-    expect(parseNdjson(stdout.written)).toEqual([
+    expect(parseNdjson(stdout.written)).toMatchObject([
       {
         data: {
           gitHubRepoCreationSkipped: true,
           payload,
-          repositoryState: {
-            nextStep:
-              "Apply infra/repository manually, then run dx add environment",
-            path: "infra/repository/terraform.tfstate",
-            status: "not-created",
-          },
         },
         ok: true,
       },

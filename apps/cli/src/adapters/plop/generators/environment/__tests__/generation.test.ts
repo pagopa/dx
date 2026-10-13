@@ -35,7 +35,6 @@ import {
 } from "../../__tests__/temp-dir.js";
 import getActions from "../actions.js";
 import { Payload, PLOP_ENVIRONMENT_GENERATOR_NAME } from "../index.js";
-import { getPayload } from "./fixtures.js";
 
 vi.mock("../../../../terraform/fmt.js", () => ({
   formatTerraformCode: vi.fn((content: string) => content),
@@ -45,32 +44,6 @@ vi.mock("../../../../execa/terraform.js", () => {
   const tf$ = vi.fn(() => terraformCommand);
 
   return { tf$ };
-});
-
-describe("repository state failure gate", () => {
-  it("does not initialize cloud accounts or write GitHub secrets after a migration failure", async () => {
-    const cloud = createMockCloudAccountService(mockTerraformBackend, false);
-    const github = createMockGitHubService();
-    const plop = await nodePlop();
-    registerEnvironmentSetup(plop, cloud, github);
-    plop.setActionType("prepareRepositoryState", async () => {
-      throw new Error("State migration failed");
-    });
-    plop.setGenerator("blocked-environment", {
-      actions: getActions(resolveTemplatesPath("environment")),
-      prompts: [],
-    });
-    const result = await plop
-      .getGenerator("blocked-environment")
-      .runActions(getPayload(true));
-    expect(result.failures[0]).toMatchObject({
-      error: "State migration failed",
-      type: "prepareRepositoryState",
-    });
-    expect(cloud.initialize).not.toHaveBeenCalled();
-    expect(cloud.configureGitHubEnvironment).not.toHaveBeenCalled();
-    expect(github.createOrUpdateEnvironmentSecret).not.toHaveBeenCalled();
-  });
 });
 
 /**

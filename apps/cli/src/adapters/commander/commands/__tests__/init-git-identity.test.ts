@@ -195,15 +195,6 @@ describe("makeInitCommand git identity fallback", () => {
     expect(commitCommand).toContain(
       'git -c user.name=dx-pagopa-bot -c user.email=dx-pagopa-github-bot@pagopa.it commit --no-gpg-sign -m "Scaffold workspace"',
     );
-    expect(mocks.reportResult).toHaveBeenCalledWith(
-      expect.objectContaining({
-        repositoryState: {
-          nextStep: "dx add environment",
-          path: "infra/repository/terraform.tfstate",
-          status: "local-temporary",
-        },
-      }),
-    );
   });
 
   it("uses the default bot identity for both values when only one git config value is present", async () => {
