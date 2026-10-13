@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.78"
+      version = ">= 4.78, < 6.0.0"
     }
     pagopa-dx = {
       source  = "pagopa-dx/azure"
