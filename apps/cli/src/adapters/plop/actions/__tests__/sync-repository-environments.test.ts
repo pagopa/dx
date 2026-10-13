@@ -236,6 +236,29 @@ describe("structural repository HCL updates", () => {
     ).resolves.toBe(result);
   });
 
+  it("supports literal quoted repository keys", async () => {
+    const content = repositoryConfig.replace(
+      '    name                   = "my-project"',
+      '    "name"                 = "my-project"',
+    );
+
+    const result = await syncRepositoryTerraformEnvironments(content, "dev");
+
+    expect(result).toContain('    "name"                 = "my-project"');
+    expect(result).toContain('    environments           = ["dev", "prod"]');
+  });
+
+  it("detects duplicate quoted and unquoted repository keys after decoding", async () => {
+    const content = repositoryConfig.replace(
+      "    reviewers_teams        = []",
+      '    reviewers_teams        = []\n    "na\\u006de" = "duplicate"',
+    );
+
+    await expect(
+      syncRepositoryTerraformEnvironments(content, "dev"),
+    ).rejects.toThrow(/Duplicate repository property "name"/);
+  });
+
   it("preserves comments in and around an existing environment list", async () => {
     const content = repositoryConfig.replace(
       "    reviewers_teams        = []\n",
