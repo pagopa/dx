@@ -38,6 +38,10 @@ data "azurerm_resource_group" "network" {
   }))
 }
 
+#trivy:ignore:AZU-0012 Public access is required for the storage static website CDN origin
+#trivy:ignore:AZU-0057 This ephemeral integration fixture does not store production data
+#trivy:ignore:AZU-0058 CDN integration tests do not validate storage redundancy
+#trivy:ignore:AZU-0061 The development-tier test origin mirrors the storage module defaults
 resource "azurerm_storage_account" "cdn_origin" {
   name                     = provider::dx::resource_name(merge(var.environment, { resource_type = "storage_account" }))
   resource_group_name      = azurerm_resource_group.rg.name
