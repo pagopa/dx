@@ -96,19 +96,7 @@ const onlyNode = (nodes: Node[], description: string): Node => {
 const nodeOfType = (node: Node, type: string): Node | undefined =>
   node.namedChildren.find((child) => child.type === type);
 
-const repositoryKey = (element: Node): string => {
-  const key = element.childForFieldName("key");
-  const variable = key && nodeOfType(key, "variable_expr");
-  const identifier = variable && nodeOfType(variable, "identifier");
-  if (!identifier) {
-    throw new Error(
-      `Unsupported repository object key in ${REPOSITORY_MAIN}; expected a literal identifier`,
-    );
-  }
-  return identifier.text;
-};
-
-const literalEnvironment = (expression: Node): string => {
+const stringLiteralNode = (expression: Node): Node | undefined => {
   const literal = nodeOfType(expression, "literal_value");
   const string = literal && nodeOfType(literal, "string_lit");
   if (
@@ -120,20 +108,58 @@ const literalEnvironment = (expression: Node): string => {
         child.type !== "quoted_template_end",
     )
   ) {
-    throw new Error(
-      `Unsupported environments value in ${REPOSITORY_MAIN}; expected a list of literal strings`,
-    );
+    return undefined;
   }
+  return string;
+};
 
+const parseStringLiteral = (string: Node, description: string): string => {
   let value: unknown;
   try {
     value = JSON.parse(string.text);
   } catch (cause) {
     throw new Error(
-      `Unsupported environments string literal in ${REPOSITORY_MAIN}`,
+      `Unsupported ${description} string literal in ${REPOSITORY_MAIN}`,
       { cause },
     );
   }
+  const parsed = z.string().safeParse(value);
+  if (!parsed.success) {
+    throw new Error(
+      `Invalid ${description} string literal in ${REPOSITORY_MAIN}`,
+      {
+        cause: parsed.error,
+      },
+    );
+  }
+  return parsed.data;
+};
+
+const repositoryKey = (element: Node): string => {
+  const key = element.childForFieldName("key");
+  const variable = key && nodeOfType(key, "variable_expr");
+  const identifier = variable && nodeOfType(variable, "identifier");
+  if (identifier) {
+    return identifier.text;
+  }
+  const string = key && stringLiteralNode(key);
+  if (!string) {
+    throw new Error(
+      `Unsupported repository object key in ${REPOSITORY_MAIN}; expected a literal identifier or string`,
+    );
+  }
+  return parseStringLiteral(string, "repository object key");
+};
+
+const literalEnvironment = (expression: Node): string => {
+  const string = stringLiteralNode(expression);
+  if (!string) {
+    throw new Error(
+      `Unsupported environments value in ${REPOSITORY_MAIN}; expected a list of literal strings`,
+    );
+  }
+
+  const value = parseStringLiteral(string, "environments");
   const parsed = environmentValueSchema.safeParse(value);
   if (!parsed.success) {
     throw new Error(`Invalid environments entry in ${REPOSITORY_MAIN}`, {
