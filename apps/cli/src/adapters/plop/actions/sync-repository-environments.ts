@@ -11,6 +11,7 @@ import { execa } from "execa";
 import { type NodePlopAPI } from "node-plop";
 import fs, { type FileHandle } from "node:fs/promises";
 import path from "node:path";
+import lockfile from "proper-lockfile";
 
 import { tf$ } from "../../execa/terraform.js";
 import { updateRepositoryEnvironmentsHcl } from "../../terraform/hcl-repository-environments.js";
@@ -81,6 +82,57 @@ const closeFileHandleAfterError = async (
     );
   }
   throw error;
+};
+
+const withRepositoryLock = async (
+  repositoryPath: string,
+  operation: () => Promise<void>,
+): Promise<void> => {
+  // Serialize the read/modify/replace sequence across CLI processes.
+  const releaseLock = await lockfile
+    .lock(repositoryPath, {
+      retries: {
+        factor: 1.2,
+        maxTimeout: 1000,
+        minTimeout: 100,
+        retries: 30,
+      },
+    })
+    .catch((cause: unknown) => {
+      throw new Error(
+        `Cannot acquire the repository environment synchronization lock for ${path.relative(process.cwd(), repositoryPath)}.`,
+        { cause },
+      );
+    });
+
+  let operationFailed = false;
+  let operationError: unknown;
+  try {
+    await operation();
+  } catch (cause) {
+    operationFailed = true;
+    operationError = cause;
+  }
+
+  try {
+    await releaseLock();
+  } catch (releaseCause) {
+    if (operationFailed) {
+      throw new AggregateError(
+        [operationError, releaseCause],
+        "Repository environment synchronization failed and its lock could not be released",
+        { cause: releaseCause },
+      );
+    }
+    throw new Error(
+      `Cannot release the repository environment synchronization lock for ${path.relative(process.cwd(), repositoryPath)}.`,
+      { cause: releaseCause },
+    );
+  }
+
+  if (operationFailed) {
+    throw operationError;
+  }
 };
 
 const readRepositoryConfig = async (
@@ -188,26 +240,28 @@ export const syncRepositoryEnvironments = async (
   const repositoryPath = path.join(process.cwd(), "infra", "repository");
   const repositoryMainPath = path.join(repositoryPath, "main.tf");
 
-  const repositoryConfig = await readRepositoryConfig(repositoryMainPath);
-  try {
-    const updatedRepositoryConfig = await syncRepositoryTerraformEnvironments(
-      repositoryConfig.content,
-      payload.env.name,
-    );
-
-    await validateTerraformSource(repositoryConfig.content);
-    if (updatedRepositoryConfig !== repositoryConfig.content) {
-      await validateTerraformSource(updatedRepositoryConfig);
-      await replaceRepositoryConfig(
-        repositoryMainPath,
-        repositoryConfig,
-        updatedRepositoryConfig,
+  await withRepositoryLock(repositoryPath, async () => {
+    const repositoryConfig = await readRepositoryConfig(repositoryMainPath);
+    try {
+      const updatedRepositoryConfig = await syncRepositoryTerraformEnvironments(
+        repositoryConfig.content,
+        payload.env.name,
       );
+
+      await validateTerraformSource(repositoryConfig.content);
+      if (updatedRepositoryConfig !== repositoryConfig.content) {
+        await validateTerraformSource(updatedRepositoryConfig);
+        await replaceRepositoryConfig(
+          repositoryMainPath,
+          repositoryConfig,
+          updatedRepositoryConfig,
+        );
+      }
+    } catch (cause) {
+      return closeFileHandleAfterError(repositoryConfig.fileHandle, cause);
     }
-  } catch (cause) {
-    return closeFileHandleAfterError(repositoryConfig.fileHandle, cause);
-  }
-  await repositoryConfig.fileHandle.close();
+    await repositoryConfig.fileHandle.close();
+  });
 
   const repositoryTerraform = tf$({ cwd: repositoryPath });
   await repositoryTerraform`terraform init`;
