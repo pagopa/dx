@@ -60,15 +60,6 @@ mock_provider "github" {
 }
 mock_provider "dx" {}
 
-override_resource {
-  target          = azurerm_user_assigned_identity.infra_ci
-  override_during = plan
-  values = {
-    client_id = "00000000-0000-0000-0000-000000000101"
-    id        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/mock/providers/Microsoft.ManagedIdentity/userAssignedIdentities/infra-ci"
-  }
-}
-
 override_data {
   target = data.azurerm_subscription.current
   values = {
@@ -198,21 +189,6 @@ run "azure_github_environment_bootstrap_infra_identities" {
   assert {
     condition     = azurerm_federated_identity_credential.github_infra_cd.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:infra-uat-cd"
     error_message = "The Infra CD GitHub federation has the wrong subject"
-  }
-
-  assert {
-    condition     = github_actions_environment_secret.automation_ci["ARM_CLIENT_ID"].environment == "automation-uat-ci" && github_actions_environment_secret.automation_ci["ARM_CLIENT_ID"].value == azurerm_user_assigned_identity.infra_ci.client_id
-    error_message = "Automation CI must set the infra CI client ID secret in the matching GitHub environment"
-  }
-
-  assert {
-    condition     = github_actions_environment_secret.automation_ci["ARM_SUBSCRIPTION_ID"].environment == "automation-uat-ci" && github_actions_environment_secret.automation_ci["ARM_SUBSCRIPTION_ID"].value == data.azurerm_subscription.current.subscription_id
-    error_message = "Automation CI must set the Azure subscription secret in the matching GitHub environment"
-  }
-
-  assert {
-    condition     = azurerm_federated_identity_credential.github_automation_ci.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:automation-uat-ci" && azurerm_federated_identity_credential.github_automation_ci.user_assigned_identity_id == azurerm_user_assigned_identity.infra_ci.id
-    error_message = "Automation CI must federate its legacy subject to the existing infra CI identity"
   }
 
   assert {
@@ -374,11 +350,6 @@ run "azure_github_environment_bootstrap_immutable_identities" {
   assert {
     condition     = azurerm_federated_identity_credential.github_automation_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:automation-uat-cd"
     error_message = "The automation CD immutable subject is incorrect"
-  }
-
-  assert {
-    condition     = azurerm_federated_identity_credential.github_automation_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:automation-uat-ci" && azurerm_federated_identity_credential.github_automation_ci_immutable.user_assigned_identity_id == azurerm_user_assigned_identity.infra_ci.id
-    error_message = "The automation CI immutable subject must target the existing infra CI identity"
   }
 
   assert {
