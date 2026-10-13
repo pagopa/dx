@@ -4,6 +4,7 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import lockfile from "proper-lockfile";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Language } from "web-tree-sitter";
 
@@ -62,6 +63,22 @@ const payload: Payload = {
     Owner: "DX Platform",
   },
   workspace: { domain: "payments" },
+};
+
+const createDeferred = () => {
+  let resolvePromise: (() => void) | undefined;
+  const promise = new Promise<void>((resolve) => {
+    resolvePromise = () => resolve();
+  });
+  return {
+    promise,
+    resolve: () => {
+      if (!resolvePromise) {
+        throw new Error("Deferred promise resolver is not initialized");
+      }
+      resolvePromise();
+    },
+  };
 };
 
 const inTemporaryRepository = async (
@@ -583,5 +600,58 @@ describe("syncRepositoryEnvironments", () => {
         expect(terraformCommand).not.toHaveBeenCalled();
       },
     );
+  });
+});
+
+describe("concurrent repository environment updates", () => {
+  beforeEach(() => {
+    terraformCommand.mockClear();
+    terraformValidator.mockReset();
+    terraformValidator.mockResolvedValue({ stdout: "" });
+  });
+
+  it("serializes concurrent updates so neither environment is lost", async () => {
+    const firstValidationStarted = createDeferred();
+    const continueFirstValidation = createDeferred();
+    const secondLockAttempted = createDeferred();
+    const originalLock = lockfile.lock.bind(lockfile);
+    let lockAttempts = 0;
+    const lockSpy = vi
+      .spyOn(lockfile, "lock")
+      .mockImplementation((file, options) => {
+        lockAttempts += 1;
+        if (lockAttempts === 2) {
+          secondLockAttempted.resolve();
+        }
+        return originalLock(file, options);
+      });
+    terraformValidator.mockImplementationOnce(async () => {
+      firstValidationStarted.resolve();
+      await continueFirstValidation.promise;
+      return { stdout: "" };
+    });
+
+    try {
+      await inTemporaryRepository(repositoryConfig, async (mainFile) => {
+        const firstUpdate = syncRepositoryEnvironments(payload);
+        await firstValidationStarted.promise;
+        const secondUpdate = syncRepositoryEnvironments({
+          ...payload,
+          env: { ...payload.env, name: "uat" },
+        });
+        await secondLockAttempted.promise;
+        continueFirstValidation.resolve();
+
+        await Promise.all([firstUpdate, secondUpdate]);
+
+        await expect(fs.readFile(mainFile, "utf8")).resolves.toContain(
+          '    environments           = ["dev", "uat", "prod"]',
+        );
+      });
+      expect(lockAttempts).toBe(2);
+    } finally {
+      continueFirstValidation.resolve();
+      lockSpy.mockRestore();
+    }
   });
 });
