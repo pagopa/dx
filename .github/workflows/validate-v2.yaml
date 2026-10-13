@@ -450,7 +450,31 @@ jobs:
       - name: Run code quality checks on affected projects
         run: |
           EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
-          pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci
+          pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy -c=ci
+
+      - name: Restore the registry module source before documentation checks
+        if: ${{ hashFiles('infra/modules/azure_app_configuration/.terraform.lock.hcl') != '' }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("infra/modules/azure_app_configuration/iam.tf")
+          content = path.read_text()
+          registry_reference = '  source  = "pagopa-dx/azure-role-assignments/azurerm"\n  version = "~> 4.0"'
+          local_reference = '  source = "../azure_role_assignments"'
+
+          if local_reference in content:
+              if content.count(local_reference) != 1:
+                  raise SystemExit("Expected exactly one local Azure role assignments module reference")
+              path.write_text(content.replace(local_reference, registry_reference, 1))
+          elif registry_reference not in content:
+              raise SystemExit("Could not find the Azure role assignments module reference")
+          PY
+
+      - name: Run documentation checks on affected projects
+        run: |
+          EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
+          pnpm nx affected --exclude=$EXCLUDE -t=docs -c=ci
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
