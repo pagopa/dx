@@ -424,6 +424,25 @@ jobs:
           registry-type: public
           mask-password: "true"
 
+      - name: Use the local AzureRM v5-compatible role assignments module
+        if: ${{ hashFiles('infra/modules/azure_app_configuration/.terraform.lock.hcl') != '' }}
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("infra/modules/azure_app_configuration/iam.tf")
+          content = path.read_text()
+          registry_reference = '  source  = "pagopa-dx/azure-role-assignments/azurerm"\n  version = "~> 4.0"'
+          local_reference = '  source = "../azure_role_assignments"'
+
+          if registry_reference in content:
+              if content.count(registry_reference) != 1:
+                  raise SystemExit("Expected exactly one Azure role assignments registry reference")
+              path.write_text(content.replace(registry_reference, local_reference, 1))
+          elif local_reference not in content:
+              raise SystemExit("Could not find the Azure role assignments module reference")
+          PY
+
       # We exclude all Terraform Apps from quality checks
       # because they require a dedicated environment to be initialized.
       # Their static checks (lint, test) run in the
