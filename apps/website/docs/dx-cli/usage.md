@@ -109,10 +109,17 @@ prompt expects and where to find the required values.
 | **Account(s)**                       | Select one or more Azure subscriptions belonging to your product. Contact your Engineering Leader if you are unsure which subscriptions to pick.       |
 | **Prefix**                           | A short identifier (2–4 characters) used in Azure resource names. It should match the prefix already in use for your product (e.g., `dx`, `io`, `pn`). |
 | **Domain**                           | An optional sub-grouping for the project (e.g., `payments`). Leave empty if not needed.                                                                |
-| **Cost center**                      | Select the cost center for your team.                                                                                                                  |
-| **Business unit**                    | The business unit or team that owns this project (free text).                                                                                          |
-| **Management team**                  | The team responsible for managing the environment (free text, e.g., `devex`).                                                                          |
+| **Cost center**                      | Select your team’s cost center. Defaults to `TS000 - TECNOLOGIA & SERVIZI`; `--cost-center` accepts only the listed choices.                           |
+| **Owner**                            | The team or person responsible for the environment (required; free text). Use `--owner` when running non-interactively.                                |
+| **Business unit**                    | The business unit or team that owns this project (free text, optional; press Enter to skip).                                                           |
+| **Management team**                  | The team responsible for managing the environment (free text, optional; press Enter to skip).                                                          |
 | **Default location for \<account\>** | The primary Azure region for the selected account (e.g., `Italy North`). Asked once per selected account.                                              |
+
+Valid cost centers are `TS000 - TECNOLOGIA & SERVIZI`, `TS100 - TECNOLOGIA`,
+`TS110 - SVILUPPO E ARCHITETTURA`, `TS120 - CLIENT E FRONTEND`,
+`TS200 - SICUREZZA`, `TS300 - PRODOTTI E SERVIZI`,
+`TS310 - PAGAMENTI & SERVIZI`, `TS320 - PIATTAFORMA NOTIFICHE DIGITALI`, and
+`TS330 - PDND & INTEROPERABILITA'`.
 
 #### Multi-tenant environments
 
@@ -126,6 +133,7 @@ npx @pagopa/dx-cli add environment \
   --account <subscription-id> \
   --location <subscription-id>=italynorth \
   --domain bonus \
+  --owner devex \
   --business-unit devex \
   --management-team devex
 ```
@@ -173,6 +181,8 @@ CI=1 npx @pagopa/dx-cli add environment \
   --location <subscription-id>=italynorth \
   --prefix dx \
   --domain payments \
+  --owner devex \
+  --cost-center "TS330 - PDND & INTEROPERABILITA'" \
   --business-unit devex \
   --management-team devex \
   --runner-app-id <runner-app-id> \

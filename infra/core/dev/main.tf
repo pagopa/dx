@@ -1,6 +1,6 @@
 module "azure" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 4.2"
+  version = "~> 6.0"
 
   environment = local.azure_environment
 
@@ -16,7 +16,7 @@ module "azure" {
 
 module "aws" {
   source  = "pagopa-dx/aws-core-infra/aws"
-  version = "~> 0.0"
+  version = "~> 2.0"
 
   environment       = local.aws_environment
   vpc_cidr          = local.aws.vpc_cidr
@@ -31,6 +31,8 @@ resource "aws_budgets_budget" "monthly_budget" {
   limit_amount = "50"
   limit_unit   = "USD"
   time_unit    = "MONTHLY"
+
+  tags = local.tags
 
   cost_types {
     include_tax = true

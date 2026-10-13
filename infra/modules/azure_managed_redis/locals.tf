@@ -15,6 +15,15 @@ locals {
       alerts_enabled            = true
       persistence_mode          = "rdb"
     }
+    ephemeral = {
+      sku_name                  = "Balanced_B3"
+      high_availability_enabled = true
+      private_network_enabled   = true
+      lock_enabled              = true
+      diagnostics_enabled       = true
+      alerts_enabled            = true
+      persistence_mode          = "disabled"
+    }
     development = {
       sku_name                  = "Balanced_B0"
       high_availability_enabled = false

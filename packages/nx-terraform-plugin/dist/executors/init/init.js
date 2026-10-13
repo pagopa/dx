@@ -1,5 +1,5 @@
-import { t as createDefaultTaskDispatcher } from "../../default-dispatcher-CblKABKZ.js";
-import { n as getPackageLogger, t as configureLogger } from "../../logger-DZ1KFLzv.js";
+import { t as createDefaultTaskDispatcher } from "../../default-dispatcher-C_hICWDL.js";
+import { n as getPackageLogger, t as configureLogger } from "../../logger-C2K7hHjS.js";
 import { z } from "zod/v4";
 
 //#region src/executors/init/schema.ts
@@ -9,6 +9,7 @@ import { z } from "zod/v4";
 const initExecutorSchema = z.object({
 	args: z.array(z.string()).default([]),
 	frozenLockfile: z.boolean().default(false),
+	platforms: z.array(z.string()).default([]),
 	projectRoot: z.string().min(1)
 });
 
@@ -25,11 +26,12 @@ const runExecutor = async (options) => {
 		});
 		return { success: false };
 	}
-	const { args, frozenLockfile, projectRoot } = parseResult.data;
+	const { args, frozenLockfile, platforms, projectRoot } = parseResult.data;
 	await createDefaultTaskDispatcher().dispatchTask("terraformInit", {
 		args,
 		frozenLockfile,
-		modulePath: projectRoot
+		modulePath: projectRoot,
+		platforms
 	});
 	return { success: true };
 };

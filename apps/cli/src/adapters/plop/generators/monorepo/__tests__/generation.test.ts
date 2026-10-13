@@ -39,77 +39,11 @@ const registerStubActions = (plop: NodePlopAPI) => {
   plop.setActionType("setupPnpm", async () => "Monorepo bootstrapped");
 };
 
-describe("monorepo generator — file generation", () => {
-  let tmpDir: string;
-  let originalCwd: string;
-
-  const payload: Payload = {
-    repoDescription: "A test repository for DX",
-    repoName: "my-test-repo",
-    repoOwner: "pagopa",
-  };
-
-  beforeAll(async () => {
-    originalCwd = process.cwd();
-    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-monorepo-test-"));
-    process.chdir(tmpDir);
-
-    const plop = await nodePlop();
-    registerStubActions(plop);
-    plop.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
-      actions: getActions(resolveTemplatesPath("monorepo")),
-      description: "A scaffold for a monorepo repository",
-      prompts: [],
-    });
-
-    const generator = plop.getGenerator(PLOP_MONOREPO_GENERATOR_NAME);
-    const result = await generator.runActions(payload);
-
-    const realFailures = result.failures.filter(
-      (f) => f.error !== "Aborted due to previous action failure",
-    );
-    if (realFailures.length > 0) {
-      const summary = realFailures
-        .map((f) => `${f.type}: ${f.error}`)
-        .join("\n");
-      throw new Error(`Generator failed:\n${summary}`);
-    }
-  });
-
-  afterAll(async () => {
-    process.chdir(originalCwd);
-    await cleanupTempDir(tmpDir);
-  });
-
-  it("materializes repository metadata from the generator payload", async () => {
-    const generatedFiles = await readGeneratedFiles(
-      path.join(tmpDir, payload.repoName),
-      ["package.json"],
-    );
-
-    expect(generatedFiles).toMatchSnapshot();
-  });
-
-  it("propagates action outputs into generated version files", async () => {
-    const generatedFiles = await readGeneratedFiles(
-      path.join(tmpDir, payload.repoName),
-      [".node-version", ".terraform-version", ".pre-commit-config.yaml"],
-    );
-
-    expect(generatedFiles).toMatchSnapshot();
-  });
-
-  it("does not add pnpm 11 build approval settings to the generated pnpm workspace", async () => {
-    const generatedFiles = await readGeneratedFiles(
-      path.join(tmpDir, payload.repoName),
-      ["pnpm-workspace.yaml"],
-    );
-
-    expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain("allowBuilds:");
-  });
-
+const registerMiseToolchainConfigurationTest = (
+  getGeneratedRoot: () => string,
+): void => {
   it("includes the mise toolchain configuration", async () => {
-    const generatedRoot = path.join(tmpDir, payload.repoName);
+    const generatedRoot = getGeneratedRoot();
     const generatedFiles = await fs.readdir(generatedRoot);
     expect(generatedFiles).toContain("mise.toml");
 
@@ -147,6 +81,177 @@ describe("monorepo generator — file generation", () => {
     expect(miseConfig).not.toContain("postinstall");
     expect(miseConfig).not.toContain("minimum_release_age_excludes");
   });
+};
+
+describe("monorepo generator — file generation", () => {
+  let tmpDir: string;
+  let originalCwd: string;
+  let plop: NodePlopAPI;
+
+  const payload: Payload = {
+    repoDescription: "A test repository for DX",
+    repoName: "my-test-repo",
+    repoOwner: "pagopa",
+  };
+
+  beforeAll(async () => {
+    originalCwd = process.cwd();
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-monorepo-test-"));
+    process.chdir(tmpDir);
+
+    plop = await nodePlop();
+    registerStubActions(plop);
+    plop.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
+      actions: getActions(resolveTemplatesPath("monorepo")),
+      description: "A scaffold for a monorepo repository",
+      prompts: [],
+    });
+
+    const generator = plop.getGenerator(PLOP_MONOREPO_GENERATOR_NAME);
+    const result = await generator.runActions(payload);
+
+    const realFailures = result.failures.filter(
+      (f) => f.error !== "Aborted due to previous action failure",
+    );
+    if (realFailures.length > 0) {
+      const summary = realFailures
+        .map((f) => `${f.type}: ${f.error}`)
+        .join("\n");
+      throw new Error(`Generator failed:\n${summary}`);
+    }
+  });
+
+  afterAll(async () => {
+    process.chdir(originalCwd);
+    await cleanupTempDir(tmpDir);
+  });
+
+  it("materializes repository metadata from the generator payload", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["package.json"],
+    );
+
+    expect(generatedFiles).toMatchSnapshot();
+  });
+
+  it("uses the selected GitHub organization in repository provider configuration", async () => {
+    const customPayload: Payload = {
+      ...payload,
+      repoName: "my-custom-owner-repo",
+      repoOwner: "example-org",
+    };
+
+    const result = await plop
+      .getGenerator(PLOP_MONOREPO_GENERATOR_NAME)
+      .runActions(customPayload);
+    const realFailures = result.failures.filter(
+      (failure) => failure.error !== "Aborted due to previous action failure",
+    );
+    expect(realFailures).toEqual([]);
+
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, customPayload.repoName),
+      ["infra/repository/providers.tf"],
+    );
+
+    expect(generatedFiles["infra/repository/providers.tf"]).toContain(
+      'owner = "example-org"',
+    );
+    expect(generatedFiles["infra/repository/providers.tf"]).not.toContain(
+      'owner = "pagopa"',
+    );
+  });
+
+  it("propagates action outputs into generated version files", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      [".node-version", ".terraform-version", ".pre-commit-config.yaml"],
+    );
+
+    expect(generatedFiles).toMatchSnapshot();
+  });
+
+  it("does not add pnpm 11 build approval settings to the generated pnpm workspace", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["pnpm-workspace.yaml"],
+    );
+
+    expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain("allowBuilds:");
+  });
+
+  it("configures Renovate for DX actions and Docker images", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["renovate.json"],
+    );
+
+    expect(generatedFiles["renovate.json"]).toContain(
+      '"matchPackageNames": ["pagopa/dx"]',
+    );
+    expect(generatedFiles["renovate.json"]).toContain('"pinDigests": false');
+    expect(generatedFiles["renovate.json"]).toContain(
+      '"matchManagers": ["dockerfile"]',
+    );
+    expect(generatedFiles["renovate.json"]).toContain(
+      '"minimumReleaseAge": "7 days"',
+    );
+    expect(generatedFiles["renovate.json"]).toContain(
+      '"prCreation": "immediate"',
+    );
+  });
+
+  it("resolves the generated tests plugin from the DX marketplace", async () => {
+    const generatedSettings: unknown = JSON.parse(
+      await fs.readFile(
+        path.join(tmpDir, payload.repoName, ".github/copilot/settings.json"),
+        "utf-8",
+      ),
+    );
+    expect(generatedSettings).toStrictEqual({
+      enabledPlugins: {
+        "azure@pagopa-dx": true,
+        "project-management@pagopa-dx": true,
+        "standards@pagopa-dx": true,
+        "terraform@pagopa-dx": true,
+        "tests@pagopa-dx": true,
+        "typescript@pagopa-dx": true,
+      },
+      extraKnownMarketplaces: {
+        "pagopa-dx": {
+          source: { repo: "pagopa/dx", source: "github" },
+        },
+      },
+    });
+
+    const repositoryRoot = path.resolve(
+      resolveTemplatesPath("monorepo"),
+      "../../../..",
+    );
+    const marketplace: unknown = JSON.parse(
+      await fs.readFile(
+        path.join(repositoryRoot, ".github/plugin/marketplace.json"),
+        "utf-8",
+      ),
+    );
+    expect(marketplace).toMatchObject({
+      metadata: { pluginRoot: "plugins" },
+      plugins: expect.arrayContaining([{ name: "tests", source: "tests" }]),
+    });
+
+    const testsManifest: unknown = JSON.parse(
+      await fs.readFile(
+        path.join(repositoryRoot, "plugins/tests/plugin.json"),
+        "utf-8",
+      ),
+    );
+    expect(testsManifest).toMatchObject({ name: "tests" });
+  });
+
+  registerMiseToolchainConfigurationTest(() =>
+    path.join(tmpDir, payload.repoName),
+  );
 
   it("applies the repository-specific gitignore customization", async () => {
     const generatedFiles = await readGeneratedFiles(

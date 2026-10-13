@@ -207,21 +207,27 @@ run "container_app_system_assigned_only" {
   }
 }
 
-# Secret name normalization: uppercase and underscores → lowercase and dashes
-run "container_app_secret_name_normalization" {
+# Key Vault URI values use normalized Container App secret names.
+run "container_app_key_vault_secret_reference_normalization" {
   command = plan
 
   variables {
-    secrets = [
-      {
-        name                = "MY_SECRET_VALUE"
-        key_vault_secret_id = "https://kv-test.vault.azure.net/secrets/my-secret"
-      },
-      {
-        name                = "ANOTHER-SECRET"
-        key_vault_secret_id = "https://kv-test.vault.azure.net/secrets/another-secret"
+    containers = [{
+      image = "nginx:latest"
+      environment_variables = [
+        {
+          name  = "MY_SECRET_VALUE"
+          value = "https://kv-test.vault.azure.net/secrets/my-secret"
+        },
+        {
+          name  = "ANOTHER-SECRET"
+          value = "https://kv-test.vault.azure.net/secrets/another-secret/1234567890abcdef1234567890abcdef"
+        }
+      ]
+      liveness_probe = {
+        path = "/"
       }
-    ]
+    }]
   }
 
   assert {
@@ -237,36 +243,55 @@ run "container_app_secret_name_normalization" {
     ])
     error_message = "Secret names must not contain underscores (must be replaced with dashes)"
   }
+
+  assert {
+    condition = contains([
+      for env in azurerm_container_app.this.template[0].container[0].env :
+      env.secret_name if env.name == "MY_SECRET_VALUE"
+    ], "my-secret-value")
+    error_message = "A Key Vault URI value must create a normalized Container App secret reference"
+  }
+
+  assert {
+    condition = contains([
+      for env in azurerm_container_app.this.template[0].container[0].env :
+      env.secret_name if env.name == "ANOTHER-SECRET"
+    ], "another-secret")
+    error_message = "A versioned Key Vault URI value must create a Container App secret reference"
+  }
+
+  assert {
+    condition = contains([
+      for secret in azurerm_container_app.this.secret :
+      secret.key_vault_secret_id if secret.name == "another-secret"
+    ], "https://kv-test.vault.azure.net/secrets/another-secret/1234567890abcdef1234567890abcdef")
+    error_message = "A versioned Key Vault URI must be assigned to the matching Container App secret"
+  }
 }
 
-run "container_app_binds_secrets_per_container" {
+run "container_app_binds_key_vault_secrets_per_container" {
   command = plan
 
   variables {
-    secrets = [
-      {
-        name                = "APP_SECRET"
-        key_vault_secret_id = "https://kv-test.vault.azure.net/secrets/app-secret"
-      },
-      {
-        name                = "SIDECAR_SECRET"
-        key_vault_secret_id = "https://kv-test.vault.azure.net/secrets/sidecar-secret"
-      }
-    ]
-
     containers = [
       {
-        image        = "ghcr.io/pagopa/app:latest"
-        name         = "app"
-        secret_names = ["APP_SECRET"]
+        image = "ghcr.io/pagopa/app:latest"
+        name  = "app"
+        environment_variables = [{
+          name  = "APP_SECRET"
+          value = "https://kv-test.vault.azure.net/secrets/app-secret"
+        }]
         liveness_probe = {
           path = "/health"
         }
       },
       {
-        image        = "ghcr.io/pagopa/sidecar:latest"
-        name         = "sidecar"
-        secret_names = ["SIDECAR_SECRET"]
+        image = "ghcr.io/pagopa/sidecar:latest"
+        name  = "sidecar"
+        environment_variables = [{
+          name  = "SIDECAR_SECRET"
+          value = "https://kv-test.vault.azure.net/secrets/sidecar-secret"
+        }]
         liveness_probe = {
           path = "/status"
         }
@@ -513,19 +538,19 @@ run "container_app_custom_scaler" {
   }
 }
 
-# App settings: env vars are mapped correctly from app_settings map
-run "container_app_app_settings" {
+# Ordered environment variables preserve caller-defined values.
+run "container_app_environment_variables" {
   command = plan
 
   variables {
     containers = [
       {
         image = "nginx:latest"
-        app_settings = {
-          "KEY_ONE"           = "value_one"
-          "KEY_TWO"           = "value_two"
-          "OTEL_SERVICE_NAME" = "caller-value"
-        }
+        environment_variables = [
+          { name = "KEY_ONE", value = "value_one" },
+          { name = "KEY_TWO", value = "value_two" },
+          { name = "OTEL_SERVICE_NAME", value = "caller-value" },
+        ]
         liveness_probe = {
           path = "/"
         }
@@ -538,7 +563,7 @@ run "container_app_app_settings" {
       for env in azurerm_container_app.this.template[0].container[0].env :
       env if env.secret_name == null
     ]) == 3
-    error_message = "Two app_settings variables and OTEL_SERVICE_NAME must be created"
+    error_message = "Two environment variables and OTEL_SERVICE_NAME must be created"
   }
 
   assert {
@@ -546,7 +571,7 @@ run "container_app_app_settings" {
       for env in azurerm_container_app.this.template[0].container[0].env :
       contains(["KEY_ONE", "KEY_TWO", "OTEL_SERVICE_NAME"], env.name) if env.secret_name == null
     ])
-    error_message = "Environment variable names must match app_settings keys"
+    error_message = "Environment variable names must match the configured list"
   }
 
   assert {
@@ -555,5 +580,44 @@ run "container_app_app_settings" {
       env.value if env.name == "OTEL_SERVICE_NAME"
     ]) == "caller-value"
     error_message = "A manually configured OTEL_SERVICE_NAME must override the Container App name"
+  }
+
+  assert {
+    condition     = length(azurerm_container_app.this.secret) == 0
+    error_message = "Plain environment variable values must not create Container App secrets"
+  }
+}
+
+# Ordered environment variables maintain their positions after the injected OTEL value.
+run "container_app_preserves_environment_variable_order" {
+  command = plan
+
+  variables {
+    containers = [{
+      image = "nginx:latest"
+      environment_variables = [
+        { name = "FIRST", value = "first" },
+        { name = "API_KEY", value = "https://kv-test.vault.azure.net/secrets/api-key" },
+        { name = "LAST", value = "last" },
+      ]
+      liveness_probe = {
+        path = "/"
+      }
+    }]
+  }
+
+  assert {
+    condition = [
+      for env in azurerm_container_app.this.template[0].container[0].env : env.name
+    ] == ["OTEL_SERVICE_NAME", "FIRST", "API_KEY", "LAST"]
+    error_message = "Environment variables must retain their caller-defined order after the injected OTEL value"
+  }
+
+  assert {
+    condition = (
+      azurerm_container_app.this.template[0].container[0].env[2].value == null &&
+      azurerm_container_app.this.template[0].container[0].env[2].secret_name == "api-key"
+    )
+    error_message = "Key Vault URI values must become secret references without changing their list position"
   }
 }

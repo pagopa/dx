@@ -2,12 +2,12 @@
   "lockFileVersion": 2,
   "modules": {
     "azure_core_values": {
-      "hash": "8b9a3151a0e9ec1015b23f137107cd966629384e0cd954c69be07891ff198b1b",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/0.4.0"
+      "hash": "41cc1185f732f4830082cf06ef936e0483030cc2112c1ffd3dd4827d311489b5",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/2.0.2"
     },
     "aws_core_values": {
-      "hash": "1f5ed95651a2e1ce625deb0563d6845826706f5b3a53dcfccf06d32aded2a636",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/0.1.2"
+      "hash": "448b07c5cf00159bebbe07ccf65a230ab590eaefd15c1a8521e56ae66977362a",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/2.0.0"
     }
   }
 }

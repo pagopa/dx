@@ -183,7 +183,7 @@ export const createDockerReleaseNodes = (
     getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null
   ) {
     targets["nx-release-publish"] = {
-      executor: "@pagopa/nx-dx-docker-plugin:release-publish",
+      executor: "@pagopa/nx-docker:release-publish",
       metadata: {
         description:
           "Push this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action)",

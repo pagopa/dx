@@ -13,11 +13,20 @@ variable "environment" {
 
 variable "repository" {
   type = object({
-    owner = optional(string, "pagopa")
-    name  = string
+    owner    = optional(string, "pagopa")
+    name     = string
+    owner_id = optional(number)
   })
 
-  description = "Details about the GitHub repository, including owner, name."
+  description = "Details about the GitHub repository, including owner, optional positive integer owner ID, and name."
+
+  validation {
+    condition = var.repository.owner_id == null ? true : (
+      var.repository.owner_id > 0 &&
+      floor(var.repository.owner_id) == var.repository.owner_id
+    )
+    error_message = "repository.owner_id must be a positive integer when set."
+  }
 }
 
 variable "core_state" {

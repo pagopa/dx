@@ -1,5 +1,10 @@
 {
   "executors": {
+    "apply": {
+      "implementation": "./dist/executors/apply/apply.js",
+      "schema": "./src/executors/apply/schema.json",
+      "description": "Apply Terraform with masked saved-plan output"
+    },
     "init": {
       "implementation": "./dist/executors/init/init.js",
       "schema": "./src/executors/init/schema.json",

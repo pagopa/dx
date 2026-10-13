@@ -1,3 +1,23 @@
+## 0.1.4 (2026-10-08)
+
+### 🩹 Fixes
+
+- Refresh the Python dependency locks. Upgrade the uv workspace lock shared by harbor-bench and harbor-copilot (litellm, fastapi, starlette, uvicorn, pydantic, cryptography, and other transitive dependencies), and regenerate the hash-locked renew-tls-certificate requirements (cryptography 50.0.2, azure-identity 1.26.0, jwcrypto 1.6.1, msal 1.39.0, requests 2.34.2, pyjwt 2.15.1, and other transitive updates). ([#2322](https://github.com/pagopa/dx/pull/2322))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.3 (2026-10-08)
+
+### 🚀 Features
+
+- Add a repeatable `--skill` option to `harbor-bench compare` to inject auxiliary skills (e.g. eval dependencies) into both runs, with the tested skill always winning on name collisions, and document installing the CLI from the public repo with `uv tool install`. The agent and judge default models move to `gpt-6-luna`. The JSON comparison report now separates completion from verifier-gate outcomes: `base_completed`/`head_completed` replace the old completion-valued `base_passed`/`head_passed` fields in the `comparison` and `summary` objects, while new `base_gate_passed`/`head_gate_passed` fields expose verifier-gate results. Per-task sides keep `completed` and `eval_passed`, and the ambiguous `passed` alias is removed; the formatted key-signal cards are exposed as `comparison.signals`. ([#2309](https://github.com/pagopa/dx/pull/2309))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.1.2 (2026-09-09)
 
 ### 🚀 Features

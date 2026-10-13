@@ -2,8 +2,9 @@
 
 ``harbor-bench compare <base-skill> <head-skill>`` runs the same eval set twice
 on the same generated config — the base skill injected into the first
-``harbor run``, the head skill into the second (per-skill last-wins) — then
-writes a delta report between the two job directories.
+``harbor run``, the head skill into the second (per-skill last-wins), with any
+``--skill`` auxiliary skills injected into both — then writes a delta report
+between the two job directories.
 
 The workflow lives behind one entry point:
 
@@ -25,6 +26,7 @@ from __future__ import annotations
 
 import shutil
 import subprocess
+import sys
 from dataclasses import dataclass, replace
 from datetime import datetime
 from pathlib import Path
@@ -50,7 +52,7 @@ from harbor_bench.jobs import Job
 from harbor_bench.report import ReportFormat, render_report
 
 from .sources import (
-    SkillSource,
+    SkillInjection,
     derive_globs,
     parse_skill,
     validate_git_source,
@@ -93,8 +95,11 @@ class CompareOptions:
     Defaults mirror the ``harbor-bench compare`` CLI defaults. ``task_globs``
     carries the ``--task-glob`` value (used only when ``task_patterns`` is
     empty) and ``token`` the ``--token`` value (passed to the agent as
-    ``--ae COPILOT_GITHUB_TOKEN=...``). ``report_format`` selects the adapter
-    and resulting ``comparison.<ext>`` file.
+    ``--ae COPILOT_GITHUB_TOKEN=...``). ``aux_skills`` carries the repeated
+    ``--skill`` values: auxiliary skills (dependencies, even without evals)
+    injected into **both** runs, in the same source grammar as base/head and
+    validated the same way. ``report_format`` selects the adapter and resulting
+    ``comparison.<ext>`` file.
     """
 
     base_skill: str
@@ -111,6 +116,7 @@ class CompareOptions:
     token: str | None = None
     harbor: str = "harbor"
     report_format: ReportFormat = "markdown"
+    aux_skills: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -128,13 +134,43 @@ def _log(message: str) -> None:
     print(f">> {message}")
 
 
+def default_harbor() -> str:
+    """The Harbor console script bundled in harbor-bench's own environment.
+
+    ``harbor-bench`` depends on ``harbor`` and ``harbor-copilot``, so the
+    ``harbor`` script next to the running interpreter runs Harbor from the same
+    venv where ``harbor_copilot`` is importable. A bare ``harbor`` name is kept
+    as a fallback for installs where the interpreter has no sibling script.
+    """
+    for name in ("harbor", "harbor.exe"):
+        candidate = Path(sys.executable).with_name(name)
+        if candidate.is_file():
+            return str(candidate)
+    return "harbor"
+
+
+def resolve_harbor(harbor: str) -> str:
+    """Resolve the Harbor executable, preferring the bundled one.
+
+    Only the default ``harbor`` name is resolved: an explicit path or
+    alternative executable name is honored as-is.
+    """
+    if harbor != "harbor":
+        return harbor
+    return default_harbor()
+
+
 def check_harbor_cli(harbor: str) -> str | None:
-    """Return an error message when the ``harbor`` CLI is not on PATH."""
+    """Return an error message when the ``harbor`` CLI cannot be found.
+
+    ``harbor`` is expected to be already resolved by :func:`resolve_harbor`;
+    an absolute path is checked directly.
+    """
     if shutil.which(harbor) is not None:
         return None
     return (
-        f"'{harbor}' CLI not found on PATH "
-        "(run with: uv run --package harbor-bench harbor)"
+        f"'{harbor}' CLI not found: harbor-bench runs Harbor from its own "
+        "environment — reinstall harbor-bench and retry"
     )
 
 
@@ -170,10 +206,14 @@ def _run_command(
     config: Path,
     jobs_dir: Path,
     label: str,
-    skill: SkillSource,
+    injection: SkillInjection,
     token: str | None,
 ) -> list[str]:
-    """The ``harbor run`` command line for one job (base or head)."""
+    """The ``harbor run`` command line for one job (base or head).
+
+    The ``--skill`` flags follow :meth:`SkillInjection.references` (last-wins
+    order): auxiliary skills first, the tested skill last.
+    """
     command = [
         harbor,
         "run",
@@ -187,7 +227,8 @@ def _run_command(
     ]
     if token:
         command += ["--ae", f"COPILOT_GITHUB_TOKEN={token}"]
-    command += ["--skill", skill.reference]
+    for reference in injection.references():
+        command += ["--skill", reference]
     return command
 
 
@@ -196,7 +237,7 @@ def _run_job(
     config: Path,
     jobs_dir: Path,
     label: str,
-    skill: SkillSource,
+    injection: SkillInjection,
     token: str | None,
 ) -> None:
     """Run one job, streaming ``harbor run`` output to the terminal.
@@ -204,8 +245,13 @@ def _run_job(
     Harbor's own progress is passed through untransformed so the two sequential
     runs give live feedback; a non-zero exit raises :class:`HarborRunError`.
     """
-    command = _run_command(harbor, config, jobs_dir, label, skill, token)
-    _log(f"[{label}] harbor run --skill {skill.reference}")
+    command = _run_command(harbor, config, jobs_dir, label, injection, token)
+    aux_note = (
+        f" (aux: {', '.join(skill.reference for skill in injection.aux)})"
+        if injection.aux
+        else ""
+    )
+    _log(f"[{label}] harbor run --skill {injection.tested.reference}{aux_note}")
     result = subprocess.run(command)
     if result.returncode != 0:
         raise HarborRunError(label, result.returncode)
@@ -233,15 +279,18 @@ def _write_report(
 def run_compare(options: CompareOptions) -> CompareResult:
     """Run the full comparison workflow.
 
-    Preflight — harbor CLI present, host can run the environment, both skills
-    resolve (local paths validated, git sources resolved to real skills via
-    :func:`validate_git_source`), evals found — happens before anything is
-    written, so an invalid base/head reference fails immediately instead of
-    after the first ``harbor run``. Raises
+    Preflight — harbor CLI present, host can run the environment, base/head and
+    every auxiliary skill resolve (local paths validated, git sources resolved
+    to real skills via :func:`validate_git_source`), evals found — happens
+    before anything is written, so an invalid reference fails immediately
+    instead of after the first ``harbor run``. Raises
     ``CompareError``/``ValueError``/``DiscoverError``/``WorkspaceError`` on
     failure; the CLI maps them to exit codes.
     """
     opts = _normalize_options(options)
+    # Run Harbor from harbor-bench's own environment: that is the venv where
+    # `harbor-copilot` (the agent the generated config imports) is installed.
+    opts = replace(opts, harbor=resolve_harbor(opts.harbor))
 
     if error := check_harbor_cli(opts.harbor):
         raise CompareError(error)
@@ -257,10 +306,16 @@ def run_compare(options: CompareOptions) -> CompareResult:
 
     base = parse_skill(opts.base_skill, Path.cwd())
     head = parse_skill(opts.head_skill, Path.cwd())
+    aux_skills = tuple(parse_skill(value, Path.cwd()) for value in opts.aux_skills)
 
     # Fail fast before any conversion or run: git references must resolve to
     # real skills. Local paths were already validated by parse_skill above.
-    for label, skill in (("base", base), ("head", head)):
+    labelled_sources = (
+        ("base", base),
+        ("head", head),
+        *((f"aux {skill.reference!r}", skill) for skill in aux_skills),
+    )
+    for label, skill in labelled_sources:
         if error := validate_git_source(skill):
             raise CompareError(f"[{label}] invalid skill source: {error}")
 
@@ -303,9 +358,19 @@ def run_compare(options: CompareOptions) -> CompareResult:
             "the agent may fail to authenticate"
         )
 
-    jobs = tuple(zip(JOB_LABELS, (base, head)))
-    for label, skill in jobs:
-        _run_job(opts.harbor, run_config, run_dir, label, skill, opts.token)
+    jobs = (
+        (JOB_LABELS[0], SkillInjection(tested=base, aux=aux_skills)),
+        (JOB_LABELS[1], SkillInjection(tested=head, aux=aux_skills)),
+    )
+    for label, injection in jobs:
+        _run_job(
+            opts.harbor,
+            run_config,
+            run_dir,
+            label,
+            injection,
+            opts.token,
+        )
 
     # 4. delta report (reuses the diff seam)
     report_path = run_dir / f"comparison.{REPORT_EXTENSIONS[opts.report_format]}"

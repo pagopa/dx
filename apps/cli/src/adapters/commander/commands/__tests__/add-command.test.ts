@@ -61,8 +61,9 @@ const payload: EnvironmentPayload = {
   github: { owner: "pagopa", repo: "dx" },
   tags: {
     BusinessUnit: "Platform",
-    CostCenter: "TS000",
+    CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
     ManagementTeam: "Engineering",
+    Owner: "DX Platform",
   },
   workspace: {
     domain: "payments",
@@ -135,7 +136,9 @@ describe("makeAddCommand", () => {
         "--prefix <prefix>",
         "--domain <domain>",
         "--business-unit <business-unit>",
+        "--cost-center <cost-center>",
         "--management-team <management-team>",
+        "--owner <owner>",
         "--runner-app-id <runner-app-id>",
         "--client-id <client-id>",
         "--installation-id <installation-id>",
@@ -168,8 +171,12 @@ describe("makeAddCommand", () => {
       "payments",
       "--business-unit",
       "Platform",
+      "--cost-center",
+      "TS330 - PDND & INTEROPERABILITA'",
       "--management-team",
       "Engineering",
+      "--owner",
+      " DX Platform ",
     ]);
 
     expect(mocks.collectDeploymentEnvironmentPayload).toHaveBeenCalledWith(
@@ -188,7 +195,9 @@ describe("makeAddCommand", () => {
         },
         tags: {
           BusinessUnit: "Platform",
+          CostCenter: "TS330 - PDND & INTEROPERABILITA'",
           ManagementTeam: "Engineering",
+          Owner: "DX Platform",
         },
         workspace: {
           domain: "payments",
@@ -270,6 +279,30 @@ describe("makeAddCommand", () => {
       parseAddEnvironmentCommandOptions({
         account: ["sub-123"],
         location: ["sub-123"],
+      }),
+    ).toThrow(/Invalid add environment command options/);
+  });
+});
+
+describe("add environment tag options", () => {
+  it("trims owner values and rejects invalid cost centers", () => {
+    expect(
+      parseAddEnvironmentCommandOptions({
+        costCenter: "TS000 - TECNOLOGIA & SERVIZI",
+        owner: " DX Platform ",
+      }),
+    ).toMatchObject({
+      costCenter: "TS000 - TECNOLOGIA & SERVIZI",
+      owner: "DX Platform",
+    });
+    expect(() =>
+      parseAddEnvironmentCommandOptions({
+        costCenter: "TS000",
+      }),
+    ).toThrow(/Invalid add environment command options/);
+    expect(() =>
+      parseAddEnvironmentCommandOptions({
+        owner: "   ",
       }),
     ).toThrow(/Invalid add environment command options/);
   });

@@ -1,8 +1,17 @@
 # Nx Terraform Plugin
 
-`@pagopa/nx-terraform-plugin` is an Nx plugin that discovers Terraform
+`@pagopa/nx-terraform` is an Nx plugin that discovers Terraform
 configurations and infers targets for formatting, testing, validation, planning,
 applying, security scanning, documentation, and module publishing.
+
+## Package name migration
+
+The plugin is now named `@pagopa/nx-terraform` and published to GitHub Packages.
+Replace the previous package dependency and update the plugin entry in
+`nx.json`, any explicit executor prefixes, and the
+`release.version.versionActions` path to use `@pagopa/nx-terraform`.
+Regenerate your package-manager lockfile after updating the dependency.
+The source directory remains `packages/nx-terraform-plugin`.
 
 ## Terraform project discovery
 
@@ -11,6 +20,14 @@ application projects. Configurations inside those directories are inferred as
 library projects only when their own root contains a `module.json` file. This
 keeps nested implementation modules, such as `modules/<module>/modules/<child>`,
 from becoming standalone projects.
+
+Every application includes the `_modules` tree beside the first recognized
+environment directory in its root as a static Nx input. For example,
+`infra/resources/prod/networking` uses `infra/resources/_modules`, so any file
+added or changed there affects all applications in that area, whether or not
+they reference that module. If no supported environment segment is present,
+the input remains beside the application root. Unmanifested `_modules`
+directories still do not become standalone projects.
 
 ## Trivy
 
@@ -61,7 +78,7 @@ customizable:
 {
   "plugins": [
     {
-      "plugin": "@pagopa/nx-terraform-plugin",
+      "plugin": "@pagopa/nx-terraform",
       "include": ["infra/**"],
       "options": {
         "targetNamePrefix": "tf"
@@ -120,6 +137,21 @@ generated lock differs from the committed file. Targets that depend on `init`,
 including `plan` and `apply`, inherit the requested `ci` configuration and stop
 before execution when the module lock is stale.
 
+Saved-plan applies run through the same output masking as plans:
+
+```sh
+nx run <project>:apply -c ci --planFile=saved.tfplan
+```
+
+The file is relative to the project's root. Applying a saved plan is already
+non-interactive: no `-auto-approve` is necessary. The task masks output before
+printing it, including `hidden-link` and `APPINSIGHTS_INSTRUMENTATIONKEY`, and
+fails when Terraform exits unsuccessfully.
+
+Replace the previous positional form (`-- <file> -auto-approve ...`) with
+`--planFile=<file>`. Without `planFile`, local applies retain their interactive
+approval and direct terminal output, without output filtering.
+
 The `init` target is intentionally not cached. This ensures that
 `terraform init` and frozen-lock verification cannot be skipped by an Nx cache
 hit.
@@ -131,7 +163,7 @@ through the plugin options:
 {
   "plugins": [
     {
-      "plugin": "@pagopa/nx-terraform-plugin",
+      "plugin": "@pagopa/nx-terraform",
       "include": ["infra/**"],
       "options": {
         "initTarget": {

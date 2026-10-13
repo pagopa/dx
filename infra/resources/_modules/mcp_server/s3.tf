@@ -8,6 +8,8 @@ resource "aws_s3_bucket" "mcp_knowledge_base" {
     name          = "docs-kb"
     resource_type = "s3_bucket"
   }))
+
+  tags = var.tags
 }
 
 # trivy:ignore:AVD-AWS-0132

@@ -94,7 +94,7 @@
       }
     },
     {
-      "plugin": "@pagopa/nx-terraform-plugin",
+      "plugin": "@pagopa/nx-terraform",
       "include": ["infra/**"],
       "options": {
         "initTarget": {
@@ -109,7 +109,7 @@
       }
     },
     {
-      "plugin": "@pagopa/nx-dx-docker-plugin",
+      "plugin": "@pagopa/nx-docker",
       "options": {
         "buildTarget": {
           "name": "docker:build",

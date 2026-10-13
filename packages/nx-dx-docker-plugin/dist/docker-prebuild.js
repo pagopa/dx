@@ -23,7 +23,7 @@ const main = () => {
 		"-t",
 		"docker:build"
 	];
-	console.log(`[@pagopa/nx-dx-docker-plugin] Running: pnpm ${args.join(" ")}`);
+	console.log(`[@pagopa/nx-docker] Running: pnpm ${args.join(" ")}`);
 	(0, node_child_process.execFileSync)("pnpm", args, { stdio: "inherit" });
 };
 main();

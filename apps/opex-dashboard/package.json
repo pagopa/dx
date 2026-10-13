@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/opex-dashboard",
-  "version": "0.2.16",
+  "version": "0.2.17",
   "description": "Generate operational dashboards from OpenAPI specifications",
   "keywords": [
     "azure",

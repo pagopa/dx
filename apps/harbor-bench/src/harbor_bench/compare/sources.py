@@ -4,7 +4,9 @@
 same Harbor eval set: typically the local workspace checkout as one side and a
 git source (``org/repo[@ref]`` or a GitHub ``/tree/<ref>/<subdir>`` URL) as the
 other. Both are handed to ``harbor run --skill`` — a git source passes through
-verbatim, a local path is resolved and validated up front.
+verbatim, a local path is resolved and validated up front. Auxiliary sources
+ride along in both runs; :class:`SkillInjection` composes them with the tested
+skill in Harbor's per-name last-wins order.
 
 This module is the single place that decides what a skill argument means.
 :func:`parse_skill` returns a typed :class:`SkillSource` carrying the reference
@@ -40,6 +42,24 @@ class SkillSource:
     kind: str  # "local" | "git"
     reference: str
     name: str | None
+
+
+@dataclass(frozen=True)
+class SkillInjection:
+    """The skills of one ``harbor run``: a tested skill plus auxiliaries.
+
+    Harbor resolves duplicate skill names last-wins across ``--skill`` flags,
+    so :meth:`references` yields the auxiliary sources first and the tested
+    skill last: an auxiliary source that also contains the skill under test
+    (e.g. a skills root) can never clobber the base/head version.
+    """
+
+    tested: SkillSource
+    aux: tuple[SkillSource, ...] = ()
+
+    def references(self) -> tuple[str, ...]:
+        """The ``--skill`` references, tested skill last (last-wins)."""
+        return tuple(skill.reference for skill in (*self.aux, self.tested))
 
 
 def is_git_source(value: str) -> bool:

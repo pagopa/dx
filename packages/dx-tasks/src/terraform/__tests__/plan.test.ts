@@ -400,7 +400,7 @@ describe("terraformPlan", () => {
   });
 });
 
-describe("terraformPlan notice reports", () => {
+describe("terraformPlan notice and masking reports", () => {
   let tempDirectoryPath = "";
 
   beforeEach(() => {
@@ -454,6 +454,30 @@ describe("terraformPlan notice reports", () => {
       planOutput: "No changes. Your infrastructure matches the configuration.",
       success: true,
     });
+  });
+
+  it("masks Azure metadata in both plan logs and reports", async () => {
+    const reports = createReports(tempDirectoryPath);
+    mockRunCommand.mockResolvedValue({
+      exitCode: 0,
+      signal: null,
+      stderr: 'APPINSIGHTS_INSTRUMENTATIONKEY = "private-key-value"',
+      stdout: 'hidden-link: /app-insights-conn-string = "private-link-value"',
+    });
+
+    await terraformPlan(
+      { modulePath: "/tmp/module", report: true, verbose: true },
+      { reports },
+    );
+
+    const expectedOutput =
+      'hidden-link: /app-insights-conn-string = "[REDACTED]"\nAPPINSIGHTS_INSTRUMENTATIONKEY = "[REDACTED]"';
+    expect(console.log).toHaveBeenCalledExactlyOnceWith(expectedOutput);
+    const report = await readTerraformPlanReport(
+      tempDirectoryPath,
+      "/tmp/module",
+    );
+    expect(report.planOutput).toBe(expectedOutput);
   });
 });
 

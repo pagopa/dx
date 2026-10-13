@@ -256,6 +256,20 @@ jobs:
             exit 1
           fi
 
+      - name: Assign Staging Label
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
+          steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        env:
+          NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
+        run: |
+          az containerapp revision label add \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --revision "$NEW_REVISION_NAME" \
+            --label staging \
+            --yes \
+            --output none
+
       - name: Deactivate New Revision
         if:
           ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple'
@@ -356,6 +370,14 @@ jobs:
           resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
           resource_name: ${{ env.CONTAINER_APP_NAME }}
           resource_type: "containerapp"
+
+      - name: Remove Staging Label
+        run: |
+          az containerapp revision label remove \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --label staging \
+            --output none
 
       - name: Deactivate Old Revision
         run: |

@@ -1,3 +1,13 @@
+## 5.0.5 (2026-10-13)
+
+### 🩹 Fixes
+
+- Update internal examples and AzureRM constraints ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 5.0.4 (2026-09-16)
 
 ### 🩹 Fixes

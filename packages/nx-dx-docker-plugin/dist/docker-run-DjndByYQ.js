@@ -10,7 +10,7 @@ const appendSummary = (markdown, env) => {
 	try {
 		(0, node_fs.appendFileSync)(summaryFile, `${markdown}\n`);
 	} catch (err) {
-		console.warn("[@pagopa/nx-dx-docker-plugin] Could not write to GITHUB_STEP_SUMMARY", err);
+		console.warn("[@pagopa/nx-docker] Could not write to GITHUB_STEP_SUMMARY", err);
 	}
 };
 const summarizeDockerPush = (projectDisplayName, imageName, tags, env = process.env) => {
@@ -68,11 +68,11 @@ const runDockerCommand = (mode, options, workspaceRoot, releaseVersion) => {
 	const { contextPath, defaultBranch, dockerfilePath, imageAuthors, imageName, imageUrl, platform, projectDisplayName, projectRoot } = options;
 	const tags = releaseVersion ? require_docker_image.computeReleaseTags(projectDisplayName, releaseVersion) : require_docker_image.computeImageTags(projectDisplayName, defaultBranch);
 	if (releaseVersion && tags.length === 0) {
-		console.error(`[@pagopa/nx-dx-docker-plugin] '${releaseVersion}' is not a Docker-compatible semantic version for ${projectDisplayName}.`);
+		console.error(`[@pagopa/nx-docker] '${releaseVersion}' is not a Docker-compatible semantic version for ${projectDisplayName}.`);
 		return { success: false };
 	}
 	if (mode === "push" && tags.length === 0) {
-		console.log(`[@pagopa/nx-dx-docker-plugin] No CI tags detected for ${imageName} (not running in a GitHub Actions job) — skipping publish.`);
+		console.log(`[@pagopa/nx-docker] No CI tags detected for ${imageName} (not running in a GitHub Actions job) — skipping publish.`);
 		return { success: true };
 	}
 	const publishTags = tags.length > 0 ? tags : ["dev"];

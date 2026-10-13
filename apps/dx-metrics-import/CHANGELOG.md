@@ -1,3 +1,10 @@
+## 0.1.17 (2026-10-08)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.12
+- Updated @pagopa/eslint-config to 7.0.1
+
 ## 0.1.16 (2026-10-01)
 
 ### 🩹 Fixes

@@ -1,3 +1,69 @@
+## 0.22.17 (2026-10-12)
+
+### 🚀 Features
+
+- Move Changeset to the Hold ring, add the DX Nx plugins for Docker and Terraform, and document mise for agent sandboxes on the technology radar. ([#2335](https://github.com/pagopa/dx/pull/2335))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.22.16 (2026-10-09)
+
+### 🩹 Fixes
+
+- Document stable staging URLs for healthy Multiple-mode Container App releases. ([#2281](https://github.com/pagopa/dx/pull/2281))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.22.15 (2026-10-08)
+
+### 🩹 Fixes
+
+- Update dependencies ([#2319](https://github.com/pagopa/dx/pull/2319))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.22.14 (2026-10-06)
+
+### 🩹 Fixes
+
+- Update Terraform apply documentation to reference @pagopa/nx-terraform. ([#2301](https://github.com/pagopa/dx/pull/2301))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.22.13 (2026-10-06)
+
+### 🩹 Fixes
+
+- Make the tests plugin available in the DX marketplace ([#2268](https://github.com/pagopa/dx/pull/2268))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.22.12 (2026-10-06)
+
+### 🩹 Fixes
+
+- Align infra_apply workflow to Nx orchestration ([#2232](https://github.com/pagopa/dx/pull/2232))
+- CSP tags documentation has been updated to the agreed tags ([#2282](https://github.com/pagopa/dx/pull/2282))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 0.22.11 (2026-10-01)
 
 ### 🩹 Fixes

@@ -6,6 +6,7 @@ export default defineConfig({
     "pnpm-*.yaml",
     "CHANGELOG.md",
     ".nx/",
+    ".mise/",
     "dist/",
     "*.hbs",
     "apps/opex-dashboard/test/data/io_backend_malformed.yaml",

@@ -10,6 +10,18 @@
       "schedule": ["* 0-8 * * 1"]
     },
     {
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["pagopa/dx"],
+      "pinDigests": false
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "groupName": "Docker images",
+      "minimumReleaseAge": "7 days",
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
+      "prCreation": "immediate"
+    },
+    {
       "matchManagers": ["terraform"],
       "matchDatasources": ["terraform-provider"],
       "matchPackageNames": ["!/^pagopa-dx\\//"],

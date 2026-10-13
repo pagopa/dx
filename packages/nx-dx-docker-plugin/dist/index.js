@@ -25,7 +25,7 @@ const getBuildLayoutOverrides = (workspaceRoot, projectRoot) => {
 //#endregion
 //#region src/docker-targets.ts
 const buildDockerBuildTarget = (options) => ({
-	executor: "@pagopa/nx-dx-docker-plugin:build",
+	executor: "@pagopa/nx-docker:build",
 	metadata: {
 		description: "Build this project's Docker image locally with full OCI labels, computed fresh on every run (RFC-DX-076 feature parity with docker/metadata-action)",
 		technologies: ["container-image"]
@@ -34,7 +34,7 @@ const buildDockerBuildTarget = (options) => ({
 });
 const buildDockerPushTarget = (options, buildTargetName) => ({
 	dependsOn: [buildTargetName],
-	executor: "@pagopa/nx-dx-docker-plugin:push",
+	executor: "@pagopa/nx-docker:push",
 	metadata: {
 		description: "Build and push this project's Docker image with full OCI labels and index+manifest annotations; no-ops when there's nothing CI-computed to publish",
 		technologies: ["container-image"]
@@ -93,7 +93,7 @@ const getPlatform = (buildTarget) => {
 };
 const parseDockerReleasePluginOptions = (options, workspaceRoot) => {
 	const optionsResult = pluginOptionsSchema.safeParse(options ?? {});
-	if (!optionsResult.success) throw new Error("Invalid @pagopa/nx-dx-docker-plugin options: only imageAuthors, imageNamePrefix, and imageUrl may be overridden.");
+	if (!optionsResult.success) throw new Error("Invalid @pagopa/nx-docker options: only imageAuthors, imageNamePrefix, and imageUrl may be overridden.");
 	const nxResult = nxConfigurationSchema.safeParse((0, _nx_devkit.readJsonFile)((0, node_path.join)(workspaceRoot, "nx.json")));
 	if (!nxResult.success) throw new Error("Unable to infer Docker conventions from nx.json.");
 	const repository = optionsResult.data.imageNamePrefix && optionsResult.data.imageUrl ? {
@@ -174,7 +174,7 @@ const createDockerReleaseNodes = (projectRoot, options, context) => {
 		options: { cwd: projectRoot }
 	};
 	if (getDockerRepositoryNameOverride(context.workspaceRoot, projectRoot) !== null) targets["nx-release-publish"] = {
-		executor: "@pagopa/nx-dx-docker-plugin:release-publish",
+		executor: "@pagopa/nx-docker:release-publish",
 		metadata: {
 			description: "Push this release's version tag plus major/major.minor/latest alias tags (RFC-DX-076 feature parity with docker/metadata-action)",
 			technologies: ["container-image"]

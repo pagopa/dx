@@ -1,3 +1,49 @@
+## 0.5.13 (2026-10-09)
+
+### 🩹 Fixes
+
+- Include shared Terraform module files in all application affected inputs ([#2303](https://github.com/pagopa/dx/pull/2303))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.5.12 (2026-10-08)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+- Updated @pagopa/dx-tasks to 0.2.8
+
+## 0.5.11 (2026-10-06)
+
+### 🚀 Features
+
+- Rename the Nx Terraform plugin to `@pagopa/nx-terraform` and publish it to GitHub Packages. Replace the old package dependency, Nx plugin registration, executor prefixes, and release version-actions references with the new name. ([#2301](https://github.com/pagopa/dx/pull/2301))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.5.10 (2026-10-06)
+
+### 🚀 Features
+
+- Use shared output masking for Terraform plans and saved-plan applies through Nx, ([#2286](https://github.com/pagopa/dx/pull/2286))
+  preserving CI initialization and interactive local applies.
+
+  For saved-plan applies, replace positional Terraform arguments with
+  `nx run <project>:apply --configuration=ci --planFile=<file>`.
+  Interactive `nx run <project>:apply` remains available without a plan file.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.7
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.5.9 (2026-09-22)
 
 ### 🩹 Fixes

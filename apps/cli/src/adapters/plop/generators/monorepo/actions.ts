@@ -18,7 +18,7 @@ const getActions = (templatesPath: string) => [
     abortOnFail: true,
     base: templatesPath,
     destination: "{{repoName}}",
-    globOptions: { dot: true },
+    globOptions: { cwd: templatesPath, dot: true },
     templateFiles: path.join(templatesPath),
     type: "addMany",
   },

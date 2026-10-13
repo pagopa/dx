@@ -13,6 +13,8 @@ from pathlib import Path
 import pytest
 
 from harbor_bench.compare.sources import (
+    SkillInjection,
+    SkillSource,
     derive_globs,
     is_git_source,
     parse_skill,
@@ -60,6 +62,28 @@ def test_is_git_source_accepts_urls_and_shorthand(value: str):
 )
 def test_is_git_source_rejects_local_paths(value: str):
     assert not is_git_source(value)
+
+
+# --- SkillInjection ------------------------------------------------------
+
+
+def test_skill_injection_keeps_tested_skill_last():
+    """Aux references come first, the tested skill last (Harbor last-wins)."""
+    aux = SkillSource(
+        value="pagopa/dx@main", kind="git", reference="pagopa/dx@main", name=None
+    )
+    tested = SkillSource(
+        value="plugins/aiepdf/skills/dr-blacksmith",
+        kind="local",
+        reference="/abs/dr-blacksmith",
+        name="dr-blacksmith",
+    )
+
+    assert SkillInjection(tested=tested, aux=(aux,)).references() == (
+        "pagopa/dx@main",
+        "/abs/dr-blacksmith",
+    )
+    assert SkillInjection(tested=tested).references() == ("/abs/dr-blacksmith",)
 
 
 # --- parse_skill ---------------------------------------------------------

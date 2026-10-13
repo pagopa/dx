@@ -12,7 +12,7 @@ terraform {
 
     azuredx = {
       source  = "pagopa-dx/azure"
-      version = "~> 0.0"
+      version = "~> 0.12"
     }
 
     awsdx = {
@@ -43,6 +43,10 @@ provider "azurerm" {
 
 provider "aws" {
   region = local.aws_environment.region
+
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "awsdx" {

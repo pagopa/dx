@@ -181,7 +181,7 @@ const getExpectedPublishTarget = (
   useGitHubAppAuthentication: boolean,
 ) => ({
   cache: false,
-  executor: "@pagopa/nx-terraform-plugin:publish",
+  executor: "@pagopa/nx-terraform:publish",
   options: {
     description: "Terraform module description",
     github: {
@@ -299,7 +299,13 @@ describe("getProject applications", () => {
       expect(project.name).toBe("resources-prod-my-stack");
       expect(project.projectType).toBe("application");
       expect(project.root).toBe(root);
-      expect(project.namedInputs).toEqual(expectedNamedInputs);
+      expect(project.namedInputs).toEqual({
+        ...expectedNamedInputs,
+        default: [
+          "{projectRoot}/*.{tf,tfvars}",
+          "{workspaceRoot}/infra/resources/_modules/**/*",
+        ],
+      });
       expect(project.tags).toEqual(["terraform", "env:prod"]);
       expect(Object.keys(targets)).toEqual([
         "init",
@@ -418,7 +424,7 @@ describe("getProject application initialization and tags", () => {
             frozenLockfile: true,
           },
         },
-        executor: "@pagopa/nx-terraform-plugin:init",
+        executor: "@pagopa/nx-terraform:init",
         inputs: ["default"],
         options: {
           platforms: [],
@@ -471,6 +477,10 @@ describe("getProject application initialization and tags", () => {
       expect(targets["apply"]).toEqual(
         expect.objectContaining({
           dependsOn: ["init"],
+          executor: "@pagopa/nx-terraform:apply",
+          options: {
+            projectRoot: "{projectRoot}",
+          },
         }),
       );
     });
@@ -489,6 +499,9 @@ describe("getProject application initialization and tags", () => {
       const project = getProject(defaultOptions, root);
 
       expect(project.tags).toEqual(["terraform", "env:prod"]);
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/infra/resources/_modules/**/*",
+      );
     });
 
     it("adds the environment tag from non-resources application paths", () => {
@@ -508,6 +521,17 @@ describe("getProject application initialization and tags", () => {
       );
 
       expect(project.tags).toEqual(["terraform", "env:sandbox"]);
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/infra/core/_modules/**/*",
+      );
+    });
+
+    it("normalizes the shared input when the environment is the root segment", () => {
+      const project = getProject(defaultOptions, path.join("prod", "network"));
+
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/_modules/**/*",
+      );
     });
 
     it("defaults the environment tag to prod when no environment is found", () => {
@@ -515,6 +539,9 @@ describe("getProject application initialization and tags", () => {
       const project = getProject(defaultOptions, root);
 
       expect(project.tags).toEqual(["terraform", "env:prod"]);
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/infra/core/_modules/**/*",
+      );
     });
   });
 });
@@ -888,7 +915,7 @@ describe("getProject release configuration", () => {
       expect(project.release?.version).toEqual({
         currentVersionResolver: "disk",
         manifestRootsToUpdate: ["{projectRoot}"],
-        versionActions: "@pagopa/nx-terraform-plugin/release/version-actions",
+        versionActions: "@pagopa/nx-terraform/release/version-actions",
       });
     });
 

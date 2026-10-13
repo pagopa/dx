@@ -1,3 +1,24 @@
+## 0.2.8 (2026-10-08)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+
+## 0.2.7 (2026-10-06)
+
+### 🚀 Features
+
+- Use shared output masking for Terraform plans and saved-plan applies through Nx, ([#2286](https://github.com/pagopa/dx/pull/2286))
+  preserving CI initialization and interactive local applies.
+
+  For saved-plan applies, replace positional Terraform arguments with
+  `nx run <project>:apply --configuration=ci --planFile=<file>`.
+  Interactive `nx run <project>:apply` remains available without a plan file.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.2.6 (2026-09-22)
 
 ### 🩹 Fixes

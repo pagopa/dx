@@ -121,6 +121,19 @@ run "balanced_b0_rejected_for_default_use_case" {
   ]
 }
 
+run "balanced_b0_rejected_for_ephemeral_use_case" {
+  command = plan
+
+  variables {
+    use_case          = "ephemeral"
+    sku_name_override = "Balanced_B0"
+  }
+
+  expect_failures = [
+    var.sku_name_override,
+  ]
+}
+
 run "balanced_b0_allowed_for_development_use_case" {
   command = plan
 

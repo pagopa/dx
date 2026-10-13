@@ -6,6 +6,7 @@ import {
   prCommentTask,
   renderReportTask,
   reportPrCommentTask,
+  terraformApplyTask,
   terraformInitTask,
   terraformPlanTask,
 } from "./tasks.ts";
@@ -24,6 +25,7 @@ export const createDefaultTaskDispatcher = ({
   const dispatcher = createTaskDispatcher({ context: { reports } });
   dispatcher.registerTask(terraformInitTask);
   dispatcher.registerTask(terraformPlanTask);
+  dispatcher.registerTask(terraformApplyTask);
   dispatcher.registerTask(renderReportTask);
   dispatcher.registerTask(reportPrCommentTask);
   dispatcher.registerTask(prCommentTask);

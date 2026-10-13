@@ -5,6 +5,7 @@ selecting tasks and tuning the agent, speeding up repeated runs, authoring
 skills for the benchmark, and the exact semantics of the comparison reports.
 
 - [harbor-bench: advanced usage](#harbor-bench-advanced-usage)
+  - [Install from git](#install-from-git)
   - [Apple Container](#apple-container)
   - [Running a subset of tasks](#running-a-subset-of-tasks)
   - [Agent model and reasoning effort](#agent-model-and-reasoning-effort)
@@ -25,6 +26,42 @@ skills for the benchmark, and the exact semantics of the comparison reports.
   - [One-command comparison: harbor-bench compare](#one-command-comparison-harbor-bench-compare)
   - [Baseline: with vs without the skill](#baseline-with-vs-without-the-skill)
   - [Gotchas](#gotchas)
+
+## Install from git
+
+The README installs the CLI from `main`:
+
+```bash
+uv tool install "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench"
+```
+
+To pin a **released version** instead, use the release tag
+(`harbor-bench@<version>`); the tag's `@` must be percent-encoded as `%40` in
+the git URL, otherwise `uv` rejects the URL as ambiguous:
+
+```bash
+uv tool install "git+https://github.com/pagopa/dx@harbor-bench%400.1.2#subdirectory=apps/harbor-bench"
+```
+
+To switch to another version, reinstall with `--force` and the new ref;
+`uv tool uninstall harbor-bench` removes the CLI. One-off runs need no install:
+
+```bash
+uvx --from "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench" harbor-bench --help
+```
+
+`harbor-bench` runs Harbor through the `harbor` console script of its own
+environment — the tool venv ships `harbor` together with `harbor-copilot`, and
+`compare` resolves that executable automatically. To invoke Harbor directly,
+use the bundled script too; a separate `harbor` on `PATH` (e.g. `uv tool
+install harbor`) has no `harbor-copilot` and fails to import the agent
+(`ValueError: Failed to import module 'harbor_copilot.agents.copilot_cli_mod':
+No module named 'harbor_copilot'`):
+
+```bash
+"$(uv tool dir)/harbor-bench/bin/harbor" run -c .harbor/config.yaml -y \
+  --ae COPILOT_GITHUB_TOKEN=...
+```
 
 ## Apple Container
 
@@ -105,7 +142,7 @@ there is no equivalent CLI flag for a `--config`-based run.
 `convert` bakes the **Copilot model** and **reasoning effort** into the
 generated `config.yaml`. The defaults are:
 
-- model: `gpt-5.6-luna` (`harbor_bench.convert.config.DEFAULT_MODEL`)
+- model: `gpt-6-luna` (`harbor_bench.convert.config.DEFAULT_MODEL`)
 - effort: `high` (`harbor_bench.convert.config.DEFAULT_AGENT_KWARGS`)
 
 so the emitted agent entry looks like:
@@ -113,7 +150,7 @@ so the emitted agent entry looks like:
 ```yaml
 agents:
   - import_path: harbor_copilot.agents.copilot_cli_mod:CopilotCliMod
-    model_name: gpt-5.6-luna # -> copilot --model=gpt-5.6-luna
+    model_name: gpt-6-luna # -> copilot --model=gpt-6-luna
     kwargs:
       reasoning_effort: high # -> copilot --effort high
     skills: [...]
@@ -182,7 +219,7 @@ config file, pass them directly to `harbor run`:
 ```bash
 uv run --package harbor-bench harbor \
   --agent harbor_copilot.agents.copilot_cli_mod:CopilotCliMod \
-  --model gpt-5.6-luna --ak reasoning_effort=high ...
+  --model gpt-6-luna --ak reasoning_effort=high ...
 ```
 
 ## Reusing the environment image (faster startup)
@@ -488,8 +525,13 @@ uv run --package harbor-bench harbor-bench report \
 The report is rendered as Markdown by default; pass `--format json` for a
 machine-readable document. Its `comparison` object is calculated only from
 tasks present in both runs, while `summary` contains whole-job totals; each
-metric records its population explicitly. Per-task metrics remain keyed by the
-metric registry, and run configuration is included. Write it to stdout or
+metric records its population explicitly. Counts name the two outcome axes
+explicitly: `base_gate_passed`/`head_gate_passed` count trials whose verifier
+reward met its gate, while `base_completed`/`head_completed` count trials that
+finished without an exception. The same formatted key-signal cards shown by
+the HTML and Markdown reports are exposed as `comparison.signals`. Per-task
+metrics remain keyed by the metric registry, and run configuration is
+included. Write it to stdout or
 `--report out.json`:
 
 ```bash
@@ -510,13 +552,22 @@ uv run --package harbor-bench harbor-bench report \
 open comparison.html
 ```
 
-The HTML report presents a plain-language verdict, headline score and
-success-rate changes, task outcome counts, visual metric bars, and expandable
-technical details for each task. Headline comparisons use only tasks present
-in both runs, so newly added or removed tasks remain visible without skewing
-the verdict. Interrupted Harbor trials that have a `trial.log` but no
+The HTML report presents a plain-language verdict, one Key signals grid with
+the verifier-gate and execution cards, and per-task details open by default;
+per-task score rows (including `score.reward`) live in the task table.
+**Completed** counts trials that finished without an exception; **Tasks
+passed** counts trials whose verifier reward met its gate (RewardKit writes
+the already-gated reward). When the verifier recorded per-criterion outcomes
+(`verifier/reward-details.json`), each task shows a criterion table and which
+criteria each side gained, so a tied score that hides a local regression
+reads as `Criteria changed` instead of `Unchanged`; the task's `quality.toml`
+`[scoring]` gate recorded by new runs in `verifier/scoring.json` is shown
+next to a failing score. Headline comparisons use only tasks present in both
+runs, so newly added or removed tasks remain visible without skewing the
+verdict. Interrupted Harbor trials that have a `trial.log` but no
 `result.json` are shown as `Incomplete` instead of disappearing from the
-report. Markdown remains the default for terminal and source-control workflows.
+report. Markdown remains the default for terminal and source-control
+workflows.
 
 Without `--job-name`/`--jobs-dir`, each run lands in `jobs/<timestamp>/`; the
 two `--job-name` flags above give stable, human-readable paths so the `report`
@@ -599,19 +650,43 @@ generated tasks when no name is derivable.
 
 Flags:
 
-| Flag                         | Meaning                                                                |
-| ---------------------------- | ---------------------------------------------------------------------- |
-| `-t, --task-pattern PATTERN` | run only tasks matching `PATTERN` (glob); repeatable                   |
-| `--scan-root DIR`            | evals.json scan root (default: `plugins`)                              |
-| `--out DIR`                  | convert output dir (default: `.harbor`)                                |
-| `--runs-dir DIR`             | parent dir for the two job runs (default: `runs`)                      |
-| `--run-id ID`                | stable run id (default: a fresh timestamp)                             |
-| `--task-glob GLOBS`          | explicit task globs, space-separated; used only when `-t` is not given |
-| `--model MODEL`              | Copilot model passed to the agent (default: `gpt-5.6-luna`)            |
-| `--environment TYPE`         | `docker` (default) or `apple-container`                                |
-| `--n-concurrent N`           | `n_concurrent_trials` (default: `4`)                                   |
-| `--format FORMAT`            | report format: `markdown` (default), `html`, or `json`                 |
-| `--token TOKEN`              | GitHub token passed to the agent (`--ae COPILOT_GITHUB_TOKEN=...`)     |
+| Flag                         | Meaning                                                                                             |
+| ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| `-t, --task-pattern PATTERN` | run only tasks matching `PATTERN` (glob); repeatable                                                |
+| `--skill SOURCE`             | auxiliary skill injected into both runs (repeatable): local path, root of skill dirs, or git source |
+| `--scan-root DIR`            | evals.json scan root (default: `plugins`)                                                           |
+| `--out DIR`                  | convert output dir (default: `.harbor`)                                                             |
+| `--runs-dir DIR`             | parent dir for the two job runs (default: `runs`)                                                   |
+| `--run-id ID`                | stable run id (default: a fresh timestamp)                                                          |
+| `--task-glob GLOBS`          | explicit task globs, space-separated; used only when `-t` is not given                              |
+| `--model MODEL`              | Copilot model passed to the agent (default: `gpt-6-luna`)                                           |
+| `--environment TYPE`         | `docker` (default) or `apple-container`                                                             |
+| `--n-concurrent N`           | `n_concurrent_trials` (default: `4`)                                                                |
+| `--format FORMAT`            | report format: `markdown` (default), `html`, or `json`                                              |
+| `--token TOKEN`              | GitHub token passed to the agent (`--ae COPILOT_GITHUB_TOKEN=...`)                                  |
+
+**Auxiliary skills.** `convert` already injects every skill that has an
+`evals/evals.json` under the scan root, so an aux skill like `uc-engraver` is
+usually present without any flag. `--skill` covers the remaining cases: a
+dependency **without** evals, a skill from another repo, or a pinned git ref
+for a dependency. Each source is validated in the preflight exactly like
+base/head (local path or git source, same grammar) and passed to **both**
+`harbor run` invocations, so aux skills stay a constant of the comparison.
+They are ordered before the tested skill, so a source that itself contains the
+skill under test (e.g. the `plugins/aiepdf/skills` root) can never clobber the
+base/head version — Harbor resolves duplicate names last-wins. Aux skills
+appear in the report's run-configuration section like every other injected
+skill, `(git: <repo>@<sha>)` when loaded from git.
+
+```bash
+uv run --package harbor-bench harbor-bench compare \
+  plugins/aiepdf/skills/dr-blacksmith \
+  https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills/dr-blacksmith \
+  -t 'dr-blacksmith-*-intake-*' \
+  --skill plugins/aiepdf/skills/uc-engraver \
+  --format html \
+  --token $COPILOT_GITHUB_TOKEN
+```
 
 ## Baseline: with vs without the skill
 

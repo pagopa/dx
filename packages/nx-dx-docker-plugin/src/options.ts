@@ -126,7 +126,7 @@ export const parseDockerReleasePluginOptions = (
   const optionsResult = pluginOptionsSchema.safeParse(options ?? {});
   if (!optionsResult.success) {
     throw new Error(
-      "Invalid @pagopa/nx-dx-docker-plugin options: only imageAuthors, imageNamePrefix, and imageUrl may be overridden.",
+      "Invalid @pagopa/nx-docker options: only imageAuthors, imageNamePrefix, and imageUrl may be overridden.",
     );
   }
 

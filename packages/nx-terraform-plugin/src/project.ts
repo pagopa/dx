@@ -66,20 +66,17 @@ const getProjectType = (root: string): ProjectType =>
 
 const defaultEnvironments = ["prod", "uat", "dev"];
 
-const getEnvironmentTag = (
-  root: string,
+const getEnvironmentIndex = (
+  rootSegments: string[],
   additionalEnvironments: readonly string[],
-): string => {
-  const rootSegments = root.split(path.sep);
+): number => {
   const supportedEnvironments = new Set([
     ...defaultEnvironments,
     ...additionalEnvironments,
   ]);
-  const environment = rootSegments.find((segment) =>
+  return rootSegments.findIndex((segment) =>
     supportedEnvironments.has(segment),
   );
-
-  return `env:${environment ?? "prod"}`;
 };
 
 const getPublishTarget = (
@@ -93,7 +90,7 @@ const getPublishTarget = (
       "nx-release-publish",
       {
         cache: false,
-        executor: "@pagopa/nx-terraform-plugin:publish",
+        executor: "@pagopa/nx-terraform:publish",
         options: {
           ...publishOptions,
           githubOwner: publishOptions.github.owner,
@@ -202,7 +199,7 @@ const getInitTarget = (
             frozenLockfile: true,
           },
         },
-        executor: "@pagopa/nx-terraform-plugin:init",
+        executor: "@pagopa/nx-terraform:init",
         inputs: ["default"],
         options: {
           platforms: opts.initTarget.platforms,
@@ -401,7 +398,7 @@ const getTargets = (
             },
           },
           dependsOn: [initTargetName],
-          executor: "@pagopa/nx-terraform-plugin:plan",
+          executor: "@pagopa/nx-terraform:plan",
           options: {
             projectRoot: "{projectRoot}",
             refresh: true,
@@ -414,11 +411,10 @@ const getTargets = (
         getTargetName(opts, "apply"),
         {
           cache: false,
-          command: `terraform apply`,
           dependsOn: [initTargetName],
+          executor: "@pagopa/nx-terraform:apply",
           options: {
-            cwd,
-            tty: true,
+            projectRoot: "{projectRoot}",
           },
         },
       ],
@@ -437,6 +433,19 @@ export const getProject = (
   testCapabilities: TerraformTestCapabilities = noTerraformTestCapabilities,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
+  const rootSegments = root.split(path.sep);
+  const environmentIndex = getEnvironmentIndex(
+    rootSegments,
+    opts.additionalEnvironments,
+  );
+  const sharedModulesRoot =
+    environmentIndex < 0
+      ? path.dirname(root)
+      : rootSegments.slice(0, environmentIndex).join(path.sep);
+  const sharedModulesInput = path
+    .join(sharedModulesRoot, "_modules", "**", "*")
+    .split(path.sep)
+    .join("/");
   const isPublishableLibrary =
     projectType === "library" && publishManifest !== undefined;
   const targets = getTargets(
@@ -450,7 +459,7 @@ export const getProject = (
   );
   const environmentTag =
     projectType === "application"
-      ? getEnvironmentTag(root, opts.additionalEnvironments)
+      ? `env:${rootSegments[environmentIndex] ?? "prod"}`
       : undefined;
   const tags = ["terraform", ...(environmentTag ? [environmentTag] : [])];
   if (isPublishableLibrary) {
@@ -460,7 +469,12 @@ export const getProject = (
   const config: ProjectConfiguration = {
     name: getProjectNameFromRoot(root),
     namedInputs: {
-      default: ["{projectRoot}/*.{tf,tfvars}"],
+      default: [
+        "{projectRoot}/*.{tf,tfvars}",
+        ...(projectType === "application"
+          ? [`{workspaceRoot}/${sharedModulesInput}`]
+          : []),
+      ],
       examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
     },
     projectType,
@@ -478,7 +492,7 @@ export const getProject = (
       version: {
         currentVersionResolver: "disk",
         manifestRootsToUpdate: ["{projectRoot}"],
-        versionActions: "@pagopa/nx-terraform-plugin/release/version-actions",
+        versionActions: "@pagopa/nx-terraform/release/version-actions",
       },
     };
   }

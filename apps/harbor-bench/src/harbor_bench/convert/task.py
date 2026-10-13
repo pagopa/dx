@@ -25,7 +25,7 @@ ENVIRONMENT_DOCKERFILE_TEMPLATE = "environment.Dockerfile.tmpl"
 
 # Defaults formerly configurable through evals.json Harbor metadata.
 DEFAULT_BASE_IMAGE = "ubuntu:24.04"
-DEFAULT_JUDGE_MODEL = "openai/gpt-5.6-luna"
+DEFAULT_JUDGE_MODEL = "openai/gpt-6-luna"
 
 #: The exact set of files ``convert`` generates for every task (identical for
 #: every task of every skill). These are the ONLY files a skill's ``harbor/``

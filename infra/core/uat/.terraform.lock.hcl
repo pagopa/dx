@@ -172,7 +172,7 @@ provider "registry.terraform.io/integrations/github" {
 
 provider "registry.terraform.io/pagopa-dx/aws" {
   version     = "0.1.12"
-  constraints = "~> 0.1"
+  constraints = "~> 0.0, ~> 0.1"
   hashes = [
     "h1:0TgFsNwrbu1HEwTYadVviWGE2QEpdWQ8VikN+V02UT4=",
     "h1:10KtY5AjUrXHnqR7oKm7CbF2jCxvHW2STu4U65gPAl0=",

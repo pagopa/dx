@@ -34,11 +34,9 @@ locals {
   ]
 
   tags = {
-    BusinessUnit   = "DevEx"
-    CostCenter     = "TS000 - Tecnologia e Servizi"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    ManagementTeam = "Developer Experience"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/resources/uat"
+    CostCenter  = "TS000 - TECNOLOGIA & SERVIZI"
+    Owner       = "DevEx"
+    Environment = "Uat"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/resources/uat"
   }
 }

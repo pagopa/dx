@@ -27,6 +27,7 @@ import setEnvShortHelper from "../../../helpers/env-short.js";
 import setEqHelper from "../../../helpers/eq.js";
 import setResourcePrefixHelper from "../../../helpers/resource-prefix.js";
 import setTerraformStateKeyHelper from "../../../helpers/terraform-state-key.js";
+import setTerraformStringHelper from "../../../helpers/terraform-string.js";
 import { resolveTemplatesPath } from "../../../templates-path.js";
 import {
   cleanupTempDir,
@@ -62,6 +63,7 @@ const registerEnvironmentSetup = (
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
   setTerraformStateKeyHelper(plop);
+  setTerraformStringHelper(plop);
 
   setGetTerraformBackend(plop, mockCloudAccountService);
   setProvisionTerraformBackendAction(plop, mockCloudAccountService);
@@ -191,9 +193,8 @@ describe("environment generator — file generation (no init)", () => {
       key: "test-private-key",
     },
     tags: {
-      BusinessUnit: "Platform",
-      CostCenter: "TS000",
-      ManagementTeam: "Engineering",
+      CostCenter: "TS330 - PDND & INTEROPERABILITA'",
+      Owner: "DX Platform",
     },
     workspace: {
       domain: "payments",
@@ -231,6 +232,86 @@ describe("environment generator — file generation (no init)", () => {
 
     expect(generatedFiles).toMatchSnapshot();
     expect(generatedFiles).not.toContain("test-private-key");
+  });
+
+  it("uses the selected GitHub organization in generated bootstrapper files", async () => {
+    const customPayload: Payload = {
+      ...payload,
+      github: {
+        ...payload.github,
+        owner: "example-org",
+      },
+    };
+    const generatedEnvironment = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload: customPayload,
+      tmpDirPrefix: "dx-cli-env-custom-owner-test-",
+    });
+
+    try {
+      const generatedFiles = await readGeneratedFiles(
+        generatedEnvironment.tmpDir,
+        [
+          `infra/bootstrapper/${customPayload.env.name}/providers.tf`,
+          `infra/bootstrapper/${customPayload.env.name}/main.tf`,
+        ],
+      );
+      const providersFile =
+        generatedFiles[
+          `infra/bootstrapper/${customPayload.env.name}/providers.tf`
+        ];
+      const mainFile =
+        generatedFiles[`infra/bootstrapper/${customPayload.env.name}/main.tf`];
+
+      expect(providersFile).toContain('owner = "example-org"');
+      expect(mainFile).toContain('owner    = "example-org"');
+      expect(mainFile).toContain(
+        "https://github.com/example-org/my-project/blob/main/infra/bootstrapper/dev",
+      );
+      expect(mainFile).not.toContain('owner    = "pagopa"');
+    } finally {
+      process.chdir(generatedEnvironment.originalCwd);
+      await cleanupTempDir(generatedEnvironment.tmpDir);
+    }
+  });
+
+  it("passes the selected GitHub owner ID into generated bootstrapper Terraform", async () => {
+    const userPayload: Payload = {
+      ...payload,
+      github: {
+        ...payload.github,
+        owner: "example-user",
+        ownerId: 54321,
+      },
+    };
+    const generatedEnvironment = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload: userPayload,
+      tmpDirPrefix: "dx-cli-env-user-owner-test-",
+    });
+
+    try {
+      const generatedFiles = await readGeneratedFiles(
+        generatedEnvironment.tmpDir,
+        [`infra/bootstrapper/${userPayload.env.name}/main.tf`],
+      );
+      const mainFile =
+        generatedFiles[`infra/bootstrapper/${userPayload.env.name}/main.tf`];
+
+      expect(mainFile).toContain('owner    = "example-user"');
+      expect(mainFile).toContain("owner_id = 54321");
+    } finally {
+      process.chdir(generatedEnvironment.originalCwd);
+      await cleanupTempDir(generatedEnvironment.tmpDir);
+    }
   });
 
   it("skips init-only side effects and core files when init is absent", async () => {
@@ -282,8 +363,9 @@ describe("environment generator — file generation (with init)", () => {
     },
     tags: {
       BusinessUnit: "Platform",
-      CostCenter: "TS000",
+      CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
       ManagementTeam: "Engineering",
+      Owner: "DX Platform",
     },
     workspace: {
       domain: "payments",

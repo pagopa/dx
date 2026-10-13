@@ -1,4 +1,4 @@
-import { n as getPackageLogger, t as configureLogger } from "./logger-DZ1KFLzv.js";
+import { n as getPackageLogger, t as configureLogger } from "./logger-C2K7hHjS.js";
 import { i as publishSchema, n as mergePublishOptions, r as pluginPublishOptionsSchema, t as PublishOptionsError } from "./publish-options-DI4KrjU0.js";
 import fs from "node:fs/promises";
 import path from "node:path";
@@ -88,7 +88,7 @@ const getPublishTarget = (opts, root, publishManifest) => {
 		const publishOptions = mergePublishOptions(opts.publish, publishManifest);
 		return ["nx-release-publish", {
 			cache: false,
-			executor: "@pagopa/nx-terraform-plugin:publish",
+			executor: "@pagopa/nx-terraform:publish",
 			options: {
 				...publishOptions,
 				githubOwner: publishOptions.github.owner,
@@ -152,12 +152,15 @@ const getTestTargets = (opts, cwd, testCapabilities) => {
 	}]);
 	return targets;
 };
-const getInitTarget = (projectType, initTargetName, cwd) => [initTargetName, projectType === "application" ? {
+const getInitTarget = (opts, projectType, initTargetName, cwd) => [initTargetName, projectType === "application" ? {
 	cache: false,
 	configurations: { ci: { frozenLockfile: true } },
-	executor: "@pagopa/nx-terraform-plugin:init",
+	executor: "@pagopa/nx-terraform:init",
 	inputs: ["default"],
-	options: { projectRoot: "{projectRoot}" },
+	options: {
+		platforms: opts.initTarget.platforms,
+		projectRoot: "{projectRoot}"
+	},
 	outputs: [
 		"{projectRoot}/.terraform",
 		"{projectRoot}/.terraform.lock.hcl",
@@ -194,7 +197,7 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 	const formatArgs = ["-list=true", "-recursive=true"];
 	const cwd = "{projectRoot}";
 	const initTargetName = getTargetName(opts, "init");
-	const targets = [getInitTarget(projectType, initTargetName, cwd), [getTargetName(opts, "fmt"), {
+	const targets = [getInitTarget(opts, projectType, initTargetName, cwd), [getTargetName(opts, "fmt"), {
 		cache: true,
 		command: `terraform fmt`,
 		configurations: { ci: { args: [...formatArgs, "-check=true"] } },
@@ -268,7 +271,7 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 			verbose: false
 		} },
 		dependsOn: [initTargetName],
-		executor: "@pagopa/nx-terraform-plugin:plan",
+		executor: "@pagopa/nx-terraform:plan",
 		options: {
 			projectRoot: "{projectRoot}",
 			refresh: true,
@@ -277,17 +280,15 @@ const getTargets = (opts, workspaceRoot, root, projectType, hasRootTflintConfig,
 		}
 	}], [getTargetName(opts, "apply"), {
 		cache: false,
-		command: `terraform apply`,
 		dependsOn: [initTargetName],
-		options: {
-			cwd,
-			tty: true
-		}
+		executor: "@pagopa/nx-terraform:apply",
+		options: { projectRoot: "{projectRoot}" }
 	}]);
 	return Object.fromEntries(targets);
 };
 const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publishManifest = void 0, testCapabilities = noTerraformTestCapabilities) => {
 	const projectType = getProjectType(root);
+	const sharedModulesInput = path.join(path.dirname(root), "_modules", "**", "*").split(path.sep).join("/");
 	const isPublishableLibrary = projectType === "library" && publishManifest !== void 0;
 	const targets = getTargets(opts, workspaceRoot, root, projectType, hasRootTflintConfig, publishManifest, testCapabilities);
 	const environmentTag = projectType === "application" ? getEnvironmentTag(root, opts.additionalEnvironments) : void 0;
@@ -296,7 +297,7 @@ const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publ
 	const config = {
 		name: getProjectNameFromRoot(root),
 		namedInputs: {
-			default: ["{projectRoot}/*.{tf,tfvars}"],
+			default: ["{projectRoot}/*.{tf,tfvars}", ...projectType === "application" ? [`{workspaceRoot}/${sharedModulesInput}`] : []],
 			examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"]
 		},
 		projectType,
@@ -307,7 +308,7 @@ const getProject = (opts, workspaceRoot, root, hasRootTflintConfig = false, publ
 	if (isPublishableLibrary) config.release = { version: {
 		currentVersionResolver: "disk",
 		manifestRootsToUpdate: ["{projectRoot}"],
-		versionActions: "@pagopa/nx-terraform-plugin/release/version-actions"
+		versionActions: "@pagopa/nx-terraform/release/version-actions"
 	} };
 	return config;
 };
@@ -335,7 +336,8 @@ function getStaticDependencies(file, fileContent) {
 const getStaticDependenciesFromFile = async (file) => {
 	const logger = getPackageLogger(["fs"]);
 	try {
-		return getStaticDependencies(file, await fs.readFile(file.fileName, "utf-8"));
+		const fileContent = await fs.readFile(file.fileName, "utf-8");
+		return getStaticDependencies(file, fileContent);
 	} catch (error) {
 		logger.error("Error reading file {fileName}", {
 			error,
@@ -352,13 +354,16 @@ const publishOptionsSchema = z.object({
 	github: pluginPublishOptionsSchema.shape.github,
 	mode: z.literal("github")
 });
+const initTargetOptionsSchema = z.object({ platforms: z.array(z.string()).default([]) });
 const terraformPluginOptionsSchema = z.object({
 	additionalEnvironments: z.array(environmentNameSchema),
+	initTarget: initTargetOptionsSchema.default({ platforms: [] }),
 	publish: publishOptionsSchema,
 	targetNamePrefix: z.string()
 });
 const defaultOptions = {
 	additionalEnvironments: [],
+	initTarget: { platforms: [] },
 	publish: { mode: "github" },
 	targetNamePrefix: ""
 };
@@ -373,6 +378,10 @@ const parseOptions = (options) => {
 	return {
 		...defaultOptions,
 		...parseResult.data,
+		initTarget: {
+			...defaultOptions.initTarget,
+			...parseResult.data.initTarget
+		},
 		publish: {
 			...defaultOptions.publish,
 			...parseResult.data.publish,
@@ -467,7 +476,8 @@ const getDiscoveryState = (configFiles) => {
 };
 const getPublishableManifestByRoot = async (moduleManifestRoots, workspaceRoot) => {
 	const validationResults = await Promise.all(moduleManifestRoots.map(async (root) => {
-		const manifest = await readModulePublishManifest(path.join(workspaceRoot, root));
+		const absoluteRoot = path.join(workspaceRoot, root);
+		const manifest = await readModulePublishManifest(absoluteRoot);
 		return manifest ? [root, manifest] : null;
 	}));
 	return new Map(validationResults.filter((rootManifest) => rootManifest !== null));

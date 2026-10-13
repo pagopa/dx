@@ -99,7 +99,7 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
     assert "grep -q '<skill-context'" not in verifier_script
 
     quality = tomllib.loads((task_root / "tests" / "quality.toml").read_text())
-    assert quality["judge"]["judge"] == "openai/gpt-5.6-luna"
+    assert quality["judge"]["judge"] == "openai/gpt-6-luna"
     assert quality["judge"]["files"] == [task_shape.WORKSPACE_PACKET_MD]
     # expected_output + expectations -> one binary criterion each
     descriptions = [c["description"] for c in quality["criterion"]]

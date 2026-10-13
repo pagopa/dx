@@ -91,14 +91,14 @@ export const runDockerCommand = (
 
   if (releaseVersion && tags.length === 0) {
     console.error(
-      `[@pagopa/nx-dx-docker-plugin] '${releaseVersion}' is not a Docker-compatible semantic version for ${projectDisplayName}.`,
+      `[@pagopa/nx-docker] '${releaseVersion}' is not a Docker-compatible semantic version for ${projectDisplayName}.`,
     );
     return { success: false };
   }
 
   if (mode === "push" && tags.length === 0) {
     console.log(
-      `[@pagopa/nx-dx-docker-plugin] No CI tags detected for ${imageName} (not running in a GitHub Actions job) — skipping publish.`,
+      `[@pagopa/nx-docker] No CI tags detected for ${imageName} (not running in a GitHub Actions job) — skipping publish.`,
     );
     return { success: true };
   }

@@ -42,6 +42,10 @@ provider "azurerm" {
 
 provider "aws" {
   region = local.aws_environment.region
+
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "awsdx" {

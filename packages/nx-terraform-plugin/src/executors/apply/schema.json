@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Apply executor",
+  "description": "Applies Terraform through dx-tasks, masking saved-plan output",
+  "type": "object",
+  "properties": {
+    "projectRoot": {
+      "type": "string",
+      "description": "Terraform working directory"
+    },
+    "planFile": {
+      "type": "string",
+      "description": "Saved plan file relative to the project root; omit for interactive local apply"
+    }
+  },
+  "required": ["projectRoot"]
+}

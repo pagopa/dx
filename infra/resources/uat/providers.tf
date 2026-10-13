@@ -62,7 +62,10 @@ provider "azapi" {}
 
 provider "aws" {
   region = "eu-south-1"
+
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "awsdx" {}
-
