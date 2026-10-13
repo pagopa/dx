@@ -1,3 +1,13 @@
+## 0.22.17 (2026-10-12)
+
+### 🚀 Features
+
+- Move Changeset to the Hold ring, add the DX Nx plugins for Docker and Terraform, and document mise for agent sandboxes on the technology radar. ([#2335](https://github.com/pagopa/dx/pull/2335))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.22.16 (2026-10-09)
 
 ### 🩹 Fixes

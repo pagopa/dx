@@ -1,3 +1,13 @@
+## 4.0.5 (2026-10-13)
+
+### 🩹 Fixes
+
+- Align AzureRM constraints across role assignment submodules ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 4.0.4 (2026-09-16)
 
 ### 🩹 Fixes
