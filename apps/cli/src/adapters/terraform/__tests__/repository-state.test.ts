@@ -1,550 +1,454 @@
 /**
- * State migration contracts using real files and injected Terraform/cloud ports.
+ * Repository-state lifecycle through its public coordinator and real internal adapters.
  */
+import { execa } from "execa";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
+import { inspect } from "node:util";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import type {
-  RepositoryStateDestination,
-  RepositoryStateStorage,
-} from "../../../domain/repository-state.js";
+import { blobFaults, credential } from "../../azure/__tests__/blob-fixture.js";
+import {
+  recoveredState,
+  recoveryPlan,
+  seedRecovery,
+} from "./recovery-fixture.js";
+import {
+  createStateFixture,
+  destination,
+  github,
+  localState,
+} from "./state-fixture.js";
 
-import {
-  parseRepositoryState,
-  verifyStateCopy,
-} from "../../../domain/repository-state.js";
-import { formatErrorDetailed } from "../../commander/error-reporting.js";
-import {
-  readRepositoryBackend,
-  writeRepositoryBackend,
-} from "../repository-backend.js";
-import { repositoryRecoveryImportsHeader } from "../repository-imports.js";
+vi.mock("@azure/storage-blob", async () => {
+  const { BlobServiceClient } =
+    await import("../../azure/__tests__/blob-fixture.js");
+  return { BlobServiceClient };
+});
+
+import { AzureRepositoryStateStorage } from "../../azure/repository-state-storage.js";
 import { prepareRepositoryState } from "../repository-state.js";
 
-const github = { owner: "pagopa", repo: "test-repo" };
-const destination: RepositoryStateDestination = {
-  backend: {
-    resourceGroupName: "dx-d-itn-tfstate-rg-01",
-    storageAccountName: "dxditntfstatest01",
-    subscriptionId: "subscription-dev",
-    type: "azurerm",
-  },
-  containerName: "terraform-state",
-  key: "dx/payments/repository.tfstate",
-};
-
-const state = (lineage = "repository-lineage", serial = 1) =>
-  JSON.stringify({
-    lineage,
-    resources: [
-      {
-        instances: [
-          { attributes: { full_name: "pagopa/test-repo", id: "test-repo" } },
-        ],
-        mode: "managed",
-        module: "module.github_repository",
-        name: "this",
-        type: "github_repository",
-      },
-      {
-        instances: [{ attributes: { id: "protection-main" } }],
-        mode: "managed",
-        module: "module.github_repository",
-        name: "main",
-        type: "github_branch_protection",
-      },
-    ],
-    serial,
-    version: 4,
-  });
-
-let repositoryPath: string;
-let remote: string | undefined;
-const commands: string[][] = [];
-const read = vi.fn(async () => remote);
-const run = vi.fn(async (args: string[]) => {
-  commands.push(args);
-  if (args.includes("-migrate-state")) {
-    remote = state();
-  }
-  return {
-    stdout:
-      args[0] === "state"
-        ? (remote ?? "")
-        : args[0] === "workspace"
-          ? "default"
-          : "",
-  };
-});
-const storage: RepositoryStateStorage = {
-  read,
-  withLock: async (_destination, task) => task(),
-};
-
-beforeEach(async () => {
-  repositoryPath = await fs.mkdtemp(path.join(os.tmpdir(), "dx-state-test-"));
-  await fs.writeFile(
-    path.join(repositoryPath, "providers.tf"),
-    'terraform {\n  required_providers {\n    github = {\n      source = "integrations/github"\n    }\n  }\n}\n',
-  );
-  await fs.mkdir(path.join(repositoryPath, ".terraform"));
-  await fs.writeFile(
-    path.join(repositoryPath, ".terraform", "terraform.tfstate"),
-    JSON.stringify({
-      backend: {
-        config: {
-          container_name: destination.containerName,
-          key: destination.key,
-          resource_group_name: destination.backend.resourceGroupName,
-          storage_account_name: destination.backend.storageAccountName,
-          subscription_id: destination.backend.subscriptionId,
-        },
-        type: "azurerm",
-      },
-    }),
-  );
-  remote = undefined;
-  commands.length = 0;
-  read.mockClear();
-  run.mockReset();
-  run.mockImplementation(async (args: string[]) => {
-    commands.push(args);
-    if (args.includes("-migrate-state")) {
-      remote = state();
-    }
-    return {
-      stdout:
-        args[0] === "state"
-          ? (remote ?? "")
-          : args[0] === "workspace"
-            ? "default"
-            : "",
-    };
-  });
-});
-
-afterEach(async () => {
-  await fs.rm(repositoryPath, { recursive: true });
-});
-
+let fixture: Awaited<ReturnType<typeof createStateFixture>>;
+const storage = new AzureRepositoryStateStorage(credential);
 const prepare = () =>
   prepareRepositoryState({
     destination,
     github,
-    repositoryPath,
-    run,
+    repositoryPath: fixture.repositoryPath,
     storage,
   });
 
-describe("local repository state migration", () => {
-  it("migrates, verifies the actual backend, then removes local state and backups", async () => {
-    await fs.writeFile(path.join(repositoryPath, "terraform.tfstate"), state());
-    await fs.writeFile(
-      path.join(repositoryPath, "terraform.tfstate.backup"),
-      state(),
-    );
+beforeEach(async () => {
+  fixture = await createStateFixture();
+});
+
+afterEach(async () => {
+  await fixture.dispose();
+});
+
+describe("repository-state lifecycle", () => {
+  it("makes local repository state available remotely before reporting migration complete", async () => {
+    await fixture.seedLocal();
 
     await expect(prepare()).resolves.toEqual({
       destination,
       status: "remote-verified",
     });
-    expect(commands).toEqual([
-      ["workspace", "show"],
-      ["init", "-reconfigure", "-input=false"],
-      ["init", "-migrate-state", "-force-copy", "-input=false"],
-      ["state", "pull"],
-    ]);
-    await expect(readRepositoryBackend(repositoryPath)).resolves.toEqual(
-      destination,
+    await expect(storage.read(destination)).resolves.toBe(localState);
+    await expect(fs.readdir(fixture.repositoryPath)).resolves.not.toContain(
+      "terraform.tfstate",
     );
-    await expect(fs.readdir(repositoryPath)).resolves.toEqual([
-      ".terraform",
-      "providers.tf",
-    ]);
-  });
-
-  it("rejects an occupied destination without writing backend configuration", async () => {
-    await fs.writeFile(path.join(repositoryPath, "terraform.tfstate"), state());
-    remote = state("someone-else");
-
-    await expect(prepare()).rejects.toThrow("refusing to adopt or overwrite");
-    expect(commands).toEqual([["workspace", "show"]]);
+    await expect(fs.readdir(fixture.repositoryPath)).resolves.not.toContain(
+      "terraform.tfstate.dx-backup",
+    );
     await expect(
-      readRepositoryBackend(repositoryPath),
-    ).resolves.toBeUndefined();
-    await expect(
-      fs.readFile(path.join(repositoryPath, "terraform.tfstate"), "utf8"),
-    ).resolves.toBe(state());
-  });
-
-  it("rejects empty pre-existing blobs before the first migration", async () => {
-    remote = "";
-    await expect(prepare()).rejects.toThrow("not valid JSON");
-    expect(commands).toEqual([["workspace", "show"]]);
-  });
-
-  it("preserves state when migration fails and can safely retry", async () => {
-    await fs.writeFile(path.join(repositoryPath, "terraform.tfstate"), state());
-    run.mockImplementationOnce(async () => ({ stdout: "default" }));
-    run.mockRejectedValueOnce(new Error("Initialization unavailable"));
-
-    await expect(prepare()).rejects.toThrow("Retry from the repository root");
-    await expect(
-      fs.readFile(path.join(repositoryPath, "terraform.tfstate"), "utf8"),
-    ).resolves.toBe(state());
-    await expect(
-      fs.readFile(
-        path.join(repositoryPath, "terraform.tfstate.dx-backup"),
-        "utf8",
-      ),
-    ).resolves.toBe(state());
-
-    await expect(prepare()).resolves.toMatchObject({
-      status: "remote-verified",
+      fs.readFile(path.join(fixture.repositoryPath, "providers.tf"), "utf8"),
+    ).resolves.toContain(
+      'key                  = "dx/payments/repository.tfstate"',
+    );
+    const { stdout } = await execa(fixture.terraform, ["validate", "-json"], {
+      cwd: fixture.repositoryPath,
     });
+    expect(JSON.parse(stdout)).toMatchObject({ valid: true });
   });
 
-  it("restores the source when Terraform removes it before a failed verification", async () => {
-    await fs.writeFile(path.join(repositoryPath, "terraform.tfstate"), state());
-    run.mockImplementationOnce(async () => ({ stdout: "default" }));
-    run.mockImplementationOnce(async () => ({ stdout: "" }));
-    run.mockImplementationOnce(async () => {
-      await fs.rm(path.join(repositoryPath, "terraform.tfstate"));
-      return { stdout: "" };
-    });
+  it("keeps a private recoverable copy when external migration fails", async () => {
+    await fixture.seedLocal();
+    await fixture.scenario({ failure: "migration" });
 
-    await expect(prepare()).rejects.toThrow("missing after migration");
-    await expect(
-      fs.readFile(path.join(repositoryPath, "terraform.tfstate"), "utf8"),
-    ).resolves.toBe(state());
-    await expect(readRepositoryBackend(repositoryPath)).resolves.toEqual(
-      destination,
-    );
-  });
-});
-
-describe("remote repository state and retries", () => {
-  it("does not treat matching state contents as proof of an active remote backend", async () => {
-    await writeRepositoryBackend(repositoryPath, destination);
-    await fs.writeFile(path.join(repositoryPath, "terraform.tfstate"), state());
-    remote = state();
-    await fs.writeFile(
-      path.join(repositoryPath, ".terraform", "terraform.tfstate"),
-      JSON.stringify({ backend: { config: {}, type: "local" } }),
-    );
     await expect(prepare()).rejects.toThrow(
-      "has not initialized the expected Azure",
-    );
-    await expect(
-      fs.readFile(path.join(repositoryPath, "terraform.tfstate"), "utf8"),
-    ).resolves.toBe(state());
-  });
-  it("resumes an interrupted migration from a backup with a configured backend", async () => {
-    await writeRepositoryBackend(repositoryPath, destination);
-    await fs.writeFile(
-      path.join(repositoryPath, "terraform.tfstate.dx-backup"),
-      state(),
+      "Terraform init failed during repository state preparation",
     );
 
-    await expect(prepare()).resolves.toMatchObject({
-      status: "remote-verified",
-    });
-    expect(commands[1]).toEqual(["init", "-reconfigure", "-input=false"]);
-    expect(commands[2]).toContain("-migrate-state");
-  });
-
-  it("reuses verified remote state without another migration", async () => {
-    await writeRepositoryBackend(repositoryPath, destination);
-    remote = state();
-
-    await expect(prepare()).resolves.toMatchObject({ destination });
-    expect(commands).toEqual([
-      ["workspace", "show"],
-      ["init", "-reconfigure", "-input=false"],
-      ["state", "pull"],
-    ]);
-  });
-
-  it("recognizes migration success when local cleanup previously failed", async () => {
-    await writeRepositoryBackend(repositoryPath, destination);
-    await fs.writeFile(path.join(repositoryPath, "terraform.tfstate"), state());
-    remote = state("repository-lineage", 2);
-
-    await expect(prepare()).resolves.toMatchObject({
-      status: "remote-verified",
-    });
-    expect(commands.some((command) => command.includes("-force-copy"))).toBe(
-      false,
+    const backup = path.join(
+      fixture.repositoryPath,
+      "terraform.tfstate.dx-backup",
     );
-  });
-
-  it("rejects different state lineages even when the backend is configured", async () => {
-    await writeRepositoryBackend(repositoryPath, destination);
-    await fs.writeFile(path.join(repositoryPath, "terraform.tfstate"), state());
-    remote = state("different");
-
-    await expect(prepare()).rejects.toThrow("differs from local state");
-    expect(commands).toEqual([["workspace", "show"]]);
-  });
-
-  it("requires copied resources, not just matching lineage", async () => {
-    await fs.writeFile(path.join(repositoryPath, "terraform.tfstate"), state());
-    run.mockImplementationOnce(async () => ({ stdout: "default" }));
-    run.mockImplementationOnce(async () => ({ stdout: "" }));
-    run.mockImplementationOnce(async () => {
-      remote = state().replace("protection-main", "different-protection");
-      return { stdout: "" };
-    });
-
-    await expect(prepare()).rejects.toThrow("differs from local state");
-    await expect(
-      fs.readFile(path.join(repositoryPath, "terraform.tfstate"), "utf8"),
-    ).resolves.toBe(state());
-  });
-
-  it("checks Terraform's selected backend before removing local files", async () => {
-    await fs.writeFile(path.join(repositoryPath, "terraform.tfstate"), state());
-    run.mockImplementation(async (args) => {
-      if (args.includes("-migrate-state")) remote = state();
-      return {
-        stdout:
-          args[0] === "state"
-            ? state("wrong-cache")
-            : args[0] === "workspace"
-              ? "default"
-              : "",
-      };
-    });
-
-    await expect(prepare()).rejects.toThrow("differs from local state");
+    await expect(fs.readFile(backup, "utf8")).resolves.toBe(localState);
+    expect((await fs.stat(backup)).mode % 0o1000).toBe(0o600);
     await expect(
       fs.readFile(
-        path.join(repositoryPath, "terraform.tfstate.dx-backup"),
+        path.join(fixture.repositoryPath, "terraform.tfstate"),
         "utf8",
       ),
-    ).resolves.toBe(state());
-    run.mockImplementation(async (args) => {
-      commands.push(args);
-      if (args.includes("-migrate-state")) remote = state();
-      return {
-        stdout:
-          args[0] === "state"
-            ? (remote ?? "")
-            : args[0] === "workspace"
-              ? "default"
-              : "",
-      };
+    ).resolves.toBe(localState);
+  });
+
+  it("preserves local state when the transferred snapshot has a different lineage", async () => {
+    await fixture.seedLocal();
+    await fixture.scenario({
+      migratedState: localState.replace(
+        "fixture-original-lineage",
+        "foreign-lineage",
+      ),
     });
+
+    await expect(prepare()).rejects.toThrow(
+      "Remote repository state differs from local state",
+    );
+
+    await expect(
+      fs.readFile(
+        path.join(fixture.repositoryPath, "terraform.tfstate"),
+        "utf8",
+      ),
+    ).resolves.toBe(localState);
+  });
+
+  it("refuses a stale transferred snapshot instead of discarding newer local state", async () => {
+    await fixture.seedLocal();
+    await fixture.scenario({
+      migratedState: localState.replace('"serial":7', '"serial":6'),
+    });
+
+    await expect(prepare()).rejects.toThrow(
+      "Remote repository state differs from local state",
+    );
+
+    await expect(
+      fs.readFile(
+        path.join(fixture.repositoryPath, "terraform.tfstate"),
+        "utf8",
+      ),
+    ).resolves.toBe(localState);
+  });
+
+  it("refuses a transferred snapshot that lost an original managed resource identity", async () => {
+    await fixture.seedLocal();
+    await fixture.scenario({
+      migratedState: localState.replace("test-repo:main", "other-protection"),
+    });
+
+    await expect(prepare()).rejects.toThrow(
+      "Remote repository state differs from local state",
+    );
+
+    await expect(
+      fs.readFile(
+        path.join(fixture.repositoryPath, "terraform.tfstate"),
+        "utf8",
+      ),
+    ).resolves.toBe(localState);
+  });
+
+  it("does not report success when Terraform actually initialized another backend key", async () => {
+    await fixture.seedLocal();
+    await fixture.scenario({ activeKey: "different/repository.tfstate" });
+
+    await expect(prepare()).rejects.toThrow(
+      "active repository backend differs",
+    );
+
+    await expect(
+      fs.readFile(
+        path.join(fixture.repositoryPath, "terraform.tfstate"),
+        "utf8",
+      ),
+    ).resolves.toBe(localState);
+  });
+
+  it("restores an interrupted transfer's local source so the same operation can be retried", async () => {
+    await fixture.seedLocal();
+    await fixture.scenario({ failure: "release-source" });
+    await expect(prepare()).rejects.toThrow(
+      "Terraform init failed during repository state preparation",
+    );
+    await expect(
+      fs.readFile(
+        path.join(fixture.repositoryPath, "terraform.tfstate"),
+        "utf8",
+      ),
+    ).resolves.toBe(localState);
+
+    await fixture.scenario({});
+    await expect(prepare()).resolves.toEqual({
+      destination,
+      status: "remote-verified",
+    });
+    await expect(storage.read(destination)).resolves.toBe(localState);
+    await expect(fs.readdir(fixture.repositoryPath)).resolves.not.toContain(
+      "terraform.tfstate.dx-backup",
+    );
+  });
+
+  it("retains local recovery files until the migration lease is successfully released", async () => {
+    await fixture.seedLocal();
+    blobFaults.release = new Error("Lease release failed");
+
+    await expect(prepare()).rejects.toThrow("Lease release failed");
+
+    await expect(
+      fs.readFile(
+        path.join(fixture.repositoryPath, "terraform.tfstate"),
+        "utf8",
+      ),
+    ).resolves.toBe(localState);
+    await expect(
+      fs.readFile(
+        path.join(fixture.repositoryPath, "terraform.tfstate.dx-backup"),
+        "utf8",
+      ),
+    ).resolves.toBe(localState);
   });
 });
 
-describe("repository recovery and failure preservation", () => {
-  it("recovers missing local state before reporting success", async () => {
-    const recover = vi.fn(async () => {
-      remote = state();
+describe("repository-state recovery", () => {
+  it("recovers existing GitHub resources with provider-valid imports when local state is missing", async () => {
+    await seedRecovery(fixture.root);
+
+    await expect(prepare()).resolves.toEqual({
+      destination,
+      status: "remote-verified",
     });
-    await expect(
-      prepareRepositoryState({
-        destination,
-        github,
-        recover,
-        repositoryPath,
-        run,
-        storage,
-      }),
-    ).resolves.toMatchObject({ status: "remote-verified" });
-    expect(recover).toHaveBeenCalledWith(repositoryPath, github, run);
-    expect(commands.some((command) => command.includes("-migrate-state"))).toBe(
-      false,
+
+    await expect(storage.read(destination)).resolves.toBe(recoveredState);
+    await expect(fs.readdir(fixture.repositoryPath)).resolves.not.toContain(
+      "repository-state-imports.tf",
     );
   });
 
-  describe("interrupted repository recovery", () => {
-    it("retries a configured backend containing only an initial empty Terraform snapshot", async () => {
-      await writeRepositoryBackend(repositoryPath, destination);
-      remote = JSON.stringify({
-        lineage: "empty-lineage",
-        resources: [],
-        serial: 0,
-        version: 4,
-      });
-      const recover = vi.fn(async () => {
-        remote = state();
-      });
-      await expect(
-        prepareRepositoryState({
-          destination,
-          github,
-          recover,
-          repositoryPath,
-          run,
-          storage,
-        }),
-      ).resolves.toMatchObject({ status: "remote-verified" });
-      expect(recover).toHaveBeenCalledExactlyOnceWith(
-        repositoryPath,
-        github,
-        run,
-      );
+  it("resumes pending imports after partial recovery instead of accepting repository-only state", async () => {
+    await seedRecovery(fixture.root);
+    await fixture.scenario({ failure: "apply" });
+    await expect(prepare()).rejects.toThrow(
+      "Terraform apply failed during repository state preparation",
+    );
+    await expect(fs.readdir(fixture.repositoryPath)).resolves.toContain(
+      "repository-state-imports.tf",
+    );
+
+    await fixture.scenario({});
+    await expect(prepare()).resolves.toEqual({
+      destination,
+      status: "remote-verified",
     });
 
-    it("finishes pending imports even when a failed recovery already imported the repository", async () => {
-      await writeRepositoryBackend(repositoryPath, destination);
-      remote = state();
-      const importsPath = path.join(
-        repositoryPath,
-        "repository-state-imports.tf",
-      );
-      await fs.writeFile(importsPath, repositoryRecoveryImportsHeader);
-      const recover = vi.fn(async (): Promise<void> => {
-        throw new Error("Remaining imports unavailable");
-      });
-      const input = {
-        destination,
-        github,
-        recover,
-        repositoryPath,
-        run,
-        storage,
-      };
-      await expect(prepareRepositoryState(input)).rejects.toThrow(
-        "Remaining imports unavailable",
-      );
-      await expect(fs.readFile(importsPath, "utf8")).resolves.toBe(
-        repositoryRecoveryImportsHeader,
-      );
-      recover.mockResolvedValueOnce(undefined);
-      await expect(prepareRepositoryState(input)).resolves.toMatchObject({
-        status: "remote-verified",
-      });
-      expect(recover).toHaveBeenCalledTimes(2);
-      await expect(fs.access(importsPath)).rejects.toThrow();
-    });
-
-    it("requires the initialized backend to target the verified blob, not another Azure key", async () => {
-      await writeRepositoryBackend(repositoryPath, destination);
-      await fs.writeFile(
-        path.join(repositoryPath, "terraform.tfstate"),
-        state(),
-      );
-      remote = state();
-      const metadataPath = path.join(
-        repositoryPath,
-        ".terraform",
-        "terraform.tfstate",
-      );
-      const metadata = await fs.readFile(metadataPath, "utf8");
-      await fs.writeFile(
-        metadataPath,
-        metadata.replace(destination.key, "another/repository.tfstate"),
-      );
-      await expect(prepare()).rejects.toThrow(
-        "active repository backend differs",
-      );
-      await expect(
-        fs.readFile(path.join(repositoryPath, "terraform.tfstate"), "utf8"),
-      ).resolves.toBe(state());
-    });
+    await expect(storage.read(destination)).resolves.toBe(recoveredState);
+    await expect(fs.readdir(fixture.repositoryPath)).resolves.not.toContain(
+      "repository-state-imports.tf",
+    );
   });
 
-  it("does not remove backups when migration lock release fails", async () => {
-    await fs.writeFile(path.join(repositoryPath, "terraform.tfstate"), state());
-    const failingStorage: RepositoryStateStorage = {
-      read,
-      withLock: async (_destination, task) => {
-        await task();
-        throw new Error("Lease release failed");
+  it("refuses a recovery plan that would delete an existing GitHub resource", async () => {
+    await seedRecovery(fixture.root);
+    await fs.writeFile(
+      path.join(fixture.root, "recovery-plan.json"),
+      JSON.stringify({
+        resource_changes: [
+          ...recoveryPlan.resource_changes,
+          {
+            address: "module.github_repository.github_branch.obsolete",
+            change: { actions: ["delete"], after: null },
+            mode: "managed",
+            type: "github_branch",
+          },
+        ],
+      }),
+    );
+
+    await expect(prepare()).rejects.toThrow(
+      "would destroy or replace resources",
+    );
+
+    await expect(storage.read(destination)).resolves.toBeUndefined();
+  });
+
+  it("refuses recovery rather than silently skipping an unsupported GitHub resource", async () => {
+    await seedRecovery(fixture.root);
+    await fs.writeFile(
+      path.join(fixture.root, "recovery-plan.json"),
+      JSON.stringify({
+        resource_changes: [
+          ...recoveryPlan.resource_changes,
+          {
+            address:
+              "module.github_repository.github_repository_collaborator.member",
+            change: {
+              actions: ["create"],
+              after: { username: "fixture-user" },
+            },
+            mode: "managed",
+            type: "github_repository_collaborator",
+          },
+        ],
+      }),
+    );
+
+    await expect(prepare()).rejects.toThrow(
+      "Automatic repository recovery does not support module.github_repository.github_repository_collaborator.member",
+    );
+
+    await expect(storage.read(destination)).resolves.toBeUndefined();
+  });
+});
+
+describe("repository-state safety and retries", () => {
+  it("does not expose malformed local-state contents through the returned error or its causes", async () => {
+    await fixture.seedLocal("secret-token");
+
+    const outcome = await prepare().then(
+      (value) => ({ value }),
+      (error: unknown) => ({ error }),
+    );
+
+    expect(outcome).toMatchObject({
+      error: {
+        message: expect.stringContaining(
+          "Repository Terraform state is not valid JSON",
+        ),
       },
-    };
-    await expect(
-      prepareRepositoryState({
-        destination,
-        github,
-        repositoryPath,
-        run,
-        storage: failingStorage,
-      }),
-    ).rejects.toThrow("Lease release failed");
+    });
+    expect(inspect(outcome, { depth: null })).not.toContain("secret-token");
     await expect(
       fs.readFile(
-        path.join(repositoryPath, "terraform.tfstate.dx-backup"),
+        path.join(fixture.repositoryPath, "terraform.tfstate"),
         "utf8",
       ),
-    ).resolves.toBe(state());
+    ).resolves.toBe("secret-token");
   });
 
-  it("rejects malformed local state and state for another owner", async () => {
-    await fs.writeFile(
-      path.join(repositoryPath, "terraform.tfstate"),
-      "{invalid}",
-    );
-    await expect(prepare()).rejects.toThrow("not valid JSON");
-    await fs.writeFile(
-      path.join(repositoryPath, "terraform.tfstate"),
-      state().replace("pagopa/test-repo", "other/test-repo"),
-    );
-    await expect(prepare()).rejects.toThrow("expected repository");
-    expect(commands.every((command) => command[0] === "workspace")).toBe(true);
-  });
+  it("refuses migration from a non-default Terraform workspace before writing a backend", async () => {
+    await fixture.seedLocal();
+    await fixture.scenario({ workspace: "review" });
 
-  it("rejects named workspaces before acquiring the migration lease or copying state", async () => {
-    run.mockResolvedValueOnce({ stdout: "another-workspace" });
     await expect(prepare()).rejects.toThrow(
-      "only the default Terraform workspace",
+      "supports only the default Terraform workspace",
     );
-    expect(read).not.toHaveBeenCalled();
+
     await expect(
-      readRepositoryBackend(repositoryPath),
-    ).resolves.toBeUndefined();
+      fs.readFile(path.join(fixture.repositoryPath, "providers.tf"), "utf8"),
+    ).resolves.toBe("terraform {\n}\n");
+    await expect(storage.read(destination)).resolves.toBeUndefined();
   });
 
-  it("refuses to migrate hidden additional local workspaces", async () => {
-    await fs.mkdir(path.join(repositoryPath, "terraform.tfstate.d", "other"), {
-      recursive: true,
-    });
-    await expect(prepare()).rejects.toThrow(
-      "only the default Terraform workspace",
+  it("refuses migration of other local workspaces even when default is selected", async () => {
+    await fixture.seedLocal();
+    await fs.mkdir(
+      path.join(fixture.repositoryPath, "terraform.tfstate.d", "review"),
+      {
+        recursive: true,
+      },
     );
-    expect(read).not.toHaveBeenCalled();
-  });
-});
 
-describe("repository state validation", () => {
-  it("does not expose malformed state contents even in verbose errors", () => {
-    const failure = (() => {
-      try {
-        parseRepositoryState("PRIVATE_STATE_CONTENT", github);
-      } catch (cause) {
-        return cause;
-      }
-    })();
-    expect(failure).toBeInstanceOf(Error);
-    expect(formatErrorDetailed(failure)).not.toContain("PRIVATE_STATE_CONTENT");
-    expect(formatErrorDetailed(failure)).toContain("not valid JSON");
-  });
-  it("rejects unsupported schema versions and missing resource identities", () => {
-    expect(() =>
-      parseRepositoryState(
-        state().replace('"version":4', '"version":3'),
-        github,
-      ),
-    ).toThrow("unsupported structure");
-    expect(() =>
-      parseRepositoryState(
-        state().replace('"id":"protection-main"', '"wrong":"id"'),
-        github,
-      ),
-    ).toThrow("without identities");
+    await expect(prepare()).rejects.toThrow(
+      "supports only the default Terraform workspace",
+    );
+
+    await expect(
+      fs.readFile(path.join(fixture.repositoryPath, "providers.tf"), "utf8"),
+    ).resolves.toBe("terraform {\n}\n");
+    await expect(storage.read(destination)).resolves.toBeUndefined();
   });
 
-  it("rejects remote state older than the local source", () => {
-    expect(() =>
-      verifyStateCopy(
-        parseRepositoryState(state("same", 2), github),
-        parseRepositoryState(state("same", 1), github),
+  it("refuses to move a local snapshot belonging to another GitHub repository", async () => {
+    const foreign = localState.replaceAll("test-repo", "another-repo");
+    await fixture.seedLocal(foreign);
+
+    await expect(prepare()).rejects.toThrow(
+      "does not manage the expected repository pagopa/test-repo",
+    );
+
+    await expect(
+      fs.readFile(
+        path.join(fixture.repositoryPath, "terraform.tfstate"),
+        "utf8",
       ),
-    ).toThrow("differs from local state");
+    ).resolves.toBe(foreign);
+    await expect(storage.read(destination)).resolves.toBeUndefined();
+  });
+
+  it("keeps recovery files when Terraform cannot read the snapshot verified in Azure", async () => {
+    await fixture.seedLocal();
+    await fixture.scenario({
+      pulledState: localState.replace(
+        "fixture-original-lineage",
+        "different-readable-lineage",
+      ),
+    });
+
+    await expect(prepare()).rejects.toThrow(
+      "Remote repository state differs from local state",
+    );
+
+    await expect(
+      fs.readFile(
+        path.join(fixture.repositoryPath, "terraform.tfstate"),
+        "utf8",
+      ),
+    ).resolves.toBe(localState);
+  });
+
+  it("preserves a conflicting migration backup instead of overwriting it", async () => {
+    await fixture.seedLocal();
+    const backup = localState.replace(
+      "fixture-original-lineage",
+      "earlier-backup-lineage",
+    );
+    const filename = path.join(
+      fixture.repositoryPath,
+      "terraform.tfstate.dx-backup",
+    );
+    await fs.writeFile(filename, backup, { mode: 0o600 });
+
+    await expect(prepare()).rejects.toThrow(
+      "migration backup conflicts with the current local state",
+    );
+
+    await expect(fs.readFile(filename, "utf8")).resolves.toBe(backup);
+    await expect(storage.read(destination)).resolves.toBeUndefined();
+  });
+
+  it("recovers an empty initialized Azure state blob instead of treating it as corrupt repository state", async () => {
+    await fixture.configureBackend();
+    await fixture.putRemote("");
+    await seedRecovery(fixture.root);
+
+    await expect(prepare()).resolves.toEqual({
+      destination,
+      status: "remote-verified",
+    });
+
+    await expect(storage.read(destination)).resolves.toBe(recoveredState);
+  });
+
+  it("refuses a backend changed after confirmation without transferring to the new destination", async () => {
+    await fixture.configureBackend();
+    const providers = path.join(fixture.repositoryPath, "providers.tf");
+    const changed = (await fs.readFile(providers, "utf8")).replace(
+      "dx/payments/repository.tfstate",
+      "other/repository.tfstate",
+    );
+    await fs.writeFile(providers, changed);
+    await fixture.seedLocal();
+
+    await expect(prepare()).rejects.toThrow(
+      "backend changed after confirmation",
+    );
+
+    await expect(
+      storage.read({ ...destination, key: "other/repository.tfstate" }),
+    ).resolves.toBeUndefined();
+    await expect(fs.readFile(providers, "utf8")).resolves.toBe(changed);
   });
 });

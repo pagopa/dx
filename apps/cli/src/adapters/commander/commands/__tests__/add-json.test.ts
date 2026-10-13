@@ -55,19 +55,6 @@ const payload: EnvironmentPayload = {
     prefix: "dx",
   },
   github: { owner: "pagopa", repo: "test-repo" },
-  repositoryState: {
-    destination: {
-      backend: {
-        resourceGroupName: "state-rg",
-        storageAccountName: "statest",
-        subscriptionId: "sub-123",
-        type: "azurerm",
-      },
-      containerName: "terraform-state",
-      key: "dx/payments/repository.tfstate",
-    },
-    status: "remote-verified",
-  },
   tags: {
     BusinessUnit: "BU",
     CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
@@ -202,7 +189,6 @@ describe("add environment command json output", () => {
       { data: { authorizationPrs: [], payload }, ok: true },
     ]);
   });
-
   describe.each([
     { args: ["--output", "json"], CI: false, mode: "explicit JSON output" },
     { args: ["--output", "text"], CI: true, mode: "CI output" },
@@ -294,33 +280,4 @@ describe("add environment command json output", () => {
     );
   });
 
-  it("reports the concrete migration failure and retry guidance in the JSON error envelope", async () => {
-    const stdout = captureStream(process.stdout);
-    captureStream(process.stderr);
-    const error =
-      "Remote state differs. Retry from the repository root with the same dx add environment arguments.";
-    mocks.runDeploymentEnvironmentActions.mockRejectedValueOnce(
-      new Error(error),
-    );
-    const requireGitHubAuth: GitHubAuthFactory = () =>
-      okAsync({
-        authorizationService: mockDeep<AuthorizationService>(),
-        gitHubService: mockDeep<GitHubService>(),
-      });
-    const program = new Command()
-      .option("--output <mode>", "Output mode", "json")
-      .addCommand(makeAddCommand(requireGitHubAuth, { CI: false }));
-
-    await program.parseAsync([
-      "node",
-      "dx",
-      "--output",
-      "json",
-      "add",
-      "environment",
-    ]);
-
-    expect(parseNdjson(stdout.written)).toEqual([{ error, ok: false }]);
-    expect(process.exitCode).toBe(1);
-  });
 });
