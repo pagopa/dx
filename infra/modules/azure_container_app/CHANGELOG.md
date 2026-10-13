@@ -1,3 +1,13 @@
+## 8.0.1 (2026-10-13)
+
+### 🩹 Fixes
+
+- Update internal examples and AzureRM constraints ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 # 8.0.0 (2026-10-02)
 
 ### ⚠️  Breaking Changes
