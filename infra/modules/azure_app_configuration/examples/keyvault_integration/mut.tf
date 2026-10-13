@@ -1,6 +1,5 @@
 module "appcs_with_kv" {
-  source  = "pagopa-dx/azure-app-configuration/azurerm"
-  version = "~> 2.0"
+  source = "../.."
 
   environment         = (merge(local.environment, { instance_number = random_integer.instance_number.result }))
   resource_group_name = azurerm_resource_group.e2e_appcs.name
