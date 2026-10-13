@@ -100,7 +100,8 @@ const addArguments = (keyPath: string) => [
   keyPath,
 ];
 
-describe("repository-state CLI contracts", () => {
+// Real CLI/scaffolding subprocesses need an integration budget on shared runners.
+describe("repository-state CLI contracts", { timeout: 20_000 }, () => {
   it("reports published repository state as temporary and keeps the actual local snapshot", async () => {
     await fixture.program().parseAsync([...initArguments, "--publish"]);
 
