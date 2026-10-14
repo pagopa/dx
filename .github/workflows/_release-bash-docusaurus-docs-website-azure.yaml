@@ -15,6 +15,11 @@ on:
 
 permissions: {}
 
+concurrency:
+  # One production release and one latest run per PR for this website.
+  group: dx-website-orchestrator-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'production' }}
+  cancel-in-progress: true
+
 jobs:
   deploy_to_static_web_app:
     permissions:
@@ -28,7 +33,7 @@ jobs:
       output_dir: "build" # The build output directory name
       static_web_app_name: "dx-p-itn-website-stapp-01"
       resource_group_name: "dx-p-itn-common-rg-01"
-      environment: "app-prod"
+      environment: "automation-prod"
 
   feed_docs_knowledge_base:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/docs@')
