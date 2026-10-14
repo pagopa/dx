@@ -96,6 +96,13 @@ locals {
     }
   }
 
+  automation_ci = {
+    secrets = {
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_ci.client_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
+    }
+  }
+
   app_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.app_ci.client_id

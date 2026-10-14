@@ -58,6 +58,19 @@ resource "azurerm_cdn_frontdoor_rule" "example" {
 
 The `origins` variable accepts a map of origin configurations. Each origin must have a `host_name` and optionally a `priority` for routing preference.
 
+By default, `preserve_host_header` is `false`: Front Door sets the origin `Host` header to `host_name`, preserving the existing behavior. Set `preserve_host_header = true` on an origin to forward the incoming request's `Host` header instead:
+
+```hcl
+origins = {
+  cloudfront = {
+    host_name            = "distribution.cloudfront.net"
+    preserve_host_header = true
+  }
+}
+```
+
+This setting is independent for each origin and does not change the hostname Front Door connects to. Ensure the origin accepts the incoming hostname; for CloudFront, configure the corresponding alternate domain name and certificate. Azure Storage and App Service origins typically require the default behavior unless configured to accept the incoming hostname.
+
 #### Supported Origin Types
 
 | Origin Type                          | `host_name` Value       | Terraform Resource Attribute                                               | DX Module Attribute                                              | Example                                                     | Notes                                                  |
@@ -175,7 +188,7 @@ No modules.
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment configuration object for resource naming | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_existing_cdn_frontdoor_profile_id"></a> [existing\_cdn\_frontdoor\_profile\_id](#input\_existing\_cdn\_frontdoor\_profile\_id) | Existing CDN FrontDoor Profile ID. If provided, the module will not create a new profile. | `string` | `null` | no |
 | <a name="input_origin_health_probe"></a> [origin\_health\_probe](#input\_origin\_health\_probe) | Health probe configuration of the CDN origin group | <pre>object({<br/>    path         = optional(string, "/")<br/>    request_type = optional(string, "HEAD")<br/>  })</pre> | `{}` | no |
-| <a name="input_origins"></a> [origins](#input\_origins) | Map of origin configurations. Key is the origin identifier. Priority determines routing preference (lower values = higher priority). If use\_managed\_identity is true, the Front Door identity will be granted 'Storage Blob Data Reader' role on the storage\_account\_id if provided. | <pre>map(object({<br/>    host_name            = string<br/>    priority             = optional(number, 1)<br/>    storage_account_id   = optional(string, null)<br/>    use_managed_identity = optional(bool, false)<br/>  }))</pre> | n/a | yes |
+| <a name="input_origins"></a> [origins](#input\_origins) | Map of origin configurations. Key is the origin identifier. If preserve\_host\_header is true, Front Door forwards the incoming request Host header; if false (default), the origin Host header is set to host\_name. Priority determines routing preference (lower values = higher priority). If use\_managed\_identity is true, the Front Door identity will be granted 'Storage Blob Data Reader' role on the storage\_account\_id if provided. | <pre>map(object({<br/>    host_name            = string<br/>    preserve_host_header = optional(bool, false)<br/>    priority             = optional(number, 1)<br/>    storage_account_id   = optional(string, null)<br/>    use_managed_identity = optional(bool, false)<br/>  }))</pre> | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name where the CDN profile will be created | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resource tags | `map(any)` | n/a | yes |
 | <a name="input_waf_enabled"></a> [waf\_enabled](#input\_waf\_enabled) | Whether to enable the WAF policy and associate it with the endpoint. | `bool` | `false` | no |

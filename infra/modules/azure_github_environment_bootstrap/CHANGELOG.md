@@ -1,3 +1,13 @@
+## 6.2.2 (2026-10-14)
+
+### 🩹 Fixes
+
+- Add automation CI environment ([#2345](https://github.com/pagopa/dx/pull/2345))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 6.2.1 (2026-10-09)
 
 ### 🩹 Fixes
