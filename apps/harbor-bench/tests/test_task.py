@@ -118,6 +118,26 @@ def test_generate_task_writes_exactly_the_generated_file_set(
     assert generated == set(GENERATED_TASK_FILES)
 
 
+def test_skill_use_check_is_generated_and_wired(skill: Path, tmp_path: Path):
+    """F1 proves skill use on the ATIF trajectory via tests/skill_use.py.
+
+    The raw-stream greps broke when Copilot CLI 1.0.97 changed the
+    ``--output-format json`` shape (no more ``<skill-context>`` messages), so
+    the gate must stay wired to the trajectory artifact Harbor normalizes.
+    """
+    task_root = tmp_path / "task"
+    generate_task(make_spec(skill), task_root)
+
+    assert (task_root / "tests" / "skill_use.py").is_file()
+    test_sh = (task_root / "tests" / "test.sh").read_text()
+    assert f"python3 /tests/skill_use.py {task_shape.TRAJECTORY_JSON}" in test_sh
+    assert "SKILL_EVAL_SKILL_NAME:-test-skill" in test_sh
+    # the raw-stream greps (invalidated by CLI output-format drift) are gone
+    assert "grep -q '<skill-context'" not in test_sh
+    assert "grep -q '\"name\" *: *\"skill\"'" not in test_sh
+    assert "skill_use.py" in (task_root / "tests" / "Dockerfile").read_text()
+
+
 def test_instruction_md_is_the_prompt_only(skill: Path, tmp_path: Path):
     task_root = tmp_path / "task"
     generate_task(make_spec(skill), task_root)

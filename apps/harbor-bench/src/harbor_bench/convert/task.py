@@ -37,6 +37,7 @@ GENERATED_TASK_FILES: frozenset[str] = frozenset(
         "environment/Dockerfile",
         "environment/.dockerignore",
         "tests/test.sh",
+        "tests/skill_use.py",
         "tests/quality.toml",
         "tests/Dockerfile",
         "solution/solve.sh",
@@ -258,6 +259,11 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
             (TEMPLATES / "test.sh").read_text(),
             SKILL_NAME=spec.skill_name,
         )
+    )
+    # F1 skill-use proof: its own file so the predicate is unit-tested
+    # (tests/test_skill_use.py) and the verifier image reuses it verbatim.
+    (tests_dir / "skill_use.py").write_text(
+        render_template((TEMPLATES / "skill_use.py").read_text())
     )
     # RewardKit quality.toml: header ([judge]/[scoring]) + per-eval criteria.
     (tests_dir / "quality.toml").write_text(

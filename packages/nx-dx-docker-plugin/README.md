@@ -18,11 +18,34 @@ It provides the Docker target inference with:
 
 ## Installation
 
-Install the package as a development dependency in the target monorepo.
+The package is published to GitHub Packages. With pnpm 11.23+, install through
+the [`gh:` registry prefix](https://pnpm.io/registries#prefix) without
+configuring scope routing:
 
 ```bash
-pnpm add -D @pagopa/nx-docker
-# or
+pnpm add -D gh:@pagopa/nx-docker
+```
+
+All package managers need authentication to download from GitHub Packages.
+Configure the token in the consuming repository's `.npmrc`:
+
+```ini
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+Set `GITHUB_TOKEN` to a token with permission to read packages. In GitHub
+Actions, use a workflow token with `packages: read`.
+
+For npm or Yarn, also configure the `@pagopa` scope in `.npmrc` to route
+package requests to GitHub Packages:
+
+```ini
+@pagopa:registry=https://npm.pkg.github.com
+```
+
+Then install the package as a development dependency in the target monorepo:
+
+```bash
 npm install -D @pagopa/nx-docker
 # or
 yarn add -D @pagopa/nx-docker

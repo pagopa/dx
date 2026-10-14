@@ -1,3 +1,13 @@
+## 0.22.18 (2026-10-14)
+
+### 🩹 Fixes
+
+- Update the Docker Nx plugin installation documentation ([#2349](https://github.com/pagopa/dx/pull/2349))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.22.17 (2026-10-12)
 
 ### 🚀 Features

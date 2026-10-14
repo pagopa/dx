@@ -1,3 +1,13 @@
+## 0.1.8 (2026-10-14)
+
+### 🩹 Fixes
+
+- Publish @pagopa/nx-docker to GitHub Packages ([#2349](https://github.com/pagopa/dx/pull/2349))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.1.7 (2026-10-09)
 
 ### 🚀 Features
