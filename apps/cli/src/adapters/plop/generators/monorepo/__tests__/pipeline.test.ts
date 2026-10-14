@@ -107,17 +107,17 @@ describe("monorepo generator — DX validation pipeline", () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),
       [
-        ".github/workflows/_validate.yaml",
+        ".github/workflows/validate.yaml",
         ".trivy/checks/terraform/forbid_azurerm_key_vault_secret_data_source.rego",
         "oxfmt.config.ts",
         "trivy.yml",
       ],
     );
 
-    expect(generatedFiles[".github/workflows/_validate.yaml"]).toContain(
+    expect(generatedFiles[".github/workflows/validate.yaml"]).toContain(
       "uses: pagopa/dx/.github/workflows/validate-v2.yaml@main",
     );
-    expect(generatedFiles[".github/workflows/_validate.yaml"]).toContain(
+    expect(generatedFiles[".github/workflows/validate.yaml"]).toContain(
       "secrets: inherit",
     );
     expect(generatedFiles["trivy.yml"]).toContain("ignorefile: .trivyignore");
