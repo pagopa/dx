@@ -480,7 +480,7 @@ describe("environment generator — tenant-qualified environment", () => {
         );
         await prepareOxfmtCheck(
           repositoryRoot,
-          path.join(resolveTemplatesPath("monorepo"), "oxfmt.config.ts"),
+          path.join(resolveTemplatesPath("monorepo"), "oxfmt.config.ts.hbs"),
         );
       },
       tmpDirPrefix: "dx-cli-env-tenant-test-",

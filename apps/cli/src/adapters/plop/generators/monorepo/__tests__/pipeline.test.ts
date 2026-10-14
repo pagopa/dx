@@ -139,7 +139,7 @@ describe("monorepo generator — DX validation pipeline", () => {
     const generatedRoot = path.join(tmpDir, payload.repoName);
     await prepareOxfmtCheck(
       generatedRoot,
-      path.join(resolveTemplatesPath("monorepo"), "oxfmt.config.ts"),
+      path.join(resolveTemplatesPath("monorepo"), "oxfmt.config.ts.hbs"),
     );
 
     // `setupPnpm` formats the scaffold with oxfmt once dependencies are
