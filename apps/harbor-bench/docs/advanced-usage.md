@@ -449,7 +449,8 @@ instead of a hand-rolled `judge.py`. `convert` renders a judge header
 `[[criterion]]` per `expected_output` / `expectations` entry, reading the
 agentskills.io rubric from `evals.json` (see the `quality-header.toml`
 template). `tests/test.sh` runs the mechanical checks (F1 skill load + invoke
-proof) and, when a judge token is available, invokes
+proof, evaluated by `tests/skill_use.py` over the ATIF trajectory) and, when a
+judge token is available, invokes
 `uvx --from harbor-rewardkit==0.2.0 rewardkit /tests` to produce
 `reward.json` → `reward.txt`. Env is injected via `[verifier].env`
 (`OPENAI_API_BASE=https://api.githubcopilot.com`,
@@ -467,8 +468,8 @@ verifier only what is declared in the task-level `artifacts` list:
 ```toml
 artifacts = [
   { source = "/workspace", exclude = [".git"] },  # agent-produced files (judge packet); skip the git baseline
-  "/logs/agent/copilot-cli.jsonl",    # agent transcript (F1 skill proof)
-  "/logs/agent/trajectory.json",      # ATIF trajectory (RewardKit process criteria)
+  "/logs/agent/copilot-cli.jsonl",    # raw Copilot CLI stream (kept for debugging the verifier)
+  "/logs/agent/trajectory.json",      # ATIF trajectory (F1 skill proof + RewardKit process criteria)
 ]
 ```
 
