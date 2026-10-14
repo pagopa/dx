@@ -3,18 +3,16 @@
  * initializes Nx, installs the DX Nx plugins, and formats the scaffold.
  *
  * DX packages are served by GitHub Packages and are referenced through pnpm's
- * built-in `gh:` alias. pnpm does not expand environment variables in registry
- * credentials stored in a committed project `.npmrc`, so the GitHub token
- * resolved by the CLI is written to a temporary user-level npmrc (the
- * developer's own configuration plus the token). Only the dependency commands
- * receive that npmrc through `npm_config_userconfig`: mise, Corepack, Nx and
- * the formatter run without it, and the raw `GH_TOKEN`/`GITHUB_TOKEN`
- * variables are never forwarded to any child process.
+ * built-in `gh:` alias. pnpm does not expand environment variables in project
+ * `.npmrc` credentials, so the GitHub token resolved by the CLI is written
+ * verbatim to the repository's git-ignored `.npmrc`, where every later local
+ * install can reuse it. mise, Corepack and Nx run before that file exists, and
+ * the raw `GH_TOKEN`/`GITHUB_TOKEN` variables are never forwarded to any
+ * bootstrap command.
  */
 import { $ as $_ } from "execa";
 import { type NodePlopAPI } from "node-plop";
 import fs from "node:fs/promises";
-import os from "node:os";
 import path from "node:path";
 
 import { getGitHubPAT } from "../../octokit/index.js";
@@ -48,51 +46,26 @@ const buildChildEnvironment = (): NodeJS.ProcessEnv =>
       // attach to the VS Code debugger and hang/fail.
       .filter(([key]) => key !== "NODE_OPTIONS")
       .filter(([key]) => !key.startsWith("VSCODE_INSPECTOR"))
-      // The GitHub token reaches the dependency commands only through the
-      // temporary npmrc: never forward the raw variables, so no bootstrap
-      // command can read the token.
+      // The GitHub token lives in the repository npmrc: never forward the raw
+      // variables, so no bootstrap command can read the token from the
+      // environment.
       .filter(([key]) => key !== "GH_TOKEN" && key !== "GITHUB_TOKEN"),
   );
 
 /**
- * Creates a temporary user-level npmrc that carries the GitHub Packages token
- * on top of the developer's existing user configuration. Returns the path of
- * the file so it can be removed once the bootstrap completes.
+ * Writes the GitHub Packages token to the repository-level npmrc so local
+ * installs keep working after the bootstrap. The file is covered by the
+ * scaffolded `.gitignore` and is never committed.
  */
-const createTemporaryUserNpmrc = async (token: string): Promise<string> => {
-  const temporaryDirectory = await fs.mkdtemp(
-    path.join(os.tmpdir(), "dx-npmrc-"),
+const writeRepositoryNpmrc = async (
+  repositoryRoot: string,
+  token: string,
+): Promise<void> => {
+  await fs.writeFile(
+    path.join(repositoryRoot, ".npmrc"),
+    `//npm.pkg.github.com/:_authToken=${token}\n`,
+    { mode: 0o600 },
   );
-
-  try {
-    const temporaryUserNpmrc = path.join(temporaryDirectory, ".npmrc");
-
-    let existingUserNpmrc = "";
-    try {
-      existingUserNpmrc = await fs.readFile(
-        path.join(os.homedir(), ".npmrc"),
-        "utf8",
-      );
-    } catch {
-      // No user-level npmrc: the temporary file only carries the token.
-    }
-
-    const lines = [
-      existingUserNpmrc.trimEnd(),
-      `//npm.pkg.github.com/:_authToken=${token}`,
-    ].filter((line) => line.length > 0);
-
-    await fs.writeFile(temporaryUserNpmrc, `${lines.join("\n")}\n`, {
-      mode: 0o600,
-    });
-    return temporaryUserNpmrc;
-  } catch (error) {
-    // The caller can only remove the directory once this helper returns its
-    // path: if anything fails before that, drop the token here so it is never
-    // left behind on disk.
-    await fs.rm(temporaryDirectory, { force: true, recursive: true });
-    throw error;
-  }
 };
 
 export default function (plop: NodePlopAPI) {
@@ -101,56 +74,41 @@ export default function (plop: NodePlopAPI) {
     const cwd = path.resolve(repoName);
     const githubToken = await getGitHubPAT();
 
-    // mise, Corepack and Nx only reach public registries: they run without
-    // the token-bearing npmrc.
-    const $unauthenticated = $_({
+    const $ = $_({
       cwd,
       env: buildChildEnvironment(),
       extendEnv: false, // Don't include process.env variables
     });
 
-    await $unauthenticated`mise lock`;
-    await $unauthenticated`mise install`;
-    await $unauthenticated`mise exec -- corepack use pnpm@11`;
-    await $unauthenticated`mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot`;
+    // mise, Corepack and Nx only reach public registries: they run before the
+    // token-bearing npmrc exists.
+    await $`mise lock`;
+    await $`mise install`;
+    await $`mise exec -- corepack use pnpm@11`;
+    await $`mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot`;
 
-    // GitHub Packages is reached only by the dependency commands, through a
-    // temporary npmrc layered over the developer's own configuration and
-    // removed as soon as the install completes.
-    let temporaryNpmrcDirectory: string | undefined;
-    try {
-      const authenticatedEnvironment = buildChildEnvironment();
-      if (githubToken) {
-        const temporaryUserNpmrc = await createTemporaryUserNpmrc(githubToken);
-        temporaryNpmrcDirectory = path.dirname(temporaryUserNpmrc);
-        authenticatedEnvironment.npm_config_userconfig = temporaryUserNpmrc;
-      }
-      const $authenticated = $_({
-        cwd,
-        env: authenticatedEnvironment,
-        extendEnv: false,
-      });
-
-      try {
-        await $authenticated`mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`;
-      } catch (cause) {
-        throw new Error(
-          [
-            `Failed to install the workspace dependencies (${NX_TERRAFORM_DEPENDENCY}, ${NX_DOCKER_DEPENDENCY}).`,
-            "The DX Nx plugins are served by GitHub Packages: make sure the GitHub token used by the CLI has the read:packages scope.",
-            "Run `gh auth refresh --scopes read:packages` (or set GITHUB_TOKEN to a personal access token that includes read:packages) and try again.",
-          ].join(" "),
-          { cause },
-        );
-      }
-      await $authenticated`mise exec -- pnpm install`;
-    } finally {
-      if (temporaryNpmrcDirectory) {
-        await fs.rm(temporaryNpmrcDirectory, { force: true, recursive: true });
-      }
+    // GitHub Packages is reached only by the dependency commands: the token is
+    // written right before them and stays in the git-ignored npmrc for the
+    // next local installs.
+    if (githubToken) {
+      await writeRepositoryNpmrc(cwd, githubToken);
     }
 
-    await $unauthenticated`mise exec -- pnpm exec oxfmt`;
+    try {
+      await $`mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`;
+    } catch (cause) {
+      throw new Error(
+        [
+          `Failed to install the workspace dependencies (${NX_TERRAFORM_DEPENDENCY}, ${NX_DOCKER_DEPENDENCY}).`,
+          "The DX Nx plugins are served by GitHub Packages: make sure the GitHub token used by the CLI has the read:packages scope.",
+          "Run `gh auth refresh --scopes read:packages` (or set GITHUB_TOKEN to a personal access token that includes read:packages) and try again.",
+        ].join(" "),
+        { cause },
+      );
+    }
+    await $`mise exec -- pnpm install`;
+
+    await $`mise exec -- pnpm exec oxfmt`;
     return "Monorepo bootstrapped";
   });
 }

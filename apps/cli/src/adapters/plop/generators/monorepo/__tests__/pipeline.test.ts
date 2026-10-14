@@ -100,12 +100,15 @@ describe("monorepo generator — DX validation pipeline", () => {
       }),
     );
 
-    // DX packages flow through pnpm's built-in `gh:` alias and credentials
-    // live in the developer's user configuration: the scaffold must not
-    // commit an npmrc that routes scopes or embeds secrets.
+    // DX packages flow through pnpm's built-in `gh:` alias: the scaffold must
+    // not commit an npmrc that routes scopes or embeds secrets. The token is
+    // written at bootstrap time to a git-ignored `.npmrc`.
     await expect(
       fs.access(path.join(generatedRoot, ".npmrc")),
     ).rejects.toThrow();
+    await expect(
+      fs.readFile(path.join(generatedRoot, ".gitignore"), "utf8"),
+    ).resolves.toContain(".npmrc");
   });
 
   it("generates the Code Review workflow and the Trivy configuration", async () => {

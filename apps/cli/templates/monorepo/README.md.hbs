@@ -30,11 +30,14 @@ you use the GitHub CLI, add it with:
 gh auth refresh --scopes read:packages
 ```
 
-Then configure the credential once:
+`dx init` wrote the credential to a local, git-ignored `.npmrc`. On a fresh
+clone, recreate it with:
 
 ```bash
-pnpm config set "//npm.pkg.github.com/:_authToken" "$(gh auth token)"
+printf '//npm.pkg.github.com/:_authToken=%s\n' "$(gh auth token)" > .npmrc
 ```
+
+Then install the dependencies:
 
 ```bash
 pnpm install

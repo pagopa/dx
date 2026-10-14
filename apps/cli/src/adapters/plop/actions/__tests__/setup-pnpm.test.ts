@@ -9,44 +9,39 @@ const mocks = vi.hoisted(() => {
   const commandsWithEnvironment: {
     command: string;
     env?: NodeJS.ProcessEnv;
+    npmrcExistsAt: boolean;
   }[] = [];
-  const execaOptions: { env?: NodeJS.ProcessEnv }[] = [];
-  const savedNpmrcContent = { value: undefined as string | undefined };
-  const execa$ = vi.fn((options: { env?: NodeJS.ProcessEnv } = {}) => {
-    execaOptions.push(options);
-    const userNpmrc = options.env?.npm_config_userconfig;
-    if (
-      typeof userNpmrc === "string" &&
-      savedNpmrcContent.value === undefined
-    ) {
-      const nodeFs = process.getBuiltinModule("node:fs");
-      try {
-        savedNpmrcContent.value = nodeFs.readFileSync(userNpmrc, "utf8");
-      } catch {
-        savedNpmrcContent.value = undefined;
-      }
-    }
-    return (
-      strings: TemplateStringsArray,
-      ...values: readonly unknown[]
-    ): Promise<void> => {
-      const command = strings.reduce(
-        (fullCommand, string, index) =>
-          `${fullCommand}${string}${values[index] ?? ""}`,
-        "",
-      );
-      commands.push(command);
-      commandsWithEnvironment.push({ command, env: options.env });
-      return Promise.resolve();
-    };
-  });
+  const execa$ = vi.fn(
+    (options: { cwd?: string; env?: NodeJS.ProcessEnv } = {}) =>
+      (
+        strings: TemplateStringsArray,
+        ...values: readonly unknown[]
+      ): Promise<void> => {
+        const command = strings.reduce(
+          (fullCommand, string, index) =>
+            `${fullCommand}${string}${values[index] ?? ""}`,
+          "",
+        );
+        // Records whether the repository npmrc already exists when the
+        // command runs, so ordering can be asserted.
+        const nodeFs = process.getBuiltinModule("node:fs");
+        const nodePath = process.getBuiltinModule("node:path");
+        commands.push(command);
+        commandsWithEnvironment.push({
+          command,
+          env: options.env,
+          npmrcExistsAt: options.cwd
+            ? nodeFs.existsSync(nodePath.join(options.cwd, ".npmrc"))
+            : false,
+        });
+        return Promise.resolve();
+      },
+  );
 
   return {
     commands,
     commandsWithEnvironment,
     execa$,
-    execaOptions,
-    savedNpmrcContent,
   };
 });
 
@@ -63,21 +58,27 @@ import setSetupPnpmAction, {
 } from "../setup-pnpm.js";
 
 describe("setupPnpm", () => {
+  const originalCwd = process.cwd();
   const originalGitHubToken = process.env.GITHUB_TOKEN;
   const originalGhToken = process.env.GH_TOKEN;
+  let tmpDir: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     mocks.commands.length = 0;
     mocks.commandsWithEnvironment.length = 0;
-    mocks.execaOptions.length = 0;
-    mocks.savedNpmrcContent.value = undefined;
     mocks.execa$.mockClear();
     // Pin a token so the action never shells out to `gh auth token`.
     process.env.GITHUB_TOKEN = "test-github-token";
     delete process.env.GH_TOKEN;
+    tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-setup-pnpm-"));
+    process.chdir(tmpDir);
+    // The generator renders the repository before this action runs.
+    await fs.mkdir(path.join(tmpDir, "generated-repo"), { recursive: true });
   });
 
-  afterEach(() => {
+  afterEach(async () => {
+    process.chdir(originalCwd);
+    await fs.rm(tmpDir, { force: true, recursive: true });
     if (originalGitHubToken === undefined) {
       delete process.env.GITHUB_TOKEN;
     } else {
@@ -89,6 +90,8 @@ describe("setupPnpm", () => {
       process.env.GH_TOKEN = originalGhToken;
     }
   });
+
+  const repositoryNpmrc = () => path.join(tmpDir, "generated-repo", ".npmrc");
 
   const runGenerator = async () => {
     const plop = await nodePlop();
@@ -145,28 +148,48 @@ describe("setupPnpm", () => {
     expect(oxfmtIndex).toBeGreaterThan(pnpmInstallIndex);
   });
 
-  it("authenticates to GitHub Packages through a temporary npmrc that never leaks the token", async () => {
+  it("writes the GitHub Packages token to the repository npmrc", async () => {
     await runGenerator();
 
-    const options = mocks.execaOptions.find(
-      ({ env }) => env?.npm_config_userconfig !== undefined,
+    await expect(fs.readFile(repositoryNpmrc(), "utf8")).resolves.toBe(
+      "//npm.pkg.github.com/:_authToken=test-github-token\n",
     );
-    const userNpmrc = options?.env?.npm_config_userconfig;
-    expect(userNpmrc).toEqual(expect.stringContaining("dx-npmrc-"));
-    // The developer's own npmrc is copied, never used as the target file.
-    expect(userNpmrc).not.toEqual(path.join(os.homedir(), ".npmrc"));
-    expect(path.basename(path.dirname(userNpmrc ?? ""))).toMatch(/^dx-npmrc-/);
-    expect(mocks.savedNpmrcContent.value).toContain(
-      "//npm.pkg.github.com/:_authToken=test-github-token",
-    );
-    // The token is passed through the temporary npmrc, never as a CLI argument.
+    // The token is written to the npmrc, never passed as a CLI argument.
     expect(mocks.commands.join("\n")).not.toContain("test-github-token");
-    // The temporary npmrc is removed once the bootstrap completes.
-    await expect(fs.access(path.dirname(userNpmrc ?? ""))).rejects.toThrow();
+    // Only the owner can read the credential.
+    const { mode } = await fs.stat(repositoryNpmrc());
+    expect(mode % 0o1000).toBe(0o600);
   });
 
-  it("removes the temporary npmrc directory when writing the token fails", async () => {
-    const mkdtemp = vi.spyOn(fs, "mkdtemp");
+  it("keeps the npmrc from the dependency commands onwards", async () => {
+    await runGenerator();
+
+    const npmrcExistsAt = (command: string) =>
+      mocks.commandsWithEnvironment.find((entry) => entry.command === command)
+        ?.npmrcExistsAt;
+
+    for (const command of [
+      "mise lock",
+      "mise install",
+      "mise exec -- corepack use pnpm@11",
+      "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
+    ]) {
+      expect(npmrcExistsAt(command)).toBe(false);
+    }
+
+    for (const command of [
+      `mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`,
+      "mise exec -- pnpm install",
+      "mise exec -- pnpm exec oxfmt",
+    ]) {
+      expect(npmrcExistsAt(command)).toBe(true);
+    }
+
+    // The credential survives the bootstrap for the next local installs.
+    await expect(fs.access(repositoryNpmrc())).resolves.toBeUndefined();
+  });
+
+  it("fails the bootstrap when the npmrc cannot be written", async () => {
     const writeFile = vi
       .spyOn(fs, "writeFile")
       .mockRejectedValueOnce(new Error("write failed"));
@@ -177,42 +200,8 @@ describe("setupPnpm", () => {
       expect(failures).toEqual([
         expect.objectContaining({ error: "write failed" }),
       ]);
-
-      // The helper never returned the path, so the caller's cleanup could not
-      // run: the directory and the partially written token must be gone.
-      const temporaryDirectory = await mkdtemp.mock.results[0]?.value;
-      expect(temporaryDirectory).toContain("dx-npmrc-");
-      await expect(fs.access(temporaryDirectory ?? "")).rejects.toThrow();
     } finally {
       writeFile.mockRestore();
-      mkdtemp.mockRestore();
-    }
-  });
-
-  it("passes the temporary npmrc only to the dependency commands", async () => {
-    await runGenerator();
-
-    const environmentFor = (command: string) =>
-      mocks.commandsWithEnvironment.find((entry) => entry.command === command)
-        ?.env;
-
-    for (const command of [
-      "mise lock",
-      "mise install",
-      "mise exec -- corepack use pnpm@11",
-      "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
-      "mise exec -- pnpm exec oxfmt",
-    ]) {
-      expect(environmentFor(command)?.npm_config_userconfig).toBeUndefined();
-    }
-
-    for (const command of [
-      `mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`,
-      "mise exec -- pnpm install",
-    ]) {
-      expect(environmentFor(command)?.npm_config_userconfig).toEqual(
-        expect.stringContaining("dx-npmrc-"),
-      );
     }
   });
 

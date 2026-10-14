@@ -38,6 +38,9 @@ gh auth refresh --scopes read:packages
 Alternatively, set `GH_TOKEN` or `GITHUB_TOKEN` to a personal access token that
 includes the `read:packages` scope.
 
+`dx init` stores the resolved token in a git-ignored `.npmrc` inside the
+generated repository, so later local installs keep working.
+
 :::
 
 Before running any command that interacts with GitHub or a cloud provider,
