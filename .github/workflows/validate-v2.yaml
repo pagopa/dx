@@ -38,6 +38,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      packages: read
       pull-requests: write
     steps:
       - name: Generate GitHub App token
@@ -61,6 +62,12 @@ jobs:
           install_args: "node pnpm"
           minimum_release_age: 7d
 
+      - name: Configure GitHub Packages authentication
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$HOME/.npmrc"
+
       - name: Install dependencies
         run: pnpm --filter . ci
 
@@ -78,6 +85,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      packages: read
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -90,6 +98,12 @@ jobs:
         with:
           install_args: "node pnpm"
           minimum_release_age: 7d
+
+      - name: Configure GitHub Packages authentication
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$HOME/.npmrc"
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -111,6 +125,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      packages: read
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -126,6 +141,12 @@ jobs:
 
       - name: Set base and head SHAs for affected commands
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Configure GitHub Packages authentication
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$HOME/.npmrc"
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -219,6 +240,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      packages: read
       pull-requests: read
     steps:
       - name: Check out repository
@@ -250,6 +272,12 @@ jobs:
         with:
           path: ${{ env.TFLINT_PLUGIN_DIR }}
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
+
+      - name: Configure GitHub Packages authentication
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$HOME/.npmrc"
 
       - name: Install dependencies
         run: mise deps
@@ -300,6 +328,7 @@ jobs:
       actions: read
       contents: read
       id-token: write
+      packages: read
     env:
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -343,6 +372,12 @@ jobs:
         with:
           path: ${{ env.TFLINT_PLUGIN_DIR }}
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
+
+      - name: Configure GitHub Packages authentication
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$HOME/.npmrc"
 
       - name: Install dependencies
         run: |

@@ -84,6 +84,9 @@ export default function getActions(
         type: "getTerraformBackend",
       },
       {
+        type: "syncNxAdditionalEnvironments",
+      },
+      {
         type: "syncRepositoryEnvironments",
       },
       // Bootstrap Azure resources can pre-exist, but OIDC credentials and

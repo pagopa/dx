@@ -1,50 +1,89 @@
 import { errAsync, ok, okAsync } from "neverthrow";
 import { describe, expect, it } from "vitest";
 
-import { checkNxConfig, checkPreCommitConfig } from "../repository.js";
+import { checkNxConfig, checkNxTerraformPlugin } from "../repository.js";
 import {
   makeMockConfig,
   makeMockDependencies,
   makeMockRepositoryRoot,
 } from "./data.js";
 
-describe("checkPreCommitConfig", () => {
-  it("should return ok result with successful validation when .pre-commit-config.yaml exists", async () => {
-    const deps = makeMockDependencies();
-    const repositoryRoot = makeMockRepositoryRoot();
-    deps.repositoryReader.fileExists.mockReturnValueOnce(okAsync(true));
+describe("checkNxTerraformPlugin", () => {
+  const repositoryRoot = makeMockRepositoryRoot();
 
-    const result = await checkPreCommitConfig(deps, repositoryRoot);
+  it("should return ok result with successful validation when nx.json configures the plugin", async () => {
+    const deps = makeMockDependencies();
+    deps.repositoryReader.readFile.mockReturnValueOnce(
+      okAsync(
+        JSON.stringify({
+          plugins: [
+            { plugin: "@nx/js/typescript" },
+            { plugin: "@pagopa/nx-terraform" },
+          ],
+        }),
+      ),
+    );
+
+    const result = await checkNxTerraformPlugin(deps, repositoryRoot);
 
     expect(result).toStrictEqual(
       ok({
-        checkName: "Pre-commit Configuration",
+        checkName: "Nx Terraform Plugin",
         isValid: true,
-        successMessage:
-          "Pre-commit configuration is present in the repository root",
+        successMessage: "@pagopa/nx-terraform is configured in nx.json",
       }),
     );
-    expect(deps.repositoryReader.fileExists).toHaveBeenCalledWith(
-      "a/repo/root/.pre-commit-config.yaml",
+    expect(deps.repositoryReader.readFile).toHaveBeenCalledWith(
+      "a/repo/root/nx.json",
     );
   });
 
-  it("should return ok result with failed validation when .pre-commit-config.yaml does not exist", async () => {
+  it("should return ok result with failed validation when the plugin is not configured", async () => {
     const deps = makeMockDependencies();
-    const repositoryRoot = makeMockRepositoryRoot();
-
-    const errorMessage =
-      ".pre-commit-config.yaml not found in repository root. Make sure to have pre-commit configured for the repository.";
-    deps.repositoryReader.fileExists.mockReturnValueOnce(
-      errAsync(new Error(errorMessage)),
+    deps.repositoryReader.readFile.mockReturnValueOnce(
+      okAsync(JSON.stringify({ plugins: [{ plugin: "@nx/js/typescript" }] })),
     );
 
-    const result = await checkPreCommitConfig(deps, repositoryRoot);
+    const result = await checkNxTerraformPlugin(deps, repositoryRoot);
 
     expect(result).toStrictEqual(
       ok({
-        checkName: "Pre-commit Configuration",
-        errorMessage,
+        checkName: "Nx Terraform Plugin",
+        errorMessage:
+          "The @pagopa/nx-terraform plugin is not configured in nx.json. Add it to align the repository with the DX Terraform validation pipeline.",
+        isValid: false,
+      }),
+    );
+  });
+
+  it("should return ok result with failed validation when nx.json cannot be read", async () => {
+    const deps = makeMockDependencies();
+    deps.repositoryReader.readFile.mockReturnValueOnce(
+      errAsync(new Error("ENOENT: no such file or directory")),
+    );
+
+    const result = await checkNxTerraformPlugin(deps, repositoryRoot);
+
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Nx Terraform Plugin",
+        errorMessage:
+          "Could not read nx.json: ENOENT: no such file or directory. Make sure to have Nx configured for the monorepo.",
+        isValid: false,
+      }),
+    );
+  });
+
+  it("should return ok result with failed validation when nx.json is not valid JSON", async () => {
+    const deps = makeMockDependencies();
+    deps.repositoryReader.readFile.mockReturnValueOnce(okAsync("not-json"));
+
+    const result = await checkNxTerraformPlugin(deps, repositoryRoot);
+
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Nx Terraform Plugin",
+        errorMessage: "nx.json is not a valid JSON file.",
         isValid: false,
       }),
     );

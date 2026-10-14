@@ -1,0 +1,18 @@
+name: Code Review
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  validate:
+    if: $\{{ github.actor != 'dx-pagopa-bot' }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      packages: read
+      pull-requests: write
+    uses: pagopa/dx/.github/workflows/validate-v2.yaml@main
+    secrets: inherit

@@ -27,33 +27,61 @@ const isVersionValid = (version: string, minVersion: string): boolean => {
   return semverGte(dependencySemVer, minAcceptedSemVer);
 };
 
-export const checkPreCommitConfig = async (
+export const NX_TERRAFORM_PLUGIN_NAME = "@pagopa/nx-terraform";
+
+/**
+ * Checks that the repository configures the DX Nx Terraform plugin in
+ * `nx.json`, so Terraform roots take part in the DX validation pipeline.
+ */
+export const checkNxTerraformPlugin = async (
   dependencies: Pick<Dependencies, "repositoryReader">,
   repositoryRoot: string,
 ): Promise<ValidationCheckResult> => {
   const { repositoryReader } = dependencies;
-  const checkName = "Pre-commit Configuration";
+  const checkName = "Nx Terraform Plugin";
 
-  const preCommitResult = await repositoryReader.fileExists(
-    fs.join(repositoryRoot, ".pre-commit-config.yaml"),
+  const nxJsonResult = await repositoryReader.readFile(
+    fs.join(repositoryRoot, "nx.json"),
   );
-
-  if (preCommitResult.isOk() && preCommitResult.value) {
+  if (nxJsonResult.isErr()) {
     return ok({
       checkName,
-      isValid: true,
-      successMessage:
-        "Pre-commit configuration is present in the repository root",
+      errorMessage: `Could not read nx.json: ${nxJsonResult.error.message}. Make sure to have Nx configured for the monorepo.`,
+      isValid: false,
     });
   }
 
-  const errorMessage = preCommitResult.isErr()
-    ? preCommitResult.error.message
-    : `Pre-commit configuration is not present in the repository root. Please add a .pre-commit-config.yaml file to the repository root.`;
+  let plugins: unknown;
+  try {
+    ({ plugins } = JSON.parse(nxJsonResult.value) as { plugins?: unknown });
+  } catch {
+    return ok({
+      checkName,
+      errorMessage: "nx.json is not a valid JSON file.",
+      isValid: false,
+    });
+  }
+
+  const isConfigured =
+    Array.isArray(plugins) &&
+    plugins.some(
+      (entry) =>
+        typeof entry === "object" &&
+        entry !== null &&
+        (entry as { plugin?: unknown }).plugin === NX_TERRAFORM_PLUGIN_NAME,
+    );
+
+  if (isConfigured) {
+    return ok({
+      checkName,
+      isValid: true,
+      successMessage: `${NX_TERRAFORM_PLUGIN_NAME} is configured in nx.json`,
+    });
+  }
 
   return ok({
     checkName,
-    errorMessage,
+    errorMessage: `The ${NX_TERRAFORM_PLUGIN_NAME} plugin is not configured in nx.json. Add it to align the repository with the DX Terraform validation pipeline.`,
     isValid: false,
   });
 };

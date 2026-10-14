@@ -22,6 +22,7 @@ import setConfigureGitHubEnvironmentsAction from "../../../actions/configure-git
 import setGetTerraformBackend from "../../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../../actions/init-cloud-accounts.js";
 import setProvisionTerraformBackendAction from "../../../actions/provision-terraform-backend.js";
+import setSyncNxAdditionalEnvironments from "../../../actions/sync-nx-additional-environments.js";
 import setSyncRepositoryEnvironmentsAction from "../../../actions/sync-repository-environments.js";
 import setEnvShortHelper from "../../../helpers/env-short.js";
 import setEqHelper from "../../../helpers/eq.js";
@@ -29,6 +30,10 @@ import setResourcePrefixHelper from "../../../helpers/resource-prefix.js";
 import setTerraformStateKeyHelper from "../../../helpers/terraform-state-key.js";
 import setTerraformStringHelper from "../../../helpers/terraform-string.js";
 import { resolveTemplatesPath } from "../../../templates-path.js";
+import {
+  checkOxfmtFormatting,
+  prepareOxfmtCheck,
+} from "../../__tests__/oxfmt.js";
 import {
   cleanupTempDir,
   readGeneratedFiles,
@@ -73,6 +78,7 @@ const registerEnvironmentSetup = (
     mockCloudAccountService,
     mockGitHubService,
   );
+  setSyncNxAdditionalEnvironments(plop);
   setSyncRepositoryEnvironmentsAction(plop);
 };
 
@@ -108,11 +114,13 @@ const runEnvironmentGenerator = async ({
   mockCloudAccountService,
   mockGitHubService,
   payload,
+  prepareRepository,
   tmpDirPrefix,
 }: {
   mockCloudAccountService: CloudAccountService;
   mockGitHubService: GitHubService;
   payload: Payload;
+  prepareRepository?: (tmpDir: string) => Promise<void>;
   tmpDirPrefix: string;
 }): Promise<{
   originalCwd: string;
@@ -141,6 +149,8 @@ const runEnvironmentGenerator = async ({
       "",
     ].join("\n"),
   );
+
+  await prepareRepository?.(tmpDir);
 
   const plop = await nodePlop();
   registerEnvironmentSetup(plop, mockCloudAccountService, mockGitHubService);
@@ -416,5 +426,93 @@ describe("environment generator — file generation (with init)", () => {
     ]);
 
     expect(generatedFiles).toMatchSnapshot();
+  });
+});
+
+describe("environment generator — tenant-qualified environment", () => {
+  let tmpDir: string;
+  let originalCwd: string;
+
+  const payload: Payload = {
+    env: {
+      cloudAccounts: [
+        {
+          csp: "azure",
+          defaultLocation: "italynorth",
+          displayName: "PROD-CED",
+          id: "sub-ced-123",
+        },
+      ],
+      name: "ced-prod",
+      prefix: "ced",
+    },
+    github: {
+      owner: "pagopa",
+      repo: "my-project",
+    },
+    runnerAppCredentials: {
+      clientId: "test-app-client-id",
+      id: "test-app-id",
+      installationId: "test-installation-id",
+      key: "test-private-key",
+    },
+    tags: {
+      CostCenter: "TS330 - PDND & INTEROPERABILITA'",
+      Owner: "DX Platform",
+    },
+    workspace: {
+      domain: "bonus",
+    },
+  };
+
+  beforeAll(async () => {
+    ({ originalCwd, tmpDir } = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload,
+      prepareRepository: async (repositoryRoot) => {
+        await fs.copyFile(
+          path.join(resolveTemplatesPath("monorepo"), "nx.json"),
+          path.join(repositoryRoot, "nx.json"),
+        );
+        await prepareOxfmtCheck(
+          repositoryRoot,
+          path.join(resolveTemplatesPath("monorepo"), "oxfmt.config.ts"),
+        );
+      },
+      tmpDirPrefix: "dx-cli-env-tenant-test-",
+    }));
+  });
+
+  afterAll(async () => {
+    process.chdir(originalCwd);
+    await cleanupTempDir(tmpDir);
+  });
+
+  it("registers the environment in the Nx Terraform plugin additional environments", async () => {
+    const nxJson = JSON.parse(
+      await fs.readFile(path.join(tmpDir, "nx.json"), "utf8"),
+    ) as {
+      plugins: {
+        options?: { additionalEnvironments?: string[] };
+        plugin: string;
+      }[];
+    };
+
+    expect(
+      nxJson.plugins.find((entry) => entry.plugin === "@pagopa/nx-terraform")
+        ?.options?.additionalEnvironments,
+    ).toEqual(["ced-prod"]);
+  });
+
+  it("generates files that are already formatted with oxfmt", async () => {
+    const result = await checkOxfmtFormatting(tmpDir);
+
+    expect(result.stderr).toBe("");
+    expect(result.stdout).toContain("All matched files use the correct format");
+    expect(result.exitCode).toBe(0);
   });
 });

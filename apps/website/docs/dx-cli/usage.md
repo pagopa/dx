@@ -224,8 +224,8 @@ Pull Request to merge the initial project structure.
 
 Validate your repository against DevEx guidelines. Typical checks include:
 
-- Presence and correctness of pre-commit configuration.
-- `turbo.json` configuration sanity.
+- Configuration of the `@pagopa/nx-terraform` plugin in `nx.json`.
+- `nx.json` presence and the minimum Nx version in `devDependencies`.
 - Required monorepo scripts in `package.json`.
 - Workspace declaration and structure.
 
@@ -240,9 +240,9 @@ Exit code: `0` if all checks pass, `1` if one or more checks fail.
 Example output:
 
 ```text
-✔ pre-commit configuration ok
-✔ turbo configuration ok
-✖ monorepo scripts missing: build, test
+✔ Nx Terraform Plugin ok
+✔ Nx Configuration ok
+✖ Monorepo Scripts missing: build, test
 ```
 
 ## `codemod` – Repository Migrations

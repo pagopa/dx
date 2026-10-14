@@ -25,6 +25,21 @@ The following tools must be installed on your machine:
 lock and install the generated toolchain before installing the workspace
 dependencies.
 
+:::info[GitHub Packages access]
+
+Generated repositories depend on the DX Nx plugins, which are published to
+GitHub Packages. The GitHub token used by the CLI must include the
+`read:packages` scope: if you authenticated with the GitHub CLI, add it with:
+
+```bash
+gh auth refresh --scopes read:packages
+```
+
+Alternatively, set `GH_TOKEN` or `GITHUB_TOKEN` to a personal access token that
+includes the `read:packages` scope.
+
+:::
+
 Before running any command that interacts with GitHub or a cloud provider,
 ensure you are logged in:
 

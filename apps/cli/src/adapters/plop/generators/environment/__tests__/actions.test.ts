@@ -97,6 +97,7 @@ describe("actions", () => {
   ])("correct order of actions", ({ payload }) => {
     const actionsOrder = [
       "getTerraformBackend",
+      "syncNxAdditionalEnvironments",
       "syncRepositoryEnvironments",
       "configureGitHubEnvironments",
       "addMany",
