@@ -46,6 +46,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
+      release-app-configured: ${{ steps.evaluate-release-app.outputs.configured }}
     steps:
       - name: Evaluate fork PR
         id: evaluate
@@ -61,10 +62,28 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # The version-plan warning job comments through the release GitHub App.
+      # Repositories that cannot inherit the GH_APP_RELEASE_* secrets (for
+      # example repositories generated under a personal owner) would otherwise
+      # fail on `actions/create-github-app-token`, which requires a private key:
+      # when the secrets are missing the warning job is skipped instead.
+      - name: Evaluate release app credentials
+        id: evaluate-release-app
+        env:
+          GH_APP_RELEASE_CLIENT_ID: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
+          GH_APP_RELEASE_APP_KEY: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
+        run: |
+          if [ -n "$GH_APP_RELEASE_CLIENT_ID" ] && [ -n "$GH_APP_RELEASE_APP_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Version plan warning skipped::GH_APP_RELEASE_CLIENT_ID and GH_APP_RELEASE_APP_KEY are not configured. Set them to enable the version-plan warning comment on pull requests."
+          fi
+
   warn-missing-version-plans:
     name: Warn Missing Version Plans
     needs: gate
-    if: ${{ github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' }}
+    if: ${{ github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' && needs.gate.outputs.release-app-configured == 'true' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
