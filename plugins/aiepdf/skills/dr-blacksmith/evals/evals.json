@@ -155,16 +155,34 @@
     {
       "id": 11,
       "name": "cross-domain-c4-and-readiness-evidence",
-      "prompt": "Create a DR/SRS from an approved PRD for a municipal service-status subscription. A resident subscribes to disruption notifications for one municipal service; a service operator publishes disruption and recovery events. The PRD confirms the actors, JTBD, outcome metric, privacy guardrail, owner, and scope. Produce the minimum C4 views, a link-first catalog for UC-01 Subscribe to service updates and UC-02 Publish a disruption update, and evidence-based review and backlog readiness. Do not reuse document-upload assumptions or CED terminology.",
-      "expected_output": "A cross-domain DR/SRS with a C4 System Context and an appropriate Container or Component view, two link-first Use Case entries, and criterion-by-criterion readiness evidence linked to sources, gaps, or justified N/A values.",
+      "prompt": "Create design-review.md from the approved municipal service-status PRD at municipal-prd.md. Include a catalog for UC-01 Subscribe to service updates and UC-02 Publish a disruption update, and report review and backlog readiness. Work offline; no child pages or architecture decisions have been supplied.",
+      "expected_output": "A cross-domain DR/SRS with a system-context view, an internal view when boundaries are evidenced or an owned decomposition gap when they are not, two link-first Use Case entries, and criterion-by-criterion readiness evidence linked to sources, gaps, or justified N/A values.",
       "expectations": [
-        "Produces a C4 System Context view and a Container or Component view appropriate to the notification solution.",
+        "Produces a system-context view of the supplied actors and solution scope; provides an internal Container or Component view only with evidenced boundaries, otherwise records an owned decomposition gap. C4-compatible flowchart or PlantUML views are acceptable; a specific Mermaid directive is not required.",
         "Uses only the municipal service-status actors, domain entities, outcomes, and constraints supplied by the scenario.",
         "Keeps UC-01 and UC-02 catalog rows to stable ID, title, and child link.",
         "Separately reports review readiness and per-Use-Case backlog readiness with source evidence, owned gaps, or justified N/A values.",
         "Does not import agreement-upload, CAdES, Practice, Document, REQUEST, or PENDING concepts from another fixture."
       ],
-      "files": []
+      "files": ["fixtures/municipal-prd.md"]
+    },
+    {
+      "id": 12,
+      "name": "reconcile-canonical-source-and-later-decisions",
+      "prompt": "Aggiorna la DR/SRS legacy-design-review.md usando source-reconciliation.md, che contiene il brief canonico e le decisioni umane successive. Scrivi la proposta in design-review.md e lascia intatte le fonti. Non promuovere lo stato né creare documenti child. Lavora offline.",
+      "expected_output": "A draft DR/SRS proposal grounded in the supplied product brief and later human decisions, with preserved identities and evidence provenance, not an invented product baseline. A document-edit timestamp may use the evaluation date; it is not a source or approval date, which remains unknown unless supplied.",
+      "expectations": [
+        "Keeps the historical meaning of solution.decision.item-005 traceable; resolves open.item-005 and links the real repository without reusing the historical ID for a different meaning.",
+        "Retains the supplied design and blueprint URLs; distinguishes unavailable offline contents from absent links.",
+        "Does not attribute the legacy JTBD-99 or 95% completion target to the authoritative product brief.",
+        "Records the confirmed repeated-registration rejection as a decision linked to its source; keeps infrastructure observations proposed rather than human-approved.",
+        "Keeps metadata.status draft and the UC-01 catalog link-first, with no detailed child behavior.",
+        "Writes descriptive content in Italian while preserving identifiers and supplied actor wording."
+      ],
+      "files": [
+        "fixtures/source-reconciliation.md",
+        "fixtures/legacy-design-review.md"
+      ]
     }
   ]
 }

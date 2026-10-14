@@ -20,6 +20,8 @@ request in Italian, write the DR/SRS in Italian. Only when the language cannot
 be inferred at all, default to English unless the user asks for another
 language. Stable IDs, status values, endpoint names, metric identifiers, and
 other machine-facing values always stay in English and are never translated.
+Translate editable template and readiness descriptions too; their stable
+identifiers do not make the surrounding explanation machine-facing.
 
 ## Scope
 
@@ -78,9 +80,16 @@ bundled template as a read-only input.
 - Keep evidence traceable to its source artifact or stated input.
 - Include a minimum C4 view: a System Context diagram or link in every DR/SRS,
   plus a Container or Component view when the solution has an internal
-  decomposition. Record a justified gap rather than inventing boundaries.
+  decomposition. Derive a conceptual context from evidenced actors and
+  capabilities even when no diagram was supplied; unknown internal boundaries
+  remain an owned gap rather than an invented decomposition.
 - Separate confirmed facts, proposed design, assumptions, unresolved questions,
   and decisions.
+- Reconcile legacy drafts against the actual canonical source. A later plan or
+  implementation is evidence, not approval: propagate only expressly confirmed
+  decisions, retain historical ID meanings, and record resolved gaps separately.
+  A supplied design link with unreadable contents is not a missing artifact.
+  A topic absent from a source is not a confirmed exclusion or non-goal.
 - Keep detailed flows, edge cases, acceptance checks, and test notes in the Use
   Case child pages; the DR/SRS links the children.
 - The PRD is not mandatory: without one, the initiative outcome and scope live
@@ -117,6 +126,9 @@ bundled template as a read-only input.
    `Open questions, assumptions, decisions, and change propagation`. Every
    material gap carries an owner, and no proposal becomes a confirmed decision
    without evidence or user confirmation.
+   In a proposed update, record every confirmed behavior change before handing
+   it to child authoring; keep the operational baseline and the proposal
+   distinguishable until approval.
 7. **Operate by lifecycle state.** Before the baseline is approved, missing,
    ambiguous, or contradictory content produces a gap or an open question,
    never a Change Request. After the baseline is approved, a Change Request is

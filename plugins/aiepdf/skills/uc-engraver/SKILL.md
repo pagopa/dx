@@ -40,7 +40,11 @@ bundled template.
 - Return the stable Use Case ID and complete acceptance-check ID set as coverage
   inputs for downstream `UC-XX::` delivery validation. Do not create projection
   keys in the child document; `jira-magister` owns slice identities.
-- Write visible content in English unless another language is requested.
+  Return the UC ID and its AC set separately, without manufacturing composite
+  `UC-XX::AC-YY` identities. In the coverage handoff, list IDs and child links
+  only; leave AC behavior and explanations in the canonical child.
+- Write visible content in the user's language, including field labels, flows
+  and acceptance-check prose; use English only when no language is inferable.
   Stable IDs, status values, endpoint names, metric identifiers, and URLs are
   machine-facing and remain unchanged.
 - Keep the frontmatter `status` (`draft` or `ready`) unchanged unless the user
@@ -68,6 +72,9 @@ bundled template.
    architecture and contract sections. Treat conflicts with the PRD, DR/SRS,
    Service Blueprint, Figma, RFC, or contracts as open questions; do not
    silently reconcile them.
+   Do not turn a legacy actor alias or JTBD reference into canonical evidence.
+   When a PRD exists but defines no matching JTBD, record the missing mapping;
+   do not invent an ID. Preserve existing AC meaning while exposing conflicts.
 4. Use accepted RFC decisions only after they have been propagated into the
    parent DR/SRS.
 
@@ -155,6 +162,9 @@ readiness, and change propagation.
   owner.
 - Do not repeat a parent open question: reference its `open.item-XX`. Put
   cross-Use-Case or initiative questions in the parent document.
+- A resolved local question becomes a reference to the parent decision, not a
+  second open-question row. Preconditions may reference parent constraints;
+  they must not reopen their ownership or decision.
 - Use `N/A — <confirmed reason>` only when the source or user confirms that a
   section does not apply.
 - Do not turn a user story into a Use Case without defining the observable

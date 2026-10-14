@@ -48,6 +48,10 @@ request is ambiguous.
    and the linked PRD/JTBD evidence before drafting Jira items.
 2. Treat the DR/SRS as the current operational source of truth. An accepted RFC
    does not guide Jira until its decision is propagated into the DR/SRS.
+   When reviewing a proposed source revision, state that scope and compare the
+   existing projection against that revision without implying baseline approval.
+   A read-only audit reports the existing draft's failures; it does not repair
+   the draft and then present the repaired result as the audit.
 3. Preserve stable `JTBD-XX`, `UC-XX`, `AC-UC-XX-YY`, `RFC-XX`, and `CR-YYYY-NNN`
    identifiers. Never renumber or reuse an identifier for a different meaning.
    Preserve DR/SRS `open.item-XX` and Use Case `uc-open-XX` question IDs, and the

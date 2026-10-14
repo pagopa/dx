@@ -56,30 +56,33 @@
     {
       "id": 4,
       "name": "publication-handoff",
-      "prompt": "The local UC-03 Markdown and parent DR/SRS index are complete and validated. Publish UC-03 as a child page under the parent DR/SRS in Confluence.",
-      "expected_output": "The agent confirms publication, delegates the Confluence operation to confluence-librarian, and keeps both local and Confluence links in the parent index after success.",
+      "prompt": "The local UC-03 Markdown and parent DR/SRS index are complete and validated. Prepare the handoff to publish UC-03 as a child page under the parent DR/SRS in Confluence. Explain the confirmation and catalog synchronization requirements, but do not invoke another skill or publish anything.",
+      "expected_output": "A publication handoff proposal that requests confirmation, identifies the publication owner, and describes how local and returned Confluence links must be retained without invoking another skill or writing remote state.",
       "expectations": [
         "Does not publish before explicit confirmation.",
-        "Delegates publication mechanics to confluence-librarian.",
+        "Identifies confluence-librarian as the publication owner without invoking it.",
         "Uses the parent DR/SRS as the Confluence parent page.",
-        "Retains both the local Markdown link and returned Confluence URL in the parent index.",
-        "Updates and verifies the published parent Confluence catalog row instead of leaving a TBD or missing-child placeholder."
+        "Requires retention of both the local Markdown link and returned Confluence URL in the parent index after a successful publication.",
+        "Requires update and verification of the published parent catalog instead of claiming that a handoff alone completes publication."
       ],
       "files": []
     },
     {
       "id": 5,
       "name": "hierarchical-publication-synchronization",
-      "prompt": "Publish three already-authored Use Case child documents under an existing Confluence Design Review whose catalog rows currently contain local links and TBD Confluence URLs. Keep each child in draft status, update the parent catalog with the returned URLs, re-fetch the parent, and report any failed synchronization instead of claiming completion.",
-      "expected_output": "All child pages are created under the existing parent, the parent catalog is updated with the three returned URLs and no stale placeholders, the parent is re-fetched for verification, and child statuses remain unchanged.",
+      "prompt": "Synchronize publication-parent.md using the recorded publication results in publication-receipt.md. Keep the local links and draft child statuses. Write the updated parent catalog to publication-parent.md and a synchronization report to publication-sync.md. Work offline; do not invoke another skill, publish pages or change remote state.",
+      "expected_output": "The local parent catalog retains each stable UC ID and local link, receives all three supplied Confluence URLs without TBD placeholders, and reports that remote parent synchronization and re-fetch verification remain pending.",
       "expectations": [
-        "Creates child pages under the existing parent and does not create a duplicate parent.",
+        "Uses the recorded URLs for the existing parent's children without creating pages or inventing a duplicate parent.",
         "Preserves stable UC IDs and the draft child status.",
         "Updates each parent catalog row with both local and Confluence links.",
-        "Re-fetches the parent and verifies that TBD or missing-child placeholders are gone.",
-        "Reports publication as incomplete if any parent synchronization fails."
+        "Verifies the local catalog has no TBD or missing-child placeholders and does not claim to have re-fetched the remote parent.",
+        "Reports remote parent synchronization and verification as pending rather than claiming complete publication."
       ],
-      "files": []
+      "files": [
+        "fixtures/publication-parent.md",
+        "fixtures/publication-receipt.md"
+      ]
     },
     {
       "id": 6,
@@ -127,7 +130,7 @@
     {
       "id": 9,
       "name": "cross-domain-coverage-handoff",
-      "prompt": "Using the existing municipal service-status DR/SRS and approved PRD, create UC-01 for a resident subscribing to disruption notifications. The exact actor is \"Resident subscriber\". Define AC-01 for a successful subscription and AC-02 for rejecting an unsupported delivery channel, keep the parent catalog link-first, and return the coverage handoff needed by the backlog skill. Do not create Jira projection keys.",
+      "prompt": "Using municipal-design-review.md and its linked approved product evidence, create UC-01 Subscribe to service updates at the catalog path. Define AC-01 for a successful subscription and AC-02 for an unsupported delivery channel, synchronize the parent row, and return the coverage handoff. Work offline. No promotion to ready has been authorized.",
       "expected_output": "A complete service-status Use Case child with stable AC-01 and AC-02 identifiers, a synchronized link-first parent row, and a handoff containing UC-01 plus the complete acceptance-check ID set without copied acceptance-check text or Jira slice identities.",
       "expectations": [
         "Uses the exact actor name \"Resident subscriber\" and service-status domain concepts only.",
@@ -136,7 +139,28 @@
         "Returns UC-01 and the complete AC-01/AC-02 identifier set as downstream coverage inputs.",
         "Does not create a Projection Key or Slice Scope ID because jira-magister owns delivery slice identity."
       ],
-      "files": []
+      "files": [
+        "fixtures/municipal-design-review.md",
+        "fixtures/municipal-evidence.md"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "reconcile-legacy-child-with-canonical-evidence",
+      "prompt": "Aggiorna il child legacy-registration.md da registration-evidence.md (brief canonico e parent DR/SRS). Scrivi use-cases/uc-01-register.md, mantenendo gli identificatori e lo stato del child. Segnala i conflitti delle fonti e restituisci il coverage handoff. Lavora offline senza Jira o pubblicazione.",
+      "expected_output": "An Italian UC-01 update with exact canonical actor wording, unchanged draft lifecycle and AC identities, honest missing-JTBD traceability, and no duplicate parent questions.",
+      "expectations": [
+        "Uses Community participant exactly and exposes the legacy Community member alias conflict rather than treating the alias as authoritative.",
+        "Does not claim JTBD-99 is defined by the PRD; records that no canonical JTBD identifier is supplied.",
+        "Preserves UC-01, AC-01 and AC-02 meanings and draft status without autonomous promotion.",
+        "References the parent decision for repeated registration; keeps retention owned by the parent, either referencing open.item-001 or omitting the question, without opening it again.",
+        "Returns the complete AC identifier set without Jira Projection Keys or Slice Scope IDs.",
+        "Writes descriptive fields, flows and acceptance-check content in Italian; keeps IDs, semantic errors and exact actor names unchanged."
+      ],
+      "files": [
+        "fixtures/registration-evidence.md",
+        "fixtures/legacy-registration.md"
+      ]
     }
   ]
 }

@@ -5,6 +5,9 @@ confirmation. The validation is read-only: it checks the proposed projection
 against the selected Use Cases and reports blocking gaps and warnings without
 creating or updating Jira items.
 
+This names the procedure below, not an installed CLI command. Apply each check
+to the source and item content and expose the resulting evidence tables.
+
 ## Projection identity
 
 Every dispatchable item, including each Epic, has:
