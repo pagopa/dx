@@ -12,6 +12,7 @@ import { type NodePlopAPI } from "node-plop";
 import fs from "node:fs/promises";
 import { createRequire } from "node:module";
 import path from "node:path";
+import { z } from "zod/v4";
 
 import {
   type Environment,
@@ -26,6 +27,11 @@ import {
   type Payload,
   payloadSchema,
 } from "../generators/environment/prompts.js";
+
+/** Minimal shape of the installed oxfmt manifest needed to locate its bin. */
+const oxfmtManifestSchema = z.object({
+  bin: z.union([z.string(), z.record(z.string(), z.string())]),
+});
 
 /**
  * Returns the updated `nx.json` content, or `undefined` when the file does not
@@ -75,13 +81,10 @@ export const formatWithRepositoryOxfmt = async (
   try {
     const require = createRequire(path.join(repositoryRoot, "package.json"));
     const packageJsonPath = require.resolve("oxfmt/package.json");
-    const packageJson = JSON.parse(
-      await fs.readFile(packageJsonPath, "utf8"),
-    ) as { bin: Record<string, string> | string };
-    const binary =
-      typeof packageJson.bin === "string"
-        ? packageJson.bin
-        : packageJson.bin["oxfmt"];
+    const { bin } = oxfmtManifestSchema.parse(
+      JSON.parse(await fs.readFile(packageJsonPath, "utf8")),
+    );
+    const binary = typeof bin === "string" ? bin : bin["oxfmt"];
     oxfmtBinary = path.resolve(path.dirname(packageJsonPath), binary);
   } catch {
     logger.debug("oxfmt is not installed, skipping the formatting of {file}", {

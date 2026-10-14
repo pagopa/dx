@@ -4,14 +4,8 @@
 import { parse } from "jsonc-parser";
 import { describe, expect, it } from "vitest";
 
+import { nxJsonSchema } from "../../../../domain/nx-json.js";
 import { syncAdditionalEnvironments } from "../sync-nx-additional-environments.js";
-
-type NxJsonFixture = {
-  plugins: {
-    options?: { additionalEnvironments?: string[] };
-    plugin: string;
-  }[];
-};
 
 const buildNxJson = (additionalEnvironments?: string[]): string =>
   `${JSON.stringify(
@@ -33,9 +27,9 @@ const buildNxJson = (additionalEnvironments?: string[]): string =>
   )}\n`;
 
 const getAdditionalEnvironments = (content: string): string[] | undefined =>
-  (
-    parse(content, undefined, { allowTrailingComma: true }) as NxJsonFixture
-  ).plugins.find((entry) => entry.plugin === "@pagopa/nx-terraform")?.options
+  nxJsonSchema
+    .parse(parse(content, undefined, { allowTrailingComma: true }))
+    .plugins?.find((entry) => entry.plugin === "@pagopa/nx-terraform")?.options
     ?.additionalEnvironments;
 
 describe("syncAdditionalEnvironments", () => {
@@ -106,5 +100,11 @@ describe("syncAdditionalEnvironments", () => {
 
   it("leaves an invalid nx.json untouched", () => {
     expect(syncAdditionalEnvironments("not-json", "ced-prod")).toBeUndefined();
+  });
+
+  it("leaves an nx.json with an unexpected shape untouched", () => {
+    expect(
+      syncAdditionalEnvironments('{ "plugins": {} }', "ced-prod"),
+    ).toBeUndefined();
   });
 });

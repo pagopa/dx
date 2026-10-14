@@ -12,18 +12,35 @@ import {
   type ParseError,
   printParseErrorCode,
 } from "jsonc-parser";
+import { z } from "zod/v4";
 
 export const NX_TERRAFORM_PLUGIN_NAME = "@pagopa/nx-terraform";
 
-export type NxJson = {
-  plugins?: NxPluginEntry[];
-};
+/**
+ * The structure the CLI relies on. The schema is loose on purpose: plugins
+ * carry arbitrary options and every untouched entry must round-trip unchanged.
+ */
+export const nxJsonSchema = z
+  .object({
+    plugins: z
+      .array(
+        z
+          .object({
+            options: z
+              .object({
+                additionalEnvironments: z.array(z.string()).optional(),
+              })
+              .loose()
+              .optional(),
+            plugin: z.string(),
+          })
+          .loose(),
+      )
+      .optional(),
+  })
+  .loose();
 
-type NxPluginEntry = {
-  include?: string[];
-  options?: { additionalEnvironments?: string[] };
-  plugin: string;
-};
+export type NxJson = z.infer<typeof nxJsonSchema>;
 
 const parseOptions = { allowTrailingComma: true } as const;
 
@@ -33,19 +50,27 @@ export type NxJsonParseResult =
 
 export const parseNxJson = (content: string): NxJsonParseResult => {
   const errors: ParseError[] = [];
-  const nxJson = parse(content, errors, parseOptions) as NxJson | undefined;
+  const parsed = parse(content, errors, parseOptions);
 
-  if (errors.length > 0) {
-    const { error, offset } = errors[0] as ParseError;
+  const firstError = errors[0];
+  if (firstError !== undefined) {
     return {
-      error: `nx.json is not a valid JSON file (${printParseErrorCode(error)} at offset ${offset})`,
+      error: `nx.json is not a valid JSON file (${printParseErrorCode(firstError.error)} at offset ${firstError.offset})`,
     };
   }
-  if (nxJson === undefined) {
+  if (parsed === undefined) {
     return { error: "nx.json is empty" };
   }
 
-  return { nxJson };
+  const result = nxJsonSchema.safeParse(parsed);
+  if (!result.success) {
+    const { message, path } = result.error.issues[0];
+    return {
+      error: `nx.json has an unexpected shape (${[...path, message].join(": ")})`,
+    };
+  }
+
+  return { nxJson: result.data };
 };
 
 /**

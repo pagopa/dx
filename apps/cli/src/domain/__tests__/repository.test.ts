@@ -114,6 +114,24 @@ describe("checkNxTerraformPlugin", () => {
       }),
     );
   });
+
+  it("should return ok result with failed validation when nx.json has an unexpected shape", async () => {
+    const deps = makeMockDependencies();
+    deps.repositoryReader.readFile.mockReturnValueOnce(
+      okAsync('{ "plugins": {} }'),
+    );
+
+    const result = await checkNxTerraformPlugin(deps, repositoryRoot);
+
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Nx Terraform Plugin",
+        errorMessage:
+          "nx.json has an unexpected shape (plugins: Invalid input: expected array, received object).",
+        isValid: false,
+      }),
+    );
+  });
 });
 
 describe("checkNxConfig", () => {
