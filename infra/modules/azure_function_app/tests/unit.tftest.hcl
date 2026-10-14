@@ -213,3 +213,93 @@ run "azure_function_app_diagnostics_and_entra_authentication" {
     error_message = "The Entra ID audience client ID must be exposed in the output."
   }
 }
+
+run "azure_function_app_package_deployment_by_default" {
+  command = plan
+
+  assert {
+    condition     = azurerm_linux_function_app.this.app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1" && azurerm_linux_function_app_slot.this[0].app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1"
+    error_message = "Without a container image, both slots must run from the deployment package."
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app.this.site_config[0].application_stack[0].docker) == 0 && length(azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].docker) == 0
+    error_message = "Without a container image, no docker configuration must be set."
+  }
+
+  assert {
+    condition     = !azurerm_linux_function_app.this.site_config[0].container_registry_use_managed_identity && !azurerm_linux_function_app_slot.this[0].site_config[0].container_registry_use_managed_identity
+    error_message = "Without an Azure Container Registry, managed identity must not be used to pull images."
+  }
+}
+
+run "azure_function_app_container_image_docker_hub" {
+  command = plan
+
+  variables {
+    container_image = "nginx:latest"
+  }
+
+  assert {
+    condition = alltrue([
+      for docker in [azurerm_linux_function_app.this.site_config[0].application_stack[0].docker[0], azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].docker[0]] :
+      docker.registry_url == "https://index.docker.io" && docker.image_name == "nginx" && docker.image_tag == "latest"
+    ])
+    error_message = "Images without a registry must be pulled from Docker Hub."
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version == null && azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].node_version == null
+    error_message = "The language runtime must not be set when running a container image."
+  }
+
+  assert {
+    condition     = !contains(keys(azurerm_linux_function_app.this.app_settings), "WEBSITE_RUN_FROM_PACKAGE") && !contains(keys(azurerm_linux_function_app_slot.this[0].app_settings), "WEBSITE_RUN_FROM_PACKAGE")
+    error_message = "WEBSITE_RUN_FROM_PACKAGE must not be set when running a container image."
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.app_settings["WEBSITES_ENABLE_APP_SERVICE_STORAGE"] == "false" && azurerm_linux_function_app_slot.this[0].app_settings["WEBSITES_ENABLE_APP_SERVICE_STORAGE"] == "false"
+    error_message = "App Service storage must be disabled when running a container image."
+  }
+
+  assert {
+    condition     = !azurerm_linux_function_app.this.site_config[0].container_registry_use_managed_identity
+    error_message = "Managed identity must not be used to pull images when acr_registry is not set."
+  }
+}
+
+run "azure_function_app_container_image_registry_with_namespace" {
+  command = plan
+
+  variables {
+    container_image = "ghcr.io/pagopa/my-function:1.0.0"
+  }
+
+  assert {
+    condition = alltrue([
+      for docker in [azurerm_linux_function_app.this.site_config[0].application_stack[0].docker[0], azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].docker[0]] :
+      docker.registry_url == "https://ghcr.io" && docker.image_name == "pagopa/my-function" && docker.image_tag == "1.0.0"
+    ])
+    error_message = "The image must be split into registry, name and tag."
+  }
+}
+
+run "azure_function_app_container_image_acr" {
+  command = plan
+
+  variables {
+    container_image = "myacr.azurecr.io/my-function:sha-abc123"
+    acr_registry    = "myacr.azurecr.io"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.site_config[0].container_registry_use_managed_identity && azurerm_linux_function_app_slot.this[0].site_config[0].container_registry_use_managed_identity
+    error_message = "Both slots must pull from Azure Container Registry using managed identity."
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].docker[0].registry_url == "https://myacr.azurecr.io"
+    error_message = "The registry URL must be derived from the image."
+  }
+}
