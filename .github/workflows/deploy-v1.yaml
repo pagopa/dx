@@ -1,0 +1,227 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      project_name:
+        description: Name of the Nx application project to deploy.
+        type: string
+        required: true
+      version:
+        description: Version of the project to deploy.
+        type: string
+        required: false
+        default: latest
+      environment:
+        description: GitHub environment named app-<env>-cd; <env> is also the self-hosted runner label.
+        type: string
+        required: false
+        default: app-prod-cd
+
+jobs:
+  get-project-info:
+    name: Get project info
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+    outputs:
+      env_name: ${{ steps.environment.outputs.env_name }}
+      project_info: ${{ steps.project-info.outputs.project_info }}
+      target_resources: ${{ steps.project-info.outputs.target_resources }}
+    steps:
+      - name: Resolve environment runner label
+        id: environment
+        env:
+          DEPLOYMENT_ENVIRONMENT: ${{ inputs.environment }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! "$DEPLOYMENT_ENVIRONMENT" =~ ^app-([A-Za-z0-9_-]+)-cd$ ]]; then
+            echo "::error::Environment must match app-<env>-cd." >&2
+            exit 1
+          fi
+          printf 'env_name=%s\n' "${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: "node pnpm jq"
+          minimum_release_age: 7d
+
+      - name: Install dependencies
+        run: pnpm --filter . ci
+
+      - name: Get Project Info
+        id: project-info
+        env:
+          PROJECT_NAME: ${{ inputs.project_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          project_info="$(pnpm nx show project "$PROJECT_NAME" --json)"
+          jq -e 'type == "object"' <<< "$project_info" >/dev/null
+          if ! jq -e '.projectType == "application"' <<< "$project_info" >/dev/null; then
+            echo "::error::Project '$PROJECT_NAME' must have projectType 'application' to be deployed." >&2
+            exit 1
+          fi
+          printf 'project_info=%s\n' "$(jq -c . <<< "$project_info")" >> "$GITHUB_OUTPUT"
+          target_resources="$(jq -ce '(.metadata["pagopa-dx"].targetResources // []) | if type == "array" then . else error("metadata.pagopa-dx.targetResources must be an array") end' <<< "$project_info")"
+          printf 'target_resources=%s\n' "$target_resources" >> "$GITHUB_OUTPUT"
+
+      - name: Warn when there are no deployment targets
+        if: ${{ steps.project-info.outputs.target_resources == '[]' }}
+        env:
+          PROJECT_NAME: ${{ inputs.project_name }}
+        run: echo "::warning::Project '$PROJECT_NAME' has no target resources; there is nothing to be deployed."
+
+  verify-image:
+    name: Verify container image
+    runs-on: ubuntu-26.04
+    needs: get-project-info
+    if: ${{ needs.get-project-info.outputs.target_resources != '[]' }}
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      image: ${{ steps.detect.outputs.image }}
+    steps:
+      - name: Resolve container image
+        id: detect
+        env:
+          PROJECT_NAME: ${{ inputs.project_name }}
+          PROJECT_INFO: ${{ needs.get-project-info.outputs.project_info }}
+          VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! jq -e 'type == "object"' <<< "$PROJECT_INFO" >/dev/null; then
+            echo "::error::Invalid Nx project metadata for '$PROJECT_NAME'." >&2
+            exit 1
+          fi
+
+          if ! jq -e '.release.docker? != null' <<< "$PROJECT_INFO" >/dev/null; then
+            echo "::error::Project '$PROJECT_NAME' has no release.docker configuration; only container projects are supported." >&2
+            exit 1
+          fi
+
+          repository_name="$(jq -r '.release.docker.repositoryName // empty' <<< "$PROJECT_INFO")"
+          if [[ -z "$repository_name" ]]; then
+            echo "::error::Project '$PROJECT_NAME' has release.docker configured but no release.docker.repositoryName." >&2
+            exit 1
+          fi
+
+          if [[ ! "$VERSION" =~ ^[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$ ]]; then
+            echo "::error::Version '$VERSION' is not a valid container image tag." >&2
+            exit 1
+          fi
+          if [[ "$repository_name" == *$'\n'* || "$repository_name" == *$'\r'* ]]; then
+            echo "::error::Container repository metadata must be a single-line value." >&2
+            exit 1
+          fi
+
+          image="ghcr.io/${repository_name}:${VERSION}"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+      - name: Authenticate to GitHub Container Registry
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Verify container image exists
+        env:
+          IMAGE: ${{ steps.detect.outputs.image }}
+        shell: bash
+        run: |
+          if ! docker manifest inspect "$IMAGE" >/dev/null; then
+            echo "::error::Could not verify image '$IMAGE'. It may not exist or the runner may not have pull access." >&2
+            exit 1
+          fi
+
+  stage:
+    name: Stage ${{ matrix.targetResource.name }}
+    runs-on: ["self-hosted", "${{ needs.get-project-info.outputs.env_name }}"]
+    environment: ${{ inputs.environment }}
+    needs: [get-project-info, verify-image]
+    if: ${{ needs.get-project-info.outputs.target_resources != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        targetResource: ${{ fromJSON(needs.get-project-info.outputs.target_resources) }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    steps:
+      - name: Checkout mise configuration
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: mise.toml
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Node.js
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: "python uv azure-cli"
+          minimum_release_age: 7d
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Stage deployment
+        uses: pagopa/dx/actions/deploy@function-app-image-staging
+        with:
+          phase: stage
+          resource_type: ${{ matrix.targetResource.type }}
+          resource_name: ${{ matrix.targetResource.name }}
+          image: ${{ needs.verify-image.outputs.image }}
+          resource_group_name: ${{ matrix.targetResource.resourceGroupName }}
+
+  rollout:
+    name: Rollout ${{ matrix.targetResource.name }}
+    runs-on: ["self-hosted", "${{ needs.get-project-info.outputs.env_name }}"]
+    environment: ${{ inputs.environment }}
+    needs: [get-project-info, stage]
+    if: ${{ needs.get-project-info.outputs.target_resources != '[]' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        targetResource: ${{ fromJSON(needs.get-project-info.outputs.target_resources) }}
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+    steps:
+      - name: Checkout mise configuration
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: mise.toml
+          sparse-checkout-cone-mode: false
+
+      - name: Setup Azure CLI
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: "python uv azure-cli jq"
+          minimum_release_age: 7d
+
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Roll out deployment
+        uses: pagopa/dx/actions/deploy@function-app-image-staging
+        with:
+          phase: rollout
+          resource_type: ${{ matrix.targetResource.type }}
+          resource_name: ${{ matrix.targetResource.name }}
+          resource_group_name: ${{ matrix.targetResource.resourceGroupName }}
