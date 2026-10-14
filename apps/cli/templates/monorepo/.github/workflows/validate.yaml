@@ -7,7 +7,6 @@ on:
 
 jobs:
   validate:
-    if: $\{{ github.actor != 'dx-pagopa-bot' }}
     permissions:
       actions: read
       contents: read
