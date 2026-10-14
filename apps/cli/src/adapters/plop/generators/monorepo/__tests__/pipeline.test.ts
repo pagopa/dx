@@ -117,7 +117,13 @@ describe("monorepo generator — DX validation pipeline", () => {
     expect(generatedFiles[".github/workflows/validate.yaml"]).toContain(
       "uses: pagopa/dx/.github/workflows/validate-v2.yaml@main",
     );
+    // Secrets are passed explicitly: `secrets: inherit` is limited to the
+    // caller's own organization or enterprise, while the scaffold supports
+    // repositories under any owner.
     expect(generatedFiles[".github/workflows/validate.yaml"]).toContain(
+      "GH_APP_RELEASE_CLIENT_ID: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}",
+    );
+    expect(generatedFiles[".github/workflows/validate.yaml"]).not.toContain(
       "secrets: inherit",
     );
     expect(generatedFiles["trivy.yml"]).toContain("ignorefile: .trivyignore");

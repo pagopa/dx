@@ -5,6 +5,11 @@ import semverGte from "semver/functions/gte.js";
 
 import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
+import {
+  findNxTerraformPlugin,
+  NX_TERRAFORM_PLUGIN_NAME,
+  parseNxJson,
+} from "./nx-json.js";
 import { Dependency } from "./package-json.js";
 import { ValidationCheckResult } from "./validation.js";
 import { Workspace } from "./workspace.js";
@@ -26,8 +31,6 @@ const isVersionValid = (version: string, minVersion: string): boolean => {
 
   return semverGte(dependencySemVer, minAcceptedSemVer);
 };
-
-export const NX_TERRAFORM_PLUGIN_NAME = "@pagopa/nx-terraform";
 
 /**
  * Checks that the repository configures the DX Nx Terraform plugin in
@@ -51,38 +54,27 @@ export const checkNxTerraformPlugin = async (
     });
   }
 
-  let plugins: unknown;
-  try {
-    ({ plugins } = JSON.parse(nxJsonResult.value) as { plugins?: unknown });
-  } catch {
+  const parsed = parseNxJson(nxJsonResult.value);
+  if (parsed.error !== undefined) {
     return ok({
       checkName,
-      errorMessage: "nx.json is not a valid JSON file.",
+      errorMessage: `${parsed.error}.`,
       isValid: false,
     });
   }
 
-  const isConfigured =
-    Array.isArray(plugins) &&
-    plugins.some(
-      (entry) =>
-        typeof entry === "object" &&
-        entry !== null &&
-        (entry as { plugin?: unknown }).plugin === NX_TERRAFORM_PLUGIN_NAME,
-    );
-
-  if (isConfigured) {
+  if (findNxTerraformPlugin(parsed.nxJson) === undefined) {
     return ok({
       checkName,
-      isValid: true,
-      successMessage: `${NX_TERRAFORM_PLUGIN_NAME} is configured in nx.json`,
+      errorMessage: `The ${NX_TERRAFORM_PLUGIN_NAME} plugin is not configured in nx.json. Add it to align the repository with the DX Terraform validation pipeline.`,
+      isValid: false,
     });
   }
 
   return ok({
     checkName,
-    errorMessage: `The ${NX_TERRAFORM_PLUGIN_NAME} plugin is not configured in nx.json. Add it to align the repository with the DX Terraform validation pipeline.`,
-    isValid: false,
+    isValid: true,
+    successMessage: `${NX_TERRAFORM_PLUGIN_NAME} is configured in nx.json`,
   });
 };
 

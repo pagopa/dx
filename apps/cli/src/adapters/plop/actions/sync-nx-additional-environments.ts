@@ -18,26 +18,20 @@ import {
   getBaseEnvironmentName,
 } from "../../../domain/environment.js";
 import {
+  addNxTerraformEnvironment,
+  findNxTerraformPlugin,
+  parseNxJson,
+} from "../../../domain/nx-json.js";
+import {
   type Payload,
   payloadSchema,
 } from "../generators/environment/prompts.js";
 
-const NX_TERRAFORM_PLUGIN = "@pagopa/nx-terraform";
-
-type NxJson = {
-  plugins?: NxPluginEntry[];
-};
-
-type NxPluginEntry = {
-  include?: string[];
-  options?: { additionalEnvironments?: string[] };
-  plugin: string;
-};
-
 /**
  * Returns the updated `nx.json` content, or `undefined` when the file does not
  * need any change: lifecycle environments, repositories without the Nx
- * Terraform plugin, and already-registered environments are left untouched.
+ * Terraform plugin, already-registered environments, and unreadable or
+ * invalid files are left untouched.
  */
 export const syncAdditionalEnvironments = (
   nxJsonContent: string,
@@ -47,22 +41,22 @@ export const syncAdditionalEnvironments = (
     return undefined;
   }
 
-  const nxJson = JSON.parse(nxJsonContent) as NxJson;
-  const terraformPlugin = nxJson.plugins?.find(
-    (entry) => entry.plugin === NX_TERRAFORM_PLUGIN,
+  const parsed = parseNxJson(nxJsonContent);
+  if (parsed.error !== undefined) {
+    return undefined;
+  }
+
+  const plugin = findNxTerraformPlugin(parsed.nxJson);
+  if (plugin === undefined || plugin.environments.includes(environmentName)) {
+    return undefined;
+  }
+
+  return addNxTerraformEnvironment(
+    nxJsonContent,
+    plugin.index,
+    plugin.environments,
+    environmentName,
   );
-  if (terraformPlugin === undefined) {
-    return undefined;
-  }
-
-  const options = (terraformPlugin.options ??= {});
-  const environments = (options.additionalEnvironments ??= []);
-  if (environments.includes(environmentName)) {
-    return undefined;
-  }
-
-  environments.push(environmentName);
-  return `${JSON.stringify(nxJson, null, 2)}\n`;
 };
 
 /**

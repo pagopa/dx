@@ -83,8 +83,34 @@ describe("checkNxTerraformPlugin", () => {
     expect(result).toStrictEqual(
       ok({
         checkName: "Nx Terraform Plugin",
-        errorMessage: "nx.json is not a valid JSON file.",
+        errorMessage:
+          "nx.json is not a valid JSON file (InvalidSymbol at offset 0).",
         isValid: false,
+      }),
+    );
+  });
+
+  it("should accept an nx.json with comments and trailing commas", async () => {
+    const deps = makeMockDependencies();
+    deps.repositoryReader.readFile.mockReturnValueOnce(
+      okAsync(
+        [
+          "{",
+          "  // DX Nx Terraform plugin",
+          '  "plugins": [{ "plugin": "@pagopa/nx-terraform" },],',
+          "}",
+          "",
+        ].join("\n"),
+      ),
+    );
+
+    const result = await checkNxTerraformPlugin(deps, repositoryRoot);
+
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Nx Terraform Plugin",
+        isValid: true,
+        successMessage: "@pagopa/nx-terraform is configured in nx.json",
       }),
     );
   });

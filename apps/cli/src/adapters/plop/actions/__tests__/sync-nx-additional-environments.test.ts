@@ -1,6 +1,7 @@
 /**
  * Unit tests for registering tenant-qualified environments in nx.json.
  */
+import { parse } from "jsonc-parser";
 import { describe, expect, it } from "vitest";
 
 import { syncAdditionalEnvironments } from "../sync-nx-additional-environments.js";
@@ -32,9 +33,10 @@ const buildNxJson = (additionalEnvironments?: string[]): string =>
   )}\n`;
 
 const getAdditionalEnvironments = (content: string): string[] | undefined =>
-  (JSON.parse(content) as NxJsonFixture).plugins.find(
-    (entry) => entry.plugin === "@pagopa/nx-terraform",
-  )?.options?.additionalEnvironments;
+  (
+    parse(content, undefined, { allowTrailingComma: true }) as NxJsonFixture
+  ).plugins.find((entry) => entry.plugin === "@pagopa/nx-terraform")?.options
+    ?.additionalEnvironments;
 
 describe("syncAdditionalEnvironments", () => {
   it("registers a tenant-qualified environment in the Nx Terraform plugin options", () => {
@@ -76,5 +78,33 @@ describe("syncAdditionalEnvironments", () => {
     )}\n`;
 
     expect(syncAdditionalEnvironments(content, "ced-prod")).toBeUndefined();
+  });
+
+  it("preserves comments and trailing commas when registering the environment", () => {
+    const content = [
+      "{",
+      "  // DX Nx Terraform plugin configuration",
+      '  "plugins": [',
+      "    {",
+      '      "plugin": "@nx/js/typescript",',
+      "    },",
+      "    {",
+      '      "include": ["infra/**"],',
+      '      "plugin": "@pagopa/nx-terraform",',
+      "    },",
+      "  ],",
+      "}",
+      "",
+    ].join("\n");
+
+    const result = syncAdditionalEnvironments(content, "ced-prod");
+
+    expect(result).toBeDefined();
+    expect(result).toContain("// DX Nx Terraform plugin configuration");
+    expect(getAdditionalEnvironments(result ?? "")).toEqual(["ced-prod"]);
+  });
+
+  it("leaves an invalid nx.json untouched", () => {
+    expect(syncAdditionalEnvironments("not-json", "ced-prod")).toBeUndefined();
   });
 });

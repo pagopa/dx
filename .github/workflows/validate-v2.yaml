@@ -2,6 +2,37 @@ name: Validate
 
 on:
   workflow_call:
+    secrets:
+      ARM_CLIENT_ID:
+        description: Azure client ID used by Terraform plans.
+        required: false
+      ARM_SUBSCRIPTION_ID:
+        description: Azure subscription planned by the environment jobs.
+        required: false
+      ARM_TENANT_ID:
+        description: Azure tenant used by cloud login.
+        required: false
+      AWS_REGION:
+        description: AWS region used by cloud login.
+        required: false
+      GH_APP_CLIENT_ID:
+        description: GitHub App client ID used by cloud login.
+        required: false
+      GH_APP_INSTALLATION_ID:
+        description: GitHub App installation ID used by cloud login.
+        required: false
+      GH_APP_KEY:
+        description: GitHub App private key used by cloud login.
+        required: false
+      GH_APP_RELEASE_APP_KEY:
+        description: Release App private key used by the version-plan warning.
+        required: false
+      GH_APP_RELEASE_CLIENT_ID:
+        description: Release App client ID used by the version-plan warning.
+        required: false
+      ROLE_ARN:
+        description: AWS role assumed by Terraform plans.
+        required: false
 
 env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
