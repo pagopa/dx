@@ -382,6 +382,33 @@ describe("repository HCL validation", () => {
     ).rejects.toThrow(/environments/);
   });
 
+  it("rejects a repository object followed by an attribute traversal", async () => {
+    const content = [
+      'module "github_repository" {',
+      '  repository = { selected = { name = "my-project" } }.selected',
+      "}",
+      "",
+    ].join("\n");
+
+    await expect(
+      syncRepositoryTerraformEnvironments(content, "dev"),
+    ).rejects.toThrow(/repository/);
+  });
+
+  it.each([
+    'environments = ["prod"][var.index]',
+    'environments = ["prod"[var.index]]',
+  ])("rejects indexed environment expressions: %s", async (attribute) => {
+    const content = repositoryConfig.replace(
+      "    reviewers_teams        = []",
+      `    reviewers_teams        = []\n    ${attribute}`,
+    );
+
+    await expect(
+      syncRepositoryTerraformEnvironments(content, "uat"),
+    ).rejects.toThrow(/environments/);
+  });
+
   it("rejects repeated environment names", async () => {
     const content = repositoryConfig.replace(
       "    reviewers_teams        = []",
@@ -623,6 +650,54 @@ describe("syncRepositoryEnvironments", () => {
         expect(terraformCommand).not.toHaveBeenCalled();
       },
     );
+  });
+});
+
+describe("repository configuration UTF-8 decoding", () => {
+  beforeEach(() => {
+    terraformCommand.mockClear();
+    terraformValidator.mockReset();
+    terraformValidator.mockResolvedValue({ stdout: "" });
+  });
+
+  it("rejects invalid UTF-8 without replacing main.tf", async () => {
+    const content = Buffer.concat([
+      Buffer.from("# invalid byte sequence: "),
+      Buffer.from([0xc3, 0x28]),
+      Buffer.from(`\n${repositoryConfig}`),
+    ]);
+
+    await inTemporaryRepository(
+      repositoryConfig,
+      async (mainFile, repositoryDirectory) => {
+        await fs.writeFile(mainFile, content);
+
+        await expect(syncRepositoryEnvironments(payload)).rejects.toThrow(
+          /Cannot safely read/,
+        );
+
+        await expect(fs.readFile(mainFile)).resolves.toEqual(content);
+        await expect(fs.readdir(repositoryDirectory)).resolves.toEqual([
+          "main.tf",
+        ]);
+        expect(terraformValidator).not.toHaveBeenCalled();
+        expect(terraformCommand).not.toHaveBeenCalled();
+      },
+    );
+  });
+
+  it("preserves a UTF-8 BOM when replacing main.tf", async () => {
+    const content = `\uFEFF${repositoryConfig}`;
+
+    await inTemporaryRepository(content, async (mainFile) => {
+      await syncRepositoryEnvironments(payload);
+
+      const updated = await fs.readFile(mainFile);
+      expect(updated.subarray(0, 3)).toEqual(Buffer.from([0xef, 0xbb, 0xbf]));
+      expect(updated.toString("utf8")).toContain(
+        '    environments           = ["dev", "prod"]',
+      );
+    });
   });
 });
 

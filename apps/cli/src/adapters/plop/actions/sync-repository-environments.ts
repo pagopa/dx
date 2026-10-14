@@ -11,6 +11,7 @@ import { execa } from "execa";
 import { type NodePlopAPI } from "node-plop";
 import fs, { type FileHandle } from "node:fs/promises";
 import path from "node:path";
+import { TextDecoder } from "node:util";
 import lockfile from "proper-lockfile";
 
 import { tf$ } from "../../execa/terraform.js";
@@ -44,7 +45,9 @@ const readFileHandle = async (fileHandle: FileHandle): Promise<string> => {
     chunks.push(buffer.subarray(0, bytesRead));
     position += bytesRead;
   }
-  return Buffer.concat(chunks).toString("utf8");
+  return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+    Buffer.concat(chunks),
+  );
 };
 
 const isSameRegularFile = (
