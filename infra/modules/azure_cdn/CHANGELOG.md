@@ -1,3 +1,13 @@
+## 2.2.0 (2026-10-14)
+
+### 🚀 Features
+
+- Add per-origin preserve_host_header option to forward the incoming Host header when enabled, preserving the existing default behavior. ([#2338](https://github.com/pagopa/dx/pull/2338))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 2.1.7 (2026-10-13)
 
 ### 🩹 Fixes
