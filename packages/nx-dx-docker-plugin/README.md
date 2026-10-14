@@ -26,16 +26,22 @@ configuring scope routing:
 pnpm add -D gh:@pagopa/nx-docker
 ```
 
-For npm or Yarn, configure the `@pagopa` scope in the consuming repository's
-`.npmrc`:
+All package managers need authentication to download from GitHub Packages.
+Configure the token in the consuming repository's `.npmrc`:
 
 ```ini
-@pagopa:registry=https://npm.pkg.github.com
 //npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
 ```
 
 Set `GITHUB_TOKEN` to a token with permission to read packages. In GitHub
 Actions, use a workflow token with `packages: read`.
+
+For npm or Yarn, also configure the `@pagopa` scope in `.npmrc` to route
+package requests to GitHub Packages:
+
+```ini
+@pagopa:registry=https://npm.pkg.github.com
+```
 
 Then install the package as a development dependency in the target monorepo:
 
