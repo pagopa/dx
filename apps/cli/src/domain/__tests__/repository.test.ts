@@ -38,6 +38,27 @@ describe("checkNxTerraformPlugin", () => {
     );
   });
 
+  it("should accept the plugin configured in the shorthand string form", async () => {
+    const deps = makeMockDependencies();
+    deps.repositoryReader.readFile.mockReturnValueOnce(
+      okAsync(
+        JSON.stringify({
+          plugins: ["@nx/js/typescript", "@pagopa/nx-terraform"],
+        }),
+      ),
+    );
+
+    const result = await checkNxTerraformPlugin(deps, repositoryRoot);
+
+    expect(result).toStrictEqual(
+      ok({
+        checkName: "Nx Terraform Plugin",
+        isValid: true,
+        successMessage: "@pagopa/nx-terraform is configured in nx.json",
+      }),
+    );
+  });
+
   it("should return ok result with failed validation when the plugin is not configured", async () => {
     const deps = makeMockDependencies();
     deps.repositoryReader.readFile.mockReturnValueOnce(

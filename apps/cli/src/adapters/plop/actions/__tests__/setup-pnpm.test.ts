@@ -6,6 +6,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
   const commands: string[] = [];
+  const commandsWithEnvironment: {
+    command: string;
+    env?: NodeJS.ProcessEnv;
+  }[] = [];
   const execaOptions: { env?: NodeJS.ProcessEnv }[] = [];
   const savedNpmrcContent = { value: undefined as string | undefined };
   const execa$ = vi.fn((options: { env?: NodeJS.ProcessEnv } = {}) => {
@@ -26,18 +30,24 @@ const mocks = vi.hoisted(() => {
       strings: TemplateStringsArray,
       ...values: readonly unknown[]
     ): Promise<void> => {
-      commands.push(
-        strings.reduce(
-          (command, string, index) =>
-            `${command}${string}${values[index] ?? ""}`,
-          "",
-        ),
+      const command = strings.reduce(
+        (fullCommand, string, index) =>
+          `${fullCommand}${string}${values[index] ?? ""}`,
+        "",
       );
+      commands.push(command);
+      commandsWithEnvironment.push({ command, env: options.env });
       return Promise.resolve();
     };
   });
 
-  return { commands, execa$, execaOptions, savedNpmrcContent };
+  return {
+    commands,
+    commandsWithEnvironment,
+    execa$,
+    execaOptions,
+    savedNpmrcContent,
+  };
 });
 
 vi.mock("execa", () => ({ $: mocks.execa$ }));
@@ -58,6 +68,7 @@ describe("setupPnpm", () => {
 
   beforeEach(() => {
     mocks.commands.length = 0;
+    mocks.commandsWithEnvironment.length = 0;
     mocks.execaOptions.length = 0;
     mocks.savedNpmrcContent.value = undefined;
     mocks.execa$.mockClear();
@@ -135,7 +146,9 @@ describe("setupPnpm", () => {
   it("authenticates to GitHub Packages through a temporary npmrc that never leaks the token", async () => {
     await runGenerator();
 
-    const options = mocks.execaOptions.at(0);
+    const options = mocks.execaOptions.find(
+      ({ env }) => env?.npm_config_userconfig !== undefined,
+    );
     const userNpmrc = options?.env?.npm_config_userconfig;
     expect(userNpmrc).toEqual(expect.stringContaining("dx-npmrc-"));
     // The developer's own npmrc is copied, never used as the target file.
@@ -148,5 +161,41 @@ describe("setupPnpm", () => {
     expect(mocks.commands.join("\n")).not.toContain("test-github-token");
     // The temporary npmrc is removed once the bootstrap completes.
     await expect(fs.access(path.dirname(userNpmrc ?? ""))).rejects.toThrow();
+  });
+
+  it("passes the temporary npmrc only to the dependency commands", async () => {
+    await runGenerator();
+
+    const environmentFor = (command: string) =>
+      mocks.commandsWithEnvironment.find((entry) => entry.command === command)
+        ?.env;
+
+    for (const command of [
+      "mise lock",
+      "mise install",
+      "mise exec -- corepack use pnpm@11",
+      "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
+      "mise exec -- pnpm exec oxfmt",
+    ]) {
+      expect(environmentFor(command)?.npm_config_userconfig).toBeUndefined();
+    }
+
+    for (const command of [
+      `mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`,
+      "mise exec -- pnpm install",
+    ]) {
+      expect(environmentFor(command)?.npm_config_userconfig).toEqual(
+        expect.stringContaining("dx-npmrc-"),
+      );
+    }
+  });
+
+  it("never forwards the raw GitHub token variables to the bootstrap commands", async () => {
+    await runGenerator();
+
+    for (const { env } of mocks.commandsWithEnvironment) {
+      expect(env?.GITHUB_TOKEN).toBeUndefined();
+      expect(env?.GH_TOKEN).toBeUndefined();
+    }
   });
 });

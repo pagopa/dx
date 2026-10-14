@@ -26,11 +26,20 @@ const buildNxJson = (additionalEnvironments?: string[]): string =>
     2,
   )}\n`;
 
-const getAdditionalEnvironments = (content: string): string[] | undefined =>
-  nxJsonSchema
-    .parse(parse(content, undefined, { allowTrailingComma: true }))
-    .plugins?.find((entry) => entry.plugin === "@pagopa/nx-terraform")?.options
-    ?.additionalEnvironments;
+const getAdditionalEnvironments = (content: string): string[] | undefined => {
+  const nxJson = nxJsonSchema.parse(
+    parse(content, undefined, { allowTrailingComma: true }),
+  );
+  const entry = nxJson.plugins?.find((pluginEntry) =>
+    typeof pluginEntry === "string"
+      ? pluginEntry === "@pagopa/nx-terraform"
+      : pluginEntry.plugin === "@pagopa/nx-terraform",
+  );
+
+  return typeof entry === "object"
+    ? entry.options?.additionalEnvironments
+    : undefined;
+};
 
 describe("syncAdditionalEnvironments", () => {
   it("registers a tenant-qualified environment in the Nx Terraform plugin options", () => {
@@ -50,6 +59,28 @@ describe("syncAdditionalEnvironments", () => {
       "cgn-dev",
       "ced-prod",
     ]);
+  });
+
+  it("upgrades a shorthand string entry to the object form when registering", () => {
+    const content = [
+      "{",
+      "  // The Docker plugin uses the shorthand form",
+      '  "plugins": [',
+      '    "@pagopa/nx-docker",',
+      '    "@pagopa/nx-terraform"',
+      "  ]",
+      "}",
+      "",
+    ].join("\n");
+
+    const result = syncAdditionalEnvironments(content, "ced-prod");
+
+    expect(result).toBeDefined();
+    expect(getAdditionalEnvironments(result ?? "")).toEqual(["ced-prod"]);
+    expect(result).toContain('"plugin": "@pagopa/nx-terraform"');
+    // The other entries and the comments are preserved as they are.
+    expect(result).toContain('"@pagopa/nx-docker",');
+    expect(result).toContain("// The Docker plugin uses the shorthand form");
   });
 
   it("is idempotent when the environment is already registered", () => {

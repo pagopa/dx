@@ -57,12 +57,7 @@ export const syncAdditionalEnvironments = (
     return undefined;
   }
 
-  return addNxTerraformEnvironment(
-    nxJsonContent,
-    plugin.index,
-    plugin.environments,
-    environmentName,
-  );
+  return addNxTerraformEnvironment(nxJsonContent, plugin, environmentName);
 };
 
 /**

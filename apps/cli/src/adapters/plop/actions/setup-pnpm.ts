@@ -6,8 +6,10 @@
  * built-in `gh:` alias. pnpm does not expand environment variables in registry
  * credentials stored in a committed project `.npmrc`, so the GitHub token
  * resolved by the CLI is written to a temporary user-level npmrc (the
- * developer's own configuration plus the token) and passed to the bootstrap
- * commands through `npm_config_userconfig`.
+ * developer's own configuration plus the token). Only the dependency commands
+ * receive that npmrc through `npm_config_userconfig`: mise, Corepack, Nx and
+ * the formatter run without it, and the raw `GH_TOKEN`/`GITHUB_TOKEN`
+ * variables are never forwarded to any child process.
  */
 import { $ as $_ } from "execa";
 import { type NodePlopAPI } from "node-plop";
@@ -45,7 +47,11 @@ const buildChildEnvironment = (): NodeJS.ProcessEnv =>
       // Strip Node.js debugger env vars so child processes don't try to
       // attach to the VS Code debugger and hang/fail.
       .filter(([key]) => key !== "NODE_OPTIONS")
-      .filter(([key]) => !key.startsWith("VSCODE_INSPECTOR")),
+      .filter(([key]) => !key.startsWith("VSCODE_INSPECTOR"))
+      // The GitHub token reaches the dependency commands only through the
+      // temporary npmrc: never forward the raw variables, so no bootstrap
+      // command can read the token.
+      .filter(([key]) => key !== "GH_TOKEN" && key !== "GITHUB_TOKEN"),
   );
 
 /**
@@ -86,27 +92,38 @@ export default function (plop: NodePlopAPI) {
     const cwd = path.resolve(repoName);
     const githubToken = await getGitHubPAT();
 
-    const env = buildChildEnvironment();
-    let temporaryNpmrcDirectory: string | undefined;
-    if (githubToken) {
-      const temporaryUserNpmrc = await createTemporaryUserNpmrc(githubToken);
-      temporaryNpmrcDirectory = path.dirname(temporaryUserNpmrc);
-      env.npm_config_userconfig = temporaryUserNpmrc;
-    }
-
-    const $ = $_({
+    // mise, Corepack and Nx only reach public registries: they run without
+    // the token-bearing npmrc.
+    const $unauthenticated = $_({
       cwd,
-      env,
+      env: buildChildEnvironment(),
       extendEnv: false, // Don't include process.env variables
     });
 
+    await $unauthenticated`mise lock`;
+    await $unauthenticated`mise install`;
+    await $unauthenticated`mise exec -- corepack use pnpm@11`;
+    await $unauthenticated`mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot`;
+
+    // GitHub Packages is reached only by the dependency commands, through a
+    // temporary npmrc layered over the developer's own configuration and
+    // removed as soon as the install completes.
+    let temporaryNpmrcDirectory: string | undefined;
     try {
-      await $`mise lock`;
-      await $`mise install`;
-      await $`mise exec -- corepack use pnpm@11`;
-      await $`mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot`;
+      const authenticatedEnvironment = buildChildEnvironment();
+      if (githubToken) {
+        const temporaryUserNpmrc = await createTemporaryUserNpmrc(githubToken);
+        temporaryNpmrcDirectory = path.dirname(temporaryUserNpmrc);
+        authenticatedEnvironment.npm_config_userconfig = temporaryUserNpmrc;
+      }
+      const $authenticated = $_({
+        cwd,
+        env: authenticatedEnvironment,
+        extendEnv: false,
+      });
+
       try {
-        await $`mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`;
+        await $authenticated`mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`;
       } catch (cause) {
         throw new Error(
           [
@@ -117,13 +134,14 @@ export default function (plop: NodePlopAPI) {
           { cause },
         );
       }
-      await $`mise exec -- pnpm install`;
-      await $`mise exec -- pnpm exec oxfmt`;
+      await $authenticated`mise exec -- pnpm install`;
     } finally {
       if (temporaryNpmrcDirectory) {
         await fs.rm(temporaryNpmrcDirectory, { force: true, recursive: true });
       }
     }
+
+    await $unauthenticated`mise exec -- pnpm exec oxfmt`;
     return "Monorepo bootstrapped";
   });
 }
