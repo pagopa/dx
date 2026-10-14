@@ -98,7 +98,9 @@ describe("setupPnpm", () => {
       prompts: [],
     });
 
-    await plop.getGenerator("test").runActions({ repoName: "generated-repo" });
+    return await plop
+      .getGenerator("test")
+      .runActions({ repoName: "generated-repo" });
   };
 
   it("bootstraps Nx without installing or applying a devcontainer", async () => {
@@ -161,6 +163,30 @@ describe("setupPnpm", () => {
     expect(mocks.commands.join("\n")).not.toContain("test-github-token");
     // The temporary npmrc is removed once the bootstrap completes.
     await expect(fs.access(path.dirname(userNpmrc ?? ""))).rejects.toThrow();
+  });
+
+  it("removes the temporary npmrc directory when writing the token fails", async () => {
+    const mkdtemp = vi.spyOn(fs, "mkdtemp");
+    const writeFile = vi
+      .spyOn(fs, "writeFile")
+      .mockRejectedValueOnce(new Error("write failed"));
+
+    try {
+      const { failures } = await runGenerator();
+
+      expect(failures).toEqual([
+        expect.objectContaining({ error: "write failed" }),
+      ]);
+
+      // The helper never returned the path, so the caller's cleanup could not
+      // run: the directory and the partially written token must be gone.
+      const temporaryDirectory = await mkdtemp.mock.results[0]?.value;
+      expect(temporaryDirectory).toContain("dx-npmrc-");
+      await expect(fs.access(temporaryDirectory ?? "")).rejects.toThrow();
+    } finally {
+      writeFile.mockRestore();
+      mkdtemp.mockRestore();
+    }
   });
 
   it("passes the temporary npmrc only to the dependency commands", async () => {

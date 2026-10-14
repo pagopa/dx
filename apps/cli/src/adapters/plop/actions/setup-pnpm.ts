@@ -63,27 +63,36 @@ const createTemporaryUserNpmrc = async (token: string): Promise<string> => {
   const temporaryDirectory = await fs.mkdtemp(
     path.join(os.tmpdir(), "dx-npmrc-"),
   );
-  const temporaryUserNpmrc = path.join(temporaryDirectory, ".npmrc");
 
-  let existingUserNpmrc = "";
   try {
-    existingUserNpmrc = await fs.readFile(
-      path.join(os.homedir(), ".npmrc"),
-      "utf8",
-    );
-  } catch {
-    // No user-level npmrc: the temporary file only carries the token.
+    const temporaryUserNpmrc = path.join(temporaryDirectory, ".npmrc");
+
+    let existingUserNpmrc = "";
+    try {
+      existingUserNpmrc = await fs.readFile(
+        path.join(os.homedir(), ".npmrc"),
+        "utf8",
+      );
+    } catch {
+      // No user-level npmrc: the temporary file only carries the token.
+    }
+
+    const lines = [
+      existingUserNpmrc.trimEnd(),
+      `//npm.pkg.github.com/:_authToken=${token}`,
+    ].filter((line) => line.length > 0);
+
+    await fs.writeFile(temporaryUserNpmrc, `${lines.join("\n")}\n`, {
+      mode: 0o600,
+    });
+    return temporaryUserNpmrc;
+  } catch (error) {
+    // The caller can only remove the directory once this helper returns its
+    // path: if anything fails before that, drop the token here so it is never
+    // left behind on disk.
+    await fs.rm(temporaryDirectory, { force: true, recursive: true });
+    throw error;
   }
-
-  const lines = [
-    existingUserNpmrc.trimEnd(),
-    `//npm.pkg.github.com/:_authToken=${token}`,
-  ].filter((line) => line.length > 0);
-
-  await fs.writeFile(temporaryUserNpmrc, `${lines.join("\n")}\n`, {
-    mode: 0o600,
-  });
-  return temporaryUserNpmrc;
 };
 
 export default function (plop: NodePlopAPI) {
