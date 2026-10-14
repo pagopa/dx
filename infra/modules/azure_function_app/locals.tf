@@ -58,6 +58,26 @@ locals {
     name = "staging"
   }
 
+  container_image_parts        = var.container_image == null ? [] : split("/", var.container_image)
+  container_image_has_registry = length(local.container_image_parts) > 1 && can(regex("[.:]|^localhost$", try(local.container_image_parts[0], "")))
+  container_image_repository   = local.container_image_has_registry ? join("/", slice(local.container_image_parts, 1, length(local.container_image_parts))) : var.container_image
+
+  container = {
+    enable       = var.container_image != null
+    use_acr      = var.acr_registry != null
+    registry_url = var.container_image == null ? null : "https://${local.container_image_has_registry ? local.container_image_parts[0] : "index.docker.io"}"
+    image_name   = var.container_image == null ? null : regex("^(.+):[^:]+$", local.container_image_repository)[0]
+    image_tag    = var.container_image == null ? null : regex(":([^:]+)$", local.container_image_repository)[0]
+  }
+
+  # Container-based apps run the image content, so the deployment package setting must not be set
+  package_app_settings = local.container.enable ? {
+    WEBSITES_ENABLE_APP_SERVICE_STORAGE = "false"
+    } : {
+    # https://learn.microsoft.com/en-us/azure/azure-functions/run-functions-from-deployment-package#using-website_run_from_package--1
+    WEBSITE_RUN_FROM_PACKAGE = 1
+  }
+
   application_insights = {
     enable = nonsensitive(var.application_insights_connection_string != null)
   }
