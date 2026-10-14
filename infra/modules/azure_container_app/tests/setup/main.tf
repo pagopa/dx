@@ -39,10 +39,10 @@ resource "random_integer" "instance_base" {
 }
 
 resource "azurerm_container_app_environment" "sut" {
-  name                       = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app_environment" }))
-  resource_group_name        = azurerm_resource_group.sut.name
-  location                   = var.environment.location
-  log_analytics_workspace_id = data.azurerm_log_analytics_workspace.logs.id
+  name                = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app_environment" }))
+  resource_group_name = azurerm_resource_group.sut.name
+  location            = var.environment.location
+  logs_destination    = "azure-monitor"
 
   workload_profile {
     name                  = "Consumption"

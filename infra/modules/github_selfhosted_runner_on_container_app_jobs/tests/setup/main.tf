@@ -76,7 +76,7 @@ resource "azurerm_container_app_environment" "runner" {
   location                       = azurerm_resource_group.sut.location
   internal_load_balancer_enabled = false
   infrastructure_subnet_id       = azurerm_subnet.cae.id
-  log_analytics_workspace_id     = data.azurerm_log_analytics_workspace.int.id
+  logs_destination               = "azure-monitor"
 
   zone_redundancy_enabled = false
 
