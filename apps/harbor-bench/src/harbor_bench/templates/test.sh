@@ -8,30 +8,20 @@
 # {{ARTIFACT_DIR}}/; {{VERIFIER_LOG_DIR}}/ is mounted for the reward.
 set -uo pipefail
 
-# --- F1: skill load + invoke proof (agent trajectory under {{AGENT_LOG_DIR}}) ----------
+# --- F1: skill load + invoke proof (ATIF trajectory under {{AGENT_LOG_DIR}}) ----------
 # Enforced unless SKILL_EVAL_ENFORCE_SKILL_USE=false (e.g. without-skill jobs).
+# The proof reads the transferred ATIF trajectory — the same artifact the
+# RewardKit judge sees — via /tests/skill_use.py instead of grepping the raw
+# Copilot CLI stream: Harbor normalizes every `--output-format json` shape
+# into ATIF, so CLI output-format drift (e.g. 1.0.97 dropping the legacy
+# `<skill-context>` messages) can no longer break the gate.
 SKILL_OK=1
-TRANSCRIPT=""
-if [ -d {{AGENT_LOG_DIR}} ]; then
-  TRANSCRIPT=$(find {{AGENT_LOG_DIR}} -type f -name '*.jsonl' 2>/dev/null | head -n 1)
-fi
 if [ "${SKILL_EVAL_ENFORCE_SKILL_USE:-true}" = "true" ]; then
   SKILL_NAME="${SKILL_EVAL_SKILL_NAME:-{{SKILL_NAME}}}"
-  if [ -n "$TRANSCRIPT" ]; then
-    # load: skill context injected into the user turn
-    if ! grep -q '<skill-context' "$TRANSCRIPT" 2>/dev/null; then
-      SKILL_OK=0
-    fi
-    # invoke: at least one tool call to the `skill` tool
-    if ! grep -q '"name" *: *"skill"' "$TRANSCRIPT" 2>/dev/null; then
-      SKILL_OK=0
-    fi
-  else
-    SKILL_OK=0
-  fi
+  SKILL_OK=$(python3 /tests/skill_use.py {{TRAJECTORY_JSON}} "$SKILL_NAME" 2>/dev/null || echo 0)
 fi
 
-if [ "$SKILL_OK" -eq 0 ]; then
+if [ "$SKILL_OK" != "1" ]; then
   echo 0 > /logs/verifier/reward.txt
   echo "skill_use_ok=$SKILL_OK" > /logs/verifier/reason.txt
   exit 0
