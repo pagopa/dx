@@ -27,7 +27,7 @@ concurrency:
 jobs:
   deploy:
     name: Deploy ${{ inputs.project_name }}
-    uses: $/.github/workflows/deploy-v1.yaml
+    uses: pagopa/dx/.github/workflows/deploy-v1.yaml@main
     permissions:
       contents: read
       id-token: write
