@@ -82,10 +82,8 @@ describe("monorepo generator — DX validation pipeline", () => {
   });
 
   it("configures the Nx Terraform plugin for the DX validation pipeline", async () => {
-    const generatedFiles = await readGeneratedFiles(
-      path.join(tmpDir, payload.repoName),
-      [".npmrc", "nx.json"],
-    );
+    const generatedRoot = path.join(tmpDir, payload.repoName);
+    const generatedFiles = await readGeneratedFiles(generatedRoot, ["nx.json"]);
 
     const nxJson = JSON.parse(generatedFiles["nx.json"]) as {
       plugins: Record<string, unknown>[];
@@ -97,14 +95,12 @@ describe("monorepo generator — DX validation pipeline", () => {
       }),
     );
 
-    // The committed npmrc only maps the @pagopa scope to GitHub Packages and
-    // never embeds a credential.
-    expect(generatedFiles[".npmrc"]).toContain(
-      "@pagopa:registry=https://npm.pkg.github.com/",
-    );
-    expect(generatedFiles[".npmrc"]).not.toMatch(
-      /^\/\/npm\.pkg\.github\.com\/:_authToken=/m,
-    );
+    // DX packages flow through pnpm's built-in `gh:` alias and credentials
+    // live in the developer's user configuration: the scaffold must not
+    // commit an npmrc that routes scopes or embeds secrets.
+    await expect(
+      fs.access(path.join(generatedRoot, ".npmrc")),
+    ).rejects.toThrow();
   });
 
   it("generates the Code Review workflow and the Trivy configuration", async () => {

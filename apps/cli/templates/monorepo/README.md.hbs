@@ -21,9 +21,10 @@ mise install
 
 3. Install dependencies using `pnpm`
 
-Packages under the `@pagopa` scope are served by GitHub Packages: your GitHub
-token must include the `read:packages` scope. If you use the GitHub CLI, add it
-with:
+DX packages are served by GitHub Packages and are installed through pnpm's
+built-in `gh:` alias, so the rest of the dependencies keep resolving from the
+default registry. Your GitHub token must include the `read:packages` scope. If
+you use the GitHub CLI, add it with:
 
 ```bash
 gh auth refresh --scopes read:packages

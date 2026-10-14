@@ -62,14 +62,18 @@ jobs:
           install_args: "node pnpm"
           minimum_release_age: 7d
 
-      - name: Configure GitHub Packages authentication
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The token is confined to this step: it is written to a
+      # temporary user-level npmrc that is removed when the step ends.
+      - name: Install dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm_config_userconfig: ${{ runner.temp }}/dx-npmrc
         run: |
-          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$HOME/.npmrc"
-
-      - name: Install dependencies
-        run: pnpm --filter . ci
+          trap 'rm -f "$npm_config_userconfig"' EXIT
+          if [ -f "$HOME/.npmrc" ]; then cp "$HOME/.npmrc" "$npm_config_userconfig"; fi
+          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$npm_config_userconfig"
+          pnpm --filter . ci
 
       - name: Warn missing version plan coverage
         uses: pagopa/dx/actions/nx-release@main
@@ -99,14 +103,18 @@ jobs:
           install_args: "node pnpm"
           minimum_release_age: 7d
 
-      - name: Configure GitHub Packages authentication
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The token is confined to this step: it is written to a
+      # temporary user-level npmrc that is removed when the step ends.
+      - name: Install dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm_config_userconfig: ${{ runner.temp }}/dx-npmrc
         run: |
-          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$HOME/.npmrc"
-
-      - name: Install dependencies
-        run: pnpm --filter . ci
+          trap 'rm -f "$npm_config_userconfig"' EXIT
+          if [ -f "$HOME/.npmrc" ]; then cp "$HOME/.npmrc" "$npm_config_userconfig"; fi
+          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$npm_config_userconfig"
+          pnpm --filter . ci
 
       - name: Set base and head SHAs for format check
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -142,14 +150,18 @@ jobs:
       - name: Set base and head SHAs for affected commands
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
-      - name: Configure GitHub Packages authentication
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The token is confined to this step: it is written to a
+      # temporary user-level npmrc that is removed when the step ends.
+      - name: Install dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm_config_userconfig: ${{ runner.temp }}/dx-npmrc
         run: |
-          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$HOME/.npmrc"
-
-      - name: Install dependencies
-        run: pnpm --filter . ci
+          trap 'rm -f "$npm_config_userconfig"' EXIT
+          if [ -f "$HOME/.npmrc" ]; then cp "$HOME/.npmrc" "$npm_config_userconfig"; fi
+          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$npm_config_userconfig"
+          pnpm --filter . ci
 
       # Avoid querying GitHub environments when the change does not affect any
       # Nx project, and let downstream jobs short circuit cleanly.
@@ -273,14 +285,18 @@ jobs:
           path: ${{ env.TFLINT_PLUGIN_DIR }}
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
-      - name: Configure GitHub Packages authentication
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The token is confined to this step: it is written to a
+      # temporary user-level npmrc that is removed when the step ends.
+      - name: Install dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm_config_userconfig: ${{ runner.temp }}/dx-npmrc
         run: |
-          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$HOME/.npmrc"
-
-      - name: Install dependencies
-        run: mise deps
+          trap 'rm -f "$npm_config_userconfig"' EXIT
+          if [ -f "$HOME/.npmrc" ]; then cp "$HOME/.npmrc" "$npm_config_userconfig"; fi
+          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$npm_config_userconfig"
+          mise deps
 
       - name: Cache Nx
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -373,14 +389,17 @@ jobs:
           path: ${{ env.TFLINT_PLUGIN_DIR }}
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
-      - name: Configure GitHub Packages authentication
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The token is confined to this step: it is written to a
+      # temporary user-level npmrc that is removed when the step ends.
+      - name: Install dependencies
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          npm_config_userconfig: ${{ runner.temp }}/dx-npmrc
         run: |
-          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$HOME/.npmrc"
-
-      - name: Install dependencies
-        run: |
+          trap 'rm -f "$npm_config_userconfig"' EXIT
+          if [ -f "$HOME/.npmrc" ]; then cp "$HOME/.npmrc" "$npm_config_userconfig"; fi
+          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$npm_config_userconfig"
           mise deps --skip pnpm
           pnpm --filter . ci
 

@@ -92,7 +92,7 @@ describe("setupPnpm", () => {
   it("bootstraps Nx without installing or applying a devcontainer", async () => {
     await runGenerator();
 
-    expect(mocks.commands).toContain("mise exec -- corepack use pnpm@10");
+    expect(mocks.commands).toContain("mise exec -- corepack use pnpm@11");
     expect(mocks.commands).toContain(
       "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
     );
@@ -111,7 +111,7 @@ describe("setupPnpm", () => {
 
     const miseInstallIndex = mocks.commands.indexOf("mise install");
     const corepackIndex = mocks.commands.indexOf(
-      "mise exec -- corepack use pnpm@10",
+      "mise exec -- corepack use pnpm@11",
     );
     const miseLockIndex = mocks.commands.indexOf("mise lock");
     const nxInitIndex = mocks.commands.indexOf(

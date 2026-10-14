@@ -2,11 +2,12 @@
  * Bootstraps the generated monorepo: locks and installs the mise toolchain,
  * initializes Nx, installs the DX Nx plugins, and formats the scaffold.
  *
- * DX packages are served by GitHub Packages. pnpm refuses to expand environment
- * variables in registry credentials stored in a committed project `.npmrc`,
- * so the GitHub token resolved by the CLI is written to a temporary user-level
- * npmrc (the developer's own configuration plus the token) and passed to the
- * bootstrap commands through `npm_config_userconfig`.
+ * DX packages are served by GitHub Packages and are referenced through pnpm's
+ * built-in `gh:` alias. pnpm does not expand environment variables in registry
+ * credentials stored in a committed project `.npmrc`, so the GitHub token
+ * resolved by the CLI is written to a temporary user-level npmrc (the
+ * developer's own configuration plus the token) and passed to the bootstrap
+ * commands through `npm_config_userconfig`.
  */
 import { $ as $_ } from "execa";
 import { type NodePlopAPI } from "node-plop";
@@ -18,16 +19,16 @@ import { getGitHubPAT } from "../../octokit/index.js";
 import { payloadSchema } from "../generators/monorepo/prompts.js";
 
 /**
- * Version of the DX Nx Terraform plugin installed in generated repositories.
- * Update it when a new version is published to GitHub Packages.
+ * DX Nx Terraform plugin installed in generated repositories. DX packages are
+ * referenced through pnpm's built-in `gh:` alias (GitHub Packages) so that
+ * every other dependency keeps resolving from the default registry.
  */
-export const NX_TERRAFORM_DEPENDENCY = "@pagopa/nx-terraform@^0.5.13";
+export const NX_TERRAFORM_DEPENDENCY = "gh:@pagopa/nx-terraform";
 
 /**
- * Formatter used by `nx format:check` in generated repositories. Keep it in
- * sync with the oxfmt devDependency used by the CLI generator tests.
+ * Formatter used by `nx format:check` in generated repositories.
  */
-export const OXFMT_DEPENDENCY = "oxfmt@^0.71.0";
+export const OXFMT_DEPENDENCY = "oxfmt";
 
 const buildChildEnvironment = (): NodeJS.ProcessEnv =>
   Object.fromEntries(
@@ -97,7 +98,7 @@ export default function (plop: NodePlopAPI) {
     try {
       await $`mise lock`;
       await $`mise install`;
-      await $`mise exec -- corepack use pnpm@10`;
+      await $`mise exec -- corepack use pnpm@11`;
       await $`mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot`;
       try {
         await $`mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${OXFMT_DEPENDENCY}`;
@@ -105,7 +106,7 @@ export default function (plop: NodePlopAPI) {
         throw new Error(
           [
             `Failed to install the workspace dependencies (${NX_TERRAFORM_DEPENDENCY}).`,
-            "DX Nx plugins are published to GitHub Packages: make sure the GitHub token used by the CLI has the read:packages scope.",
+            "The DX Nx plugins are served by GitHub Packages: make sure the GitHub token used by the CLI has the read:packages scope.",
             "Run `gh auth refresh --scopes read:packages` (or set GITHUB_TOKEN to a personal access token that includes read:packages) and try again.",
           ].join(" "),
           { cause },
