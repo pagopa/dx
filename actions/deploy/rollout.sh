@@ -6,7 +6,12 @@ resource_group_name=${3:-}
 
 set -euo pipefail
 
+: "${GITHUB_STEP_SUMMARY:=summary.md}"
+
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck disable=SC2329,SC2317
+__prepare_rollout() { :; }
 
 # shellcheck disable=SC2329,SC2317
 __revert_traffic() {
@@ -30,6 +35,10 @@ __finalize() {
 
 # shellcheck disable=SC1091
 source "$script_dir/resource-type.sh" "$resource_type" "$resource_group_name"
+
+prepare_rollout() {
+  __prepare_rollout "$resource_group_name" "$resource_name"
+}
 
 log_canary_event() {
   local staging_percentage="$1"
@@ -91,6 +100,8 @@ swap_versions() {
 finalize() {
   __finalize "$resource_group_name" "$resource_name"
 }
+
+prepare_rollout
 
 if [[ -r ./canary-monitor.sh ]]; then
   log_canary_event 0
