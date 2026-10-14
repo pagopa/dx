@@ -15,11 +15,6 @@ data "azurerm_resource_group" "test" {
   name = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "resource_group" }))
 }
 
-data "azurerm_log_analytics_workspace" "int" {
-  name                = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "log_analytics" }))
-  resource_group_name = data.azurerm_resource_group.test.name
-}
-
 resource "azurerm_resource_group" "sut" {
   name     = provider::dx::resource_name(merge(var.environment, { resource_type = "resource_group" }))
   location = var.environment.location
