@@ -8,12 +8,16 @@
 import { describe, expect, it } from "vitest";
 
 import type { Finding } from "../../finding.js";
+import type { AzureClients } from "../analyzers/index.js";
 import type { AzureDetailedResourceReport } from "../types.js";
 
+import { DEFAULT_THRESHOLDS } from "../../types.js";
 import {
+  analyzeResource,
   mergeFinding,
   shouldIncludeAdvisorFindingForTags,
 } from "../analyzer.js";
+import { MISSING_TAGS_REASON } from "../finding-category.js";
 
 function mkFinding(resourceId: string, source: Finding["source"]): Finding {
   return {
@@ -77,6 +81,28 @@ describe("shouldIncludeAdvisorFindingForTags", () => {
   });
 });
 
+describe("analyzeResource", () => {
+  it("does not flag a resource with no tags and no other signal", async () => {
+    const result = await analyzeResource(
+      {
+        id: "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Compute/virtualMachines/vm1",
+        location: "westeurope",
+        name: "vm1",
+        type: "Microsoft.Compute/virtualMachines",
+      },
+      [],
+      {} as unknown as AzureClients,
+      new Map(),
+      "westeurope",
+      30,
+      DEFAULT_THRESHOLDS,
+    );
+
+    expect(result.suspectedUnused).toBe(false);
+    expect(result.reason).toContain(MISSING_TAGS_REASON);
+  });
+});
+
 describe("mergeFinding", () => {
   it("preserves custom cost at risk when merging an Advisor finding", () => {
     const resourceId =
@@ -105,5 +131,24 @@ describe("mergeFinding", () => {
       currency: "EUR",
     });
     expect(existing.findings).toHaveLength(2);
+  });
+
+  it("creates a stub entry carrying the given location", () => {
+    const reports: AzureDetailedResourceReport[] = [];
+
+    mergeFinding(
+      mkFinding(
+        "/subscriptions/s/resourceGroups/rg/providers/Microsoft.Network/networkSecurityGroups/nsg1",
+        "azqr",
+      ),
+      reports,
+      new Map(),
+      "westeurope",
+    );
+
+    expect(reports[0].resource).toMatchObject({
+      location: "westeurope",
+      name: "nsg1",
+    });
   });
 });

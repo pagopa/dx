@@ -66,8 +66,7 @@ export async function analyzePublicIp(
   // Capture details outside the try so the pricing enrichment below can
   // reuse them without an extra API round-trip.
   let publicIpDetails:
-    | Awaited<ReturnType<typeof networkClient.publicIPAddresses.get>>
-    | undefined;
+    Awaited<ReturnType<typeof networkClient.publicIPAddresses.get>> | undefined;
 
   try {
     // Get detailed Public IP information
@@ -81,14 +80,6 @@ export async function analyzePublicIp(
     // Check if Public IP is not associated with any resource
     if (!publicIpDetails.ipConfiguration && !publicIpDetails.natGateway) {
       reason += "Public IP not associated with any resource. ";
-    }
-
-    // Check if it's a static IP that might be unused
-    if (
-      publicIpDetails.publicIPAllocationMethod === "Static" &&
-      !publicIpDetails.ipConfiguration
-    ) {
-      reason += "Static IP not in use. ";
     }
 
     // Check network metrics for low usage

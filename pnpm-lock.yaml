@@ -13,6 +13,9 @@ catalogs:
     '@azure/arm-resources':
       specifier: ^7.0.0
       version: 7.0.0
+    '@azure/logger':
+      specifier: ^1.4.0
+      version: 1.4.0
     '@azure/storage-blob':
       specifier: ^12.34.0
       version: 12.34.0
@@ -545,6 +548,9 @@ importers:
       '@azure/keyvault-secrets':
         specifier: ^4.11.2
         version: 4.11.2(supports-color@8.1.1)
+      '@azure/logger':
+        specifier: catalog:azure
+        version: 1.4.0(supports-color@8.1.1)
       '@azure/monitor-opentelemetry':
         specifier: catalog:opentelemetry
         version: 1.19.0(supports-color@8.1.1)

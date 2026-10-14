@@ -13,7 +13,6 @@ import type { Finding } from "../../finding.js";
 import {
   categorizeCustomFindings,
   MISSING_TAGS_REASON,
-  NO_ANALYZER_REASON,
   unpreferredLocationReason,
 } from "../finding-category.js";
 
@@ -39,7 +38,6 @@ function customFinding(reason: string): Finding {
 describe("categorizeCustomFindings", () => {
   it.each([
     MISSING_TAGS_REASON,
-    NO_ANALYZER_REASON,
     unpreferredLocationReason("italynorth"),
     "Could not retrieve detailed NIC information.",
   ])("reports %j as operational excellence, not cost", (reason) => {

@@ -94,12 +94,12 @@ The tool analyzes the following Azure resource types with specific detection met
 | Resource Type           | Detection Method        | Cost Risk | What's Checked                                                                                                                                              |
 | :---------------------- | :---------------------- | :-------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Virtual Machines**    | Instance View + Metrics |  🔴 High  | Deallocated/stopped state, Low CPU usage (<1%), Low network traffic (<3MB per days)                                                                         |
-| **App Service Plans**   | API Details + Metrics   |  🔴 High  | No apps deployed, Very low CPU (<5%), Very low memory (<10%), Oversized Premium tier                                                                        |
+| **App Service Plans**   | API Details + Metrics   |  🔴 High  | No apps deployed, Very low CPU (<5%), Very low memory (<10%)                                                                                                |
 | **Container Apps**      | API Details + Metrics   | 🟡 Medium | Not running state, Zero replicas configured, Low CPU (<0.001 cores), Low memory (<10MB), Low network traffic (<1MB)                                         |
 | **Managed Disks**       | API Details             | 🟡 Medium | Unattached state, No `managedBy` property                                                                                                                   |
-| **Public IP Addresses** | API Details + Metrics   | 🟡 Medium | Not associated with any resource, Static IP not in use, Very low network traffic (<~340KB per day)                                                          |
-| **Network Interfaces**  | API Details             | 🟡 Medium | Not attached to VM or Private Endpoint, No public IP assigned                                                                                               |
-| **Private Endpoints**   | API Details             | 🟡 Medium | No private link connections, Rejected/disconnected connections, No network interfaces                                                                       |
+| **Public IP Addresses** | API Details + Metrics   | 🟡 Medium | Not associated with any resource, Very low network traffic (<~340KB per day)                                                                                |
+| **Network Interfaces**  | API Details             | 🟡 Medium | Not attached to VM or Private Endpoint                                                                                                                      |
+| **Private Endpoints**   | API Details             | 🟡 Medium | No private link connections (automatic or manual), Rejected/disconnected connections, No network interfaces                                                 |
 | **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<10 per days in timespan)                                                                                                       |
 | **Static Web Apps**     | Metrics                 |  🟢 Low   | No traffic data available, Very low site hits (<100 requests in 30 days), Very low data transfer (<1MB in 30 days)                                          |
 | **Azure Advisor**       | Advisor API             | ⚪ Varies | Reserved Instance and Savings Plan opportunities, right-sizing suggestions, and other Cost recommendations — with estimated monthly savings where available |
@@ -121,7 +121,7 @@ SaveMoney keeps two monetary signals separate:
 
 All resources are also checked for:
 
-- **Missing tags**: Resources without tags are flagged as potentially unmanaged
+- **Missing tags**: Resources without tags are reported as a governance note (`operationalExcellence`); they are not, by themselves, flagged as unused
 - **Location mismatch**: Resources not in the preferred location are reported
 
 Both are governance signals, not billable waste, so they are reported under the
@@ -254,7 +254,7 @@ azure:
 | `vm`           | `networkInBytesPerDay` | `3145728` (3 MB)        | Average inbound traffic below which flagged   |
 | `appService`   | `cpuPercent`           | `5` (%)                 | Average CPU below which plan is flagged       |
 | `appService`   | `memoryPercent`        | `10` (%)                | Average memory below which plan is flagged    |
-| `appService`   | `premiumCpuPercent`    | `10` (%)                | CPU threshold for Premium-tier over-provision |
+| `appService`   | `premiumCpuPercent`    | `10` (%)                | Deprecated (ignored): kept for compatibility. |
 | `containerApp` | `cpuNanoCores`         | `1000000` (0.001 cores) | Average CPU below which app is flagged        |
 | `containerApp` | `memoryBytes`          | `10485760` (10 MB)      | Average memory below which app is flagged     |
 | `containerApp` | `networkBytes`         | `34000` (~33 KB)        | Combined Rx+Tx below which app is flagged     |
