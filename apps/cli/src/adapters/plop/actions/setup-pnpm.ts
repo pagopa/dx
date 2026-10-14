@@ -26,6 +26,11 @@ import { payloadSchema } from "../generators/monorepo/prompts.js";
 export const NX_TERRAFORM_DEPENDENCY = "gh:@pagopa/nx-terraform";
 
 /**
+ * DX Nx Docker plugin installed in generated repositories.
+ */
+export const NX_DOCKER_DEPENDENCY = "gh:@pagopa/nx-docker";
+
+/**
  * Formatter used by `nx format:check` in generated repositories.
  */
 export const OXFMT_DEPENDENCY = "oxfmt";
@@ -101,11 +106,11 @@ export default function (plop: NodePlopAPI) {
       await $`mise exec -- corepack use pnpm@11`;
       await $`mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot`;
       try {
-        await $`mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${OXFMT_DEPENDENCY}`;
+        await $`mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`;
       } catch (cause) {
         throw new Error(
           [
-            `Failed to install the workspace dependencies (${NX_TERRAFORM_DEPENDENCY}).`,
+            `Failed to install the workspace dependencies (${NX_TERRAFORM_DEPENDENCY}, ${NX_DOCKER_DEPENDENCY}).`,
             "The DX Nx plugins are served by GitHub Packages: make sure the GitHub token used by the CLI has the read:packages scope.",
             "Run `gh auth refresh --scopes read:packages` (or set GITHUB_TOKEN to a personal access token that includes read:packages) and try again.",
           ].join(" "),

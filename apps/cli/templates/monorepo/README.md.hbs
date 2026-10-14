@@ -168,3 +168,6 @@ Terraform roots under `infra/` are Nx projects inferred by
 `plan` and `apply` targets. Shared Terraform modules live in `_modules`
 directories (for example `infra/bootstrapper/_modules`): changes there mark
 every project in the same area as affected.
+
+Projects that contain a `Dockerfile` are inferred by `@pagopa/nx-docker`,
+which provides the `docker:build`, `docker:push` and `docker:run` targets.

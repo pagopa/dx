@@ -94,6 +94,11 @@ describe("monorepo generator — DX validation pipeline", () => {
         plugin: "@pagopa/nx-terraform",
       }),
     );
+    expect(nxJson.plugins).toContainEqual(
+      expect.objectContaining({
+        plugin: "@pagopa/nx-docker",
+      }),
+    );
 
     // DX packages flow through pnpm's built-in `gh:` alias and credentials
     // live in the developer's user configuration: the scaffold must not

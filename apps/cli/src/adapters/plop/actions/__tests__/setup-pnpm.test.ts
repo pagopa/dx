@@ -47,6 +47,7 @@ import os from "node:os";
 import path from "node:path";
 
 import setSetupPnpmAction, {
+  NX_DOCKER_DEPENDENCY,
   NX_TERRAFORM_DEPENDENCY,
   OXFMT_DEPENDENCY,
 } from "../setup-pnpm.js";
@@ -97,7 +98,7 @@ describe("setupPnpm", () => {
       "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
     );
     expect(mocks.commands).toContain(
-      `mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${OXFMT_DEPENDENCY}`,
+      `mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`,
     );
     expect(mocks.commands).toContain("mise exec -- pnpm install");
     expect(mocks.commands).toContain("mise exec -- pnpm exec oxfmt");

@@ -82,6 +82,9 @@
           "platforms": ["linux_amd64"]
         }
       }
+    },
+    {
+      "plugin": "@pagopa/nx-docker"
     }
   ],
   "pluginsConfig": {
