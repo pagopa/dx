@@ -39,7 +39,6 @@ jobs:
       actions: read
       contents: read
       packages: read
-      pull-requests: write
     steps:
       - name: Generate GitHub App token
         id: generate-token
@@ -54,6 +53,10 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
+          # The App token is only needed for the initial fetch. Keeping it out
+          # of the checkout config prevents dependency install scripts from
+          # reading a write-capable token from .git/config.
+          persist-credentials: false
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Setup Node.js
