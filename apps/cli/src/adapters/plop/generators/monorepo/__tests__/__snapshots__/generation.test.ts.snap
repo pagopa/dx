@@ -307,6 +307,11 @@ terraform.rc
 .turbo
 
 # End of https://www.toptal.com/developers/gitignore/api/macos,turbo,terraform,intellij+all,node
+
+### DX ###
+# Local npm configuration: it carries the GitHub Packages token written by
+# \`dx init\` and must never be committed.
+.npmrc
 # Terraform lock files for modules
 **/modules/**/.terraform.lock.hcl
 **/_modules/**/.terraform.lock.hcl
