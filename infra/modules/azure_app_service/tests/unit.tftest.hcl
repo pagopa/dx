@@ -169,3 +169,92 @@ run "azure_app_service_rejects_unsupported_tls_version" {
 
   expect_failures = [var.tls_version]
 }
+
+run "azure_app_service_package_deployment_by_default" {
+  command = plan
+
+  assert {
+    condition     = azurerm_linux_web_app.this.app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1" && azurerm_linux_web_app_slot.this[0].app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1"
+    error_message = "The App Service and staging slot must run from package when no container image is set."
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].docker_image_name == null && azurerm_linux_web_app_slot.this[0].site_config[0].application_stack[0].docker_image_name == null
+    error_message = "No container image must be configured by default."
+  }
+
+  assert {
+    condition     = !azurerm_linux_web_app.this.site_config[0].container_registry_use_managed_identity && !azurerm_linux_web_app_slot.this[0].site_config[0].container_registry_use_managed_identity
+    error_message = "Managed identity registry pulls must be disabled by default."
+  }
+}
+
+run "azure_app_service_container_image_docker_hub" {
+  command = plan
+
+  variables {
+    container_image = "nginx:latest"
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].docker_registry_url == "https://index.docker.io" && azurerm_linux_web_app.this.site_config[0].application_stack[0].docker_image_name == "nginx:latest"
+    error_message = "Images without a registry must be pulled from Docker Hub."
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app_slot.this[0].site_config[0].application_stack[0].docker_registry_url == "https://index.docker.io" && azurerm_linux_web_app_slot.this[0].site_config[0].application_stack[0].docker_image_name == "nginx:latest"
+    error_message = "The staging slot must use the same container image."
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].node_version == null && azurerm_linux_web_app_slot.this[0].site_config[0].application_stack[0].node_version == null
+    error_message = "The language stack must not be configured for container images."
+  }
+
+  assert {
+    condition     = !contains(keys(azurerm_linux_web_app.this.app_settings), "WEBSITE_RUN_FROM_PACKAGE") && !contains(keys(azurerm_linux_web_app_slot.this[0].app_settings), "WEBSITE_RUN_FROM_PACKAGE")
+    error_message = "WEBSITE_RUN_FROM_PACKAGE must not be set for container images."
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app.this.app_settings["WEBSITES_ENABLE_APP_SERVICE_STORAGE"] == "false" && azurerm_linux_web_app_slot.this[0].app_settings["WEBSITES_ENABLE_APP_SERVICE_STORAGE"] == "false"
+    error_message = "App Service storage must be disabled for container images."
+  }
+}
+
+run "azure_app_service_container_image_registry_with_namespace" {
+  command = plan
+
+  variables {
+    container_image = "ghcr.io/pagopa/my-app:1.0.0"
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].docker_registry_url == "https://ghcr.io" && azurerm_linux_web_app.this.site_config[0].application_stack[0].docker_image_name == "pagopa/my-app:1.0.0"
+    error_message = "The registry must be split from the image name and tag."
+  }
+
+  assert {
+    condition     = !azurerm_linux_web_app.this.site_config[0].container_registry_use_managed_identity
+    error_message = "Managed identity registry pulls must be disabled when acr_registry is not set."
+  }
+}
+
+run "azure_app_service_container_image_acr" {
+  command = plan
+
+  variables {
+    container_image = "dxcommonacr.azurecr.io/my-app:1.0.0"
+    acr_registry    = "dxcommonacr.azurecr.io"
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].docker_registry_url == "https://dxcommonacr.azurecr.io" && azurerm_linux_web_app.this.site_config[0].application_stack[0].docker_image_name == "my-app:1.0.0"
+    error_message = "The ACR image must be configured on the App Service."
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app.this.site_config[0].container_registry_use_managed_identity && azurerm_linux_web_app_slot.this[0].site_config[0].container_registry_use_managed_identity
+    error_message = "The App Service and staging slot must pull from ACR with their managed identity."
+  }
+}
