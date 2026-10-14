@@ -96,9 +96,19 @@ const onlyNode = (nodes: Node[], description: string): Node => {
 const nodeOfType = (node: Node, type: string): Node | undefined =>
   node.namedChildren.find((child) => child.type === type);
 
+const onlyChildOfType = (node: Node, type: string): Node | undefined => {
+  const children = node.namedChildren.filter(
+    (child) => child.type !== "comment",
+  );
+  if (children.length !== 1) {
+    return undefined;
+  }
+  return children[0]?.type === type ? children[0] : undefined;
+};
+
 const stringLiteralNode = (expression: Node): Node | undefined => {
-  const literal = nodeOfType(expression, "literal_value");
-  const string = literal && nodeOfType(literal, "string_lit");
+  const literal = onlyChildOfType(expression, "literal_value");
+  const string = literal && onlyChildOfType(literal, "string_lit");
   if (
     !string ||
     string.namedChildren.some(
@@ -137,8 +147,8 @@ const parseStringLiteral = (string: Node, description: string): string => {
 
 const repositoryKey = (element: Node): string => {
   const key = element.childForFieldName("key");
-  const variable = key && nodeOfType(key, "variable_expr");
-  const identifier = variable && nodeOfType(variable, "identifier");
+  const variable = key && onlyChildOfType(key, "variable_expr");
+  const identifier = variable && onlyChildOfType(variable, "identifier");
   if (identifier) {
     return identifier.text;
   }
@@ -197,8 +207,9 @@ const findRepositoryTarget = (root: Node): RepositoryTarget => {
     'repository attribute in module "github_repository"',
   );
   const expression = nodeOfType(repository, "expression");
-  const collection = expression && nodeOfType(expression, "collection_value");
-  const object = collection && nodeOfType(collection, "object");
+  const collection =
+    expression && onlyChildOfType(expression, "collection_value");
+  const object = collection && onlyChildOfType(collection, "object");
   if (!object) {
     throw new Error(
       `Unsupported repository value in ${REPOSITORY_MAIN}; expected a literal object`,
@@ -222,8 +233,8 @@ const findRepositoryTarget = (root: Node): RepositoryTarget => {
 
   const environmentElement = objectElements[environmentIndex];
   const value = environmentElement?.childForFieldName("val");
-  const tuple = value && nodeOfType(value, "collection_value");
-  const list = tuple && nodeOfType(tuple, "tuple");
+  const tuple = value && onlyChildOfType(value, "collection_value");
+  const list = tuple && onlyChildOfType(tuple, "tuple");
   if (!list) {
     throw new Error(
       `Unsupported environments value in ${REPOSITORY_MAIN}; expected a list of literal strings`,
