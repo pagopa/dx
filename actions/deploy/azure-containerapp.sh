@@ -5,10 +5,11 @@
 # image (stage only) from the calling script. Requires multiple revision mode.
 #
 # Stage:
-#   1. Copy the most recent active revision with the new image.
-#   2. Keep 100% of traffic on the current revision, 0% on the new one.
-#   3. Wait for the new revision to be healthy (30 checks, 3s apart).
-#   4. Healthy: add the `staging` label. Unhealthy: deactivate it and fail.
+#   1. Find the revision receiving 100% of traffic (fail if traffic is split).
+#   2. Pin traffic to it, so the new revision gets none when it becomes ready.
+#   3. Copy it with the new image, keeping 0% of traffic on the new revision.
+#   4. Wait for the new revision to be healthy (30 checks, 3s apart).
+#   5. Healthy: add the `staging` label. Unhealthy: deactivate it and fail.
 #
 # Rollout:
 #   1. Find the `staging` revision and the previous one (100% traffic, no
@@ -50,13 +51,23 @@ __stage() {
     return 1
   fi
 
-  local current_revision
-  # shellcheck disable=SC2016
-  current_revision=$(az containerapp revision list \
+  local traffic current_revision
+  traffic=$(az containerapp ingress traffic show \
     --name "$resource_name" \
-    --query 'reverse(sort_by([].{Revision:name,Active:properties.active,Created:properties.createdTime}[?Active!=`false`], &Created))| [0].Revision' \
-    --output tsv)
+    --output json)
+  current_revision=$(jq -r '[.[] | select(.weight == 100)][0].revisionName // empty' <<< "$traffic")
+  if [[ -z "$current_revision" ]]; then
+    echo "::error::No single revision receives 100% of traffic - complete or revert the ongoing rollout first"
+    return 1
+  fi
   echo "::notice::Current revision: $current_revision"
+
+  # Pin traffic before copying: with `latest` weights, the new revision would
+  # receive production traffic as soon as it becomes ready.
+  az containerapp ingress traffic set \
+    --name "$resource_name" \
+    --revision-weight "$current_revision=100" \
+    --output table
 
   local new_revision
   new_revision=$(az containerapp revision copy \
@@ -148,16 +159,17 @@ on_rollout_exit() {
   fi
 }
 
+# Explicit returns: errexit is disabled when called as `__revert_traffic || true`.
 __revert_traffic() {
-  traffic_reverted=true
   az containerapp ingress traffic set \
     --name "$resource_name" \
     --revision-weight "$previous_revision=100" "$staged_revision=0" \
-    --output table
+    --output table || return 1
+  traffic_reverted=true
 
   az containerapp revision deactivate \
     --name "$resource_name" \
-    --revision "$staged_revision"
+    --revision "$staged_revision" || return 1
 }
 
 __set_traffic() {

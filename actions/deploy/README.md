@@ -27,7 +27,7 @@ This GitHub Action supports staging a new version and incrementally rolling it o
 
 ## Phases
 
-- `stage`: For Azure Container Apps, copies the most recent active revision with `image`, keeps all traffic on the current revision, waits for the new revision to become healthy, and assigns it the `staging` label. If Azure returns the current revision (the image is unchanged), the stage ends without changes. If the new revision does not become healthy (30 checks, 3 seconds apart), traffic stays on the current revision, the new revision is deactivated, and the action fails.
+- `stage`: For Azure Container Apps, finds the revision receiving 100% of traffic (and fails if traffic is split across revisions), pins all traffic to it, then copies it with `image`, keeping all traffic on the current revision, waits for the new revision to become healthy, and assigns it the `staging` label. If Azure returns the current revision (the image is unchanged), the stage ends without changes. If the new revision does not become healthy (30 checks, 3 seconds apart), traffic stays on the current revision, the new revision is deactivated, and the action fails.
 - `rollout`: For Azure Container Apps, shifts traffic from the previous revision (the one receiving 100% of traffic) to the `staging` revision through the `latest` revision weight. With a canary script, traffic increases step by step; without one, all traffic moves at once. On success, the `staging` label is removed and the previous revision is deactivated. On any failure, all traffic returns to the previous revision and the staged revision is deactivated. If no revision has the `staging` label, the rollout ends without changes.
 
 ## How It Works
