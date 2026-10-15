@@ -84,14 +84,15 @@
     {
       "id": 6,
       "name": "explicit-subject-prose",
-      "prompt": "Write a draft PRD from these onboarding notes. Sponsor: Merchant Services Director. Product owner: Onboarding PM. Merchants currently wait up to three days for onboarding approval. Customer Operations reviews merchant applications. The source notes also say: \"Need to reduce delays. It was decided that progress should be monitored weekly. Legal review should be requested. Must support merchants with rejected applications.\" The notes do not identify who made the decision, who owns weekly monitoring, who requests Legal review, or which team supports rejected merchants. Do not invent owners or decision-makers.",
+      "prompt": "Write a draft PRD from these onboarding notes. Sponsor: Merchant Services Director. Product owner: Onboarding PM. Merchants currently wait up to three days for onboarding approval. Customer Operations reviews merchant applications. The source notes also say: \"Need to reduce delays. It was decided that progress should be monitored weekly. Legal review should be requested. Must support merchants with rejected applications.\" The notes do not identify who made the decision, who owns weekly monitoring, who requests Legal review, or which team supports rejected merchants. Do not invent owners or decision-makers. Intake note: \"Alex Chen, the Copilot interlocutor, confirmed that this draft covers application submission through the approval outcome, not post-approval account management.\" Alex's authority to approve scope for the team is not established.",
       "expected_output": "A draft PRD whose narrative prose names confirmed actors such as merchants and Customer Operations, while the missing decision-maker, monitoring owner, Legal-review initiator, and support owner remain explicit open questions.",
       "expectations": [
         "Narrative sentences use explicit subjects instead of retaining impersonal, passive, or subjectless wording from the notes",
         "The PRD names merchants and Customer Operations where the source confirms those actors",
         "The PRD records targeted open questions for the decision-maker, monitoring owner, Legal-review initiator, and support owner",
         "The PRD does not invent an actor, owner, or decision-maker",
-        "metadata.status remains draft"
+        "metadata.status remains draft",
+        "States the draft's application-submission-to-approval scope directly, excluding post-approval account management; any necessary attribution names Alex without implying team approval or repeatedly recounting the chat confirmation"
       ],
       "files": []
     }
