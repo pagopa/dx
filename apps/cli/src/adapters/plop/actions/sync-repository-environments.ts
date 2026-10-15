@@ -11,6 +11,7 @@ import { execa } from "execa";
 import { type NodePlopAPI } from "node-plop";
 import fs, { type FileHandle } from "node:fs/promises";
 import path from "node:path";
+import { buffer } from "node:stream/consumers";
 import { TextDecoder } from "node:util";
 import lockfile from "proper-lockfile";
 
@@ -29,24 +30,11 @@ type OpenRepositoryConfig = {
 type RepositoryFileInfo = Awaited<ReturnType<typeof fs.lstat>>;
 
 const readFileHandle = async (fileHandle: FileHandle): Promise<string> => {
-  const chunks: Buffer[] = [];
-  let position = 0;
-  while (true) {
-    const buffer = Buffer.alloc(64 * 1024);
-    const { bytesRead } = await fileHandle.read(
-      buffer,
-      0,
-      buffer.length,
-      position,
-    );
-    if (bytesRead === 0) {
-      break;
-    }
-    chunks.push(buffer.subarray(0, bytesRead));
-    position += bytesRead;
-  }
+  const bytes = await buffer(
+    fileHandle.createReadStream({ autoClose: false, start: 0 }),
+  );
   return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
-    Buffer.concat(chunks),
+    bytes,
   );
 };
 
