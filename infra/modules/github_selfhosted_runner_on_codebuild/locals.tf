@@ -4,7 +4,7 @@ locals {
     {
       ModuleSource  = "DX",
       ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"),
-      ModuleName    = "github_selfhosted_runner_on_codebuild"
+      ModuleName    = try(jsondecode(file("${path.module}/project.json")).name, "unknown")
     }
   )
 

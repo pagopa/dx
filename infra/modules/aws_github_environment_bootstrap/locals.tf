@@ -4,7 +4,7 @@ locals {
     {
       ModuleSource  = "DX",
       ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"),
-      ModuleName    = "aws_github_environment_bootstrap"
+      ModuleName    = try(jsondecode(file("${path.module}/project.json")).name, "unknown")
     }
   )
 
