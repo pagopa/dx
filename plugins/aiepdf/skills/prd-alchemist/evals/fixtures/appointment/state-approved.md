@@ -17,4 +17,3 @@
   https://example.invalid/design-review/INIT-314 .
 - Epic `INIT-314` and board `INIT-BOARD` are available (fictional identifiers).
 - Product has not yet recorded a delivery kickoff.
-

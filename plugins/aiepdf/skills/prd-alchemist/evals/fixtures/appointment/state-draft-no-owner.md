@@ -14,4 +14,3 @@ asking Customer Care to do it for them.
 ## Open question
 
 Which Product owner is accountable for this initiative?
-

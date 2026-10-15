@@ -163,9 +163,7 @@
         "The skill asks whether the user wants to provide missing information and explains why the transition remains blocked",
         "No invented metric, observation, or closure decision appears in the PRD"
       ],
-      "files": [
-        "evals/fixtures/appointment/state-execution-no-observation.md"
-      ]
+      "files": ["evals/fixtures/appointment/state-execution-no-observation.md"]
     },
     {
       "id": 9,
@@ -210,9 +208,7 @@
         "The PRD does not invent or infer an owner",
         "The skill asks whether the user wants to provide the missing owner and explains why the transition remains blocked"
       ],
-      "files": [
-        "evals/fixtures/appointment/state-draft-no-owner.md"
-      ]
+      "files": ["evals/fixtures/appointment/state-draft-no-owner.md"]
     },
     {
       "id": 12,
@@ -225,9 +221,7 @@
         "No unprovided metric targets, feasibility approvals, or accountable owners are invented",
         "The skill asks whether the user wants to provide the missing evaluation evidence"
       ],
-      "files": [
-        "evals/fixtures/appointment/state-discovery.md"
-      ]
+      "files": ["evals/fixtures/appointment/state-discovery.md"]
     },
     {
       "id": 13,
@@ -257,9 +251,7 @@
         "The validator identifies the draft-to-approved jump as invalid using the captured draft source and names the canonical progression",
         "The skill does not treat user assertion or apparent completeness as a gate bypass"
       ],
-      "files": [
-        "evals/fixtures/appointment/state-draft.md"
-      ]
+      "files": ["evals/fixtures/appointment/state-draft.md"]
     },
     {
       "id": 15,

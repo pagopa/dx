@@ -11,4 +11,3 @@
   observation window on 2027-07-01.
 - The observation is evidence of outcome, not a claim that every target was
   achieved.
-

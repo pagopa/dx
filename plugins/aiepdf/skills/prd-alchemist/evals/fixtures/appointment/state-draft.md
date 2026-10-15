@@ -19,4 +19,3 @@ asking Customer Care to do it for them.
 - Which appointment types qualify?
 - What change cutoff applies, and can the service charge a fee?
 - Who owns outcome measurement?
-

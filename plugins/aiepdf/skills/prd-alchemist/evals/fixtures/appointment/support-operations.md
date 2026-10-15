@@ -9,4 +9,3 @@ Fictional preliminary evidence; not formal approval or an operational plan.
   accountable Customer Care owner.
 - Engineering has not completed a feasibility assessment.
 - Legal/Privacy has not reviewed the proposed self-service experience.
-

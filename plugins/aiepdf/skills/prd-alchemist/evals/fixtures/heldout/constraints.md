@@ -8,4 +8,3 @@
   initiative is internal, backend-only, and has no changed user interface.
 - The reconciliation should not silently merge records with conflicting
   identity attributes.
-

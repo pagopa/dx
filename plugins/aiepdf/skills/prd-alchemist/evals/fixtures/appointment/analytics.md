@@ -11,4 +11,3 @@ Synthetic, privacy-safe aggregate data. No person-level records are included.
   outcome measurement.
 - The Service Access PM proposed reviewing aggregate contact and completion
   measures monthly. This proposal is not an approved KPI plan.
-

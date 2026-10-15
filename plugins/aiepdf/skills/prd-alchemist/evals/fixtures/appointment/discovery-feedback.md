@@ -6,4 +6,3 @@
   appointment-type question open until discovery research.
 - Customer Care confirmed its involvement in feedback; no solution or
   operational commitment has been approved.
-

@@ -30,8 +30,7 @@ extracts. It does not change the unapproved fee/cutoff proposals.
   contacts by Q2 2027. The aggregate dashboard is the source, Data & Insights
   owns measurement, and the review date is 2027-03-31.
 - Data & Insights established an eligible-change completion baseline of 61%
-  from the aggregate appointment dashboard and a 75% planning target by Q2
-  2027. Data & Insights owns measurement and will review it on 2027-03-31.
+  from the aggregate appointment dashboard and a 75% planning target by Q2 2027. Data & Insights owns measurement and will review it on 2027-03-31.
 - Engineering confirmed an accuracy guardrail of at least 99.5% correct
   appointment records after an eligible change, measured from aggregate
   scheduling audit logs. Engineering owns this measure.

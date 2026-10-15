@@ -5,4 +5,3 @@
   `INIT-BOARD`.
 - The Design Review remains the operational requirements source.
 - Release is planned for Q2 2027; it has not happened yet.
-

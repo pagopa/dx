@@ -31,4 +31,3 @@ so I can attend at a time that works for me.
 
 Which appointment types qualify? The answer affects scope; owner: Service
 Access PM.
-

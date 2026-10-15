@@ -177,7 +177,7 @@ Detailed gate definitions are documented in
 ### Status Change Rules
 
 1. **Explicit request required**: A status change must be prompted by an
-   explicit user request (e.g., *“move to evaluation”*, *“mark as approved”*). A
+   explicit user request (e.g., _“move to evaluation”_, _“mark as approved”_). A
    normal content update must preserve the current status.
 2. **Validate assertions vs shortcuts**: When the user asks to move to a given
    state or asserts that the PRD is approved, validate the requested state
@@ -212,14 +212,14 @@ Detailed gate definitions are documented in
 
 ### Summary of Stage-Appropriate Gate Evidence
 
-| State | Required Entry Evidence |
-| ----- | ----------------------- |
-| `draft` | Initial problem signals. Gaps recorded as open questions or justified N/A. |
-| `discovery` | Need definition present; confirmed sponsor and Product owner; initial actors identified; initial goals drafted; no blocking contradictions in intent. |
+| State                   | Required Entry Evidence                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `draft`                 | Initial problem signals. Gaps recorded as open questions or justified N/A.                                                                                                                                                                                                                                                                                                                                                                      |
+| `discovery`             | Need definition present; confirmed sponsor and Product owner; initial actors identified; initial goals drafted; no blocking contradictions in intent.                                                                                                                                                                                                                                                                                           |
 | `evaluation` / `review` | Canonical JTBDs with complete outcomes, metrics, guardrails, and priorities; KPI and quality-guardrail values/owners; strategic dependencies, scope boundaries, and constraints; feasibility survey across Legal/Compliance, Privacy, Security, Technology, and Operations with owners/actions; design discovery or justified N/A; all support-readiness questions assessed; every open question has impact, owner, and expected decision date. |
-| `approved` | Product and Design sign-off evidence (reviewer, role, and date); explicit proceed decision; linked or explicitly planned Design Review and available Epic/board; confirmed target and priority; zero blocking open questions; feasibility red flags addressed, mitigated, or formally accepted with owners; outcome metrics and guardrails confirmed with owners; scope boundaries confirmed. |
-| `execution` | Prior `approved` state and its evidence confirmed; linked and aligned solution design; available Epic/board; Product and delivery team kickoff/alignment evidence. |
-| `archived` | Explicit user request, closure decision with owner/date and confirmed rationale (`completata`, `sostituita`, or `annullata`); include post-release observation evidence when the initiative shipped. |
+| `approved`              | Product and Design sign-off evidence (reviewer, role, and date); explicit proceed decision; linked or explicitly planned Design Review and available Epic/board; confirmed target and priority; zero blocking open questions; feasibility red flags addressed, mitigated, or formally accepted with owners; outcome metrics and guardrails confirmed with owners; scope boundaries confirmed.                                                   |
+| `execution`             | Prior `approved` state and its evidence confirmed; linked and aligned solution design; available Epic/board; Product and delivery team kickoff/alignment evidence.                                                                                                                                                                                                                                                                              |
+| `archived`              | Explicit user request, closure decision with owner/date and confirmed rationale (`completata`, `sostituita`, or `annullata`); include post-release observation evidence when the initiative shipped.                                                                                                                                                                                                                                            |
 
 The execution gate checks the solution-design reference and its explicit
 `Collegato e allineato` status in addition to delivery-alignment evidence. The

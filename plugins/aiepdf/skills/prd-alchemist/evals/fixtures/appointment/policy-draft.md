@@ -7,4 +7,3 @@ This fictional policy draft is not a law, approved rule, or legal opinion.
   appointment.
 - Draft proposal: the service may charge a processing fee for a change.
 - The Permit Policy Lead has not approved this draft.
-

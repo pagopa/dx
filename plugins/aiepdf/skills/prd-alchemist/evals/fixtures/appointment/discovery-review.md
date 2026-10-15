@@ -6,4 +6,3 @@
   questions into evaluation; neither question blocks starting that assessment.
 - The review is not approval to deliver or a substitute for the later
   initiative proceed decision.
-

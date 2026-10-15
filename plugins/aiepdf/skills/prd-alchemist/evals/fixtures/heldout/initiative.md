@@ -10,4 +10,3 @@
 - Operations staff are the confirmed internal users.
 - The sponsor requested a problem and outcome brief; no solution or delivery
   decision has been approved.
-

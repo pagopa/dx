@@ -28,4 +28,3 @@ changes without relying on Customer Care.
 - Design Review: planned, owner Engineering, target 2026-10-30.
 - Epic: `INIT-314` (fictional).
 - Board: `INIT-BOARD` (fictional), available for planning.
-

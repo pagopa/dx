@@ -49,7 +49,7 @@ specific safety rules (see below).
   governance domains, and readiness for formal stakeholder review.
 - **Entry Gate Criteria**:
   1. `Objectives`: User goals structured as canonical JTBD statements:
-  *“Quando [situazione], voglio [obiettivo], così posso [risultato atteso]”*
+     _“Quando [situazione], voglio [obiettivo], così posso [risultato atteso]”_
      accompanied by expected outcome, success metric, quality guardrail,
      priority, and notes.
   2. `Success metrics`: Outcome KPIs (with baseline, target, data source, and
@@ -131,7 +131,7 @@ specific safety rules (see below).
 ### Explicit Request Requirement
 
 - A status change **must be prompted by an explicit user request** (e.g.,
-  *“move to evaluation”*, *“mark as approved”*, *“the PRD is ready for review”*).
+  _“move to evaluation”_, _“mark as approved”_, _“the PRD is ready for review”_).
 - A normal content update, rewrite, clarification, or addition **must preserve
   the current status**. Never advance or regress status autonomously.
 - Before editing `metadata.status`, capture the original value and validate
@@ -143,7 +143,7 @@ specific safety rules (see below).
 ### Validating Assertions vs Shortcuts
 
 - When a user asserts a status or reports that an initiative has been approved
-  (e.g., *“I have approved this PRD, change status to approved”*), the skill
+  (e.g., _“I have approved this PRD, change status to approved”_), the skill
   **validates the requested state against the stage-appropriate entry evidence**
   rather than treating the assertion as a shortcut.
 - If required entry evidence is present, apply the status change.
@@ -177,10 +177,11 @@ keep the current status.
 
 When sources or stakeholders present conflicting facts, metrics, scope, or
 priorities:
+
 - Never pick a winner or resolve the contradiction autonomously.
 - Never invent missing facts to make the PRD appear consistent.
 - Preserve the competing positions as an explicit entry in `Open questions,
-  assumptions, and hypotheses`; state the impact of leaving the issue
+assumptions, and hypotheses`; state the impact of leaving the issue
   unresolved in the same question cell, and name the decision owner.
 - Assess the single `Bloccante?` value against the transition currently being
   requested. Mark `Sì` for discovery only when the disagreement challenges the
@@ -208,6 +209,7 @@ priorities:
     criteria based on the user's explicit target.
   - If the user asks to transition to `approved`, enforce the full `approved`
     gate (including Product + Design review sign-off and zero blockers).
+
 ---
 
 ## Reporting Gate Validation
@@ -236,10 +238,10 @@ memos, chat transcripts, customer feedback, and preliminary technical opinions.
 Maintain strict traceability:
 
 1. **Source attribution**: Name the source in notes or source columns for
-   confirmed facts (e.g., *“Payments funnel dashboard reviewed weekly”*).
+   confirmed facts (e.g., _“Payments funnel dashboard reviewed weekly”_).
 2. **Canonical JTBD structure**: Every user goal must follow:
    - Persona: specific identified actor.
-   - Job statement: *“Quando [situazione], voglio [obiettivo], così posso [risultato atteso]”*.
+   - Job statement: _“Quando [situazione], voglio [obiettivo], così posso [risultato atteso]”_.
    - Expected outcome: measurable business/user result.
    - Success metric: concrete indicator.
    - Quality guardrail: boundary or standard that must not regress.

@@ -10,4 +10,3 @@ Synthetic concept note; not an approved design.
 - The concept is available at
   https://www.figma.com/file/appointment-demo-invalid/early-concept .
 - Open design question: which appointment types should be eligible?
-
