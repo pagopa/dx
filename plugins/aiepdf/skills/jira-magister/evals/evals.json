@@ -84,14 +84,15 @@
     {
       "id": 6,
       "name": "create-one-prepared-story",
-      "prompt": "Create a single Jira Story in project PAY for the actor \"Cittadino pagatore\": as that actor, they want to download the payment receipt, so that they can keep proof of payment. The acceptance check is that the receipt downloads as a PDF. Do not propose Epics or a full backlog. Ask for confirmation before creating anything.",
+      "prompt": "Create a single Jira Story in project PAY for the actor \"Cittadino pagatore\": as that actor, they want to download the payment receipt, so that they can keep proof of payment. The acceptance check is that the receipt downloads as a PDF. Do not propose Epics or a full backlog. Ask for confirmation before creating anything. Source S1 is UC-04 - Download payment receipt (https://example.org/use-cases/download-receipt), with acceptance check AC-04. Intake annotation: \"The user confirmed PDF download; the agent retried the source-reading tool twice.\" Parent Epic: PAY-10 - Payment receipts. Labels: payments, receipts. This self-contained item has no additional required fields; show the complete proposed description for confirmation without calling Jira.",
       "expected_output": "A single-item mode flow that normalizes one Story to the canonical contract, asks for any missing field, requests confirmation, and never proposes Epic slicing or a whole backlog.",
       "expectations": [
         "Uses single-item mode and does not propose Epic slices or a full backlog.",
         "Writes the canonical As a [Actor], I want to [action], so that [Gain] summary with the exact actor name.",
         "Keeps the Story scoped to one two-week sprint.",
         "Asks for missing fields such as the parent Epic, labels, or source IDs instead of inventing them.",
-        "Requests explicit confirmation before creating the item."
+        "Requests explicit confirmation before creating the item.",
+        "Uses the meaningful UC-04 title/key and link in the proposed issue description, retains UC-04 and AC-04 in source traceability, and excludes chat-confirmation and tool-retry narration rather than citing S1 alone."
       ],
       "files": []
     },
