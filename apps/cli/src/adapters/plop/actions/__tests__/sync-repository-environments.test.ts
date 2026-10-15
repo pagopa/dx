@@ -660,6 +660,22 @@ describe("repository configuration UTF-8 decoding", () => {
     terraformValidator.mockResolvedValue({ stdout: "" });
   });
 
+  it("preserves UTF-8 characters across read chunks", async () => {
+    const content = `# ${"x".repeat(64 * 1024 - 3)}\u00e9\n${repositoryConfig}`;
+    const expected = content.replace(
+      "    reviewers_teams        = []\n",
+      '    reviewers_teams        = []\n    environments           = ["dev", "prod"]\n',
+    );
+
+    await inTemporaryRepository(content, async (mainFile) => {
+      await syncRepositoryEnvironments(payload);
+
+      await expect(fs.readFile(mainFile)).resolves.toEqual(
+        Buffer.from(expected),
+      );
+    });
+  });
+
   it("rejects invalid UTF-8 without replacing main.tf", async () => {
     const content = Buffer.concat([
       Buffer.from("# invalid byte sequence: "),
