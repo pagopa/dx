@@ -125,12 +125,12 @@ const backUpLocalState = async (
   const previousBackup = await readOptionalFile(backupPath);
   if (previousBackup !== undefined) {
     const backupState = parseRepositoryState(previousBackup, github);
-    if (
-      backupState.lineage !== localState.lineage ||
-      backupState.serial > localState.serial
-    ) {
+    try {
+      verifyStateCopy(backupState, localState);
+    } catch (cause) {
       throw new Error(
         "The migration backup conflicts with the current local state.",
+        { cause },
       );
     }
   }
@@ -196,9 +196,12 @@ export const prepareRepositoryState = async ({
       }
       const localPath = path.join(repositoryPath, localStateFiles[0]);
       const backupPath = path.join(repositoryPath, localStateFiles[2]);
-      const localContent =
-        (await readOptionalFile(localPath)) ??
-        (await readOptionalFile(backupPath));
+      const backupContent = await readOptionalFile(backupPath);
+      const backupState =
+        backupContent === undefined
+          ? undefined
+          : parseRepositoryState(backupContent, github);
+      const localContent = (await readOptionalFile(localPath)) ?? backupContent;
       const localState =
         localContent === undefined
           ? undefined
@@ -219,7 +222,11 @@ export const prepareRepositoryState = async ({
         if (localState) {
           verifyStateCopy(localState, remoteState);
         }
+        if (backupState) {
+          verifyStateCopy(backupState, remoteState);
+        }
         await execute(["init", "-reconfigure", "-input=false"]);
+        await verifyInitializedRepositoryBackend(repositoryPath, destination);
         if (
           (await readOptionalFile(
             path.join(repositoryPath, repositoryRecoveryImportsName),
@@ -249,6 +256,7 @@ export const prepareRepositoryState = async ({
           await writeRepositoryBackend(repositoryPath, destination);
         }
         await execute(["init", "-reconfigure", "-input=false"]);
+        await verifyInitializedRepositoryBackend(repositoryPath, destination);
         await recover(repositoryPath, github, execute);
       }
 
@@ -261,6 +269,9 @@ export const prepareRepositoryState = async ({
       const verifiedState = parseRepositoryState(verifiedContent, github);
       if (localState) {
         verifyStateCopy(localState, verifiedState);
+      }
+      if (backupState) {
+        verifyStateCopy(backupState, verifiedState);
       }
       await verifyInitializedRepositoryBackend(repositoryPath, destination);
       const pulled = await execute(["state", "pull"]);

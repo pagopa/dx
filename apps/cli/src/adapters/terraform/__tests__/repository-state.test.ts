@@ -9,9 +9,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { blobFaults, credential } from "../../azure/__tests__/blob-fixture.js";
 import {
+  importedRecoveryPlan,
+  providerRecoveryPlan,
   recoveredState,
   recoveryPlan,
   seedRecovery,
+  taintedRecoveryState,
 } from "./recovery-fixture.js";
 import {
   createStateFixture,
@@ -214,6 +217,355 @@ describe("repository-state lifecycle", () => {
 });
 
 describe("repository-state recovery", () => {
+  it("recovers provider-imported branch protection without replacing its existing rule", async () => {
+    await seedRecovery(fixture.root);
+    await fs.writeFile(
+      path.join(fixture.root, "imported-recovery-plan.json"),
+      JSON.stringify(providerRecoveryPlan),
+    );
+
+    await expect(prepare()).resolves.toEqual({
+      destination,
+      status: "remote-verified",
+    });
+
+    await expect(storage.read(destination)).resolves.toBe(recoveredState);
+  });
+
+  it("preserves opaque provider metadata and outputs when reconciliation is interrupted before apply", async () => {
+    await seedRecovery(fixture.root);
+    await fs.writeFile(
+      path.join(fixture.root, "imported-recovery-plan.json"),
+      JSON.stringify(providerRecoveryPlan),
+    );
+    await fixture.scenario({ failure: "recovery-replan" });
+
+    await expect(prepare()).rejects.toThrow("Terraform plan failed");
+
+    const content = await storage.read(destination);
+    expect(JSON.parse(content ?? "null")).toMatchObject({
+      outputs: {
+        repository_name: { type: "string", value: "test-repo" },
+      },
+      resources: expect.arrayContaining([
+        expect.objectContaining({
+          instances: [
+            expect.objectContaining({
+              attributes: {
+                id: "BPR_kwDOFixture",
+                pattern: "main",
+                repository_id: "test-repo",
+              },
+              dependencies: ["module.github_repository.github_repository.this"],
+              private: "eyJzY2hlbWFfdmVyc2lvbiI6IjIifQ==",
+              schema_version: 2,
+            }),
+          ],
+          provider: 'provider["registry.terraform.io/integrations/github"]',
+          type: "github_branch_protection",
+        }),
+      ]),
+    });
+    await expect(fs.readdir(fixture.repositoryPath)).resolves.toContain(
+      "repository-state-imports.tf",
+    );
+    await fixture.scenario({});
+    await expect(prepare()).resolves.toEqual({
+      destination,
+      status: "remote-verified",
+    });
+  });
+
+  it("retries interrupted branch-protection reconciliation without importing managed resources again", async () => {
+    await seedRecovery(fixture.root);
+    await fs.writeFile(
+      path.join(fixture.root, "imported-recovery-plan.json"),
+      JSON.stringify(providerRecoveryPlan),
+    );
+    await fixture.scenario({ failure: "state-push" });
+    await expect(prepare()).rejects.toThrow("Terraform state failed");
+    await fixture.scenario({});
+
+    await expect(prepare()).resolves.toEqual({
+      destination,
+      status: "remote-verified",
+    });
+
+    await expect(storage.read(destination)).resolves.toBe(recoveredState);
+  });
+
+  it("preserves a concurrently advanced remote snapshot rather than forcing reconciliation", async () => {
+    await seedRecovery(fixture.root);
+    await fs.writeFile(
+      path.join(fixture.root, "imported-recovery-plan.json"),
+      JSON.stringify(providerRecoveryPlan),
+    );
+    await fixture.scenario({ failure: "state-race" });
+
+    await expect(prepare()).rejects.toThrow("Terraform state failed");
+
+    const content = await storage.read(destination);
+    expect(JSON.parse(content ?? "null")).toMatchObject({
+      outputs: {
+        operator: { sensitive: false, type: "string", value: "concurrent" },
+      },
+      resources: [
+        expect.anything(),
+        {
+          instances: [
+            {
+              attributes: {
+                id: "BPR_kwDOFixture",
+                repository_id: "R_kgDOFixture",
+              },
+            },
+          ],
+        },
+      ],
+      serial: 4,
+    });
+    await expect(fs.readdir(fixture.repositoryPath)).resolves.toContain(
+      "repository-state-imports.tf",
+    );
+  });
+});
+
+describe("branch-protection recovery safety", () => {
+  it("refuses an incorrectly initialized backend before importing or reconciling state", async () => {
+    await seedRecovery(fixture.root);
+    await fs.writeFile(
+      path.join(fixture.root, "imported-recovery-plan.json"),
+      JSON.stringify(providerRecoveryPlan),
+    );
+    await fixture.scenario({ activeKey: "another/repository.tfstate" });
+
+    await expect(prepare()).rejects.toThrow(
+      "active repository backend differs",
+    );
+
+    await expect(storage.read(destination)).resolves.toBeUndefined();
+  });
+
+  it.each([
+    {
+      before: { repository_id: "another-repository-node" },
+      label: "an imported rule belonging to another repository",
+      replace_paths: [["repository_id"]],
+    },
+    {
+      before: {},
+      label:
+        "replacement caused by more than the equivalent repository identifier",
+      replace_paths: [["repository_id"], ["another_force_new_field"]],
+    },
+  ])("refuses $label", async ({ before, replace_paths }) => {
+    await seedRecovery(fixture.root);
+    await fs.writeFile(
+      path.join(fixture.root, "imported-recovery-plan.json"),
+      JSON.stringify({
+        resource_changes: providerRecoveryPlan.resource_changes.map(
+          (resource) =>
+            resource.type === "github_branch_protection"
+              ? {
+                  ...resource,
+                  change: {
+                    ...resource.change,
+                    before: { ...resource.change.before, ...before },
+                    replace_paths,
+                  },
+                }
+              : resource,
+        ),
+      }),
+    );
+
+    await expect(prepare()).rejects.toThrow(
+      "would destroy or replace resources",
+    );
+
+    await expect(storage.read(destination)).resolves.toBeUndefined();
+  });
+
+  it("does not reconcile identities when another GitHub resource would be destroyed", async () => {
+    await seedRecovery(fixture.root);
+    await fs.writeFile(
+      path.join(fixture.root, "imported-recovery-plan.json"),
+      JSON.stringify({
+        resource_changes: [
+          ...providerRecoveryPlan.resource_changes,
+          {
+            address: "module.github_repository.github_branch.obsolete",
+            change: { actions: ["delete"], after: null },
+            mode: "managed",
+            type: "github_branch",
+          },
+        ],
+      }),
+    );
+
+    await expect(prepare()).rejects.toThrow(
+      "would destroy or replace resources",
+    );
+
+    await expect(storage.read(destination)).resolves.toBeUndefined();
+  });
+});
+
+describe("workflow-permissions recovery", () => {
+  it("finishes recovery after a failed workflow-permissions provisioner leaves its helper tainted", async () => {
+    await seedRecovery(fixture.root);
+    await fixture.scenario({ failure: "workflow-permissions" });
+    await expect(prepare()).rejects.toThrow("Terraform apply failed");
+    await expect(storage.read(destination)).resolves.toBe(taintedRecoveryState);
+    await fixture.scenario({});
+    await fs.writeFile(
+      path.join(fixture.root, "imported-recovery-plan.json"),
+      JSON.stringify({
+        resource_changes: importedRecoveryPlan.resource_changes.map(
+          (resource) =>
+            resource.type === "null_resource"
+              ? {
+                  ...resource,
+                  action_reason: "replace_because_tainted",
+                  change: {
+                    ...resource.change,
+                    actions: ["delete", "create"],
+                  },
+                }
+              : resource,
+        ),
+      }),
+    );
+
+    await expect(prepare()).resolves.toEqual({
+      destination,
+      status: "remote-verified",
+    });
+
+    await expect(storage.read(destination)).resolves.toBe(recoveredState);
+  });
+
+  it.each([
+    {
+      actions: ["delete"],
+      address: "module.github_repository.null_resource.workflow_permissions",
+      label: "deleting the workflow helper without replacing it",
+      type: "null_resource",
+    },
+    {
+      actions: ["delete", "create"],
+      address: "module.github_repository.null_resource.other",
+      label: "replacing an unrelated helper",
+      type: "null_resource",
+    },
+    {
+      actions: ["delete", "create"],
+      address: "module.github_repository.github_branch.development",
+      label: "replacing a GitHub resource",
+      type: "github_branch",
+    },
+  ])(
+    "still refuses $label during recovery",
+    async ({ actions, address, type }) => {
+      await seedRecovery(fixture.root);
+      await fs.writeFile(
+        path.join(fixture.root, "imported-recovery-plan.json"),
+        JSON.stringify({
+          resource_changes: [
+            ...importedRecoveryPlan.resource_changes.filter(
+              (resource) => resource.address !== address,
+            ),
+            {
+              address,
+              change: { actions, after: {}, before: {} },
+              mode: "managed",
+              type,
+            },
+          ],
+        }),
+      );
+
+      await expect(prepare()).rejects.toThrow(
+        "would destroy or replace resources",
+      );
+
+      await expect(storage.read(destination)).resolves.toBeUndefined();
+    },
+  );
+});
+
+describe.each([
+  { arrange: () => fixture.scenario({}), phase: "first recovery" },
+  {
+    arrange: async () => {
+      await fixture.scenario({ failure: "apply" });
+      await expect(prepare()).rejects.toThrow("Terraform apply failed");
+      await fixture.scenario({});
+    },
+    phase: "partial recovery retry",
+  },
+])("$phase repository identity", ({ arrange }) => {
+  it.each([
+    {
+      after: { full_name: "other-owner/test-repo" },
+      before: { full_name: "other-owner/test-repo" },
+      label: "another imported owner",
+    },
+    {
+      after: {},
+      before: { full_name: "pagopa/another-repo" },
+      label: "another imported repository",
+    },
+    {
+      after: { full_name: "pagopa/renamed-repo", name: "renamed-repo" },
+      before: {},
+      label: "a configured repository rename",
+    },
+    {
+      after: {},
+      before: { full_name: undefined },
+      label: "an unresolved imported identity",
+    },
+    {
+      after: { name: undefined },
+      before: {},
+      label: "an unresolved desired name",
+    },
+    {
+      after: { full_name: undefined },
+      before: {},
+      label: "an unresolved desired owner",
+    },
+  ])("refuses $label before changing GitHub", async ({ after, before }) => {
+    await seedRecovery(fixture.root);
+    await arrange();
+    const original = await storage.read(destination);
+    await fs.writeFile(
+      path.join(fixture.root, "imported-recovery-plan.json"),
+      JSON.stringify({
+        resource_changes: importedRecoveryPlan.resource_changes.map(
+          (resource) =>
+            resource.type === "github_repository"
+              ? {
+                  ...resource,
+                  change: {
+                    ...resource.change,
+                    after: { ...resource.change.after, ...after },
+                    before: { ...resource.change.before, ...before },
+                  },
+                }
+              : resource,
+        ),
+      }),
+    );
+
+    await expect(prepare()).rejects.toThrow("repository identity");
+
+    await expect(storage.read(destination)).resolves.toBe(original);
+  });
+});
+
+describe("repository-state import recovery", () => {
   it("recovers existing GitHub resources with provider-valid imports when local state is missing", async () => {
     await seedRecovery(fixture.root);
 
@@ -301,6 +653,113 @@ describe("repository-state recovery", () => {
 
     await expect(storage.read(destination)).resolves.toBeUndefined();
   });
+});
+
+describe("repository-state backup preservation", () => {
+  it("clears a verified newer migration backup while tolerating unrelated historical Terraform identities", async () => {
+    await fixture.configureBackend();
+    await fixture.seedLocal();
+    const remote = localState.replace('"serial":7', '"serial":8');
+    await fixture.putRemote(remote);
+    await fs.writeFile(
+      path.join(fixture.repositoryPath, "terraform.tfstate.dx-backup"),
+      remote,
+    );
+    await fs.writeFile(
+      path.join(fixture.repositoryPath, "terraform.tfstate.backup"),
+      localState.replace("test-repo:main", "historical-deleted-protection"),
+    );
+
+    await expect(prepare()).resolves.toEqual({
+      destination,
+      status: "remote-verified",
+    });
+
+    await expect(storage.read(destination)).resolves.toBe(remote);
+    const files = await fs.readdir(fixture.repositoryPath);
+    for (const name of [
+      "terraform.tfstate",
+      "terraform.tfstate.backup",
+      "terraform.tfstate.dx-backup",
+    ]) {
+      expect(files).not.toContain(name);
+    }
+  });
+
+  it("does not overwrite a migration backup whose resource identities are absent locally", async () => {
+    await fixture.seedLocal();
+    const backup = localState.replace(
+      "test-repo:main",
+      "protection-only-in-backup",
+    );
+    const filename = path.join(
+      fixture.repositoryPath,
+      "terraform.tfstate.dx-backup",
+    );
+    await fs.writeFile(filename, backup, { mode: 0o600 });
+
+    await expect(prepare()).rejects.toThrow();
+
+    await expect(fs.readFile(filename, "utf8")).resolves.toBe(backup);
+    await expect(storage.read(destination)).resolves.toBeUndefined();
+  });
+
+  it.each([
+    {
+      backup: localState.replace(
+        "fixture-original-lineage",
+        "different-backup-lineage",
+      ),
+      error: "Remote repository state differs from local state",
+      label: "another lineage",
+    },
+    {
+      backup: localState.replace('"serial":7', '"serial":8'),
+      error: "Remote repository state differs from local state",
+      label: "a newer serial",
+    },
+    {
+      backup: localState.replace(
+        "test-repo:main",
+        "protection-missing-remotely",
+      ),
+      error: "Remote repository state differs from local state",
+      label: "a managed identity missing remotely",
+    },
+    {
+      backup: "invalid-backup",
+      error: "Repository Terraform state is not valid JSON",
+      label: "malformed content",
+    },
+    {
+      backup: localState.replace("pagopa/test-repo", "other-owner/test-repo"),
+      error: "does not manage the expected repository",
+      label: "another repository owner",
+    },
+  ])(
+    "preserves a migration backup with $label even when local and remote match",
+    async ({ backup, error }) => {
+      await fixture.configureBackend();
+      await fixture.seedLocal();
+      await fixture.putRemote(localState);
+      const filename = path.join(
+        fixture.repositoryPath,
+        "terraform.tfstate.dx-backup",
+      );
+      await fs.writeFile(filename, backup, { mode: 0o600 });
+
+      await expect(prepare()).rejects.toThrow(error);
+
+      await expect(fs.readFile(filename, "utf8")).resolves.toBe(backup);
+      await expect(
+        fs.readFile(
+          path.join(fixture.repositoryPath, "terraform.tfstate"),
+          "utf8",
+        ),
+      ).resolves.toBe(localState);
+      await expect(storage.read(destination)).resolves.toBe(localState);
+    },
+  );
 });
 
 describe("repository-state safety and retries", () => {
