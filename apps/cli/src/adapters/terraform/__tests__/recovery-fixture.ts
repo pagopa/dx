@@ -83,22 +83,144 @@ export const recoveryPlan = {
   ],
 };
 
+const repositoryAttributes = {
+  full_name: "pagopa/test-repo",
+  id: "test-repo",
+  name: "test-repo",
+  node_id: "R_kgDOFixture",
+};
+
+export const importedRecoveryPlan = {
+  resource_changes: recoveryPlan.resource_changes.map((resource) => {
+    const attributes =
+      resource.type === "github_repository"
+        ? repositoryAttributes
+        : resource.change.after;
+    const imported = imports.find(
+      ({ address }) => address === resource.address,
+    );
+    return {
+      ...resource,
+      change: {
+        actions: imported ? ["no-op"] : ["create"],
+        after: attributes,
+        before: imported ? attributes : null,
+        ...(imported ? { importing: { id: imported.id } } : {}),
+      },
+    };
+  }),
+};
+
 const recoveredRepository = {
-  instances: [
-    { attributes: { full_name: "pagopa/test-repo", id: "test-repo" } },
-  ],
+  instances: [{ attributes: repositoryAttributes, schema_version: 1 }],
   mode: "managed",
   module: "module.github_repository",
   name: "this",
+  provider: 'provider["registry.terraform.io/integrations/github"]',
   type: "github_repository",
 };
+
+const importedProtection = {
+  instances: [
+    {
+      attributes: {
+        id: "BPR_kwDOFixture",
+        pattern: "main",
+        repository_id: "R_kgDOFixture",
+      },
+      dependencies: ["module.github_repository.github_repository.this"],
+      private: "eyJzY2hlbWFfdmVyc2lvbiI6IjIifQ==",
+      schema_version: 2,
+    },
+  ],
+  mode: "managed",
+  module: "module.github_repository",
+  name: "main",
+  provider: 'provider["registry.terraform.io/integrations/github"]',
+  type: "github_branch_protection",
+};
+
+export const providerRecoveryPlan = {
+  resource_changes: importedRecoveryPlan.resource_changes.map((resource) =>
+    resource.type === "github_branch_protection"
+      ? {
+          ...resource,
+          change: {
+            ...resource.change,
+            actions: ["delete", "create"],
+            after: { pattern: "main", repository_id: "test-repo" },
+            after_unknown: { id: true },
+            before: importedProtection.instances[0].attributes,
+            replace_paths: [["repository_id"]],
+          },
+        }
+      : resource,
+  ),
+};
+
+export const reconciledRecoveryState = {
+  lineage: "fixture-recovered-lineage",
+  outputs: {
+    repository_name: { sensitive: false, type: "string", value: "test-repo" },
+  },
+  resources: [
+    recoveredRepository,
+    {
+      ...importedProtection,
+      instances: [
+        {
+          ...importedProtection.instances[0],
+          attributes: {
+            ...importedProtection.instances[0].attributes,
+            repository_id: "test-repo",
+          },
+        },
+      ],
+    },
+  ],
+  serial: 3,
+  terraform_version: "1.16.0",
+  version: 4,
+};
+
+export const taintedRecoveryState = JSON.stringify({
+  lineage: "fixture-recovered-lineage",
+  resources: [
+    recoveredRepository,
+    {
+      instances: [
+        {
+          attributes: {
+            id: "workflow-helper",
+            triggers: { repo: "pagopa/test-repo" },
+          },
+          status: "tainted",
+        },
+      ],
+      mode: "managed",
+      module: "module.github_repository",
+      name: "workflow_permissions",
+      type: "null_resource",
+    },
+  ],
+  serial: 2,
+  version: 4,
+});
 
 export const recoveredState = JSON.stringify({
   lineage: "fixture-recovered-lineage",
   resources: [
     recoveredRepository,
     {
-      instances: [{ attributes: { id: "test-repo:main" } }],
+      instances: [
+        {
+          attributes: {
+            id: "BPR_kwDOFixture",
+            pattern: "main",
+            repository_id: "test-repo",
+          },
+        },
+      ],
       mode: "managed",
       module: "module.github_repository",
       name: "main",
@@ -131,6 +253,7 @@ export const seedRecovery = async (root: string) => {
           { branch_policies: [{ id: 12, name: "main", type: "tag" }] },
         ],
     }),
+    "imported-recovery-plan.json": JSON.stringify(importedRecoveryPlan),
     "partial-recovery.tfstate": JSON.stringify({
       lineage: "fixture-recovered-lineage",
       resources: [recoveredRepository],
@@ -140,8 +263,13 @@ export const seedRecovery = async (root: string) => {
     "provider-import-ids.json": JSON.stringify(
       Object.fromEntries(imports.map(({ address, id }) => [address, id])),
     ),
+    "provider-import-state.json": JSON.stringify({
+      ...reconciledRecoveryState,
+      resources: [recoveredRepository, importedProtection],
+    }),
     "recovered.tfstate": recoveredState,
     "recovery-plan.json": JSON.stringify(recoveryPlan),
+    "tainted-recovery.tfstate": taintedRecoveryState,
   };
   await Promise.all(
     Object.entries(files).map(([name, content]) =>

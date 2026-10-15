@@ -263,8 +263,20 @@ core and bootstrapper state-key conventions do not change.
 When local state is missing on another device, the CLI recovers the existing
 GitHub resources with declarative imports in
 `infra/repository/repository-state-imports.tf`. Recovery refuses resource
-destruction or replacement. The module's non-importable workflow-permissions
-resource reasserts its declared permissions. Generated imports are removed after
+destruction or replacement in GitHub. Before every recovery apply, including
+retries, the imported and desired repository identities must both match the
+expected owner and name; unresolved identities are rejected.
+
+When the GitHub provider imports a branch-protection rule with a repository node
+ID instead of the configured name, the CLI verifies their equivalence and
+reconciles only that identifier in Terraform state. This uses locked state
+operations without forcing lineage or serial conflicts, preserves the existing
+rule ID and provider metadata, and regenerates the plan before applying it.
+It does not change the shared module or allow protection-rule replacement.
+
+The module's non-importable workflow-permissions resource reasserts its declared
+permissions. If its creation provisioner previously failed, recovery permits
+replacement of that specific helper only. Generated imports are removed after
 successful recovery and remote-state verification. A retry completes pending
 imports before changing environments, including when a previous attempt imported
 only part of the repository.
@@ -273,6 +285,10 @@ If migration or recovery fails, the CLI stops before applying GitHub
 environments. Preserve local state, the migration backup, backend configuration
 and generated imports; retry from the repository root using the same command
 arguments. Conflicting remote state is never overwritten automatically.
+The CLI's `terraform.tfstate.dx-backup` is verified independently against remote
+state, even when local and remote snapshots already match. A malformed or
+conflicting migration backup is preserved instead of being overwritten or
+removed.
 Investigate identity or lineage conflicts instead of manually forcing a copy.
 
 #### Example Usage
