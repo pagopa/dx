@@ -84,14 +84,14 @@ template.
   any additional detail inside the existing cells.
 - Keep concrete facts traceable through source titles/keys and links, not opaque
   source codes alone.
-- Run the deterministic validator and summarize its result, blockers, and
-  unresolved gaps in the response. Distinguish checks the script can verify
-  from evidence that needs human judgment.
+- Check the PRD against the template and lifecycle-gate requirements, then
+  summarize the assessment, blockers, and unresolved gaps in the response.
+  Distinguish recorded evidence from matters requiring human confirmation.
 - Assess only the current status unless the user requests a transition or
   explicitly asks about readiness for another status. Do not claim that an
   unassessed future gate would pass or fail based on gaps for a different
-  stage. When a future gate is requested for assessment, run the validator
-  with that `--target-status` and summarize the target, invocation, and result
+  stage. When a future gate is requested for assessment, check its entry
+  requirements and summarize the target, supporting evidence, and result
   in the response.
 - Do not advance lifecycle status without an explicit user request and gate
   validation. Do not claim human acceptance. Do not create downstream use
@@ -197,12 +197,10 @@ Detailed gate definitions are documented in
    (such as `artifacts.design-review` or a Figma link) does **NOT** constitute
    review approval evidence.
 6. **Validate the original transition**: Record the PRD's current status before
-   editing. Validate with both `--from-status <original>` and
-   `--target-status <requested>` while `metadata.status` still contains the
-   original status. Change `metadata.status` only after that validation passes.
-   The validator accepts a document already set to the target only when the
-   original source status is supplied and the stored status matches that source
-   or target.
+   editing. Check the permitted sequence and requested state's entry evidence
+   while `metadata.status` still contains the original status. Change
+   `metadata.status` only after those requirements are satisfied. An updated
+   status value alone is not evidence that the transition was valid.
 7. **Assess the blocker for the requested transition**: The Open Questions
    table has one `Bloccante?` value. For discovery, mark `Sì` only when the
    unresolved issue challenges the initiative's core intent; for a later gate,
@@ -225,8 +223,8 @@ Detailed gate definitions are documented in
 
 The execution gate checks the solution-design reference and its explicit
 `Collegato e allineato` status in addition to delivery-alignment evidence. The
-validator checks the PRD's recorded fields; it cannot fetch or verify that an
-external link is reachable or that a human's alignment claim is true.
+PRD's recorded fields alone do not establish that an external link is reachable
+or that a human's alignment claim is true.
 
 ### Safety Handlers
 
@@ -266,19 +264,19 @@ external link is reachable or that a human's alignment claim is true.
    out of the PRD. Retain technical constraints pertinent to product scope or
    feasibility and link supporting implementation evidence instead of retelling
    it.
-5. **Run deterministic validation.** Run
-   [`scripts/validate_prd.py`](./scripts/validate_prd.py) against the document.
-   For an explicitly requested transition, pass the captured original state
-   with `--from-status` and the requested state with `--target-status`.
+5. **Review completeness and gate evidence.** Check the document's structure,
+   stable IDs, table schemas, and stage-appropriate evidence against the
+   template and lifecycle rules. For an explicitly requested transition,
+   assess the captured original state and the requested state's requirements.
    Correct authoring errors such as changed table headers, missing required
-   sections, or damaged stable IDs using the template, then rerun validation
+   sections, or damaged stable IDs using the template, then review the document
    before delivering. Formatting corrections do not require new source facts;
    unresolved evidence gaps still follow the requested gate's rules.
 6. **Apply only a validated transition.** If all required gate checks pass,
-   update `metadata.status` to the requested state and rerun the validator with
-   the same source and target statuses. If any check is blocked or not
-   validated, preserve the original status, summarize the missing evidence in
-   the response, and ask whether the user wants to provide the needed input.
+   update `metadata.status` to the requested state and confirm the resulting
+   document still satisfies that state's requirements. If any check is blocked
+   or not validated, preserve the original status, summarize the missing evidence
+   in the response, and ask whether the user wants to provide the needed input.
 7. **Summarize the result.** State the PRD path, current status, validation
    result, and any blockers or unresolved gaps. For a blocked transition, end
    with the output contract's opt-in question. Do not imply human acceptance.
@@ -300,33 +298,6 @@ external link is reachable or that a human's alignment claim is true.
   contradiction in the clarification question and ask the decision owner to
   resolve it.
 
-## Validation Script
-
-The skill bundles [`scripts/validate_prd.py`](./scripts/validate_prd.py) for
-deterministic completeness and gate checks:
-
-```bash
-python3 scripts/validate_prd.py <path-to-prd.md> \
-  [--from-status <original-status>] [--target-status <requested-status>] [--json]
-```
-
-| Parameter | Required | Default | Description |
-| --------- | -------- | ------- | ----------- |
-| `file` | Yes | - | Path to the PRD Markdown file |
-| `--from-status` | Yes for a transition | Current status | Original status captured before editing; requires `--target-status` |
-| `--target-status` | No | Current status | Target gate to evaluate entry criteria against |
-| `--json` | No | `false` | Output machine-readable JSON results |
-
-The script validates structural completeness, stable IDs, and evidence markers.
-It does not validate semantic truth or replace human reviews.
-For a requested transition, preserve the original status while running the
-validator and provide both transition statuses. Do not treat an updated
-`metadata.status` alone as evidence that the transition sequence was valid.
-If Python 3 or the bundled script cannot run, do not replace it with an ad hoc
-check or claim a pass. State in the response that validation was not run and
-why. Keep the current status for any requested promotion and request a working
-validation environment.
-
 ## Boundaries
 
 - Do not perform gathering-only aggregation when the user asks for a structured
@@ -342,4 +313,3 @@ validation environment.
 
 - [PRD Template](./templates/prd.md)
 - [Lifecycle and Gate Model](./references/lifecycle-and-gates.md)
-- [Validation Script](./scripts/validate_prd.py)
