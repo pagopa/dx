@@ -303,3 +303,68 @@ run "azure_function_app_container_image_acr" {
     error_message = "The registry URL must be derived from the image."
   }
 }
+
+run "azure_function_app_package_state_for_container_migration" {
+  command   = apply
+  state_key = "package-to-container-migration"
+
+  override_resource {
+    target = azurerm_service_plan.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/serverFarms/plan-test"
+    }
+  }
+
+  override_resource {
+    target = azurerm_subnet.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/functions"
+    }
+  }
+
+  override_resource {
+    target = azurerm_storage_account.this
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/sttest"
+    }
+  }
+
+  override_resource {
+    target = azurerm_linux_function_app.this
+    values = {
+      id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/sites/function-test"
+      principal_id = "00000000-0000-0000-0000-000000000001"
+    }
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1" && azurerm_linux_function_app_slot.this[0].app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1"
+    error_message = "The migration must start from production and staging resources deployed from packages."
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app.this.site_config[0].application_stack[0].docker) == 0 && length(azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].docker) == 0
+    error_message = "The migration must start from production and staging resources without a configured container image."
+  }
+}
+
+run "azure_function_app_replace_package_state_with_container" {
+  command   = plan
+  state_key = "package-to-container-migration"
+
+  plan_options {
+    replace = [
+      azurerm_linux_function_app.this,
+      azurerm_linux_function_app_slot.this[0]
+    ]
+  }
+
+  variables {
+    container_image = "nginx:1.0.0"
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app.this.site_config[0].application_stack[0].docker) == 1 && length(azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].docker) == 1
+    error_message = "Replacing package-based production and staging resources must initialize the configured container image."
+  }
+}
