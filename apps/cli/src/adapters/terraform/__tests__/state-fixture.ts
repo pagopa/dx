@@ -58,7 +58,14 @@ export const backendConfiguration = `terraform {
 
 export type ToolScenario = {
   activeKey?: string;
-  failure?: "apply" | "migration" | "release-source";
+  failure?:
+    | "apply"
+    | "migration"
+    | "recovery-replan"
+    | "release-source"
+    | "state-push"
+    | "state-race"
+    | "workflow-permissions";
   migratedState?: string;
   pulledState?: string;
   workspace?: string;

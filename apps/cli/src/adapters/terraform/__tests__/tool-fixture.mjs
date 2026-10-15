@@ -7,6 +7,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
 import { clearInterval, setInterval } from "node:timers";
+import { isDeepStrictEqual } from "node:util";
 import { z } from "zod/v4";
 
 const control = z
@@ -19,7 +20,17 @@ const control = z
 const scenario = z
   .object({
     activeKey: z.string().optional(),
-    failure: z.enum(["migration", "apply", "release-source"]).optional(),
+    failure: z
+      .enum([
+        "migration",
+        "apply",
+        "recovery-replan",
+        "release-source",
+        "state-push",
+        "state-race",
+        "workflow-permissions",
+      ])
+      .optional(),
     migratedState: z.string().optional(),
     pulledState: z.string().optional(),
     workspace: z.string().default("default"),
@@ -117,6 +128,86 @@ if (tool === "terraform") {
     }
   } else if (args[0] === "state" && args[1] === "pull") {
     output(scenario.pulledState ?? (await fs.readFile(control.remote, "utf8")));
+  } else if (args[0] === "import" && args[1] === "-input=false") {
+    const known = JSON.parse(
+      await fs.readFile(
+        path.join(control.root, "provider-import-state.json"),
+        "utf8",
+      ),
+    );
+    const current = await optionalFile(control.remote);
+    const state = current
+      ? JSON.parse(current)
+      : { ...known, resources: [], serial: 0 };
+    const resource = known.resources.find(
+      (resource) =>
+        `${resource.module}.${resource.type}.${resource.name}` === args[2],
+    );
+    const expected = JSON.parse(
+      await fs.readFile(
+        path.join(control.root, "provider-import-ids.json"),
+        "utf8",
+      ),
+    );
+    if (!resource || expected[args[2]] !== args[3]) {
+      throw new Error("Unexpected standalone provider import.");
+    }
+    if (
+      state.resources.some(
+        (entry) => `${entry.module}.${entry.type}.${entry.name}` === args[2],
+      )
+    ) {
+      throw new Error("Resource already managed by Terraform.");
+    }
+    state.resources.push(resource);
+    state.serial += 1;
+    await fs.mkdir(path.dirname(control.remote), { recursive: true });
+    await fs.writeFile(control.remote, JSON.stringify(state));
+  } else if (args[0] === "state" && args[1] === "push") {
+    if (args.length !== 3 || args[2].startsWith("-")) {
+      throw new Error(
+        "Recovery must retain state-push lineage, serial and locking guards.",
+      );
+    }
+    if ((await fs.stat(args[2])).mode % 0o1000 !== 0o600) {
+      throw new Error("Recovery state must be private.");
+    }
+    if (scenario.failure === "state-push") {
+      throw new Error("State persistence interrupted.");
+    }
+    if (scenario.failure === "state-race") {
+      const current = JSON.parse(await fs.readFile(control.remote, "utf8"));
+      await fs.writeFile(
+        control.remote,
+        JSON.stringify({
+          ...current,
+          outputs: {
+            ...current.outputs,
+            operator: { sensitive: false, type: "string", value: "concurrent" },
+          },
+          serial: current.serial + 2,
+        }),
+      );
+    }
+    const directory = await fs.mkdtemp(path.join(control.root, "state-push-"));
+    await fs.copyFile(
+      control.remote,
+      path.join(directory, "terraform.tfstate"),
+    );
+    const pushed = spawnSync(control.terraform, ["state", "push", args[2]], {
+      cwd: directory,
+      encoding: "utf8",
+      env: { ...process.env, TF_DATA_DIR: path.join(directory, ".terraform") },
+    });
+    if (pushed.status !== 0) {
+      throw new Error(
+        `Terraform rejected state reconciliation: ${pushed.stderr}`,
+      );
+    }
+    await fs.copyFile(
+      path.join(directory, "terraform.tfstate"),
+      control.remote,
+    );
   } else if (args[0] === "plan") {
     const filename = args.find((arg) => arg.startsWith("-out="))?.slice(5);
     if (!filename) {
@@ -129,16 +220,53 @@ if (tool === "terraform") {
           .map((name) => fs.readFile(name, "utf8")),
       )
     ).join("\n");
+    const hasImports = /\bimport\s*\{/.test(configuration);
+    const plan = JSON.parse(
+      await fs.readFile(
+        path.join(
+          control.root,
+          hasImports ? "imported-recovery-plan.json" : "recovery-plan.json",
+        ),
+        "utf8",
+      ),
+    );
+    const current = await optionalFile(control.remote);
+    if (hasImports && current) {
+      const state = JSON.parse(current);
+      for (const resource of plan.resource_changes) {
+        const managed = state.resources.find(
+          (entry) =>
+            `${entry.module}.${entry.type}.${entry.name}` === resource.address,
+        );
+        if (managed) {
+          delete resource.change.importing;
+          if (
+            resource.type === "github_branch_protection" &&
+            managed.instances[0].attributes.repository_id === "test-repo" &&
+            resource.change.after.repository_id === "test-repo" &&
+            isDeepStrictEqual(resource.change.replace_paths, [
+              ["repository_id"],
+            ])
+          ) {
+            if (scenario.failure === "recovery-replan") {
+              throw new Error(
+                "Provider unavailable after state reconciliation.",
+              );
+            }
+            resource.change = {
+              actions: ["no-op"],
+              after: managed.instances[0].attributes,
+              before: managed.instances[0].attributes,
+            };
+          }
+        }
+      }
+    }
     await fs.writeFile(
       filename,
       JSON.stringify({
-        imports: /\bimport\s*\{/.test(configuration) ? configuration : null,
-        plan: JSON.parse(
-          await fs.readFile(
-            path.join(control.root, "recovery-plan.json"),
-            "utf8",
-          ),
-        ),
+        imports: hasImports ? configuration : null,
+        plan,
       }),
     );
   } else if (args[0] === "show" && args[1] === "-json") {
@@ -148,7 +276,18 @@ if (tool === "terraform") {
     output(JSON.stringify(saved.plan));
   } else if (args[0] === "apply" && args[1] === "-input=false") {
     const saved = z
-      .object({ imports: z.string() })
+      .object({
+        imports: z.string(),
+        plan: z.object({
+          resource_changes: z.array(
+            z.object({
+              address: z.string(),
+              change: z.object({ actions: z.array(z.string()) }),
+              type: z.string(),
+            }),
+          ),
+        }),
+      })
       .parse(JSON.parse(await fs.readFile(args[2], "utf8")));
     const formatted = spawnSync(control.terraform, ["fmt", "-"], {
       encoding: "utf8",
@@ -187,16 +326,39 @@ if (tool === "terraform") {
       throw new Error("Unexpected resource import in saved recovery plan.");
     }
     await fs.mkdir(path.dirname(control.remote), { recursive: true });
-    await fs.copyFile(
-      path.join(
-        control.root,
-        scenario.failure === "apply"
-          ? "partial-recovery.tfstate"
-          : "recovered.tfstate",
+    const state = JSON.parse(
+      await fs.readFile(
+        path.join(
+          control.root,
+          scenario.failure === "apply"
+            ? "partial-recovery.tfstate"
+            : scenario.failure === "workflow-permissions"
+              ? "tainted-recovery.tfstate"
+              : "recovered.tfstate",
+        ),
+        "utf8",
       ),
-      control.remote,
     );
-    if (scenario.failure === "apply") {
+    for (const resource of state.resources) {
+      const address = `${resource.module}.${resource.type}.${resource.name}`;
+      if (
+        saved.plan.resource_changes.some(
+          (change) =>
+            change.address === address &&
+            change.type.startsWith("github_") &&
+            change.change.actions.includes("delete"),
+        )
+      ) {
+        for (const instance of resource.instances) {
+          instance.attributes.id = "replaced-github-resource";
+        }
+      }
+    }
+    await fs.writeFile(control.remote, JSON.stringify(state));
+    if (
+      scenario.failure === "apply" ||
+      scenario.failure === "workflow-permissions"
+    ) {
       throw new Error(
         "Provider interrupted after importing only the repository.",
       );
