@@ -1,0 +1,19 @@
+{
+  "projectType": "application",
+  "release": {
+    "docker": {
+      "repositoryName": "pagopa/dx-metrics"
+    }
+  },
+  "metadata": {
+    "pagopa-dx": {
+      "targetResources": [
+        {
+          "type": "Microsoft.App/containerApps",
+          "name": "dx-p-itn-metrics-portal-ca-01",
+          "resourceGroupName": "dx-p-itn-common-rg-01"
+        }
+      ]
+    }
+  }
+}
