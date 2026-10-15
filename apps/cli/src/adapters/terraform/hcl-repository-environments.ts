@@ -96,6 +96,13 @@ const onlyNode = (nodes: Node[], description: string): Node => {
 const nodeOfType = (node: Node, type: string): Node | undefined =>
   node.namedChildren.find((child) => child.type === type);
 
+const blockLabels = (block: Node): Node[] =>
+  block.namedChildren
+    .filter(
+      (child) => child.type === "identifier" || child.type === "string_lit",
+    )
+    .slice(1);
+
 const onlyChildOfType = (node: Node, type: string): Node | undefined => {
   const children = node.namedChildren.filter(
     (child) => child.type !== "comment",
@@ -182,17 +189,25 @@ const literalEnvironment = (expression: Node): string => {
 const findRepositoryTarget = (root: Node): RepositoryTarget => {
   const rootBody = nodeOfType(root, "body");
   const modules =
-    rootBody?.namedChildren.filter(
-      (node) =>
-        node.type === "block" &&
-        nodeOfType(node, "identifier")?.text === "module" &&
-        nodeOfType(node, "string_lit")?.text === '"github_repository"',
-    ) ?? [];
+    rootBody?.namedChildren.filter((node) => {
+      if (
+        node.type !== "block" ||
+        nodeOfType(node, "identifier")?.text !== "module"
+      ) {
+        return false;
+      }
+      const label = blockLabels(node)[0];
+      if (!label) {
+        return false;
+      }
+      const name =
+        label.type === "identifier"
+          ? label.text
+          : parseStringLiteral(label, "module label");
+      return name === "github_repository";
+    }) ?? [];
   const module = onlyNode(modules, 'module "github_repository"');
-  if (
-    module.namedChildren.filter((node) => node.type === "string_lit").length !==
-    1
-  ) {
+  if (blockLabels(module).length !== 1) {
     throw new Error(
       `Unsupported labels on module "github_repository" in ${REPOSITORY_MAIN}`,
     );

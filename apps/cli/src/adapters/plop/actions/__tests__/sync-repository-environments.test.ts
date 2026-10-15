@@ -127,6 +127,18 @@ describe("syncRepositoryTerraformEnvironments", () => {
     expect(result).toContain('    environments           = ["dev", "prod"]');
   });
 
+  it.each(["github_repository", '"github_\\u0072epository"'])(
+    "recognizes an equivalent repository module label: %s",
+    async (label) => {
+      const content = repositoryConfig.replace('"github_repository"', label);
+
+      const result = await syncRepositoryTerraformEnvironments(content, "dev");
+
+      expect(result).toContain(`module ${label} {`);
+      expect(result).toContain('    environments           = ["dev", "prod"]');
+    },
+  );
+
   it("does not add an explicit environments property when prod is already implicit", async () => {
     const result = await syncRepositoryTerraformEnvironments(
       repositoryConfig,
@@ -420,25 +432,31 @@ describe("repository HCL validation", () => {
     ).rejects.toThrow(/environments/);
   });
 
-  it("rejects duplicate repository modules", async () => {
-    await expect(async () =>
-      syncRepositoryTerraformEnvironments(
-        repositoryConfig + repositoryConfig,
-        "dev",
-      ),
+  it.each([
+    '"github_repository"',
+    "github_repository",
+    '"github_\\u0072epository"',
+  ])("rejects duplicate repository modules with label %s", async (label) => {
+    const duplicate = repositoryConfig.replace('"github_repository"', label);
+
+    await expect(
+      syncRepositoryTerraformEnvironments(repositoryConfig + duplicate, "dev"),
     ).rejects.toThrow(/github_repository/);
   });
 
-  it("rejects extra labels on the repository module", async () => {
-    const content = repositoryConfig.replace(
-      'module "github_repository" {',
-      'module "github_repository" "extra" {',
-    );
+  it.each(['"extra"', "extra"])(
+    "rejects an extra repository module label: %s",
+    async (label) => {
+      const content = repositoryConfig.replace(
+        'module "github_repository" {',
+        `module "github_repository" ${label} {`,
+      );
 
-    await expect(async () =>
-      syncRepositoryTerraformEnvironments(content, "dev"),
-    ).rejects.toThrow(/github_repository/);
-  });
+      await expect(
+        syncRepositoryTerraformEnvironments(content, "dev"),
+      ).rejects.toThrow(/github_repository/);
+    },
+  );
 
   it("rejects duplicate environments attributes", async () => {
     const content = repositoryConfig.replace(
@@ -450,6 +468,47 @@ describe("repository HCL validation", () => {
       syncRepositoryTerraformEnvironments(content, "uat"),
     ).rejects.toThrow(/environments/);
   });
+});
+
+describe("repository module label validation", () => {
+  beforeEach(() => {
+    terraformCommand.mockClear();
+    terraformValidator.mockReset();
+    terraformValidator.mockResolvedValue({ stdout: "" });
+  });
+
+  it.each([
+    { duplicate: true, header: "module github_repository {" },
+    { duplicate: true, header: 'module "github_\\u0072epository" {' },
+    { duplicate: true, header: 'module "github_\\U00000072epository" {' },
+    { duplicate: false, header: 'module "github_repository" extra {' },
+  ])(
+    "rejects $header without changing main.tf",
+    async ({ duplicate, header }) => {
+      const module = repositoryConfig.replace(
+        'module "github_repository" {',
+        header,
+      );
+      const content = duplicate ? repositoryConfig + module : module;
+
+      await inTemporaryRepository(
+        content,
+        async (mainFile, repositoryDirectory) => {
+          await expect(syncRepositoryEnvironments(payload)).rejects.toThrow(
+            /module/,
+          );
+          await expect(fs.readFile(mainFile)).resolves.toEqual(
+            Buffer.from(content),
+          );
+          await expect(fs.readdir(repositoryDirectory)).resolves.toEqual([
+            "main.tf",
+          ]);
+          expect(terraformValidator).not.toHaveBeenCalled();
+          expect(terraformCommand).not.toHaveBeenCalled();
+        },
+      );
+    },
+  );
 });
 
 describe("syncRepositoryEnvironments", () => {

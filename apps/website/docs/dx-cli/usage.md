@@ -163,10 +163,13 @@ adding another environment also makes `prod` explicit. The command preserves
 other HCL settings and requires a single repository module with a literal
 repository object and a list of unique, literal environment names.
 
+The repository module must have exactly one label. Unquoted labels and supported
+quoted escapes are recognized when checking for duplicate modules.
+
 Invalid HCL, ambiguous repository modules, or dynamic `environments` values
-produce an error before this action writes `main.tf` or starts Terraform.
-After a valid edit, a later `terraform init` or `terraform apply` failure does
-not roll back the edited file or any remote changes.
+produce an error before this action writes `main.tf` or starts Terraform. After
+a valid edit, a later `terraform init` or `terraform apply` failure does not
+roll back the edited file or any remote changes.
 
 **Initialization and Runner App credentials**
 
