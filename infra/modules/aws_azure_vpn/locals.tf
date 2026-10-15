@@ -4,7 +4,7 @@ locals {
     {
       ModuleSource  = "DX",
       ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"),
-      ModuleName    = try(jsondecode(file("${path.module}/module.json")).name, basename(path.module))
+      ModuleName    = "aws_azure_vpn"
     }
   )
 

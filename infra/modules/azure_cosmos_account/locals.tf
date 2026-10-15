@@ -3,7 +3,7 @@ locals {
     {
       ModuleSource  = "DX",
       ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"),
-      ModuleName    = try(jsondecode(file("${path.module}/module.json")).name, basename(path.module))
+      ModuleName    = "azure_cosmos_account"
   })
 
   primary_location = var.primary_geo_location.location == null ? var.environment.location : var.primary_geo_location.location
