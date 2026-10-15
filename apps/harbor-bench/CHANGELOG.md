@@ -1,3 +1,13 @@
+## 0.1.5 (2026-10-15)
+
+### 🩹 Fixes
+
+- Fix the F1 skill-use gate on Copilot CLI runs: the verifier now proves skill load and invoke on the trial's ATIF trajectory (tests/skill_use.py, the same artifact the judge reads) instead of grepping the raw --output-format json stream, which Copilot CLI 1.0.97 changed by dropping the <skill-context> messages. The check pins the tested skill name, so auxiliary skills and the tool catalog can no longer satisfy or trip it. ([#2359](https://github.com/pagopa/dx/pull/2359), [#2358](https://github.com/pagopa/dx/issues/2358))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.1.4 (2026-10-08)
 
 ### 🩹 Fixes
