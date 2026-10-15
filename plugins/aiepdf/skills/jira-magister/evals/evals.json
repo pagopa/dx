@@ -107,6 +107,77 @@
         "Re-fetches and verifies the updated item after mutation."
       ],
       "files": []
+    },
+    {
+      "id": 8,
+      "name": "validate-cross-domain-delivery-coverage",
+      "prompt": "Using municipal-planning.md and its approved Epic grouping, prepare an offline Jira preview for project SERV: two outcome Epics, a resident subscription Story, an operator publication Story and a notification-delivery Task. Write backlog.md with the item descriptions, coverage audit and final review. Stop before Jira mutation.",
+      "expected_output": "A cross-domain Jira projection where every Epic, Story, and Task has Source, Slice Scope ID, observable Output, item-local Checks, and optional AC Coverage IDs; projection keys are unique, evidence shows coverage passing for UC-01:: and UC-02::, and no Jira mutation occurs.",
+      "expectations": [
+        "Uses unique projection keys beginning with UC-01:: or UC-02:: for Use Case delivery slices.",
+        "Gives every Epic, Story, and Task the fixed Source, Slice Scope ID, Output, and Checks sections in order.",
+        "Lists only stable AC IDs in AC Coverage and never copies acceptance-check text.",
+        "Applies the read-only validate-delivery-coverage procedure in references/delivery-coverage.md and shows one evidence row per item plus coverage rows for both UC-01:: and UC-02:: prefixes. This is a documented procedure, not a required executable command.",
+        "Keeps item-local Checks distinct from canonical acceptance-check satisfaction and does not paraphrase Given/When/Then behavior.",
+        "Does not reuse CED, signed-agreement, CAdES, Practice, or Document assumptions and does not mutate Jira."
+      ],
+      "files": ["fixtures/municipal-planning.md"]
+    },
+    {
+      "id": 11,
+      "name": "audit-legacy-delivery-coverage",
+      "prompt": "Audit the Jira draft legacy-backlog.md against municipal-planning.md in read-only mode. Write backlog-audit.md with evidence for every dispatchable item and selected Use Case. Do not repair the backlog, persist Jira, or change the sources.",
+      "expected_output": "A truthful failing delivery-coverage audit of the four legacy items and both UC prefixes, not a repaired draft disguised as an audit.",
+      "expectations": [
+        "Reports FAIL for the current legacy draft because Projection Keys and required item sections are absent.",
+        "Shows separate evidence rows for EPIC-01, STORY-01, STORY-02 and TASK-01, not only an aggregate count.",
+        "Shows UC-01:: and UC-02:: coverage rows and distinguishes narrative AC references from valid structured AC Coverage.",
+        "Keeps the supplied canonical source URLs usable and does not claim that all source URLs are absent.",
+        "Leaves legacy-backlog.md and municipal-planning.md unchanged and performs no Jira mutations."
+      ],
+      "files": ["fixtures/municipal-planning.md", "fixtures/legacy-backlog.md"]
+    },
+    {
+      "id": 9,
+      "name": "digest-confirmation-and-epic-remote-link",
+      "prompt": "A complete backlog projection has passed validate-delivery-coverage. Show the final review for project SERV, including its digest, then wait for an explicit confirmation bound to that digest. The canonical DR/SRS is https://example.atlassian.net/wiki/spaces/SERV/pages/123/service-status-design-review. If the source changes after confirmation, handle it safely. Describe the persistence verification requirements.",
+      "expected_output": "A non-mutating review bound to a projection digest; source or projection changes invalidate confirmation; persistence requires the Epic remote link to the canonical DR/SRS and post-write verification of links, identities, and coverage.",
+      "expectations": [
+        "Shows the project, operations, item count, hierarchy, material changes, delivery-coverage result, unresolved gaps, and exact projection digest before mutation.",
+        "Treats confirmation as valid only for the reviewed digest and invalidates it when canonical sources or projection content change.",
+        "Defines the versioned deterministic JSON serialization and SHA-256 manifest input, including complete write payloads, relationships, remote links and canonical-source content hashes; does not invent a digest when required inputs are unavailable.",
+        "Requires every Epic to receive a remote link to the canonical DR/SRS URL.",
+        "Requires re-fetch and verification of hierarchy, dependency direction, remote links, unique projection keys, and UC-prefix coverage.",
+        "Does not mutate Jira before an explicit confirmation for the current digest."
+      ],
+      "files": []
+    },
+    {
+      "id": 12,
+      "name": "reject-story-without-item-local-ac-coverage",
+      "prompt": "Audit story-coverage-gap.md in read-only mode. Assess the item contracts and UC-01 coverage separately. Write story-coverage-audit.md. Do not repair the draft or mutate Jira.",
+      "expected_output": "A failing item-level audit for STORY-01 because its Use Case source requires non-empty AC Coverage, even though TASK-01 covers the complete UC-01 AC set. The aggregate AC mapping does not make the Story valid.",
+      "expectations": [
+        "Reports STORY-01 as FAIL specifically for missing non-empty AC Coverage.",
+        "Recognizes that TASK-01 covers AC-01 and AC-02 without treating its coverage as a substitute for the Story's coverage.",
+        "Reports overall FAIL even if the aggregate UC-01 AC mapping is complete.",
+        "Does not repair the source draft, invent missing requirements, or mutate Jira."
+      ],
+      "files": ["fixtures/story-coverage-gap.md"]
+    },
+    {
+      "id": 13,
+      "name": "preview-standalone-epic-without-upstream-dr",
+      "prompt": "Prepare the single self-contained Epic described in standalone-epic.md for review, without querying or mutating Jira. Write standalone-epic-preview.md. Do not produce a requirements backlog.",
+      "expected_output": "A single-item Epic preview that preserves the supplied source and output without requiring an invented DR/SRS, PRD, JTBD or Use Case. Any unavailable Jira field mapping remains a persistence gap; the applicable source link is retained.",
+      "expectations": [
+        "Uses single-item mode and prepares exactly one Epic rather than decomposing a backlog.",
+        "Does not require a canonical DR/SRS remote link or upstream PRD/JTBD/UC documents for this self-contained intake.",
+        "Keeps the supplied source ID, source link, observable output and binary local check.",
+        "Requires explicit digest-bound confirmation before mutation and leaves unavailable Jira schema discovery as a gap rather than inventing field values.",
+        "Does not query or mutate Jira."
+      ],
+      "files": ["fixtures/standalone-epic.md"]
     }
   ]
 }

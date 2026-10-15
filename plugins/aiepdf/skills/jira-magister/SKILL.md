@@ -1,6 +1,6 @@
 ---
 name: jira-magister
-description: Project approved DR/SRS and Use Case contracts into a reviewable Jira backlog, and format or persist a single already-specified Jira item. Use whenever a user asks to create, decompose, refine, synchronize, or update Jira Epics, User Stories, or technical Tasks — from a PRD, DR/SRS, Use Case, JTBD, acceptance check, RFC, or requirements document, or from one item the user has already specified. Propose multiple cohesive Epics that fit a few sprints, write actor-facing Stories sized for one two-week sprint, separate enabling work into Tasks, preserve source traceability, and require explicit confirmation before Jira mutations.
+description: Project approved DR/SRS and Use Case contracts into a reviewable Jira backlog, audit delivery coverage, and format or persist a single already-specified Jira item. Use whenever a user asks to create, decompose, refine, audit, synchronize, or update Jira Epics, User Stories, or technical Tasks — from a PRD, DR/SRS, Use Case, JTBD, acceptance check, RFC, or requirements document, or from one item the user has already specified. Propose cohesive Epics, write actor-facing Stories sized for one two-week sprint, separate enabling work into Tasks, preserve source traceability, and require explicit confirmation before Jira mutations.
 ---
 
 # Jira Magister
@@ -18,6 +18,7 @@ Use this skill when the user asks to:
 - refine a Jira projection after a Use Case, acceptance check, contract, or
   readiness decision changes;
 - synchronize existing Jira items with stable PRD, JTBD, UC, or AC identifiers;
+- audit an existing draft's delivery coverage without repairing or persisting it;
 - prepare Jira work for a sprint or ask whether requirements are ready for Jira;
 - format and create or update one Jira item the user has already specified,
   without generating a full backlog.
@@ -47,6 +48,10 @@ request is ambiguous.
    and the linked PRD/JTBD evidence before drafting Jira items.
 2. Treat the DR/SRS as the current operational source of truth. An accepted RFC
    does not guide Jira until its decision is propagated into the DR/SRS.
+   When reviewing a proposed source revision, state that scope and compare the
+   existing projection against that revision without implying baseline approval.
+   A read-only audit reports the existing draft's failures; it does not repair
+   the draft and then present the repaired result as the audit.
 3. Preserve stable `JTBD-XX`, `UC-XX`, `AC-UC-XX-YY`, `RFC-XX`, and `CR-YYYY-NNN`
    identifiers. Never renumber or reuse an identifier for a different meaning.
    Preserve DR/SRS `open.item-XX` and Use Case `uc-open-XX` question IDs, and the
@@ -67,6 +72,11 @@ request is ambiguous.
 6. Preserve source traceability in both the issue description and native Jira
    remote links. When a source has a Confluence or Figma URL, link that page or
    design artifact to the Jira item instead of relying only on prose references.
+   Give every dispatchable item a stable projection identity and the fixed
+   `Source`, `Slice Scope ID`, `Output`, and `Checks` sections. `AC Coverage` is
+   mandatory and non-empty for Use-Case-sourced Stories; Epics and Tasks may
+   omit it when they cover no acceptance checks. Follow
+   [`delivery-coverage.md`](./references/delivery-coverage.md).
 7. Treat open questions as projection input. A question flagged `Blocking: yes`
    becomes an independent spike Task that the dependent Story or Task
    `is blocked by`; a non-blocking question is recorded as a gap with its owner
@@ -122,8 +132,12 @@ structure:
 
 Every Story must be independently deliverable within one two-week sprint. Split
 Stories that combine multiple outcomes, actors, or independently testable flows.
-Use the Use Case's binary acceptance checks as the Story's acceptance criteria;
-preserve their IDs and do not invent missing checks.
+Trace a Story to the Use Case's binary acceptance checks by listing their IDs in
+`AC Coverage`; do not copy or paraphrase their text into the Jira item. The
+canonical Use Case remains the acceptance source of truth. Keep `Checks`
+item-local: verify the Story's produced delivery artifact, execution evidence,
+or traceability to an executable test suite, not the end-user behavior,
+guardrail, error outcome, or threshold stated by an acceptance check.
 
 Create a technical Task for smaller enabling work such as repository setup,
 API/AsyncAPI/Data Contract wiring, migrations, instrumentation, test fixtures,
@@ -156,7 +170,19 @@ Keep hierarchy and dependencies distinct:
 Read [issue-contract.md](./references/issue-contract.md) for required content,
 traceability, and sizing.
 
-### 4. Review the projection
+### 4. Validate delivery coverage
+
+Run the read-only `validate-delivery-coverage` procedure in
+[`delivery-coverage.md`](./references/delivery-coverage.md) before presenting
+the projection for confirmation. Epics are dispatchable items too and must pass
+the same fixed-section validation as Stories and Tasks. Validate every item and
+query coverage by each selected `UC-XX::` projection-key prefix. Include the
+item and prefix evidence tables defined by the procedure; a bare status line is
+not evidence that validation ran. Stop on `FAIL`; surface
+`PASS_WITH_WARNINGS` findings in the review. Never treat item-local `Checks` as
+proof that a canonical acceptance check passed.
+
+### 5. Review the projection
 
 Show a complete human-readable draft before any Jira mutation:
 
@@ -172,10 +198,16 @@ Show a complete human-readable draft before any Jira mutation:
 - the repository target and any Task that cannot be routed;
 - proposed creates, updates, splits, and unchanged items.
 
-Ask for explicit confirmation. A request to “prepare”, “draft”, or “show” the
-backlog is not confirmation to create or update Jira.
+Include the delivery-coverage result and the SHA-256 digest of the complete
+review manifest defined in [persistence.md](./references/persistence.md),
+including all write payloads, relationships, remote links and source-content
+digests. Use its bundled script; do not hash a prose summary. Ask for explicit
+confirmation bound to that digest. A request to
+“prepare”, “draft”, or “show” the backlog is not confirmation to create or
+update Jira. If source content or the projection changes after review, invalidate
+the confirmation, show the new diff and digest, and ask again.
 
-### 5. Create or synchronize after confirmation
+### 6. Create or synchronize after confirmation
 
 Read [persistence.md](./references/persistence.md) for the Jira mechanics:
 integration selection, project metadata discovery, creation order, native and
@@ -183,7 +215,7 @@ remote links, synchronization matching, field-level updates, and failure
 handling. Match existing issues before creating new ones, and create parents
 before children.
 
-### 6. Verify and report
+### 7. Verify and report
 
 Re-fetch every created or updated item and verify it against the checklist in
 [persistence.md](./references/persistence.md). Report partial failures
@@ -204,9 +236,13 @@ of requirements.
    field; never infer the actor, gain, acceptance checks, parent, project, or
    source ID.
 2. **Review the item.** Show the complete item — type, summary, description,
-   project, parent, links, labels, source IDs, and acceptance checks — and ask
-   for explicit confirmation. A request to "prepare", "draft", or "show" is not
+   project, parent, links, labels, source IDs, and acceptance checks — with the
+   complete review-manifest digest from [persistence.md](./references/persistence.md),
+   and ask for explicit confirmation bound to it. A request to "prepare", "draft", or "show" is not
    confirmation.
+   If schema discovery or another required input prevents computing the
+   manifest, label the preview incomplete and explicitly require a new review
+   and digest-bound confirmation after that gap is resolved, before any write.
 3. **Persist.** After confirmation, create or update the one item following
    [persistence.md](./references/persistence.md), and attach its source remote
    links.
@@ -241,7 +277,8 @@ When invoked by `uc-engraver` or `dr-blacksmith`, return the proposed and
 confirmed Epic/Story/Task mapping, including spike Tasks derived from blocking
 open questions and deduplicated error-handling Tasks, the repository used,
 source IDs, Jira keys and URLs, unresolved readiness gaps, synchronization
-results, and any failed verification. In single-item mode, return the created or
+results, the `validate-delivery-coverage` result, the confirmed projection
+digest, and any failed verification. In single-item mode, return the created or
 updated item, its key and URL, the preserved source line, and any failed step;
 no backlog mapping is produced. Do not publish Confluence or edit source
 documents outside this skill's ownership.
