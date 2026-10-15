@@ -6,6 +6,7 @@ import type { NetworkManagementClient } from "@azure/arm-network";
 import type { GenericResource } from "@azure/arm-resources";
 
 import { describe, expect, it, vi } from "vitest";
+import { mockDeep } from "vitest-mock-extended";
 
 import { analyzeNic } from "../nic.js";
 
@@ -22,9 +23,9 @@ const RESOURCE: GenericResource = {
 };
 
 function makeNetworkClient(details: object) {
-  return {
-    networkInterfaces: { get: vi.fn().mockResolvedValue(details) },
-  } as unknown as NetworkManagementClient;
+  const client = mockDeep<NetworkManagementClient>();
+  client.networkInterfaces.get.mockResolvedValue(details);
+  return client;
 }
 
 describe("analyzeNic", () => {

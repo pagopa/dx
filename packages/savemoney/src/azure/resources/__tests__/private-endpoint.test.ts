@@ -7,6 +7,7 @@ import type { NetworkManagementClient } from "@azure/arm-network";
 import type { GenericResource } from "@azure/arm-resources";
 
 import { describe, expect, it, vi } from "vitest";
+import { mockDeep } from "vitest-mock-extended";
 
 import { analyzePrivateEndpoint } from "../private-endpoint.js";
 
@@ -23,9 +24,9 @@ const RESOURCE: GenericResource = {
 };
 
 function makeNetworkClient(details: object) {
-  return {
-    privateEndpoints: { get: vi.fn().mockResolvedValue(details) },
-  } as unknown as NetworkManagementClient;
+  const client = mockDeep<NetworkManagementClient>();
+  client.privateEndpoints.get.mockResolvedValue(details);
+  return client;
 }
 
 const SUBNET = { id: "/subnets/s1" };

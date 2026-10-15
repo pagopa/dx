@@ -121,7 +121,7 @@ SaveMoney keeps two monetary signals separate:
 
 All resources are also checked for:
 
-- **Missing tags**: Resources without tags are reported as a governance note (`operationalExcellence`); they are not, by themselves, flagged as unused
+- **Missing tags**: Added as a governance note (`operationalExcellence`) to resources already reported for other reasons; missing tags alone do not include a resource in the report
 - **Location mismatch**: Resources not in the preferred location are reported
 
 Both are governance signals, not billable waste, so they are reported under the

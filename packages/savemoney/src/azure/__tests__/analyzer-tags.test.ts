@@ -6,6 +6,7 @@
  */
 
 import { describe, expect, it } from "vitest";
+import { mock } from "vitest-mock-extended";
 
 import type { Finding } from "../../finding.js";
 import type { AzureClients } from "../analyzers/index.js";
@@ -91,7 +92,7 @@ describe("analyzeResource", () => {
         type: "Microsoft.Compute/virtualMachines",
       },
       [],
-      {} as unknown as AzureClients,
+      mock<AzureClients>(),
       new Map(),
       "westeurope",
       30,
