@@ -1,3 +1,14 @@
+## 0.27.15 (2026-10-15)
+
+### 🩹 Fixes
+
+- Fix Azure CLI setup during `dx add environment` by using a supported managed ([#2363](https://github.com/pagopa/dx/pull/2363))
+  Python runtime and Mise's dependency prerelease setting.
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.27.14 (2026-10-09)
 
 ### 🩹 Fixes
