@@ -258,3 +258,85 @@ run "azure_app_service_container_image_acr" {
     error_message = "The App Service and staging slot must pull from ACR with their managed identity."
   }
 }
+
+run "azure_app_service_package_state_for_container_migration" {
+  command   = apply
+  state_key = "package-to-container-migration"
+
+  override_resource {
+    target = azurerm_service_plan.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/serverFarms/plan-test"
+    }
+  }
+
+  override_resource {
+    target = azurerm_subnet.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/app-service"
+    }
+  }
+
+  override_resource {
+    target = azurerm_linux_web_app.this
+    values = {
+      id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/sites/app-service-test"
+      principal_id = "00000000-0000-0000-0000-000000000001"
+    }
+  }
+
+  override_resource {
+    target = azurerm_private_endpoint.app_service_sites
+    values = {
+      private_dns_zone_configs = [{
+        id                  = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.azurewebsites.net"
+        name                = "app-service"
+        private_dns_zone_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.azurewebsites.net"
+        record_sets         = []
+      }]
+    }
+  }
+
+  override_resource {
+    target = azurerm_private_endpoint.staging_app_service_sites[0]
+    values = {
+      private_dns_zone_configs = [{
+        id                  = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.azurewebsites.net"
+        name                = "app-service-staging"
+        private_dns_zone_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.azurewebsites.net"
+        record_sets         = []
+      }]
+    }
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app.this.app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1" && azurerm_linux_web_app_slot.this[0].app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1"
+    error_message = "The migration must start from production and staging resources deployed from packages."
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].docker_image_name == null && azurerm_linux_web_app_slot.this[0].site_config[0].application_stack[0].docker_image_name == null
+    error_message = "The migration must start from production and staging resources without a configured container image."
+  }
+}
+
+run "azure_app_service_replace_package_state_with_container" {
+  command   = plan
+  state_key = "package-to-container-migration"
+
+  plan_options {
+    replace = [
+      azurerm_linux_web_app.this,
+      azurerm_linux_web_app_slot.this[0]
+    ]
+  }
+
+  variables {
+    container_image = "nginx:1.0.0"
+  }
+
+  assert {
+    condition     = azurerm_linux_web_app.this.site_config[0].application_stack[0].docker_image_name == "nginx:1.0.0" && azurerm_linux_web_app_slot.this[0].site_config[0].application_stack[0].docker_image_name == "nginx:1.0.0"
+    error_message = "Replacing package-based production and staging resources must initialize the configured container image."
+  }
+}
