@@ -59,8 +59,8 @@ jobs:
           # Define the naming pattern.
           # Pattern is: [_]<scope>[-<description>][-vN].yaml
           NAMING_PATTERN='^_?(release|validate|cron)(-[a-z0-9]+)*(-v[0-9]+)?\.yaml$'
-          # Reusable workflows allowed to bypass the scope convention.
-          ALLOWED_NAMES=("deploy-v1.yaml")
+          # Workflows allowed to bypass the scope convention.
+          ALLOWED_NAMES=("deploy-v1.yaml" "_deploy.yaml")
           FOUND_FILES=0
 
           # Check each new or renamed file
