@@ -4,7 +4,7 @@
     {
       "id": 0,
       "name": "create-complete-use-case",
-      "prompt": "Using the existing parent DR/SRS and its linked PRD for a saved-payment experience, create UC-01 for selecting a saved card. The PRD defines the actor exactly as \"Cittadino pagatore\". Include the linked JTBD, trigger, preconditions, main and alternate flows, edge cases, postconditions, binary acceptance checks, tracking events, and relevant API/Figma links. Write the child Markdown under use-cases/ and update the parent Use Case index.",
+      "prompt": "Using the existing parent DR/SRS at design-review-saved-payments.md and its linked PRD at prd-saved-payments.md for a saved-payment experience, create UC-01 for selecting a saved card. Use the supplied local snapshots without remote calls. The PRD defines the actor exactly as \"Cittadino pagatore\". Include the linked JTBD, trigger, preconditions, main and alternate flows, edge cases, postconditions, binary acceptance checks, tracking events, and relevant API/Figma links. Write the child Markdown under use-cases/ and update the parent Use Case index.",
       "expected_output": "A complete UC-01 child document and a synchronized parent catalog row, with all required DR-01 sections, the exact PRD actor name, its domain entities by name, and its typed errors with semantic identifiers.",
       "expectations": [
         "Creates one child Markdown file under use-cases/ and does not embed the detailed body in the parent.",
@@ -13,7 +13,10 @@
         "Uses the exact actor name \"Cittadino pagatore\" from the PRD.",
         "Updates the parent catalog with only the stable ID, title, and child link."
       ],
-      "files": []
+      "files": [
+        "fixtures/design-review-saved-payments.md",
+        "fixtures/prd-saved-payments.md"
+      ]
     },
     {
       "id": 1,
@@ -32,7 +35,7 @@
     {
       "id": 2,
       "name": "update-stable-use-case",
-      "prompt": "Update the existing UC-02 child document after the confirmed flow adds a retry step. Preserve UC-02 and all existing AC-* IDs whose meanings are unchanged, add a new acceptance check only for the retry behavior, and synchronize the parent DR/SRS row without renumbering anything.",
+      "prompt": "Update the existing UC-02 child at uc-02-download-payment-receipt.md, whose parent is design-review-retry.md and linked PRD is prd-saved-payments.md, after the confirmed flow adds a retry step. The PRD's Confirmed retry addition defines one explicit retry after a generation timeout, with no automatic retry or retry for a missing receipt. Use the supplied local snapshots without remote calls. Preserve UC-02 and all existing AC-* IDs whose meanings are unchanged, add a new acceptance check only for the retry behavior, and synchronize the parent DR/SRS row without renumbering anything.",
       "expected_output": "The existing child is updated in place, stable IDs are preserved, the new behavior has a new acceptance check, and the parent index remains aligned.",
       "expectations": [
         "Preserves the existing UC-02 ID and unchanged acceptance-check IDs.",
@@ -40,7 +43,11 @@
         "Updates the child document rather than creating a duplicate.",
         "Synchronizes the parent catalog row and records any required propagation gap."
       ],
-      "files": []
+      "files": [
+        "fixtures/design-review-retry.md",
+        "fixtures/prd-saved-payments.md",
+        "fixtures/uc-02-download-payment-receipt.md"
+      ]
     },
     {
       "id": 3,
@@ -85,7 +92,7 @@
     {
       "id": 6,
       "name": "create-use-cases-from-parent-catalog",
-      "prompt": "The parent DR/SRS already has link-first catalog entries UC-01, UC-02, and UC-03, each with a title and a child link to a missing file. Create every missing child Use Case using the linked PRD and artifacts, fill linked JTBD and priority on the child pages, and synchronize every parent row without creating a new parent.",
+      "prompt": "The parent DR/SRS at design-review-saved-payments.md already has link-first catalog entries UC-01, UC-02, and UC-03, each with a title and a child link to a missing file. Create every missing child Use Case using the linked PRD at prd-saved-payments.md and the artifacts in these local snapshots, without remote calls. Fill linked JTBD and priority on the child pages, and synchronize every parent row without creating a new parent.",
       "expected_output": "One complete child Use Case document is created for every selected catalog entry, with its own status, priority, and linked JTBD, and every parent catalog row keeps only its stable ID, title, and child link.",
       "expectations": [
         "Processes all selected catalog entries rather than stopping after one Use Case.",
@@ -93,12 +100,15 @@
         "Keeps child status, priority, and linked JTBD on the child page, not in the parent catalog.",
         "Synchronizes every parent catalog row to ID, title, and child link and does not create a new parent DR/SRS."
       ],
-      "files": []
+      "files": [
+        "fixtures/design-review-saved-payments.md",
+        "fixtures/prd-saved-payments.md"
+      ]
     },
     {
       "id": 7,
       "name": "follow-dr01-use-case-template",
-      "prompt": "Create UC-01 from a parent DR/SRS using the DR-01 Use Case template contract. Keep the canonical field order, set the status to draft, use locally scoped AC-01 identifiers, and allow the sequence diagram to be either inline Mermaid/PlantUML or a repository link.",
+      "prompt": "Create UC-01 from the existing parent DR/SRS at design-review-saved-payments.md and linked PRD at prd-saved-payments.md using the DR-01 Use Case template contract. Use the supplied local snapshots without remote calls. Keep the canonical field order, set the status to draft, use locally scoped AC-01 identifiers, and allow the sequence diagram to be either inline Mermaid/PlantUML or a repository link.",
       "expected_output": "The child Markdown follows the DR-01 Use Case body structure directly while retaining machine-readable document metadata, a draft status, and explicit gaps.",
       "expectations": [
         "Orders Linked JTBD, primary actor, secondary actors, source artifact, Service Blueprint step, domain entities, trigger, preconditions, flows, postconditions, typed errors, acceptance checks, tracking events, and relevant links according to the DR-01 template.",
@@ -109,7 +119,10 @@
         "Includes the DR component and contract references among the relevant links.",
         "Accepts either an inline Mermaid/PlantUML sequence diagram or a link to one."
       ],
-      "files": []
+      "files": [
+        "fixtures/design-review-saved-payments.md",
+        "fixtures/prd-saved-payments.md"
+      ]
     },
     {
       "id": 8,
