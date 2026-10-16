@@ -2,15 +2,19 @@ import type { ActionType, DynamicActionsFunction } from "node-plop";
 
 import path from "node:path";
 
+import {
+  type Environment,
+  getBaseEnvironmentName,
+} from "../../../../domain/environment.js";
 import { formatTerraformCode } from "../../../terraform/fmt.js";
 import { terraformStateKey } from "../../helpers/terraform-state-key.js";
-import { Payload } from "./prompts.js";
-import { payloadSchema } from "./prompts.js";
+import { type Payload, payloadSchema } from "./prompts.js";
 
 const addModule = (
   context: Pick<Payload, "env" | "workspace">,
   templatesPath: string,
   init = false,
+  githubEnvironmentPrefixEnabled = false,
 ) => {
   const { env } = context;
   const cloudAccountsByCsp = Object.groupBy(
@@ -24,7 +28,12 @@ const addModule = (
   return (name: string) => [
     {
       base: templatesPath,
-      data: { cloudAccountsByCsp, includesProdIO, init: init || undefined },
+      data: {
+        cloudAccountsByCsp,
+        githubEnvironmentPrefixEnabled,
+        includesProdIO,
+        init: init || undefined,
+      },
       destination: path.join(cwd, "infra"),
       force: true,
       globOptions: { cwd: templatesPath, dot: true },
@@ -64,16 +73,36 @@ const addWorkflowModule = (templatesPath: string): ActionType => {
   };
 };
 
+const isGitHubEnvironmentPrefixEnabled = (
+  environment: Pick<Environment, "name" | "prefix">,
+): boolean => {
+  const lifecycleName = getBaseEnvironmentName(environment.name);
+  if (environment.name === lifecycleName) {
+    return false;
+  }
+
+  const expectedName = `${environment.prefix}-${lifecycleName}`;
+  if (environment.name !== expectedName) {
+    throw new Error(
+      `Environment "${environment.name}" must be "${expectedName}" to match prefix "${environment.prefix}".`,
+    );
+  }
+  return true;
+};
+
 export default function getActions(
   templatesPath: string,
 ): DynamicActionsFunction {
   return (input: unknown) => {
     const { env, init, workspace } = payloadSchema.parse(input);
+    const githubEnvironmentPrefixEnabled =
+      isGitHubEnvironmentPrefixEnabled(env);
 
     const addEnvironmentModule = addModule(
       { env, workspace },
       templatesPath,
       !!init,
+      githubEnvironmentPrefixEnabled,
     );
 
     const actions: ActionType[] = [
