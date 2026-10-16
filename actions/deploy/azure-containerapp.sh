@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+
+if [[ -z "${resource_group_name:-}" ]]; then
+  echo "::error::resource_group_name is required for Microsoft.App/containerApps"
+  exit 1
+fi
+
+az config set extension.use_dynamic_install=yes_without_prompt
+
+__revert_traffic() {
+  local resource_group_name="$1"
+  local containerapp_name="$2"
+  az containerapp ingress traffic set \
+    --resource-group "$resource_group_name" \
+    --name "$containerapp_name" \
+    --revision-weight "latest=0"
+}
+
+__set_traffic() {
+  local resource_group_name="$1"
+  local containerapp_name="$2"
+  local staging_percentage="$3"
+  az containerapp ingress traffic set \
+    --resource-group "$resource_group_name" \
+    --name "$containerapp_name" \
+    --revision-weight "latest=${staging_percentage}"
+}
+
+__swap_versions() {
+  __set_traffic "$1" "$2" "100"
+}
+
+__finalize() { :; }
