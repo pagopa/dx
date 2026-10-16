@@ -232,8 +232,9 @@ describe("environment generator — file generation (no init)", () => {
     ]);
 
     expect(generatedFiles).toMatchSnapshot();
-    expect(generatedFiles).not.toContain("test-private-key");
-    expect(generatedFiles).not.toContain("github_environment_prefix_enabled");
+    const generatedContent = Object.values(generatedFiles).join("\n");
+    expect(generatedContent).not.toContain("test-private-key");
+    expect(generatedContent).not.toContain("github_environment_prefix_enabled");
   });
 
   it("uses the selected GitHub organization in generated bootstrapper files", async () => {
