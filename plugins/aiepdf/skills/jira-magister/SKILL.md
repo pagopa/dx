@@ -72,8 +72,10 @@ request is ambiguous.
    `is blocked by`; a non-blocking question is recorded as a gap with its owner
    and creates no blocking edge. Never invent the answer to an open question.
 8. Use the DR/SRS `references.repository` link as the target codebase for
-   concrete Tasks. When it is missing, record the gap and flag the Tasks that
-   cannot be routed instead of guessing a repository.
+   concrete Tasks. Put the repository URL in each Task's own description; a
+   shared note, Epic reference, or repository-setup Task does not route the other
+   Tasks. When it is missing, record the gap and flag the Tasks that cannot be
+   routed instead of guessing a repository.
 
 In single-item mode, rules 1-2 and 4-5 apply to the supplied item: preserve its
 supplied stable IDs and traceability, reject a material omission rather than
@@ -169,7 +171,8 @@ Show a complete human-readable draft before any Jira mutation:
 - spike Tasks derived from blocking open questions, with their `open.item-XX`
   source and the dependents they block;
 - the semantic error identifiers and the Stories they affect;
-- the repository target and any Task that cannot be routed;
+- the repository URL in each concrete Task's description and any Task that
+  cannot be routed;
 - proposed creates, updates, splits, and unchanged items.
 
 Ask for explicit confirmation. A request to “prepare”, “draft”, or “show” the
@@ -239,9 +242,9 @@ the source line or a link needs one.
 
 When invoked by `uc-engraver` or `dr-blacksmith`, return the proposed and
 confirmed Epic/Story/Task mapping, including spike Tasks derived from blocking
-open questions and deduplicated error-handling Tasks, the repository used,
-source IDs, Jira keys and URLs, unresolved readiness gaps, synchronization
-results, and any failed verification. In single-item mode, return the created or
-updated item, its key and URL, the preserved source line, and any failed step;
-no backlog mapping is produced. Do not publish Confluence or edit source
-documents outside this skill's ownership.
+open questions and deduplicated error-handling Tasks, each concrete Task's
+repository target, source IDs, Jira keys and URLs, unresolved readiness gaps,
+synchronization results, and any failed verification. In single-item mode,
+return the created or updated item, its key and URL, the preserved source line,
+and any failed step; no backlog mapping is produced. Do not publish Confluence
+or edit source documents outside this skill's ownership.

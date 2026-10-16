@@ -5,11 +5,11 @@
 Project-specific Jira fields vary. Map these portable fields to the schema
 discovered in [persistence.md](./persistence.md):
 
-| Issue | Required content                                                                                                                                                                                                               |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Epic  | outcome-oriented summary; scope and exclusions; linked PRD and DR/SRS; included `JTBD-XX` and `UC-XX`; KPI target and qualitative guardrail; dependencies, readiness, and lifecycle note                                       |
-| Story | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; source `UC-XX` and `AC-*`; binary acceptance checks; user-facing links and gaps                                  |
-| Task  | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID, `open.item-XX` for a spike, or the semantic error identifier for error handling; dependency and verification evidence |
+| Issue | Required content                                                                                                                                                                                                                                                 |
+| ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Epic  | outcome-oriented summary; scope and exclusions; linked PRD and DR/SRS; included `JTBD-XX` and `UC-XX`; KPI target and qualitative guardrail; dependencies, readiness, and lifecycle note                                                                         |
+| Story | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; source `UC-XX` and `AC-*`; binary acceptance checks; user-facing links and gaps                                                                    |
+| Task  | concrete enabling outcome; one-sprint scope; parent Epic or Story; repository URL for concrete work; source contract/NFR/readiness/gap ID, `open.item-XX` for a spike, or the semantic error identifier for error handling; dependency and verification evidence |
 
 Descriptions may summarize source behavior, but the DR/SRS and Use Case remain
 authoritative. Use meaningful source titles/keys in prose and link labels, not
@@ -29,6 +29,25 @@ identifier too:
 Source: DR-01 | open.item-007 | blocks UC-03
 Source: DR-01 | UC-01 | AGREEMENT_EXTENSION_INVALID
 ```
+
+## Repository routing
+
+Put the canonical DR/SRS `references.repository` URL in the description of each
+concrete implementation or verification Task:
+
+```text
+Repository: <confirmed repository URL>
+```
+
+Apply this to repository setup, contract wiring, migrations, error handling,
+instrumentation, tests, deployment, and NFR verification. A shared repository
+note or the repository-setup Task alone is not sufficient. Keep the URL in the
+description without assuming a project-specific Jira repository field exists.
+
+When the repository is missing, record the gap and flag each affected Task as
+unroutable instead of inventing a URL or branch. In single-item mode, use the
+explicitly supplied repository; do not require an upstream DR/SRS for a
+self-contained item.
 
 ## Sizing and decomposition
 
@@ -74,9 +93,8 @@ Creation-time mechanics live in [persistence.md](./persistence.md).
   no owner. The same identifier can appear in several Use Cases: create one
   error-handling Task per identifier, record the identifier in its traceability,
   and link the affected Stories. Never merge two different conditions.
-- Route concrete Tasks to the repository in the DR/SRS `references.repository`.
-  If the link is missing, record the gap and flag the unroutable Tasks instead
-  of inventing a repository or a branch.
+- Apply the [repository routing contract](#repository-routing) to every concrete
+  Task, including deduplicated error-handling Tasks.
 
 ## Definition of Ready blockers
 
