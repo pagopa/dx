@@ -1,6 +1,6 @@
 ---
 name: prd-alchemist
-description: Write and update a structured Product Requirements Document (PRD) in Italian unless the user explicitly requests another language. Use when a product manager wants to turn discovery notes, meeting summaries, strategy input, or product material into a Confluence-compatible PRD covering need definition, actors, canonical JTBD, success metrics, guardrails, dependencies, constraints, feasibility red flags, design discovery, open questions, and support readiness. Supports the PRD lifecycle (draft, discovery, evaluation, approved, execution, archived, and legacy review), validates stage-appropriate gate evidence before transitions, enforces Product and Design review sign-off for approval, preserves stable English IDs, reports validation outcomes, and offers optional Confluence publication.
+description: Write and update a structured Product Requirements Document (PRD). Use when a product manager wants to turn discovery notes, meeting summaries, strategy input, or product material into a Confluence-compatible PRD covering need definition, actors, canonical JTBD, success metrics, guardrails, dependencies, constraints, feasibility red flags, design discovery, open questions, and support readiness. Supports the PRD lifecycle (draft, discovery, evaluation, approved, execution, archived, and legacy review), validates stage-appropriate gate evidence before transitions, enforces Product and Design review sign-off for approval, preserves stable IDs, reports validation outcomes, and offers optional Confluence publication.
 ---
 
 # PRD Alchemist
@@ -42,23 +42,13 @@ path requested by the user, or to `prd.md` in the current working directory when
 no path is given. Never overwrite the bundled
 template.
 
-- Write every new or updated PRD in Italian unless the user explicitly requests
-  another language. The language of the prompt, source documents, or existing
-  PRD does not override this default. Apply the chosen language to the title,
-  visible headings, prose, and explanatory cell content.
-- Keep the five standardized table headers in the template unchanged, even if
-  the user requests another PRD language.
-- Keep lifecycle status tokens in their canonical form for validation, while
-  localizing all surrounding human-readable content.
-- In an Italian PRD, express JTBD statements as
-  “Quando [situazione], voglio [obiettivo], così posso [risultato atteso]” and
-  use exactly `Sì` or `No` in the open-question blocker cell. Use `Yes` or
-  `No` if the user explicitly requests an English PRD.
-- Treat the suffixes `(Sempre)`, `(Se Applicabile)`, and `(Opzionale)` in
-  template headings as author-only requirement labels. Include every `(Sempre)`
-  section in the final PRD. Include `(Se Applicabile)` sections when relevant;
+- Use the same language as the user's prompts.
+- Keep lifecycle status tokens in their canonical form.
+- Treat the suffixes `(Always)`, `(If Applicable)`, and `(Optional)` in
+  template headings as author-only requirement labels. Include every `(Always)`
+  section in the final PRD. Include `(If Applicable)` sections when relevant;
   omit them only when confirmed not applicable, unless a requested lifecycle
-  gate requires an explicit assessment. Include `(Opzionale)` sections only
+  gate requires an explicit assessment. Include `(Optional)` sections only
   when useful or required by the requested gate. Remove these suffixes from
   every final heading; they must not appear in the PRD.
 - Unknown applicability is not confirmed non-applicability. Keep a conditional
@@ -69,19 +59,17 @@ template.
   content from a conditional or optional section, include that section with
   supported evidence or an explicit gap/N/A rationale. Do not infer evidence
   from its classification label.
-- Include the visible `Metadati` section from the template. Status defaults to
+- Include the visible Metadata section from the template. Status defaults to
   `draft` for new documents. A normal update must preserve the current status.
 - Preserve every stable section comment (`<!-- id: ... -->`) and field ID
-  (`metadata.*`, `objectives.*`, etc.) exactly as written. IDs are always English
-  and are never translated, even if visible headings are translated.
-- Include every section marked `(Sempre)`. For other sections, follow the
+  (`metadata.*`, `objectives.*`, etc.) exactly as written.
+- Include every section marked `(Always)`. For other sections, follow the
   classification and lifecycle-gate rules above. When omitting a section,
   remove its section anchor and contents together; retain all anchors and field
   IDs in sections included in the PRD.
 - Preserve the template schemas for its Persona, Business Goals, User Goals,
   Risks, and Open Questions tables. Do not add or remove columns or rename their
-  column titles, even when the user requests a language other than Italian; put
-  any additional detail inside the existing cells.
+  column titles; put any additional detail inside the existing cells.
 - Keep concrete facts traceable through source titles/keys and links, not opaque
   source codes alone.
 - Check the PRD against the template and lifecycle-gate requirements, then
@@ -97,9 +85,8 @@ template.
   validation. Do not claim human acceptance. Do not create downstream use
   cases, architecture, or backlog items.
 - For a blocked transition, end the response with an explicit opt-in question:
-  “Vuoi fornire le evidenze mancanti per rivalutare il passaggio?” (or
   “Would you like to provide the missing evidence to reassess the transition?”
-  for an English response). A gap list or “Please provide…” is not an opt-in
+  A gap list or “Please provide…” is not an opt-in
   question. If interactive questioning is unavailable, include the question
   in the final response rather than omitting it.
 
@@ -132,7 +119,7 @@ is confirmed, proposed, unapproved, or unknown.
 
 - Do not infer a priority, accountable owner, metric target or threshold,
   measurement cadence, approval, or release decision. Use an explicit
-  `Non confermato — non fornito` or `Non assegnato — non identificato` value in a
+  `Unconfirmed — not provided` or `Unassigned — not identified` value in a
   draft when the source is silent. A later lifecycle gate may require that
   field to be resolved.
 - A team named as a source, contributor, or data provider is not necessarily
@@ -143,7 +130,7 @@ is confirmed, proposed, unapproved, or unknown.
   who must decide when authority is unknown.
 - Distinguish an action's completion from whether it was requested. A review
   that is not completed does not establish that it was not requested; use
-  `Non valutato — stato della richiesta sconosciuto` unless a
+  `Not assessed — request status unknown` unless a
   source explicitly states the request status. Apply this to Legal/Privacy,
   Engineering, and other review or feasibility fields.
 - Preserve the exact reporting window attached to a measurement. A count for
@@ -158,7 +145,7 @@ is confirmed, proposed, unapproved, or unknown.
   release or synchronization behavior, APIs, support tools, or runbooks.
   Record a useful but unverified implication as an explicitly labeled
   hypothesis or open question, not as a confirmed design or requirement.
-- Do not assign `Obbligatorio`, `Raccomandato`, or `Facoltativo` unless a
+- Do not assign `Must`, `Should`, or `Could` unless a
   source or explicit user decision sets the priority. Keep an unknown priority
   explicit in a draft; block a later gate if that gate requires a confirmed
   priority.
@@ -202,11 +189,10 @@ Detailed gate definitions are documented in
    `metadata.status` only after those requirements are satisfied. An updated
    status value alone is not evidence that the transition was valid.
 7. **Assess the blocker for the requested transition**: The Open Questions
-   table has one `Bloccante?` value. For discovery, mark `Sì` only when the
+   table has one `Blocking?` value. For discovery, mark Yes only when the
    unresolved issue challenges the initiative's core intent; for a later gate,
-   mark `Sì` when it prevents that gate. Include the question and its impact in
-   `Domanda / ipotesi`; put only an exact binary value in `Bloccante?`:
-   `Sì`/`No` for Italian or `Yes`/`No` for an explicitly requested English PRD.
+   mark Yes when it prevents that gate. Include the question and its impact in
+   `Question / hypothesis`; put only a binary yes/no answer in `Blocking?`.
    `No — <explanation>` is not a valid value. Unknown values block the
    relevant gate.
 
@@ -219,10 +205,10 @@ Detailed gate definitions are documented in
 | `evaluation` / `review` | Canonical JTBDs with complete outcomes, metrics, guardrails, and priorities; KPI and quality-guardrail values/owners; strategic dependencies, scope boundaries, and constraints; feasibility survey across Legal/Compliance, Privacy, Security, Technology, and Operations with owners/actions; design discovery or justified N/A; all support-readiness questions assessed; every open question has impact, owner, and expected decision date. |
 | `approved`              | Product and Design sign-off evidence (reviewer, role, and date); explicit proceed decision; linked or explicitly planned Design Review and available Epic/board; confirmed target and priority; zero blocking open questions; feasibility red flags addressed, mitigated, or formally accepted with owners; outcome metrics and guardrails confirmed with owners; scope boundaries confirmed.                                                   |
 | `execution`             | Prior `approved` state and its evidence confirmed; linked and aligned solution design; available Epic/board; Product and delivery team kickoff/alignment evidence.                                                                                                                                                                                                                                                                              |
-| `archived`              | Explicit user request, closure decision with owner/date and confirmed rationale (`completata`, `sostituita`, or `annullata`); include post-release observation evidence when the initiative shipped.                                                                                                                                                                                                                                            |
+| `archived`              | Explicit user request, closure decision with owner/date and confirmed rationale (completed, superseded, or canceled); include post-release observation evidence when the initiative shipped.                                                                                                                                                                                                                                                    |
 
 The execution gate checks the solution-design reference and its explicit
-`Collegato e allineato` status in addition to delivery-alignment evidence. The
+linked-and-aligned status in addition to delivery-alignment evidence. The
 PRD's recorded fields alone do not establish that an external link is reachable
 or that a human's alignment claim is true.
 
@@ -290,7 +276,7 @@ or that a human's alignment claim is true.
   metrics, choose scope, assign ownership or priority, or resolve
   contradictions yourself.
 - **Drafts may be incomplete.** Missing information belongs in open questions,
-  assumptions, or a justified `Non applicabile` value. Do not invent a value to
+  assumptions, or a justified Not applicable value. Do not invent a value to
   make the document look complete.
 - **Change status only on explicit confirmation.** Keep current status unless
   the user explicitly requests a transition and gate criteria are met.

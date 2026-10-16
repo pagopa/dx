@@ -39,9 +39,9 @@ specific safety rules (see below).
      behavior/needs.
   4. `Objectives`: Initial user goals or business goals drafted.
   5. `Blockers`: No unresolved fundamental contradictions in initiative intent.
-     Assess the `Bloccante?` value against the requested transition. For
-     discovery, mark `Sì` only when a question challenges the core initiative
-     intent; for later gates, mark `Sì` when it prevents that gate.
+     Assess the `Blocking?` value against the requested transition. For
+     discovery, mark Yes only when a question challenges the core initiative
+     intent; for later gates, mark Yes when it prevents that gate.
 
 ### 3. `evaluation`
 
@@ -49,12 +49,12 @@ specific safety rules (see below).
   governance domains, and readiness for formal stakeholder review.
 - **Entry Gate Criteria**:
   1. `Objectives`: User goals structured as canonical JTBD statements:
-     _“Quando [situazione], voglio [obiettivo], così posso [risultato atteso]”_
+     _“When [situation], I want [objective], so I can [expected outcome]”_
      accompanied by expected outcome, success metric, quality guardrail,
      priority, and notes.
   2. `Success metrics`: Outcome KPIs (with baseline, target, data source, and
      review date) and Quality guardrails (with threshold, measurement source,
-     and owner) defined or marked `Non applicabile — <motivazione confermata>`.
+     and owner) defined or marked Not applicable with a confirmed reason.
   3. `Dependencies & Constraints`: Strategic dependencies and context/constraints
      explicitly mapped.
   4. `Feasibility red flags`: Feasibility surveyed across all mandatory domains:
@@ -64,9 +64,9 @@ specific safety rules (see below).
      non-goals recorded, or a justified N/A when a boundary is genuinely
      inapplicable.
   6. `Design discovery`: Design discovery and Service Blueprint touchpoints
-     summarized, or marked `Non applicabile — <motivazione confermata>`.
+     summarized, or marked Not applicable with a confirmed reason.
   7. `Support readiness`: All four support readiness questions evaluated;
-     unresolved `Da valutare` answers block the transition.
+     unresolved To assess answers block the transition.
   8. `Open questions`: Every open question has an assigned owner, the impact
      of leaving it unresolved stated with the question, and an expected
      decision date.
@@ -86,7 +86,7 @@ specific safety rules (see below).
      and delivery board are available.
   4. **Confirmed planning inputs**: Target release and priority are confirmed.
   5. **Zero blocking open questions**: Zero items in `Open questions` marked
-     `Bloccante? = Sì`, or with a missing/unknown blocker assessment.
+     with an affirmative `Blocking?` answer, or a missing/unknown blocker assessment.
   6. **Feasibility red flags addressed**: Each surveyed risk is addressed,
      mitigated, or formally accepted with a named owner and recorded
      disposition.
@@ -115,11 +115,11 @@ specific safety rules (see below).
 
 ### 6. `archived`
 
-- **Purpose**: Initiative completata, annullata o sostituita.
+- **Purpose**: Initiative completed, canceled, or superseded.
 - **Entry Gate Criteria**:
   1. Explicit user request requesting archival.
-  2. Confirmed archival rationale: `completata`, `sostituita da <artefatto>`,
-     or `annullata/abbandonata`, with a recorded decision owner and date.
+  2. Confirmed archival rationale: completed, superseded by a named artifact,
+     or canceled/abandoned, with a recorded decision owner and date.
   3. If the initiative shipped, link the post-release observation and record
      its measured outcome and observation date. If it did not ship, justify why
      no post-release observation applies.
@@ -183,11 +183,11 @@ priorities:
 - Preserve the competing positions as an explicit entry in `Open questions,
 assumptions, and hypotheses`; state the impact of leaving the issue
   unresolved in the same question cell, and name the decision owner.
-- Assess the single `Bloccante?` value against the transition currently being
-  requested. Mark `Sì` for discovery only when the disagreement challenges the
+- Assess the single `Blocking?` value against the transition currently being
+  requested. Mark Yes for discovery only when the disagreement challenges the
   initiative's core reason, intended users, or outcome; for a later gate, mark
-  `Sì` when it prevents that gate. A policy, feasibility, metric, or solution
-  question may be `No` for discovery but `Sì` for approval. Do not infer the
+  Yes when it prevents that gate. A policy, feasibility, metric, or solution
+  question may be No for discovery but Yes for approval. Do not infer the
   classification; an unknown value blocks the relevant gate.
 
 ### Unknown Ownership
@@ -223,7 +223,7 @@ not establish semantic truth, external-link availability, or human approval.
 Never describe a generated PRD as accepted unless the user explicitly accepts
 it.
 
-Assess the single `Bloccante?` value for the requested gate. Check discovery
+Assess the single `Blocking?` value for the requested gate. Check discovery
 intent only when assessing discovery; do not reinterpret a later gate's blocker
 as a contradiction in the initiative's original intent.
 Later gates still check the underlying need, sponsor, owner, actors, and goals.
@@ -240,14 +240,14 @@ Maintain strict traceability:
    confirmed facts (e.g., _“Payments funnel dashboard reviewed weekly”_).
 2. **Canonical JTBD structure**: Every user goal must follow:
    - Persona: specific identified actor.
-   - Job statement: _“Quando [situazione], voglio [obiettivo], così posso [risultato atteso]”_.
+   - Job statement: _“When [situation], I want [objective], so I can [expected outcome]”_.
    - Expected outcome: measurable business/user result.
    - Success metric: concrete indicator.
    - Quality guardrail: boundary or standard that must not regress.
-   - Priority: Obbligatorio / Raccomandato / Facoltativo.
+   - Priority: Must / Should / Could.
    - Notes: source context or dependencies.
 3. **Justified N/A**: When a conditional section or item does not apply, write
-   `Non applicabile — <motivazione confermata>`. Never leave blank or silently omit.
+   Not applicable with a confirmed reason. Never leave blank or silently omit.
 4. **Completeness and gate review**: Check the PRD's structure, stable IDs,
    table schemas, and stage-appropriate evidence against the template and
    lifecycle requirements.

@@ -7,14 +7,14 @@
       "prompt": "Read all supplied product evidence and create a Confluence-compatible PRD. Use only facts supported by the source material; distinguish decisions, proposals, and unknowns; trace material claims to their source; and preserve the unresolved policy contradiction as an owned, impact-aware open question. Keep status draft. Save only the PRD as prd.md. Do not publish.",
       "expected_output": "A source-grounded PRD for a fictional public-service appointment initiative, with canonical JTBD, measurable outcomes and guardrails, mixed-source provenance, the unresolved fee-policy contradiction as an owned and impact-aware question, and draft status.",
       "expectations": [
-        "Every section marked (Sempre) is present; conditional and optional sections are included only when applicable or required by the requested lifecycle gate",
-        "The author-only requirement labels (Sempre), (Se applicabile), and (Opzionale) do not appear in final PRD headings",
+        "Every section marked (Always) is present; conditional and optional sections are included only when applicable or required by the requested lifecycle gate",
+        "The author-only requirement labels (Always), (If Applicable), and (Optional) do not appear in final PRD headings",
         "The Persona, Business Goals, User Goals, Risks, and Open Questions tables preserve their specified column titles and column counts",
-        "Because the user did not request another language, the title, visible headings, prose, non-standardized table headers, and explanatory cell content are in Italian despite the English-language sources; the five standardized tables retain their exact specified mixed-language column titles and counts",
-        "Every JTBD uses the canonical Quando / voglio / così posso form and names persona, expected outcome, supported metric, quality guardrail, source-backed priority or explicit unconfirmed priority, and notes",
+        "The title, visible headings, prose, non-standardized table headers, and explanatory cell content follow the English language of the user's prompt; the five standardized tables retain the English template's exact column titles and counts",
+        "Every JTBD uses the canonical When / I want / so I can form and names persona, expected outcome, supported metric, quality guardrail, source-backed priority or explicit unconfirmed priority, and notes",
         "The policy disagreement is not resolved by the agent and appears as an open question with its impact and confirmed owner or an explicit unknown owner",
         "The Open Questions table has the exact six-column schema and uses its single blocker value for the relevant gate",
-        "Every `Bloccante?` cell contains exactly `Sì` or `No`; the question and impact are stated in `Domanda / ipotesi`",
+        "Every `Blocking?` cell contains exactly `Yes` or `No`; the question and impact are stated in `Question / hypothesis`",
         "Claims retain source attribution; unsupported targets, approvals, actors, owners, priorities, cadences, thresholds, and legal conclusions are not invented",
         "The PRD distinguishes review completion from request status: it does not say Legal/Privacy or Engineering review was not requested unless a source explicitly says so",
         "The 1,200 support contacts remain tied to the 2026-07-01-2026-07-31 reporting period; the PRD does not present that single-period count as an established recurring monthly rate or trend",
@@ -270,12 +270,12 @@
     },
     {
       "id": 16,
-      "name": "explicit-english-language-override",
-      "prompt": "Create a draft PRD in English for this initiative: small businesses need a reliable way to reconcile submitted records so they can complete reporting accurately. Information about actors, metrics, ownership, risks, scope, and support readiness is not supplied; keep those gaps explicit instead of inventing details. I explicitly request English for the PRD. Save only the PRD as prd.md. Do not publish.",
-      "expected_output": "A source-grounded draft PRD whose visible title, headings, prose, non-standardized table headers, and explanatory cell content are in English because the user explicitly requested English; the five standardized tables retain their exact specified mixed-language column titles and column counts.",
+      "name": "prompt-language-italian",
+      "prompt": "Crea una bozza di PRD per questa iniziativa: le piccole imprese hanno bisogno di un modo affidabile per riconciliare i record inviati, così da completare correttamente la rendicontazione. Le informazioni su attori, metriche, responsabilità, rischi, ambito e preparazione del supporto non sono fornite; mantieni esplicite queste lacune senza inventare dettagli. Salva soltanto il PRD nel file prd.md. Non pubblicarlo.",
+      "expected_output": "A source-grounded draft PRD whose visible title, headings, prose, non-standardized table headers, and explanatory cell content follow the Italian language of the user's prompt, without requiring an explicit language request; the five standardized tables retain the English template's exact column titles and column counts.",
       "expectations": [
-        "The user’s explicit language request overrides the Italian default",
-        "The Persona, Business Goals, User Goals, Risks, and Open Questions tables retain their specified exact column titles and column counts despite the English-language request; only other human-readable table headers are localized to English",
+        "The PRD follows the Italian language of the user's prompt rather than treating the English template as a default output language; JTBD uses Quando / voglio / così posso and blocker values use Sì or No",
+        "The Persona, Business Goals, User Goals, Risks, and Open Questions tables retain the English template's exact column titles and column counts; other human-readable table headers follow the prompt language",
         "The PRD retains the stable section comments and field IDs, keeps status draft, and marks unsupported details as gaps or open questions"
       ],
       "files": []
