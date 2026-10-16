@@ -4,7 +4,7 @@
     {
       "id": 0,
       "name": "slice-dr-into-approved-epics",
-      "prompt": "Using the existing DR/SRS, linked PRD, and completed Use Cases, propose several cohesive Jira Epics that can each be completed in a few two-week sprints. Group related Use Cases by outcome, show the proposed boundaries and traceability, and ask me to approve the grouping before drafting Jira items. Do not call Jira yet.",
+      "prompt": "Using the existing DR/SRS at design-review-payments.md, linked PRD at prd-payments.md, and completed Use Cases at uc-01-select-saved-card.md and uc-02-find-payment-receipt.md, propose several cohesive Jira Epics that can each be completed in a few two-week sprints. Use only the supplied local snapshots. Target context is project PAY, board PAY Planning. Group related Use Cases by outcome, show the proposed boundaries and traceability, and ask me to approve the grouping before drafting Jira items. Do not call Jira yet.",
       "expected_output": "A reviewable Epic proposal grouped by cohesive outcome and bounded to a few sprints, with source traceability and an explicit approval gate before Jira mutation.",
       "expectations": [
         "Proposes multiple Epic slices when one DR/SRS contains enough scope for more than one few-sprint outcome.",
@@ -12,12 +12,17 @@
         "Shows traceability from each Epic to the parent DR/SRS, PRD/JTBD, and included UC-XX IDs.",
         "Asks for explicit approval before drafting or mutating Jira items."
       ],
-      "files": []
+      "files": [
+        "fixtures/design-review-payments.md",
+        "fixtures/prd-payments.md",
+        "fixtures/uc-01-select-saved-card.md",
+        "fixtures/uc-02-find-payment-receipt.md"
+      ]
     },
     {
       "id": 1,
       "name": "write-actor-stories-and-technical-tasks",
-      "prompt": "After the Epic grouping is approved, create the Jira backlog projection for UC-01 and UC-02. UC-01 has primary actor \"Cittadino pagatore\" and UC-02 has primary actor \"Operatore di assistenza\". Write actor-facing Stories using exactly \"As [Actor], I want to [action], so that [Gain]\". Keep each Story deliverable in one two-week sprint. Put repository setup and API contract wiring into technical Tasks, and link every item to its Epic and source UC/AC IDs.",
+      "prompt": "The Epic grouping in approved-epic-grouping.md is approved for drafting only; it does not authorize Jira writes. Create the local Jira backlog projection for UC-01 and UC-02 from design-review-payments.md, prd-payments.md, uc-01-select-saved-card.md, and uc-02-find-payment-receipt.md. Use only the supplied snapshots and do not call Jira. UC-01 has primary actor \"Cittadino pagatore\" and UC-02 has primary actor \"Operatore di assistenza\". Write actor-facing Stories using exactly \"As [Actor], I want to [action], so that [Gain]\". Keep each Story deliverable in one two-week sprint. Put repository setup and API contract wiring into technical Tasks, and link every item to its Epic and source UC/AC IDs.",
       "expected_output": "A Jira-ready draft containing canonical actor-facing Stories, sprint-sized scope, technical Tasks for enabling work, and complete hierarchy/traceability.",
       "expectations": [
         "Uses the exact actor names supplied by the Use Cases.",
@@ -27,7 +32,13 @@
         "Routes concrete Tasks to the repository from the DR/SRS references.repository link.",
         "Links each item to its Epic and one or more source UC-XX or AC-XX IDs."
       ],
-      "files": []
+      "files": [
+        "fixtures/design-review-payments.md",
+        "fixtures/prd-payments.md",
+        "fixtures/uc-01-select-saved-card.md",
+        "fixtures/uc-02-find-payment-receipt.md",
+        "fixtures/approved-epic-grouping.md"
+      ]
     },
     {
       "id": 2,
@@ -45,7 +56,7 @@
     {
       "id": 3,
       "name": "synchronize-existing-backlog",
-      "prompt": "Synchronize the existing Jira projection after UC-02 gains a confirmed retry flow. Preserve the existing Epic, UC-02 link, and unchanged AC-UC-02-* identifiers. Add only the new retry acceptance traceability, avoid duplicate issues, show a proposed diff, and wait for explicit confirmation before updating Jira.",
+      "prompt": "Propose synchronization of the existing Jira projection in existing-projection.md after UC-02 at uc-02-find-payment-receipt.md gains the confirmed retry flow. Read the parent design-review-payments.md and linked prd-payments.md; uc-01-select-saved-card.md is supplied only as unchanged catalog context. Use only these local snapshots without Jira calls. Preserve the existing Epic, UC-02 link, and unchanged AC-UC-02-* identifiers. Add only the new retry acceptance traceability, avoid duplicate issues, show a proposed diff, and wait for explicit confirmation before updating Jira.",
       "expected_output": "A non-destructive synchronization proposal that matches existing issues by stable source identifiers, preserves unchanged data, and requires confirmation before updating.",
       "expectations": [
         "Matches existing Jira items using stable source links or IDs and does not create duplicates.",
@@ -53,7 +64,13 @@
         "Adds only the new retry behavior and its new traceability.",
         "Shows a human-readable proposed diff and asks for explicit confirmation before mutation."
       ],
-      "files": []
+      "files": [
+        "fixtures/design-review-payments.md",
+        "fixtures/prd-payments.md",
+        "fixtures/uc-01-select-saved-card.md",
+        "fixtures/uc-02-find-payment-receipt.md",
+        "fixtures/existing-projection.md"
+      ]
     },
     {
       "id": 4,
@@ -99,15 +116,15 @@
     {
       "id": 7,
       "name": "update-single-item-by-key",
-      "prompt": "Update the existing Jira Story PAY-42 to add the acceptance check that the receipt is also available from the payment history page. Preserve its actor, summary, parent, and existing acceptance checks. Show the proposed diff and wait for explicit confirmation before updating.",
-      "expected_output": "A single-item update that matches the issue by the supplied key, changes only the requested acceptance check, shows a field-level diff, and requires confirmation before mutation.",
+      "prompt": "Propose an update to the existing Jira Story PAY-42 using its current local snapshot at pay-42.md, without Jira calls, to add the acceptance check that the receipt is also available from the payment history page. Preserve its actor, summary, parent, and existing acceptance checks. Show the proposed diff and wait for explicit confirmation before updating. Include re-fetch and verification after any future confirmed mutation in the plan; do not claim an update or post-write verification has already happened.",
+      "expected_output": "A pre-confirmation single-item proposal that matches PAY-42 from the supplied snapshot, adds only the requested acceptance check and its source traceability, preserves existing data, shows a field-level diff, and requires confirmation before mutation. Post-mutation re-fetch and verification are planned, not claimed as executed.",
       "expectations": [
         "Matches the existing item using the supplied Jira key rather than creating a duplicate.",
-        "Adds only the new acceptance check and preserves the actor, summary, parent, and existing acceptance IDs.",
+        "Adds only the new history-page acceptance check and its source traceability; preserves actor Cittadino pagatore, the exact summary, parent PAY-10, existing AC-04 and AC-05 meanings, and unrelated fields from pay-42.md.",
         "Shows a field-level proposed diff and waits for explicit confirmation before updating.",
-        "Re-fetches and verifies the updated item after mutation."
+        "Makes no Jira write and claims no completed update or post-write verification before confirmation; explicitly plans to re-fetch PAY-42 and verify the preserved fields, acceptance IDs, and source links after any future confirmed mutation."
       ],
-      "files": []
+      "files": ["fixtures/pay-42.md"]
     }
   ]
 }

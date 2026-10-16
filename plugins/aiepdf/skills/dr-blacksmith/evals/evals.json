@@ -4,7 +4,7 @@
     {
       "id": 0,
       "name": "complete-design-review",
-      "prompt": "Create a Design Review / SRS in English from a linked PRD for a saved-payment experience. Include the system context, mobile app, payment backend, PSP token dependency, the technology profile (CSP and language preferences, Technology Radar outcome), API and event contracts, security/privacy constraints, p95 latency and availability targets, rollout and rollback, monitoring, and a Use Case index with UC-01 for selecting a saved card. The individual Use Case document will be written by another skill. Write Markdown to design-review.md.",
+      "prompt": "Create a Design Review / SRS in English from the approved PRD and engineering source notes at prd-saved-payments.md for a saved-payment experience. Use the supplied local snapshot without remote source reads. Include the system context, mobile app, payment backend, PSP token dependency, the technology profile (CSP and language preferences, Technology Radar outcome), API and event contracts, security/privacy constraints, p95 latency and availability targets, rollout and rollback, monitoring, and a Use Case index with UC-01 for selecting a saved card. The individual Use Case document will be written by another skill. Write Markdown to design-review.md.",
       "expected_output": "A complete DR/SRS Markdown document with stable IDs, all always-required sections, a domain model and glossary, a technology profile and Technology Radar outcome or explicit gap, relevant technical contracts and non-functional requirements, rollout/readiness information, and only a link-first UC-01 catalog entry rather than a detailed Use Case body.",
       "expectations": [
         "Uses the bundled DR/SRS template structure and includes every Always section, including the Domain model and glossary.",
@@ -13,7 +13,7 @@
         "Creates a UC-01 catalog entry with only ID, title, and child link, with no behavior detail, status, priority, or component/contract data in the catalog.",
         "Preserves traceability to the PRD and other supplied source artifacts."
       ],
-      "files": []
+      "files": ["fixtures/prd-saved-payments.md"]
     },
     {
       "id": 1,

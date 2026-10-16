@@ -79,6 +79,7 @@ Re-fetch every created or updated item and verify:
 - parent-child hierarchy and issue types;
 - every confirmed dependency link, including direction and link type;
 - source links and stable IDs;
+- each concrete Task's confirmed repository URL in its own description;
 - Story acceptance checks and Task/Story classification;
 - no duplicate was created, and no two error-handling Tasks share one semantic
   error identifier;
