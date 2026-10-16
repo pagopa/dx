@@ -36,7 +36,7 @@ describe("setupCloudTools", () => {
     mocks.execa$.mockClear();
   });
 
-  it("adds the cloud CLIs and relies on mise lockfile settings", async () => {
+  it("adds the cloud CLIs and relies on mise's Azure CLI prerelease policy", async () => {
     const plop = await nodePlop();
     setSetupCloudToolsAction(plop);
     plop.setGenerator("test", {
@@ -47,7 +47,7 @@ describe("setupCloudTools", () => {
     await plop.getGenerator("test").runActions({});
 
     expect(mocks.commands).toEqual([
-      'mise use aws-cli[symlink_bins=true]@2 azure-cli[uvx_args=--prerelease=allow,depends=["uv"]]@2 uv@latest',
+      'mise use aws-cli[symlink_bins=true]@2 azure-cli[depends=["uv"]]@2 uv@latest',
     ]);
   });
 });

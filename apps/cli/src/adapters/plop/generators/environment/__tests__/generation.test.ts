@@ -165,41 +165,42 @@ const runEnvironmentGenerator = async ({
   return { originalCwd, tmpDir };
 };
 
+const payload: Payload = {
+  env: {
+    cloudAccounts: [
+      {
+        csp: "azure",
+        defaultLocation: "italynorth",
+        displayName: "DEV-DX",
+        id: "sub-dev-123",
+      },
+    ],
+    name: "dev",
+    prefix: "dx",
+  },
+  github: {
+    owner: "pagopa",
+    repo: "my-project",
+  },
+  runnerAppCredentials: {
+    clientId: "test-app-client-id",
+    id: "test-app-id",
+    installationId: "test-installation-id",
+    key: "test-private-key",
+  },
+  tags: {
+    CostCenter: "TS330 - PDND & INTEROPERABILITA'",
+    Owner: "DX Platform",
+  },
+  workspace: {
+    domain: "payments",
+  },
+};
+
 describe("environment generator — file generation (no init)", () => {
   let tmpDir: string;
   let originalCwd: string;
 
-  const payload: Payload = {
-    env: {
-      cloudAccounts: [
-        {
-          csp: "azure",
-          defaultLocation: "italynorth",
-          displayName: "DEV-DX",
-          id: "sub-dev-123",
-        },
-      ],
-      name: "dev",
-      prefix: "dx",
-    },
-    github: {
-      owner: "pagopa",
-      repo: "my-project",
-    },
-    runnerAppCredentials: {
-      clientId: "test-app-client-id",
-      id: "test-app-id",
-      installationId: "test-installation-id",
-      key: "test-private-key",
-    },
-    tags: {
-      CostCenter: "TS330 - PDND & INTEROPERABILITA'",
-      Owner: "DX Platform",
-    },
-    workspace: {
-      domain: "payments",
-    },
-  };
   const mockCloudAccountService = createMockCloudAccountService(
     mockTerraformBackend,
     true,
@@ -232,6 +233,7 @@ describe("environment generator — file generation (no init)", () => {
 
     expect(generatedFiles).toMatchSnapshot();
     expect(generatedFiles).not.toContain("test-private-key");
+    expect(generatedFiles).not.toContain("github_environment_prefix_enabled");
   });
 
   it("uses the selected GitHub organization in generated bootstrapper files", async () => {
@@ -325,6 +327,77 @@ describe("environment generator — file generation (no init)", () => {
       mockCloudAccountService.provisionTerraformBackend,
     ).not.toHaveBeenCalled();
     await expect(fs.stat(corePath)).rejects.toThrow();
+  });
+});
+
+describe("environment generator — tenant-qualified environment", () => {
+  it("enables prefixing and keeps tenant runner labels in both Azure branches", async () => {
+    const tenantPayload: Payload = {
+      ...payload,
+      env: {
+        ...payload.env,
+        cloudAccounts: [
+          ...payload.env.cloudAccounts,
+          {
+            csp: "azure",
+            defaultLocation: "westeurope",
+            displayName: "PROD-IO",
+            id: "sub-prod-123",
+          },
+        ],
+        name: "ced-prod",
+        prefix: "ced",
+      },
+    };
+    const generatedEnvironment = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload: tenantPayload,
+      tmpDirPrefix: "dx-cli-env-tenant-test-",
+    });
+
+    try {
+      const generatedFiles = await readGeneratedFiles(
+        generatedEnvironment.tmpDir,
+        [`infra/bootstrapper/${tenantPayload.env.name}/main.tf`],
+      );
+      const bootstrapperFile =
+        generatedFiles[`infra/bootstrapper/${tenantPayload.env.name}/main.tf`];
+
+      expect(bootstrapperFile).not.toContain('name = "ced-prod"');
+      expect(
+        [...bootstrapperFile.matchAll(/labels = \[\s*"ced-prod"\s*\]/g)],
+      ).toHaveLength(2);
+      expect(
+        [...bootstrapperFile.matchAll(
+          /github_environment_prefix_enabled = true/g,
+        )],
+      ).toHaveLength(2);
+      expect(
+        [...bootstrapperFile.matchAll(/version = "~> 6\.3"/g)],
+      ).toHaveLength(2);
+    } finally {
+      process.chdir(generatedEnvironment.originalCwd);
+      await cleanupTempDir(generatedEnvironment.tmpDir);
+    }
+  });
+
+  it("rejects tenant names that do not match the selected prefix before actions run", () => {
+    const mismatchPayload: Payload = {
+      ...payload,
+      env: {
+        ...payload.env,
+        name: "cgn-prod",
+      },
+    };
+    const actions = getActions(resolveTemplatesPath("environment"));
+
+    expect(() => actions(mismatchPayload)).toThrow(
+      'Environment "cgn-prod" must be "dx-prod" to match prefix "dx".',
+    );
   });
 });
 
