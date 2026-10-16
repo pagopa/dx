@@ -327,9 +327,28 @@ export const authorizeCloudAccounts =
     );
   };
 
+const toPublicEnvironmentPayload = ({
+  env,
+  github,
+  init,
+  tags,
+  workspace,
+}: EnvironmentPayload) => ({
+  env,
+  github,
+  ...(init && {
+    init: {
+      cloudAccountsToInitialize: init.cloudAccountsToInitialize,
+      terraformBackend: init.terraformBackend,
+    },
+  }),
+  tags,
+  workspace,
+});
+
 type AddResult = {
   authorizationPrs: AuthorizationResult[];
-  payload: EnvironmentPayload;
+  payload: ReturnType<typeof toPublicEnvironmentPayload>;
 };
 
 const displaySummary = (result: AddResult) => {
@@ -416,7 +435,7 @@ const addEnvironmentAction = (
       authorizeCloudAccounts(authorizationService)(payload).map(
         (authorizationPrs) => ({
           authorizationPrs,
-          payload,
+          payload: toPublicEnvironmentPayload(payload),
         }),
       ),
     );

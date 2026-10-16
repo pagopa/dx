@@ -163,6 +163,9 @@ already exist. The CLI stores them as GitHub environment secrets used by the
 bootstrapper workflow; they are not written to generated Terraform or workflow
 files.
 
+The CLI omits Runner App credentials from its JSON success result. This also
+applies when `CI=1` selects JSON output automatically.
+
 | Prompt                                             | What to enter                                                                                                        |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | **Initialize it now?**                             | Confirm `Yes` to provision the baseline cloud infrastructure (VPN, network, monitoring, Terraform backend).          |
