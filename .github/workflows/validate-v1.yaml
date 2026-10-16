@@ -27,6 +27,7 @@ jobs:
           fetch-depth: 0
           filter: tree:0
           token: ${{ steps.generate-token.outputs.token }}
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: pagopa/dx/.github/actions/node-setup@main
@@ -53,6 +54,7 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: pagopa/dx/.github/actions/node-setup@main
