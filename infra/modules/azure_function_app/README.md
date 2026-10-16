@@ -6,7 +6,7 @@ This module deploys an Azure Function App with a strong opinionated configuratio
 
 ## Features
 
-- **Function App**: Deploys a Linux-based Azure Function App supporting Node.js or Java runtimes
+- **Function App**: Deploys a Linux-based Azure Function App supporting Node.js or Java runtimes, or a custom container image
 - **Staging Slot**: Includes a staging slot for zero-downtime deployments
 - **App Service Plan**: Uses a Linux App Service Plan (can be created or reused)
 - **Private Endpoints**: Ensures private connectivity for the Function App and its storage accounts
@@ -91,6 +91,55 @@ module "function_app" {
 | APIM policy        | `x-functions-key` header  | `<authentication-managed-identity>` |
 | Function authLevel | `function`                | `anonymous`                         |
 
+## Container Images
+
+By default, the Function App runs from a deployment package (`WEBSITE_RUN_FROM_PACKAGE=1`). Set `container_image` to run both the production and the staging slot from a Linux container image instead. When set:
+
+- `stack`, `node_version` and `java_version` are ignored, as the runtime is provided by the image
+- `WEBSITE_RUN_FROM_PACKAGE` is not configured and `WEBSITES_ENABLE_APP_SERVICE_STORAGE` is set to `false`
+- the image is not managed by Terraform after creation, so that CD pipelines can roll out new images (e.g. deploy to the `staging` slot and swap) without Terraform reverting them
+
+```hcl
+module "function_app" {
+  source = "pagopa-dx/azure-function-app/azurerm"
+  # ... other parameters ...
+
+  container_image = "myacr.azurecr.io/my-function:1.0.0"
+  # Optional: pull from a private Azure Container Registry using the
+  # system-assigned managed identities of the Function App and its staging slot
+  acr_registry = "myacr.azurecr.io"
+}
+```
+
+When using `acr_registry`, grant the `AcrPull` role on the registry to both `function_app.function_app.principal_id` and `function_app.function_app.slot.principal_id` outputs. Omit `acr_registry` for public registries; images without a registry are pulled from Docker Hub.
+
+### Migrating an existing package-based app
+
+Changing `container_image` on an existing package-based Function App does not initialize its Docker configuration: the production app and staging slot intentionally ignore Docker changes so CD pipelines can own subsequent image updates. Replace both resources once to initialize them from the container configuration:
+
+1. Confirm the tagged image is available. For ACR, plan how to grant `AcrPull` to the new production and staging system-assigned identities after replacement; replacing either resource changes its identity.
+2. Set `container_image` (and `acr_registry` for ACR) in the consuming configuration.
+3. Use `terraform state list` to find the exact addresses for the production Function App and staging slot. For a module named `function_app`, the addresses are typically:
+
+   ```text
+   module.function_app.azurerm_linux_function_app.this
+   module.function_app.azurerm_linux_function_app_slot.this[0]
+   ```
+
+   If the module is nested or uses `count`/`for_each`, use its actual addresses from state.
+4. Review and apply a plan that replaces both resources:
+
+   ```sh
+   terraform plan -out=container-migration.tfplan \
+     -replace='module.function_app.azurerm_linux_function_app.this' \
+     -replace='module.function_app.azurerm_linux_function_app_slot.this[0]'
+   terraform apply container-migration.tfplan
+   ```
+
+   Replacing the existing app and slot causes service interruption; schedule a maintenance window and review all dependent resources and traffic routing before applying. For ACR, update the role assignments to the new identity outputs and allow image pulls to succeed.
+
+After replacement, keep `container_image` configured as the bootstrap image. Docker changes remain ignored by Terraform, so CD pipelines retain ownership of subsequent production and staging image updates.
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -152,12 +201,14 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_acr_registry"></a> [acr\_registry](#input\_acr\_registry) | Indicates the Azure Container Registry to pull images from. Use this variable only if the registry service is an Azure Container Registry. Value must match the registry specified in the image name. | `string` | `null` | no |
 | <a name="input_action_group_ids"></a> [action\_group\_ids](#input\_action\_group\_ids) | The ID of the Action Groups to invoke when an alert is triggered for the Function App. | `set(string)` | `[]` | no |
 | <a name="input_app_service_plan_id"></a> [app\_service\_plan\_id](#input\_app\_service\_plan\_id) | The ID of the App Service Plan where the Function App will be hosted. Leave null to create a new plan. | `string` | `null` | no |
 | <a name="input_app_settings"></a> [app\_settings](#input\_app\_settings) | A map of application settings for the Function App. | `map(string)` | n/a | yes |
 | <a name="input_application_insights_connection_string"></a> [application\_insights\_connection\_string](#input\_application\_insights\_connection\_string) | The connection string for Application Insights to enable monitoring and diagnostics. | `string` | `null` | no |
 | <a name="input_application_insights_key"></a> [application\_insights\_key](#input\_application\_insights\_key) | The instrumentation key for Application Insights to enable monitoring and diagnostics. | `string` | `null` | no |
 | <a name="input_application_insights_sampling_percentage"></a> [application\_insights\_sampling\_percentage](#input\_application\_insights\_sampling\_percentage) | The sampling percentage for Application Insights telemetry. Default is 5. | `number` | `5` | no |
+| <a name="input_container_image"></a> [container\_image](#input\_container\_image) | Container image used to run the Function App and its staging slot instead of a deployment package (e.g. "myacr.azurecr.io/my-function:1.0.0").<br/>When set, "stack", "node\_version" and "java\_version" are ignored and WEBSITE\_RUN\_FROM\_PACKAGE is not configured.<br/>Images without a registry are pulled from Docker Hub. The image must specify a tag.<br/>The image is not managed by Terraform after creation, but instead updated by CD pipelines. | `string` | `null` | no |
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Define if diagnostic settings should be enabled.<br/>If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and<br/>optionally the ID of the Storage Account where logs should be sent. | <pre>object({<br/>    enabled                                   = bool<br/>    log_analytics_workspace_id                = optional(string)<br/>    diagnostic_setting_destination_storage_id = optional(string)<br/>  })</pre> | <pre>{<br/>  "diagnostic_setting_destination_storage_id": null,<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_entra_id_authentication"></a> [entra\_id\_authentication](#input\_entra\_id\_authentication) | Enables Entra ID (Azure AD) authentication on the Function App, allowing callers (e.g. APIM) to authenticate via their Managed Identity instead of using function keys. When set, callers must present a valid JWT; unauthenticated requests receive HTTP 401. See README for prerequisites and usage examples. | <pre>object({<br/>    audience_client_id         = string<br/>    allowed_callers_client_ids = list(string)<br/>    tenant_id                  = string<br/>  })</pre> | `null` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
