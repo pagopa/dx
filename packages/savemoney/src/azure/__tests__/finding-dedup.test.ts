@@ -149,6 +149,20 @@ describe("foldDuplicateFinding", () => {
     });
   });
 
+  it("folds an orphan row onto a coded custom finding", () => {
+    const report = mkReport([
+      mkFinding({ recommendationId: "private-endpoint.no-connection" }),
+    ]);
+
+    expect(
+      foldDuplicateFinding(
+        mkFinding({ recommendationId: ORPHAN_DISK, source: "azqr" }),
+        report,
+      ),
+    ).toBe(true);
+    expect(report.findings).toHaveLength(1);
+  });
+
   it("does not fold an orphan row onto a governance-only finding", () => {
     const report = mkReport([
       mkFinding({

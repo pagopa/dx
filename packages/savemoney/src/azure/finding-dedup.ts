@@ -148,7 +148,8 @@ function findDuplicateFinding(
     (candidate) =>
       candidate.category === "cost" &&
       LIVE_SOURCES.has(candidate.source) &&
-      !candidate.recommendationId,
+      // Custom findings always carry a SaveMoney code, so it is not an identity.
+      (candidate.source === "custom" || !candidate.recommendationId),
   );
 }
 

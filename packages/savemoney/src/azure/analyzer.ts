@@ -59,7 +59,6 @@ import {
 import {
   categorizeCustomFindings,
   MISSING_TAGS_REASON,
-  NO_ANALYZER_REASON,
   unpreferredLocationReason,
 } from "./finding-category.js";
 import { assignCustomFindingCodes } from "./finding-code.js";
@@ -243,9 +242,8 @@ export async function analyzeResource(
     suspectedUnused: false,
   };
 
-  // Generic check: lack of tags is a common sign of unmanaged resources.
+  // Missing tags are governance, not evidence of waste: report them without flagging as unused.
   if (!resource.tags || Object.keys(resource.tags).length === 0) {
-    result.suspectedUnused = true;
     result.reason += `${MISSING_TAGS_REASON} `;
   }
 
@@ -260,18 +258,12 @@ export async function analyzeResource(
     verbose,
   };
 
-  let matched = false;
   for (const analyzer of analyzers) {
     if (!analyzer.supports(resource)) {
       continue;
     }
-    matched = true;
     const specific = await analyzer.analyze(ctx);
     result = mergeResults(result, specific);
-  }
-
-  if (!matched) {
-    result.reason += `${NO_ANALYZER_REASON} `;
   }
 
   // Generic check for location
@@ -294,6 +286,7 @@ export function mergeFinding(
   finding: Finding,
   reports: AzureDetailedResourceReport[],
   reportsById: Map<string, AzureDetailedResourceReport>,
+  location?: string,
 ): void {
   const idKey = finding.resourceId.toLowerCase();
   const existing = reportsById.get(idKey);
@@ -316,11 +309,10 @@ export function mergeFinding(
     return;
   }
 
-  const stub = buildResourceStub(finding.resourceId);
   const report: AzureDetailedResourceReport = {
     analysis: analysisFromFinding(finding),
     findings: [finding],
-    resource: stub,
+    resource: { ...buildResourceStub(finding.resourceId), location },
   };
   reports.push(report);
   reportsById.set(idKey, report);
@@ -481,6 +473,9 @@ async function ingestAzqrReport(
   }
 
   const findings = azqrImpactedToFindings(report);
+  const locationById = new Map(
+    report.inventory.map((row) => [row.resourceId.toLowerCase(), row.location]),
+  );
   const reportsById = new Map<string, AzureDetailedResourceReport>(
     reports.map((r) => [(r.resource.id ?? "").toLowerCase(), r]),
   );
@@ -492,7 +487,12 @@ async function ingestAzqrReport(
       deduplicated++;
       continue;
     }
-    mergeFinding(finding, reports, reportsById);
+    mergeFinding(
+      finding,
+      reports,
+      reportsById,
+      locationById.get(finding.resourceId.toLowerCase()) || undefined,
+    );
     merged++;
   }
   logger.info(

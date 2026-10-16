@@ -33,6 +33,7 @@
     "@azure/arm-storage": "^19.1.0",
     "@azure/identity": "catalog:",
     "@azure/keyvault-secrets": "^4.11.2",
+    "@azure/logger": "catalog:azure",
     "@azure/monitor-opentelemetry": "catalog:opentelemetry",
     "@azure/storage-blob": "catalog:azure",
     "@logtape/logtape": "catalog:",

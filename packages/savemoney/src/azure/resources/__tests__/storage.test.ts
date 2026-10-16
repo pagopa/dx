@@ -54,8 +54,8 @@ describe("analyzeStorageAccount — threshold sensitivity", () => {
   });
 
   describe("with DEFAULT threshold (transactionsPerDay = 10)", () => {
-    it("does NOT flag a resource with 30 transactions/day (30 ≥ 10)", async () => {
-      mockGetMetric.mockResolvedValue(30);
+    it("does NOT flag a resource with 30 transactions/day (900 total over 30 days)", async () => {
+      mockGetMetric.mockResolvedValue(900);
 
       const result = await analyzeStorageAccount(
         FAKE_RESOURCE,
@@ -67,8 +67,8 @@ describe("analyzeStorageAccount — threshold sensitivity", () => {
       expect(result.suspectedUnused).toBe(false);
     });
 
-    it("flags a resource with 5 transactions/day (5 < 10)", async () => {
-      mockGetMetric.mockResolvedValue(5);
+    it("flags a resource with 5 transactions/day (150 total over 30 days)", async () => {
+      mockGetMetric.mockResolvedValue(150);
 
       const result = await analyzeStorageAccount(
         FAKE_RESOURCE,
@@ -80,8 +80,8 @@ describe("analyzeStorageAccount — threshold sensitivity", () => {
       expect(result.suspectedUnused).toBe(true);
     });
 
-    it("does not flag when metric is exactly at the threshold (10)", async () => {
-      mockGetMetric.mockResolvedValue(10);
+    it("does not flag when metric is exactly at the threshold (300 total = 10/day)", async () => {
+      mockGetMetric.mockResolvedValue(300);
 
       const result = await analyzeStorageAccount(
         FAKE_RESOURCE,
@@ -101,8 +101,8 @@ describe("analyzeStorageAccount — threshold sensitivity", () => {
       storage: { transactionsPerDay: 50 },
     };
 
-    it("DOES flag a resource with 30 transactions/day (30 < 50) — proves override works", async () => {
-      mockGetMetric.mockResolvedValue(30);
+    it("DOES flag a resource with 30 transactions/day (900 total = 30/day < 50) — proves override works", async () => {
+      mockGetMetric.mockResolvedValue(900);
 
       const result = await analyzeStorageAccount(
         FAKE_RESOURCE,
@@ -114,8 +114,8 @@ describe("analyzeStorageAccount — threshold sensitivity", () => {
       expect(result.suspectedUnused).toBe(true);
     });
 
-    it("does NOT flag a resource with 60 transactions/day (60 ≥ 50)", async () => {
-      mockGetMetric.mockResolvedValue(60);
+    it("does NOT flag a resource with 60 transactions/day (1800 total = 60/day ≥ 50)", async () => {
+      mockGetMetric.mockResolvedValue(1800);
 
       const result = await analyzeStorageAccount(
         FAKE_RESOURCE,
@@ -127,8 +127,8 @@ describe("analyzeStorageAccount — threshold sensitivity", () => {
       expect(result.suspectedUnused).toBe(false);
     });
 
-    it("flags at threshold boundary (49 < 50)", async () => {
-      mockGetMetric.mockResolvedValue(49);
+    it("flags at threshold boundary (1470 total = 49/day < 50)", async () => {
+      mockGetMetric.mockResolvedValue(1470);
 
       const result = await analyzeStorageAccount(
         FAKE_RESOURCE,
@@ -170,8 +170,8 @@ describe("analyzeStorageAccount — threshold sensitivity", () => {
     });
 
     it("applies default thresholds when the parameter is omitted", async () => {
-      // 5 < DEFAULT 10 → flagged even without explicit thresholds argument
-      mockGetMetric.mockResolvedValue(5);
+      // 150 total over 30 days = 5/day < DEFAULT 10 → flagged even without explicit thresholds argument
+      mockGetMetric.mockResolvedValue(150);
 
       const result = await analyzeStorageAccount(
         FAKE_RESOURCE,
@@ -179,6 +179,30 @@ describe("analyzeStorageAccount — threshold sensitivity", () => {
         30,
       );
 
+      expect(result.suspectedUnused).toBe(true);
+    });
+
+    it("requests Total aggregation and reports a per-day average", async () => {
+      mockGetMetric.mockResolvedValue(30);
+
+      const result = await analyzeStorageAccount(
+        FAKE_RESOURCE,
+        FAKE_CLIENT,
+        30,
+        DEFAULT_THRESHOLDS,
+      );
+
+      expect(mockGetMetric).toHaveBeenCalledWith(
+        FAKE_CLIENT,
+        FAKE_RESOURCE.id,
+        "Transactions",
+        "Total",
+        30,
+        undefined,
+      );
+      expect(result.reason).toContain(
+        "Very low transaction count (1.00 avg/day)",
+      );
       expect(result.suspectedUnused).toBe(true);
     });
   });

@@ -83,14 +83,6 @@ export async function analyzePublicIp(
       reason += "Public IP not associated with any resource. ";
     }
 
-    // Check if it's a static IP that might be unused
-    if (
-      publicIpDetails.publicIPAllocationMethod === "Static" &&
-      !publicIpDetails.ipConfiguration
-    ) {
-      reason += "Static IP not in use. ";
-    }
-
     // Check network metrics for low usage
     const bytesInDDoS = await getMetric(
       monitorClient,

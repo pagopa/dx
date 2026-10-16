@@ -36,7 +36,6 @@ import type { Finding } from "../finding.js";
 import {
   DETAIL_LOOKUP_FAILURE_PREFIX,
   MISSING_TAGS_REASON,
-  NO_ANALYZER_REASON,
   UNPREFERRED_LOCATION_REASON,
 } from "./finding-category.js";
 
@@ -54,7 +53,6 @@ const REASON_CODES: readonly (readonly [string, string])[] = [
   ["resource id is missing.", "missing-resource-id"],
   [DETAIL_LOOKUP_FAILURE_PREFIX, "lookup-failed"],
   [MISSING_TAGS_REASON.toLowerCase(), "missing-tags"],
-  [NO_ANALYZER_REASON.toLowerCase(), "no-analyzer"],
   [UNPREFERRED_LOCATION_REASON.toLowerCase(), "unpreferred-location"],
 
   // Managed Disk (azure/resources/disk.ts)
@@ -62,7 +60,6 @@ const REASON_CODES: readonly (readonly [string, string])[] = [
 
   // Network Interface (azure/resources/nic.ts)
   ["nic not attached to any vm or private endpoint.", "nic.unattached"],
-  ["no public ip assigned.", "nic.no-public-ip"],
 
   // Private Endpoint (azure/resources/private-endpoint.ts)
   [
@@ -88,14 +85,9 @@ const REASON_CODES: readonly (readonly [string, string])[] = [
 
   // App Service Plan (azure/resources/app-service.ts)
   ["app service plan has no apps deployed.", "app-service.no-apps"],
-  [
-    "premium tier with low resource utilization.",
-    "app-service.premium-underutilized",
-  ],
 
   // Public IP (azure/resources/public-ip.ts)
   ["public ip not associated with any resource.", "public-ip.unassociated"],
-  ["static ip not in use.", "public-ip.static-unused"],
 
   // Storage Account (azure/resources/storage.ts)
   ["very low transaction count (", "storage.low-transactions"],
