@@ -13,6 +13,7 @@ import { mockDeep } from "vitest-mock-extended";
 import type { CloudAccount } from "../../../../domain/cloud-account.js";
 import type { GitHubAuthFactory } from "../../../../domain/dependencies.js";
 import type { GitHubService } from "../../../../domain/github.js";
+import type { TerraformBackend } from "../../../../domain/remote-backend.js";
 import type { Payload as EnvironmentPayload } from "../../../plop/generators/environment/index.js";
 
 import {
@@ -80,6 +81,13 @@ const initializationCredentials = {
 const initialization = {
   cloudAccountsToInitialize: [cloudAccount],
   terraformBackend: { cloudAccount },
+};
+
+const terraformBackend: TerraformBackend = {
+  resourceGroupName: "dx-d-itn-tfstate-rg-01",
+  storageAccountName: "dxditntfst01",
+  subscriptionId: cloudAccount.id,
+  type: "azurerm",
 };
 
 const captureStream = (stream: NodeJS.WriteStream) => {
@@ -206,9 +214,20 @@ describe("add environment command json output", () => {
         },
       },
     ])(
-      "omits Runner App credentials for $name",
+      "preserves resolved backend metadata and omits credentials for $name",
       async ({ authorizationPrs, expectedPayload, sourcePayload }) => {
         const originalPayload = structuredClone(sourcePayload);
+        const actionResult = {
+          ...sourcePayload,
+          terraform: {
+            backend: {
+              ...terraformBackend,
+              accessKey: "terraform-backend-private-value",
+            },
+            privateValue: "terraform-private-value",
+          },
+        };
+        const originalActionResult = structuredClone(actionResult);
         const stdout = captureStream(process.stdout);
         const stderr = captureStream(process.stderr);
         const authorizationService = mockDeep<AuthorizationService>();
@@ -226,7 +245,7 @@ describe("add environment command json output", () => {
           generator: {},
           payload: sourcePayload,
         });
-        mocks.runDeploymentEnvironmentActions.mockResolvedValue(sourcePayload);
+        mocks.runDeploymentEnvironmentActions.mockResolvedValue(actionResult);
         const program = new Command()
           .option("--output <mode>", "Output mode", "text")
           .addCommand(makeAddCommand(requireGitHubAuth, { CI }));
@@ -234,17 +253,29 @@ describe("add environment command json output", () => {
         await program.parseAsync(["node", "dx", ...args, "add", "environment"]);
 
         expect(parseNdjson(stdout.written)).toStrictEqual([
-          { data: { authorizationPrs, payload: expectedPayload }, ok: true },
+          {
+            data: {
+              authorizationPrs,
+              payload: {
+                ...expectedPayload,
+                terraform: { backend: terraformBackend },
+              },
+            },
+            ok: true,
+          },
         ]);
         const output = [...stdout.written, ...stderr.written].join("");
         expect(output).not.toContain("runnerAppCredentials");
         expect(output).not.toContain(runnerAppCredentials.key);
         expect(output).not.toContain(initializationCredentials.key);
+        expect(output).not.toContain(actionResult.terraform.backend.accessKey);
+        expect(output).not.toContain(actionResult.terraform.privateValue);
         expect(mocks.runDeploymentEnvironmentActions).toHaveBeenCalledWith(
           expect.anything(),
           originalPayload,
         );
         expect(sourcePayload).toStrictEqual(originalPayload);
+        expect(actionResult).toStrictEqual(originalActionResult);
       },
     );
   });
