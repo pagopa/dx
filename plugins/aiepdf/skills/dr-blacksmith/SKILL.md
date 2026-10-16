@@ -75,9 +75,15 @@ bundled template as a read-only input.
   agent as separate context. Show the deployment view with the real cloud
   services and trust boundaries, not IaC, pipeline, or SKU detail, and record the
   repository as a link.
-- Keep evidence traceable to its source artifact or stated input.
+- Keep evidence traceable through named source artifacts, tickets, and links,
+  not opaque source codes alone.
 - Separate confirmed facts, proposed design, assumptions, unresolved questions,
-  and decisions.
+  and decisions. Distinguish product actors from the Copilot interlocutor;
+  attribute decisions to the evidenced person or role, not an inferred team.
+  State the design directly rather than narrating chat confirmations.
+- Keep necessary technical evidence and precise operational behavior; agent
+  activity and session restrictions are not design content. Record material
+  uncertainty without repetitive caveats.
 - Keep detailed flows, edge cases, acceptance checks, and test notes in the Use
   Case child pages; the DR/SRS links the children.
 - The PRD is not mandatory: without one, the initiative outcome and scope live

@@ -141,14 +141,15 @@
     {
       "id": 10,
       "name": "domain-model-and-high-level-technology-profile",
-      "prompt": "Create a Design Review / SRS for a document-upload service on Azure. Fully describe the solution domain: a Practice with states REQUEST and PENDING, and a Document with a signingStep. Provide the technology profile and a deployment view. The repository is github.com/pagopa/ced-portal. Do not include development tooling such as package managers, version managers, test runners, or linters, and do not assign identifiers to domain entities or terms.",
+      "prompt": "Create a Design Review / SRS for a document-upload service on Azure. Fully describe the solution domain: a Practice with states REQUEST and PENDING, and a Document with a signingStep. Provide the technology profile and a deployment view. The repository is github.com/pagopa/ced-portal. Do not include development tooling such as package managers, version managers, test runners, or linters, and do not assign identifiers to domain entities or terms. Source S1, RFC-14 - Signed document storage (https://example.org/rfcs/signed-document-storage), establishes that document contents are stored in private Azure Blob Storage and anonymous reads are disabled. Agent session notes: the first Markdown conversion failed, a second tool read succeeded, and this session does not permit commits or Jira writes.",
       "expected_output": "A DR/SRS with a Domain model and glossary that describes entities, relations, states, invariants, and terms by name without identifiers; a high-level, Technology-Radar-informed technology profile limited to platform/cloud choices; a deployment view with real cloud services; and the repository recorded as a link.",
       "expectations": [
         "Describes the Practice and Document entities, their states and invariants, and a glossary, all by name and without identifiers.",
         "Provides the technology profile at the high level the Technology Radar informs (CSP, language, managed services, architecture style) and omits day-to-day development tooling.",
         "Shows the deployment view with real cloud services and trust boundaries, without IaC, pipeline, or SKU detail.",
         "Records the repository as a link.",
-        "Does not centralize typed errors or an error taxonomy in the DR/SRS."
+        "Does not centralize typed errors or an error taxonomy in the DR/SRS.",
+        "Retains private Azure Blob Storage and disabled anonymous reads, citing RFC-14 by meaningful title/key and link rather than S1 alone; excludes conversion attempts, tool-read history, and session commit/Jira restrictions from the DR/SRS body."
       ],
       "files": []
     }

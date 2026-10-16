@@ -69,7 +69,9 @@ export function mergeResults(
     estimatedMonthlySavings:
       specificResult.estimatedMonthlySavings ??
       baseResult.estimatedMonthlySavings,
-    reason: baseResult.reason + specificResult.reason,
+    reason: specificResult.reason.trim()
+      ? `${baseResult.reason}${specificResult.reason.trim()} `
+      : baseResult.reason,
     suspectedUnused:
       baseResult.suspectedUnused || specificResult.suspectedUnused,
   };

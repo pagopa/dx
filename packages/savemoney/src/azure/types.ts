@@ -4,7 +4,7 @@
 
 import type * as armResources from "@azure/arm-resources";
 
-import type { Finding } from "../finding.js";
+import type { Finding, Money } from "../finding.js";
 import type { Config } from "../schema.js";
 import type {
   AnalysisResult,
@@ -84,6 +84,8 @@ export type AzureDetailedResourceReport = {
  */
 export type AzureResourceReport = {
   costRisk: CostRisk;
+  /** Custom cost at risk, or else the summed per-finding (Advisor) savings. */
+  estimatedMonthlySavings?: Money;
   location?: string;
   name: string;
   reason: string;

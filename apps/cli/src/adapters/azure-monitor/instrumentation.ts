@@ -16,6 +16,7 @@
  * in the process lifecycle.
  */
 
+import { getLogLevel, setLogLevel } from "@azure/logger";
 import { useAzureMonitor } from "@azure/monitor-opentelemetry";
 import { metrics, trace } from "@opentelemetry/api";
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
@@ -89,6 +90,8 @@ export const enableAzureMonitor = (): void => {
   }
   azureMonitorEnabled = true;
 
+  // Already validated from AZURE_LOG_LEVEL by @azure/logger (unset if invalid).
+  const azureLogLevel = getLogLevel();
   useAzureMonitor({
     azureMonitorExporterOptions: {
       connectionString:
@@ -97,6 +100,9 @@ export const enableAzureMonitor = (): void => {
     },
     enableLiveMetrics: true,
   });
+  // useAzureMonitor() enables Azure SDK logging at "warning", which leaks
+  // credential-chain probes and SDK deprecation notices to the console.
+  setLogLevel(azureLogLevel);
 
   // Registered after useAzureMonitor() so the instrumentation binds to the
   // real tracer/meter providers it installs (rather than the no-op defaults).

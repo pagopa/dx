@@ -79,19 +79,13 @@ export async function analyzeVM(
       s.code?.startsWith("PowerState/"),
     );
 
+    // Deallocated VMs do not bill compute, so no compute price is attached.
     if (vmStatus?.code === "PowerState/deallocated") {
-      const result = await enrichWithPricing(
-        {
-          costRisk,
-          reason: "VM is deallocated. ",
-          suspectedUnused: true,
-        },
-        resource,
-        computeClient,
-        resourceGroupName,
-        vmName,
-        pricing,
-      );
+      const result = {
+        costRisk,
+        reason: "VM is deallocated. ",
+        suspectedUnused: true,
+      };
       verboseLogAnalysisResult(verbose, result);
       return result;
     }

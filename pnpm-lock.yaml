@@ -13,6 +13,9 @@ catalogs:
     '@azure/arm-resources':
       specifier: ^7.0.0
       version: 7.0.0
+    '@azure/logger':
+      specifier: ^1.4.0
+      version: 1.4.0
     '@azure/storage-blob':
       specifier: ^12.34.0
       version: 12.34.0
@@ -545,6 +548,9 @@ importers:
       '@azure/keyvault-secrets':
         specifier: ^4.11.2
         version: 4.11.2(supports-color@8.1.1)
+      '@azure/logger':
+        specifier: catalog:azure
+        version: 1.4.0(supports-color@8.1.1)
       '@azure/monitor-opentelemetry':
         specifier: catalog:opentelemetry
         version: 1.19.0(supports-color@8.1.1)
@@ -1361,6 +1367,9 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest-mock-extended:
+        specifier: 'catalog:'
+        version: 4.0.0(typescript@5.9.3)(vitest@4.1.11)
 
   providers/aws: {}
 
@@ -22342,7 +22351,7 @@ snapshots:
       obug: 2.2.1
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.6.4)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@26.6.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   '@vitest/eslint-plugin@1.6.27(@typescript-eslint/eslint-plugin@8.71.0(@typescript-eslint/parser@8.71.0(eslint@10.12.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@10.12.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@10.12.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)(vitest@4.1.11)':
     dependencies:

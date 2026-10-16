@@ -18,13 +18,14 @@
     {
       "id": 1,
       "name": "preserve-actors-and-gaps",
-      "prompt": "Create a Use Case from a PRD and Service Blueprint where the PRD calls the primary actor \"Operatore di assistenza\" but the Service Blueprint says \"Support agent\". The owner, timeout, tracking event, and privacy behavior are not confirmed. Do not invent decisions.",
+      "prompt": "Create a Use Case from a PRD and Service Blueprint where the PRD calls the primary actor \"Operatore di assistenza\" but the Service Blueprint says \"Support agent\". The owner, timeout, tracking event, and privacy behavior are not confirmed. Do not invent decisions. The blueprint is source S1, Support Blueprint - Receipt lookup (https://example.org/blueprints/receipt-lookup), and describes finding a receipt by payment reference. Its intake annotation says: \"The user confirmed receipt lookup; the agent retried the source-reading tool twice.\" Use these supplied snapshots of existing source pages, without remote calls. Parent DR-02 (https://example.org/design-reviews/receipt-lookup), status draft: references.prd = https://example.org/prds/receipt-lookup; domain entity Payment has a payment reference and receipt; solution.components.item-001 = Receipt service; contracts.item-001 = lookup receipt by payment reference; complete UC catalog: UC-01 | Find payment receipt | use-cases/uc-01-find-payment-receipt.md. Linked PRD snapshot: actor = Operatore di assistenza; JTBD-01 = find a payment receipt to answer a support request. Draft the child and show the parent catalog update; do not publish.",
       "expected_output": "The Use Case copies the PRD actor exactly, records the terminology conflict and missing decisions as open questions or gaps, and avoids fabricated behavior.",
       "expectations": [
         "Uses \"Operatore di assistenza\" exactly as the actor name.",
         "Does not silently replace the PRD actor with the Service Blueprint wording.",
         "Makes missing owner, timeout, tracking, and privacy decisions visible.",
-        "Does not invent a flow, metric, approval, or compliance outcome."
+        "Does not invent a flow, metric, approval, or compliance outcome.",
+        "Names and links Support Blueprint - Receipt lookup instead of citing S1 alone, retains lookup by payment reference, and excludes chat-confirmation and tool-retry narration from the Use Case body."
       ],
       "files": []
     },

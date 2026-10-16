@@ -48,14 +48,17 @@ export async function analyzeStorageAccount(
       suspectedUnused: false,
     };
   }
-  const transactions = await getMetric(
+  // "Transactions" only supports Total aggregation; normalize to a per-day average.
+  const totalTransactions = await getMetric(
     monitorClient,
     resource.id,
     "Transactions",
-    "Average",
+    "Total",
     timespanDays,
     cache,
   );
+  const transactions =
+    totalTransactions !== null ? totalTransactions / timespanDays : null;
   if (
     transactions !== null &&
     transactions < thresholds.storage.transactionsPerDay

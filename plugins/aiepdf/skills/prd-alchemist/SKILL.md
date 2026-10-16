@@ -43,7 +43,8 @@ no path is given. Never overwrite the bundled template.
 - Include every template section. For conditional sections, use
   `Not applicable — <confirmed reason>` when the user confirms they do not
   apply; never silently remove a section.
-- Keep concrete facts traceable to source inputs.
+- Keep concrete facts traceable through source titles/keys and links, not opaque
+  source codes alone.
 - Do not advance the status without the explicit confirmation described below or
   create downstream use cases, backlog items, or implementation specifications.
 
@@ -53,8 +54,9 @@ Write narrative PRD prose with an explicit subject so readers can identify who
 experiences a need, performs an action, owns a decision, measures an outcome, or
 enforces a constraint.
 
-- Prefer active constructions that name the relevant user group, actor, team,
-  owner, stakeholder, or system.
+- Name the relevant product user, actor, owner, stakeholder, or system.
+  Distinguish product users from the Copilot interlocutor; attribute a team role
+  or decision only when the source establishes it.
 - Replace impersonal or subjectless phrases such as “it is necessary,” “it was
   decided,” “should be monitored,” or standalone infinitive instructions with a
   sentence that names the confirmed subject.
@@ -62,6 +64,9 @@ enforces a constraint.
   open question. Do not invent an actor merely to complete the sentence.
 - Apply this rule to narrative sentences in the PRD. Headings, stable IDs,
   metadata values, and intentionally compact table cells may remain fragments.
+- State product needs and agreed scope directly. Keep necessary attribution
+  with the decision or evidence, not as repeated accounts of chat confirmations.
+  Retain material uncertainty without repeating the same caveat.
 
 ## Workflow
 
@@ -82,7 +87,9 @@ enforces a constraint.
    outcome-oriented language whose narrative sentences identify explicit
    subjects. Every JTBD row must include persona, canonical job statement,
    expected outcome, success metric, quality guardrail, priority, and notes. Keep
-   detailed use cases and implementation content out of the PRD.
+   detailed use cases, implementation detail, and agent/session procedure out
+   of the PRD. Retain technical constraints pertinent to product scope or
+   feasibility and link supporting implementation evidence instead of retelling it.
 5. **Validate the document.** Confirm that every stable section and field ID is
    present, status is valid, confirmed values are traceable, conditional sections
    are populated or explicitly marked not applicable, and authoring guidance is
