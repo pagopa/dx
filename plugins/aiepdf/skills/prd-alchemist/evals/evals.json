@@ -186,7 +186,7 @@
     {
       "id": 10,
       "name": "held-out-non-user-facing-draft",
-      "prompt": "Create a draft PRD for the internal records-reconciliation initiative described in heldout/initiative.md and heldout/constraints.md. This is a backend-only initiative with no direct user interface. Include every always-required product section; mark Design/Experience as not applicable only with the confirmed rationale in the evidence. Keep outcome ownership and unknowns explicit. Preserve status draft, validate completeness. Save only the PRD as prd.md. Do not publish.",
+      "prompt": "Create a draft PRD for the internal records-reconciliation initiative described in initiative.md and constraints.md. This is a backend-only initiative with no direct user interface. Include every always-required product section; mark Design/Experience as not applicable only with the confirmed rationale in the evidence. Keep outcome ownership and unknowns explicit. Preserve status draft, validate completeness. Save only the PRD as prd.md. Do not publish.",
       "expected_output": "A generalized product PRD for an internal records-reconciliation initiative that does not fabricate direct end users or design work, explains why Experience is not applicable, preserves business outcomes and constraints, and remains in draft status.",
       "expectations": [
         "The PRD transfers the same product-outcome method to the held-out backend-only initiative without reusing appointment-specific concepts",
