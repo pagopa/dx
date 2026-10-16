@@ -134,10 +134,10 @@ specific safety rules (see below).
   _“move to evaluation”_, _“mark as approved”_, _“the PRD is ready for review”_).
 - A normal content update, rewrite, clarification, or addition **must preserve
   the current status**. Never advance or regress status autonomously.
-- Before editing `metadata.status`, capture the original value and validate
-  with `--from-status <original>` and `--target-status <requested>`. Apply the
-  target only after the gate passes. A post-update validation must still include
-  both values; a document's current status alone cannot prove the transition
+- Before editing `metadata.status`, capture the original value and check the
+  permitted transition sequence and requested state's entry evidence. Apply
+  the target only after those requirements are satisfied, then review the
+  resulting document. Its current status alone cannot prove the transition
   sequence.
 
 ### Validating Assertions vs Shortcuts
@@ -214,19 +214,18 @@ assumptions, and hypotheses`; state the impact of leaving the issue
 
 ## Reporting Gate Validation
 
-Run `scripts/validate_prd.py` for structural and lifecycle checks. Summarize the
-requested gate, validation result, and any blocking gaps in the response; do not
-create separate validation or iteration files unless the user asks for them.
-If Python 3 or the script cannot run, say validation was not run and why rather
-than substituting a guessed result. A requested promotion remains at its
-previous status until deterministic validation succeeds. Structural checks do
+Review the PRD against the template and lifecycle requirements. Summarize the
+requested gate, supporting evidence, assessment, and any blocking gaps in the
+response; do not create separate validation or iteration files unless the user
+asks for them. A requested promotion remains at its previous status until all
+required entry evidence is established. Structural completeness alone does
 not establish semantic truth, external-link availability, or human approval.
 Never describe a generated PRD as accepted unless the user explicitly accepts
 it.
 
-The single `Bloccante?` value is assessed for the requested gate. The validator
-checks discovery intent only when assessing discovery; it does not reinterpret
-a later gate's blocker as a contradiction in the initiative's original intent.
+Assess the single `Bloccante?` value for the requested gate. Check discovery
+intent only when assessing discovery; do not reinterpret a later gate's blocker
+as a contradiction in the initiative's original intent.
 Later gates still check the underlying need, sponsor, owner, actors, and goals.
 
 ---
@@ -249,5 +248,6 @@ Maintain strict traceability:
    - Notes: source context or dependencies.
 3. **Justified N/A**: When a conditional section or item does not apply, write
    `Non applicabile — <motivazione confermata>`. Never leave blank or silently omit.
-4. **Repeatable validation**: Verify structural completeness and gate
-   compliance deterministically using `scripts/validate_prd.py`.
+4. **Completeness and gate review**: Check the PRD's structure, stable IDs,
+   table schemas, and stage-appropriate evidence against the template and
+   lifecycle requirements.

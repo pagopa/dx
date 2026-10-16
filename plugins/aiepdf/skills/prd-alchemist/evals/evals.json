@@ -126,7 +126,7 @@
       "expected_output": "The skill retains evaluation because committee approval does not substitute for the required Product + Design review, and it identifies the missing evidence and asks whether the user wants to supply it.",
       "expectations": [
         "metadata.status remains evaluation",
-        "The validator identifies the missing Product + Design review evidence and does not treat committee approval as a substitute",
+        "The skill identifies the missing Product + Design review evidence and does not treat committee approval as a substitute",
         "The skill asks whether the user wants to provide the missing review evidence"
       ],
       "files": [
@@ -204,7 +204,7 @@
       "expected_output": "The skill retains draft because the Product owner is not assigned or confirmed, and asks the user to supply an accountable owner instead of inventing one.",
       "expectations": [
         "metadata.status remains draft",
-        "The validator identifies the missing confirmed Product owner as a discovery blocker",
+        "The skill identifies the missing confirmed Product owner as a discovery blocker",
         "The PRD does not invent or infer an owner",
         "The skill asks whether the user wants to provide the missing owner and explains why the transition remains blocked"
       ],
@@ -248,7 +248,7 @@
       "expected_output": "The skill rejects the direct draft-to-approved jump, keeps draft, and explains that discovery, evaluation, and approval gates cannot be skipped.",
       "expectations": [
         "metadata.status remains draft",
-        "The validator identifies the draft-to-approved jump as invalid using the captured draft source and names the canonical progression",
+        "The skill identifies the draft-to-approved jump as invalid using the captured draft source and names the canonical progression",
         "The skill does not treat user assertion or apparent completeness as a gate bypass"
       ],
       "files": ["evals/fixtures/appointment/state-draft.md"]
