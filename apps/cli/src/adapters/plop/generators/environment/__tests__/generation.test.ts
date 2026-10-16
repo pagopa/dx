@@ -368,17 +368,17 @@ describe("environment generator — tenant-qualified environment", () => {
         generatedFiles[`infra/bootstrapper/${tenantPayload.env.name}/main.tf`];
 
       expect(bootstrapperFile).not.toContain('name = "ced-prod"');
-      expect(
-        [...bootstrapperFile.matchAll(/labels = \[\s*"ced-prod"\s*\]/g)],
-      ).toHaveLength(2);
-      expect(
-        [...bootstrapperFile.matchAll(
+      expect([
+        ...bootstrapperFile.matchAll(/labels = \[\s*"ced-prod"\s*\]/g),
+      ]).toHaveLength(2);
+      expect([
+        ...bootstrapperFile.matchAll(
           /github_environment_prefix_enabled = true/g,
-        )],
-      ).toHaveLength(2);
-      expect(
-        [...bootstrapperFile.matchAll(/version = "~> 6\.3"/g)],
-      ).toHaveLength(2);
+        ),
+      ]).toHaveLength(2);
+      expect([
+        ...bootstrapperFile.matchAll(/version = "~> 6\.3"/g),
+      ]).toHaveLength(2);
     } finally {
       process.chdir(generatedEnvironment.originalCwd);
       await cleanupTempDir(generatedEnvironment.tmpDir);
