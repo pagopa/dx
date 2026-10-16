@@ -179,7 +179,7 @@
         "The response summarizes the update without claiming a user-confirmed status change"
       ],
       "files": [
-        "evals/fixtures/appointment/state-discovery.md",
+        "evals/fixtures/appointment/state-discovery-update.md",
         "evals/fixtures/appointment/feedback-update.md"
       ]
     },
