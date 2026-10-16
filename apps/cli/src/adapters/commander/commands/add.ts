@@ -44,6 +44,7 @@ import {
 } from "../../plop/generators/environment/prompts.js";
 import {
   collectDeploymentEnvironmentPayload,
+  type DeploymentEnvironmentOutputPayload,
   getPlopInstance,
   runDeploymentEnvironmentActions,
 } from "../../plop/index.js";
@@ -332,8 +333,9 @@ const toPublicEnvironmentPayload = ({
   github,
   init,
   tags,
+  terraform,
   workspace,
-}: EnvironmentPayload) => ({
+}: DeploymentEnvironmentOutputPayload) => ({
   env,
   github,
   ...(init && {
@@ -343,6 +345,16 @@ const toPublicEnvironmentPayload = ({
     },
   }),
   tags,
+  ...(terraform && {
+    terraform: {
+      backend: terraform.backend && {
+        resourceGroupName: terraform.backend.resourceGroupName,
+        storageAccountName: terraform.backend.storageAccountName,
+        subscriptionId: terraform.backend.subscriptionId,
+        type: terraform.backend.type,
+      },
+    },
+  }),
   workspace,
 });
 
