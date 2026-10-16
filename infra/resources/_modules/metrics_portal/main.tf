@@ -14,7 +14,7 @@ resource "azurerm_key_vault_secret" "azuread_client_secret" {
 # Publicly accessible Container App hosting the Next.js application.
 module "container_app" {
   source  = "pagopa-dx/azure-container-app/azurerm"
-  version = "~> 7.0"
+  version = "~> 8.0"
 
   environment         = merge(var.environment, { env_short = var.environment.environment })
   resource_group_name = var.resource_group_name
@@ -31,7 +31,7 @@ module "container_app" {
     memory = "1Gi"
   }
 
-  container_port            = 3000
+  container_port             = 3000
   log_analytics_workspace_id = var.log_analytics_workspace_id
 
   allow_access_from_environment_only = false
@@ -51,23 +51,25 @@ module "container_app" {
     }
   }
 
-  secrets = [
-    {
-      name                = "DATABASE_URL"
-      key_vault_secret_id = azurerm_key_vault_secret.database_url.versionless_id
-    }
-  ]
-
   containers = [
     {
-      image        = var.container_app_image
-      name         = "metrics-portal"
-      secret_names = ["DATABASE_URL"]
+      image = var.container_app_image
+      name  = "metrics-portal"
 
-      app_settings = {
-        NODE_ENV = "production"
-        PORT     = "3000"
-      }
+      environment_variables = [
+        {
+          name  = "NODE_ENV"
+          value = "production"
+        },
+        {
+          name  = "PORT"
+          value = "3000"
+        },
+        {
+          name  = "DATABASE_URL"
+          value = azurerm_key_vault_secret.database_url.versionless_id
+        },
+      ]
 
       liveness_probe = {
         path          = "/api/health"
