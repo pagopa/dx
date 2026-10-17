@@ -116,17 +116,16 @@ jobs:
           minimum_release_age: 7d
 
       # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The token is confined to this step: it is written to a
-      # temporary user-level npmrc that is removed when the step ends.
+      # alias. The composite action stores the registry credentials as a
+      # placeholder in the user-level npmrc: pnpm resolves the token from the
+      # NODE_AUTH_TOKEN variable of the steps that install dependencies.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@feats/align-dx-init-with-validate-v2
+
       - name: Install dependencies
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm_config_userconfig: ${{ runner.temp }}/dx-npmrc
-        run: |
-          trap 'rm -f "$npm_config_userconfig"' EXIT
-          if [ -f "$HOME/.npmrc" ]; then cp "$HOME/.npmrc" "$npm_config_userconfig"; fi
-          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$npm_config_userconfig"
-          pnpm --filter . ci
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm --filter . ci
 
       - name: Warn missing version plan coverage
         uses: pagopa/dx/actions/nx-release@main
@@ -160,17 +159,16 @@ jobs:
           minimum_release_age: 7d
 
       # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The token is confined to this step: it is written to a
-      # temporary user-level npmrc that is removed when the step ends.
+      # alias. The composite action stores the registry credentials as a
+      # placeholder in the user-level npmrc: pnpm resolves the token from the
+      # NODE_AUTH_TOKEN variable of the steps that install dependencies.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@feats/align-dx-init-with-validate-v2
+
       - name: Install dependencies
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm_config_userconfig: ${{ runner.temp }}/dx-npmrc
-        run: |
-          trap 'rm -f "$npm_config_userconfig"' EXIT
-          if [ -f "$HOME/.npmrc" ]; then cp "$HOME/.npmrc" "$npm_config_userconfig"; fi
-          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$npm_config_userconfig"
-          pnpm --filter . ci
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm --filter . ci
 
       - name: Set base and head SHAs for format check
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -210,17 +208,16 @@ jobs:
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
       # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The token is confined to this step: it is written to a
-      # temporary user-level npmrc that is removed when the step ends.
+      # alias. The composite action stores the registry credentials as a
+      # placeholder in the user-level npmrc: pnpm resolves the token from the
+      # NODE_AUTH_TOKEN variable of the steps that install dependencies.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@feats/align-dx-init-with-validate-v2
+
       - name: Install dependencies
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm_config_userconfig: ${{ runner.temp }}/dx-npmrc
-        run: |
-          trap 'rm -f "$npm_config_userconfig"' EXIT
-          if [ -f "$HOME/.npmrc" ]; then cp "$HOME/.npmrc" "$npm_config_userconfig"; fi
-          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$npm_config_userconfig"
-          pnpm --filter . ci
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm --filter . ci
 
       # Avoid querying GitHub environments when the change does not affect any
       # Nx project, and let downstream jobs short circuit cleanly.
@@ -348,17 +345,16 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
       # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The token is confined to this step: it is written to a
-      # temporary user-level npmrc that is removed when the step ends.
+      # alias. The composite action stores the registry credentials as a
+      # placeholder in the user-level npmrc: pnpm resolves the token from the
+      # NODE_AUTH_TOKEN variable of the steps that install dependencies.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@feats/align-dx-init-with-validate-v2
+
       - name: Install dependencies
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm_config_userconfig: ${{ runner.temp }}/dx-npmrc
-        run: |
-          trap 'rm -f "$npm_config_userconfig"' EXIT
-          if [ -f "$HOME/.npmrc" ]; then cp "$HOME/.npmrc" "$npm_config_userconfig"; fi
-          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$npm_config_userconfig"
-          mise deps
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: mise deps
 
       - name: Cache Nx
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -455,16 +451,16 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
       # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The token is confined to this step: it is written to a
-      # temporary user-level npmrc that is removed when the step ends.
+      # alias. The composite action stores the registry credentials as a
+      # placeholder in the user-level npmrc: pnpm resolves the token from the
+      # NODE_AUTH_TOKEN variable of the steps that install dependencies.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@feats/align-dx-init-with-validate-v2
+
       - name: Install dependencies
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          npm_config_userconfig: ${{ runner.temp }}/dx-npmrc
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          trap 'rm -f "$npm_config_userconfig"' EXIT
-          if [ -f "$HOME/.npmrc" ]; then cp "$HOME/.npmrc" "$npm_config_userconfig"; fi
-          printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}" >> "$npm_config_userconfig"
           mise deps --skip pnpm
           pnpm --filter . ci
 

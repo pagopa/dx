@@ -390,6 +390,8 @@ importers:
 
   actions/sanitize-terraform-plan: {}
 
+  actions/setup-npm-registry: {}
+
   actions/setup-telemetry:
     dependencies:
       '@azure/monitor-opentelemetry-exporter':

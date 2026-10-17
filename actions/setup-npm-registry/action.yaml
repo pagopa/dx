@@ -1,0 +1,24 @@
+name: Setup npm registry
+description: Authenticate npm and pnpm to the GitHub Packages registry that hosts DX packages.
+
+runs:
+  using: composite
+  steps:
+    - name: Authenticate to GitHub Packages
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        # The credential is stored as a placeholder and expanded by npm and
+        # pnpm at install time, so no secret is ever written to disk. Only the
+        # user-level npmrc expands environment variables: the repository-level
+        # one does not.
+        npmrc="$HOME/.npmrc"
+        touch "$npmrc"
+
+        # Keep the action idempotent by dropping entries written by a previous
+        # run before appending the current one.
+        grep -v -F '//npm.pkg.github.com/:_authToken=' "$npmrc" > "$npmrc.dx" || true
+        mv "$npmrc.dx" "$npmrc"
+
+        printf '%s\n' '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' >> "$npmrc"
