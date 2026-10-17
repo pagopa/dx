@@ -13,17 +13,29 @@ import type { GitHubAuthFactory } from "../../../../domain/dependencies.js";
 import type { GitHubService } from "../../../../domain/github.js";
 import type { Payload as MonorepoPayload } from "../../../plop/generators/monorepo/index.js";
 
-const { collectMonorepoPayload, getPlopInstance, runMonorepoActions, tfMock } =
-  vi.hoisted(() => ({
-    collectMonorepoPayload: vi.fn(),
-    getPlopInstance: vi.fn(),
-    runMonorepoActions: vi.fn(),
-    tfMock: vi.fn(),
-  }));
+const {
+  collectMonorepoPayload,
+  execaMock,
+  getPlopInstance,
+  runMonorepoActions,
+  tfMock,
+} = vi.hoisted(() => ({
+  collectMonorepoPayload: vi.fn(),
+  execaMock: vi.fn(),
+  getPlopInstance: vi.fn(),
+  runMonorepoActions: vi.fn(),
+  tfMock: vi.fn(),
+}));
 
 vi.mock("ora", () => ({
   oraPromise: <T>(promise: Promise<T>) => promise,
 }));
+
+vi.mock("execa", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("execa")>();
+
+  return { ...actual, $: execaMock };
+});
 
 vi.mock("../../../execa/terraform.js", () => ({
   tf$: tfMock,
@@ -89,7 +101,7 @@ describe("makeInitCommand", () => {
     const outputMessages: string[] = [];
     const terraformError = new ExecaError();
     terraformError.shortMessage =
-      "Command failed with exit code 1: terraform init";
+      "Command failed with exit code 1: mise exec -- pnpm exec nx run-many -t init";
     terraformError.stderr = "Error: failed to load backend";
     const payload = makePayload();
     getPlopInstance.mockResolvedValue({});
@@ -99,13 +111,14 @@ describe("makeInitCommand", () => {
     tfMock
       .mockResolvedValueOnce({ stdout: "Terraform v1.0.0" })
       .mockResolvedValueOnce({ stdout: "0.0.0" })
-      .mockReturnValueOnce(
-        vi.fn((strings: TemplateStringsArray) =>
-          strings.join("").includes("init")
-            ? Promise.reject(terraformError)
-            : Promise.resolve({ stdout: "" }),
-        ),
-      );
+      .mockReturnValueOnce(vi.fn(() => Promise.resolve({ stdout: "" })));
+    execaMock.mockReturnValueOnce(
+      vi.fn((strings: TemplateStringsArray) =>
+        strings.join("").includes("init")
+          ? Promise.reject(terraformError)
+          : Promise.resolve({ stdout: "" }),
+      ),
+    );
 
     const requireGitHubAuthSpy = vi.fn(() =>
       okAsync({
@@ -125,10 +138,10 @@ describe("makeInitCommand", () => {
 
     const message = outputMessages.join("");
     expect(message).toContain(
-      "Terraform init failed while creating the GitHub repository.",
+      "Terraform init failed while initializing the scaffolded projects.",
     );
     expect(message).toContain(
-      "Command failed with exit code 1: terraform init",
+      "Command failed with exit code 1: mise exec -- pnpm exec nx run-many -t init",
     );
     expect(message).toContain("Error: failed to load backend");
     expect(message).not.toContain("Failed to create GitHub repository.");

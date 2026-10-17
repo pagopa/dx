@@ -174,7 +174,10 @@ describe("makeInitCommand git identity fallback", () => {
         : repositoryTerraform,
     );
     mocks.execa$.mockImplementation((options?: { shell?: boolean }) =>
-      options?.shell === true ? gitCommands : Promise.resolve({ stdout: "" }),
+      options?.shell === true
+        ? gitCommands
+        : // The generated Terraform projects are initialized through Nx.
+          () => Promise.resolve({ stdout: "" }),
     );
     vi.mocked(inquirer.prompt).mockResolvedValue({ confirm: true });
     vi.spyOn(process, "chdir").mockImplementation(() => undefined);

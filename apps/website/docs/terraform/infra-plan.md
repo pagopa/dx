@@ -12,6 +12,17 @@ sidebar_position: 5
 
 :::
 
+:::info[Nx-managed repositories]
+
+Repositories that manage Terraform with Nx and `@pagopa/nx-terraform`
+(including the ones created with `dx init`) get plan output and affected
+project detection from
+[`validate-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v2.yaml)
+instead of `infra_plan.yaml`. This page remains as reference for repositories
+that still use the legacy workflow.
+
+:::
+
 This page describes the GitHub workflow that automates Terraform plan
 operations.
 
