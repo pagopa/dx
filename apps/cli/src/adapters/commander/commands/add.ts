@@ -47,6 +47,7 @@ import {
   getPlopInstance,
   runDeploymentEnvironmentActions,
 } from "../../plop/index.js";
+import { describeRepositoryDestination } from "../../terraform/repository-backend.js";
 import { asError, reportCommandError } from "../command-errors.js";
 import {
   createCommandPresenter,
@@ -335,6 +336,15 @@ type AddResult = {
 const displaySummary = (result: AddResult) => {
   const { authorizationPrs } = result;
   console.log(chalk.green.bold("\nCloud environment created successfully!"));
+  if (result.payload.repositoryState?.status === "remote-verified") {
+    console.log(chalk.green.bold("\nRepository state: remote and verified"));
+    console.log(
+      describeRepositoryDestination(result.payload.repositoryState.destination),
+    );
+    console.log(
+      "Commit infra/repository changes (backend and environment configuration) so other operators share the same desired state.",
+    );
+  }
 
   let step = 1;
   console.log(chalk.green.bold("\nNext Steps:"));
@@ -401,7 +411,12 @@ const addEnvironmentAction = (
           initialAnswers,
           nonInteractive,
         ),
-        asError("Failed to run the deployment environment generator"),
+        (cause) =>
+          cause instanceof Error
+            ? cause
+            : asError("Failed to run the deployment environment generator")(
+                cause,
+              ),
       ),
     )
     .andThen(({ generator, payload }) =>
@@ -409,7 +424,10 @@ const addEnvironmentAction = (
         presenter,
         "Creating environment...",
         () => runDeploymentEnvironmentActions(generator, payload),
-        asError("Failed to create the deployment environment"),
+        (cause) =>
+          cause instanceof Error
+            ? cause
+            : asError("Failed to create the deployment environment")(cause),
       ),
     )
     .andThen((payload) =>
@@ -465,7 +483,7 @@ export const makeAddCommand = (
         .addOption(
           new Option(
             "-y, --yes",
-            "Confirm environment initialization without prompting",
+            "Confirm environment initialization and permanent repository state placement without prompting",
           ),
         )
         .addOption(

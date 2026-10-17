@@ -88,6 +88,7 @@ describe("add environment command json output", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    process.exitCode = undefined;
   });
 
   it("emits progress events and the final result through the json presenter", async () => {

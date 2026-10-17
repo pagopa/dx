@@ -59,6 +59,17 @@ const registerEnvironmentSetup = (
     "setupCloudTools",
     async () => "Cloud CLI tools configured",
   );
+  plop.setActionType("prepareRepositoryState", async (data) => {
+    data.repositoryState = {
+      destination: {
+        backend: mockTerraformBackend,
+        containerName: "terraform-state",
+        key: "dx/mytest/repository.tfstate",
+      },
+      status: "remote-verified",
+    };
+    return "Repository state: remote and verified";
+  });
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
   setEqHelper(plop);

@@ -84,6 +84,9 @@ export default function getActions(
         type: "getTerraformBackend",
       },
       {
+        type: "prepareRepositoryState",
+      },
+      {
         type: "syncRepositoryEnvironments",
       },
       // Bootstrap Azure resources can pre-exist, but OIDC credentials and
@@ -97,18 +100,17 @@ export default function getActions(
     ];
 
     if (init) {
-      actions.splice(
-        1,
-        0,
-        {
-          type: "initCloudAccounts",
-        },
-        {
-          type: init.terraformBackend
-            ? "provisionTerraformBackend"
-            : "getTerraformBackend",
-        },
+      if (init.terraformBackend) {
+        actions.splice(1, 0, { type: "provisionTerraformBackend" });
+      }
+      // Initialization also writes GitHub environment secrets, so it must
+      // remain behind repository-state verification and the Terraform apply.
+      const configureIndex = actions.findIndex(
+        (action) =>
+          typeof action === "object" &&
+          action.type === "configureGitHubEnvironments",
       );
+      actions.splice(configureIndex, 0, { type: "initCloudAccounts" });
       actions.push(...addEnvironmentModule("core"));
     }
 
