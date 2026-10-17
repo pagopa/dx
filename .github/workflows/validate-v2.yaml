@@ -102,7 +102,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # The base/head comparisons need the historical trees locally: with
+          # `filter: tree:0` a missing tree triggers a lazy fetch, which fails
+          # here because the checkout does not persist credentials.
           # The App token is only needed for the initial fetch. Keeping it out
           # of the checkout config prevents dependency install scripts from
           # reading a write-capable token from .git/config.
@@ -147,7 +149,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # The base/head comparisons need the historical trees locally: with
+          # `filter: tree:0` a missing tree triggers a lazy fetch, which fails
+          # here because the checkout does not persist credentials.
           # Keep the run token out of .git/config: no step after the checkout
           # needs persisted git credentials.
           persist-credentials: false
@@ -193,7 +197,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # The base/head comparisons need the historical trees locally: with
+          # `filter: tree:0` a missing tree triggers a lazy fetch, which fails
+          # here because the checkout does not persist credentials.
           # Keep the run token out of .git/config: no step after the checkout
           # needs persisted git credentials.
           persist-credentials: false
@@ -315,7 +321,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # The base/head comparisons need the historical trees locally: with
+          # `filter: tree:0` a missing tree triggers a lazy fetch, which fails
+          # here because the checkout does not persist credentials.
           # Keep the run token out of .git/config: no step after the checkout
           # needs persisted git credentials.
           persist-credentials: false
@@ -417,7 +425,9 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # The base/head comparisons need the historical trees locally: with
+          # `filter: tree:0` a missing tree triggers a lazy fetch, which fails
+          # here because the checkout does not persist credentials.
           # Keep the run token out of .git/config: no step after the checkout
           # needs persisted git credentials.
           persist-credentials: false
