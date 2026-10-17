@@ -38,14 +38,15 @@ jobs:
         run: pnpm --filter . ci
 ```
 
-Workflows in this repository reference the action through the local path, which requires no ref:
+Reference it with an absolute ref. The `$/` syntax cannot be used here: it always resolves against the top-level caller's repository, and this action is consumed from `validate-v2.yaml`, an `on: workflow_call` workflow that other repositories invoke as `pagopa/dx/.github/workflows/validate-v2.yaml@main`.
 
 ```yaml
 - name: Setup npm registry
-  uses: $/actions/setup-npm-registry
+  uses: pagopa/dx/actions/setup-npm-registry@main
 ```
 
 ## Notes
 
 - The job needs the `packages: read` permission, otherwise the registry rejects the token.
+- The token is deliberately not an input. The action only declares where the credential is read from; the steps that consume it expose it as `NODE_AUTH_TOKEN`, which keeps the secret out of the npmrc and scoped to those steps. This mirrors `actions/setup-node` with `registry-url`, which also writes a `${NODE_AUTH_TOKEN}` placeholder and expects the caller to set the variable.
 - Reference this action instead of writing the npmrc bootstrap inline: it is the single place where the registry credential handling is maintained.
