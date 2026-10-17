@@ -18,6 +18,10 @@ import {
   Repository,
 } from "../../../domain/github.js";
 import { tf$ } from "../../execa/terraform.js";
+import {
+  initTerraformProjects,
+  REPOSITORY_PROJECT,
+} from "../../plop/actions/init-terraform-projects.js";
 import { Payload as MonorepoPayload } from "../../plop/generators/monorepo/index.js";
 import {
   collectMonorepoPayload,
@@ -283,11 +287,7 @@ export const getMonorepoInitialAnswers = ({
   return initialAnswers;
 };
 
-type TerraformRepositoryCreationStep = "apply" | "init";
-
-const formatTerraformRepositoryCreationFailureDetails = (
-  cause: unknown,
-): string => {
+const formatTerraformFailureDetails = (cause: unknown): string => {
   const details =
     cause instanceof ExecaError
       ? [cause.shortMessage, cause.stderr]
@@ -302,19 +302,31 @@ const formatTerraformRepositoryCreationFailureDetails = (
     .join("\n");
 };
 
-const mapTerraformRepositoryCreationError =
-  (step: TerraformRepositoryCreationStep) =>
+const mapTerraformFailure =
+  (message: string) =>
   (cause: unknown): Error => {
-    const details = formatTerraformRepositoryCreationFailureDetails(cause);
-    const message = [
-      `Terraform ${step} failed while creating the GitHub repository.`,
-      details,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const details = formatTerraformFailureDetails(cause);
+    const error = new Error([message, details].filter(Boolean).join("\n"), {
+      cause,
+    });
 
-    return new Error(message, { cause });
+    getLogger(["dx-cli", "init"]).error(error.message);
+    return error;
   };
+
+/**
+ * Initializes the Terraform project of the repository root, so the provider and
+ * module lock files are part of the scaffold commit.
+ *
+ * The initialization is delegated to the Nx `init` target: a plain
+ * `terraform init` would lock the providers of the current platform only, while
+ * the validation workflow initializes the same project with a frozen lockfile.
+ *
+ * Only the repository root is initialized, never the environments already
+ * present in the repository: they need access to their own backend.
+ */
+const initializeRepositoryTerraform = (): Promise<void> =>
+  initTerraformProjects([REPOSITORY_PROJECT]);
 
 const createRemoteRepositoryWithPresenter =
   (presenter: CommandPresenter) =>
@@ -322,50 +334,17 @@ const createRemoteRepositoryWithPresenter =
     repoName,
     repoOwner,
   }: MonorepoPayload): ResultAsync<Repository, Error> => {
-    const logger = getLogger(["dx-cli", "init"]);
     const repo$ = tf$({ cwd: path.resolve("infra", "repository") });
-    const workspace$ = $({});
-    const runTerraformRepositoryCreationStep = async (
-      step: TerraformRepositoryCreationStep,
-      executeStep: () => Promise<unknown>,
-    ) => {
-      try {
-        await executeStep();
-      } catch (cause) {
-        const error = mapTerraformRepositoryCreationError(step)(cause);
-        logger.error(error.message);
-        throw error;
-      }
-    };
 
-    const applyTerraform = async () => {
-      // `terraform init` would lock the providers of the current platform
-      // only, while the validation workflow initializes the same project with
-      // a frozen lockfile: the Nx `init` target locks every platform the
-      // repository declares and refreshes `tfmodules.lock.json`, so both lock
-      // files are part of the scaffold commit.
-      const initializeRepositoryTerraform = () =>
-        workspace$`mise exec -- pnpm exec nx run-many -t init`;
-      const applyRepositoryTerraform = () =>
-        repo$`terraform apply -auto-approve`;
+    const applyRepositoryTerraform = () => repo$`terraform apply -auto-approve`;
 
-      await runTerraformRepositoryCreationStep(
-        "init",
-        initializeRepositoryTerraform,
-      );
-      await runTerraformRepositoryCreationStep(
-        "apply",
-        applyRepositoryTerraform,
-      );
-    };
     return trackStep(
       presenter,
       "Creating GitHub repository...",
-      applyTerraform,
-      (cause) =>
-        cause instanceof Error
-          ? cause
-          : asError("Failed to create GitHub repository.")(cause),
+      applyRepositoryTerraform,
+      mapTerraformFailure(
+        "Terraform apply failed while creating the GitHub repository.",
+      ),
     ).map(() => new Repository(repoName, repoOwner));
   };
 /**
@@ -602,6 +581,19 @@ const runInitAction = ({
     .andTee((payload) => {
       process.chdir(payload.repoName);
     })
+    .andThen((payload) =>
+      // The initialization runs before the GitHub publication: a generated
+      // repository without lock files fails its own validation pipeline, so it
+      // must be complete even when the publication is declined.
+      trackStep(
+        presenter,
+        "Initializing Terraform projects...",
+        initializeRepositoryTerraform,
+        mapTerraformFailure(
+          "Terraform init failed while initializing the scaffolded projects.",
+        ),
+      ).map(() => payload),
+    )
     .andThen((payload) =>
       confirmGitHubRepoCreation(payload, publishToGitHub).andThen<
         SummaryInput,

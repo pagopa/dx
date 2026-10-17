@@ -138,7 +138,7 @@ describe("makeInitCommand", () => {
 
     const message = outputMessages.join("");
     expect(message).toContain(
-      "Terraform init failed while creating the GitHub repository.",
+      "Terraform init failed while initializing the scaffolded projects.",
     );
     expect(message).toContain(
       "Command failed with exit code 1: mise exec -- pnpm exec nx run-many -t init",

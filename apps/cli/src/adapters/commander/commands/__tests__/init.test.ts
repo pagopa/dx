@@ -16,6 +16,11 @@ import type { GitHubService } from "../../../../domain/github.js";
 import type { Payload as MonorepoPayload } from "../../../plop/generators/monorepo/index.js";
 
 const mocks = vi.hoisted(() => {
+  type ExecaTemplate = (
+    strings: TemplateStringsArray,
+    ...values: readonly unknown[]
+  ) => Promise<{ stdout: string }>;
+
   const reportError = vi.fn();
   const reportResult = vi.fn();
   const trackStepMock = vi.fn();
@@ -31,7 +36,9 @@ const mocks = vi.hoisted(() => {
   return {
     collectMonorepoPayload: vi.fn(),
     createCommandPresenter: vi.fn(() => presenter),
-    execa$: vi.fn(() => () => Promise.resolve({ stdout: "" })),
+    execa$: vi.fn<() => ExecaTemplate>(
+      () => () => Promise.resolve({ stdout: "" }),
+    ),
     getPlopInstance: vi.fn(),
     presenter,
     reportError,
@@ -335,6 +342,32 @@ describe("makeInitCommand", () => {
         gitHubRepoCreationSkipped: true,
         payload,
       }),
+    );
+  });
+
+  it("initializes the Terraform projects even when the publication is declined", async () => {
+    const commands: string[] = [];
+    mocks.execa$.mockImplementation(
+      () =>
+        (strings: TemplateStringsArray, ...values: readonly unknown[]) => {
+          commands.push(
+            strings.reduce(
+              (fullCommand, string, index) =>
+                `${fullCommand}${string}${values[index] ?? ""}`,
+              "",
+            ),
+          );
+          return Promise.resolve({ stdout: "" });
+        },
+    );
+
+    await runInitCommand("json");
+
+    expect(commands).toEqual([
+      "mise exec -- pnpm exec nx run-many -t init --projects=repository",
+    ]);
+    expect(mocks.reportResult).toHaveBeenCalledWith(
+      expect.objectContaining({ gitHubRepoCreationSkipped: true }),
     );
   });
 

@@ -14,6 +14,7 @@ import type { Payload as MonorepoPayload } from "../../../plop/generators/monore
 
 const mocks = vi.hoisted(() => ({
   collectMonorepoPayload: vi.fn(),
+  execa$: vi.fn(() => () => Promise.resolve({ stdout: "" })),
   getPlopInstance: vi.fn(),
   runMonorepoActions: vi.fn(),
   tf$: vi.fn(async (...args: [TemplateStringsArray, ...unknown[]]) => {
@@ -23,6 +24,11 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("inquirer");
+vi.mock("execa", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("execa")>();
+
+  return { ...actual, $: mocks.execa$ };
+});
 vi.mock("../../../plop/index.js", () => ({
   collectMonorepoPayload: mocks.collectMonorepoPayload,
   getPlopInstance: mocks.getPlopInstance,
@@ -134,6 +140,16 @@ describe("init command json output", () => {
       },
       {
         name: "Scaffolding workspace...",
+        status: "success",
+        type: "step",
+      },
+      {
+        name: "Initializing Terraform projects...",
+        status: "start",
+        type: "step",
+      },
+      {
+        name: "Initializing Terraform projects...",
         status: "success",
         type: "step",
       },

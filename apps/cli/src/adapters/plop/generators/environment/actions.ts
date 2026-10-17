@@ -118,8 +118,10 @@ export default function getActions(
       type: "formatGeneratedCode",
     });
 
-    // The generated Terraform projects are initialized once every file is on
-    // disk, so the provider and module locks are part of the same commit.
+    // The Terraform projects of the generated environment are initialized once
+    // every file is on disk, so the provider and module locks are part of the
+    // same commit. The action reads the environment name from the payload, so
+    // no other environment of the repository is initialized.
     actions.push({
       type: "initTerraformProjects",
     });
