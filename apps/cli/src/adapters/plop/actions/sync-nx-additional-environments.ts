@@ -56,6 +56,15 @@ export const syncAdditionalEnvironments = (
   return addNxTerraformEnvironment(nxJsonContent, plugin, environmentName);
 };
 
+/**
+ * Returns whether the error is the "file does not exist" failure of a read.
+ */
+const isMissingFileError = (error: unknown): boolean =>
+  error !== null &&
+  typeof error === "object" &&
+  "code" in error &&
+  error.code === "ENOENT";
+
 export const syncNxAdditionalEnvironments = async (
   environmentName: Environment["name"],
   repositoryRoot: string = process.cwd(),
@@ -64,7 +73,14 @@ export const syncNxAdditionalEnvironments = async (
   let nxJsonContent: string;
   try {
     nxJsonContent = await fs.readFile(nxJsonPath, "utf8");
-  } catch {
+  } catch (error) {
+    if (!isMissingFileError(error)) {
+      // Any other failure (e.g. a permission error) must not be reported as a
+      // repository without nx.json: the environment would silently miss its Nx
+      // Terraform registration.
+      throw error;
+    }
+
     // Repositories scaffolded before the Nx Terraform alignment have no
     // nx.json configuration to update.
     return "No nx.json found, skipped the Nx Terraform environment registration";
