@@ -27,8 +27,11 @@ import {
 /**
  * Returns the updated `nx.json` content, or `undefined` when the file does not
  * need any change: lifecycle environments, repositories without the Nx
- * Terraform plugin, already-registered environments, and unreadable or
- * invalid files are left untouched.
+ * Terraform plugin, and already-registered environments.
+ *
+ * A file that cannot be parsed is an error: silently skipping the registration
+ * would generate an environment that Nx tags with the wrong environment, so the
+ * caller must abort before any repository or cloud side effect.
  */
 export const syncAdditionalEnvironments = (
   nxJsonContent: string,
@@ -40,7 +43,9 @@ export const syncAdditionalEnvironments = (
 
   const parsed = parseNxJson(nxJsonContent);
   if (parsed.error !== undefined) {
-    return undefined;
+    throw new Error(
+      `Cannot register env:${environmentName} in nx.json: ${parsed.error}`,
+    );
   }
 
   const plugin = findNxTerraformPlugin(parsed.nxJson);
