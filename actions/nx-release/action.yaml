@@ -164,14 +164,19 @@ runs:
         username: ${{ github.actor }}
         password: ${{ github.token }}
 
+    - name: Setup npm registry
+      if: steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
+      uses: pagopa/dx/actions/setup-npm-registry@main
+
     - name: Publish with Nx release
       if: steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
       id: publish
       shell: bash
       env:
         NPM_CONFIG_PROVENANCE: true
-        # Workflow token with packages:write authenticates GitHub Packages via .npmrc.
-        GITHUB_TOKEN: ${{ github.token }}
+        # Workflow token with packages:write resolves the ${NODE_AUTH_TOKEN}
+        # placeholder that the Setup npm registry action wrote to the npmrc.
+        NODE_AUTH_TOKEN: ${{ github.token }}
         # GitHub App token authenticates gh/Octokit for PR and release operations.
         GH_TOKEN: ${{ inputs.github-token }}
         ACTION_PATH: ${{ github.action_path }}
@@ -179,8 +184,6 @@ runs:
         RELEASE_MODE: ${{ steps.release-mode.outputs.mode }}
       run: |
         set -euo pipefail
-
-        printf '%s\n' '//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}' >> "$HOME/.npmrc"
 
         if [[ "$RELEASE_MODE" == "publish-all" ]]; then
           # workflow_dispatch: publish every project with an Nx Release publisher.
