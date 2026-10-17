@@ -14,11 +14,15 @@ runs:
         # user-level npmrc expands environment variables: the repository-level
         # one does not.
         npmrc="$HOME/.npmrc"
-        touch "$npmrc"
+        # mktemp creates the rewritten file as private (0600) and mv keeps that
+        # mode, so replacing an existing npmrc never widens its permissions.
+        tempNpmrc="$(mktemp)"
 
         # Keep the action idempotent by dropping entries written by a previous
         # run before appending the current one.
-        grep -v -F '//npm.pkg.github.com/:_authToken=' "$npmrc" > "$npmrc.dx" || true
-        mv "$npmrc.dx" "$npmrc"
+        if [[ -f "$npmrc" ]]; then
+          grep -v -F '//npm.pkg.github.com/:_authToken=' "$npmrc" > "$tempNpmrc" || true
+        fi
 
-        printf '%s\n' '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' >> "$npmrc"
+        printf '%s\n' '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' >> "$tempNpmrc"
+        mv "$tempNpmrc" "$npmrc"
