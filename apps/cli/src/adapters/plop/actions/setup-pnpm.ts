@@ -108,7 +108,11 @@ export default function (plop: NodePlopAPI) {
     }
     await $`mise exec -- pnpm install`;
 
-    await $`mise exec -- pnpm exec oxfmt`;
+    // Format the whole scaffold in a single pass, once every file is on disk:
+    // the workspace formatter (oxfmt) runs through `nx format:write`, and the
+    // Nx Terraform plugin formats `infra/repository` through its `fmt` target.
+    await $`mise exec -- pnpm exec nx format:write --all`;
+    await $`mise exec -- pnpm exec nx run-many -t fmt`;
     return "Monorepo bootstrapped";
   });
 }

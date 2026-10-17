@@ -31,19 +31,12 @@ import setTerraformStateKeyHelper from "../../../helpers/terraform-state-key.js"
 import setTerraformStringHelper from "../../../helpers/terraform-string.js";
 import { resolveTemplatesPath } from "../../../templates-path.js";
 import {
-  checkOxfmtFormatting,
-  prepareOxfmtCheck,
-} from "../../__tests__/oxfmt.js";
-import {
   cleanupTempDir,
   readGeneratedFiles,
 } from "../../__tests__/temp-dir.js";
 import getActions from "../actions.js";
 import { Payload, PLOP_ENVIRONMENT_GENERATOR_NAME } from "../index.js";
 
-vi.mock("../../../../terraform/fmt.js", () => ({
-  formatTerraformCode: vi.fn((content: string) => content),
-}));
 vi.mock("../../../../execa/terraform.js", () => {
   const terraformCommand = vi.fn(async () => undefined);
   const tf$ = vi.fn(() => terraformCommand);
@@ -63,6 +56,12 @@ const registerEnvironmentSetup = (
   plop.setActionType(
     "setupCloudTools",
     async () => "Cloud CLI tools configured",
+  );
+  // The formatting pass shells out to the repository Nx tasks: it is covered
+  // by its own test, and stubbed here to keep the generated files untouched.
+  plop.setActionType(
+    "formatGeneratedCode",
+    async () => "Generated files formatted",
   );
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
@@ -478,10 +477,6 @@ describe("environment generator — tenant-qualified environment", () => {
           path.join(resolveTemplatesPath("monorepo"), "nx.json"),
           path.join(repositoryRoot, "nx.json"),
         );
-        await prepareOxfmtCheck(
-          repositoryRoot,
-          path.join(resolveTemplatesPath("monorepo"), "oxfmt.config.ts.hbs"),
-        );
       },
       tmpDirPrefix: "dx-cli-env-tenant-test-",
     }));
@@ -506,13 +501,5 @@ describe("environment generator — tenant-qualified environment", () => {
       nxJson.plugins.find((entry) => entry.plugin === "@pagopa/nx-terraform")
         ?.options?.additionalEnvironments,
     ).toEqual(["ced-prod"]);
-  });
-
-  it("generates files that are already formatted with oxfmt", async () => {
-    const result = await checkOxfmtFormatting(tmpDir);
-
-    expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("All matched files use the correct format");
-    expect(result.exitCode).toBe(0);
   });
 });

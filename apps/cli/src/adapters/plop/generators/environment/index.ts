@@ -6,6 +6,7 @@ import {
 } from "../../../../domain/cloud-account.js";
 import { GitHubRepo } from "../../../../domain/github-repo.js";
 import { type GitHubService } from "../../../../domain/github.js";
+import { setFormatGeneratedCodeAction } from "../../actions/format-generated-code.js";
 import setGetTerraformBackend from "../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../actions/init-cloud-accounts.js";
 import setProvisionTerraformBackendAction from "../../actions/provision-terraform-backend.js";
@@ -47,6 +48,7 @@ export default function (
   setProvisionTerraformBackendAction(plop, cloudAccountService);
   setSetupCloudToolsAction(plop);
   setInitCloudAccountsAction(plop, cloudAccountService, gitHubService);
+  setFormatGeneratedCodeAction(plop);
   setSyncNxAdditionalEnvironments(plop);
   setSyncRepositoryEnvironmentsAction(plop);
 

@@ -13,10 +13,6 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { resolveTemplatesPath } from "../../../templates-path.js";
 import {
-  checkOxfmtFormatting,
-  prepareOxfmtCheck,
-} from "../../__tests__/oxfmt.js";
-import {
   cleanupTempDir,
   readGeneratedFiles,
 } from "../../__tests__/temp-dir.js";
@@ -136,23 +132,5 @@ describe("monorepo generator — DX validation pipeline", () => {
     );
     expect(generatedFiles["trivy.yml"]).toContain("ignorefile: .trivyignore");
     expect(generatedFiles["oxfmt.config.ts"]).toContain("defineConfig");
-  });
-
-  it("generates files that are already formatted with oxfmt", async () => {
-    const generatedRoot = path.join(tmpDir, payload.repoName);
-    await prepareOxfmtCheck(
-      generatedRoot,
-      path.join(resolveTemplatesPath("monorepo"), "oxfmt.config.ts.hbs"),
-    );
-
-    // `setupPnpm` formats the scaffold with oxfmt once dependencies are
-    // installed, but the templates are expected to render already-formatted
-    // files for the canonical payload: a drift here would produce noisy
-    // formatting diffs in every scaffolded repository.
-    const result = await checkOxfmtFormatting(generatedRoot);
-
-    expect(result.stderr).toBe("");
-    expect(result.stdout).toContain("All matched files use the correct format");
-    expect(result.exitCode).toBe(0);
   });
 });

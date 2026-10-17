@@ -6,13 +6,9 @@
  * Lifecycle environments (`dev`, `uat`, `prod`) are recognized by the plugin
  * out of the box and never need an entry.
  */
-import { getLogger } from "@logtape/logtape";
-import { execa } from "execa";
 import { type NodePlopAPI } from "node-plop";
 import fs from "node:fs/promises";
-import { createRequire } from "node:module";
 import path from "node:path";
-import { z } from "zod/v4";
 
 import {
   type Environment,
@@ -27,11 +23,6 @@ import {
   type Payload,
   payloadSchema,
 } from "../generators/environment/prompts.js";
-
-/** Minimal shape of the installed oxfmt manifest needed to locate its bin. */
-const oxfmtManifestSchema = z.object({
-  bin: z.union([z.string(), z.record(z.string(), z.string())]),
-});
 
 /**
  * Returns the updated `nx.json` content, or `undefined` when the file does not
@@ -60,52 +51,6 @@ export const syncAdditionalEnvironments = (
   return addNxTerraformEnvironment(nxJsonContent, plugin, environmentName);
 };
 
-/**
- * Formats the file with the repository's own oxfmt, when installed.
- *
- * The CLI does not depend on oxfmt, and repositories scaffolded before the
- * formatter was introduced do not install it: formatting is best-effort, and
- * the written file is valid JSON either way.
- */
-export const formatWithRepositoryOxfmt = async (
-  repositoryRoot: string,
-  filePath: string,
-): Promise<void> => {
-  const logger = getLogger(["gen", "env"]);
-  let oxfmtBinary: string;
-  try {
-    const require = createRequire(path.join(repositoryRoot, "package.json"));
-    const packageJsonPath = require.resolve("oxfmt/package.json");
-    const { bin } = oxfmtManifestSchema.parse(
-      JSON.parse(await fs.readFile(packageJsonPath, "utf8")),
-    );
-    const binary = typeof bin === "string" ? bin : bin["oxfmt"];
-    oxfmtBinary = path.resolve(path.dirname(packageJsonPath), binary);
-  } catch {
-    logger.debug("oxfmt is not installed, skipping the formatting of {file}", {
-      file: path.relative(repositoryRoot, filePath),
-    });
-    return;
-  }
-
-  try {
-    await execa(
-      "node",
-      [oxfmtBinary, path.relative(repositoryRoot, filePath)],
-      {
-        cwd: repositoryRoot,
-      },
-    );
-  } catch (error) {
-    // A formatting failure must not abort the environment generation: the
-    // written file is already valid JSON.
-    logger.debug("Could not format {file}: {error}", {
-      error: error instanceof Error ? error.message : String(error),
-      file: path.relative(repositoryRoot, filePath),
-    });
-  }
-};
-
 export const syncNxAdditionalEnvironments = async (
   environmentName: Environment["name"],
   repositoryRoot: string = process.cwd(),
@@ -129,7 +74,6 @@ export const syncNxAdditionalEnvironments = async (
   }
 
   await fs.writeFile(nxJsonPath, updatedNxJson, "utf8");
-  await formatWithRepositoryOxfmt(repositoryRoot, nxJsonPath);
   return `Registered env:${environmentName} in the Nx Terraform additional environments`;
 };
 

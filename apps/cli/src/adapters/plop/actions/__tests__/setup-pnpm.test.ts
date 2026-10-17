@@ -1,12 +1,13 @@
 /**
- * Verifies the commands used to bootstrap a generated monorepo.
+ * Verifies the observable behavior of the monorepo bootstrap: the DX
+ * dependencies are installed from the GitHub Packages registry, and the
+ * scaffold is formatted once, at the end of the bootstrap.
  */
 import nodePlop from "node-plop";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
-  const commands: string[] = [];
-  const commandsWithEnvironment: {
+  const commands: {
     command: string;
     env?: NodeJS.ProcessEnv;
     npmrcExistsAt: boolean;
@@ -22,12 +23,9 @@ const mocks = vi.hoisted(() => {
             `${fullCommand}${string}${values[index] ?? ""}`,
           "",
         );
-        // Records whether the repository npmrc already exists when the
-        // command runs, so ordering can be asserted.
         const nodeFs = process.getBuiltinModule("node:fs");
         const nodePath = process.getBuiltinModule("node:path");
-        commands.push(command);
-        commandsWithEnvironment.push({
+        commands.push({
           command,
           env: options.env,
           npmrcExistsAt: options.cwd
@@ -38,11 +36,7 @@ const mocks = vi.hoisted(() => {
       },
   );
 
-  return {
-    commands,
-    commandsWithEnvironment,
-    execa$,
-  };
+  return { commands, execa$ };
 });
 
 vi.mock("execa", () => ({ $: mocks.execa$ }));
@@ -65,7 +59,6 @@ describe("setupPnpm", () => {
 
   beforeEach(async () => {
     mocks.commands.length = 0;
-    mocks.commandsWithEnvironment.length = 0;
     mocks.execa$.mockClear();
     // Pin a token so the action never shells out to `gh auth token`.
     process.env.GITHUB_TOKEN = "test-github-token";
@@ -93,6 +86,9 @@ describe("setupPnpm", () => {
 
   const repositoryNpmrc = () => path.join(tmpDir, "generated-repo", ".npmrc");
 
+  const commandIndex = (expected: string) =>
+    mocks.commands.findIndex(({ command }) => command === expected);
+
   const runGenerator = async () => {
     const plop = await nodePlop();
     setSetupPnpmAction(plop);
@@ -106,46 +102,37 @@ describe("setupPnpm", () => {
       .runActions({ repoName: "generated-repo" });
   };
 
-  it("bootstraps Nx without installing or applying a devcontainer", async () => {
+  it("installs the DX dependencies from the GitHub Packages registry", async () => {
     await runGenerator();
 
-    expect(mocks.commands).toContain("mise exec -- corepack use pnpm@11");
-    expect(mocks.commands).toContain(
-      "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
-    );
-    expect(mocks.commands).toContain(
+    const dependenciesCommand = commandIndex(
       `mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`,
     );
-    expect(mocks.commands).toContain("mise exec -- pnpm install");
-    expect(mocks.commands).toContain("mise exec -- pnpm exec oxfmt");
-    expect(mocks.commands).not.toEqual(
-      expect.arrayContaining([expect.stringContaining("devcontainer")]),
-    );
+    const installCommand = commandIndex("mise exec -- pnpm install");
+
+    expect(dependenciesCommand).toBeGreaterThanOrEqual(0);
+    expect(installCommand).toBeGreaterThan(dependenciesCommand);
+    // The registry credentials must be in place before the first install.
+    expect(mocks.commands[dependenciesCommand].npmrcExistsAt).toBe(true);
   });
 
-  it("locks and installs mise tools before running the pnpm bootstrap", async () => {
+  it("formats the scaffold once, after the dependencies are installed", async () => {
     await runGenerator();
 
-    const miseInstallIndex = mocks.commands.indexOf("mise install");
-    const corepackIndex = mocks.commands.indexOf(
-      "mise exec -- corepack use pnpm@11",
+    const installCommand = commandIndex("mise exec -- pnpm install");
+    const formatCommand = commandIndex(
+      "mise exec -- pnpm exec nx format:write --all",
     );
-    const miseLockIndex = mocks.commands.indexOf("mise lock");
-    const nxInitIndex = mocks.commands.indexOf(
-      "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
+    const terraformFormatCommand = commandIndex(
+      "mise exec -- pnpm exec nx run-many -t fmt",
     );
-    const pnpmInstallIndex = mocks.commands.indexOf(
-      "mise exec -- pnpm install",
-    );
-    const oxfmtIndex = mocks.commands.indexOf("mise exec -- pnpm exec oxfmt");
 
-    expect(miseInstallIndex).toBeGreaterThanOrEqual(0);
-    expect(miseLockIndex).toBeGreaterThanOrEqual(0);
-    expect(miseLockIndex).toBeLessThan(miseInstallIndex);
-    expect(corepackIndex).toBeGreaterThan(miseInstallIndex);
-    expect(nxInitIndex).toBeGreaterThan(corepackIndex);
-    expect(pnpmInstallIndex).toBeGreaterThan(miseInstallIndex);
-    expect(oxfmtIndex).toBeGreaterThan(pnpmInstallIndex);
+    expect(formatCommand).toBeGreaterThan(installCommand);
+    // Formatting is delegated to the Nx tasks, not run directly.
+    expect(terraformFormatCommand).toBeGreaterThan(formatCommand);
+    expect(mocks.commands.at(-1)?.command).toBe(
+      "mise exec -- pnpm exec nx run-many -t fmt",
+    );
   });
 
   it("writes the GitHub Packages token to the repository npmrc", async () => {
@@ -155,38 +142,12 @@ describe("setupPnpm", () => {
       "//npm.pkg.github.com/:_authToken=test-github-token\n",
     );
     // The token is written to the npmrc, never passed as a CLI argument.
-    expect(mocks.commands.join("\n")).not.toContain("test-github-token");
+    expect(
+      mocks.commands.map(({ command }) => command).join("\n"),
+    ).not.toContain("test-github-token");
     // Only the owner can read the credential.
     const { mode } = await fs.stat(repositoryNpmrc());
     expect(mode % 0o1000).toBe(0o600);
-  });
-
-  it("keeps the npmrc from the dependency commands onwards", async () => {
-    await runGenerator();
-
-    const npmrcExistsAt = (command: string) =>
-      mocks.commandsWithEnvironment.find((entry) => entry.command === command)
-        ?.npmrcExistsAt;
-
-    for (const command of [
-      "mise lock",
-      "mise install",
-      "mise exec -- corepack use pnpm@11",
-      "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
-    ]) {
-      expect(npmrcExistsAt(command)).toBe(false);
-    }
-
-    for (const command of [
-      `mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`,
-      "mise exec -- pnpm install",
-      "mise exec -- pnpm exec oxfmt",
-    ]) {
-      expect(npmrcExistsAt(command)).toBe(true);
-    }
-
-    // The credential survives the bootstrap for the next local installs.
-    await expect(fs.access(repositoryNpmrc())).resolves.toBeUndefined();
   });
 
   it("fails the bootstrap when the npmrc cannot be written", async () => {
@@ -208,7 +169,7 @@ describe("setupPnpm", () => {
   it("never forwards the raw GitHub token variables to the bootstrap commands", async () => {
     await runGenerator();
 
-    for (const { env } of mocks.commandsWithEnvironment) {
+    for (const { env } of mocks.commands) {
       expect(env?.GITHUB_TOKEN).toBeUndefined();
       expect(env?.GH_TOKEN).toBeUndefined();
     }

@@ -3,6 +3,10 @@
  * the CLI reads and edits the file with the same parser it uses, preserving
  * comments and formatting on updates.
  *
+ * `@nx/devkit` is deliberately not used here: `readNxJson`/`updateNxJson`
+ * serialize the whole object with `JSON.stringify`, which would silently drop
+ * the comments of the repository `nx.json`.
+ *
  * Shared by the `doctor` command and the environment synchronizer.
  */
 import {

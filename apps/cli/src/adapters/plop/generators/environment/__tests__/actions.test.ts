@@ -116,6 +116,9 @@ describe("actions", () => {
       actionsOrder.unshift("setupCloudTools");
     }
 
+    // The formatting pass always runs last, once every file is on disk.
+    actionsOrder.push("formatGeneratedCode");
+
     const actions = getActions("/templates/path")(payload);
 
     const actionTypes = actions
