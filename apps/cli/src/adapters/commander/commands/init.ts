@@ -324,6 +324,7 @@ const createRemoteRepositoryWithPresenter =
   }: MonorepoPayload): ResultAsync<Repository, Error> => {
     const logger = getLogger(["dx-cli", "init"]);
     const repo$ = tf$({ cwd: path.resolve("infra", "repository") });
+    const workspace$ = $({});
     const runTerraformRepositoryCreationStep = async (
       step: TerraformRepositoryCreationStep,
       executeStep: () => Promise<unknown>,
@@ -338,7 +339,13 @@ const createRemoteRepositoryWithPresenter =
     };
 
     const applyTerraform = async () => {
-      const initializeRepositoryTerraform = () => repo$`terraform init`;
+      // `terraform init` would lock the providers of the current platform
+      // only, while the validation workflow initializes the same project with
+      // a frozen lockfile: the Nx `init` target locks every platform the
+      // repository declares and refreshes `tfmodules.lock.json`, so both lock
+      // files are part of the scaffold commit.
+      const initializeRepositoryTerraform = () =>
+        workspace$`mise exec -- pnpm exec nx run-many -t init`;
       const applyRepositoryTerraform = () =>
         repo$`terraform apply -auto-approve`;
 

@@ -119,6 +119,10 @@ describe("actions", () => {
     // The formatting pass always runs last, once every file is on disk.
     actionsOrder.push("formatGeneratedCode");
 
+    // The generated Terraform projects are initialized once every file is on
+    // disk, so the provider and module locks land in the same commit.
+    actionsOrder.push("initTerraformProjects");
+
     const actions = getActions("/templates/path")(payload);
 
     const actionTypes = actions

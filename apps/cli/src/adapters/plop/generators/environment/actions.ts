@@ -118,6 +118,12 @@ export default function getActions(
       type: "formatGeneratedCode",
     });
 
+    // The generated Terraform projects are initialized once every file is on
+    // disk, so the provider and module locks are part of the same commit.
+    actions.push({
+      type: "initTerraformProjects",
+    });
+
     return actions;
   };
 }

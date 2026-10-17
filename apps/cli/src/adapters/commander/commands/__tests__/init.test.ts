@@ -31,6 +31,7 @@ const mocks = vi.hoisted(() => {
   return {
     collectMonorepoPayload: vi.fn(),
     createCommandPresenter: vi.fn(() => presenter),
+    execa$: vi.fn(() => () => Promise.resolve({ stdout: "" })),
     getPlopInstance: vi.fn(),
     presenter,
     reportError,
@@ -53,6 +54,11 @@ vi.mock("inquirer");
 vi.mock("ora", () => ({
   oraPromise: <T>(promise: Promise<T>) => promise,
 }));
+vi.mock("execa", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("execa")>();
+
+  return { ...actual, $: mocks.execa$ };
+});
 vi.mock("../../../plop/index.js", () => ({
   collectMonorepoPayload: mocks.collectMonorepoPayload,
   getPlopInstance: mocks.getPlopInstance,

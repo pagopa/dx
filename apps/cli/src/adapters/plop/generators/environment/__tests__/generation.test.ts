@@ -63,6 +63,13 @@ const registerEnvironmentSetup = (
     "formatGeneratedCode",
     async () => "Generated files formatted",
   );
+  // The Terraform initialization shells out to the repository Nx tasks too:
+  // it is covered by its own test, and stubbed here to keep the generation
+  // offline.
+  plop.setActionType(
+    "initTerraformProjects",
+    async () => "Generated Terraform projects initialized",
+  );
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
