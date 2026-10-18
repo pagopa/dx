@@ -116,6 +116,38 @@ describe("setupPnpm", () => {
     expect(mocks.commands[dependenciesCommand].npmrcExistsAt).toBe(true);
   });
 
+  it("trusts the config and pins pnpm before locking and installing mise tools", async () => {
+    await runGenerator();
+
+    const trustCommand = commandIndex("mise trust");
+    const corepackCommand = commandIndex("mise exec -- corepack use pnpm@11");
+    const lockCommand = commandIndex("mise lock");
+    const installCommand = commandIndex("mise install");
+    const nxInitCommand = commandIndex(
+      "mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot",
+    );
+
+    // `mise lock` refuses untrusted configs, so trust must come first.
+    expect(trustCommand).toBeGreaterThanOrEqual(0);
+    expect(corepackCommand).toBeGreaterThan(trustCommand);
+    // pnpm is resolved from the package.json `packageManager` pinned by
+    // Corepack, so it must be pinned before the lockfile is written.
+    expect(lockCommand).toBeGreaterThan(corepackCommand);
+    expect(installCommand).toBeGreaterThan(lockCommand);
+    expect(nxInitCommand).toBeGreaterThan(installCommand);
+
+    // The whole mise bootstrap runs before the registry credentials exist.
+    for (const index of [
+      trustCommand,
+      corepackCommand,
+      lockCommand,
+      installCommand,
+      nxInitCommand,
+    ]) {
+      expect(mocks.commands[index].npmrcExistsAt).toBe(false);
+    }
+  });
+
   it("formats the scaffold once, after the dependencies are installed", async () => {
     await runGenerator();
 

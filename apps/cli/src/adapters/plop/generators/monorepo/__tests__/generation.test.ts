@@ -56,12 +56,15 @@ const registerMiseToolchainConfigurationTest = (
     expect(miseConfig).toContain('tflint = "0.63"');
     expect(miseConfig).toContain('trivy = "0.74"');
     expect(miseConfig).toContain(
-      'idiomatic_version_file_enable_tools = ["node", "terraform"]',
+      'idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]',
     );
     expect(miseConfig).toContain(
       'TFLINT_PLUGIN_DIR = "{{config_root}}/.tflint.d/plugins"',
     );
     expect(miseConfig).toContain('run = "tflint --init"');
+    expect(miseConfig).toContain(
+      'minimum_release_age_excludes = ["copilot", "github-cli"]',
+    );
     for (const removedTool of [
       "acli",
       "act",
@@ -82,7 +85,6 @@ const registerMiseToolchainConfigurationTest = (
       expect(miseConfig).not.toMatch(new RegExp(`^${removedTool}\\s*=`, "m"));
     }
     expect(miseConfig).not.toContain("postinstall");
-    expect(miseConfig).not.toContain("minimum_release_age_excludes");
   });
 };
 

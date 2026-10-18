@@ -82,9 +82,16 @@ export default function (plop: NodePlopAPI) {
 
     // mise, Corepack and Nx only reach public registries: they run before the
     // token-bearing npmrc exists.
+
+    // A freshly generated mise.toml is new to mise's trust store, and `mise
+    // lock` (unlike `mise install`/`mise exec`) refuses to load an untrusted
+    // config.
+    await $`mise trust`;
+    // Pin pnpm in package.json before locking so mise resolves it through the
+    // idiomatic version file and records it in mise.lock.
+    await $`mise exec -- corepack use pnpm@11`;
     await $`mise lock`;
     await $`mise install`;
-    await $`mise exec -- corepack use pnpm@11`;
     await $`mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot`;
 
     // GitHub Packages is reached only by the dependency commands: the token is
