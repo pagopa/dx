@@ -12,7 +12,10 @@ discovered in [persistence.md](./persistence.md):
 | Task  | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID, `open.item-XX` for a spike, or the semantic error identifier for error handling; dependency and verification evidence |
 
 Descriptions may summarize source behavior, but the DR/SRS and Use Case remain
-authoritative. Always include links to the source documents and stable IDs in a
+authoritative. Use meaningful source titles/keys in prose and link labels, not
+opaque source codes alone. Attribute decisions to evidenced owners rather than
+an inferred team; describe the work, not the agent's conversation or procedure.
+Always include links to the source documents and stable IDs in a
 machine-readable line, for example:
 
 ```text

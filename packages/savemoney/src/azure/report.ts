@@ -12,7 +12,7 @@ import type {
 
 // Fixed column widths — keeps the Reason column within a readable width
 // while allowing cli-table3 to word-wrap long content across multiple lines.
-const COL_WIDTHS = [30, 35, 25, 8, 55] as const;
+const COL_WIDTHS = [30, 35, 25, 8, 55, 14] as const;
 
 // ANSI color codes — only applied when stdout is a TTY to avoid cluttering redirected output
 const isTTY = process.stdout.isTTY ?? false;
@@ -71,33 +71,15 @@ export async function generateReport(
   }
 
   if (format === "json") {
-    const summaryReport: AzureResourceReport[] = report.map((r) => ({
-      costRisk: r.analysis.costRisk,
-      location: r.resource.location ?? "",
-      name: r.resource.name ?? "unknown",
-      reason: r.analysis.reason,
-      resourceGroup: r.resource.id?.split("/")[4],
-      subscriptionId: r.resource.id?.split("/")[2] ?? "unknown",
-      suspectedUnused: r.analysis.suspectedUnused,
-      type: r.resource.type ?? "unknown",
-    }));
+    const summaryReport = report.map(toResourceReport);
     console.log(JSON.stringify(summaryReport, null, 2));
   } else if (format === "lint") {
     generateLintReport(report);
   } else {
-    const summaryReport: AzureResourceReport[] = report.map((r) => ({
-      costRisk: r.analysis.costRisk,
-      location: r.resource.location ?? "",
-      name: r.resource.name ?? "unknown",
-      reason: r.analysis.reason,
-      resourceGroup: r.resource.id?.split("/")[4],
-      subscriptionId: r.resource.id?.split("/")[2] ?? "unknown",
-      suspectedUnused: r.analysis.suspectedUnused,
-      type: r.resource.type ?? "unknown",
-    }));
+    const summaryReport = report.map(toResourceReport);
     const table = new Table({
       colWidths: [...COL_WIDTHS],
-      head: ["Name", "Type", "Resource Group", "Risk", "Reason"],
+      head: ["Name", "Type", "Resource Group", "Risk", "Reason", "Savings"],
       wordWrap: true,
     });
     for (const r of summaryReport) {
@@ -107,6 +89,12 @@ export async function generateReport(
         r.resourceGroup || "N/A",
         r.costRisk,
         r.reason,
+        r.estimatedMonthlySavings
+          ? formatAmount(
+              r.estimatedMonthlySavings.amount,
+              r.estimatedMonthlySavings.currency,
+            )
+          : "",
       ]);
     }
     console.log(table.toString());
@@ -302,6 +290,18 @@ function generateLintReport(report: AzureDetailedResourceReport[]): void {
 }
 
 /**
+ * Prints per-currency totals joined with " + " so they read as one cumulative
+ * amount split only by billing currency (never converted).
+ */
+function printAmounts(label: string, byCurrency: Map<string, number>): void {
+  if (byCurrency.size === 0) return;
+  const parts = [...byCurrency.entries()].map(
+    ([currency, amount]) => `${GREEN}${formatAmount(amount, currency)}${RESET}`,
+  );
+  console.log(`${BOLD}${label}:${RESET} ${parts.join(" + ")}`);
+}
+
+/**
  * Prints the shared trailer (issues, sources, estimated savings) used by
  * both the lint and the table format.
  *
@@ -331,25 +331,25 @@ function printSummary(summary: Summary): void {
     console.log(`${BOLD}Sources:${RESET} ${sourceBreakdown}`);
   }
 
-  if (costAtRiskByCurrency.size > 0) {
-    const parts = [...costAtRiskByCurrency.entries()].map(
-      ([currency, amount]) =>
-        `${GREEN}${formatAmount(amount, currency)}${RESET}`,
-    );
-    console.log(
-      `${BOLD}Estimated monthly cost at risk (custom):${RESET} ${parts.join(", ")}`,
-    );
-  }
+  printAmounts("Estimated monthly cost at risk (custom)", costAtRiskByCurrency);
+  printAmounts("Estimated monthly savings (advisor)", savingsByCurrency);
+}
 
-  if (savingsByCurrency.size > 0) {
-    const parts = [...savingsByCurrency.entries()].map(
-      ([currency, amount]) =>
-        `${GREEN}${formatAmount(amount, currency)}${RESET}`,
-    );
-    console.log(
-      `${BOLD}Estimated monthly savings (advisor):${RESET} ${parts.join(", ")}`,
-    );
+/**
+ * Custom cost at risk when present, otherwise the sum of the resource's
+ * per-finding (Advisor) savings in the first finding's currency.
+ */
+function resourceSavings(r: AzureDetailedResourceReport): Money | undefined {
+  const [first, ...rest] = (r.findings ?? []).flatMap(
+    (f) => f.estimatedMonthlySavings ?? [],
+  );
+  if (r.analysis.estimatedMonthlySavings || !first) {
+    return r.analysis.estimatedMonthlySavings;
   }
+  const amount = rest
+    .filter((m) => m.currency === first.currency)
+    .reduce((sum, m) => sum + m.amount, first.amount);
+  return { amount, currency: first.currency };
 }
 
 /**
@@ -362,4 +362,18 @@ function splitReasons(reason: string): string[] {
     .map((s) => s.trim())
     .filter((s) => s.length > 0)
     .map((s) => (s.endsWith(".") ? s : `${s}.`));
+}
+
+function toResourceReport(r: AzureDetailedResourceReport): AzureResourceReport {
+  return {
+    costRisk: r.analysis.costRisk,
+    estimatedMonthlySavings: resourceSavings(r),
+    location: r.resource.location ?? "",
+    name: r.resource.name ?? "unknown",
+    reason: r.analysis.reason,
+    resourceGroup: r.resource.id?.split("/")[4],
+    subscriptionId: r.resource.id?.split("/")[2] ?? "unknown",
+    suspectedUnused: r.analysis.suspectedUnused,
+    type: r.resource.type ?? "unknown",
+  };
 }

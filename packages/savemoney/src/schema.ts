@@ -37,7 +37,7 @@ const AppServiceThresholdsSchema = z
     cpuPercent: z.number().default(5),
     /** Memory threshold (%) below which usage is flagged as very low. Default: 10 */
     memoryPercent: z.number().default(10),
-    /** CPU threshold (%) for Premium-tier plans below which over-provisioning is flagged. Default: 10 */
+    /** @deprecated Ignored; kept so existing strict configs still parse. Default: 10 */
     premiumCpuPercent: z.number().default(10),
   })
   .strict();

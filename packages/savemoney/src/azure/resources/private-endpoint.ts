@@ -63,23 +63,22 @@ export async function analyzePrivateEndpoint(
       privateEndpointDetails,
     );
 
-    // Check if Private Endpoint has no private link service connection
-    if (
-      !privateEndpointDetails.privateLinkServiceConnections ||
-      privateEndpointDetails.privateLinkServiceConnections.length === 0
-    ) {
+    // Automatic and manual (approval-based) private link connections are both valid
+    const connections = [
+      ...(privateEndpointDetails.privateLinkServiceConnections ?? []),
+      ...(privateEndpointDetails.manualPrivateLinkServiceConnections ?? []),
+    ];
+
+    if (connections.length === 0) {
       reason +=
         "Private Endpoint has no private link service connections configured. ";
     }
 
-    // Check connection state
-    const hasFailedConnection =
-      privateEndpointDetails.privateLinkServiceConnections?.some(
-        (connection) =>
-          connection.privateLinkServiceConnectionState?.status === "Rejected" ||
-          connection.privateLinkServiceConnectionState?.status ===
-            "Disconnected",
-      );
+    const hasFailedConnection = connections.some(
+      (connection) =>
+        connection.privateLinkServiceConnectionState?.status === "Rejected" ||
+        connection.privateLinkServiceConnectionState?.status === "Disconnected",
+    );
 
     if (hasFailedConnection) {
       reason += "Private Endpoint has rejected or disconnected connections. ";

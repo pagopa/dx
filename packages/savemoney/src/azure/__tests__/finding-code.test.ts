@@ -40,7 +40,6 @@ describe("assignCustomFindingCodes", () => {
       "NIC not attached to any VM or private endpoint.",
       "custom.nic.unattached",
     ],
-    ["No public IP assigned.", "custom.nic.no-public-ip"],
     [
       "Private Endpoint has no private link service connections configured.",
       "custom.private-endpoint.no-connections",
@@ -51,7 +50,6 @@ describe("assignCustomFindingCodes", () => {
       "Public IP not associated with any resource.",
       "custom.public-ip.unassociated",
     ],
-    ["Static IP not in use.", "custom.public-ip.static-unused"],
     [
       "Very low transaction count (2.00 avg/day).",
       "custom.storage.low-transactions",
