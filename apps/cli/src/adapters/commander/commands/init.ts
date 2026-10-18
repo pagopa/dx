@@ -18,6 +18,7 @@ import {
   Repository,
 } from "../../../domain/github.js";
 import { tf$ } from "../../execa/terraform.js";
+import { assertGitHubPackagesAccess } from "../../github/packages.js";
 import {
   initTerraformProjects,
   REPOSITORY_PROJECT,
@@ -166,6 +167,33 @@ const trackMiseIsInstalled = (presenter: CommandPresenter) =>
     ),
   );
 
+/**
+ * Verifies the GitHub credentials can read the DX packages from GitHub Packages.
+ *
+ * The probe fails with its own actionable message (the `read:packages` scope is
+ * a prerequisite), so the mapper only guards against non-Error rejections.
+ */
+const mapGitHubPackagesError = (cause: unknown): Error =>
+  cause instanceof Error
+    ? cause
+    : new Error(
+        "Failed to verify access to the DX packages on GitHub Packages.",
+        { cause },
+      );
+
+/**
+ * Probes GitHub Packages before the scaffold is generated: without the
+ * `read:packages` scope the bootstrap would only fail after the workspace has
+ * already been scaffolded.
+ */
+const trackGitHubPackagesAccess = (presenter: CommandPresenter) =>
+  trackStep(
+    presenter,
+    "Checking GitHub Packages access...",
+    assertGitHubPackagesAccess,
+    mapGitHubPackagesError,
+  );
+
 const azureAccountSchema = z.object({
   user: z.object({
     name: z.string().min(1),
@@ -225,9 +253,9 @@ const trackAzLogin = (presenter: CommandPresenter) =>
 
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
 export const runInitPreconditions = (presenter: CommandPresenter) =>
-  trackTerraformCliIsInstalled(presenter).andThen(() =>
-    trackMiseIsInstalled(presenter),
-  );
+  trackGitHubPackagesAccess(presenter)
+    .andThen(() => trackTerraformCliIsInstalled(presenter))
+    .andThen(() => trackMiseIsInstalled(presenter));
 
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
 export const runAddEnvironmentPreconditions = (presenter: CommandPresenter) =>

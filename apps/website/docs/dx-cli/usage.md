@@ -15,6 +15,10 @@ Bootstrap a new project following DevEx conventions.
 - The monorepository, both locally and remotely on GitHub.com, with dotfiles and
   a locked mise toolchain configuration.
 
+Before generating anything, the command checks that Terraform and mise are
+installed and that the GitHub token can read the DX packages from GitHub
+Packages (see [Installation](./requirements.md)).
+
 ### Prompt Reference
 
 The `init` command is interactive. The tables below explain what each prompt

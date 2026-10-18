@@ -31,6 +31,7 @@ const mocks = vi.hoisted(() => {
   };
 
   return {
+    assertGitHubPackagesAccess: vi.fn(),
     collectMonorepoPayload: vi.fn(),
     createCommandPresenter: vi.fn(() => presenter),
     execa$: vi.fn(),
@@ -56,6 +57,9 @@ vi.mock("../../../plop/index.js", () => ({
   runMonorepoActions: mocks.runMonorepoActions,
 }));
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
+vi.mock("../../../github/packages.js", () => ({
+  assertGitHubPackagesAccess: mocks.assertGitHubPackagesAccess,
+}));
 vi.mock("../../presenters/index.js", () => ({
   createCommandPresenter: mocks.createCommandPresenter,
   resolveOutputMode: mocks.resolveOutputMode,

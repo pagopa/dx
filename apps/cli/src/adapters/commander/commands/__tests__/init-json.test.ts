@@ -13,6 +13,7 @@ import type { GitHubService } from "../../../../domain/github.js";
 import type { Payload as MonorepoPayload } from "../../../plop/generators/monorepo/index.js";
 
 const mocks = vi.hoisted(() => ({
+  assertGitHubPackagesAccess: vi.fn(),
   collectMonorepoPayload: vi.fn(),
   execa$: vi.fn(() => () => Promise.resolve({ stdout: "" })),
   getPlopInstance: vi.fn(),
@@ -35,6 +36,9 @@ vi.mock("../../../plop/index.js", () => ({
   runMonorepoActions: mocks.runMonorepoActions,
 }));
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
+vi.mock("../../../github/packages.js", () => ({
+  assertGitHubPackagesAccess: mocks.assertGitHubPackagesAccess,
+}));
 
 import { makeInitCommand } from "../init.js";
 
@@ -103,6 +107,16 @@ describe("init command json output", () => {
     await program.parseAsync(["node", "dx", "--output", "json", "init"]);
 
     expect(parseNdjson(stderr.written)).toEqual([
+      {
+        name: "Checking GitHub Packages access...",
+        status: "start",
+        type: "step",
+      },
+      {
+        name: "Checking GitHub Packages access...",
+        status: "success",
+        type: "step",
+      },
       {
         name: "Checking Terraform installation...",
         status: "start",

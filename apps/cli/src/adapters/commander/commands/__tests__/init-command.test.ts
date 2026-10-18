@@ -14,12 +14,14 @@ import type { GitHubService } from "../../../../domain/github.js";
 import type { Payload as MonorepoPayload } from "../../../plop/generators/monorepo/index.js";
 
 const {
+  assertGitHubPackagesAccess,
   collectMonorepoPayload,
   execaMock,
   getPlopInstance,
   runMonorepoActions,
   tfMock,
 } = vi.hoisted(() => ({
+  assertGitHubPackagesAccess: vi.fn(),
   collectMonorepoPayload: vi.fn(),
   execaMock: vi.fn(),
   getPlopInstance: vi.fn(),
@@ -39,6 +41,9 @@ vi.mock("execa", async (importOriginal) => {
 
 vi.mock("../../../execa/terraform.js", () => ({
   tf$: tfMock,
+}));
+vi.mock("../../../github/packages.js", () => ({
+  assertGitHubPackagesAccess,
 }));
 vi.mock("../../../plop/index.js", () => ({
   collectMonorepoPayload,
