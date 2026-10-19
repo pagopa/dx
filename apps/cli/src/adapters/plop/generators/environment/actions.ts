@@ -6,7 +6,6 @@ import {
   type Environment,
   getBaseEnvironmentName,
 } from "../../../../domain/environment.js";
-import { formatTerraformCode } from "../../../terraform/fmt.js";
 import { terraformStateKey } from "../../helpers/terraform-state-key.js";
 import { type Payload, payloadSchema } from "./prompts.js";
 
@@ -38,7 +37,6 @@ const addModule = (
       force: true,
       globOptions: { cwd: templatesPath, dot: true },
       templateFiles: path.join(templatesPath, name),
-      transform: formatTerraformCode,
       type: "addMany",
       verbose: true,
     },
@@ -53,7 +51,6 @@ const addModule = (
       force: true,
       globOptions: { cwd: path.join(templatesPath, "shared"), dot: true },
       templateFiles: path.join(templatesPath, "shared"),
-      transform: formatTerraformCode,
       type: "addMany",
       verbose: true,
     },
@@ -113,6 +110,9 @@ export default function getActions(
         type: "getTerraformBackend",
       },
       {
+        type: "syncNxAdditionalEnvironments",
+      },
+      {
         type: "syncRepositoryEnvironments",
       },
       // Bootstrap Azure resources can pre-exist, but OIDC credentials and
@@ -140,6 +140,20 @@ export default function getActions(
       );
       actions.push(...addEnvironmentModule("core"));
     }
+
+    // The generated files are formatted in a single pass, once every file is
+    // on disk.
+    actions.push({
+      type: "formatGeneratedCode",
+    });
+
+    // The Terraform projects of the generated environment are initialized once
+    // every file is on disk, so the provider and module locks are part of the
+    // same commit. The action reads the environment name from the payload, so
+    // no other environment of the repository is initialized.
+    actions.push({
+      type: "initTerraformProjects",
+    });
 
     return actions;
   };

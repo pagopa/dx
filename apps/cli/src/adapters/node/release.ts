@@ -10,7 +10,9 @@ const nodeReleaseSchema = z.object({
 
 type NodeRelease = z.infer<typeof nodeReleaseSchema>;
 
-export async function getLatestByCodename(codename: "Jod"): Promise<SemVer> {
+export async function getLatestByCodename(
+  codename: "Krypton",
+): Promise<SemVer> {
   const releases = await nodeReleases();
   for (const release of releases) {
     if (release.lts === codename) {

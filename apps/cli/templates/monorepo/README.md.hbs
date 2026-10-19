@@ -21,11 +21,30 @@ mise install
 
 3. Install dependencies using `pnpm`
 
+DX packages are served by GitHub Packages and are installed through pnpm's
+built-in `gh:` alias, so the rest of the dependencies keep resolving from the
+default registry. Your GitHub token must include the `read:packages` scope. If
+you use the GitHub CLI, add it with:
+
+```bash
+gh auth refresh --scopes read:packages
+```
+
+`dx init` wrote the credential to a local, git-ignored `.npmrc`. On a fresh
+clone, recreate it with:
+
+```bash
+install -m 600 /dev/null .npmrc && printf '//npm.pkg.github.com/:_authToken=%s\n' "$(gh auth token)" > .npmrc
+```
+
+Then install the dependencies:
+
 ```bash
 pnpm install
 ```
 
 4. Build all the workspaces contained by this repo
+
 ```bash
 pnpm nx run-many -t build
 ```
@@ -112,7 +131,7 @@ pnpm nx release plan
 
 - When opening a Pull Request with a change intended to be published, add a version plan file that describes the change and the version bump type (patch, minor, major) for each involved app or package.
 - Once the Pull Request is merged, a new Pull Request named `Version Packages` will be automatically opened with all the release changes such as version bumping for each involved app or package and changelog update; if an open `Version Packages` PR already exists, it will be updated and the package versions calculated accordingly.
-Only apps and packages mentioned in the version plan files will be bumped.
+  Only apps and packages mentioned in the version plan files will be bumped.
 - Review the `Version Packages` PR and merge it when ready. Version plan files will be deleted.
 - A Release entry is created for each app or package whose version has been bumped.
 
@@ -135,6 +154,23 @@ terraform init
 terraform plan
 terraform apply
 ```
+
 ### Workflow automation
 
-The workflow `infra_plan.yaml` is executed on every PR that edits the `infra/resources` folder or the workflow definition itself. It executes a `terraform plan` and comments the PR with the result. If the plan fails, the workflow fails.
+The workflow `validate.yaml` runs the DX Code Review on every Pull Request and
+delegates to the reusable
+[`validate-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v2.yaml)
+workflow. It formats, lints, scans and plans every Nx project affected by the
+change; Terraform plans run under the `infra-<env>-ci` GitHub environment
+(or `bootstrapper-<env>-ci` for bootstrapper projects) and the result is
+published as a comment on the Pull Request. The workflow fails when a plan
+fails.
+
+Terraform roots under `infra/` are Nx projects inferred by
+`@pagopa/nx-terraform`, which provides the `fmt`, `validate`, `trivy`, `docs`,
+`plan` and `apply` targets. Shared Terraform modules live in `_modules`
+directories (for example `infra/bootstrapper/_modules`): changes there mark
+every project in the same area as affected.
+
+Projects that contain a `Dockerfile` are inferred by `@pagopa/nx-docker`,
+which provides the `docker:build`, `docker:push` and `docker:run` targets.

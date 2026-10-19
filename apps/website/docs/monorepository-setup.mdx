@@ -217,6 +217,11 @@ Commit and push to GitHub the working changes.
 After the command completes successfully, work through the following steps in
 order before merging the generated Pull Request.
 
+The generated repository includes the DX Code Review workflow
+(`.github/workflows/validate.yaml`): every Pull Request is formatted, scanned
+with Trivy and planned for the affected environments, and the plan is
+published as a comment on the Pull Request.
+
 ### Step 1 — Migrate `infra/repository` Terraform state to remote storage
 
 The `@pagopa/dx-cli` command initializes the Terraform state for
@@ -249,10 +254,13 @@ please coordinate with them before merging the generated Pull Request.
 
 :::
 
-:::info[Automation under development]
+:::info[Bootstrapper apply workflow]
 
-We are currently developing a pipeline that will automate the step 2,
-eliminating the need for this manual step.
+The generated `_release-terraform-apply-bootstrapper-<env>.yaml` workflow can
+apply the bootstrapper for you: run it with **workflow_dispatch** from the
+default branch, or let the push to `main` that merges the environment files
+trigger it. The job runs under the `bootstrapper-<env>-cd` GitHub environment,
+so its approval rules (and the EL role) still apply.
 
 :::
 

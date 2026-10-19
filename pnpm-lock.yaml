@@ -393,6 +393,8 @@ importers:
 
   actions/sanitize-terraform-plan: {}
 
+  actions/setup-npm-registry: {}
+
   actions/setup-telemetry:
     dependencies:
       '@azure/monitor-opentelemetry-exporter':
@@ -605,6 +607,9 @@ importers:
       inquirer:
         specifier: ^9.3.8
         version: 9.3.8(@types/node@22.20.5)
+      jsonc-parser:
+        specifier: ^3.3.1
+        version: 3.3.1
       libsodium-wrappers:
         specifier: ^0.8.4
         version: 0.8.4
@@ -663,6 +668,9 @@ importers:
       memfs:
         specifier: ^4.68.0
         version: 4.68.0
+      oxfmt:
+        specifier: ^0.71.0
+        version: 0.71.0
       plop:
         specifier: 'catalog:'
         version: 4.0.5(@types/node@22.20.5)

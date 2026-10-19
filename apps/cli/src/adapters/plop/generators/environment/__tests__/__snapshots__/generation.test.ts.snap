@@ -22,7 +22,7 @@ jobs:
     name: Release Bootstrapper (dev)
     secrets: inherit
     with:
-      environment: 'dev'
+      environment: "dev"
 ",
   "infra/bootstrapper/dev/backend.tf": "
 terraform {
