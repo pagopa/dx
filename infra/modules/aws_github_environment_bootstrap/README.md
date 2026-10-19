@@ -94,9 +94,7 @@ secrets with `environment.prefix`; for example, `prefix = "ced"` and
 `env_short = "p"` produce `infra-ced-prod-ci` and `infra-ced-prod-cd`. The flag
 defaults to `false`, preserving the existing `env_short` mapping
 (`d`/`u`/`p` to `dev`/`uat`/`prod`). It does not change AWS resource names or the
-repository-scoped OIDC trust policy. For existing repositories, stage the new
-GitHub environments and secrets before switching workflows, then retire the
-legacy environments only after the new workflow is verified.
+repository-scoped OIDC trust policy.
 
 #### `repository`
 

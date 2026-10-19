@@ -84,12 +84,6 @@ resource and identity names remain governed by the existing naming inputs. The
 flag is available from module version 6.3.0; consumers that enable it must use
 a module constraint with a 6.3.0 or later lower bound.
 
-For existing repositories, stage the new GitHub environments, protections, and
-secrets before switching workflows. Azure requires unique federated credential
-issuer/subject pairs: adopt credentials at their existing Terraform addresses
-instead of creating duplicates, and retire legacy credentials only after the
-new workflow is verified.
-
 ## Using with Core Values Exporter
 
 Many input values for this module can be automatically retrieved using the companion module [`pagopa-dx/azure-core-values-exporter/azurerm`](https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/latest). This module reads core infrastructure values from a shared Terraform state, eliminating the need to hardcode or manually look up resource IDs.
