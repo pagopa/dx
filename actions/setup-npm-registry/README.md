@@ -2,30 +2,22 @@
 
 This GitHub Action authenticates npm and pnpm to the GitHub Packages registry that hosts DX packages, so that dependencies referenced with pnpm's `gh:` alias (for example `gh:pagopa/dx/...`) can be installed.
 
-It writes the registry credential to a dedicated npmrc, under `runner.temp`, as a `${NODE_AUTH_TOKEN}` placeholder: the value is expanded by npm and pnpm at install time, so no secret is ever written to disk.
-
-The file is deliberately **not** the user-level `$HOME/.npmrc`. Every npm and pnpm invocation of a job loads the user-level npmrc, so a placeholder left there makes each later step that does not export `NODE_AUTH_TOKEN` print `Failed to replace env in config: ${NODE_AUTH_TOKEN}`. The action exposes the npmrc location as an output instead, and consumers point `NPM_CONFIG_USERCONFIG` at it only on the steps that need the credential.
+It writes the credential to a private npmrc under `runner.temp` and exports `NPM_CONFIG_USERCONFIG` for the rest of the job, so consumers only configure one variable: the token.
 
 ## Features
 
 - Configures GitHub Packages authentication with a single step, without duplicating npmrc bootstrap scripts across jobs.
-- Never persists the token: only a placeholder is stored on disk.
-- Keeps the placeholder scoped to the steps that consume it, so unrelated npm and pnpm invocations in the same job stay quiet.
+- Expands the token at write time, so the file never contains a `${VAR}` placeholder. A placeholder is re-evaluated by every npm and pnpm invocation that loads the npmrc, and any step that cannot see the variable prints `Failed to replace env in config: ${...}`.
+- Keeps the credential out of `$HOME/.npmrc` and out of the repository: the file lives in `$RUNNER_TEMP`, which the runner wipes at the start of every job.
 - Idempotent, so it can safely run more than once in the same job.
 
 ## Inputs
 
-None.
-
-## Outputs
-
-| Output       | Description                                                                                                                    |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| `npmrc-path` | Path of the npmrc that holds the credential. Pass it as `NPM_CONFIG_USERCONFIG` to the steps that install or publish packages. |
+| Input   | Required | Description                                                                         |
+| ------- | -------- | ----------------------------------------------------------------------------------- |
+| `token` | yes      | Token with `packages:read` on GitHub Packages, or `packages:write` when publishing. |
 
 ## Usage
-
-The action only configures the registry. The steps that install dependencies must expose the token as `NODE_AUTH_TOKEN` and point `NPM_CONFIG_USERCONFIG` at the output, which keeps both the file and the credential scoped to those steps.
 
 ```yaml
 jobs:
@@ -39,27 +31,22 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Setup npm registry
-        id: setup-npm-registry
         uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_USERCONFIG: ${{ steps.setup-npm-registry.outputs.npmrc-path }}
         run: pnpm --filter . ci
 ```
 
-Reference it with an absolute ref. The `$/` syntax cannot be used here: it always resolves against the top-level caller's repository, and this action is consumed from `validate-v2.yaml`, an `on: workflow_call` workflow that other repositories invoke as `pagopa/dx/.github/workflows/validate-v2.yaml@main`.
+The installing step needs no extra configuration: the action already exported `NPM_CONFIG_USERCONFIG`, so every later npm and pnpm invocation of the job loads the npmrc.
 
-```yaml
-- name: Setup npm registry
-  id: setup-npm-registry
-  uses: pagopa/dx/actions/setup-npm-registry@main
-```
+Reference it with an absolute ref. The `$/` syntax cannot be used here: it always resolves against the top-level caller's repository, and this action is consumed from `validate-v2.yaml`, an `on: workflow_call` workflow that other repositories invoke as `pagopa/dx/.github/workflows/validate-v2.yaml@main`.
 
 ## Notes
 
-- The job needs the `packages: read` permission, otherwise the registry rejects the token.
-- The token is deliberately not an input. The action only declares where the credential is read from; the steps that consume it expose it as `NODE_AUTH_TOKEN`, which keeps the secret out of the npmrc and scoped to those steps. This mirrors `actions/setup-node` with `registry-url`, which also writes a `${NODE_AUTH_TOKEN}` placeholder and expects the caller to set the variable — with the difference that this action does not put the file in the user-level npmrc, so the placeholder cannot leak into unrelated steps.
-- Setting `NPM_CONFIG_USERCONFIG` makes npm and pnpm ignore `$HOME/.npmrc` for that step. CI runners have no other configuration to inherit, but a consumer that keeps custom user-level npm settings must merge them into the file pointed to by the output.
+- The job needs the `packages: read` permission (`packages: write` when publishing), otherwise the registry rejects the token.
+- Pass the token through the `token` input. The action forwards it to the shell through an environment variable instead of interpolating it into the script, so the value never appears in the generated command.
+- The credential is written to `$RUNNER_TEMP/dx-npmrc` with `0600` permissions and stays there for the duration of the job. It never reaches `$HOME`, which on self-hosted runners persists across jobs, and the runner removes the directory at the start of the next job.
+- Exporting `NPM_CONFIG_USERCONFIG` makes npm and pnpm ignore `$HOME/.npmrc` for the rest of the job. CI runners have no other configuration to inherit, but a consumer that keeps custom user-level npm settings must merge them into the exported file.
 - Reference this action instead of writing the npmrc bootstrap inline: it is the single place where the registry credential handling is maintained.

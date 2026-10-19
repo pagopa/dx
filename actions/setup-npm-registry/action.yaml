@@ -1,33 +1,42 @@
 name: Setup npm registry
 description: Authenticate npm and pnpm to the GitHub Packages registry that hosts DX packages.
 
-outputs:
-  npmrc-path:
-    description: "Path of the npmrc that holds the GitHub Packages credential. Set it as NPM_CONFIG_USERCONFIG on the steps that install or publish packages."
-    value: ${{ steps.configure.outputs.npmrc-path }}
+inputs:
+  token:
+    description: "Token with packages:read on the GitHub Packages registry, or packages:write when publishing."
+    required: true
 
 runs:
   using: composite
   steps:
     - name: Authenticate to GitHub Packages
-      id: configure
       shell: bash
+      env:
+        # Passed through the environment instead of being interpolated into the
+        # script, so the token never shows up in the generated shell command.
+        GITHUB_PACKAGES_TOKEN: ${{ inputs.token }}
       run: |
         set -euo pipefail
 
-        # The credential is stored as a placeholder and expanded by npm and
-        # pnpm at install time, so no secret is ever written to disk.
+        if [[ -z "${GITHUB_PACKAGES_TOKEN:-}" ]]; then
+          echo "::error::setup-npm-registry requires a non-empty token input." >&2
+          exit 1
+        fi
+
+        # The token is expanded here, once, instead of storing a ${VAR}
+        # placeholder that npm and pnpm resolve on every run. A placeholder is
+        # re-evaluated by each npm and pnpm invocation that loads the file, so
+        # any step that cannot see the variable prints
+        # "Failed to replace env in config: ${...}". Expanding it at write time
+        # makes the file self-contained and keeps the other steps quiet.
         #
-        # The file is kept out of $HOME on purpose. The user-level npmrc is
-        # loaded by every npm and pnpm invocation of the job, so a placeholder
-        # left there makes each later step that does not export
-        # NODE_AUTH_TOKEN print "Failed to replace env in config:
-        # ${NODE_AUTH_TOKEN}". Consumers point NPM_CONFIG_USERCONFIG at this
-        # file only on the steps that need the credential, so the placeholder
-        # never reaches the other steps.
-        npmrc="${{ runner.temp }}/dx-npmrc"
-        # mktemp creates the rewritten file as private (0600) and mv keeps that
-        # mode, so overwriting an existing npmrc never widens its permissions.
+        # The file lives in $RUNNER_TEMP, which the runner wipes at the start of
+        # every job: the credential never reaches the persistent $HOME of a
+        # self-hosted runner, so it cannot leak into a later job.
+        npmrc="$RUNNER_TEMP/dx-npmrc"
+
+        # Create every file as private (0600), including the npmrc below.
+        umask 077
         tempNpmrc="$(mktemp)"
 
         # Keep the action idempotent by dropping entries written by a previous
@@ -36,7 +45,10 @@ runs:
           grep -v -F '//npm.pkg.github.com/:_authToken=' "$npmrc" > "$tempNpmrc" || true
         fi
 
-        printf '%s\n' '//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}' >> "$tempNpmrc"
+        printf '%s\n' "//npm.pkg.github.com/:_authToken=${GITHUB_PACKAGES_TOKEN}" >> "$tempNpmrc"
         mv "$tempNpmrc" "$npmrc"
 
-        echo "npmrc-path=$npmrc" >> "$GITHUB_OUTPUT"
+        # Point the rest of the job at the file, so consumers configure a single
+        # variable: the token. npm and pnpm read it as the user-level npmrc,
+        # which means $HOME/.npmrc is ignored from this step on.
+        echo "NPM_CONFIG_USERCONFIG=$npmrc" >> "$GITHUB_ENV"

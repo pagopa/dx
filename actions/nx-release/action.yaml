@@ -164,10 +164,12 @@ runs:
         username: ${{ github.actor }}
         password: ${{ github.token }}
 
+    # The workflow token needs packages:write to publish to GitHub Packages.
     - name: Setup npm registry
       if: steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
-      id: setup-npm-registry
       uses: pagopa/dx/actions/setup-npm-registry@main
+      with:
+        token: ${{ github.token }}
 
     - name: Publish with Nx release
       if: steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
@@ -175,13 +177,6 @@ runs:
       shell: bash
       env:
         NPM_CONFIG_PROVENANCE: true
-        # Workflow token with packages:write resolves the ${NODE_AUTH_TOKEN}
-        # placeholder that the Setup npm registry action wrote to its npmrc.
-        NODE_AUTH_TOKEN: ${{ github.token }}
-        # Point npm and pnpm at the npmrc prepared by Setup npm registry. The
-        # variable is scoped to this step so no other step of the job loads the
-        # placeholder without a token to expand it.
-        NPM_CONFIG_USERCONFIG: ${{ steps.setup-npm-registry.outputs.npmrc-path }}
         # GitHub App token authenticates gh/Octokit for PR and release operations.
         GH_TOKEN: ${{ inputs.github-token }}
         ACTION_PATH: ${{ github.action_path }}
