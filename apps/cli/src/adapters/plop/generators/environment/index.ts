@@ -6,10 +6,13 @@ import {
 } from "../../../../domain/cloud-account.js";
 import { GitHubRepo } from "../../../../domain/github-repo.js";
 import { type GitHubService } from "../../../../domain/github.js";
+import { setFormatGeneratedCodeAction } from "../../actions/format-generated-code.js";
 import setGetTerraformBackend from "../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../actions/init-cloud-accounts.js";
+import { setInitTerraformProjectsAction } from "../../actions/init-terraform-projects.js";
 import setProvisionTerraformBackendAction from "../../actions/provision-terraform-backend.js";
 import { setSetupCloudToolsAction } from "../../actions/setup-cloud-tools.js";
+import setSyncNxAdditionalEnvironments from "../../actions/sync-nx-additional-environments.js";
 import setSyncRepositoryEnvironmentsAction from "../../actions/sync-repository-environments.js";
 import setEnvShortHelper from "../../helpers/env-short.js";
 import setEqHelper from "../../helpers/eq.js";
@@ -46,6 +49,9 @@ export default function (
   setProvisionTerraformBackendAction(plop, cloudAccountService);
   setSetupCloudToolsAction(plop);
   setInitCloudAccountsAction(plop, cloudAccountService, gitHubService);
+  setFormatGeneratedCodeAction(plop);
+  setInitTerraformProjectsAction(plop);
+  setSyncNxAdditionalEnvironments(plop);
   setSyncRepositoryEnvironmentsAction(plop);
 
   plop.setGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME, {
