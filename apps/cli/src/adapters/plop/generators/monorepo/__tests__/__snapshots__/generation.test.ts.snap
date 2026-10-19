@@ -329,7 +329,7 @@ exports[`monorepo generator — file generation > materializes repository metada
 
 exports[`monorepo generator — file generation > propagates action outputs into generated version files 1`] = `
 {
-  ".node-version": "22.14.0
+  ".node-version": "24.22.0
 ",
   ".pre-commit-config.yaml": "repos:
   - repo: https://github.com/pagopa/dx

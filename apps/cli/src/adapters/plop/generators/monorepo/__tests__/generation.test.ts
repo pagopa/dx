@@ -28,8 +28,8 @@ import { Payload, PLOP_MONOREPO_GENERATOR_NAME } from "../index.js";
  */
 const registerStubActions = (plop: NodePlopAPI) => {
   plop.setActionType("getNodeVersion", async (data) => {
-    data.nodeVersion = "22.14.0";
-    return "Fetched latest version: 22.14.0";
+    data.nodeVersion = "24.22.0";
+    return "Fetched latest version: 24.22.0";
   });
   plop.setActionType("fetchGithubRelease", async (data, ctx) => {
     const resultKey = (ctx as Record<string, unknown>).resultKey as string;
