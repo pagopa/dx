@@ -120,15 +120,17 @@ jobs:
           minimum_release_age: 7d
 
       # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The composite action stores the registry credentials as a
-      # placeholder in the user-level npmrc: pnpm resolves the token from the
-      # NODE_AUTH_TOKEN variable of the steps that install dependencies.
+      # alias. The action returns an npmrc that the installing steps load
+      # through NPM_CONFIG_USERCONFIG, together with NODE_AUTH_TOKEN, so later
+      # npm and pnpm invocations never evaluate the token placeholder.
       - name: Setup npm registry
+        id: setup-npm-registry
         uses: pagopa/dx/actions/setup-npm-registry@main
 
       - name: Install dependencies
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ steps.setup-npm-registry.outputs.npmrc-path }}
         run: pnpm --filter . ci
 
       - name: Warn missing version plan coverage
@@ -167,15 +169,17 @@ jobs:
           minimum_release_age: 7d
 
       # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The composite action stores the registry credentials as a
-      # placeholder in the user-level npmrc: pnpm resolves the token from the
-      # NODE_AUTH_TOKEN variable of the steps that install dependencies.
+      # alias. The action returns an npmrc that the installing steps load
+      # through NPM_CONFIG_USERCONFIG, together with NODE_AUTH_TOKEN, so later
+      # npm and pnpm invocations never evaluate the token placeholder.
       - name: Setup npm registry
+        id: setup-npm-registry
         uses: pagopa/dx/actions/setup-npm-registry@main
 
       - name: Install dependencies
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ steps.setup-npm-registry.outputs.npmrc-path }}
         run: pnpm --filter . ci
 
       - name: Set base and head SHAs for format check
@@ -220,15 +224,17 @@ jobs:
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
       # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The composite action stores the registry credentials as a
-      # placeholder in the user-level npmrc: pnpm resolves the token from the
-      # NODE_AUTH_TOKEN variable of the steps that install dependencies.
+      # alias. The action returns an npmrc that the installing steps load
+      # through NPM_CONFIG_USERCONFIG, together with NODE_AUTH_TOKEN, so later
+      # npm and pnpm invocations never evaluate the token placeholder.
       - name: Setup npm registry
+        id: setup-npm-registry
         uses: pagopa/dx/actions/setup-npm-registry@main
 
       - name: Install dependencies
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ steps.setup-npm-registry.outputs.npmrc-path }}
         run: pnpm --filter . ci
 
       # Avoid querying GitHub environments when the change does not affect any
@@ -361,15 +367,17 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
       # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The composite action stores the registry credentials as a
-      # placeholder in the user-level npmrc: pnpm resolves the token from the
-      # NODE_AUTH_TOKEN variable of the steps that install dependencies.
+      # alias. The action returns an npmrc that the installing steps load
+      # through NPM_CONFIG_USERCONFIG, together with NODE_AUTH_TOKEN, so later
+      # npm and pnpm invocations never evaluate the token placeholder.
       - name: Setup npm registry
+        id: setup-npm-registry
         uses: pagopa/dx/actions/setup-npm-registry@main
 
       - name: Install dependencies
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ steps.setup-npm-registry.outputs.npmrc-path }}
         run: mise deps
 
       - name: Cache Nx
@@ -471,15 +479,17 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
       # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The composite action stores the registry credentials as a
-      # placeholder in the user-level npmrc: pnpm resolves the token from the
-      # NODE_AUTH_TOKEN variable of the steps that install dependencies.
+      # alias. The action returns an npmrc that the installing steps load
+      # through NPM_CONFIG_USERCONFIG, together with NODE_AUTH_TOKEN, so later
+      # npm and pnpm invocations never evaluate the token placeholder.
       - name: Setup npm registry
+        id: setup-npm-registry
         uses: pagopa/dx/actions/setup-npm-registry@main
 
       - name: Install dependencies
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_CONFIG_USERCONFIG: ${{ steps.setup-npm-registry.outputs.npmrc-path }}
         run: |
           mise deps --skip pnpm
           pnpm --filter . ci
