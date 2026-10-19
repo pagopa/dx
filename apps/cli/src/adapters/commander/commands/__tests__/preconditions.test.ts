@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { CommandPresenter } from "../../../../domain/command-presenter.js";
 
 const mocks = vi.hoisted(() => ({
+  assertGitHubPackagesAccess: vi.fn(),
   tf$: vi.fn(async (...args: [TemplateStringsArray, ...unknown[]]) => {
     void args;
     return { stdout: '{"user":{"name":"test@example.com"}}' };
@@ -11,6 +12,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
+vi.mock("../../../github/packages.js", () => ({
+  assertGitHubPackagesAccess: mocks.assertGitHubPackagesAccess,
+}));
 
 import {
   runAddEnvironmentPreconditions,
@@ -35,6 +39,8 @@ const calledCommands = () =>
 
 describe("init preconditions", () => {
   beforeEach(() => {
+    mocks.assertGitHubPackagesAccess.mockReset();
+    mocks.assertGitHubPackagesAccess.mockResolvedValue(undefined);
     mocks.tf$.mockReset();
     mocks.tf$.mockResolvedValue({
       stdout: '{"user":{"name":"test@example.com"}}',
@@ -45,7 +51,23 @@ describe("init preconditions", () => {
     const result = await runInitPreconditions(presenter);
 
     expect(result.isOk()).toBe(true);
+    expect(mocks.assertGitHubPackagesAccess).toHaveBeenCalledTimes(1);
     expect(calledCommands()).toEqual(["terraform -version", "mise --version"]);
+  });
+
+  it("checks the GitHub Packages access before the local tools", async () => {
+    const packagesError = new Error(
+      "Your GitHub token cannot read the DX packages from GitHub Packages: the registry requires the read:packages scope.",
+    );
+    mocks.assertGitHubPackagesAccess.mockRejectedValueOnce(packagesError);
+
+    const result = await runInitPreconditions(presenter);
+
+    expect(result.isErr()).toBe(true);
+    // The probe message is surfaced as-is, so the user gets the actionable
+    // guidance without --verbose.
+    expect(result._unsafeUnwrapErr()).toBe(packagesError);
+    expect(calledCommands()).toEqual([]);
   });
 
   it("returns mise installation guidance when mise is unavailable", async () => {
@@ -69,6 +91,8 @@ describe("init preconditions", () => {
     const result = await runAddEnvironmentPreconditions(presenter);
 
     expect(result.isOk()).toBe(true);
+    // Only `dx init` installs the DX packages from GitHub Packages.
+    expect(mocks.assertGitHubPackagesAccess).not.toHaveBeenCalled();
     expect(calledCommands()).toEqual([
       "terraform -version",
       "mise --version",

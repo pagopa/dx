@@ -59,12 +59,19 @@ jobs:
           # Define the naming pattern.
           # Pattern is: [_]<scope>[-<description>][-vN].yaml
           NAMING_PATTERN='^_?(release|validate|cron)(-[a-z0-9]+)*(-v[0-9]+)?\.yaml$'
+          # Workflows allowed to bypass the scope convention.
+          ALLOWED_NAMES=("deploy-v1.yaml" "_deploy.yaml")
           FOUND_FILES=0
 
           # Check each new or renamed file
           while IFS= read -r -d '' FILE; do
             FOUND_FILES=1
             FILE_NAME=$(basename "$FILE")
+
+            if [[ " ${ALLOWED_NAMES[*]} " == *" $FILE_NAME "* ]]; then
+              echo "Skipping '$FILE_NAME': allowed by exception."
+              continue
+            fi
 
             if ! [[ "$FILE_NAME" =~ ^_ ]]; then
               # Reusable workflows must end with an explicit major version.

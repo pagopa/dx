@@ -22,6 +22,7 @@ import setConfigureGitHubEnvironmentsAction from "../../../actions/configure-git
 import setGetTerraformBackend from "../../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../../actions/init-cloud-accounts.js";
 import setProvisionTerraformBackendAction from "../../../actions/provision-terraform-backend.js";
+import setSyncNxAdditionalEnvironments from "../../../actions/sync-nx-additional-environments.js";
 import setSyncRepositoryEnvironmentsAction from "../../../actions/sync-repository-environments.js";
 import setEnvShortHelper from "../../../helpers/env-short.js";
 import setEqHelper from "../../../helpers/eq.js";
@@ -36,9 +37,6 @@ import {
 import getActions from "../actions.js";
 import { Payload, PLOP_ENVIRONMENT_GENERATOR_NAME } from "../index.js";
 
-vi.mock("../../../../terraform/fmt.js", () => ({
-  formatTerraformCode: vi.fn((content: string) => content),
-}));
 vi.mock("../../../../execa/terraform.js", () => {
   const terraformCommand = vi.fn(async () => undefined);
   const tf$ = vi.fn(() => terraformCommand);
@@ -59,6 +57,19 @@ const registerEnvironmentSetup = (
     "setupCloudTools",
     async () => "Cloud CLI tools configured",
   );
+  // The formatting pass shells out to the repository Nx tasks: it is covered
+  // by its own test, and stubbed here to keep the generated files untouched.
+  plop.setActionType(
+    "formatGeneratedCode",
+    async () => "Generated files formatted",
+  );
+  // The Terraform initialization shells out to the repository Nx tasks too:
+  // it is covered by its own test, and stubbed here to keep the generation
+  // offline.
+  plop.setActionType(
+    "initTerraformProjects",
+    async () => "Generated Terraform projects initialized",
+  );
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
@@ -73,6 +84,7 @@ const registerEnvironmentSetup = (
     mockCloudAccountService,
     mockGitHubService,
   );
+  setSyncNxAdditionalEnvironments(plop);
   setSyncRepositoryEnvironmentsAction(plop);
 };
 
@@ -108,11 +120,13 @@ const runEnvironmentGenerator = async ({
   mockCloudAccountService,
   mockGitHubService,
   payload,
+  prepareRepository,
   tmpDirPrefix,
 }: {
   mockCloudAccountService: CloudAccountService;
   mockGitHubService: GitHubService;
   payload: Payload;
+  prepareRepository?: (tmpDir: string) => Promise<void>;
   tmpDirPrefix: string;
 }): Promise<{
   originalCwd: string;
@@ -141,6 +155,8 @@ const runEnvironmentGenerator = async ({
       "",
     ].join("\n"),
   );
+
+  await prepareRepository?.(tmpDir);
 
   const plop = await nodePlop();
   registerEnvironmentSetup(plop, mockCloudAccountService, mockGitHubService);
@@ -416,5 +432,81 @@ describe("environment generator — file generation (with init)", () => {
     ]);
 
     expect(generatedFiles).toMatchSnapshot();
+  });
+});
+
+describe("environment generator — tenant-qualified environment", () => {
+  let tmpDir: string;
+  let originalCwd: string;
+
+  const payload: Payload = {
+    env: {
+      cloudAccounts: [
+        {
+          csp: "azure",
+          defaultLocation: "italynorth",
+          displayName: "PROD-CED",
+          id: "sub-ced-123",
+        },
+      ],
+      name: "ced-prod",
+      prefix: "ced",
+    },
+    github: {
+      owner: "pagopa",
+      repo: "my-project",
+    },
+    runnerAppCredentials: {
+      clientId: "test-app-client-id",
+      id: "test-app-id",
+      installationId: "test-installation-id",
+      key: "test-private-key",
+    },
+    tags: {
+      CostCenter: "TS330 - PDND & INTEROPERABILITA'",
+      Owner: "DX Platform",
+    },
+    workspace: {
+      domain: "bonus",
+    },
+  };
+
+  beforeAll(async () => {
+    ({ originalCwd, tmpDir } = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload,
+      prepareRepository: async (repositoryRoot) => {
+        await fs.copyFile(
+          path.join(resolveTemplatesPath("monorepo"), "nx.json"),
+          path.join(repositoryRoot, "nx.json"),
+        );
+      },
+      tmpDirPrefix: "dx-cli-env-tenant-test-",
+    }));
+  });
+
+  afterAll(async () => {
+    process.chdir(originalCwd);
+    await cleanupTempDir(tmpDir);
+  });
+
+  it("registers the environment in the Nx Terraform plugin additional environments", async () => {
+    const nxJson = JSON.parse(
+      await fs.readFile(path.join(tmpDir, "nx.json"), "utf8"),
+    ) as {
+      plugins: {
+        options?: { additionalEnvironments?: string[] };
+        plugin: string;
+      }[];
+    };
+
+    expect(
+      nxJson.plugins.find((entry) => entry.plugin === "@pagopa/nx-terraform")
+        ?.options?.additionalEnvironments,
+    ).toEqual(["ced-prod"]);
   });
 });

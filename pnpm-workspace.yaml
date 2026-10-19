@@ -82,6 +82,7 @@ catalogs:
 
   azure:
     "@azure/arm-resources": ^7.0.0
+    "@azure/logger": ^1.4.0
     "@azure/storage-blob": ^12.34.0
 
   github-actions:

@@ -1,3 +1,15 @@
+## 0.6.9 (2026-10-16)
+
+### 🚀 Features
+
+- SaveMoney noise reduction: missing tags no longer mark resources as unused (still reported as a governance note); removed the NIC "No public IP assigned", Public IP "Static IP not in use" and App Service "Premium tier with low resource utilization" rules; private endpoints now consider manual private link connections; storage transaction counts use Total aggregation per day; deallocated VMs no longer report a compute price; AZQR orphan findings fold into the matching SaveMoney finding instead of being reported twice; merged reasons are separated by a space; AZQR-only entries take their location from the AZQR inventory instead of repeating it in the reason; `json` output includes per-resource `estimatedMonthlySavings` (custom cost at risk or Advisor savings), also shown in a new `Savings` table column; multi-currency totals in the summary are joined with "+" to show they are cumulative. `thresholds.appService.premiumCpuPercent` is deprecated and ignored but still accepted. ([#2357](https://github.com/pagopa/dx/pull/2357))
+
+  Silence Azure SDK console warnings (credential-chain probes, `baseUri` deprecations) enabled by telemetry; set `AZURE_LOG_LEVEL` to restore them. `savemoney` debug logs are now shown only with `--verbose`, and console logs go to stderr so `--format json` output stays valid.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.6.8 (2026-10-08)
 
 ### 🩹 Fixes

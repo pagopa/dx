@@ -64,17 +64,9 @@ export async function analyzeNic(
       reason += "NIC not attached to any VM or private endpoint. ";
     }
 
-    // Check if NIC has no public IP
-    const hasPublicIP = nicDetails.ipConfigurations?.some(
-      (config) => config.publicIPAddress,
-    );
-    if (!hasPublicIP) {
-      reason += "No public IP assigned. ";
-    }
-
     // Note: Network Interface metrics are not available for Private Endpoint NICs
     // and most Azure NICs don't expose standard traffic metrics through Azure Monitor
-    // The primary checks (attachment to VM and public IP assignment) are sufficient
+    // The attachment check (VM or private endpoint) is the primary signal
   } catch (error) {
     const logger = getLogger(["savemoney", "azure"]);
     logger.warn(`Failed to get NIC details for ${nicName}: {message}`, {

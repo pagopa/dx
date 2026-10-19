@@ -6,6 +6,8 @@ import { Answers } from "inquirer";
 import nodePlop from "node-plop";
 import { Octokit } from "octokit";
 
+import type { TerraformBackend } from "../../domain/remote-backend.js";
+
 import { GitHubRepo } from "../../domain/github-repo.js";
 import { GitHubService, RepositoryNotFoundError } from "../../domain/github.js";
 import { AzureSubscriptionRepository } from "../azure/cloud-account-repository.js";
@@ -168,6 +170,12 @@ export const collectDeploymentEnvironmentPayload = async (
   return { generator, payload };
 };
 
+export type DeploymentEnvironmentOutputPayload = EnvironmentPayload & {
+  terraform?: {
+    backend?: TerraformBackend;
+  };
+};
+
 /**
  * Execute the deployment environment generator actions for an already-collected
  * payload.
@@ -178,7 +186,7 @@ export const collectDeploymentEnvironmentPayload = async (
 export const runDeploymentEnvironmentActions = async (
   generator: PlopGenerator,
   payload: EnvironmentPayload,
-): Promise<EnvironmentPayload> => {
+): Promise<DeploymentEnvironmentOutputPayload> => {
   await runActions(generator, payload);
   return payload;
 };

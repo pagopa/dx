@@ -3,17 +3,23 @@
  *
  * Verifies that the command routes progress and the final result through the
  * shared CommandPresenter: step lifecycle events are emitted as NDJSON on
- * stderr while the structured result envelope is written to stdout.
+ * stderr while the credential-free result envelope is written to stdout.
  */
 import { Command } from "commander";
 import { okAsync } from "neverthrow";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mockDeep } from "vitest-mock-extended";
 
-import type { AuthorizationService } from "../../../../domain/authorization.js";
+import type { CloudAccount } from "../../../../domain/cloud-account.js";
 import type { GitHubAuthFactory } from "../../../../domain/dependencies.js";
 import type { GitHubService } from "../../../../domain/github.js";
+import type { TerraformBackend } from "../../../../domain/remote-backend.js";
 import type { Payload as EnvironmentPayload } from "../../../plop/generators/environment/index.js";
+
+import {
+  AuthorizationResult,
+  type AuthorizationService,
+} from "../../../../domain/authorization.js";
 
 const mocks = vi.hoisted(() => ({
   collectDeploymentEnvironmentPayload: vi.fn(),
@@ -35,16 +41,16 @@ vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
 
 import { makeAddCommand } from "../add.js";
 
+const cloudAccount: CloudAccount = {
+  csp: "azure",
+  defaultLocation: "italynorth",
+  displayName: "DEV-FooBar",
+  id: "sub-123",
+};
+
 const payload: EnvironmentPayload = {
   env: {
-    cloudAccounts: [
-      {
-        csp: "azure",
-        defaultLocation: "italynorth",
-        displayName: "DEV-FooBar",
-        id: "sub-123",
-      },
-    ],
+    cloudAccounts: [cloudAccount],
     name: "dev",
     prefix: "dx",
   },
@@ -56,6 +62,32 @@ const payload: EnvironmentPayload = {
     Owner: "DX Platform",
   },
   workspace: { domain: "" },
+};
+
+const runnerAppCredentials = {
+  clientId: "runner-app-client-id",
+  id: "runner-app-id",
+  installationId: "runner-app-installation-id",
+  key: "runner-app-private-key",
+};
+
+const initializationCredentials = {
+  clientId: "initialization-client-id",
+  id: "initialization-app-id",
+  installationId: "initialization-installation-id",
+  key: "initialization-private-key",
+};
+
+const initialization = {
+  cloudAccountsToInitialize: [cloudAccount],
+  terraformBackend: { cloudAccount },
+};
+
+const terraformBackend: TerraformBackend = {
+  resourceGroupName: "dx-d-itn-tfstate-rg-01",
+  storageAccountName: "dxditntfst01",
+  subscriptionId: cloudAccount.id,
+  type: "azurerm",
 };
 
 const captureStream = (stream: NodeJS.WriteStream) => {
@@ -155,5 +187,96 @@ describe("add environment command json output", () => {
     expect(parseNdjson(stdout.written)).toEqual([
       { data: { authorizationPrs: [], payload }, ok: true },
     ]);
+  });
+
+  describe.each([
+    { args: ["--output", "json"], CI: false, mode: "explicit JSON output" },
+    { args: ["--output", "text"], CI: true, mode: "CI output" },
+  ])("$mode", ({ args, CI }) => {
+    it.each([
+      {
+        authorizationPrs: [],
+        expectedPayload: payload,
+        name: "an initialized environment",
+        sourcePayload: { ...payload, runnerAppCredentials },
+      },
+      {
+        authorizationPrs: [{ url: "https://example.com/authorization-pr" }],
+        expectedPayload: { ...payload, init: initialization },
+        name: "environment initialization",
+        sourcePayload: {
+          ...payload,
+          init: {
+            ...initialization,
+            runnerAppCredentials: initializationCredentials,
+          },
+          runnerAppCredentials,
+        },
+      },
+    ])(
+      "preserves resolved backend metadata and omits credentials for $name",
+      async ({ authorizationPrs, expectedPayload, sourcePayload }) => {
+        const originalPayload = structuredClone(sourcePayload);
+        const actionResult = {
+          ...sourcePayload,
+          terraform: {
+            backend: {
+              ...terraformBackend,
+              accessKey: "terraform-backend-private-value",
+            },
+            privateValue: "terraform-private-value",
+          },
+        };
+        const originalActionResult = structuredClone(actionResult);
+        const stdout = captureStream(process.stdout);
+        const stderr = captureStream(process.stderr);
+        const authorizationService = mockDeep<AuthorizationService>();
+        authorizationService.requestAuthorization.mockReturnValue(
+          okAsync(
+            new AuthorizationResult("https://example.com/authorization-pr"),
+          ),
+        );
+        const requireGitHubAuth: GitHubAuthFactory = () =>
+          okAsync({
+            authorizationService,
+            gitHubService: mockDeep<GitHubService>(),
+          });
+        mocks.collectDeploymentEnvironmentPayload.mockResolvedValue({
+          generator: {},
+          payload: sourcePayload,
+        });
+        mocks.runDeploymentEnvironmentActions.mockResolvedValue(actionResult);
+        const program = new Command()
+          .option("--output <mode>", "Output mode", "text")
+          .addCommand(makeAddCommand(requireGitHubAuth, { CI }));
+
+        await program.parseAsync(["node", "dx", ...args, "add", "environment"]);
+
+        expect(parseNdjson(stdout.written)).toStrictEqual([
+          {
+            data: {
+              authorizationPrs,
+              payload: {
+                ...expectedPayload,
+                terraform: { backend: terraformBackend },
+              },
+            },
+            ok: true,
+          },
+        ]);
+        const output = [...stdout.written, ...stderr.written].join("");
+        expect(output).not.toContain("runnerAppCredentials");
+        expect(output).not.toContain(runnerAppCredentials.key);
+        expect(output).not.toContain(initializationCredentials.key);
+        expect(output).not.toContain(actionResult.terraform.backend.accessKey);
+        expect(output).not.toContain(actionResult.terraform.privateValue);
+        expect(mocks.runDeploymentEnvironmentActions).toHaveBeenCalledWith(
+          expect.anything(),
+          originalPayload,
+        );
+        expect(sourcePayload).toStrictEqual(originalPayload);
+        expect(actionResult).toStrictEqual(originalActionResult);
+      },
+    );
   });
 });

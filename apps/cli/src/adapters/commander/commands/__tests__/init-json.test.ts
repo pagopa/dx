@@ -13,7 +13,9 @@ import type { GitHubService } from "../../../../domain/github.js";
 import type { Payload as MonorepoPayload } from "../../../plop/generators/monorepo/index.js";
 
 const mocks = vi.hoisted(() => ({
+  assertGitHubPackagesAccess: vi.fn(),
   collectMonorepoPayload: vi.fn(),
+  execa$: vi.fn(() => () => Promise.resolve({ stdout: "" })),
   getPlopInstance: vi.fn(),
   runMonorepoActions: vi.fn(),
   tf$: vi.fn(async (...args: [TemplateStringsArray, ...unknown[]]) => {
@@ -23,12 +25,20 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("inquirer");
+vi.mock("execa", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("execa")>();
+
+  return { ...actual, $: mocks.execa$ };
+});
 vi.mock("../../../plop/index.js", () => ({
   collectMonorepoPayload: mocks.collectMonorepoPayload,
   getPlopInstance: mocks.getPlopInstance,
   runMonorepoActions: mocks.runMonorepoActions,
 }));
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
+vi.mock("../../../github/packages.js", () => ({
+  assertGitHubPackagesAccess: mocks.assertGitHubPackagesAccess,
+}));
 
 import { makeInitCommand } from "../init.js";
 
@@ -98,6 +108,16 @@ describe("init command json output", () => {
 
     expect(parseNdjson(stderr.written)).toEqual([
       {
+        name: "Checking GitHub Packages access...",
+        status: "start",
+        type: "step",
+      },
+      {
+        name: "Checking GitHub Packages access...",
+        status: "success",
+        type: "step",
+      },
+      {
         name: "Checking Terraform installation...",
         status: "start",
         type: "step",
@@ -134,6 +154,16 @@ describe("init command json output", () => {
       },
       {
         name: "Scaffolding workspace...",
+        status: "success",
+        type: "step",
+      },
+      {
+        name: "Initializing Terraform projects...",
+        status: "start",
+        type: "step",
+      },
+      {
+        name: "Initializing Terraform projects...",
         status: "success",
         type: "step",
       },
