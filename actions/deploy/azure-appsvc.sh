@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+if [[ -z "${resource_group_name:-}" ]]; then
+  echo "::error::resource_group_name is required for Microsoft.Web/sites"
+  exit 1
+fi
+
+__revert_traffic() {
+  local resource_group_name="$1"
+  local webapp_name="$2"
+  az webapp traffic-routing clear \
+    --resource-group "$resource_group_name" \
+    --name "$webapp_name"
+}
+
+__set_traffic() {
+  local resource_group_name="$1"
+  local webapp_name="$2"
+  local staging_percentage="$3"
+  az webapp traffic-routing set \
+    --resource-group "$resource_group_name" \
+    --name "$webapp_name" \
+    --distribution "staging=${staging_percentage}"
+}
+
+__swap_versions() {
+  local resource_group_name="$1"
+  local webapp_name="$2"
+  echo "Swapping staging slot to production"
+  az webapp deployment slot swap \
+    --resource-group "$resource_group_name" \
+    --name "$webapp_name" \
+    --slot staging \
+    --target-slot production
+}
+
+__finalize() {
+  local resource_group_name="$1"
+  local webapp_name="$2"
+  echo "Finalizing rollout by setting traffic to 100% production"
+  __set_traffic "$resource_group_name" "$webapp_name" 0
+  __swap_versions "$resource_group_name" "$webapp_name"
+}
