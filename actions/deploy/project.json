@@ -1,5 +1,4 @@
 {
-  "name": "deploy",
   "targets": {
     "shellcheck": {
       "executor": "nx:run-commands",
