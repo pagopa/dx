@@ -347,7 +347,7 @@ describe("environment generator — file generation (no init)", () => {
   });
 });
 
-describe("environment generator — tenant-qualified environment", () => {
+describe("environment generator — tenant-qualified bootstrap configuration", () => {
   it("enables prefixing and keeps tenant runner labels in both Azure branches", async () => {
     const tenantPayload: Payload = {
       ...payload,
