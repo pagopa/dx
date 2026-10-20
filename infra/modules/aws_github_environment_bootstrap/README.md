@@ -11,7 +11,7 @@ The module performs the following actions:
   2. Application resources - both CI (read-only) and CD (admin) roles.
 - Sets up **OpenID Connect (OIDC)** integration between GitHub Actions and AWS.
 - Creates **GitHub environment secrets** with the deployment IAM role ARNs for workflows to use.
-- Optionally creates a dedicated **ECR Public login role** and the repository-level `ECR_PUBLIC_ROLE_ARN` secret.
+- Creates a dedicated **ECR Public login role** and the repository-level `ECR_PUBLIC_ROLE_ARN` secret, ignoring subsequent secret value changes.
 - Uses the **pagopa-dx AWS provider** for consistent resource naming conventions.
 - Deploys a **GitHub self-hosted runner** on AWS CodeBuild for private CI/CD workflows.
 
@@ -22,7 +22,7 @@ Use this module in your bootstrapper configuration to create all necessary GitHu
 ```hcl
 module "github_bootstrap" {
   source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 1.0"
+  version = "~> 2.2"
 
   environment = {
     prefix          = "dx"
@@ -63,15 +63,14 @@ module "github_bootstrap" {
 
 ## Variables Reference
 
-| Variable                   | Description                                              | Required |
-| -------------------------- | -------------------------------------------------------- | :------: |
-| `environment`              | Resource naming and location configuration               |    ✅    |
-| `repository`               | GitHub repository details (owner, name)                   |    ✅    |
-| `vpc`                      | VPC configuration for self-hosted runner                  |    ✅    |
-| `github_private_runner`    | Self-hosted runner configuration                         |    ✅    |
-| `oidc_provider_arn`         | ARN of the GitHub OIDC provider                           |    ✅    |
-| `ecr_public_login_enabled`  | Create repository-wide ECR Public login (default: `false`) |    ❌    |
-| `tags`                     | Resource tags for cost allocation and management          |    ✅    |
+| Variable                | Description                                      | Required |
+| ----------------------- | ------------------------------------------------ | :------: |
+| `environment`           | Resource naming and location configuration       |    ✅    |
+| `repository`            | GitHub repository details (owner, name)           |    ✅    |
+| `vpc`                   | VPC configuration for self-hosted runner          |    ✅    |
+| `github_private_runner` | Self-hosted runner configuration                 |    ✅    |
+| `oidc_provider_arn`      | ARN of the GitHub OIDC provider                   |    ✅    |
+| `tags`                  | Resource tags for cost allocation and management |    ✅    |
 
 ### Detailed Variable Explanations
 
@@ -172,21 +171,11 @@ tags = {
 }
 ```
 
-### Optional ECR Public Login
+### ECR Public Login
 
-Set `ecr_public_login_enabled = true` in **exactly one module instance per
-repository**, including across separate Terraform states and AWS accounts.
-Leave the default `false` in every other environment. For example, the dev
-bootstrap may own the shared login while the uat and prod bootstraps do not:
-
-```hcl
-# Only the instance selected as repository-wide owner.
-ecr_public_login_enabled = true
-```
-
-The selected instance creates a dedicated IAM role and publishes its ARN as the
-**repository Actions secret** `ECR_PUBLIC_ROLE_ARN`. No AWS access keys are
-created. The role grants only `ecr-public:GetAuthorizationToken` and
+Every AWS bootstrap instance creates a dedicated IAM role and publishes its ARN
+as the **repository Actions secret** `ECR_PUBLIC_ROLE_ARN`; no additional input
+or AWS access keys are required. The role grants only `ecr-public:GetAuthorizationToken` and
 `sts:GetServiceBearerToken`; the latter is restricted to
 `ecr-public.amazonaws.com`. Both token APIs require `Resource = "*"`.
 The existing app/infra roles and environment-level `ROLE_ARN` secrets are
@@ -209,26 +198,36 @@ untrusted fork code.
 `validate-v2.yaml` must receive the secret via `secrets: inherit` or an explicit
 `ECR_PUBLIC_ROLE_ARN` mapping. Its gate runs **without** a GitHub environment:
 an environment-only secret cannot enable login. The gate detects the repository
-secret and both code-review jobs authenticate to `public.ecr.aws` using OIDC.
-Without the secret, pulls remain anonymous. `AWS_REGION` and `ROLE_ARN` used for
-Terraform remain independent.
+secret and both code-review jobs attempt to authenticate to `public.ecr.aws`
+using OIDC. Without the secret, pulls remain anonymous. `AWS_REGION` and `ROLE_ARN`
+used for Terraform remain independent.
 
 **Regional prerequisite:** ECR Public authorization uses `us-east-1`, regardless
 of the bootstrap resources' region. The AWS organization must permit the
-required calls in that region (and the workflow's STS calls). An explicit SCP
-or other regional Deny overrides this role's Allow; enabling the option cannot
-bypass it. If `us-east-1` is disabled, resolve this with the organization before
-enabling login. This module does not change SCPs or regional restrictions.
+required calls in that region (and the workflow's STS calls) for authenticated
+pulls to work. An explicit SCP or other regional Deny overrides this role's
+Allow. This module does not change SCPs or regional restrictions. Workflows
+using best-effort authentication can warn and fall back to anonymous pulls if
+login fails, but anonymous rate limits and downstream pull failures still apply.
 
-**Ownership and migration:** Terraform cannot enforce a single owner across
-independent states. Do not enable the option in every environment or manage the
-same secret elsewhere. If a repository-level secret is already managed, keep
-its existing owner or deliberately migrate/import it into
-`github_actions_secret.repo_secrets["ECR_PUBLIC_ROLE_ARN"]` in the selected module
-instance. Disabling or destroying that instance deletes its role and repository
-secret, affecting all environments. Transfer state ownership before retiring the
-owner; do not apply competing owners. The `ecr_public_role_arn` output is `null`
-when disabled and contains the dedicated role ARN when enabled.
+**Shared secret lifecycle:** The repository secret uses
+`ignore_changes = [plaintext_value]`. Each environment can bootstrap its own
+role without repeatedly reconciling the shared secret to a different ARN.
+This is not cross-state locking: the first creation by **each** state can
+overwrite an existing secret, and simultaneous initial creations are
+last-writer-wins. Subsequent plans in those states ignore changes to the
+desired ARN.
+
+Destroying or recreating a module instance can still delete or overwrite the
+shared secret. Coordinate retirement across states: remove the shared-secret
+resource from the retiring state without destroying it if other environments
+still depend on it, and keep the role referenced by the secret alive. If that
+role is renamed, replaced with a different ARN or retired, update the repository
+secret deliberately; `ignore_changes` will not rotate it automatically.
+For an existing secret, importing it into
+`github_actions_secret.repo_secrets["ECR_PUBLIC_ROLE_ARN"]` before applying avoids
+an initial overwrite. The `ecr_public_role_arn` output always identifies this
+instance's role, not necessarily the role currently stored in the shared secret.
 
 ## Gotchas
 
@@ -291,15 +290,13 @@ output "app_cd_role_arn" {
 
 ## IAM Roles Created
 
-The module creates four IAM roles by default:
+The module creates five IAM roles:
 
 1. **Infrastructure CI Role** (`infra-ci`): Read-only access for infrastructure testing and validation
 2. **Infrastructure CD Role** (`infra-cd`): Full admin access for infrastructure deployment
 3. **Application CI Role** (`app-ci`): Read-only access for application testing
 4. **Application CD Role** (`app-cd`): Full admin access for application deployment
-
-When `ecr_public_login_enabled = true`, it also creates a dedicated ECR Public
-login role with token-only permissions, separate from deployment roles.
+5. **ECR Public Login Role** (`ecr-public-login`): Token-only permissions for registry authentication, separate from deployment roles
 
 All roles are configured with OIDC trust relationships to allow GitHub Actions from your repository to assume them.
 
@@ -345,7 +342,7 @@ module "core_values" {
 
 module "bootstrap" {
   source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 1.0"
+  version = "~> 2.2"
 
   environment = var.environment
 
@@ -479,7 +476,6 @@ resource "aws_iam_policy" "custom_app_policy" {
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_ecr_public_login_enabled"></a> [ecr\_public\_login\_enabled](#input\_ecr\_public\_login\_enabled) | Create a dedicated ECR Public login role and the repository-level ECR\_PUBLIC\_ROLE\_ARN secret. Enable in exactly one module instance per repository, leaving it disabled in all other environments and states. | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and region short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    region          = string<br/>    domain          = string<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for the GitHub self-hosted runner, including tier, code connection ARN, personal access token, environment variables, and secrets. Either codeconnection\_arn or personal\_access\_token must be set, but not both. | <pre>object({<br/>    tier               = optional(string, "m")<br/>    codeconnection_arn = optional(string, null)<br/>    personal_access_token = optional(object({<br/>      ssm_parameter_name = optional(string, null)<br/>      value              = optional(string, null)<br/>    }), null)<br/>    env_variables = optional(map(string), {})<br/>    secrets = map(object({<br/>      ssm_parameter_name   = optional(string, null)<br/>      secrets_manager_name = optional(string, null)<br/>    }))<br/>  })</pre> | n/a | yes |
 | <a name="input_oidc_provider_arn"></a> [oidc\_provider\_arn](#input\_oidc\_provider\_arn) | The ARN of the OIDC provider for GitHub Actions. | `string` | n/a | yes |
@@ -491,7 +487,7 @@ resource "aws_iam_policy" "custom_app_policy" {
 
 | Name | Description |
 | ---- | ----------- |
-| <a name="output_ecr_public_role_arn"></a> [ecr\_public\_role\_arn](#output\_ecr\_public\_role\_arn) | ARN of the dedicated ECR Public login role, or null when ecr\_public\_login\_enabled is false. |
+| <a name="output_ecr_public_role_arn"></a> [ecr\_public\_role\_arn](#output\_ecr\_public\_role\_arn) | ARN of this instance's dedicated ECR Public login role. The shared repository secret may retain a different instance's ARN because value changes are ignored. |
 | <a name="output_github_private_runner"></a> [github\_private\_runner](#output\_github\_private\_runner) | Details of the GitHub private runner, including security group and IAM role. |
 | <a name="output_identities"></a> [identities](#output\_identities) | Details of the IAM roles for app, infra, including ARNs and names. |
 | <a name="output_repository"></a> [repository](#output\_repository) | Details of the GitHub repository. |

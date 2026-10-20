@@ -23,6 +23,12 @@ variables {
 }
 
 mock_provider "aws" {
+  mock_resource "aws_iam_policy" {
+    defaults = {
+      arn = "arn:aws:iam::123456789012:policy/test-policy"
+    }
+  }
+
   mock_data "aws_iam_policy" {
     defaults = {
       arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
@@ -52,43 +58,65 @@ override_module {
   }
 }
 
-run "aws_github_environment_bootstrap_ecr_public_non_owner" {
+run "aws_github_environment_bootstrap_ecr_public_production_defaults" {
   command = plan
-
-  variables {
-    ecr_public_login_enabled = false
-  }
 
   assert {
     condition = (
-      length(github_actions_secret.repo_secrets) == 0 &&
-      length(aws_iam_role.ecr_public_login) == 0 &&
-      length(aws_iam_role_policy.ecr_public_login) == 0 &&
-      output.ecr_public_role_arn == null
+      keys(github_actions_secret.repo_secrets) == ["ECR_PUBLIC_ROLE_ARN"] &&
+      aws_iam_role.ecr_public_login.name == "dx-p-eus1-test-ecr-public-login-role-01"
     )
-    error_message = "Non-owner environments must not manage the shared repository secret or create another ECR Public role."
+    error_message = "Production bootstrap instances must create the shared login secret and their own dedicated role automatically."
   }
 
   assert {
     condition     = github_actions_environment_secret.infra_ci["ROLE_ARN"].environment == "infra-prod-ci"
-    error_message = "Non-owner environments must still bootstrap their own deployment secrets."
+    error_message = "ECR Public login must not change the production deployment environment secrets."
   }
 }
 
-run "aws_github_environment_bootstrap_ecr_public_null_keeps_default" {
-  command = plan
+run "aws_github_environment_bootstrap_ecr_public_seed_mock_state" {
+  command = apply
 
-  variables {
-    ecr_public_login_enabled = null
+  override_resource {
+    target = aws_iam_role.ecr_public_login
+    values = {
+      arn = "arn:aws:iam::123456789012:role/test-ecr-public-original"
+    }
   }
 
   assert {
-    condition = (
-      length(github_actions_secret.repo_secrets) == 0 &&
-      length(aws_iam_role.ecr_public_login) == 0 &&
-      length(aws_iam_role_policy.ecr_public_login) == 0 &&
-      output.ecr_public_role_arn == null
-    )
-    error_message = "Null passed through an optional caller input must retain the safe disabled default."
+    condition     = github_actions_secret.repo_secrets["ECR_PUBLIC_ROLE_ARN"].plaintext_value == "arn:aws:iam::123456789012:role/test-ecr-public-original"
+    error_message = "The initial mocked creation must publish the instance's role ARN."
+  }
+}
+
+run "aws_github_environment_bootstrap_ecr_public_ignore_value_changes" {
+  command = plan
+
+  plan_options {
+    replace = [aws_iam_role.ecr_public_login]
+  }
+
+  variables {
+    environment = merge(var.environment, { instance_number = "02" })
+  }
+
+  override_resource {
+    target          = aws_iam_role.ecr_public_login
+    override_during = plan
+    values = {
+      arn = "arn:aws:iam::123456789012:role/test-ecr-public-replacement"
+    }
+  }
+
+  assert {
+    condition     = output.ecr_public_role_arn == "arn:aws:iam::123456789012:role/test-ecr-public-replacement"
+    error_message = "The instance output must expose the replacement role ARN."
+  }
+
+  assert {
+    condition     = github_actions_secret.repo_secrets["ECR_PUBLIC_ROLE_ARN"].plaintext_value == "arn:aws:iam::123456789012:role/test-ecr-public-original"
+    error_message = "A different desired role ARN must not update a repository secret already tracked in state."
   }
 }

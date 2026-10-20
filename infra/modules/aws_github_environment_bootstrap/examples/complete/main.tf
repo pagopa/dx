@@ -29,8 +29,5 @@ module "bootstrapper" {
 
   oidc_provider_arn = module.core_values.oidc_provider_arn
 
-  # Enable only in the single instance that owns repository-wide ECR Public login.
-  ecr_public_login_enabled = true
-
   tags = local.tags
 }

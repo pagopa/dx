@@ -67,39 +67,11 @@ override_module {
   }
 }
 
-run "aws_github_environment_bootstrap_ecr_public_disabled_by_default" {
+run "aws_github_environment_bootstrap_ecr_public_created_by_default" {
   command = plan
-
-  assert {
-    condition = (
-      length(aws_iam_role.ecr_public_login) == 0 &&
-      length(aws_iam_role_policy.ecr_public_login) == 0 &&
-      length(github_actions_secret.repo_secrets) == 0 &&
-      output.ecr_public_role_arn == null
-    )
-    error_message = "Existing callers must not create any ECR Public role, policy or repository secret."
-  }
-
-  assert {
-    condition = (
-      keys(github_actions_environment_secret.infra_ci) == ["ROLE_ARN"] &&
-      keys(github_actions_environment_secret.app_ci) == ["ROLE_ARN"] &&
-      keys(github_actions_environment_secret.infra_cd) == ["ROLE_ARN"] &&
-      keys(github_actions_environment_secret.app_cd) == ["ROLE_ARN"]
-    )
-    error_message = "Existing deployment environment secrets must remain unchanged."
-  }
-}
-
-run "aws_github_environment_bootstrap_ecr_public_enabled" {
-  command = plan
-
-  variables {
-    ecr_public_login_enabled = true
-  }
 
   override_resource {
-    target          = aws_iam_role.ecr_public_login[0]
+    target          = aws_iam_role.ecr_public_login
     override_during = plan
     values = {
       arn = "arn:aws:iam::123456789012:role/test-ecr-public-login"
@@ -108,34 +80,32 @@ run "aws_github_environment_bootstrap_ecr_public_enabled" {
 
   assert {
     condition = (
-      length(aws_iam_role.ecr_public_login) == 1 &&
-      length(aws_iam_role_policy.ecr_public_login) == 1 &&
       keys(github_actions_secret.repo_secrets) == ["ECR_PUBLIC_ROLE_ARN"]
     )
-    error_message = "The selected owner must create exactly one login role, inline policy and repository secret."
+    error_message = "The AWS bootstrap must always create the repository-level ECR Public secret without an opt-in flag."
   }
 
   assert {
     condition = (
       github_actions_secret.repo_secrets["ECR_PUBLIC_ROLE_ARN"].repository == "example" &&
       github_actions_secret.repo_secrets["ECR_PUBLIC_ROLE_ARN"].secret_name == "ECR_PUBLIC_ROLE_ARN" &&
-      github_actions_secret.repo_secrets["ECR_PUBLIC_ROLE_ARN"].plaintext_value == aws_iam_role.ecr_public_login[0].arn &&
-      output.ecr_public_role_arn == aws_iam_role.ecr_public_login[0].arn
+      github_actions_secret.repo_secrets["ECR_PUBLIC_ROLE_ARN"].plaintext_value == aws_iam_role.ecr_public_login.arn &&
+      output.ecr_public_role_arn == aws_iam_role.ecr_public_login.arn
     )
     error_message = "The repository secret and output must expose the dedicated login role ARN."
   }
 
   assert {
     condition = (
-      aws_iam_role.ecr_public_login[0].name == "dx-d-eus1-test-ecr-public-login-role-01" &&
-      aws_iam_role.ecr_public_login[0].assume_role_policy == data.aws_iam_policy_document.github_assume_role_policy.json &&
-      aws_iam_role_policy.ecr_public_login[0].role == aws_iam_role.ecr_public_login[0].name
+      aws_iam_role.ecr_public_login.name == "dx-d-eus1-test-ecr-public-login-role-01" &&
+      aws_iam_role.ecr_public_login.assume_role_policy == data.aws_iam_policy_document.github_assume_role_policy.json &&
+      aws_iam_role_policy.ecr_public_login.role == aws_iam_role.ecr_public_login.name
     )
     error_message = "The dedicated role must use DX naming, repository OIDC trust and its own inline policy."
   }
 
   assert {
-    condition = jsondecode(aws_iam_role_policy.ecr_public_login[0].policy) == {
+    condition = jsondecode(aws_iam_role_policy.ecr_public_login.policy) == {
       Version = "2012-10-17"
       Statement = [
         {
@@ -171,10 +141,6 @@ run "aws_github_environment_bootstrap_ecr_public_enabled" {
 
 run "aws_github_environment_bootstrap_ecr_public_repository_trust" {
   command = plan
-
-  variables {
-    ecr_public_login_enabled = true
-  }
 
   assert {
     condition = (
@@ -239,7 +205,6 @@ run "aws_github_environment_bootstrap_ecr_public_custom_repository" {
   command = plan
 
   variables {
-    ecr_public_login_enabled = true
     repository = {
       owner = "another-org"
       name  = "another-repo"
