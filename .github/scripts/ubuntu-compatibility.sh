@@ -40,7 +40,12 @@ bootstrap() {
   local expected_pnpm
   expected_pnpm="$(node -p 'require(process.argv[1]).packageManager.split("@")[1].split("+")[0]' "$repo_root/package.json")"
   test "$(pnpm --version)" = "$expected_pnpm"
-  test "$(corepack yarn@1.22.22 --version)" = 1.22.22
+  (
+    yarn_dir="$(mktemp -d)"
+    trap 'rm -rf "$yarn_dir"' EXIT
+    cd "$yarn_dir"
+    test "$(corepack yarn@1.22.22 --version)" = 1.22.22
+  )
   printf 'PASS: Corepack, pnpm %s, and Yarn 1.22.22 with ambient Node %s\n' \
     "$expected_pnpm" "$(node --version)"
 }
