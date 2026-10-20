@@ -43,6 +43,55 @@ The installing step needs no extra configuration: the action already exported `N
 
 Reference it with an absolute ref. The `$/` syntax cannot be used here: it always resolves against the top-level caller's repository, and this action is consumed from `validate-v2.yaml`, an `on: workflow_call` workflow that other repositories invoke as `pagopa/dx/.github/workflows/validate-v2.yaml@main`.
 
+## Caller requirements
+
+The job that runs the action must grant the `packages` permission, otherwise the registry rejects the token with `401`:
+
+| Use case                   | Permission        |
+| -------------------------- | ----------------- |
+| Installing dependencies    | `packages: read`  |
+| Publishing to the registry | `packages: write` |
+
+A reusable workflow cannot elevate the permissions of its caller. The `GITHUB_TOKEN` of the called workflow is the intersection between the permissions granted by the calling job and the ones requested by the called workflow: GitHub downgrades the extra permissions instead of rejecting the call. A caller that pins `permissions` without `packages`, for example:
+
+```yaml
+permissions:
+  contents: read
+```
+
+downgrades `packages` to `none` even when the reusable workflow declares `packages: read`. The run is not rejected upfront: it fails when the install reaches the registry and the token is refused with `401`. When a reusable workflow declares `packages: read`, add it to every calling job:
+
+```yaml
+jobs:
+  build:
+    permissions:
+      contents: read
+      packages: read
+    uses: octo-org/example-repo/.github/workflows/build.yaml@main
+```
+
+The snippet only illustrates the `packages` entry. Keep the permissions and secrets documented by the called workflow, because a `permissions` block on the calling job sets every scope it does not list to `none`. For example, `release-v2.yaml` also requires `contents: write`, `id-token: write`, `pull-requests: write` and the GitHub App secrets, as shown in the Nx release documentation.
+
+## Package manager support
+
+| Package manager  | Reads the npmrc exported by this action | Notes                                                                     |
+| ---------------- | --------------------------------------- | ------------------------------------------------------------------------- |
+| npm              | Yes                                     | Honors `NPM_CONFIG_USERCONFIG`.                                           |
+| pnpm             | Yes                                     | Honors `NPM_CONFIG_USERCONFIG`; this is the supported DX package manager. |
+| Yarn 1 (Classic) | Yes                                     | Reads `.npmrc`.                                                           |
+| Yarn 2+ (Berry)  | No                                      | Ignores `.npmrc` and `NPM_CONFIG_USERCONFIG`.                             |
+
+Yarn Berry resolves registries from `.yarnrc.yml` only, so a consumer that installs DX packages through `gh:` with Yarn 2+ must configure the scope in the repository itself:
+
+```yaml
+npmScopes:
+  pagopa:
+    npmRegistryServer: "https://npm.pkg.github.com"
+    npmAuthToken: "${NODE_AUTH_TOKEN}"
+```
+
+and export `NODE_AUTH_TOKEN` on the steps that run Yarn. This action does not write `.yarnrc.yml`, because editing a tracked file of the consumer repository is outside its scope. The `yarn install --immutable` branch of `release-v2.yaml` is therefore not covered by the setup step.
+
 ## Notes
 
 - The job needs the `packages: read` permission (`packages: write` when publishing), otherwise the registry rejects the token.

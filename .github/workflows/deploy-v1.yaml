@@ -24,6 +24,7 @@ jobs:
     runs-on: ubuntu-26.04
     permissions:
       contents: read
+      packages: read
     outputs:
       env_name: ${{ steps.environment.outputs.env_name }}
       project_info: ${{ steps.project-info.outputs.project_info }}
@@ -50,6 +51,15 @@ jobs:
         with:
           install_args: "node pnpm jq"
           minimum_release_age: 7d
+
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: pnpm --filter . ci

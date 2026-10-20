@@ -218,9 +218,22 @@ jobs:
       contents: read
       actions: read
       id-token: write
+      # The workflow installs the repository dependencies to resolve the
+      # affected Nx projects, and they may come from GitHub Packages.
+      packages: read
     uses: pagopa/dx/.github/workflows/release-terraform-v1.yaml@main
     secrets: inherit
 ```
+
+:::info[GitHub Packages permissions]
+
+The calling job must grant `packages: read` so the workflow can install
+dependencies hosted on GitHub Packages, including the DX Nx plugins. A reusable
+workflow can only downgrade the permissions granted by its caller: a
+`permissions` block without `packages` sets the scope to `none`, and the install
+fails later with `401` when the registry refuses the token.
+
+:::
 
 ## Complete Workflow
 
