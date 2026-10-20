@@ -314,7 +314,7 @@ jobs:
 
   code-review:
     name: No environment
-    runs-on: ubuntu-24.04
+    runs-on: self-hosted
     needs: [gate, assess-affected-projects]
     if: ${{ needs.gate.outputs.run == 'true' && needs.assess-affected-projects.outputs.affected-projects == 'true' }}
     permissions:
