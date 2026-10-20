@@ -202,10 +202,10 @@ secret and both code-review jobs attempt to authenticate to `public.ecr.aws`
 using OIDC. Without the secret, pulls remain anonymous. `AWS_REGION` and `ROLE_ARN`
 used for Terraform remain independent.
 
-In `validate-v2.yaml`, assume-role or registry login failures produce a warning
-and fall back to anonymous pulls only after Docker credential cleanup is verified.
-If anonymous access cannot be guaranteed, the job fails. Nx, Trivy and downstream
-pull failures remain blocking.
+In `validate-v2.yaml`, authentication is optional: missing AWS credentials or
+failed assume-role/registry login must not fail the job. The workflow continues
+with anonymous ECR Public pulls instead of using stale registry credentials.
+Nx, Trivy and downstream pull failures remain blocking.
 
 **Regional prerequisite:** ECR Public authorization uses `us-east-1`, regardless
 of the bootstrap resources' region. The AWS organization must permit the
