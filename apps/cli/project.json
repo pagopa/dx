@@ -7,6 +7,7 @@
         "^default",
         "{workspaceRoot}/.github/plugin/marketplace.json",
         "{workspaceRoot}/plugins/tests/plugin.json",
+        "{workspaceRoot}/.github/workflows/validate-v2.yaml",
         { "externalDependencies": ["vitest"] },
         { "env": "CI" },
         { "dependentTasksOutputFiles": "**/*.js", "transitive": true }

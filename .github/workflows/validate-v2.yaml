@@ -15,6 +15,9 @@ on:
       AWS_REGION:
         description: AWS region used by cloud login.
         required: false
+      ECR_PUBLIC_ROLE_ARN:
+        description: Optional AWS OIDC role for authenticated pulls from ECR Public.
+        required: false
       GH_APP_CLIENT_ID:
         description: GitHub App client ID used by cloud login.
         required: false
@@ -47,6 +50,7 @@ jobs:
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
       release-app-configured: ${{ steps.evaluate-release-app.outputs.configured }}
+      ecr-public-configured: ${{ steps.evaluate-ecr-public.outputs.configured }}
     steps:
       - name: Evaluate fork PR
         id: evaluate
@@ -60,6 +64,19 @@ jobs:
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Evaluate ECR Public credentials
+        id: evaluate-ecr-public
+        if: ${{ steps.evaluate.outputs.run == 'true' }}
+        env:
+          ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
+        run: |
+          if [ -n "$ECR_PUBLIC_ROLE_ARN" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::ECR_PUBLIC_ROLE_ARN is not configured. ECR Public pulls remain anonymous."
           fi
 
       # The version-plan warning job comments through the release GitHub App.
@@ -320,6 +337,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      id-token: write
       packages: read
       pull-requests: read
     steps:
@@ -387,6 +405,31 @@ jobs:
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
+      - name: Assume ECR Public pull role
+        id: ecr-public-credentials
+        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
+        with:
+          role-to-assume: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
+          aws-region: us-east-1
+          output-credentials: true
+          output-env-credentials: false
+          mask-aws-account-id: true
+
+      # Docker and Trivy's OCI client both read the Docker credential store.
+      - name: Log in to Amazon ECR Public
+        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.ecr-public-credentials.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.ecr-public-credentials.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.ecr-public-credentials.outputs.aws-session-token }}
+          AWS_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-1
+        with:
+          registry-type: public
+          mask-password: "true"
+
       # We exclude all Terraform Apps from quality checks
       # because they require a dedicated environment to be initialized.
       # Their static checks (lint, test) run in the
@@ -398,7 +441,7 @@ jobs:
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
-    needs: assess-affected-projects
+    needs: [gate, assess-affected-projects]
     if: ${{ needs.assess-affected-projects.outputs.environments != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
     environment:
@@ -534,6 +577,32 @@ jobs:
           GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
           GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
           GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+
+      # Keep the pull role and us-east-1 scoped to registry login, without
+      # replacing the AWS credentials or region used by Terraform plans.
+      - name: Assume ECR Public pull role
+        id: ecr-public-credentials
+        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
+        with:
+          role-to-assume: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
+          aws-region: us-east-1
+          output-credentials: true
+          output-env-credentials: false
+          mask-aws-account-id: true
+
+      - name: Log in to Amazon ECR Public
+        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.ecr-public-credentials.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.ecr-public-credentials.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.ecr-public-credentials.outputs.aws-session-token }}
+          AWS_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-1
+        with:
+          registry-type: public
+          mask-password: "true"
 
       - name: Run Terraform plan on affected environment projects
         env:
