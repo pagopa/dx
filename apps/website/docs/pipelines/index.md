@@ -13,7 +13,7 @@ application deployment, and infrastructure automation.
 
 ### 🔍 Code Quality & Security
 
-- **[Code Review with Nx](./validate.md)** - Comprehensive code quality checks
+- **Code Review** - Comprehensive code quality checks
 - **[Static Analysis](../terraform/static-analysis.md)** - Security and code
   quality scanning
 - **[Drift Detection](../terraform/drift-detection.md)** - Monitor
