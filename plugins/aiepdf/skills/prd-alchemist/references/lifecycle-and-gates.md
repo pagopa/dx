@@ -212,42 +212,6 @@ assumptions, and hypotheses`; state the impact of leaving the issue
 
 ---
 
-## Reporting Gate Validation
+## Reporting and Traceability
 
-Review the PRD against the template and lifecycle requirements. Summarize the
-requested gate, supporting evidence, assessment, and any blocking gaps in the
-response; do not create separate validation or iteration files unless the user
-asks for them. A requested promotion remains at its previous status until all
-required entry evidence is established. Structural completeness alone does
-not establish semantic truth, external-link availability, or human approval.
-Never describe a generated PRD as accepted unless the user explicitly accepts
-it.
-
-Assess the single `Blocking?` value for the requested gate. Check discovery
-intent only when assessing discovery; do not reinterpret a later gate's blocker
-as a contradiction in the initiative's original intent.
-Later gates still check the underlying need, sponsor, owner, actors, and goals.
-
----
-
-## Traceability of Mixed Input Evidence
-
-PRDs frequently combine diverse input sources: user interview notes, strategic
-memos, chat transcripts, customer feedback, and preliminary technical opinions.
-Maintain strict traceability:
-
-1. **Source attribution**: Name the source in notes or source columns for
-   confirmed facts (e.g., _“Payments funnel dashboard reviewed weekly”_).
-2. **Canonical JTBD structure**: Every user goal must follow:
-   - Persona: specific identified actor.
-   - Job statement: _“When [situation], I want [objective], so I can [expected outcome]”_.
-   - Expected outcome: measurable business/user result.
-   - Success metric: concrete indicator.
-   - Quality guardrail: boundary or standard that must not regress.
-   - Priority: Must / Should / Could.
-   - Notes: source context or dependencies.
-3. **Justified N/A**: When a conditional section or item does not apply, write
-   Not applicable with a confirmed reason. Never leave blank or silently omit.
-4. **Completeness and gate review**: Check the PRD's structure, stable IDs,
-   table schemas, and stage-appropriate evidence against the template and
-   lifecycle requirements.
+Follow the reporting rules in `SKILL.md` and the template's JTBD structure.
