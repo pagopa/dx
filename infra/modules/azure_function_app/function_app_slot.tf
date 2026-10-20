@@ -27,7 +27,7 @@ resource "azurerm_linux_function_app_slot" "this" {
     application_insights_key               = var.application_insights_key
     minimum_tls_version                    = var.tls_version
 
-    container_registry_use_managed_identity = local.container.use_acr
+    container_registry_use_managed_identity = local.container.use_managed_identity
 
     application_stack {
       node_version = !local.container.enable && var.stack == "node" ? var.node_version : null

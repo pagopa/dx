@@ -236,7 +236,7 @@ run "azure_app_service_container_image_registry_with_namespace" {
 
   assert {
     condition     = !azurerm_linux_web_app.this.site_config[0].container_registry_use_managed_identity
-    error_message = "Managed identity registry pulls must be disabled when acr_registry is not set."
+    error_message = "Managed identity registry pulls must be disabled unless use_acr_managed_identity is enabled."
   }
 }
 
@@ -244,8 +244,8 @@ run "azure_app_service_container_image_acr" {
   command = plan
 
   variables {
-    container_image = "dxcommonacr.azurecr.io/my-app:1.0.0"
-    acr_registry    = "dxcommonacr.azurecr.io"
+    container_image          = "dxcommonacr.azurecr.io/my-app:1.0.0"
+    use_acr_managed_identity = true
   }
 
   assert {

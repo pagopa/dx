@@ -131,10 +131,15 @@ variable "container_image" {
   }
 }
 
-variable "acr_registry" {
-  type        = string
-  default     = null
-  description = "Indicates the Azure Container Registry to pull images from. Use this variable only if the registry service is an Azure Container Registry. Value must match the registry specified in the image name."
+variable "use_acr_managed_identity" {
+  type        = bool
+  default     = false
+  description = "Set to true to pull the container image from Azure Container Registry using the system-assigned managed identities of the Function App and its staging slot."
+
+  validation {
+    condition     = !var.use_acr_managed_identity || var.container_image != null
+    error_message = "use_acr_managed_identity can only be true when container_image is set."
+  }
 }
 
 variable "application_insights_sampling_percentage" {
