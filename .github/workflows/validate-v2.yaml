@@ -405,6 +405,102 @@ jobs:
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
+      # Keep this setup in the reusable workflow: external callers check out
+      # their own repository, not the DX scripts. Reuse it across both jobs.
+      - &prepare-ecr-public-docker
+        name: Isolate ECR Public credentials
+        id: ecr-public-docker
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          source_dir="${DOCKER_CONFIG:-$HOME/.docker}"
+          temporary="$(mktemp -d "$RUNNER_TEMP/dx-ecr-public.XXXXXX")"
+          mkdir "$temporary/docker" "$temporary/bin"
+          if [ -d "$source_dir" ]; then
+            source_dir="$(cd "$source_dir" && pwd -P)"
+            find "$source_dir" -mindepth 1 -maxdepth 1 ! -name config.json \
+              -exec ln -s '{}' "$temporary/docker/" \;
+          fi
+          source_config="$source_dir/config.json"
+          if [ ! -f "$source_config" ]; then
+            for candidate in "${REGISTRY_AUTH_FILE:-}" \
+              "${XDG_RUNTIME_DIR:-}/containers/auth.json" \
+              "${XDG_CONFIG_HOME:-$HOME/.config}/containers/auth.json"; do
+              if [ -f "$candidate" ]; then
+                source_config="$candidate"
+                break
+              fi
+            done
+          fi
+          if [ -f "$source_config" ]; then
+            if ! jq -es '
+              if length != 1 then error("Invalid Docker configuration") else .[0] end |
+              if type != "object" or ((.credsStore // "") | type) != "string"
+              then error("Invalid Docker configuration") else . end |
+              .auths = ((.auths // {}) | with_entries(select(.key |
+                test("^(https?://)?public\\.ecr\\.aws(:[0-9]+)?(/|$)"; "i") | not))) |
+              .credHelpers = ((.credHelpers // {}) | with_entries(select(.key |
+                test("^(https?://)?public\\.ecr\\.aws(:[0-9]+)?(/|$)"; "i") | not))) |
+              .credHelpers["public.ecr.aws"] = "" |
+              if (.credsStore // "") != "" then
+                .dxEcrOriginalStore = .credsStore | .credsStore = "dx-ecr-public"
+              else . end
+            ' "$source_config" > "$temporary/anonymous.json" 2>/dev/null; then
+              echo "::warning::Ignoring an unreadable or invalid Docker configuration for isolated ECR Public access."
+              printf '{"auths":{},"credHelpers":{"public.ecr.aws":""}}\n' > "$temporary/anonymous.json"
+            fi
+          else
+            printf '{"auths":{},"credHelpers":{"public.ecr.aws":""}}\n' > "$temporary/anonymous.json"
+          fi
+          # A global helper must not supply tokens for repository-scoped
+          # lookups either. Delegate all other registries to the original helper.
+          cat > "$temporary/bin/docker-credential-dx-ecr-public" <<'HELPER'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          helper="$(jq -r '.dxEcrOriginalStore' "$DOCKER_CONFIG/../anonymous.json")"
+          case "$1" in
+            get)
+              server="$(cat)"
+              if printf '%s' "$server" | jq -eR '
+                test("^(https?://)?public\\.ecr\\.aws(:[0-9]+)?(/|$)"; "i")
+              ' > /dev/null; then
+                printf '{"Username":"","Secret":""}\n'
+              else
+                printf '%s' "$server" | "docker-credential-$helper" get
+              fi
+              ;;
+            list)
+              if ! entries="$("docker-credential-$helper" list 2>/dev/null | jq -ec '
+                if type != "object" then error("Invalid credential list") else . end |
+                with_entries(select(.key |
+                  test("^(https?://)?public\\.ecr\\.aws(:[0-9]+)?(/|$)"; "i") | not))
+              ' 2>/dev/null)"; then
+                echo "::warning::The original Docker credential helper could not list credentials. ECR Public remains anonymous; other registries may still require working credentials." >&2
+                entries='{}'
+              fi
+              printf '%s\n' "$entries"
+              ;;
+            *) exec "docker-credential-$helper" "$@" ;;
+          esac
+          HELPER
+          chmod 700 "$temporary/bin/docker-credential-dx-ecr-public"
+          cp "$temporary/anonymous.json" "$temporary/docker/config.json"
+          auth_config="${DOCKER_AUTH_CONFIG:-}"
+          if [ -z "$auth_config" ]; then auth_config='{}'; fi
+          if ! auth_config="$(printf '%s' "$auth_config" | jq -ecs '
+            if length != 1 then error("Invalid Docker auth configuration") else .[0] end |
+            if type != "object" then error("Invalid Docker auth configuration") else . end |
+            .auths = ((.auths // {}) | with_entries(select(.key |
+              test("^(https?://)?public\\.ecr\\.aws(:[0-9]+)?(/|$)"; "i") | not)))
+          ' 2>/dev/null)"; then
+            echo "::warning::Ignoring invalid DOCKER_AUTH_CONFIG for isolated ECR Public access."
+            auth_config='{"auths":{}}'
+          fi
+          printf 'DOCKER_CONFIG=%s/docker\nDOCKER_AUTH_CONFIG=%s\n' "$temporary" "$auth_config" >> "$GITHUB_ENV"
+          printf '%s/bin\n' "$temporary" >> "$GITHUB_PATH"
+          printf 'config=%s/docker\n' "$temporary" >> "$GITHUB_OUTPUT"
+
       - name: Assume ECR Public pull role
         id: ecr-public-credentials
         if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
@@ -432,30 +528,17 @@ jobs:
         with:
           registry-type: public
           mask-password: "true"
+          # Credentials live only in the private job config, removed below.
+          skip-logout: "true"
 
-      - name: Fall back to anonymous ECR Public pulls
-        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' && (steps.ecr-public-credentials.outcome == 'failure' || steps.ecr-public-login.outcome == 'failure') }}
+      - &ecr-public-anonymous-fallback
+        name: Fall back to anonymous ECR Public pulls
+        if: ${{ steps.ecr-public-login.outcome != 'success' }}
+        shell: bash
         run: |
-          if [ -n "${DOCKER_AUTH_CONFIG:-}" ]; then
-            echo "::error::Cannot verify anonymous ECR Public access with DOCKER_AUTH_CONFIG set."
-            exit 1
-          fi
-          docker logout public.ecr.aws
-          # Docker logout may report success even when a credential helper fails.
-          config="${DOCKER_CONFIG:-$HOME/.docker}/config.json"
-          if [ -f "$config" ]; then
-            jq --exit-status '
-              if ((.credsStore // "") != "" or
-                ((.auths // {}) + (.credHelpers // {}) | keys |
-                  any(.[]; test("^(https?://)?public\\.ecr\\.aws(/|$)"))))
-              then error("ECR Public credentials or credential helpers remain configured; cannot safely use anonymous pulls")
-              else true end
-            ' "$config" > /dev/null
-          else
-            mkdir -p "$(dirname "$config")"
-            printf '{"auths":{}}\n' > "$config"
-          fi
-          echo "::warning title=ECR Public authentication unavailable::AWS role assumption or ECR Public login failed. Using anonymous pulls after clearing registry credentials; validation still runs normally and anonymous download limits apply."
+          cp "$DOCKER_CONFIG/../anonymous.json" "$DOCKER_CONFIG/config.anonymous.json"
+          mv -f "$DOCKER_CONFIG/config.anonymous.json" "$DOCKER_CONFIG/config.json"
+          echo "::warning title=ECR Public anonymous access::AWS pull credentials are unavailable or optional authentication failed. Using isolated anonymous ECR Public access; validation still runs normally and anonymous download limits apply."
 
       # We exclude all Terraform Apps from quality checks
       # because they require a dedicated environment to be initialized.
@@ -465,6 +548,17 @@ jobs:
         run: |
           EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
           pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci
+
+      - &cleanup-ecr-public-docker
+        name: Remove temporary registry credentials
+        if: ${{ always() && steps.ecr-public-docker.outcome == 'success' }}
+        shell: bash
+        env:
+          ECR_PUBLIC_DOCKER_CONFIG: ${{ steps.ecr-public-docker.outputs.config }}
+        run: |
+          if ! rm -f -- "$ECR_PUBLIC_DOCKER_CONFIG/config.json" "$ECR_PUBLIC_DOCKER_CONFIG/../anonymous.json"; then
+            echo "::warning::Could not remove the temporary registry configuration. Runner temporary-directory cleanup is still required."
+          fi
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
@@ -607,6 +701,8 @@ jobs:
 
       # Keep the pull role and us-east-1 scoped to registry login, without
       # replacing the AWS credentials or region used by Terraform plans.
+      - *prepare-ecr-public-docker
+
       - name: Assume ECR Public pull role
         id: ecr-public-credentials
         if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
@@ -633,30 +729,9 @@ jobs:
         with:
           registry-type: public
           mask-password: "true"
+          skip-logout: "true"
 
-      - name: Fall back to anonymous ECR Public pulls
-        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' && (steps.ecr-public-credentials.outcome == 'failure' || steps.ecr-public-login.outcome == 'failure') }}
-        run: |
-          if [ -n "${DOCKER_AUTH_CONFIG:-}" ]; then
-            echo "::error::Cannot verify anonymous ECR Public access with DOCKER_AUTH_CONFIG set."
-            exit 1
-          fi
-          docker logout public.ecr.aws
-          # Docker logout may report success even when a credential helper fails.
-          config="${DOCKER_CONFIG:-$HOME/.docker}/config.json"
-          if [ -f "$config" ]; then
-            jq --exit-status '
-              if ((.credsStore // "") != "" or
-                ((.auths // {}) + (.credHelpers // {}) | keys |
-                  any(.[]; test("^(https?://)?public\\.ecr\\.aws(/|$)"))))
-              then error("ECR Public credentials or credential helpers remain configured; cannot safely use anonymous pulls")
-              else true end
-            ' "$config" > /dev/null
-          else
-            mkdir -p "$(dirname "$config")"
-            printf '{"auths":{}}\n' > "$config"
-          fi
-          echo "::warning title=ECR Public authentication unavailable::AWS role assumption or ECR Public login failed. Using anonymous pulls after clearing registry credentials; validation still runs normally and anonymous download limits apply."
+      - *ecr-public-anonymous-fallback
 
       - name: Run Terraform plan on affected environment projects
         env:
@@ -665,6 +740,8 @@ jobs:
         run: |
           pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" && \
             pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
+
+      - *cleanup-ecr-public-docker
 
       - name: Upload Terraform plan report
         if: ${{ always() && hashFiles('.dx-tasks/**/*.json') != '' }}
