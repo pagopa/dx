@@ -202,13 +202,17 @@ secret and both code-review jobs attempt to authenticate to `public.ecr.aws`
 using OIDC. Without the secret, pulls remain anonymous. `AWS_REGION` and `ROLE_ARN`
 used for Terraform remain independent.
 
+In `validate-v2.yaml`, assume-role or registry login failures produce a warning
+and fall back to anonymous pulls only after Docker credential cleanup is verified.
+If anonymous access cannot be guaranteed, the job fails. Nx, Trivy and downstream
+pull failures remain blocking.
+
 **Regional prerequisite:** ECR Public authorization uses `us-east-1`, regardless
 of the bootstrap resources' region. The AWS organization must permit the
 required calls in that region (and the workflow's STS calls) for authenticated
 pulls to work. An explicit SCP or other regional Deny overrides this role's
-Allow. This module does not change SCPs or regional restrictions. Workflows
-using best-effort authentication can warn and fall back to anonymous pulls if
-login fails, but anonymous rate limits and downstream pull failures still apply.
+Allow. This module does not change SCPs or regional restrictions. Anonymous
+fallback remains subject to rate limits and does not guarantee successful pulls.
 
 **Shared secret lifecycle:** The repository secret uses
 `ignore_changes = [plaintext_value]`. Each environment can bootstrap its own
