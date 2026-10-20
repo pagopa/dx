@@ -408,6 +408,7 @@ jobs:
       - name: Assume ECR Public pull role
         id: ecr-public-credentials
         if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
+        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
         with:
           role-to-assume: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
@@ -418,7 +419,9 @@ jobs:
 
       # Docker and Trivy's OCI client both read the Docker credential store.
       - name: Log in to Amazon ECR Public
-        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
+        id: ecr-public-login
+        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' && steps.ecr-public-credentials.outcome == 'success' }}
+        continue-on-error: true
         uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
         env:
           AWS_ACCESS_KEY_ID: ${{ steps.ecr-public-credentials.outputs.aws-access-key-id }}
@@ -429,6 +432,30 @@ jobs:
         with:
           registry-type: public
           mask-password: "true"
+
+      - name: Fall back to anonymous ECR Public pulls
+        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' && (steps.ecr-public-credentials.outcome == 'failure' || steps.ecr-public-login.outcome == 'failure') }}
+        run: |
+          if [ -n "${DOCKER_AUTH_CONFIG:-}" ]; then
+            echo "::error::Cannot verify anonymous ECR Public access with DOCKER_AUTH_CONFIG set."
+            exit 1
+          fi
+          docker logout public.ecr.aws
+          # Docker logout may report success even when a credential helper fails.
+          config="${DOCKER_CONFIG:-$HOME/.docker}/config.json"
+          if [ -f "$config" ]; then
+            jq --exit-status '
+              if ((.credsStore // "") != "" or
+                ((.auths // {}) + (.credHelpers // {}) | keys |
+                  any(.[]; test("^(https?://)?public\\.ecr\\.aws(/|$)"))))
+              then error("ECR Public credentials or credential helpers remain configured; cannot safely use anonymous pulls")
+              else true end
+            ' "$config" > /dev/null
+          else
+            mkdir -p "$(dirname "$config")"
+            printf '{"auths":{}}\n' > "$config"
+          fi
+          echo "::warning title=ECR Public authentication unavailable::AWS role assumption or ECR Public login failed. Using anonymous pulls after clearing registry credentials; validation still runs normally and anonymous download limits apply."
 
       # We exclude all Terraform Apps from quality checks
       # because they require a dedicated environment to be initialized.
@@ -583,6 +610,7 @@ jobs:
       - name: Assume ECR Public pull role
         id: ecr-public-credentials
         if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
+        continue-on-error: true
         uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
         with:
           role-to-assume: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
@@ -592,7 +620,9 @@ jobs:
           mask-aws-account-id: true
 
       - name: Log in to Amazon ECR Public
-        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
+        id: ecr-public-login
+        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' && steps.ecr-public-credentials.outcome == 'success' }}
+        continue-on-error: true
         uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
         env:
           AWS_ACCESS_KEY_ID: ${{ steps.ecr-public-credentials.outputs.aws-access-key-id }}
@@ -603,6 +633,30 @@ jobs:
         with:
           registry-type: public
           mask-password: "true"
+
+      - name: Fall back to anonymous ECR Public pulls
+        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' && (steps.ecr-public-credentials.outcome == 'failure' || steps.ecr-public-login.outcome == 'failure') }}
+        run: |
+          if [ -n "${DOCKER_AUTH_CONFIG:-}" ]; then
+            echo "::error::Cannot verify anonymous ECR Public access with DOCKER_AUTH_CONFIG set."
+            exit 1
+          fi
+          docker logout public.ecr.aws
+          # Docker logout may report success even when a credential helper fails.
+          config="${DOCKER_CONFIG:-$HOME/.docker}/config.json"
+          if [ -f "$config" ]; then
+            jq --exit-status '
+              if ((.credsStore // "") != "" or
+                ((.auths // {}) + (.credHelpers // {}) | keys |
+                  any(.[]; test("^(https?://)?public\\.ecr\\.aws(/|$)"))))
+              then error("ECR Public credentials or credential helpers remain configured; cannot safely use anonymous pulls")
+              else true end
+            ' "$config" > /dev/null
+          else
+            mkdir -p "$(dirname "$config")"
+            printf '{"auths":{}}\n' > "$config"
+          fi
+          echo "::warning title=ECR Public authentication unavailable::AWS role assumption or ECR Public login failed. Using anonymous pulls after clearing registry credentials; validation still runs normally and anonymous download limits apply."
 
       - name: Run Terraform plan on affected environment projects
         env:
