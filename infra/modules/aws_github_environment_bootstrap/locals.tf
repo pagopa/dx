@@ -30,7 +30,9 @@ locals {
   # older repositories still emit name-based subjects. Both are trusted.
   immutable_repository_slug = "${var.repository.owner}@${data.github_organization.owner.id}/${var.repository.name}@${data.github_repository.this.repo_id}"
 
-  repo_secrets = {}
+  repo_secrets = var.ecr_public_login_enabled ? {
+    ECR_PUBLIC_ROLE_ARN = aws_iam_role.ecr_public_login[0].arn
+  } : {}
 
   infra_ci = {
     secrets = {

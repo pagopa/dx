@@ -45,3 +45,8 @@ output "github_private_runner" {
     }
   }
 }
+
+output "ecr_public_role_arn" {
+  description = "ARN of the dedicated ECR Public login role, or null when ecr_public_login_enabled is false."
+  value       = one(aws_iam_role.ecr_public_login[*].arn)
+}

@@ -70,3 +70,10 @@ variable "oidc_provider_arn" {
   type        = string
   description = "The ARN of the OIDC provider for GitHub Actions."
 }
+
+variable "ecr_public_login_enabled" {
+  type        = bool
+  default     = false
+  nullable    = false
+  description = "Create a dedicated ECR Public login role and the repository-level ECR_PUBLIC_ROLE_ARN secret. Enable in exactly one module instance per repository, leaving it disabled in all other environments and states."
+}
