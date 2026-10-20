@@ -19,7 +19,7 @@ inventory() {
     python3 --version
     openssl version
     tar --version
-    go version
+    GOTOOLCHAIN=local go version
     dotnet --list-sdks
     az version
     aws --version
