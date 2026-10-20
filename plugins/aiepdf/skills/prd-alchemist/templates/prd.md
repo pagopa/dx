@@ -2,41 +2,9 @@
 
 <!--
   AUTHORING GUIDANCE — DELETE THIS ENTIRE COMMENT BLOCK IN THE FINISHED DOCUMENT.
-
-  Keep the five standardized table headers below unchanged. The suffixes
-  `(Always)`, `(If Applicable)`, and `(Optional)` are author-only requirement
-  labels. Include every `(Always)` section, use the other sections according
-  to their labels and requested lifecycle gate, and remove these suffixes from
-  every heading in the finished PRD.
-  Preserve stable section comments, field IDs, and lifecycle status tokens in
-  their canonical forms for all included sections.
-  Replace placeholders only with confirmed information. A draft may be
-  incomplete: record missing information as an open question, assumption, or
-  justified Not applicable value.
-  Distinguish review completion from request status: an incomplete review does
-  not mean "not requested." Use "Not assessed — request status
-  unknown" unless a source explicitly says whether a review or assessment
-  was requested.
-  Do not infer priorities, owners, metric cadence, baselines, targets, or
-  thresholds. Preserve the exact reporting period and label proposals as
-  unapproved.
-  Give every narrative sentence an explicit subject that identifies the actor,
-  owner, user group, team, stakeholder, or system. If the source does not name
-  the subject, record a targeted open question instead of inventing one.
-  Preserve every stable section comment and every ID exactly as written for
-  included sections; remove the anchor along with any omitted section.
-  Status starts as draft. The supported lifecycle states are: draft,
-  discovery, evaluation, approved, execution, and archived (legacy review is
-  also supported). Keep these status values in their canonical form.
-  In the open-questions table, enter only a binary yes/no answer in Blocking?.
-  Include the impact alongside the question; do not append rationale to the
-  blocker value.
-  A status change requires an explicit user request and validation against
-  stage-appropriate gate entry criteria; never infer transitions or treat user
-  assertions as shortcuts.
-  Approval strictly requires explicit Product review and Design review
-  sign-off. A linked Design Review artifact does not substitute for
-  review evidence.
+  The structure is authoritative. Authoring rules live in SKILL.md; lifecycle
+  gate criteria live in references/lifecycle-and-gates.md. Remove the
+  `(Always)`, `(If Applicable)`, and `(Optional)` labels from final headings.
 -->
 
 <!-- id: metadata -->
