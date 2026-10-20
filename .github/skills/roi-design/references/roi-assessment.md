@@ -1,24 +1,31 @@
 # ROI Assessment
 
-Reference for step 3 of the review workflow: what to collect, how to score value
-and cost, and how calibrated verdicts read.
+Reference for steps 1–3 of the design workflow: what to collect, how to score
+value and cost, and how calibrated decisions read.
 
 ## Collect the inputs
 
+The ticket carries the claim; the repository carries the cheaper options. Look
+for both before the design is written.
+
 ```bash
-# scope against the merge base, not a stale local file
+# the claimed value
+gh issue view <number> --json title,body,labels
+
+# does something already do this? (novelty test)
+git grep -n "<the operation the design would implement>"
+
+# does this repository produce the input? (upstream test)
+git grep -n "<the template, generator or schema>"
+
+# for a design already implemented: scope against the merge base, not a stale
+# local file
 git fetch origin main
 git diff --stat "$(git merge-base origin/main HEAD)"...HEAD
-
-# new runtime surface and dependencies
-git diff "$(git merge-base origin/main HEAD)"...HEAD -- '**/package.json' '**/*.csproj' '**/go.mod'
-
-# the claimed value
-gh pr view <number> --json title,body,labels
 ```
 
-Generated files, lockfiles and formatting-only churn are review cost, not design
-cost. Exclude them from the numbers and say so.
+Generated files, lockfiles and formatting-only churn inflate the cost without
+adding design surface. Exclude them from the numbers and say so.
 
 ## Value
 
@@ -44,21 +51,20 @@ Cost is permanent; value is often one-off. Count:
   answer;
 - public surface: props, flags, commands, inputs, outputs, error messages;
 - input shapes deliberately supported, each a branch forever;
-- documentation and support answers the change creates.
+- documentation and support answers the design creates.
 
 ## Report the ratio
 
 One formula, two sentences: "<value, with frequency and blast radius>. <cost, in
-lines, dependencies and supported cases>." Then the verdict. If the two sentences
-need hedging, the verdict is probably "worth it with changes" or
-"over-engineered", and the review should say which parts to drop.
+lines, dependencies and supported cases>." Then the decision. If the two sentences
+need hedging, the decision is **cut** or **spike**, not **build**.
 
 ## Calibration: worked examples
 
-### Over-engineered: a parser and a concurrency protocol for one attribute
+### Cut: a parser and a concurrency protocol for one attribute
 
 A CLI edits one attribute of a Terraform file it generates from a fixed template.
-The change replaces a regular expression with a syntax-tree editor, adds a file
+The sketch replaces a regular expression with a syntax-tree editor, adds a file
 lock, inode identity checks and atomic replacement, and supports a matrix of
 hand-edited shapes (escaped labels, quoted keys, BOM, CRLF, comments inside the
 list).
@@ -70,14 +76,28 @@ list).
 - **20% version:** locate the block by scanning, edit the attribute, validate the
   candidate with the formatter the project already runs, then replace the file. A
   malformed edit never reaches disk, at a fraction of the size.
+- **Decision:** cut. The formatter gate and the generated-file assumption are the
+  boundary; hand-edited files are out of scope.
 
-### Not worth it: an abstraction with one call site
+### Skip: an abstraction with one call site
 
 A helper, interface and factory are introduced so a twenty-line operation can be
 swapped later. No second implementation exists or is planned.
 
-- **Value:** speculative.
+- **Value:** speculative; the claim cannot name a beneficiary or a failure.
 - **Cost:** indirection every reader must follow, plus a second place to update
   when the real requirement changes.
-- **Response:** keep the twenty lines inline; extract when the second call site
-  arrives, with its shape known.
+- **Decision:** skip. Keep the twenty lines inline; extract when the second call
+  site arrives, with its shape known.
+
+### Build: a guard that stops a silent overwrite
+
+A command rewrites a generated file before validating it, so a failed validation
+leaves a half-written file. The sketch validates the candidate first and replaces
+the original only on success: about twenty lines, no dependency.
+
+- **Value:** every run where validation fails (frequent), blast radius a broken
+  generated project that blocks the workflow until git restores it.
+- **Cost:** twenty lines and one extra step in the command.
+- **Decision:** build. The validator already runs in the repository, so the gate
+  costs nothing beyond the call.

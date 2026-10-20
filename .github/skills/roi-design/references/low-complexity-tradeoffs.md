@@ -1,8 +1,9 @@
 # Low-Complexity Trade-offs
 
-Levers that keep a change small while still solving the reported case. Use them
-to propose an alternative and name its price: every lever gives something up, and
-a review that hides the price is not a trade-off, it is a preference.
+Levers that keep a design small while still solving the reported case. Use them
+to shape a design and name its price: every lever gives something up, and a
+design that hides the price is not a trade-off, it is a preference. Each lever
+the design relies on becomes a sentence in its boundary (step 4).
 
 | Lever                                  | Use when                                               | You give up                           |
 | -------------------------------------- | ------------------------------------------------------ | ------------------------------------- |
@@ -14,7 +15,7 @@ a review that hides the price is not a trade-off, it is a preference.
 | Regenerate over parse                  | the artifact comes from a template this repo owns      | preservation of manual edits          |
 | Fix the invariant upstream             | this repository owns the template, schema or generator | handling every downstream variant     |
 | Solve the reported case, not the class | no second case is known                                | generality for an imagined future     |
-| Ship the small version now             | the large version is a separate concern                | completeness in this PR               |
+| Ship the small version now             | the large version is a separate concern                | completeness in this change           |
 | Accept bounded robustness              | the failure is recoverable and rare                    | a guarantee someone must maintain     |
 | Use the platform                       | git, the package manager, Nx or Terraform do it        | a bespoke behavior you fully control  |
 
@@ -66,8 +67,8 @@ is the most expensive option available.
 ## Accept bounded robustness and document the boundary
 
 "This is not designed for X" costs one sentence. Building protection for X costs
-code, tests, support and platform risk. Say the boundary in the review, then
-approve.
+code, tests, support and platform risk. Write the boundary into the design note
+and build the version without the protection.
 
 - **Example:** "the command assumes one interactive run per checkout; concurrent
   runs are not serialized".
@@ -83,5 +84,5 @@ Complexity is justified when at least one holds:
 - the protection is **exercised by a test or a documented scenario**, so it can
   be maintained and removed with evidence.
 
-If none holds, the protection is cost: name it as such and propose the version
-without it.
+If none holds, the protection is cost: name it as such in the design and choose
+the version without it.
