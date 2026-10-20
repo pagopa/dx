@@ -23,8 +23,8 @@ locals {
     "p" = "prod"
   }
 
-  env_lifecycle_name = local.envs[var.environment.env_short]
-  env_name           = var.github_environment_prefix_enabled ? "${var.environment.prefix}-${local.env_lifecycle_name}" : local.env_lifecycle_name
+  base_environment_name = local.envs[var.environment.env_short]
+  env_name              = var.github_environment_prefix_enabled ? "${var.environment.prefix}-${local.base_environment_name}" : local.base_environment_name
 
   # GitHub emits immutable subject claims that embed the numeric owner and
   # repository IDs for repositories created or renamed after 2026-07-15, while
