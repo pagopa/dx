@@ -476,7 +476,7 @@ jobs:
                 with_entries(select(.key |
                   test("^(https?://)?public\\.ecr\\.aws(:[0-9]+)?(/|$)"; "i") | not))
               ' 2>/dev/null)"; then
-                echo "::warning::The original Docker credential helper could not list credentials. ECR Public remains anonymous; other registries may still require working credentials." >&2
+                echo "::warning::The original Docker credential helper could not list credentials. ECR Public access is isolated; other registries may still require working credentials." >&2
                 entries='{}'
               fi
               printf '%s\n' "$entries"
