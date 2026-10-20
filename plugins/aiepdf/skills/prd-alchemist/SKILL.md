@@ -79,8 +79,7 @@ directory. Keep the bundled template unchanged.
   distinct business outcome was supplied.
 - Remove an omitted section's anchor and contents together. Retain all anchors
   and field IDs in included sections.
-- Keep the exact column titles and column counts of the Persona, Business Goals,
-  User Goals, Risks, and Open Questions tables. Put additional detail inside
+- Keep the template's table schemas unchanged. Put additional detail inside
   existing cells.
 
 ## PRD Writing Style
