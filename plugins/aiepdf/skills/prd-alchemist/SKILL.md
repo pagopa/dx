@@ -37,16 +37,14 @@ the PRD. Produce the PRD only; do not create those downstream artifacts.
    missing owners, or unclear needs. Ask the decision owner to resolve competing
    positions. Record remaining gaps explicitly; conditional unknowns do not
    block `draft` creation.
-5. **Review completeness and gates.** For every lifecycle assessment, read the
-   [Lifecycle and Gate Model](./references/lifecycle-and-gates.md) and check all
-   criteria for the assessed state. For transitions, also check the captured
-   original state and permitted sequence. Check every required section, stable
-   ID, and standardized table against the template. Repair authoring errors
-   without inventing source facts, then review the corrected document.
-6. **Apply a validated transition.** Change `metadata.status` only for an
-   explicit transition request whose sequence and entry evidence pass. Review
-   the result against the target gate. If any check is blocked or unvalidated,
-   preserve the original status and report the exact missing evidence.
+5. **Review completeness and gates.** Check the document against the template
+   and, for every lifecycle assessment, against the
+   [Lifecycle and Gate Model](./references/lifecycle-and-gates.md). Check the
+   captured original state and permitted sequence before any transition. Repair
+   authoring errors without inventing source facts.
+6. **Apply a validated transition.** Change `metadata.status` only when the
+   explicit request, sequence, and entry evidence pass. If any check is blocked
+   or unvalidated, preserve the original status and report the missing evidence.
 7. **Report the result.** State the PRD path, current status, assessed gate,
    supporting evidence, validation result, blockers, and unresolved gaps.
    Distinguish recorded evidence from matters requiring human confirmation;
