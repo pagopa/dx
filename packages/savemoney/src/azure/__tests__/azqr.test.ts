@@ -204,7 +204,7 @@ describe("azqrImpactedToFindings", () => {
     expect(finding.recommendedAction).toContain("no direct cost");
   });
 
-  it("enriches the reason with inventory SKU / location when available", () => {
+  it("enriches the reason with inventory SKU when available", () => {
     const id = resourceId(REAL_SUB, "microsoft.network/natgateways", "nat");
     const report = parseAzqrReport({
       impacted: [
@@ -219,8 +219,9 @@ describe("azqrImpactedToFindings", () => {
     });
 
     const [finding] = azqrImpactedToFindings(report);
-    expect(finding.reason).toContain("Standard");
-    expect(finding.reason).toContain("italynorth");
+    expect(finding.reason).toBe(
+      "NAT Gateways not attached to any subnet (Standard).",
+    );
   });
 
   it("defaults severity to low for unknown impact on cost rows", () => {

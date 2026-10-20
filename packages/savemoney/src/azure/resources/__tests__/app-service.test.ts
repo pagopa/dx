@@ -105,7 +105,7 @@ describe("analyzeAppServicePlan", () => {
     });
   });
 
-  it("does not price Premium underutilization as full removable cost", async () => {
+  it("does not emit a Premium underutilization finding", async () => {
     mockGetMetric.mockResolvedValue(1);
     const pricing = makePricingService();
 
@@ -129,9 +129,8 @@ describe("analyzeAppServicePlan", () => {
     );
 
     expect(result.suspectedUnused).toBe(true);
-    expect(result.reason).toContain(
-      "Premium tier with low resource utilization",
-    );
+    expect(result.reason).toContain("Very low CPU usage");
+    expect(result.reason).not.toContain("Premium tier");
     expect(result.estimatedMonthlySavings).toBeUndefined();
     expect(pricing.resolveAppServicePlan).not.toHaveBeenCalled();
   });

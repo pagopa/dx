@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.27.14",
+  "version": "0.27.16",
   "description": "A CLI useful to manage DX tools.",
   "keywords": [
     "CLI",
@@ -33,6 +33,7 @@
     "@azure/arm-storage": "^19.1.0",
     "@azure/identity": "catalog:",
     "@azure/keyvault-secrets": "^4.11.2",
+    "@azure/logger": "catalog:azure",
     "@azure/monitor-opentelemetry": "catalog:opentelemetry",
     "@azure/storage-blob": "catalog:azure",
     "@logtape/logtape": "catalog:",
@@ -51,6 +52,7 @@
     "glob": "^11.1.0",
     "import-in-the-middle": "^3.5.2",
     "inquirer": "^9.3.8",
+    "jsonc-parser": "^3.3.1",
     "libsodium-wrappers": "^0.8.4",
     "neverthrow": "catalog:",
     "node-plop": "^0.32.3",
@@ -72,6 +74,7 @@
     "eslint": "catalog:",
     "fast-check": "^4.10.2",
     "memfs": "^4.68.0",
+    "oxfmt": "^0.71.0",
     "plop": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:",

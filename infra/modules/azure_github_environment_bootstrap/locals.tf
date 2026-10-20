@@ -1,5 +1,5 @@
 locals {
-  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/module.json")).name, basename(path.module)) })
+  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/project.json")).name, "unknown") })
   naming_config = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
@@ -90,6 +90,13 @@ locals {
   }
 
   infra_ci = {
+    secrets = {
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_ci.client_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
+    }
+  }
+
+  automation_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_ci.client_id
       "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id

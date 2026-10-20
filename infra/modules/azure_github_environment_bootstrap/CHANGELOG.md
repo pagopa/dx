@@ -1,3 +1,24 @@
+## 6.2.3 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 6.2.2 (2026-10-14)
+
+### 🩹 Fixes
+
+- Add automation CI environment ([#2345](https://github.com/pagopa/dx/pull/2345))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 6.2.1 (2026-10-09)
 
 ### 🩹 Fixes

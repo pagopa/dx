@@ -117,15 +117,6 @@ export async function analyzeAppServicePlan(
       reason += `Very low memory usage (${memoryPercentage.toFixed(2)}%). `;
     }
 
-    // Check if it's an oversized plan (Premium tier with low usage)
-    if (
-      planDetails.sku?.tier?.includes("Premium") &&
-      cpuPercentage !== null &&
-      cpuPercentage < thresholds.appService.premiumCpuPercent
-    ) {
-      reason += "Premium tier with low resource utilization. ";
-    }
-
     const suspectedUnused = reason.length > 0;
     const result = await enrichWithPricing(
       { costRisk, reason: reason.trim(), suspectedUnused },

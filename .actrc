@@ -1,3 +1,0 @@
--P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-24.04
--P self-hosted=ghcr.io/catthehacker/ubuntu:act-24.04
---container-daemon-socket -

@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # uv for `uvx --from harbor-rewardkit` in test.sh (judge deps fetched at runtime).
 RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
-COPY test.sh quality.toml /tests/
+COPY test.sh skill_use.py quality.toml /tests/
 RUN chmod +x /tests/test.sh
 
 WORKDIR /tests

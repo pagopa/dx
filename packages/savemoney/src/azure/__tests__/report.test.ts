@@ -210,6 +210,39 @@ describe("generateReport — lint format", () => {
       expect(output).toContain("Estimated monthly cost at risk (custom)");
       expect(output).toContain("Estimated monthly savings (advisor)");
     });
+
+    it("exposes per-resource savings in json and in the table Savings column", async () => {
+      await generateReport([VM_WITH_COST, ADVISOR_WITH_SAVINGS], "json");
+      const json = JSON.parse(allLogs(logSpy));
+      expect(
+        json.map(
+          (r: { estimatedMonthlySavings?: unknown }) =>
+            r.estimatedMonthlySavings,
+        ),
+      ).toEqual([
+        { amount: 29.94, currency: "EUR" },
+        { amount: 12.34, currency: "EUR" },
+      ]);
+
+      logSpy.mockClear();
+      await generateReport([VM_WITH_COST, ADVISOR_WITH_SAVINGS], "table");
+      expect(allLogs(logSpy)).toMatch(/Savings[\s\S]*29[.,]94[\s\S]*12[.,]34/);
+    });
+
+    it("joins per-currency savings with '+' to show they are cumulative", async () => {
+      const [eurFinding] = ADVISOR_WITH_SAVINGS.findings ?? [];
+      const usdFinding = {
+        ...eurFinding,
+        estimatedMonthlySavings: { amount: 5, currency: "USD" },
+      };
+      await generateReport(
+        [{ ...ADVISOR_WITH_SAVINGS, findings: [eurFinding, usdFinding] }],
+        "lint",
+      );
+      expect(allLogs(logSpy)).toMatch(
+        /savings \(advisor\):.*12[.,]34.* \+ .*5[.,]00/,
+      );
+    });
   });
 });
 

@@ -1,3 +1,34 @@
+## 2.2.1 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 2.2.0 (2026-10-14)
+
+### 🚀 Features
+
+- Add per-origin preserve_host_header option to forward the incoming Host header when enabled, preserving the existing default behavior. ([#2338](https://github.com/pagopa/dx/pull/2338))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 2.1.7 (2026-10-13)
+
+### 🩹 Fixes
+
+- Update internal examples and AzureRM constraints ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 2.1.6 (2026-09-30)
 
 ### 🩹 Fixes

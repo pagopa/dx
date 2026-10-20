@@ -27,10 +27,6 @@ import type { Finding, FindingCategory } from "../finding.js";
 /** Reason emitted when a resource carries no tags at all. */
 export const MISSING_TAGS_REASON = "No tags found.";
 
-/** Reason emitted when no analyzer plugin supports the resource type. */
-export const NO_ANALYZER_REASON =
-  "No specific analysis for this resource type.";
-
 /**
  * Prefix of the diagnostic sentences emitted by the per-resource analyzers when
  * an Azure detail lookup fails (e.g. "Could not retrieve detailed NIC
@@ -68,7 +64,6 @@ function categorizeCustomReason(reason: string): FindingCategory {
   const normalized = reason.trim().toLowerCase();
   const isNonCost =
     normalized.startsWith(MISSING_TAGS_REASON.toLowerCase()) ||
-    normalized.startsWith(NO_ANALYZER_REASON.toLowerCase()) ||
     normalized.startsWith(UNPREFERRED_LOCATION_REASON.toLowerCase()) ||
     normalized.startsWith(DETAIL_LOOKUP_FAILURE_PREFIX);
   return isNonCost ? "operationalExcellence" : "cost";
