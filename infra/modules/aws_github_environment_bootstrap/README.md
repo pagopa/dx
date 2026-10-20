@@ -62,15 +62,15 @@ module "github_bootstrap" {
 
 ## Variables Reference
 
-| Variable                | Description                                      | Required |
-| ----------------------- | ------------------------------------------------ | :------: |
-| `environment`           | Resource naming and location configuration       |    ✅    |
-| `repository`            | GitHub repository details (owner, name)          |    ✅    |
-| `vpc`                   | VPC configuration for self-hosted runner         |    ✅    |
-| `github_private_runner` | Self-hosted runner configuration                 |    ✅    |
-| `oidc_provider_arn`     | ARN of the GitHub OIDC provider                  |    ✅    |
-| `tags`                  | Resource tags for cost allocation and management |    ✅    |
-| `github_environment_prefix_enabled` | Prefix GitHub lifecycle names with `environment.prefix` | Optional |
+| Variable                            | Description                                               | Required |
+| ----------------------------------- | --------------------------------------------------------- | :------: |
+| `environment`                       | Resource naming and location configuration                |    ✅    |
+| `repository`                        | GitHub repository details (owner, name)                   |    ✅    |
+| `vpc`                               | VPC configuration for self-hosted runner                  |    ✅    |
+| `github_private_runner`             | Self-hosted runner configuration                          |    ✅    |
+| `oidc_provider_arn`                 | ARN of the GitHub OIDC provider                           |    ✅    |
+| `tags`                              | Resource tags for cost allocation and management          |    ✅    |
+| `github_environment_prefix_enabled` | Prefix GitHub environment names with `environment.prefix` | Optional |
 
 ### Detailed Variable Explanations
 
@@ -423,7 +423,7 @@ resource "aws_iam_policy" "custom_app_policy" {
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and region short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    region          = string<br/>    domain          = string<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
-| <a name="input_github_environment_prefix_enabled"></a> [github\_environment\_prefix\_enabled](#input\_github\_environment\_prefix\_enabled) | Prefix GitHub lifecycle environment names with environment.prefix. | `bool` | `false` | no |
+| <a name="input_github_environment_prefix_enabled"></a> [github\_environment\_prefix\_enabled](#input\_github\_environment\_prefix\_enabled) | Prefix GitHub environment names with environment.prefix. | `bool` | `false` | no |
 | <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for the GitHub self-hosted runner, including tier, code connection ARN, personal access token, environment variables, and secrets. Either codeconnection\_arn or personal\_access\_token must be set, but not both. | <pre>object({<br/>    tier               = optional(string, "m")<br/>    codeconnection_arn = optional(string, null)<br/>    personal_access_token = optional(object({<br/>      ssm_parameter_name = optional(string, null)<br/>      value              = optional(string, null)<br/>    }), null)<br/>    env_variables = optional(map(string), {})<br/>    secrets = map(object({<br/>      ssm_parameter_name   = optional(string, null)<br/>      secrets_manager_name = optional(string, null)<br/>    }))<br/>  })</pre> | n/a | yes |
 | <a name="input_oidc_provider_arn"></a> [oidc\_provider\_arn](#input\_oidc\_provider\_arn) | The ARN of the OIDC provider for GitHub Actions. | `string` | n/a | yes |
 | <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including owner and name. | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |

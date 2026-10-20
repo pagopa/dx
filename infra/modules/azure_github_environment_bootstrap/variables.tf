@@ -18,7 +18,7 @@ variable "environment" {
 variable "github_environment_prefix_enabled" {
   type        = bool
   default     = false
-  description = "Prefix GitHub lifecycle environment names with environment.prefix."
+  description = "Prefix GitHub environment names with environment.prefix."
 }
 
 variable "entraid_groups" {

@@ -57,7 +57,7 @@ locals {
       resource_type = "managed_identity"
     }))
 
-    # Prefixing only affects GitHub lifecycle names, not cloud resource names.
+    # The prefix affects GitHub environment names only, not cloud resource names.
     infra_environment_name      = "infra-${local.env_name}-%s"
     automation_environment_name = "automation-${local.env_name}-%s"
     app_environment_name        = "app-${local.env_name}-%s"
