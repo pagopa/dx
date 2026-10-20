@@ -249,6 +249,8 @@ importers:
         specifier: 'catalog:'
         version: 3.9.6
 
+  actions/deploy: {}
+
   actions/detect-node-package-manager:
     devDependencies:
       prettier:
