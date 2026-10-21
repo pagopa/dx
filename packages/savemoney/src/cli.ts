@@ -188,7 +188,7 @@ function parseTagsOption(tags?: string[]): Map<string, string> {
     const separator = pair.indexOf("=");
     const key = pair.slice(0, separator).trim();
     const value = pair.slice(separator + 1).trim();
-    if (separator <= 0 || key.length === 0 || value.length === 0) {
+    if (separator <= 0 || key.length === 0) {
       throw new InvalidArgumentError(`Invalid tag "${pair}". Use key=value.`);
     }
     parsed.set(key, value);
