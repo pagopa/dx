@@ -71,32 +71,16 @@ module "app_service" {
 
   `var.acr_id` is the Azure Container Registry resource ID.
 
-### Migrating an existing package-based app
+### Migrating from ZIP deployment
 
-Changing `container_image` on an existing package-based App Service does not initialize its Docker configuration: the production app and staging slot intentionally ignore Docker changes so CD pipelines can own subsequent image updates. Replace both resources once to initialize them from the container configuration:
+An App Service configured for ZIP deployment cannot be converted in place to run a container image. The module intentionally ignores Docker image changes after creation so CD pipelines can own subsequent image updates. Create a separate App Service with a unique `environment.instance_number`, migrate to it, and retire the ZIP-based app after cutover.
 
-1. Confirm the tagged image is available. For ACR, plan how to grant `AcrPull` to the new production and staging system-assigned identities after replacement; replacing either resource changes its identity.
-2. Set `container_image` in the consuming configuration. For standard ACR login server hostnames ending in `.azurecr.io`, managed identity pulls are enabled automatically.
-3. Use `terraform state list` to find the exact addresses for the production App Service and staging slot. For a module named `app_service`, the addresses are typically:
+1. Confirm the tagged image is available and choose an `instance_number` that produces a unique App Service name.
+2. Add a second module instance using the same application configuration, a different `environment.instance_number`, and `container_image`. For standard ACR login server hostnames ending in `.azurecr.io`, managed identity pulls are enabled automatically. Grant `AcrPull` to the new App Service and staging slot identities before expecting private image pulls to succeed.
+3. Create and validate the container-based App Service and its staging slot while the existing ZIP-based app remains available. Migrate required application settings, data, integrations, DNS or routing, and any other dependencies; test the new app before directing traffic to it.
+4. Cut over traffic to the new App Service. Once the cutover is verified and rollback is no longer needed, remove the old ZIP-based module instance and review the Terraform plan before applying its deletion.
 
-   ```text
-   module.app_service.azurerm_linux_web_app.this
-   module.app_service.azurerm_linux_web_app_slot.this[0]
-   ```
-
-   If the module is nested or uses `count`/`for_each`, use its actual addresses from state.
-4. Review and apply a plan that replaces both resources:
-
-   ```sh
-   terraform plan -out=container-migration.tfplan \
-     -replace='module.app_service.azurerm_linux_web_app.this' \
-     -replace='module.app_service.azurerm_linux_web_app_slot.this[0]'
-   terraform apply container-migration.tfplan
-   ```
-
-   Replacing the existing app and slot causes service interruption; schedule a maintenance window and review all dependent resources and traffic routing before applying. For ACR, update the role assignments to the new identity outputs and allow image pulls to succeed.
-
-After replacement, keep `container_image` configured as the bootstrap image. Docker changes remain ignored by Terraform, so CD pipelines retain ownership of subsequent production and staging image updates.
+Keep `container_image` configured on the new module instance as the bootstrap image. Docker changes remain ignored by Terraform, so CD pipelines retain ownership of subsequent production and staging image updates.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
