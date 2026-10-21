@@ -8,7 +8,7 @@ on:
         type: choice
         required: true
         options:
-          - dx-metrics
+          - "dx-metrics"
       version:
         description: Version of the project to deploy.
         type: string

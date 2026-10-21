@@ -33,6 +33,9 @@
     ],
     "version": {}
   },
+  "sync": {
+    "globalGenerators": ["@pagopa/nx-dx:workflows"]
+  },
   "release": {
     "versionPlans": true,
     "projects": [
@@ -127,7 +130,8 @@
           }
         }
       }
-    }
+    },
+    "@pagopa/nx-dx"
   ],
   "pluginsConfig": {
     "@nx/js": {
