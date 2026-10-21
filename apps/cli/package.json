@@ -44,7 +44,6 @@
     "@opentelemetry/instrumentation": "catalog:opentelemetry",
     "@opentelemetry/instrumentation-undici": "catalog:opentelemetry",
     "@opentelemetry/sdk-logs": "catalog:opentelemetry",
-    "@pagopa/dx-savemoney": "workspace:^",
     "chalk": "^5.6.2",
     "commander": "catalog:",
     "core-js": "^3.50.0",
