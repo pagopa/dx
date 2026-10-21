@@ -431,7 +431,7 @@ jobs:
       - name: Run code quality checks on affected projects
         run: |
           EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
-          pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci
+          pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci --outputStyle=static
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
@@ -610,8 +610,8 @@ jobs:
           EXCLUDE: ${{ matrix.target.exclude }}
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
         run: |
-          pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" && \
-            pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
+          pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" --outputStyle=static && \
+            pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE" --outputStyle=static
 
       - name: Upload Terraform plan report
         if: ${{ always() && hashFiles('.dx-tasks/**/*.json') != '' }}

@@ -213,7 +213,7 @@ jobs:
       - name: Terraform Plan
         env:
           PROJECT: ${{ matrix.target.project }}
-        run: pnpm nx run "${PROJECT}:plan:ci" --out="$TFPLAN_FILE"
+        run: pnpm nx run "${PROJECT}:plan:ci" --out="$TFPLAN_FILE" --outputStyle=static
 
       # Bundle the plan file together with .terraform.lock.hcl and .terraform/modules/
       # and upload it to the same storage backend used for the Terraform state.
@@ -339,4 +339,4 @@ jobs:
       - name: Terraform Apply
         env:
           PROJECT: ${{ matrix.target.project }}
-        run: pnpm nx run "${PROJECT}:apply:ci" --planFile="$TFPLAN_FILE"
+        run: pnpm nx run "${PROJECT}:apply:ci" --planFile="$TFPLAN_FILE" --outputStyle=static
