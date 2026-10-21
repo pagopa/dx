@@ -1,6 +1,5 @@
 /** Reads and updates Nx Release versions stored in project.json metadata. */
-import type { Tree } from "@nx/devkit";
-
+import { parseJson, type Tree } from "@nx/devkit";
 import { VersionActions } from "nx/release";
 import { z } from "zod/v4";
 
@@ -36,7 +35,7 @@ export default class ProjectJsonVersionActions extends VersionActions {
     }
 
     try {
-      const parsed = projectJsonSchema.safeParse(JSON.parse(content));
+      const parsed = projectJsonSchema.safeParse(parseJson(content));
       return parsed.success
         ? { currentVersion: parsed.data.metadata.version, manifestPath }
         : null;
@@ -68,7 +67,7 @@ export default class ProjectJsonVersionActions extends VersionActions {
 
     let projectJson: unknown;
     try {
-      projectJson = JSON.parse(content);
+      projectJson = parseJson(content);
     } catch (cause) {
       throw new Error(`Failed to parse ${manifestPath}.`, { cause });
     }

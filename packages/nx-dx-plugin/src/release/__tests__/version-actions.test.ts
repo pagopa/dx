@@ -88,6 +88,50 @@ describe("ProjectJsonVersionActions", () => {
     });
   });
 
+  it("reads and updates project.json with comments and trailing commas", async () => {
+    const projectRoot = "apps/test";
+    const tree = createTree();
+    tree.write(
+      `${projectRoot}/project.json`,
+      `{
+        // Project metadata
+        "metadata": {
+          /* Keep the owner while updating the version. */
+          "owner": "platform",
+          "version": "1.2.3",
+        },
+        "name": "test-project",
+      }`,
+    );
+    const versionActions = createVersionActions(projectRoot);
+
+    await expect(
+      versionActions.readCurrentVersionFromSourceManifest(tree),
+    ).resolves.toEqual({
+      currentVersion: "1.2.3",
+      manifestPath: `${projectRoot}/project.json`,
+    });
+
+    await expect(
+      versionActions.updateProjectVersion(tree, "2.0.0"),
+    ).resolves.toEqual([
+      `Updated test-project version to 2.0.0 in ${projectRoot}/project.json`,
+    ]);
+
+    const updated = tree.read(`${projectRoot}/project.json`, "utf-8");
+    if (!updated) {
+      throw new Error("Expected project.json to be updated");
+    }
+
+    expect(JSON.parse(updated)).toEqual({
+      metadata: {
+        owner: "platform",
+        version: "2.0.0",
+      },
+      name: "test-project",
+    });
+  });
+
   it("does not read or update package.json", async () => {
     const projectRoot = "apps/test";
     const tree = createTree();
@@ -144,7 +188,7 @@ describe("ProjectJsonVersionActions", () => {
     await expect(
       createVersionActions(projectRoot).updateProjectVersion(tree, "2.0.0"),
     ).rejects.toMatchObject({
-      cause: expect.any(SyntaxError),
+      cause: expect.any(Error),
       message: `Failed to parse ${projectRoot}/project.json.`,
     });
   });
