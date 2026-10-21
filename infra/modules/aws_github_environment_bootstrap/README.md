@@ -196,11 +196,12 @@ Do not expose this role through `pull_request_target` workflows that execute
 untrusted fork code.
 
 `validate-v2.yaml` must receive the secret via `secrets: inherit` or an explicit
-`ECR_PUBLIC_ROLE_ARN` mapping. Its gate runs **without** a GitHub environment:
-an environment-only secret cannot enable login. The gate detects the repository
-secret and both code-review jobs attempt to authenticate to `public.ecr.aws`
-using OIDC. Without the secret, ECR Public login is skipped. `AWS_REGION` and `ROLE_ARN`
-used for Terraform remain independent.
+`ECR_PUBLIC_ROLE_ARN` mapping. Each code-review job checks whether the secret is
+available before attempting OIDC authentication to `public.ecr.aws`. A repository
+secret enables login in both jobs; an environment-only secret can enable login
+only in the job using that environment. Without the secret in a job, ECR Public
+authentication is skipped. `AWS_REGION` and `ROLE_ARN` used for Terraform remain
+independent.
 
 In `validate-v2.yaml`, authentication uses the official AWS actions and is
 optional: failed assume-role/registry login does not stop validation. Docker
