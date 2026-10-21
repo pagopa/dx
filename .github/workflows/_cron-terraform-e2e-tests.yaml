@@ -86,7 +86,7 @@ jobs:
             ${{ runner.os }}-nx-cache-
 
       - name: Use the local AzureRM v5-compatible role assignments module
-        if: ${{ github.event_name == 'schedule' || inputs.projects == '' || contains(inputs.projects, 'modules-azure-app-configuration') }}
+        if: ${{ github.event_name == 'schedule' || inputs.projects == '' || contains(inputs.projects, 'azure_app_configuration') }}
         run: |
           python3 - <<'PY'
           from pathlib import Path
