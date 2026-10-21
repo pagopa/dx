@@ -2,8 +2,8 @@ import { z } from "zod/v4";
 
 import { publishSchema } from "./publish-options.ts";
 
-// Parses and validates module.json files for publishable Terraform modules.
-export const modulePublishManifestSchema = publishSchema.extend({
+// Parses and validates Terraform publishing metadata from project.json.
+export const terraformProjectMetadataSchema = publishSchema.extend({
   github: z
     .object({
       owner: z.string().min(1).optional(),
@@ -11,9 +11,11 @@ export const modulePublishManifestSchema = publishSchema.extend({
     .optional(),
 });
 
-export type ModulePublishManifest = z.infer<typeof modulePublishManifestSchema>;
+export type TerraformProjectMetadata = z.infer<
+  typeof terraformProjectMetadataSchema
+>;
 
-export class ModulePublishManifestError extends Error {
+export class TerraformProjectMetadataError extends Error {
   readonly issues: z.core.$ZodIssue[];
   readonly reasons: string[];
 
@@ -21,20 +23,20 @@ export class ModulePublishManifestError extends Error {
     super(reasons.join("; "));
     this.issues = issues;
     this.reasons = reasons;
-    this.name = "ModulePublishManifestError";
+    this.name = "TerraformProjectMetadataError";
   }
 }
 
-export const parseModulePublishManifest = (
+export const parseTerraformProjectMetadata = (
   input: unknown,
-): ModulePublishManifest => {
-  const parseResult = modulePublishManifestSchema.safeParse(input);
+): TerraformProjectMetadata => {
+  const parseResult = terraformProjectMetadataSchema.safeParse(input);
   if (!parseResult.success) {
     const reasons = parseResult.error.issues.map((issue) => {
       const issuePath = issue.path.join(".");
       return `${issuePath}: ${issue.message}`;
     });
-    throw new ModulePublishManifestError(parseResult.error.issues, reasons);
+    throw new TerraformProjectMetadataError(parseResult.error.issues, reasons);
   }
   return parseResult.data;
 };
