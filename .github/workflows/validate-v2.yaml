@@ -432,7 +432,7 @@ jobs:
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
-    needs: [gate, assess-affected-projects]
+    needs: assess-affected-projects
     if: ${{ needs.assess-affected-projects.outputs.environments != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
     environment:
