@@ -101,6 +101,13 @@ on:
 
 jobs:
   deploy_to_static_web_app:
+    permissions:
+      contents: read
+      id-token: write
+      # The build job installs the repository dependencies, which may come from
+      # GitHub Packages.
+      packages: read
+      pull-requests: write
     uses: pagopa/dx/.github/workflows/release-azure-staticapp-v1.yaml@main
     secrets: inherit
     with:
@@ -110,6 +117,16 @@ jobs:
       resource_group_name: "your-resource-group-name" # From Terraform
       environment: "app-dev"
 ```
+
+:::info[GitHub Packages permissions]
+
+The calling job must grant `packages: read` so the build job can install
+dependencies hosted on GitHub Packages. A reusable workflow can only downgrade
+the permissions granted by its caller: a `permissions` block without `packages`
+sets the scope to `none`, and the install fails later with `401` when the
+registry refuses the token.
+
+:::
 
 ## Additional Notes
 
