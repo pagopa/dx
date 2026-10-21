@@ -265,7 +265,7 @@ run "azure_function_app_container_image_docker_hub" {
 
   assert {
     condition     = !azurerm_linux_function_app.this.site_config[0].container_registry_use_managed_identity
-    error_message = "Managed identity must not be used unless use_acr_managed_identity is enabled."
+    error_message = "Managed identity must not be used for non-ACR registries."
   }
 }
 
@@ -289,8 +289,7 @@ run "azure_function_app_container_image_acr" {
   command = plan
 
   variables {
-    container_image          = "myacr.azurecr.io/my-function:sha-abc123"
-    use_acr_managed_identity = true
+    container_image = "myacr.azurecr.io/my-function:sha-abc123"
   }
 
   assert {

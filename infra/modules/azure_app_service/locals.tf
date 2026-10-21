@@ -53,10 +53,10 @@ locals {
   container_image_has_registry = length(local.container_image_parts) > 1 && can(regex("[.:]|^localhost$", try(local.container_image_parts[0], "")))
 
   container = {
-    enable               = var.container_image != null
-    use_managed_identity = var.use_acr_managed_identity
-    registry_url         = var.container_image == null ? null : "https://${local.container_image_has_registry ? local.container_image_parts[0] : "index.docker.io"}"
-    image_name           = var.container_image == null ? null : (local.container_image_has_registry ? join("/", slice(local.container_image_parts, 1, length(local.container_image_parts))) : var.container_image)
+    enable       = var.container_image != null
+    use_acr      = local.container_image_has_registry && can(regex("\\.azurecr\\.io$", lower(try(local.container_image_parts[0], ""))))
+    registry_url = var.container_image == null ? null : "https://${local.container_image_has_registry ? local.container_image_parts[0] : "index.docker.io"}"
+    image_name   = var.container_image == null ? null : (local.container_image_has_registry ? join("/", slice(local.container_image_parts, 1, length(local.container_image_parts))) : var.container_image)
   }
 
   # Container-based apps run the image content, so the deployment package setting must not be set

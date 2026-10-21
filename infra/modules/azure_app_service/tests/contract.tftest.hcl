@@ -93,13 +93,3 @@ run "azure_app_service_rejects_container_image_with_digest" {
 
   expect_failures = [var.container_image]
 }
-
-run "azure_app_service_rejects_acr_managed_identity_without_container_image" {
-  command = plan
-
-  variables {
-    use_acr_managed_identity = true
-  }
-
-  expect_failures = [var.use_acr_managed_identity]
-}

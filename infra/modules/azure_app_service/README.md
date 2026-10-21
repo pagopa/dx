@@ -47,14 +47,13 @@ module "app_service" {
 
   # ...
   container_image          = "myacr.azurecr.io/my-app:1.0.0"
-  use_acr_managed_identity = true
 }
 ```
 
 - The image must include a tag. Images without a registry are pulled from Docker Hub.
 - When a container image is used, `stack`, `node_version` and `java_version` are ignored and `WEBSITE_RUN_FROM_PACKAGE` is not set.
 - After creation, the image is not managed by Terraform; CD pipelines are expected to update it.
-- Set `use_acr_managed_identity = true` when the image is hosted on Azure Container Registry, so that the App Service and the staging slot pull images with their system-assigned managed identities. The module does not assign permissions on the registry: grant the `AcrPull` role to both identities, for example:
+- When the registry hostname in `container_image` ends in `.azurecr.io`, the App Service and staging slot automatically use their system-assigned managed identities to pull the image. Custom registry domains are not inferred. The module does not assign permissions on the registry, so grant the `AcrPull` role to both identities:
 
   ```hcl
   resource "azurerm_role_assignment" "app_service_acr_pull" {
@@ -77,7 +76,7 @@ module "app_service" {
 Changing `container_image` on an existing package-based App Service does not initialize its Docker configuration: the production app and staging slot intentionally ignore Docker changes so CD pipelines can own subsequent image updates. Replace both resources once to initialize them from the container configuration:
 
 1. Confirm the tagged image is available. For ACR, plan how to grant `AcrPull` to the new production and staging system-assigned identities after replacement; replacing either resource changes its identity.
-2. Set `container_image` in the consuming configuration and set `use_acr_managed_identity = true` when pulling from ACR.
+2. Set `container_image` in the consuming configuration. For standard ACR login server hostnames ending in `.azurecr.io`, managed identity pulls are enabled automatically.
 3. Use `terraform state list` to find the exact addresses for the production App Service and staging slot. For a module named `app_service`, the addresses are typically:
 
    ```text
@@ -153,7 +152,6 @@ No modules.
 | <a name="input_subnet_service_endpoints"></a> [subnet\_service\_endpoints](#input\_subnet\_service\_endpoints) | Enable service endpoints for the underlying subnet. Should only be set if dependencies do not use private endpoints. | <pre>object({<br/>    cosmos  = optional(bool, false)<br/>    storage = optional(bool, false)<br/>    web     = optional(bool, false)<br/>  })</pre> | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Map of tags to apply to all created resources. | `map(any)` | n/a | yes |
 | <a name="input_tls_version"></a> [tls\_version](#input\_tls\_version) | Minimum TLS version for the App Service. | `number` | `1.2` | no |
-| <a name="input_use_acr_managed_identity"></a> [use\_acr\_managed\_identity](#input\_use\_acr\_managed\_identity) | Set to true to pull the container image from Azure Container Registry using the system-assigned managed identities of the App Service and its staging slot. | `bool` | `false` | no |
 | <a name="input_use_case"></a> [use\_case](#input\_use\_case) | App Service use case. Allowed values: 'default', 'high\_load'. | `string` | `"default"` | no |
 | <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Virtual network where the subnet will be created. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 

@@ -105,12 +105,10 @@ module "function_app" {
   # ... other parameters ...
 
   container_image          = "myacr.azurecr.io/my-function:1.0.0"
-  # Enable system-assigned managed identity pulls from Azure Container Registry
-  use_acr_managed_identity = true
 }
 ```
 
-When `use_acr_managed_identity` is true, grant the `AcrPull` role on the registry to both identities. For a module named `function_app`, the caller-side role assignments are:
+When the registry hostname in `container_image` ends in `.azurecr.io`, the Function App and staging slot automatically use their system-assigned managed identities to pull the image. Custom registry domains are not inferred. Grant the `AcrPull` role on the registry to both identities. For a module named `function_app`, the caller-side role assignments are:
 
 ```hcl
 resource "azurerm_role_assignment" "function_app_acr_pull" {
@@ -126,14 +124,14 @@ resource "azurerm_role_assignment" "function_app_slot_acr_pull" {
 }
 ```
 
-`var.acr_id` is the Azure Container Registry resource ID. Leave `use_acr_managed_identity` false for public registries; images without a registry are pulled from Docker Hub. The module does not assign registry permissions.
+`var.acr_id` is the Azure Container Registry resource ID. Images without a registry are pulled from Docker Hub. The module does not assign registry permissions.
 
 ### Migrating an existing package-based app
 
 Changing `container_image` on an existing package-based Function App does not initialize its Docker configuration: the production app and staging slot intentionally ignore Docker changes so CD pipelines can own subsequent image updates. Replace both resources once to initialize them from the container configuration:
 
 1. Confirm the tagged image is available. For ACR, plan how to grant `AcrPull` to the new production and staging system-assigned identities after replacement; replacing either resource changes its identity.
-2. Set `container_image` in the consuming configuration and set `use_acr_managed_identity = true` when pulling from ACR.
+2. Set `container_image` in the consuming configuration. For standard ACR login server hostnames ending in `.azurecr.io`, managed identity pulls are enabled automatically.
 3. Use `terraform state list` to find the exact addresses for the production Function App and staging slot. For a module named `function_app`, the addresses are typically:
 
    ```text
@@ -243,7 +241,6 @@ No modules.
 | <a name="input_subnet_service_endpoints"></a> [subnet\_service\_endpoints](#input\_subnet\_service\_endpoints) | Enable service endpoints for the subnet used by the Function App. Set this only if dependencies do not use private endpoints. | <pre>object({<br/>    cosmos  = optional(bool, false)<br/>    storage = optional(bool, false)<br/>    web     = optional(bool, false)<br/>  })</pre> | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
 | <a name="input_tls_version"></a> [tls\_version](#input\_tls\_version) | Minimum TLS version for the App Service. | `number` | `1.2` | no |
-| <a name="input_use_acr_managed_identity"></a> [use\_acr\_managed\_identity](#input\_use\_acr\_managed\_identity) | Set to true to pull the container image from Azure Container Registry using the system-assigned managed identities of the Function App and its staging slot. | `bool` | `false` | no |
 | <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Function App use case. Allowed values: 'default', 'high\_load'. | `string` | `"default"` | no |
 | <a name="input_virtual_network"></a> [virtual\_network](#input\_virtual\_network) | Details of the virtual network where the subnet for the Function App will be created. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>  })</pre> | n/a | yes |
 

@@ -22,7 +22,7 @@ resource "azurerm_linux_web_app_slot" "this" {
     ip_restriction_default_action     = "Deny"
     minimum_tls_version               = var.tls_version
 
-    container_registry_use_managed_identity = local.container.use_managed_identity
+    container_registry_use_managed_identity = local.container.use_acr
 
     application_stack {
       node_version        = !local.container.enable && var.stack == "node" ? "${var.node_version}-lts" : null
