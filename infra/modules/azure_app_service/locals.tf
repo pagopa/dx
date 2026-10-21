@@ -61,6 +61,7 @@ locals {
 
   # Container-based apps run the image content, so the deployment package setting must not be set
   package_app_settings = local.container.enable ? {
+    # https://learn.microsoft.com/en-us/troubleshoot/azure/app-service/faqs-app-service-linux-new#custom-containers
     WEBSITES_ENABLE_APP_SERVICE_STORAGE = "false"
     } : {
     # https://learn.microsoft.com/en-us/azure/azure-functions/run-functions-from-deployment-package#using-website_run_from_package--1

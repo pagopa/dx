@@ -110,7 +110,23 @@ module "function_app" {
 }
 ```
 
-When `use_acr_managed_identity` is true, grant the `AcrPull` role on the registry to both `function_app.function_app.principal_id` and `function_app.function_app.slot.principal_id` outputs. Leave it false for public registries; images without a registry are pulled from Docker Hub. The module does not assign registry permissions.
+When `use_acr_managed_identity` is true, grant the `AcrPull` role on the registry to both identities. For a module named `function_app`, the caller-side role assignments are:
+
+```hcl
+resource "azurerm_role_assignment" "function_app_acr_pull" {
+  scope                = var.acr_id
+  role_definition_name = "AcrPull"
+  principal_id         = module.function_app.function_app.function_app.principal_id
+}
+
+resource "azurerm_role_assignment" "function_app_slot_acr_pull" {
+  scope                = var.acr_id
+  role_definition_name = "AcrPull"
+  principal_id         = module.function_app.function_app.function_app.slot.principal_id
+}
+```
+
+`var.acr_id` is the Azure Container Registry resource ID. Leave `use_acr_managed_identity` false for public registries; images without a registry are pulled from Docker Hub. The module does not assign registry permissions.
 
 ### Migrating an existing package-based app
 

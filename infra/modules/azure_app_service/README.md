@@ -54,7 +54,23 @@ module "app_service" {
 - The image must include a tag. Images without a registry are pulled from Docker Hub.
 - When a container image is used, `stack`, `node_version` and `java_version` are ignored and `WEBSITE_RUN_FROM_PACKAGE` is not set.
 - After creation, the image is not managed by Terraform; CD pipelines are expected to update it.
-- Set `use_acr_managed_identity = true` when the image is hosted on Azure Container Registry, so that the App Service and the staging slot pull images with their system-assigned managed identities. The module does not assign permissions on the registry: grant the `AcrPull` role to both `module.app_service.app_service.principal_id` and `module.app_service.app_service.slot.principal_id` outputs (using the module name from the example above).
+- Set `use_acr_managed_identity = true` when the image is hosted on Azure Container Registry, so that the App Service and the staging slot pull images with their system-assigned managed identities. The module does not assign permissions on the registry: grant the `AcrPull` role to both identities, for example:
+
+  ```hcl
+  resource "azurerm_role_assignment" "app_service_acr_pull" {
+    scope                = var.acr_id
+    role_definition_name = "AcrPull"
+    principal_id         = module.app_service.app_service.app_service.principal_id
+  }
+
+  resource "azurerm_role_assignment" "app_service_slot_acr_pull" {
+    scope                = var.acr_id
+    role_definition_name = "AcrPull"
+    principal_id         = module.app_service.app_service.app_service.slot.principal_id
+  }
+  ```
+
+  `var.acr_id` is the Azure Container Registry resource ID.
 
 ### Migrating an existing package-based app
 
