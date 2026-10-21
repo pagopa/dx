@@ -25,6 +25,9 @@ jobs:
     permissions:
       contents: read
       id-token: write
+      # The build job installs the website dependencies, which reference DX
+      # packages hosted on GitHub Packages.
+      packages: read
       pull-requests: write
     uses: $/.github/workflows/release-azure-staticapp-v1.yaml
     secrets: inherit

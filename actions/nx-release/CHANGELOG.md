@@ -1,3 +1,14 @@
+## 0.3.16 (2026-10-21)
+
+### 🩹 Fixes
+
+- nx-release now uses the shared setup-npm-registry action instead of writing the GitHub Packages credential to the npmrc inline. The publish step passes the workflow token to the action and no longer exports `NODE_AUTH_TOKEN` or `NPM_CONFIG_USERCONFIG` itself. ([#2374](https://github.com/pagopa/dx/pull/2374))
+- Pass the workflow token to `setup-npm-registry` through its new `token` input and drop the `NODE_AUTH_TOKEN` and `NPM_CONFIG_USERCONFIG` exports from the publish step. The action now prepares and exports the npmrc itself, so the publish step only runs the release. ([#2383](https://github.com/pagopa/dx/pull/2383))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.3.15 (2026-10-08)
 
 ### 🩹 Fixes

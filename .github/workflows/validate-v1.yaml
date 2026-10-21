@@ -11,6 +11,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      packages: read
       pull-requests: write
     steps:
       - name: Generate GitHub App token
@@ -31,6 +32,15 @@ jobs:
       - name: Setup Node.js
         uses: pagopa/dx/.github/actions/node-setup@main
 
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install dependencies
         run: pnpm install
 
@@ -46,6 +56,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      packages: read
       pull-requests: read
     steps:
       - name: Check out repository
@@ -65,6 +76,15 @@ jobs:
 
       - name: Setup Terraform
         uses: pagopa/dx/.github/actions/terraform-setup@main
+
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: pnpm install
