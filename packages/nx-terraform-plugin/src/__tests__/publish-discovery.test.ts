@@ -3,9 +3,9 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { hasPublishableModuleManifest } from "../discovery.ts";
+import { hasPublishableTerraformMetadata } from "../discovery.ts";
 
-describe("hasPublishableModuleManifest", () => {
+describe("hasPublishableTerraformMetadata", () => {
   const createdDirs: string[] = [];
 
   afterEach(async () => {
@@ -16,40 +16,45 @@ describe("hasPublishableModuleManifest", () => {
     );
   });
 
-  it("returns true when module.json exists and is valid", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "terraform-module-"));
+  it("returns true when project.json has valid Terraform metadata", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "terraform-project-"));
     createdDirs.push(root);
     await fs.writeFile(
-      path.join(root, "module.json"),
+      path.join(root, "project.json"),
       JSON.stringify({
-        description: "Terraform module",
-        provider: "aws",
-        version: "1.2.3",
+        metadata: {
+          description: "Terraform module",
+          provider: "aws",
+          version: "1.2.3",
+        },
       }),
       "utf-8",
     );
 
-    await expect(hasPublishableModuleManifest(root)).resolves.toBe(true);
+    await expect(hasPublishableTerraformMetadata(root)).resolves.toBe(true);
   });
 
-  it("returns false when module.json does not exist", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "terraform-module-"));
+  it("returns false when project.json has no Terraform metadata", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "terraform-project-"));
     createdDirs.push(root);
+    await fs.writeFile(path.join(root, "project.json"), '{"name":"module"}');
 
-    await expect(hasPublishableModuleManifest(root)).resolves.toBe(false);
+    await expect(hasPublishableTerraformMetadata(root)).resolves.toBe(false);
   });
 
-  it("returns false when module.json is invalid", async () => {
-    const root = await fs.mkdtemp(path.join(os.tmpdir(), "terraform-module-"));
+  it("returns false when Terraform metadata is invalid", async () => {
+    const root = await fs.mkdtemp(path.join(os.tmpdir(), "terraform-project-"));
     createdDirs.push(root);
     await fs.writeFile(
-      path.join(root, "module.json"),
+      path.join(root, "project.json"),
       JSON.stringify({
-        version: "1.2.3",
+        metadata: {
+          version: "1.2.3",
+        },
       }),
       "utf-8",
     );
 
-    await expect(hasPublishableModuleManifest(root)).resolves.toBe(false);
+    await expect(hasPublishableTerraformMetadata(root)).resolves.toBe(false);
   });
 });

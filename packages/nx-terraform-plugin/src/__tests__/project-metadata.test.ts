@@ -1,19 +1,19 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  ModulePublishManifestError,
-  modulePublishManifestSchema,
-  parseModulePublishManifest,
-} from "../manifest.ts";
+  parseTerraformProjectMetadata,
+  TerraformProjectMetadataError,
+  terraformProjectMetadataSchema,
+} from "../project-metadata.ts";
 import {
   mergePublishOptions,
   PublishOptionsError,
 } from "../publish-options.ts";
 
-describe("parseModulePublishManifest", () => {
-  it("parses a valid module.json manifest", () => {
+describe("parseTerraformProjectMetadata", () => {
+  it("parses valid project metadata", () => {
     expect(
-      parseModulePublishManifest({
+      parseTerraformProjectMetadata({
         description: "Terraform module description",
         provider: "aws",
         version: "1.2.3",
@@ -25,20 +25,20 @@ describe("parseModulePublishManifest", () => {
     });
   });
 
-  it("throws for module.json missing description", () => {
+  it("throws when metadata is missing a description", () => {
     expect(() =>
-      parseModulePublishManifest({
+      parseTerraformProjectMetadata({
         version: "1.2.3",
       }),
-    ).toThrowError(ModulePublishManifestError);
+    ).toThrowError(TerraformProjectMetadataError);
   });
 
-  it("throws for module.json missing provider", () => {
+  it("throws when metadata is missing a provider", () => {
     const invalidManifest = {
       description: "Terraform module description",
       version: "1.2.3",
     };
-    const parseResult = modulePublishManifestSchema.safeParse(invalidManifest);
+    const parseResult = terraformProjectMetadataSchema.safeParse(invalidManifest);
     expect(parseResult.success).toBe(false);
     if (parseResult.success) {
       return;
@@ -46,14 +46,14 @@ describe("parseModulePublishManifest", () => {
 
     const thrownError = (() => {
       try {
-        parseModulePublishManifest(invalidManifest);
+        parseTerraformProjectMetadata(invalidManifest);
         return undefined;
       } catch (error) {
         return error;
       }
     })();
 
-    expect(thrownError).toBeInstanceOf(ModulePublishManifestError);
+    expect(thrownError).toBeInstanceOf(TerraformProjectMetadataError);
     expect(thrownError).toMatchObject({
       issues: parseResult.error.issues,
       message: parseResult.error.issues
@@ -64,20 +64,20 @@ describe("parseModulePublishManifest", () => {
 
   it("formats multiple validation errors concisely", () => {
     const invalidManifest = {};
-    const parseResult = modulePublishManifestSchema.safeParse(invalidManifest);
+    const parseResult = terraformProjectMetadataSchema.safeParse(invalidManifest);
     expect(parseResult.success).toBe(false);
     if (parseResult.success) {
       return;
     }
 
-    expect(() => parseModulePublishManifest(invalidManifest)).toThrowError(
+    expect(() => parseTerraformProjectMetadata(invalidManifest)).toThrowError(
       parseResult.error.issues
         .map((issue) => `${issue.path.join(".")}: ${issue.message}`)
         .join("; "),
     );
   });
 
-  it("merges plugin publish defaults with manifest fields", () => {
+  it("merges plugin publish defaults with project metadata", () => {
     expect(
       mergePublishOptions(
         { github: { owner: "pagopa-dx" } },
@@ -129,7 +129,7 @@ describe("parseModulePublishManifest", () => {
 
       for (const version of validVersions) {
         expect(
-          parseModulePublishManifest({
+          parseTerraformProjectMetadata({
             description: "Test module",
             provider: "aws",
             version,
@@ -150,12 +150,12 @@ describe("parseModulePublishManifest", () => {
 
       for (const version of invalidVersions) {
         expect(() =>
-          parseModulePublishManifest({
+          parseTerraformProjectMetadata({
             description: "Test module",
             provider: "aws",
             version,
           }),
-        ).toThrowError(ModulePublishManifestError);
+        ).toThrowError(TerraformProjectMetadataError);
       }
     });
   });

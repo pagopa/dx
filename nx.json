@@ -44,7 +44,6 @@
       "actions/*",
       "containers/*",
       "plugins/*",
-      "infra/modules/*",
       "providers/*",
       "infra/scripts"
     ],

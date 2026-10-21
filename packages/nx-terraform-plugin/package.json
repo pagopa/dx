@@ -1,6 +1,11 @@
 {
   "name": "@pagopa/nx-terraform",
   "version": "0.5.15",
+  "files": [
+    "dist",
+    "executors.json",
+    "src/executors/**/schema.json"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
@@ -16,23 +21,16 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    },
-    "./release/version-actions": {
-      "types": "./dist/release/version-actions.d.ts",
-      "import": "./dist/release/version-actions.js",
-      "default": "./dist/release/version-actions.js"
     }
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
   },
-  "scripts": {
-    "generate": "node src/generate-module-schema.ts"
-  },
   "dependencies": {
     "@logtape/logtape": "catalog:",
     "@nx/devkit": "catalog:",
     "@octokit/auth-app": "catalog:",
+    "@pagopa/dx-tasks": "workspace:^",
     "execa": "catalog:",
     "octokit": "catalog:",
     "semver": "catalog:",
@@ -40,7 +38,6 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@pagopa/dx-tasks": "workspace:^",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
@@ -48,7 +45,6 @@
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "prettier": "catalog:",
-    "tsdown": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
