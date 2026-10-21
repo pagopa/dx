@@ -154,6 +154,20 @@ describe("savemoney CLI", () => {
     });
   });
 
+  it("accepts tag filters with empty values", async () => {
+    const deps = makeDependencies();
+    const { command } = makeTestCommand(deps);
+
+    await runAnalyze(command, ["--tags", "owner="]);
+
+    expect(deps.analyzeAzureResources).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filterTags: new Map([["owner", ""]]),
+      }),
+    );
+    expect(process.exitCode).toBeUndefined();
+  });
+
   it.each(["table", "json", "detailed-json", "lint"] as const)(
     "renders a non-empty report as %s",
     async (format) => {
@@ -216,6 +230,8 @@ describe("savemoney CLI errors", () => {
   it.each([
     ["subscription IDs", ["--subscriptionIds", "  "]],
     ["tags", ["--tags", "environment"]],
+    ["tags with empty keys", ["--tags", "=prod"]],
+    ["tags with blank keys", ["--tags", "  =prod"]],
   ])(
     "reports invalid %s to stderr and exits with status 1",
     async (_, options) => {
