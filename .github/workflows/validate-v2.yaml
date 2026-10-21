@@ -400,6 +400,9 @@ jobs:
         uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
         with:
           role-to-assume: ${{ env.ECR_PUBLIC_ROLE_ARN }}
+          # ECR Public is global, but AWS requires us-east-1 for registry authentication.
+          # This is the authentication region, not the deployment region.
+          # https://docs.aws.amazon.com/AmazonECR/latest/public/public-registry-auth.html
           aws-region: us-east-1
           output-credentials: true
           output-env-credentials: false
@@ -579,6 +582,9 @@ jobs:
         uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
         with:
           role-to-assume: ${{ env.ECR_PUBLIC_ROLE_ARN }}
+          # ECR Public is global, but AWS requires us-east-1 for registry authentication.
+          # This is the authentication region, not the deployment region.
+          # https://docs.aws.amazon.com/AmazonECR/latest/public/public-registry-auth.html
           aws-region: us-east-1
           output-credentials: true
           output-env-credentials: false
