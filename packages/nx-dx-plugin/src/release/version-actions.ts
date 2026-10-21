@@ -9,14 +9,14 @@ const projectJsonSchema = z
       .object({
         version: z.string().min(1),
       })
-      .passthrough(),
+      .loose(),
   })
-  .passthrough();
+  .loose();
 
 /**
  * Stores project versions in `project.json` metadata for projects without a
  * package manifest. Configure with
- * `release.version.versionActions: "@pagopa/nx-dx/release/version-actions"`.
+ * `release.version.versionActions: "@pagopa/nx-dx/version-actions"`.
  */
 export default class ProjectJsonVersionActions extends VersionActions {
   validManifestFilenames = ["project.json"];

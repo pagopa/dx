@@ -22,7 +22,7 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./release/version-actions": {
+    "./version-actions": {
       "types": "./dist/release/version-actions.d.ts",
       "import": "./dist/release/version-actions.js",
       "default": "./dist/release/version-actions.js"

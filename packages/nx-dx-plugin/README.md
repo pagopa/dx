@@ -24,7 +24,7 @@ actions:
   "release": {
     "version": {
       "currentVersionResolver": "disk",
-      "versionActions": "@pagopa/nx-dx/release/version-actions"
+      "versionActions": "@pagopa/nx-dx/version-actions"
     }
   }
 }
