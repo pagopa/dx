@@ -1,6 +1,6 @@
 {
   "name": "setup-npm-registry",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "description": "Action to authenticate npm and pnpm to the GitHub Packages registry that hosts DX packages.",
   "keywords": [
