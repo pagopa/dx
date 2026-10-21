@@ -1,3 +1,13 @@
+## 0.27.18 (2026-10-21)
+
+### 🩹 Fixes
+
+- Add optional ECR Public authentication for Docker in `validate-v2` using `ECR_PUBLIC_ROLE_ARN`. Missing credentials or authentication failures do not block validation. Forward the optional secret from generated `dx init` workflows. ([#2387](https://github.com/pagopa/dx/pull/2387))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.27.17 (2026-10-21)
 
 ### 🚀 Features
