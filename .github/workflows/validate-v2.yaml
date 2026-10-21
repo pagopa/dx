@@ -50,7 +50,6 @@ jobs:
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
       release-app-configured: ${{ steps.evaluate-release-app.outputs.configured }}
-      ecr-public-configured: ${{ steps.evaluate-ecr-public.outputs.configured }}
     steps:
       - name: Evaluate fork PR
         id: evaluate
@@ -64,19 +63,6 @@ jobs:
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
             echo "run=true" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Evaluate ECR Public credentials
-        id: evaluate-ecr-public
-        if: ${{ steps.evaluate.outputs.run == 'true' }}
-        env:
-          ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
-        run: |
-          if [ -n "$ECR_PUBLIC_ROLE_ARN" ]; then
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::ECR_PUBLIC_ROLE_ARN is not configured. ECR Public pulls remain anonymous."
           fi
 
       # The version-plan warning job comments through the release GitHub App.
@@ -340,6 +326,8 @@ jobs:
       id-token: write
       packages: read
       pull-requests: read
+    env:
+      ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -407,11 +395,11 @@ jobs:
 
       - name: Assume ECR Public pull role
         id: ecr-public-credentials
-        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
+        if: ${{ env.ECR_PUBLIC_ROLE_ARN != '' }}
         continue-on-error: true
         uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
         with:
-          role-to-assume: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
+          role-to-assume: ${{ env.ECR_PUBLIC_ROLE_ARN }}
           aws-region: us-east-1
           output-credentials: true
           output-env-credentials: false
@@ -420,7 +408,7 @@ jobs:
       # Docker and Trivy's OCI client both read the Docker credential store.
       - name: Log in to Amazon ECR Public
         id: ecr-public-login
-        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' && steps.ecr-public-credentials.outcome == 'success' }}
+        if: ${{ steps.ecr-public-credentials.outcome == 'success' }}
         continue-on-error: true
         uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
         env:
@@ -474,6 +462,7 @@ jobs:
       ARM_STORAGE_USE_AZUREAD: true
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -585,11 +574,11 @@ jobs:
       # replacing the AWS credentials or region used by Terraform plans.
       - name: Assume ECR Public pull role
         id: ecr-public-credentials
-        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' }}
+        if: ${{ env.ECR_PUBLIC_ROLE_ARN != '' }}
         continue-on-error: true
         uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
         with:
-          role-to-assume: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
+          role-to-assume: ${{ env.ECR_PUBLIC_ROLE_ARN }}
           aws-region: us-east-1
           output-credentials: true
           output-env-credentials: false
@@ -597,7 +586,7 @@ jobs:
 
       - name: Log in to Amazon ECR Public
         id: ecr-public-login
-        if: ${{ needs.gate.outputs.ecr-public-configured == 'true' && steps.ecr-public-credentials.outcome == 'success' }}
+        if: ${{ steps.ecr-public-credentials.outcome == 'success' }}
         continue-on-error: true
         uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
         env:
