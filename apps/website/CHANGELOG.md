@@ -1,3 +1,18 @@
+## 0.22.19 (2026-10-21)
+
+### 🩹 Fixes
+
+- Update the dx init documentation for the validate-v2 alignment: the generated Code Review workflow, GitHub Packages authentication, Trivy configuration and the Nx Terraform plugin check in dx doctor. The GitHub Packages prerequisite now documents the up-front check performed by dx init. ([#2347](https://github.com/pagopa/dx/pull/2347))
+- Update references to keep-alive page ([#2373](https://github.com/pagopa/dx/pull/2373))
+- Authenticate the reusable workflows to GitHub Packages before installing dependencies. `release-v2`, `validate-v1`, `release-terraform-v1`, `deploy-v1`, `release-azure-staticapp-v1` and `release-azure-staticassets-v1` now run `setup-npm-registry`, so consumers that reference DX packages through pnpm's `gh:` alias no longer fail with `ERR_PNPM_FETCH_401`. ([#2390](https://github.com/pagopa/dx/pull/2390))
+
+  Because a reusable workflow can only downgrade the permissions granted by its caller, the calling jobs must declare `packages: read` (`packages: write` for releases). The action README and the consumer docs now describe the requirement and explain that Yarn 2+ ignores the exported npmrc.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Danilo Spinelli @gunzip
+
 ## 0.22.18 (2026-10-14)
 
 ### 🩹 Fixes

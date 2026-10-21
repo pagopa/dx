@@ -1,3 +1,22 @@
+## 0.5.14 (2026-10-21)
+
+### 🩹 Fixes
+
+- Resolve the published entry points from the built output instead of the ([#2376](https://github.com/pagopa/dx/pull/2376))
+  TypeScript sources.
+
+  The `require` condition of the `.` and `./release/version-actions` exports
+  pointed at `src/*.ts`. Node refuses to strip types for files under
+  `node_modules`, so consumers that resolved the package through the CommonJS
+  condition — Nx loading the plugin, or `nx release` resolving `versionActions` —
+  failed with "Stripping types is currently unsupported for files under
+  node_modules". The conditions are removed, so every loader resolves
+  `./dist/*.js`, matching `@pagopa/nx-docker`.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.13 (2026-10-09)
 
 ### 🩹 Fixes

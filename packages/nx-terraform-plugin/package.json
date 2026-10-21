@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/nx-terraform",
-  "version": "0.5.13",
+  "version": "0.5.14",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
