@@ -176,8 +176,11 @@ tags = {
 Every AWS bootstrap instance creates a dedicated IAM role and publishes its ARN
 as the **repository Actions secret** `ECR_PUBLIC_ROLE_ARN`; no additional input
 or AWS access keys are required. The role grants only `ecr-public:GetAuthorizationToken` and
-`sts:GetServiceBearerToken`; the latter is restricted to
-`ecr-public.amazonaws.com`. Both token APIs require `Resource = "*"`.
+`sts:GetServiceBearerToken`. Both token APIs require `Resource = "*"`.
+The STS permission has no service-name condition, matching the
+[documented AWS ECR Public policy](https://docs.aws.amazon.com/aws-managed-policy/latest/reference/AmazonElasticContainerRegistryPublicReadOnly.html).
+It is not restricted to ECR Public bearer tokens, but grants no additional
+service APIs or repository write permissions.
 The existing app/infra roles and environment-level `ROLE_ARN` secrets are
 unchanged.
 

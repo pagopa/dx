@@ -13,6 +13,8 @@ provider's naming functions run locally. No infrastructure is created.
 DX naming, exact token-only IAM permissions, unchanged deployment secrets, and
 repository-scoped OIDC trust for both legacy and immutable subjects. It checks
 PR, branch and cross-environment contexts and rejects other repository subjects.
+The exact policy assertion rejects additional actions and service-name conditions
+on `sts:GetServiceBearerToken`; the token Allow must not require injected context.
 The IAM policy document data source is mocked; trust assertions inspect its
 configured statements, while permission assertions inspect the role's JSON policy.
 This does not replace a live GitHub OIDC/ECR login check or prove fork filtering

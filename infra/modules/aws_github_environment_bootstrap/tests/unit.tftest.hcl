@@ -117,15 +117,10 @@ run "aws_github_environment_bootstrap_ecr_public_created_by_default" {
           Effect   = "Allow"
           Action   = "sts:GetServiceBearerToken"
           Resource = "*"
-          Condition = {
-            StringEquals = {
-              "sts:AWSServiceName" = "ecr-public.amazonaws.com"
-            }
-          }
         }
       ]
     }
-    error_message = "The login role must allow only the two ECR Public token operations, with STS limited to ECR Public."
+    error_message = "The login role must allow exactly the two token operations without requiring a service-name condition context."
   }
 
   assert {

@@ -29,11 +29,6 @@ resource "aws_iam_role_policy" "ecr_public_login" {
         Effect   = "Allow"
         Action   = "sts:GetServiceBearerToken"
         Resource = "*"
-        Condition = {
-          StringEquals = {
-            "sts:AWSServiceName" = "ecr-public.amazonaws.com"
-          }
-        }
       }
     ]
   })
