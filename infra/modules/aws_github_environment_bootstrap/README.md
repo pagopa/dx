@@ -199,20 +199,24 @@ untrusted fork code.
 `ECR_PUBLIC_ROLE_ARN` mapping. Its gate runs **without** a GitHub environment:
 an environment-only secret cannot enable login. The gate detects the repository
 secret and both code-review jobs attempt to authenticate to `public.ecr.aws`
-using OIDC. Without the secret, pulls remain anonymous. `AWS_REGION` and `ROLE_ARN`
+using OIDC. Without the secret, ECR Public login is skipped. `AWS_REGION` and `ROLE_ARN`
 used for Terraform remain independent.
 
-In `validate-v2.yaml`, authentication is optional: missing AWS credentials or
-failed assume-role/registry login must not fail the job. The workflow continues
-with anonymous ECR Public pulls instead of using stale registry credentials.
-Nx, Trivy and downstream pull failures remain blocking.
+In `validate-v2.yaml`, authentication uses the official AWS actions and is
+optional: failed assume-role/registry login does not stop validation. Docker
+stores credentials per registry, so ECR Public and GHCR logins can coexist.
+The workflow does not isolate or clear existing Docker credentials. When login
+is skipped or fails, pulls are anonymous only if no ECR Public credentials
+already exist; self-hosted runner provisioning must manage those credentials.
+Nx, Trivy and downstream pull failures, including those caused by stale
+credentials or anonymous rate limits, remain blocking.
 
 **Regional prerequisite:** ECR Public authorization uses `us-east-1`, regardless
 of the bootstrap resources' region. The AWS organization must permit the
 required calls in that region (and the workflow's STS calls) for authenticated
 pulls to work. An explicit SCP or other regional Deny overrides this role's
 Allow. This module does not change SCPs or regional restrictions. Anonymous
-fallback remains subject to rate limits and does not guarantee successful pulls.
+access remains subject to rate limits and does not guarantee successful pulls.
 
 **Shared secret lifecycle:** The repository secret uses
 `ignore_changes = [plaintext_value]`. Each environment can bootstrap its own
