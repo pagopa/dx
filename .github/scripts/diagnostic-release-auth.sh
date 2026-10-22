@@ -7,6 +7,7 @@ record() {
   shift
   local status=0
   "$@" > "$RUNNER_TEMP/auth-probe.log" 2>&1 || status=$?
+  PROBE_STATUS="$status"
   # Never print git config, HTTP headers, npmrc, or credential-helper output.
   printf '%s: exit %s\n' "$label" "$status"
   printf '| %s | %s | %s |\n' "$AUTHENTICATION" "$label" "$status" >> "$GITHUB_STEP_SUMMARY"
@@ -62,15 +63,23 @@ case "${1:?Expected git-api, nx, or summary}" in
     # createOctokit is the exact helper used by the PR/comment/release scripts.
     record "actual nx-release createOctokit with selected token" node --input-type=module -e \
       'import {createOctokit} from "./actions/nx-release/scripts/dist/shared.js"; const client=createOctokit(); await client.repos.get({owner:"pagopa",repo:"dx"});'
+    test "$PROBE_STATUS" -eq 0
     record "actual nx-release createOctokit without GH_TOKEN" env -u GH_TOKEN -u GITHUB_TOKEN \
       node --input-type=module -e \
       'import {createOctokit} from "./actions/nx-release/scripts/dist/shared.js"; createOctokit();'
+    test "$PROBE_STATUS" -ne 0
+    record "actual nx-release createOctokit with GITHUB_TOKEN only" env -u GH_TOKEN GITHUB_TOKEN="$GH_TOKEN" \
+      node --input-type=module -e \
+      'import {createOctokit} from "./actions/nx-release/scripts/dist/shared.js"; createOctokit();'
+    test "$PROBE_STATUS" -ne 0
     record "actual release project selection helper" env target=nx-release-publish \
       node actions/nx-release/scripts/dist/select-projects-with-target.js
     # Only version/changelog dry-run. --skip-publish prevents ANY executor from
     # running; notably Terraform's publisher does not honor NX_DRY_RUN.
-    record "Nx version/changelog dry-run (publish disabled)" pnpm nx release \
-      --projects=@pagopa/eslint-config --specifier=patch --skip-publish --dry-run --yes
+    record "Nx version/changelog dry-run (publish disabled)" pnpm nx release patch \
+      --projects=@pagopa/eslint-config --skip-publish --dry-run
+    cat "$RUNNER_TEMP/auth-probe.log"
+    test "$PROBE_STATUS" -eq 0
     ;;
   summary)
     {
