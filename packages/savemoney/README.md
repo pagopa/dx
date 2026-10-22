@@ -1,16 +1,61 @@
-# DX Save Money
+# SaveMoney
 
-A TypeScript library for analyzing CSP (Cloud Service Provider) resources to identify potential cost inefficiencies and underutilized resources. It operates in read-only mode and does not modify, tag, or delete any resources; instead, it generates detailed reports to support FinOps decisions.
+SaveMoney finds Azure resources and recommendations worth reviewing for cost
+savings. Use the CLI or TypeScript library; analysis is read-only and does not
+modify, tag, or delete resources.
 
-## Supported Cloud Providers
+## Quick Start
 
-### ✅ Azure
+Authenticate to Azure first (for example, run `az login`), then install and
+analyze one or more subscriptions:
 
-Full support for Azure resource analysis with intelligent detection and flexible reporting.
+```bash
+npm install --global @pagopa/dx-savemoney
+savemoney analyze --subscriptionIds <subscription-id> --format table
+```
 
-### 🚧 AWS (Coming Soon)
+Alternatively, install and enable SaveMoney for the current project with
+[mise](https://mise.jdx.dev/):
 
-AWS support is planned for future releases. The architecture is designed to support multiple CSPs with provider-specific analyzers.
+```bash
+mise use npm:@pagopa/dx-savemoney
+```
+
+Use `--format json` for a machine-readable report, or `--config config.yaml` to
+load thresholds and other settings.
+
+## CLI options
+
+Run `savemoney analyze --help` for command help and valid choices. CLI options
+override YAML; subscription IDs can then come from comma-separated
+`ARM_SUBSCRIPTION_ID`. If no IDs are available, the CLI prompts in a terminal
+and fails without prompting in non-interactive execution. Built-in defaults
+fill unset values where available.
+
+| Option                       | Purpose                                      | Default                                           |
+| :--------------------------- | :------------------------------------------- | :------------------------------------------------ |
+| `--config <path>`            | Load YAML settings.                          | None                                              |
+| `--subscriptionIds <ids...>` | Subscriptions to analyze.                    | Required via CLI, YAML, or `ARM_SUBSCRIPTION_ID`. |
+| `--format <format>`          | `table`, `json`, `detailed-json`, or `lint`. | `table`                                           |
+| `--location <location>`      | Preferred Azure location.                    | `italynorth`                                      |
+| `--days <days>`              | Metric lookback period.                      | `30`                                              |
+| `--tags <tags...>`           | Filter by space-separated `key=value` tags.  | No filter                                         |
+| `--source <source>`          | `advisor`, `custom`, or `all`.               | All sources                                       |
+| `--no-pricing`               | Disable Retail Prices API estimates.         | Pricing enabled                                   |
+| `--azqr-report <path>`       | Merge findings from an AZQR JSON report.     | None                                              |
+| `--verbose`                  | Show debug logs.                             | `false`                                           |
+
+### Automated execution
+
+Use `--format json` or `detailed-json` for a JSON array on stdout. Progress and
+diagnostics go to stderr; exit code `0` means success and `1` means failure.
+Check the exit code and stderr—empty stdout alone does not mean there are no
+findings. Authenticate Azure before running; the tool is read-only. Cost-at-risk
+is not guaranteed savings, and Advisor estimates are reported separately.
+
+## Supported Cloud Provider
+
+Azure is currently the only provider supported by the CLI and library.
 
 ## Architecture
 
@@ -19,15 +64,8 @@ support:
 
 ```mermaid
 flowchart LR
-    subgraph cli["CLI Layer"]
-        CMDs[other cmds]
-        CLI[savemoney]
-    end
-    subgraph pkg["Package Layer - @pagopa/dx-savemoney"]
-        Config[Config Loader]
-        Azure[Azure Analyzer]
-        AWS[AWS Analyzer<br/>Coming Soon...]
-    end
+    CLI[savemoney] --> Config[Config Loader]
+    Config --> Azure[Azure Analyzer]
     subgraph svc["Azure Services"]
         ARM[Azure Resource Manager]
         Monitor[Azure Monitor Metrics]
@@ -45,9 +83,6 @@ flowchart LR
         CA[Container Apps]
         SS[Static Web Apps]
     end
-    CLI --> Config
-    Config --> Azure
-    Config -.-> AWS
     Azure --> ARM
     Azure --> Monitor
     Azure --> Identity
@@ -55,7 +90,6 @@ flowchart LR
     Monitor --> rsc
     style CLI fill:#0078d4,color:#fff
     style Azure fill:#0078d4,color:#fff
-    style AWS fill:#ccc,color:#666
     style Config fill:#107c10,color:#fff
 ```
 
@@ -139,12 +173,12 @@ Both are governance signals, not billable waste, so they are reported under the
 
 ### Usage
 
-#### Quick Start
+#### Library Quick Start
 
 ```typescript
 import { azure, loadConfig } from "@pagopa/dx-savemoney";
 
-// Load configuration (from file, env vars, or interactive prompt)
+// Load configuration from a file
 const config = await loadConfig("./config.yaml");
 
 // Run analysis, then generate report
@@ -180,11 +214,12 @@ The tool supports multiple output formats for different use cases:
 
 #### How to Load Configuration
 
-The `loadConfig()` function loads configuration in the following priority order:
-
-1. **Configuration file** (pass file path as parameter)
-2. **Environment variable** (`ARM_SUBSCRIPTION_ID`)
-3. **Interactive prompt** (if no other configuration is found)
+CLI options override YAML settings; built-in defaults fill other unset values.
+Subscription IDs are resolved in this order: `--subscriptionIds`, YAML,
+`ARM_SUBSCRIPTION_ID` (comma-separated), then a prompt in a terminal. Missing
+IDs fail without prompting when stdin is not a TTY. The library's
+`loadConfig()` API follows the same ID resolution and prompt behavior; pass
+`{ interactive: false }` to disable prompting.
 
 **Example:**
 
@@ -192,7 +227,7 @@ The `loadConfig()` function loads configuration in the following priority order:
 // From file
 const config1 = await loadConfig("./config.yaml");
 
-// From environment variable or prompt
+// From environment variable or, in an interactive process, a prompt
 const config2 = await loadConfig();
 ```
 
@@ -348,7 +383,7 @@ precedence when both are set): the FinOps-relevant resources from the report's
 azqr scan --subscription-id <sub-id> --json --mask=false
 
 # Feed it into SaveMoney alongside the live scan
-dx savemoney --azqr-report ./azqr_action_plan.json
+savemoney analyze --subscriptionIds <sub-id> --azqr-report ./azqr_action_plan.json
 ```
 
 Or persist the path in the YAML config:
@@ -363,9 +398,12 @@ azure:
 Notes:
 
 - **Disable masking.** AZQR masks subscription IDs by default
-  (`/subscriptions/xxxxxxxx-…/`). Masked IDs cannot be matched to live
-  resources, so findings would appear as separate stub entries. SaveMoney logs
-  a warning when it detects a masked report; re-run AZQR with `--mask=false`.
+  (`/subscriptions/xxxxxxxx-…/`). Only findings whose `resourceId` belongs to
+  a selected subscription are imported; `resourceId` is authoritative if the
+  AZQR `subscriptionId` field disagrees. Resources in selected subscriptions
+  are included even when the live scan did not find them. Findings with masked
+  or unrecognizable subscription IDs are skipped. SaveMoney logs a warning
+  when it detects masked IDs; re-run AZQR with `--mask=false`.
 - **Noise reduction.** Rows are classified into two buckets and everything else
   (security, reliability, high-availability best practices) is dropped:
   - **Cost opportunities** (`cost` category): rows AZQR categorises as `Cost`,
@@ -413,24 +451,6 @@ reported as `operationalExcellence` instead, and never carry a saving estimate.
 Besides keeping the FinOps signal clean, this is what makes deduplication safe:
 a resource flagged only for missing tags is not evidence of waste, so it does
 not absorb the corresponding AZQR orphan row.
-
-## AWS (Coming Soon)
-
-AWS support is planned for future releases with similar capabilities:
-
-- Multi-account analysis
-- Resource-specific detection algorithms
-- Flexible reporting formats
-- AWS-specific configuration options
-
-The API will follow a similar pattern:
-
-```typescript
-import { aws, loadAwsConfig } from "@pagopa/dx-savemoney";
-
-const config = await loadAwsConfig("./aws-config.json");
-await aws.analyzeAwsResources(config, "table");
-```
 
 ## Development
 

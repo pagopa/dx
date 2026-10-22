@@ -138,6 +138,24 @@ def test_skill_use_check_is_generated_and_wired(skill: Path, tmp_path: Path):
     assert "skill_use.py" in (task_root / "tests" / "Dockerfile").read_text()
 
 
+def test_verifier_quarantines_freshly_published_judge_dependencies(
+    skill: Path, tmp_path: Path
+):
+    """The judge deps are resolved by ``uvx`` at runtime, outside the lock.
+
+    RewardKit pins ``litellm`` with a lower bound only, so the verifier needs
+    the same publication cooldown the workspace lock gets from
+    ``[tool.uv] exclude-newer``.
+    """
+    task_root = tmp_path / "task"
+    generate_task(make_spec(skill), task_root)
+
+    test_sh = (task_root / "tests" / "test.sh").read_text()
+    assert 'export UV_EXCLUDE_NEWER="7 days"' in test_sh
+    # the cooldown must be in place before the resolver runs
+    assert test_sh.index("UV_EXCLUDE_NEWER") < test_sh.index("uvx ")
+
+
 def test_instruction_md_is_the_prompt_only(skill: Path, tmp_path: Path):
     task_root = tmp_path / "task"
     generate_task(make_spec(skill), task_root)

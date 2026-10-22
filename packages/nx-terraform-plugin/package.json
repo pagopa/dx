@@ -60,6 +60,9 @@
   "nx": {
     "targets": {
       "build": {
+        "dependsOn": [
+          "^build"
+        ],
         "inputs": [
           "default",
           "^default"

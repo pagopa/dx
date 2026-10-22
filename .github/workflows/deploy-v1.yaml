@@ -62,7 +62,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: pnpm --filter . ci
+        run: pnpm --filter '{.}...' ci
 
       - name: Get Project Info
         id: project-info

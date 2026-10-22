@@ -184,10 +184,13 @@ export async function analyzeAzureResources(
     }
   }
 
-  // Ingest an AZQR (`azqr scan --json`) report when provided, merging its
-  // FinOps-relevant `impacted` rows into the aggregated reports as findings.
   if (config.azqrReportPath) {
-    await ingestAzqrReport(config.azqrReportPath, allReports, logger);
+    await ingestAzqrReport(
+      config.azqrReportPath,
+      config.subscriptionIds,
+      allReports,
+      logger,
+    );
   }
 
   // Sort to make the output more readable:
@@ -439,59 +442,80 @@ async function collectTaggedResourceIds(args: {
   }
 }
 
+function getSubscriptionId(resourceId: string): string | undefined {
+  const subscriptionId = resourceId
+    .trim()
+    .match(/^\/subscriptions\/([^/]+)(?:\/|$)/i)?.[1]
+    ?.trim();
+  if (!subscriptionId || subscriptionId.toLowerCase().includes("xxxxxxxx")) {
+    return undefined;
+  }
+  return subscriptionId.toLowerCase();
+}
+
 function hasTagFilter(filterTags: Map<string, string> | undefined): boolean {
   return Boolean(filterTags && filterTags.size > 0);
 }
 
 /**
- * Loads an AZQR report, filters it down to FinOps opportunities and merges the
- * resulting findings into the aggregated reports. Runs once per invocation
- * (the report is subscription-agnostic), building a global index from every
- * report collected during the live scan so AZQR findings attach to their
- * resource when present or create a stub otherwise.
- *
- * Findings that duplicate what a live source already reported for the same
- * resource are folded into the existing finding instead of being appended, so
- * an orphaned resource seen by both AZQR and Advisor/custom analyzers shows up
- * once — on the entry that carries the monetary estimate.
- *
- * When the report is still masked, findings cannot match live resource IDs, so
- * a warning advises re-running AZQR with `--mask=false`.
+ * Scopes AZQR by the ARM subscription in `resourceId` (metadata can disagree)
+ * and keeps existing cost estimates when findings overlap.
  */
 async function ingestAzqrReport(
   azqrReportPath: string,
+  subscriptionIds: string[],
   reports: AzureDetailedResourceReport[],
   logger: ReturnType<typeof getLogger>,
 ): Promise<void> {
   const report = await loadAzqrReport(azqrReportPath);
   if (isAzqrReportMasked(report)) {
     logger.warn(
-      "AZQR report has masked subscription IDs: findings may not match live" +
-        " resources and can appear as separate stub entries. Re-run with" +
-        " `azqr scan --mask=false` for accurate merging.",
+      "AZQR report has masked subscription IDs: findings whose resource IDs" +
+        " cannot be attributed to a subscription are ignored. Re-run with" +
+        " `azqr scan --mask=false` to include them.",
     );
   }
 
+  const selectedSubscriptions = new Set(
+    subscriptionIds.map((id) => id.trim().toLowerCase()).filter(Boolean),
+  );
   const findings = azqrImpactedToFindings(report);
   const locationById = new Map(
-    report.inventory.map((row) => [row.resourceId.toLowerCase(), row.location]),
+    report.inventory.map((row) => [
+      normalizeResourceId(row.resourceId),
+      row.location,
+    ]),
   );
   const reportsById = new Map<string, AzureDetailedResourceReport>(
-    reports.map((r) => [(r.resource.id ?? "").toLowerCase(), r]),
+    reports.map((r) => [normalizeResourceId(r.resource.id), r]),
   );
   let merged = 0;
   let deduplicated = 0;
+  let ignoredOutOfScope = 0;
+  let ignoredUnattributable = 0;
   for (const finding of findings) {
-    const existing = reportsById.get(finding.resourceId.toLowerCase());
-    if (existing && foldDuplicateFinding(finding, existing)) {
+    const subscriptionId = getSubscriptionId(finding.resourceId);
+    if (!subscriptionId) {
+      ignoredUnattributable++;
+      continue;
+    }
+    if (!selectedSubscriptions.has(subscriptionId)) {
+      ignoredOutOfScope++;
+      continue;
+    }
+    const resourceId = finding.resourceId.trim();
+    const normalizedFinding = { ...finding, resourceId };
+    const resourceIdKey = normalizeResourceId(resourceId);
+    const existing = reportsById.get(resourceIdKey);
+    if (existing && foldDuplicateFinding(normalizedFinding, existing)) {
       deduplicated++;
       continue;
     }
     mergeFinding(
-      finding,
+      normalizedFinding,
       reports,
       reportsById,
-      locationById.get(finding.resourceId.toLowerCase()) || undefined,
+      locationById.get(resourceIdKey) || undefined,
     );
     merged++;
   }
@@ -499,6 +523,9 @@ async function ingestAzqrReport(
     `AZQR: merged ${merged} finding(s) from ${azqrReportPath}` +
       (deduplicated > 0
         ? `, ${deduplicated} deduplicated onto existing findings`
+        : "") +
+      (ignoredOutOfScope + ignoredUnattributable > 0
+        ? `, ignored ${ignoredOutOfScope} out-of-scope and ${ignoredUnattributable} unattributable finding(s)`
         : ""),
   );
 }

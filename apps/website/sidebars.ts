@@ -102,6 +102,12 @@ const sidebars: SidebarsConfig = {
       type: "category",
     },
     {
+      className: categoryClass("savemoney"),
+      items: ["savemoney/index"],
+      label: "SaveMoney",
+      type: "category",
+    },
+    {
       className: categoryClass("typescript"),
       items: [
         { id: "typescript/index", label: "Typescript in DX", type: "doc" },
