@@ -6,7 +6,7 @@ This module deploys an Azure Function App with a strong opinionated configuratio
 
 ## Features
 
-- **Function App**: Deploys a Linux-based Azure Function App supporting Node.js or Java runtimes
+- **Function App**: Deploys a Linux-based Azure Function App supporting Node.js or Java runtimes, or a custom container image
 - **Staging Slot**: Includes a staging slot for zero-downtime deployments
 - **App Service Plan**: Uses a Linux App Service Plan (can be created or reused)
 - **Private Endpoints**: Ensures private connectivity for the Function App and its storage accounts
@@ -91,6 +91,52 @@ module "function_app" {
 | APIM policy        | `x-functions-key` header  | `<authentication-managed-identity>` |
 | Function authLevel | `function`                | `anonymous`                         |
 
+## Container Images
+
+By default, the Function App runs from a deployment package (`WEBSITE_RUN_FROM_PACKAGE=1`). Set `container_image` to run both the production and the staging slot from a Linux container image instead. When set:
+
+- `stack`, `node_version` and `java_version` are ignored, as the runtime is provided by the image
+- `WEBSITE_RUN_FROM_PACKAGE` is not configured and `WEBSITES_ENABLE_APP_SERVICE_STORAGE` is set to `false`
+- the image is not managed by Terraform after creation, so that CD pipelines can roll out new images (e.g. deploy to the `staging` slot and swap) without Terraform reverting them
+
+```hcl
+module "function_app" {
+  source = "pagopa-dx/azure-function-app/azurerm"
+  # ... other parameters ...
+
+  container_image          = "myacr.azurecr.io/my-function:1.0.0"
+}
+```
+
+When the registry hostname in `container_image` ends in `.azurecr.io`, the Function App and staging slot automatically use their system-assigned managed identities to pull the image. Custom registry domains are not inferred. Grant the `AcrPull` role on the registry to both identities. For a module named `function_app`, the caller-side role assignments are:
+
+```hcl
+resource "azurerm_role_assignment" "function_app_acr_pull" {
+  scope                = var.acr_id
+  role_definition_name = "AcrPull"
+  principal_id         = module.function_app.function_app.function_app.principal_id
+}
+
+resource "azurerm_role_assignment" "function_app_slot_acr_pull" {
+  scope                = var.acr_id
+  role_definition_name = "AcrPull"
+  principal_id         = module.function_app.function_app.function_app.slot.principal_id
+}
+```
+
+`var.acr_id` is the Azure Container Registry resource ID. Images without a registry are pulled from Docker Hub. The module does not assign registry permissions.
+
+### Migrating from ZIP deployment
+
+A Function App configured for ZIP deployment cannot be converted in place to run a container image. The module intentionally ignores Docker image changes after creation so CD pipelines can own subsequent image updates. Create a separate Function App with a unique `environment.instance_number`, migrate to it, and retire the ZIP-based app after cutover.
+
+1. Confirm the tagged image is available and choose an `instance_number` that produces a unique Function App name.
+2. Add a second module instance using the same application configuration, a different `environment.instance_number`, and `container_image`. For standard ACR login server hostnames ending in `.azurecr.io`, managed identity pulls are enabled automatically. Grant `AcrPull` to the new Function App and staging slot identities before expecting private image pulls to succeed.
+3. Create and validate the container-based Function App and its staging slot while the existing ZIP-based app remains available. Migrate required application settings, data, integrations, DNS or routing, and any other dependencies; test the new app before directing traffic to it.
+4. Cut over traffic to the new Function App. Once the cutover is verified and rollback is no longer needed, remove the old ZIP-based module instance and review the Terraform plan before applying its deletion.
+
+Keep `container_image` configured on the new module instance as the bootstrap image. Docker changes remain ignored by Terraform, so CD pipelines retain ownership of subsequent production and staging image updates.
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -158,6 +204,7 @@ No modules.
 | <a name="input_application_insights_connection_string"></a> [application\_insights\_connection\_string](#input\_application\_insights\_connection\_string) | The connection string for Application Insights to enable monitoring and diagnostics. | `string` | `null` | no |
 | <a name="input_application_insights_key"></a> [application\_insights\_key](#input\_application\_insights\_key) | The instrumentation key for Application Insights to enable monitoring and diagnostics. | `string` | `null` | no |
 | <a name="input_application_insights_sampling_percentage"></a> [application\_insights\_sampling\_percentage](#input\_application\_insights\_sampling\_percentage) | The sampling percentage for Application Insights telemetry. Default is 5. | `number` | `5` | no |
+| <a name="input_container_image"></a> [container\_image](#input\_container\_image) | Container image used to run the Function App and its staging slot instead of a deployment package (e.g. "myacr.azurecr.io/my-function:1.0.0").<br/>When set, "stack", "node\_version" and "java\_version" are ignored and WEBSITE\_RUN\_FROM\_PACKAGE is not configured.<br/>Images without a registry are pulled from Docker Hub. The image must specify a tag.<br/>The image is not managed by Terraform after creation, but instead updated by CD pipelines. | `string` | `null` | no |
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Define if diagnostic settings should be enabled.<br/>If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and<br/>optionally the ID of the Storage Account where logs should be sent. | <pre>object({<br/>    enabled                                   = bool<br/>    log_analytics_workspace_id                = optional(string)<br/>    diagnostic_setting_destination_storage_id = optional(string)<br/>  })</pre> | <pre>{<br/>  "diagnostic_setting_destination_storage_id": null,<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_entra_id_authentication"></a> [entra\_id\_authentication](#input\_entra\_id\_authentication) | Enables Entra ID (Azure AD) authentication on the Function App, allowing callers (e.g. APIM) to authenticate via their Managed Identity instead of using function keys. When set, callers must present a valid JWT; unauthenticated requests receive HTTP 401. See README for prerequisites and usage examples. | <pre>object({<br/>    audience_client_id         = string<br/>    allowed_callers_client_ids = list(string)<br/>    tenant_id                  = string<br/>  })</pre> | `null` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |

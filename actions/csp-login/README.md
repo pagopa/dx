@@ -76,8 +76,3 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
 ```
-
-## Related Actions
-
-- [azure-login](../azure-login/): Direct Azure authentication
-- [aws-login](../aws-login/): Direct AWS authentication

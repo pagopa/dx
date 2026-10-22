@@ -29,6 +29,7 @@ jobs:
     permissions:
       actions: read
       contents: read
+      packages: read
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -44,6 +45,15 @@ jobs:
 
       - name: Set base and head SHAs for affected commands
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -156,6 +166,7 @@ jobs:
       actions: read
       contents: read
       id-token: write
+      packages: read
 
     steps:
       - name: Check out repository
@@ -179,6 +190,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
 
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install dependencies
         run: |
           mise deps --skip pnpm
@@ -193,7 +213,7 @@ jobs:
       - name: Terraform Plan
         env:
           PROJECT: ${{ matrix.target.project }}
-        run: pnpm nx run "${PROJECT}:plan:ci" --out="$TFPLAN_FILE"
+        run: pnpm nx run "${PROJECT}:plan:ci" --out="$TFPLAN_FILE" --outputStyle=static
 
       # Bundle the plan file together with .terraform.lock.hcl and .terraform/modules/
       # and upload it to the same storage backend used for the Terraform state.
@@ -245,6 +265,7 @@ jobs:
       actions: read
       contents: read
       id-token: write
+      packages: read
 
     steps:
       - name: Check out repository
@@ -267,6 +288,15 @@ jobs:
           key: ${{ runner.os }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
+
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: |
@@ -309,4 +339,4 @@ jobs:
       - name: Terraform Apply
         env:
           PROJECT: ${{ matrix.target.project }}
-        run: pnpm nx run "${PROJECT}:apply:ci" --planFile="$TFPLAN_FILE"
+        run: pnpm nx run "${PROJECT}:apply:ci" --planFile="$TFPLAN_FILE" --outputStyle=static

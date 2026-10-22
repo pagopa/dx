@@ -69,6 +69,12 @@ on:
 
 jobs:
   deploy_to_cdn:
+    permissions:
+      contents: read
+      id-token: write
+      # The build job installs the repository dependencies, which may come from
+      # GitHub Packages.
+      packages: read
     uses: pagopa/dx/.github/workflows/release-azure-staticassets-v1.yaml@main # Path to the reusable workflow
     secrets: inherit
     with:
@@ -88,7 +94,10 @@ When implementing this workflow:
    directory path.
 2. **Permissions & Secrets**: The calling workflow must have the necessary
    permissions and secrets (e.g., for Azure login) available. Using
-   `secrets: inherit` is the easiest way to pass them down.
+   `secrets: inherit` is the easiest way to pass them down. Grant `packages: read`
+   as well: the build job installs repository dependencies that may come from
+   GitHub Packages, and a reusable workflow can only downgrade the permissions
+   granted by its caller.
 3. **Monorepo Structure**: This workflow is optimized for a monorepo managed
    with Turborepo. It assumes your applications are located in workspaces (e.g.,
    under an `apps/` directory).

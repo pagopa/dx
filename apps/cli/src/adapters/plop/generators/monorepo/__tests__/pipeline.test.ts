@@ -127,6 +127,9 @@ describe("monorepo generator — DX validation pipeline", () => {
     expect(generatedFiles[".github/workflows/validate.yaml"]).toContain(
       "GH_APP_RELEASE_CLIENT_ID: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}",
     );
+    expect(generatedFiles[".github/workflows/validate.yaml"]).toContain(
+      "ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}",
+    );
     expect(generatedFiles[".github/workflows/validate.yaml"]).not.toContain(
       "secrets: inherit",
     );
