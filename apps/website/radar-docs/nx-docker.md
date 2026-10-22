@@ -4,9 +4,10 @@ ring: adopt
 tags: [typescript, monorepo, containerization, dx, tool]
 ---
 
-[`@pagopa/nx-docker`](https://www.npmjs.com/package/@pagopa/nx-docker) is the DX
-Nx plugin that infers `docker:build`, `docker:push`, and `docker:run` targets for
-every project with a `Dockerfile`, regardless of language or framework. It
+`@pagopa/nx-docker`, published through
+[GitHub Packages](https://github.com/orgs/pagopa/packages/npm/nx-docker), is the
+DX Nx plugin that infers `docker:build`, `docker:push`, and `docker:run` targets
+for every project with a `Dockerfile`, regardless of language or framework. It
 resolves the build context and `--file` automatically, adds OCI image labels,
 applies reproducible build flags, and computes image tags with feature parity to
 `docker/metadata-action` (short sha, branch ref, semver, `latest`).

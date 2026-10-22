@@ -1,146 +1,179 @@
 ---
 name: prd-alchemist
-description: Write and update a structured Product Requirements Document (PRD) from gathered product material. Use when a product manager wants to turn discovery notes, meeting summaries, strategy input, or a rough product document into a Confluence-compatible PRD covering needs, actors, JTBD, goals, metrics, guardrails, dependencies, constraints, feasibility red flags, design discovery, open questions, and support readiness. Preserve stable English IDs, manage explicit draft-to-review readiness, and offer optional Confluence publication only after writing.
+description: PRD authoring and lifecycle validation. Use when turning product evidence into a Confluence-compatible Product Requirements Document, rewriting or updating a PRD, clarifying evidence gaps, assessing gate readiness, requesting a lifecycle transition (including legacy review), or preparing a PRD for Confluence publication.
 ---
 
 # PRD Alchemist
 
-Turn gathered product material into a structured, outcome-oriented Product
-Requirements Document (PRD).
+Turn product evidence into an outcome-oriented PRD that aligns sponsors,
+Product, Engineering, Design, Legal/Compliance, Support/Operations, and delivery.
 
-The PRD explains the need, intended outcomes, constraints, and early feasibility
-signals. It is outcome-oriented and does not replace downstream use cases,
-technical specifications, acceptance criteria, QA checklists, or implementation
-plans.
-
-Product managers use the PRD to align sponsors, engineers, designers,
-Legal/Compliance, Support/Operations, and other stakeholders before downstream
-solution design and delivery planning.
-
-## When to Use This Skill
-
-Use this skill when the user wants to:
-
-- turn gathered product material into a structured PRD;
-- rewrite or update an existing PRD using the canonical hierarchy;
-- fill gaps in a product document through a guided interview;
-- prepare a PRD that can later be published to Confluence.
-
-The preferred input is the output of a gathering phase plus any strategic
-documents, notes, links, or decisions available. If the user starts with less,
-ask for the missing information rather than inventing it.
-
-## Output Contract
-
-Produce one PRD using [`templates/prd.md`](./templates/prd.md). Write it to the
-path requested by the user, or to `prd.md` in the current working directory when
-no path is given. Never overwrite the bundled template.
-
-- Include the visible `Metadata` section from the template and set
-  `metadata.status` to `draft` when creating or updating the PRD.
-- Preserve every stable ID exactly as written. IDs are always English and are
-  never translated, including in a translated Confluence page.
-- Include every template section. For conditional sections, use
-  `Not applicable — <confirmed reason>` when the user confirms they do not
-  apply; never silently remove a section.
-- Keep concrete facts traceable to source inputs.
-- Do not advance the status without the explicit confirmation described below or
-  create downstream use cases, backlog items, or implementation specifications.
-
-## PRD Writing Style
-
-Write narrative PRD prose with an explicit subject so readers can identify who
-experiences a need, performs an action, owns a decision, measures an outcome, or
-enforces a constraint.
-
-- Prefer active constructions that name the relevant user group, actor, team,
-  owner, stakeholder, or system.
-- Replace impersonal or subjectless phrases such as “it is necessary,” “it was
-  decided,” “should be monitored,” or standalone infinitive instructions with a
-  sentence that names the confirmed subject.
-- When the source does not identify the subject, preserve the gap as a targeted
-  open question. Do not invent an actor merely to complete the sentence.
-- Apply this rule to narrative sentences in the PRD. Headings, stable IDs,
-  metadata values, and intentionally compact table cells may remain fragments.
+Define the problem, affected users, intended outcomes, constraints, and
+preliminary feasibility signals. Keep product-relevant technical constraints
+in the PRD; link supporting implementation evidence. Leave solution design,
+detailed use cases, technical specifications, acceptance criteria, QA, rollout,
+and backlogs to downstream artifacts. Keep agent/session procedure outside
+the PRD. Produce the PRD only; do not create those downstream artifacts.
 
 ## Workflow
 
-1. **Collect the writing inputs.** Read the gathered material, strategic input,
-   existing product documents, linked artifacts, and confirmed decisions. Ask
-   for referenced material that has not been provided.
-2. **Map evidence to the template.** Organize the input under Metadata, Need
-   definition, Actors, Objectives, Success metrics, Strategic dependencies,
-   Context and constraints, Initial feasibility red flags, Design discovery,
-   Open questions, and Support readiness. Distinguish confirmed facts,
-   proposals, assumptions, and unresolved questions.
-3. **Clarify selectively.** Ask targeted questions for contradictions, missing
-   ownership, unclear problem statements, unsupported metrics, or decisions that
-   affect scope, priority, outcomes, or feasibility. Do not block creation of a
-   `draft` solely because a conditional field is unknown; record the unknown as
-   an open question or justified `Not applicable` value.
-4. **Write or update the PRD.** Rewrite confirmed material into clear,
-   outcome-oriented language whose narrative sentences identify explicit
-   subjects. Every JTBD row must include persona, canonical job statement,
-   expected outcome, success metric, quality guardrail, priority, and notes. Keep
-   detailed use cases and implementation content out of the PRD.
-5. **Validate the document.** Confirm that every stable section and field ID is
-   present, status is valid, confirmed values are traceable, conditional sections
-   are populated or explicitly marked not applicable, and authoring guidance is
-   removed.
-6. **Handle explicit review readiness.** If the user says the PRD is complete,
-   good enough, or ready for review, verify that context, sponsor, owner, and
-   problem are clear enough to request stakeholder feedback. Non-blocking open
-   questions may remain. If the criterion is met, change only
-   `metadata.status` from `draft` to `review`; otherwise keep `draft` and ask
-   targeted questions. Never infer this transition.
-7. **Offer Confluence publication.** After writing a new PRD, ask:
-   **"Do you want me to create a Confluence page for this PRD?"** Do not publish
-   without an affirmative answer. When handling a status-only completion
-   request, do not offer publication unless the user separately asks for it.
-8. **Hand off publication.** If the user confirms, invoke or hand off to the
-   `confluence-librarian` skill with the PRD path, title, and any known
-   destination details. The librarian owns publication mechanics, translation,
-   stable-ID preservation, destination confirmation, and the final page URL.
+1. **Collect and reconcile evidence.** List the supplied evidence directory and
+   read records relevant to the request, including complementary measurement,
+   review, artifact, and decision records. Read beyond a named status summary
+   before declaring gaps. Apply an explicit later resolution to earlier
+   preliminary evidence while preserving its source. Use only the user's
+   supplied material; bundled examples and eval fixtures are not project
+   evidence.
+2. **Capture the starting state.** Record the original `metadata.status`
+   before editing; use `draft` for a new PRD. Identify whether the user requests
+   a content update, a readiness assessment, or a transition. Assess the current
+   status unless another gate is explicitly requested; keep unrequested future
+   gates unassessed.
+3. **Map and write.** Populate the [PRD template](./templates/prd.md) using the
+   output contract, evidence-fidelity rules, and writing style below. Deliver a
+   structured PRD rather than a gathering-only aggregation. Keep the original
+   status while preparing any requested transition.
+4. **Clarify selectively.** Ask targeted questions about contradictions,
+   missing owners, or unclear needs. Ask the decision owner to resolve competing
+   positions. Record remaining gaps explicitly; conditional unknowns do not
+   block `draft` creation.
+5. **Review completeness and gates.** Check the document against the template
+   and, for every lifecycle assessment, against the
+   [Lifecycle and Gate Model](./references/lifecycle-and-gates.md). Check the
+   captured original state and permitted sequence before any transition. Repair
+   authoring errors without inventing source facts.
+6. **Apply a validated transition.** Change `metadata.status` only when the
+   explicit request, sequence, and entry evidence pass. If any check is blocked
+   or unvalidated, preserve the original status and report the missing evidence.
+7. **Report the result.** State the PRD path, current status, assessed gate,
+   supporting evidence, validation result, blockers, and unresolved gaps.
+   Distinguish recorded evidence from matters requiring human confirmation;
+   document structure alone proves neither external-link availability nor
+   human alignment. Claim human acceptance only when the user explicitly
+   accepts the PRD. Keep the assessment in the response unless the user requests
+   separate validation or iteration files.
+8. **Offer publication for a new PRD.** Ask: **"Do you want me to create a
+   Confluence page for this PRD?"** Hand off to `confluence-librarian` only
+   after explicit confirmation. This offer must not replace the final opt-in
+   question required for a blocked transition.
 
-## Clarification Rules
+## Output Contract
 
-- **Ask, never infer.** Do not turn a suggestion into a decision, create
-  metrics, choose scope, assign ownership, or resolve contradictions yourself.
-- **Drafts may be incomplete.** Missing information belongs in open questions,
-  assumptions, or a justified `Not applicable` value. Do not invent a value to
-  make the document look complete.
-- **Change status only on explicit confirmation.** Keep `metadata.status` as
-  `draft` unless the user explicitly confirms that the PRD is complete, good
-  enough, or ready for review. If blockers remain, keep `draft` and ask about
-  them instead.
-- **Keep review blockers distinct.** Only missing context, sponsor, owner, or a
-  sufficiently clear problem blocks `draft → review`; other open questions can
-  remain visible in the PRD.
-- **Preserve competing positions.** When sources disagree, state the
-  contradiction in the clarification question and ask the decision owner to
-  resolve it.
+Produce one PRD at the requested path, or `prd.md` in the current working
+directory. Keep the bundled template unchanged.
 
-## Stable IDs and Human Readability
+- Use the same language as the user's prompts.
+- Include the visible Metadata section. Preserve canonical lifecycle status
+  tokens, stable section comments (`<!-- id: ... -->`), and field IDs
+  (`metadata.*`, `objectives.*`, etc.) exactly as written.
+- Treat heading suffixes as author-only labels; remove them from final headings.
+  Include every `(Always)` section. Include `(If Applicable)` sections when
+  relevant and `(Optional)` sections when useful. A requested gate overrides
+  optionality: include any section it requires, with evidence or a justified
+  N/A assessment.
+- Omit conditional sections only when non-applicability is confirmed and the
+  requested gate permits omission. Unknown applicability remains an explicit
+  gap, not N/A. For example, keep the business-goals table with gaps when no
+  distinct business outcome was supplied.
+- Remove an omitted section's anchor and contents together. Retain all anchors
+  and field IDs in included sections.
+- Keep the template's table schemas unchanged. Put additional detail inside
+  existing cells.
 
-The document is prose-first for people and structurally reliable for agents:
+## PRD Writing Style
 
-- HTML comments before headings are stable section IDs.
-- The `ID` column in tables contains stable field or row IDs, including metadata
-  fields such as `metadata.status`.
-- IDs never change between revisions, even if visible headings are translated
-  or reworded.
-- Keep metadata visible in the Markdown section; do not move it to YAML
-  frontmatter or another hidden representation.
+Give every narrative sentence an explicit subject: the confirmed product user,
+actor, owner, stakeholder, or system experiencing a need or performing an action.
 
-Treat IDs as a contract. Add a new ID only for a genuinely new field; never
-reuse an existing ID for a different meaning.
+- Distinguish product users from the Copilot interlocutor. Attribute a team role
+  or decision only when the source establishes it.
+- Replace impersonal or subjectless wording such as “it was decided”
+  or “should be monitored” with the confirmed subject and action. If the subject
+  is unknown, record a targeted open question instead of inventing an actor.
+- Apply this rule to narrative sentences in the PRD. Headings, stable IDs,
+  metadata values, and intentionally compact table cells may remain fragments.
+- State needs and agreed scope directly. Keep attribution beside the decision
+  or evidence rather than retelling chat confirmations. State material
+  uncertainty without repeating the same caveat.
+- Express user goals as canonical JTBD statements with persona, job statement,
+  expected outcome, success metric, quality guardrail, priority, and notes.
 
-## Boundaries
+## Evidence Fidelity
 
-- Do not perform gathering-only aggregation when the user asks for a structured
-  PRD.
-- Do not manage statuses beyond `draft` and `review`.
-- Do not publish or change lifecycle state without explicit user confirmation.
-- Do not include detailed use cases, technical specifications, QA, rollout,
-  backlog, or implementation content inside the PRD; keep those details in
-  downstream artifacts instead.
+Keep each material claim, owner, priority, metric value, reporting period, and
+decision traceable to supplied sources. Cite source titles/keys and links, not
+opaque codes alone. Preserve whether a statement is confirmed, proposed,
+unapproved, or unknown.
+
+- **Unknowns**: Record missing information as gaps, open questions, assumptions,
+  or justified N/A. Use values such as `Unconfirmed — not provided` and
+  `Unassigned — not identified`. Keep drafts incomplete rather than inferring
+  priorities, scope decisions, owners, targets, thresholds, cadences, approvals,
+  or release decisions. Resolve each gap when the assessed gate requires it.
+- **Ownership**: Check each named owner against an explicit source assignment
+  of that responsibility. A contributor or data provider is not necessarily
+  accountable. In the Open Questions `Owner` cell, use the assigned
+  decision/follow-up owner or an explicit unknown. Keep source authors in notes;
+  never assign or propose them as owners without evidence. Ask who must decide
+  when authority is unknown.
+- **Review status**: Distinguish completion from request status. An unfinished
+  Legal/Privacy, Engineering, or other review does not mean it was not requested.
+  Use `Not assessed — request status unknown` until a source establishes it.
+- **Measurements**: Preserve exact reporting windows. A single month's count
+  is evidence for that period, not a recurring average, trend, or forecast.
+  Keep proposed review cadences unapproved until confirmed.
+- **Qualitative outcomes**: Keep “records remain accurate” qualitative rather
+  than turning it into `100%` or “zero duplicates.” Record an unknown threshold
+  and ask the accountable owner when the assessed gate requires one.
+- **Design discovery**: Summarize only sourced user touchpoints and behaviors.
+  Label useful but unverified backstage behavior, synchronization, APIs,
+  support tools, or runbooks as hypotheses or open questions, not requirements.
+- **Priority**: Assign `Must`, `Should`, or `Could` only from a source or explicit
+  user decision. Keep unknown priority explicit in drafts; treat it as a blocker
+  when the assessed gate requires confirmation.
+- **Contradictions**: Preserve competing positions with their sources, impact,
+  and confirmed decision owner or an explicit ownership gap. Only an explicit
+  resolution from supplied evidence or the decision owner settles the issue.
+
+## Lifecycle and Gate Rules
+
+```
+[draft] ──> [discovery] ──> [evaluation] ──> [approved] ──> [execution]
+   │             │               │              │              │
+   └─────────────┴───────────────┴──────────────┴──────────────┴────> [archived]
+```
+
+Use the Lifecycle and Gate Model as the authoritative gate definition. Preserve
+the current state on normal updates, including legacy `review`. For a requested
+legacy transition, assess the explicit target gate without silently renaming
+the starting state.
+
+### Transition Safety
+
+- **Assertions are evidence claims, not authorization shortcuts.** Validate a
+  claim that the PRD is approved against the full approval gate. Repeated
+  requests without new evidence leave the gate blocked.
+- **Original state matters.** Validate the permitted sequence against the
+  captured starting status, not a status already edited to the target. Reject
+  skipped states, explain the canonical progression, and keep the original.
+- **Review evidence differs from links.** Approval requires explicit sign-off
+  from both Product (`metadata.product-review`) and Design
+  (`metadata.design-review`), with reviewer, role, and date. Design Review and
+  Figma links are artifact references, not substitutes for sign-off.
+- **Execution needs its own evidence.** Check the linked-and-aligned
+  `artifacts.solution-design` reference separately from Design Review artifacts
+  and delivery kickoff/alignment evidence.
+
+### Blockers and Reassessment
+
+Assess the single `Blocking?` value for the requested gate. For discovery, mark
+Yes only when an unresolved issue challenges the initiative's core intent; for
+later gates, mark Yes when it prevents that gate. Put the question and its
+impact in `Question / hypothesis`; keep `Blocking?` binary. Unknown blocker
+values block the relevant gate; `No — <explanation>` is not a binary value.
+
+For a blocked transition, end the response with an explicit opt-in question:
+“Would you like to provide the missing evidence to reassess the transition?”
+Include it in the final response if interactive questioning is unavailable.
+A gap list or “Please provide…” does not satisfy this requirement. Revalidate
+after the user supplies the missing information.

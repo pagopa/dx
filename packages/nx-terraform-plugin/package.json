@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/nx-terraform",
-  "version": "0.5.13",
+  "version": "0.5.14",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
@@ -15,13 +15,11 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./src/index.ts",
       "default": "./dist/index.js"
     },
     "./release/version-actions": {
       "types": "./dist/release/version-actions.d.ts",
       "import": "./dist/release/version-actions.js",
-      "require": "./src/release/version-actions.ts",
       "default": "./dist/release/version-actions.js"
     }
   },

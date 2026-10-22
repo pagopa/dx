@@ -239,21 +239,19 @@ export function parseAzqrReport(raw: unknown): AzqrReport {
 
 /**
  * Builds the finding reason from the AZQR recommendation, appending SKU / tier
- * / location context from the matching `inventory` row when available.
+ * context from the matching `inventory` row when available.
  */
 function buildReason(
   row: AzqrImpactedRow,
   inventory: AzqrInventoryRow | undefined,
 ): string {
-  const base = row.recommendation.trim();
-  const sentence = base.endsWith(".") ? base : `${base}.`;
+  const base = row.recommendation.trim().replace(/\.$/, "");
   const context: string[] = [];
   if (inventory?.skuName) context.push(inventory.skuName);
   if (inventory?.skuTier && inventory.skuTier !== inventory.skuName) {
     context.push(inventory.skuTier);
   }
-  if (inventory?.location) context.push(inventory.location);
-  return context.length > 0 ? `${sentence} (${context.join(", ")})` : sentence;
+  return context.length > 0 ? `${base} (${context.join(", ")}).` : `${base}.`;
 }
 
 /**

@@ -27,3 +27,13 @@ resource "github_actions_environment_secret" "opex_ci" {
   secret_name = each.key
   value       = each.value
 }
+
+#trivy:ignore:AVD-GIT-0002
+resource "github_actions_environment_secret" "automation_ci" {
+  for_each = local.automation_ci.secrets
+
+  repository  = var.repository.name
+  environment = "automation-${local.env_name}-ci"
+  secret_name = each.key
+  value       = each.value
+}

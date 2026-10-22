@@ -3,95 +3,295 @@
   "evals": [
     {
       "id": 0,
-      "name": "complete-confluence-compatible-prd",
-      "prompt": "Write a PRD for a saved-payment experience from these complete notes. Sponsor: Payments Director. Product owner: Payments PM. Priority: high. Budget: 2026 Payments roadmap. Target release: 2026-10-01. Users repeatedly entering card details on mobile abandon or slow down payments. Actors: returning card-paying users and Customer Care. User JTBD: when returning to pay, users want to select a masked saved card so they can complete payment faster. Expected outcome: faster completed repeat payments. Success metric: median completion time falls from 74 seconds to 45 seconds. Quality guardrail: no full card number is stored. Business goal: increase completed repeat-card payments from 68% to 75% within eight weeks. Outcome KPI source: payments funnel dashboard reviewed weekly. Strategic dependency: PSP token lifecycle events. Constraint: maximum five visible cards. Preliminary Engineering opinion: tokenization is available. Preliminary Legal/Compliance opinion: requested. Design discovery: https://figma.example/saved-cards. Support needs: troubleshooting guidance for expired or declined cards. Open non-blocking assumption: Amex is excluded from this release.",
-      "expected_output": "A Confluence-compatible PRD with visible Metadata, Need definition, Actors, Objectives with a complete JTBD catalog, Success metrics with outcome KPIs and quality guardrails, strategic dependencies, constraints, feasibility red flags, design discovery, open questions, and support readiness. It starts with status draft.",
+      "name": "mixed-evidence-draft",
+      "prompt": "Read all supplied product evidence and create a Confluence-compatible PRD. Use only facts supported by the source material; distinguish decisions, proposals, and unknowns; trace material claims to their source; and preserve the unresolved policy contradiction as an owned, impact-aware open question. Keep status draft. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "A source-grounded PRD for a fictional public-service appointment initiative, with canonical JTBD, measurable outcomes and guardrails, mixed-source provenance, the unresolved fee-policy contradiction as an owned and impact-aware question, and draft status.",
       "expectations": [
-        "The PRD has a visible Metadata section with stable IDs for status, sponsor, owner, budget, Legal/Compliance, Engineering, target release, and priority",
-        "The JTBD row includes persona, canonical job statement, expected outcome, success metric, quality guardrail, priority, and notes",
-        "Outcome KPIs and quality guardrails are separate sections",
-        "Stable English IDs are present for each canonical section and table row",
-        "The PRD does not include a use-case catalog, RACI, backlog, or detailed implementation specification",
-        "Narrative PRD sentences identify the user group, actor, team, owner, stakeholder, or system responsible for each confirmed statement",
-        "metadata.status is draft"
+        "Every section marked (Always) is present; conditional and optional sections are included only when applicable or required by the requested lifecycle gate",
+        "The author-only requirement labels (Always), (If Applicable), and (Optional) do not appear in final PRD headings",
+        "The Persona, Business Goals, User Goals, Risks, and Open Questions tables preserve their specified column titles and column counts",
+        "The title, visible headings, prose, non-standardized table headers, and explanatory cell content follow the English language of the user's prompt; the five standardized tables retain the English template's exact column titles and counts",
+        "Every JTBD uses the canonical When / I want / so I can form and names persona, expected outcome, supported metric, quality guardrail, source-backed priority or explicit unconfirmed priority, and notes",
+        "The policy disagreement is not resolved by the agent and appears as an open question with its impact and confirmed owner or an explicit unknown owner",
+        "The Open Questions table has the exact six-column schema and uses its single blocker value for the relevant gate",
+        "Every `Blocking?` cell contains exactly `Yes` or `No`; the question and impact are stated in `Question / hypothesis`",
+        "Claims retain source attribution; unsupported targets, approvals, actors, owners, priorities, cadences, thresholds, and legal conclusions are not invented",
+        "The PRD distinguishes review completion from request status: it does not say Legal/Privacy or Engineering review was not requested unless a source explicitly says so",
+        "The 1,200 support contacts remain tied to the 2026-07-01-2026-07-31 reporting period; the PRD does not present that single-period count as an established recurring monthly rate or trend",
+        "Qualitative record-accuracy intent is not converted into an unsupported numeric or absolute threshold, and design discovery does not add unsourced backstage behavior or implementation details",
+        "The PRD remains product/outcome focused and does not invent use cases, technical specifications, backlog, QA, or rollout plans",
+        "metadata.status remains draft; validation is run and its actual result is communicated without predicting unrequested future-gate outcomes"
       ],
-      "files": []
+      "files": [
+        "evals/fixtures/appointment/product-brief.md",
+        "evals/fixtures/appointment/meeting-notes.md",
+        "evals/fixtures/appointment/design-discovery.md",
+        "evals/fixtures/appointment/policy-draft.md",
+        "evals/fixtures/appointment/analytics.md",
+        "evals/fixtures/appointment/support-operations.md"
+      ]
     },
     {
       "id": 1,
-      "name": "incomplete-material-remains-draft",
-      "prompt": "Create a PRD for a shared workspace idea. Sales reports that enterprise customers want collaboration, but there is no confirmed sponsor, owner, target user segment, measurable goal, or decision about whether the scope is shared folders only or also roles and audit logs. Engineering and Legal have not been consulted. Do not invent answers. Produce the PRD in draft state and make the uncertainties visible.",
-      "expected_output": "The agent produces a structured draft without inventing missing information, records the unresolved scope and ownership questions, and keeps status draft.",
+      "name": "draft-to-discovery",
+      "prompt": "The PRD in state-draft.md is currently draft. Use discovery-feedback.md as supplied evidence. I explicitly request: move the PRD to discovery. Update only what the evidence supports, validate the requested transition. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill confirms draft entry requirements and recorded stakeholder feedback, then changes the PRD status to discovery only after validation.",
       "expectations": [
-        "The PRD is created in draft state despite incomplete information",
-        "Missing sponsor, owner, audience, goals, and preliminary consultations are visible as open questions or justified not-applicable values",
-        "The conflicting scope proposals are preserved as an unresolved question",
-        "The agent does not invent metrics, ownership, actors, or feasibility conclusions"
+        "metadata.status changes from draft to discovery only because the user explicitly requested it and validation passes with the original source state recorded",
+        "The feedback is accurately represented or converted to an open question without fabricating a resolution"
       ],
-      "files": []
+      "files": [
+        "evals/fixtures/appointment/state-draft.md",
+        "evals/fixtures/appointment/discovery-feedback.md"
+      ]
     },
     {
       "id": 2,
-      "name": "review-ready-status-transition",
-      "prompt": "The existing PRD has a visible Metadata section with status draft. Its context, sponsor, Product owner, and problem statement are clear enough to share with stakeholders. It still has two non-blocking open questions about a future design decision. I have reviewed it and say it is good enough and ready for review. Change the status only. Do not publish it or modify any other content.",
-      "expected_output": "The agent changes only metadata.status from draft to review. Non-blocking open questions remain unchanged and no publication is offered.",
+      "name": "discovery-to-evaluation",
+      "prompt": "The PRD in state-discovery.md is currently discovery. Read evaluation-evidence.md. I explicitly request: move it to evaluation. Update and validate only against the supplied evidence. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill validates the discovery feedback, preliminary Engineering and Legal/Privacy evidence, budget and priority, then moves the PRD to evaluation while keeping unresolved items visible.",
       "expectations": [
-        "metadata.status changes from draft to review",
-        "Non-blocking open questions do not prevent the transition",
-        "No other PRD content is changed",
-        "The agent does not publish or offer publication"
+        "metadata.status changes from discovery to evaluation only after the explicitly requested gate passes with the original source state recorded",
+        "Engineering and Legal/Privacy opinions are presented as preliminary evidence, not formal feasibility approval",
+        "Budget, priority, relevant red flags, and unresolved questions are grounded in the supplied evidence"
       ],
-      "files": []
+      "files": [
+        "evals/fixtures/appointment/state-discovery.md",
+        "evals/fixtures/appointment/discovery-review.md",
+        "evals/fixtures/appointment/evaluation-evidence.md",
+        "evals/fixtures/appointment/product-brief.md",
+        "evals/fixtures/appointment/meeting-notes.md",
+        "evals/fixtures/appointment/design-discovery.md",
+        "evals/fixtures/appointment/policy-draft.md",
+        "evals/fixtures/appointment/analytics.md",
+        "evals/fixtures/appointment/support-operations.md"
+      ]
     },
     {
       "id": 3,
-      "name": "review-blocked-missing-entry-criteria",
-      "prompt": "The existing PRD is marked draft. It contains an idea and some technical notes, but no confirmed sponsor, Product owner, or clear problem statement. I say it is ready for review. Do not change the status yet; identify the missing review-entry information and ask targeted questions.",
-      "expected_output": "The agent keeps status draft, explains that review readiness is not established, and asks for the missing sponsor, owner, and problem definition without inventing them.",
+      "name": "evaluation-to-approved",
+      "prompt": "The PRD in state-evaluation-ready.md is currently evaluation. The evidence includes an explicit proceed decision, Product and Design review, linked/planned Design Review, and available Jira Epic/board. I explicitly request: move the PRD to approved. Verify all required evidence and record the requested transition. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill verifies an explicit human request, Product plus Design review, an explicit proceed decision, a Design Review link or plan, and available Epic/board, then transitions evaluation to approved.",
       "expectations": [
-        "metadata.status remains draft",
-        "The agent identifies missing context, sponsor, owner, or problem clarity as the reason",
-        "The agent asks targeted clarification questions",
-        "The agent does not infer values from technical notes"
+        "metadata.status changes from evaluation to approved only after every required approval gate is evidenced with the original source state recorded",
+        "Product + Design review is distinct from the existence of a linked/planned Design Review artifact",
+        "The proceed decision, Design Review link/plan, Epic/board, confirmed target and priority appear accurately"
       ],
-      "files": []
+      "files": [
+        "evals/fixtures/appointment/state-evaluation-ready.md",
+        "evals/fixtures/appointment/evaluation-evidence.md",
+        "evals/fixtures/appointment/approval-evidence.md",
+        "evals/fixtures/appointment/approval-references.md"
+      ]
     },
     {
       "id": 4,
-      "name": "downstream-detail-boundary",
-      "prompt": "Write a PRD from these notes. Include the need, actors, JTBD, goals, metrics, and risks, but keep the following out of the PRD: endpoint schemas, database tables, retry algorithms, detailed use cases, acceptance criteria, deployment steps, and backlog tickets. Mention only the high-level constraint that an existing indexed read model must be available.",
-      "expected_output": "The PRD contains product outcomes and high-level constraints while excluding detailed implementation, use-case, acceptance, deployment, and backlog content.",
+      "name": "approved-to-execution",
+      "prompt": "The PRD in state-approved.md is currently approved and has a linked Design Review and available Epic/board. kickoff-evidence.md records that Engineering has started delivery and Product confirmed execution. I explicitly request: move the PRD to execution. Validate the transition. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill verifies the explicit user request, existing approved state, and documented Product/Engineering delivery kickoff before changing the status to execution.",
       "expectations": [
-        "The PRD contains no detailed endpoint, database, retry, deployment, acceptance-criteria, use-case, or backlog content",
-        "The high-level indexed-read-model dependency is retained",
-        "The PRD remains organized according to the Confluence-compatible hierarchy"
+        "metadata.status changes from approved to execution only with the requested transition and documented kickoff evidence",
+        "The solution-design reference is separately recorded as linked and aligned to the approved PRD, in addition to the Product/Design review record and Epic/board"
       ],
-      "files": []
+      "files": [
+        "evals/fixtures/appointment/state-approved.md",
+        "evals/fixtures/appointment/evaluation-evidence.md",
+        "evals/fixtures/appointment/approval-evidence.md",
+        "evals/fixtures/appointment/approval-references-linked.md",
+        "evals/fixtures/appointment/kickoff-evidence.md"
+      ]
     },
     {
       "id": 5,
-      "name": "publication-handoff",
-      "prompt": "The PRD has just been written and validated. Ask me whether I want to create a Confluence page. Do not choose a publication language until I answer yes.",
-      "expected_output": "The agent asks for explicit confirmation to create a Confluence page and hands publication to confluence-librarian without asking for or assuming a language before confirmation.",
+      "name": "execution-to-archived",
+      "prompt": "The PRD in state-execution.md is currently execution. closure-evidence.md documents a completed release, the agreed post-release observation, measured outcome, and Product's recorded decision to close. I explicitly request: archive the PRD. Validate the closure gate. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill verifies release completion, post-release outcome evidence, and the documented Product closure decision before changing execution to archived.",
       "expectations": [
-        "The agent asks whether to create a Confluence page",
-        "The agent does not publish without explicit confirmation",
-        "The agent does not choose or ask for a publication language before confirmation",
-        "The agent delegates confirmed publication to confluence-librarian"
+        "metadata.status changes from execution to archived only after the explicit request and supplied closure evidence with the original source state recorded",
+        "The measured outcome and observation are distinguished from the decision to close and remain traceable"
+      ],
+      "files": [
+        "evals/fixtures/appointment/state-execution.md",
+        "evals/fixtures/appointment/evaluation-evidence.md",
+        "evals/fixtures/appointment/approval-evidence.md",
+        "evals/fixtures/appointment/approval-references-linked.md",
+        "evals/fixtures/appointment/kickoff-evidence.md",
+        "evals/fixtures/appointment/closure-evidence.md"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "approval-blocked-without-product-design-review",
+      "prompt": "The PRD in state-evaluation-no-review.md says the committee approved the initiative. I explicitly request: move it to approved. No Product + Design review evidence was supplied. Validate instead of assuming that the committee statement satisfies every required gate. If evidence is missing, retain the current status, record the blocker, and ask whether I want to provide the missing information. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill retains evaluation because committee approval does not substitute for the required Product + Design review, and it identifies the missing evidence and asks whether the user wants to supply it.",
+      "expectations": [
+        "metadata.status remains evaluation",
+        "The skill identifies the missing Product + Design review evidence and does not treat committee approval as a substitute",
+        "The skill asks whether the user wants to provide the missing review evidence"
+      ],
+      "files": [
+        "evals/fixtures/appointment/state-evaluation-no-review.md",
+        "evals/fixtures/appointment/evaluation-evidence.md",
+        "evals/fixtures/appointment/approval-evidence-no-review.md"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "approval-blocked-without-linked-design-review-or-board",
+      "prompt": "The PRD in state-evaluation-no-links.md records Product + Design review and an explicit committee decision to proceed. I report that the PRD has been approved and explicitly request: change its status to approved. The evidence does not include a linked or planned Design Review or an available Epic/board. Check these requirements independently from the Product + Design review. If something is missing, retain evaluation and ask whether I want to fill the gap. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill retains evaluation despite the user's reported approval because the linked/planned Design Review and available Epic/board are absent; it identifies and asks about both gaps.",
+      "expectations": [
+        "metadata.status remains evaluation and the reported committee decision does not bypass gate requirements",
+        "The skill distinguishes recorded Product + Design review from the missing linked/planned Design Review artifact",
+        "The missing Design Review and Epic/board references appear as separate blockers with impact",
+        "The skill asks whether the user wants to provide the missing information and explains why the transition remains blocked"
+      ],
+      "files": [
+        "evals/fixtures/appointment/state-evaluation-no-links.md",
+        "evals/fixtures/appointment/evaluation-evidence.md",
+        "evals/fixtures/appointment/approval-evidence.md"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "archive-blocked-without-post-release-observation",
+      "prompt": "The PRD in state-execution-no-observation.md is currently execution. The release is complete, but no post-release observation or outcome decision is recorded. I explicitly request: archive this PRD. Validate the gate; retain the current status and ask whether I want to provide missing evidence rather than infer success. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill keeps execution status until the post-release observation and outcome/closure decision are evidenced, then asks for the missing evidence.",
+      "expectations": [
+        "metadata.status remains execution",
+        "The response identifies post-release outcome evidence and a closure decision as missing rather than asserting success from release completion",
+        "The skill asks whether the user wants to provide missing information and explains why the transition remains blocked",
+        "No invented metric, observation, or closure decision appears in the PRD"
+      ],
+      "files": ["evals/fixtures/appointment/state-execution-no-observation.md"]
+    },
+    {
+      "id": 9,
+      "name": "ordinary-update-preserves-current-state",
+      "prompt": "Update the PRD in state-discovery-update.md with the new stakeholder feedback in feedback-update.md. I have not asked to change its lifecycle status. Preserve the existing state, record the feedback and unresolved question accurately, and do not publish. Save only the PRD as prd.md. Do not create separate report or log files.",
+      "expected_output": "The skill updates the PRD content but retains discovery because there is no explicit transition request.",
+      "expectations": [
+        "metadata.status remains discovery",
+        "The feedback is incorporated without treating an update request as lifecycle authorization",
+        "The unresolved issue remains visible as an open question",
+        "The response summarizes the update without claiming a user-confirmed status change"
+      ],
+      "files": [
+        "evals/fixtures/appointment/state-discovery-update.md",
+        "evals/fixtures/appointment/feedback-update.md"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "held-out-non-user-facing-draft",
+      "prompt": "Create a draft PRD for the internal records-reconciliation initiative described in initiative.md and constraints.md. This is a backend-only initiative with no direct user interface. Include every always-required product section; mark Design/Experience as not applicable only with the confirmed rationale in the evidence. Keep outcome ownership and unknowns explicit. Preserve status draft, validate completeness. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "A generalized product PRD for an internal records-reconciliation initiative that does not fabricate direct end users or design work, explains why Experience is not applicable, preserves business outcomes and constraints, and remains in draft status.",
+      "expectations": [
+        "The PRD transfers the same product-outcome method to the held-out backend-only initiative without reusing appointment-specific concepts",
+        "Design/Experience is retained and marked not applicable with the confirmed reason rather than silently omitted",
+        "The PRD distinguishes confirmed process users/actors from missing ownership or outcome decisions and records targeted questions",
+        "metadata.status remains draft"
+      ],
+      "files": [
+        "evals/fixtures/heldout/initiative.md",
+        "evals/fixtures/heldout/constraints.md"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "discovery-blocked-without-product-owner",
+      "prompt": "The PRD in state-draft-no-owner.md is currently draft. I explicitly request: move it to discovery. Validate the entry gate using only the supplied evidence. If evidence is missing, keep draft, record the exact gap, and ask whether I want to provide the missing information. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill retains draft because the Product owner is not assigned or confirmed, and asks the user to supply an accountable owner instead of inventing one.",
+      "expectations": [
+        "metadata.status remains draft",
+        "The skill identifies the missing confirmed Product owner as a discovery blocker",
+        "The PRD does not invent or infer an owner",
+        "The skill asks whether the user wants to provide the missing owner and explains why the transition remains blocked"
+      ],
+      "files": ["evals/fixtures/appointment/state-draft-no-owner.md"]
+    },
+    {
+      "id": 12,
+      "name": "evaluation-blocked-without-feasibility-and-measurement-evidence",
+      "prompt": "The PRD in state-discovery.md is currently discovery. No evaluation-evidence.md or other evaluation findings were supplied. I explicitly request: move it to evaluation. Validate the gate; retain discovery and ask for missing evidence instead of fabricating metrics, owners, or feasibility results. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill retains discovery and identifies the missing measurable outcomes, feasibility survey, and other evaluation evidence; it asks the user to supply the gaps.",
+      "expectations": [
+        "metadata.status remains discovery",
+        "The response identifies missing KPI/guardrail evidence, feasibility review, and unresolved-question ownership/date gaps",
+        "No unprovided metric targets, feasibility approvals, or accountable owners are invented",
+        "The skill asks whether the user wants to provide the missing evaluation evidence"
+      ],
+      "files": ["evals/fixtures/appointment/state-discovery.md"]
+    },
+    {
+      "id": 13,
+      "name": "execution-blocked-without-delivery-kickoff",
+      "prompt": "The PRD in state-approved.md is currently approved. Product has not recorded a delivery kickoff. I explicitly request: move the PRD to execution. Validate the gate; retain approved status, record the missing Product and delivery-team alignment evidence, and ask whether I want to provide it. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill retains approved because no delivery kickoff or operational-intake alignment is recorded.",
+      "expectations": [
+        "metadata.status remains approved",
+        "The response names Product and delivery-team kickoff/alignment evidence as missing",
+        "The PRD does not infer that approved status means delivery has started",
+        "The skill asks whether the user wants to provide kickoff evidence and records the blocked result"
+      ],
+      "files": [
+        "evals/fixtures/appointment/state-approved.md",
+        "evals/fixtures/appointment/evaluation-evidence.md",
+        "evals/fixtures/appointment/approval-evidence.md",
+        "evals/fixtures/appointment/approval-references-linked.md"
+      ]
+    },
+    {
+      "id": 14,
+      "name": "invalid-draft-to-approved-jump",
+      "prompt": "The PRD in state-draft.md is currently draft. I explicitly request: move it directly to approved. Validate the requested transition; do not skip required states even if some information appears complete. Keep the existing status and explain the required sequence in your response. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill rejects the direct draft-to-approved jump, keeps draft, and explains that discovery, evaluation, and approval gates cannot be skipped.",
+      "expectations": [
+        "metadata.status remains draft",
+        "The skill identifies the draft-to-approved jump as invalid using the captured draft source and names the canonical progression",
+        "The skill does not treat user assertion or apparent completeness as a gate bypass"
+      ],
+      "files": ["evals/fixtures/appointment/state-draft.md"]
+    },
+    {
+      "id": 15,
+      "name": "execution-blocked-without-aligned-solution-design",
+      "prompt": "The PRD in state-approved.md is currently approved. Product and Engineering confirmed delivery kickoff in kickoff-evidence.md. The Design Review link in the PRD is a review record; no separate solution-design reference or explicit alignment to the approved PRD is supplied. I explicitly request: move the PRD to execution. Validate the execution gate without treating the review link as solution-design evidence. If the solution-design evidence is missing, keep approved status, record the gap, and ask whether I want to provide it. Save only the PRD as prd.md. Do not publish.",
+      "expected_output": "The skill retains approved because execution requires a separately recorded solution-design reference explicitly linked and aligned with the approved PRD; it identifies the gap instead of treating a Design Review link as sufficient.",
+      "expectations": [
+        "metadata.status remains approved because no linked-and-aligned solution-design reference was supplied",
+        "The PRD distinguishes the Design Review artifact from the solution-design reference",
+        "The skill asks whether the user wants to provide the missing solution-design evidence and explains why execution remains blocked without claiming delivery has not started beyond the supplied evidence"
+      ],
+      "files": [
+        "evals/fixtures/appointment/state-approved.md",
+        "evals/fixtures/appointment/kickoff-evidence.md"
+      ]
+    },
+    {
+      "id": 16,
+      "name": "prompt-language-italian",
+      "prompt": "Crea una bozza di PRD per questa iniziativa: le piccole imprese hanno bisogno di un modo affidabile per riconciliare i record inviati, così da completare correttamente la rendicontazione. Le informazioni su attori, metriche, responsabilità, rischi, ambito e preparazione del supporto non sono fornite; mantieni esplicite queste lacune senza inventare dettagli. Salva soltanto il PRD nel file prd.md. Non pubblicarlo.",
+      "expected_output": "A source-grounded draft PRD whose visible title, headings, prose, non-standardized table headers, and explanatory cell content follow the Italian language of the user's prompt, without requiring an explicit language request; the five standardized tables retain the English template's exact column titles and column counts.",
+      "expectations": [
+        "The PRD follows the Italian language of the user's prompt rather than treating the English template as a default output language; JTBD uses Quando / voglio / così posso and blocker values use Sì or No",
+        "The Persona, Business Goals, User Goals, Risks, and Open Questions tables retain the English template's exact column titles and column counts; other human-readable table headers follow the prompt language",
+        "The PRD retains the stable section comments and field IDs, keeps status draft, and marks unsupported details as gaps or open questions"
       ],
       "files": []
     },
     {
-      "id": 6,
+      "id": 17,
       "name": "explicit-subject-prose",
-      "prompt": "Write a draft PRD from these onboarding notes. Sponsor: Merchant Services Director. Product owner: Onboarding PM. Merchants currently wait up to three days for onboarding approval. Customer Operations reviews merchant applications. The source notes also say: \"Need to reduce delays. It was decided that progress should be monitored weekly. Legal review should be requested. Must support merchants with rejected applications.\" The notes do not identify who made the decision, who owns weekly monitoring, who requests Legal review, or which team supports rejected merchants. Do not invent owners or decision-makers.",
+      "prompt": "Write a draft PRD from these onboarding notes. Sponsor: Merchant Services Director. Product owner: Onboarding PM. Merchants currently wait up to three days for onboarding approval. Customer Operations reviews merchant applications. The source notes also say: \"Need to reduce delays. It was decided that progress should be monitored weekly. Legal review should be requested. Must support merchants with rejected applications.\" The notes do not identify who made the decision, who owns weekly monitoring, who requests Legal review, or which team supports rejected merchants. Do not invent owners or decision-makers. Intake note: \"Alex Chen, the Copilot interlocutor, confirmed that this draft covers application submission through the approval outcome, not post-approval account management.\" Alex's authority to approve scope for the team is not established.",
       "expected_output": "A draft PRD whose narrative prose names confirmed actors such as merchants and Customer Operations, while the missing decision-maker, monitoring owner, Legal-review initiator, and support owner remain explicit open questions.",
       "expectations": [
         "Narrative sentences use explicit subjects instead of retaining impersonal, passive, or subjectless wording from the notes",
         "The PRD names merchants and Customer Operations where the source confirms those actors",
         "The PRD records targeted open questions for the decision-maker, monitoring owner, Legal-review initiator, and support owner",
         "The PRD does not invent an actor, owner, or decision-maker",
-        "metadata.status remains draft"
+        "metadata.status remains draft",
+        "States the draft's application-submission-to-approval scope directly, excluding post-approval account management; any necessary attribution names Alex without implying team approval or repeatedly recounting the chat confirmation"
       ],
       "files": []
     }

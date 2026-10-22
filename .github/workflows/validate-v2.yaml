@@ -2,6 +2,40 @@ name: Validate
 
 on:
   workflow_call:
+    secrets:
+      ARM_CLIENT_ID:
+        description: Azure client ID used by Terraform plans.
+        required: false
+      ARM_SUBSCRIPTION_ID:
+        description: Azure subscription planned by the environment jobs.
+        required: false
+      ARM_TENANT_ID:
+        description: Azure tenant used by cloud login.
+        required: false
+      AWS_REGION:
+        description: AWS region used by cloud login.
+        required: false
+      ECR_PUBLIC_ROLE_ARN:
+        description: Optional AWS OIDC role for authenticated pulls from ECR Public.
+        required: false
+      GH_APP_CLIENT_ID:
+        description: GitHub App client ID used by cloud login.
+        required: false
+      GH_APP_INSTALLATION_ID:
+        description: GitHub App installation ID used by cloud login.
+        required: false
+      GH_APP_KEY:
+        description: GitHub App private key used by cloud login.
+        required: false
+      GH_APP_RELEASE_APP_KEY:
+        description: Release App private key used by the version-plan warning.
+        required: false
+      GH_APP_RELEASE_CLIENT_ID:
+        description: Release App client ID used by the version-plan warning.
+        required: false
+      ROLE_ARN:
+        description: AWS role assumed by Terraform plans.
+        required: false
 
 env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
@@ -15,6 +49,7 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
+      release-app-configured: ${{ steps.evaluate-release-app.outputs.configured }}
     steps:
       - name: Evaluate fork PR
         id: evaluate
@@ -30,15 +65,33 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
+      # The version-plan warning job comments through the release GitHub App.
+      # Repositories that cannot inherit the GH_APP_RELEASE_* secrets (for
+      # example repositories generated under a personal owner) would otherwise
+      # fail on `actions/create-github-app-token`, which requires a private key:
+      # when the secrets are missing the warning job is skipped instead.
+      - name: Evaluate release app credentials
+        id: evaluate-release-app
+        env:
+          GH_APP_RELEASE_CLIENT_ID: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
+          GH_APP_RELEASE_APP_KEY: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
+        run: |
+          if [ -n "$GH_APP_RELEASE_CLIENT_ID" ] && [ -n "$GH_APP_RELEASE_APP_KEY" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            echo "::notice title=Version plan warning skipped::GH_APP_RELEASE_CLIENT_ID and GH_APP_RELEASE_APP_KEY are not configured. Set them to enable the version-plan warning comment on pull requests."
+          fi
+
   warn-missing-version-plans:
     name: Warn Missing Version Plans
     needs: gate
-    if: ${{ github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' }}
+    if: ${{ github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' && needs.gate.outputs.release-app-configured == 'true' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
-      pull-requests: write
+      packages: read
     steps:
       - name: Generate GitHub App token
         id: generate-token
@@ -52,7 +105,15 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # `blob:none` keeps every commit and tree but skips the historical
+          # blobs, which dominate the clone. The base/head comparisons walk the
+          # trees, never the blobs, so nothing triggers a lazy fetch and the
+          # credentials can stay out of `.git/config` (unlike `tree:0`).
+          filter: blob:none
+          # The App token is only needed for the initial fetch. Keeping it out
+          # of the checkout config prevents dependency install scripts from
+          # reading a write-capable token from .git/config.
+          persist-credentials: false
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Setup Node.js
@@ -60,6 +121,15 @@ jobs:
         with:
           install_args: "node pnpm"
           minimum_release_age: 7d
+
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -78,18 +148,35 @@ jobs:
     permissions:
       actions: read
       contents: read
+      packages: read
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # `blob:none` keeps every commit and tree but skips the historical
+          # blobs, which dominate the clone. The base/head comparisons walk the
+          # trees, never the blobs, so nothing triggers a lazy fetch and the
+          # credentials can stay out of `.git/config` (unlike `tree:0`).
+          filter: blob:none
+          # Keep the run token out of .git/config: no step after the checkout
+          # needs persisted git credentials.
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           install_args: "node pnpm"
           minimum_release_age: 7d
+
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -111,12 +198,20 @@ jobs:
     permissions:
       actions: read
       contents: read
+      packages: read
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # `blob:none` keeps every commit and tree but skips the historical
+          # blobs, which dominate the clone. The base/head comparisons walk the
+          # trees, never the blobs, so nothing triggers a lazy fetch and the
+          # credentials can stay out of `.git/config` (unlike `tree:0`).
+          filter: blob:none
+          # Keep the run token out of .git/config: no step after the checkout
+          # needs persisted git credentials.
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
@@ -126,6 +221,15 @@ jobs:
 
       - name: Set base and head SHAs for affected commands
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: pnpm --filter . ci
@@ -219,13 +323,24 @@ jobs:
     permissions:
       actions: read
       contents: read
+      id-token: write
+      packages: read
       pull-requests: read
+    env:
+      ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # `blob:none` keeps every commit and tree but skips the historical
+          # blobs, which dominate the clone. The base/head comparisons walk the
+          # trees, never the blobs, so nothing triggers a lazy fetch and the
+          # credentials can stay out of `.git/config` (unlike `tree:0`).
+          filter: blob:none
+          # Keep the run token out of .git/config: no step after the checkout
+          # needs persisted git credentials.
+          persist-credentials: false
 
       - name: Setup repository tools
         if: ${{ hashFiles('mise.toml') != '' }}
@@ -251,6 +366,15 @@ jobs:
           path: ${{ env.TFLINT_PLUGIN_DIR }}
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install dependencies
         run: mise deps
 
@@ -268,6 +392,37 @@ jobs:
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Assume ECR Public pull role
+        id: ecr-public-credentials
+        if: ${{ env.ECR_PUBLIC_ROLE_ARN != '' }}
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
+        with:
+          role-to-assume: ${{ env.ECR_PUBLIC_ROLE_ARN }}
+          # ECR Public is global, but AWS requires us-east-1 for registry authentication.
+          # This is the authentication region, not the deployment region.
+          # https://docs.aws.amazon.com/AmazonECR/latest/public/public-registry-auth.html
+          aws-region: us-east-1
+          output-credentials: true
+          output-env-credentials: false
+          mask-aws-account-id: true
+
+      # Docker and Trivy's OCI client both read the Docker credential store.
+      - name: Log in to Amazon ECR Public
+        id: ecr-public-login
+        if: ${{ steps.ecr-public-credentials.outcome == 'success' }}
+        continue-on-error: true
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.ecr-public-credentials.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.ecr-public-credentials.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.ecr-public-credentials.outputs.aws-session-token }}
+          AWS_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-1
+        with:
+          registry-type: public
+          mask-password: "true"
 
       # We exclude all Terraform Apps from quality checks
       # because they require a dedicated environment to be initialized.
@@ -300,6 +455,7 @@ jobs:
       actions: read
       contents: read
       id-token: write
+      packages: read
     env:
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -309,12 +465,20 @@ jobs:
       ARM_STORAGE_USE_AZUREAD: true
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
+      ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # `blob:none` keeps every commit and tree but skips the historical
+          # blobs, which dominate the clone. The base/head comparisons walk the
+          # trees, never the blobs, so nothing triggers a lazy fetch and the
+          # credentials can stay out of `.git/config` (unlike `tree:0`).
+          filter: blob:none
+          # Keep the run token out of .git/config: no step after the checkout
+          # needs persisted git credentials.
+          persist-credentials: false
 
       # Azure/AWS CLIs come from the repository mise.toml, not from the
       # self-hosted runner image. Install them before Cloud Login so
@@ -343,6 +507,15 @@ jobs:
         with:
           path: ${{ env.TFLINT_PLUGIN_DIR }}
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
+
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
         run: |
@@ -400,6 +573,38 @@ jobs:
           GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
           GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
 
+      # Keep the pull role and us-east-1 scoped to registry login, without
+      # replacing the AWS credentials or region used by Terraform plans.
+      - name: Assume ECR Public pull role
+        id: ecr-public-credentials
+        if: ${{ env.ECR_PUBLIC_ROLE_ARN != '' }}
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
+        with:
+          role-to-assume: ${{ env.ECR_PUBLIC_ROLE_ARN }}
+          # ECR Public is global, but AWS requires us-east-1 for registry authentication.
+          # This is the authentication region, not the deployment region.
+          # https://docs.aws.amazon.com/AmazonECR/latest/public/public-registry-auth.html
+          aws-region: us-east-1
+          output-credentials: true
+          output-env-credentials: false
+          mask-aws-account-id: true
+
+      - name: Log in to Amazon ECR Public
+        id: ecr-public-login
+        if: ${{ steps.ecr-public-credentials.outcome == 'success' }}
+        continue-on-error: true
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.ecr-public-credentials.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.ecr-public-credentials.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.ecr-public-credentials.outputs.aws-session-token }}
+          AWS_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-1
+        with:
+          registry-type: public
+          mask-password: "true"
+
       - name: Run Terraform plan on affected environment projects
         env:
           EXCLUDE: ${{ matrix.target.exclude }}
@@ -433,6 +638,9 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
+          # Keep the run token out of .git/config: no step after the checkout
+          # needs persisted git credentials.
+          persist-credentials: false
 
       - name: Download Terraform plan reports
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

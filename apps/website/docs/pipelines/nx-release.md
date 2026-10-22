@@ -148,6 +148,9 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      # The release job installs the repository dependencies and publishes the
+      # DX packages, both through GitHub Packages.
+      packages: write
       pull-requests: write
     uses: pagopa/dx/.github/workflows/release-v2.yaml@main
     with:
@@ -155,6 +158,21 @@ jobs:
     secrets:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
+
+:::info[GitHub Packages permissions]
+
+The calling job must grant `packages: write` so the workflow can both install
+dependencies hosted on GitHub Packages and publish the release. A reusable
+workflow can only downgrade the permissions granted by its caller: a
+`permissions` block without `packages` sets the scope to `none`. The call is not
+rejected upfront; the install fails later, when the registry refuses the token
+with `401`.
+
+The setup step authenticates npm and pnpm through an npmrc. Yarn 2+ (Berry)
+ignores that file, so a Yarn Berry repository must configure the `pagopa` scope
+in `.yarnrc.yml` itself.
+
+:::
 
 ### Optional: enable the pull request warning
 
@@ -173,6 +191,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      packages: read
       pull-requests: write
     uses: pagopa/dx/.github/workflows/validate-v1.yaml@main
 ```

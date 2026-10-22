@@ -44,6 +44,7 @@ import {
 } from "../../plop/generators/environment/prompts.js";
 import {
   collectDeploymentEnvironmentPayload,
+  type DeploymentEnvironmentOutputPayload,
   getPlopInstance,
   runDeploymentEnvironmentActions,
 } from "../../plop/index.js";
@@ -327,9 +328,39 @@ export const authorizeCloudAccounts =
     );
   };
 
+const toPublicEnvironmentPayload = ({
+  env,
+  github,
+  init,
+  tags,
+  terraform,
+  workspace,
+}: DeploymentEnvironmentOutputPayload) => ({
+  env,
+  github,
+  ...(init && {
+    init: {
+      cloudAccountsToInitialize: init.cloudAccountsToInitialize,
+      terraformBackend: init.terraformBackend,
+    },
+  }),
+  tags,
+  ...(terraform && {
+    terraform: {
+      backend: terraform.backend && {
+        resourceGroupName: terraform.backend.resourceGroupName,
+        storageAccountName: terraform.backend.storageAccountName,
+        subscriptionId: terraform.backend.subscriptionId,
+        type: terraform.backend.type,
+      },
+    },
+  }),
+  workspace,
+});
+
 type AddResult = {
   authorizationPrs: AuthorizationResult[];
-  payload: EnvironmentPayload;
+  payload: ReturnType<typeof toPublicEnvironmentPayload>;
 };
 
 const displaySummary = (result: AddResult) => {
@@ -416,7 +447,7 @@ const addEnvironmentAction = (
       authorizeCloudAccounts(authorizationService)(payload).map(
         (authorizationPrs) => ({
           authorizationPrs,
-          payload,
+          payload: toPublicEnvironmentPayload(payload),
         }),
       ),
     );

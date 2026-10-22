@@ -68,6 +68,11 @@ bundled template.
 4. Use accepted RFC decisions only after they have been propagated into the
    parent DR/SRS.
 
+Cite source titles/keys and links, not opaque source codes alone. Distinguish
+product actors from the Copilot interlocutor and attribute decisions only to
+evidenced owners. Describe behavior directly, without chat or tool narratives;
+retain precise flows, typed errors, and acceptance checks.
+
 ## Required Use Case structure
 
 Complete every section in the bundled template:

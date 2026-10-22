@@ -38,6 +38,14 @@ resource "azurerm_federated_identity_credential" "github_automation_cd" {
   subject                   = "repo:${var.repository.owner}/${var.repository.name}:environment:${format(local.ids.automation_environment_name, "cd")}"
 }
 
+resource "azurerm_federated_identity_credential" "github_automation_ci" {
+  name                      = format(local.ids.federated_identity_name, "automation", "ci")
+  audience                  = local.ids.audience
+  issuer                    = local.ids.issuer
+  user_assigned_identity_id = azurerm_user_assigned_identity.infra_ci.id
+  subject                   = "repo:${var.repository.owner}/${var.repository.name}:environment:${format(local.ids.automation_environment_name, "ci")}"
+}
+
 # Credentials for repositories that emit immutable subject claims. GitHub embeds
 # the numeric owner and repository IDs for repositories created or renamed after
 # 2026-07-15; both formats are federated so each repository matches exactly one
@@ -64,4 +72,12 @@ resource "azurerm_federated_identity_credential" "github_automation_cd_immutable
   issuer                    = local.ids.issuer
   user_assigned_identity_id = azurerm_user_assigned_identity.infra_cd.id
   subject                   = "repo:${local.immutable_repository_slug}:environment:${format(local.ids.automation_environment_name, "cd")}"
+}
+
+resource "azurerm_federated_identity_credential" "github_automation_ci_immutable" {
+  name                      = "${format(local.ids.federated_identity_name, "automation", "ci")}-immutable"
+  audience                  = local.ids.audience
+  issuer                    = local.ids.issuer
+  user_assigned_identity_id = azurerm_user_assigned_identity.infra_ci.id
+  subject                   = "repo:${local.immutable_repository_slug}:environment:${format(local.ids.automation_environment_name, "ci")}"
 }

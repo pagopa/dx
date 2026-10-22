@@ -9,6 +9,15 @@ This guide explains how to configure pre-commit hooks for Terraform projects,
 why these hooks are important, and best practices for managing Terraform lock
 files and modules.
 
+:::info[Nx-managed repositories]
+
+Repositories created with `dx init` do not use pre-commit: Terraform
+formatting, validation, module locking and security scanning are provided by
+the `@pagopa/nx-terraform` targets and by the Code Review workflow. This page
+remains as reference for repositories that still rely on pre-commit hooks.
+
+:::
+
 ## Why Use Pre-commit Hooks?
 
 Pre-commit hooks help automate checks and enforce consistency before code is
