@@ -37,6 +37,12 @@ if [ -n "$JUDGE_TOKEN" ]; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.local/bin:$PATH"
   fi
+  # Quarantine freshly published distributions. RewardKit declares
+  # `litellm>=1.83` with no upper bound and `uvx` resolves it here at runtime,
+  # so without a cooldown a just-published release lands in a container that
+  # holds the judge credentials. Mirrors the workspace
+  # `[tool.uv] exclude-newer` policy, which does not apply outside the lock.
+  export UV_EXCLUDE_NEWER="7 days"
   # Recursive workspace packet: RewardKit [judge].files does not recurse
   # directories, so concat the produced files (transferred artifact {{WORKSPACE_DIR}})
   # into one markdown the judge reads; the ATIF trajectory ({{AGENT_LOG_DIR}}) lets
