@@ -477,6 +477,13 @@ The verifier image is built from the generated `tests/Dockerfile` (ubuntu +
 uv + python; `tests/` is NOT uploaded at runtime). The converter always emits
 this separate-verifier setup and the generated artifact list.
 
+Judge dependencies (`harbor-rewardkit`) are installed by `uvx` inside the
+verifier at runtime, so they are not covered by the workspace lock. The
+generated `tests/test.sh` applies the same publication cooldown the lock gets
+from `[tool.uv] exclude-newer`: it exports `UV_EXCLUDE_NEWER="7 days"` before
+resolving, so a distribution published minutes earlier cannot reach a
+container that holds the judge credentials.
+
 ## Skill eval data and git sources
 
 Harbor injects the skills listed in the agent's `skills:` (or `--skill`) **as-is**:
