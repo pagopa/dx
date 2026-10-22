@@ -14,6 +14,13 @@ npm install --global @pagopa/dx-savemoney
 savemoney analyze --subscriptionIds <subscription-id> --format table
 ```
 
+Alternatively, install and enable SaveMoney for the current project with
+[mise](https://mise.jdx.dev/):
+
+```bash
+mise use npm:@pagopa/dx-savemoney
+```
+
 Use `--format json` for a machine-readable report, or `--config config.yaml` to
 load thresholds and other settings.
 
