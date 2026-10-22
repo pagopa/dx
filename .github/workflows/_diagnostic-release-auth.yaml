@@ -1,0 +1,168 @@
+name: Diagnostic release authentication (no publication)
+
+on:
+  push:
+    branches: [release-token-comparison]
+    paths:
+      - .github/workflows/_diagnostic-release-auth.yaml
+      - .github/scripts/diagnostic-release-auth.sh
+
+concurrency:
+  group: diagnostic-release-auth-${{ github.ref }}
+  cancel-in-progress: false
+
+# No environment, OIDC, publication, PR, or tag creation. Repository-level App
+# secrets are used without changing any release environment's protections.
+permissions:
+  contents: write
+  packages: read
+  pull-requests: read
+
+jobs:
+  compare:
+    if: github.repository == 'pagopa/dx' && github.ref == 'refs/heads/release-token-comparison'
+    name: Authentication / ${{ matrix.authentication }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        authentication: [app, default, no-persist]
+    env:
+      NX_DAEMON: "false"
+      NX_NO_CLOUD: "true"
+      NX_INTERACTIVE: "false"
+      GIT_TERMINAL_PROMPT: "0"
+    steps:
+      - name: Generate source-repository App token
+        id: app
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
+          private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Checkout with explicit App token
+        if: matrix.authentication == 'app'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+          token: ${{ steps.app.outputs.token }}
+
+      - name: Checkout with omitted token (defaults to github.token)
+        if: matrix.authentication == 'default'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+
+      - name: Checkout with default token but no persisted credentials
+        if: matrix.authentication == 'no-persist'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-tags: true
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Compare checkout and release API authentication
+        env:
+          AUTHENTICATION: ${{ matrix.authentication }}
+          GH_TOKEN: ${{ matrix.authentication == 'app' && steps.app.outputs.token || github.token }}
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
+        run: bash .github/scripts/diagnostic-release-auth.sh git-api
+
+      - name: Generate separate destination-organization App token
+        if: matrix.authentication == 'app'
+        id: destination
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
+          private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
+          owner: pagopa-dx
+          repositories: terraform-azurerm-azure-core-infra
+          permission-contents: write
+
+      - name: Compare destination scope without running Terraform publisher
+        if: matrix.authentication == 'app'
+        env:
+          AUTHENTICATION: destination-app
+          GH_TOKEN: ${{ steps.destination.outputs.token }}
+        run: bash .github/scripts/diagnostic-release-auth.sh destination
+
+      - name: Setup Node.js as in release-v2
+        uses: ./.github/actions/node-setup
+
+      - name: Update npm as in release-v2
+        run: npm install -g npm@11.8.0
+
+      # The real release uses github.token, NOT the App token, for packages.
+      - name: Setup npm registry with original workflow token
+        id: registry
+        uses: ./actions/setup-npm-registry
+        with:
+          token: ${{ github.token }}
+
+      - name: Read package metadata with registry credentials
+        continue-on-error: true
+        run: npm view @pagopa/eslint-config version --registry=https://npm.pkg.github.com
+
+      - name: Setup npm registry without token value (expected rejection)
+        id: registry-missing
+        continue-on-error: true
+        uses: ./actions/setup-npm-registry
+        with:
+          token: ${{ '' }}
+
+      - name: Install dependencies as in release-v2
+        id: install
+        run: pnpm install --frozen-lockfile
+
+      - name: Resolve bot identity as in nx-release
+        id: identity
+        continue-on-error: true
+        env:
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
+          GH_TOKEN: ${{ matrix.authentication == 'app' && steps.app.outputs.token || github.token }}
+        run: |
+          bot_login="${APP_SLUG}[bot]"
+          bot_user_id="$(gh api "/users/${bot_login}" --jq .id)"
+          git config user.name "$bot_login"
+          git config user.email "${bot_user_id}+${bot_login}@users.noreply.github.com"
+          echo "Resolved bot identity successfully"
+
+      - name: Exercise actual Nx release helpers with and without GH_TOKEN
+        env:
+          AUTHENTICATION: ${{ matrix.authentication }}
+          GH_TOKEN: ${{ matrix.authentication == 'app' && steps.app.outputs.token || github.token }}
+        run: bash .github/scripts/diagnostic-release-auth.sh nx
+
+      - name: Login to GHCR with original workflow token
+        id: ghcr
+        continue-on-error: true
+        uses: docker/login-action@06fb636fac595d6fb4b28a5dfcb21a6f5091859c # v4.5.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+
+      - name: Login to GHCR with omitted password (expected rejection)
+        id: ghcr-missing
+        continue-on-error: true
+        uses: docker/login-action@06fb636fac595d6fb4b28a5dfcb21a6f5091859c # v4.5.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+
+      - name: Record action outcomes and safety boundaries
+        if: always()
+        env:
+          AUTHENTICATION: ${{ matrix.authentication }}
+          REGISTRY: ${{ steps.registry.outcome }}
+          REGISTRY_MISSING: ${{ steps.registry-missing.outcome }}
+          INSTALL: ${{ steps.install.outcome }}
+          IDENTITY: ${{ steps.identity.outcome }}
+          GHCR: ${{ steps.ghcr.outcome }}
+          GHCR_MISSING: ${{ steps.ghcr-missing.outcome }}
+        run: bash .github/scripts/diagnostic-release-auth.sh summary
