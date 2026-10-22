@@ -20,14 +20,15 @@ export {
   createDefaultAnalyzers,
 } from "./azure/analyzers/index.js";
 
+export type { AzureConfigLoadOptions } from "./azure/config.js";
 // Export common types
 export type { AzureConfig, AzureSource, PricingConfig } from "./azure/types.js";
-export { type MetricsCache, type MonitorClientLike } from "./azure/utils.js";
 
 // Export Azure module
 import * as azureModule from "./azure/index.js";
 export const azure = azureModule;
 
+export { type MetricsCache, type MonitorClientLike } from "./azure/utils.js";
 // Phase 0: unified Finding model and analyzer plugin layer
 export {
   type Finding,
@@ -48,6 +49,7 @@ export {
 
 export * from "./types.js";
 
+import type { AzureConfigLoadOptions } from "./azure/config.js";
 import type { AzureConfig } from "./azure/types.js";
 
 import { loadAzureConfig } from "./azure/config.js";
@@ -68,8 +70,12 @@ import { loadAzureConfig } from "./azure/config.js";
  * ```
  *
  * @param configPath - Optional path to a YAML configuration file
+ * @param options - Optional subscription override and prompt behavior
  * @returns Configuration object with subscription IDs, settings and thresholds
  */
-export async function loadConfig(configPath?: string): Promise<AzureConfig> {
-  return loadAzureConfig(configPath);
+export async function loadConfig(
+  configPath?: string,
+  options?: AzureConfigLoadOptions,
+): Promise<AzureConfig> {
+  return loadAzureConfig(configPath, options);
 }

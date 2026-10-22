@@ -276,3 +276,38 @@ describe("generateReport — table format", () => {
     expect(output).toContain("VM is deallocated");
   });
 });
+
+describe("generateReport — JSON formats", () => {
+  let logSpy: ReturnType<typeof vi.spyOn>;
+
+  beforeEach(() => {
+    logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("keeps summary and detailed JSON aligned for the same report", async () => {
+    await generateReport([HIGH_ENTRY], "json");
+    const summary = JSON.parse(String(logSpy.mock.calls[0]?.[0]));
+
+    logSpy.mockClear();
+    await generateReport([HIGH_ENTRY], "detailed-json");
+    const detailed = JSON.parse(String(logSpy.mock.calls[0]?.[0]));
+
+    expect(summary).toEqual([
+      {
+        costRisk: "high",
+        location: "",
+        name: "vm-high",
+        reason: HIGH_ENTRY.analysis.reason,
+        resourceGroup: "rg1",
+        subscriptionId: "sub1",
+        suspectedUnused: true,
+        type: "Microsoft.Compute/virtualMachines",
+      },
+    ]);
+    expect(detailed).toEqual([HIGH_ENTRY]);
+  });
+});
