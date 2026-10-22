@@ -68,26 +68,6 @@ resource "github_actions_secret" "e2e_gh_runner_app_private_key" {
   }
 }
 
-resource "github_actions_secret" "gh_app_release_app_key" {
-  repository  = module.github_repository.name
-  secret_name = "GH_APP_RELEASE_APP_KEY"
-  value       = "placeholder"
-
-  lifecycle {
-    ignore_changes = [remote_updated_at]
-  }
-}
-
-resource "github_actions_secret" "gh_app_release_client_id" {
-  repository  = module.github_repository.name
-  secret_name = "GH_APP_RELEASE_CLIENT_ID"
-  value       = "placeholder"
-
-  lifecycle {
-    ignore_changes = [remote_updated_at]
-  }
-}
-
 // Generated via dx bot user for e2e tests pat-based scenarios
 resource "github_actions_environment_secret" "github_token" {
   repository  = module.github_repository.name
