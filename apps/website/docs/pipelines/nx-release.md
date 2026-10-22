@@ -65,6 +65,11 @@ creating only the missing tags and releases.
 - npm packages require
   [OIDC Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements)
   configured (`id-token: write` permission must be granted)
+- A GitHub App installed on the repository with **Contents: Read and write**
+  and **Pull requests: Read and write** permissions. Store its Client ID in
+  `GH_APP_CLIENT_ID` and its private key in `GH_APP_KEY`. The same pair can
+  authenticate Terraform's GitHub provider in `validate-v2.yaml`; a second App
+  is not required for releases.
 
 ### nx.json configuration
 
@@ -155,9 +160,41 @@ jobs:
     uses: pagopa/dx/.github/workflows/release-v2.yaml@main
     with:
       environment: npm-prod-cd
-    secrets:
-      github-token: ${{ secrets.GITHUB_TOKEN }}
+    secrets: inherit
 ```
+
+To pass only the required App credentials instead of inheriting secrets, use:
+
+```yaml
+secrets:
+  GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+  GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
+```
+
+### Optional: use a dedicated release App
+
+Most repositories only need the standard pair above. If releases need a
+different App, pass its credentials through the existing `app-client-id` and
+`app-private-key` secrets:
+
+```yaml
+secrets:
+  GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+  GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
+  app-client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
+  app-private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
+```
+
+The release-specific pair takes precedence when configured. Supply both override
+values or neither; an incomplete override fails rather than mixing credentials
+from different Apps. Existing callers that pass only `app-client-id` and
+`app-private-key` continue to work unchanged.
+
+For cross-organization Terraform publishing, install the release App on both the
+source repository and the destination organization. The workflow uses its source
+installation token for release operations and forwards the same App credentials
+so the Terraform publisher can mint a separate destination installation token.
+DX uses this override to publish modules to `pagopa-dx`.
 
 :::info[GitHub Packages permissions]
 
@@ -207,9 +244,12 @@ missing or incomplete.
 
 ## Secrets
 
-| Secret         | Description                                                              | Required |
-| -------------- | ------------------------------------------------------------------------ | -------- |
-| `github-token` | GitHub token with `contents:write` and `pull-requests:write` permissions | Yes      |
+| Secret             | Description                                                                  | Required                    |
+| ------------------ | ---------------------------------------------------------------------------- | --------------------------- |
+| `GH_APP_CLIENT_ID` | Standard App Client ID, shared with validation                               | Unless an override is used  |
+| `GH_APP_KEY`       | Standard App private key, shared with validation                             | Unless an override is used  |
+| `app-client-id`    | Release-specific App Client ID; overrides the standard pair                  | Only with `app-private-key` |
+| `app-private-key`  | Release-specific App private key; retained for existing caller compatibility | Only with `app-client-id`   |
 
 ## Required Permissions
 

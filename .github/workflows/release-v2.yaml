@@ -9,12 +9,18 @@ on:
         type: string
         default: "app-prod-cd"
     secrets:
+      GH_APP_CLIENT_ID:
+        description: "Standard GitHub App Client ID, shared with validation"
+        required: false
+      GH_APP_KEY:
+        description: "Standard GitHub App private key, shared with validation"
+        required: false
       app-client-id:
-        description: "GitHub App Client ID for authentication"
-        required: true
+        description: "Optional release-specific GitHub App Client ID; overrides GH_APP_CLIENT_ID when supplied with app-private-key"
+        required: false
       app-private-key:
-        description: "GitHub App private key for authentication"
-        required: true
+        description: "Optional release-specific GitHub App private key; overrides GH_APP_KEY when supplied with app-client-id"
+        required: false
 
 jobs:
   release:
@@ -27,12 +33,24 @@ jobs:
       packages: write
       pull-requests: write
     steps:
+      - name: Validate release App override
+        shell: bash
+        env:
+          APP_CLIENT_ID: ${{ secrets.app-client-id }}
+          APP_PRIVATE_KEY: ${{ secrets.app-private-key }}
+        run: |
+          if { [ -n "$APP_CLIENT_ID" ] && [ -z "$APP_PRIVATE_KEY" ]; } ||
+             { [ -z "$APP_CLIENT_ID" ] && [ -n "$APP_PRIVATE_KEY" ]; }; then
+            echo "::error::Provide both app-client-id and app-private-key, or neither to use GH_APP_CLIENT_ID and GH_APP_KEY."
+            exit 1
+          fi
+
       - name: Generate GitHub App token
         id: generate-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          client-id: ${{ secrets.app-client-id }}
-          private-key: ${{ secrets.app-private-key }}
+          client-id: ${{ secrets.app-client-id || secrets.GH_APP_CLIENT_ID }}
+          private-key: ${{ secrets.app-private-key || secrets.GH_APP_KEY }}
           permission-contents: write
           permission-pull-requests: write
 
@@ -90,8 +108,9 @@ jobs:
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
         env:
-          GH_APP_CLIENT_ID: ${{ secrets.app-client-id }}
-          GH_APP_KEY: ${{ secrets.app-private-key }}
+          # Terraform publishing mints a separate installation token for the destination organization.
+          GH_APP_CLIENT_ID: ${{ secrets.app-client-id || secrets.GH_APP_CLIENT_ID }}
+          GH_APP_KEY: ${{ secrets.app-private-key || secrets.GH_APP_KEY }}
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}

@@ -21,5 +21,7 @@ jobs:
     with:
       environment: npm-prod-cd
     secrets:
+      GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+      GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
       app-client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
       app-private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
