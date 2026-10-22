@@ -1,6 +1,6 @@
 /**
  * Tests for loadConfig() — verifies that:
- * 1. Returns default thresholds and prompts for subscriptionIds when no file is given.
+ * 1. Loads environment configuration when no file is given.
  * 2. Loads subscriptionIds, location, timespanDays and thresholds from a YAML file.
  * 3. Partial threshold overrides keep defaults for non-overridden fields.
  * 4. Throws a clear error for a non-existent explicit path.
@@ -24,6 +24,18 @@ const FIXTURE_PARTIAL = path.resolve(
   "fixtures/partial-override.yaml",
 );
 const FIXTURE_FULL = path.resolve(__dirname, "fixtures/full-override.yaml");
+const FIXTURE_NO_SUBSCRIPTIONS = path.resolve(
+  __dirname,
+  "fixtures/no-subscriptions.yaml",
+);
+const FIXTURE_EMPTY_SUBSCRIPTIONS = path.resolve(
+  __dirname,
+  "fixtures/empty-subscriptions.yaml",
+);
+const FIXTURE_INVALID_SUBSCRIPTIONS = path.resolve(
+  __dirname,
+  "fixtures/invalid-subscriptions.yaml",
+);
 
 describe("loadConfig", () => {
   afterEach(() => {
@@ -57,6 +69,66 @@ describe("loadConfig", () => {
     const result = await loadConfig();
 
     expect(result.sources).toEqual(["advisor", "custom"]);
+  });
+
+  it("uses environment subscription IDs when YAML omits them", async () => {
+    vi.stubEnv("ARM_SUBSCRIPTION_ID", "environment-subscription");
+
+    const result = await loadConfig(FIXTURE_NO_SUBSCRIPTIONS);
+
+    expect(result.subscriptionIds).toEqual(["environment-subscription"]);
+    expect(result.preferredLocation).toBe("westeurope");
+  });
+
+  it("uses explicit subscription IDs ahead of config and environment", async () => {
+    vi.stubEnv("ARM_SUBSCRIPTION_ID", "environment-subscription");
+
+    const result = await loadConfig(FIXTURE_FULL, {
+      interactive: false,
+      subscriptionIds: [" cli-subscription "],
+    });
+
+    expect(result.subscriptionIds).toEqual(["cli-subscription"]);
+  });
+
+  it("accepts explicit subscription IDs when the YAML omits them", async () => {
+    const result = await loadConfig(FIXTURE_NO_SUBSCRIPTIONS, {
+      interactive: false,
+      subscriptionIds: ["cli-subscription"],
+    });
+
+    expect(result.subscriptionIds).toEqual(["cli-subscription"]);
+    expect(result.preferredLocation).toBe("westeurope");
+  });
+
+  it.each([
+    ["empty", FIXTURE_EMPTY_SUBSCRIPTIONS],
+    ["invalid", FIXTURE_INVALID_SUBSCRIPTIONS],
+  ])(
+    "uses explicit subscription IDs when YAML IDs are %s",
+    async (_, configPath) => {
+      const result = await loadConfig(configPath, {
+        interactive: false,
+        subscriptionIds: ["cli-subscription"],
+      });
+
+      expect(result.subscriptionIds).toEqual(["cli-subscription"]);
+      expect(result.preferredLocation).toBe("westeurope");
+    },
+  );
+
+  it("rejects invalid YAML subscription IDs when they are not overridden", async () => {
+    await expect(
+      loadConfig(FIXTURE_INVALID_SUBSCRIPTIONS, { interactive: false }),
+    ).rejects.toThrow("Invalid config file");
+  });
+
+  it("fails clearly without subscription IDs when prompts are disabled", async () => {
+    vi.stubEnv("ARM_SUBSCRIPTION_ID", "");
+
+    await expect(
+      loadConfig(FIXTURE_NO_SUBSCRIPTIONS, { interactive: false }),
+    ).rejects.toThrow("--subscriptionIds");
   });
 
   it("loads partial threshold overrides and keeps defaults for missing fields", async () => {
@@ -123,6 +195,13 @@ describe("loadConfig", () => {
         sources: [],
         subscriptionIds: ["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
       },
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects blank subscription IDs", () => {
+    const result = ConfigSchema.safeParse({
+      azure: { subscriptionIds: [" "] },
     });
 
     expect(result.success).toBe(false);

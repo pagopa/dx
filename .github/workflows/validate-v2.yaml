@@ -132,7 +132,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: pnpm --filter . ci
+        run: pnpm --filter '{.}...' ci
 
       - name: Warn missing version plan coverage
         uses: pagopa/dx/actions/nx-release@main
@@ -179,7 +179,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: pnpm --filter . ci
+        run: pnpm --filter '{.}...' ci
 
       - name: Set base and head SHAs for format check
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -232,7 +232,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: pnpm --filter . ci
+        run: pnpm --filter '{.}...' ci
 
       # Avoid querying GitHub environments when the change does not affect any
       # Nx project, and let downstream jobs short circuit cleanly.
@@ -431,7 +431,7 @@ jobs:
       - name: Run code quality checks on affected projects
         run: |
           EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
-          pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci
+          pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci --outputStyle=static
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
@@ -520,7 +520,7 @@ jobs:
       - name: Install dependencies
         run: |
           mise deps --skip pnpm
-          pnpm --filter . ci
+          pnpm --filter '{.}...' ci
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -610,8 +610,8 @@ jobs:
           EXCLUDE: ${{ matrix.target.exclude }}
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
         run: |
-          pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" && \
-            pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE"
+          pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" --outputStyle=static && \
+            pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE" --outputStyle=static
 
       - name: Upload Terraform plan report
         if: ${{ always() && hashFiles('.dx-tasks/**/*.json') != '' }}

@@ -13,6 +13,9 @@
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "packages/savemoney"
   },
+  "bin": {
+    "savemoney": "./dist/cli.js"
+  },
   "files": [
     "src",
     "dist"
@@ -37,7 +40,9 @@
     "@azure/identity": "catalog:",
     "@logtape/logtape": "catalog:",
     "cli-table3": "^0.6.5",
+    "commander": "catalog:",
     "js-yaml": "catalog:",
+    "ora": "^9.4.1",
     "p-limit": "^7.3.3",
     "zod": "catalog:"
   },
