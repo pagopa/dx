@@ -28,10 +28,10 @@ on:
         description: GitHub App private key used by cloud login.
         required: false
       GH_APP_RELEASE_APP_KEY:
-        description: Release App private key used by the version-plan warning.
+        description: Deprecated and ignored. Version-plan warnings use GITHUB_TOKEN.
         required: false
       GH_APP_RELEASE_CLIENT_ID:
-        description: Release App client ID used by the version-plan warning.
+        description: Deprecated and ignored. Version-plan warnings use GITHUB_TOKEN.
         required: false
       ROLE_ARN:
         description: AWS role assumed by Terraform plans.
@@ -49,7 +49,6 @@ jobs:
     runs-on: ubuntu-24.04
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
-      release-app-configured: ${{ steps.evaluate-release-app.outputs.configured }}
     steps:
       - name: Evaluate fork PR
         id: evaluate
@@ -65,42 +64,17 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
-      # The version-plan warning job comments through the release GitHub App.
-      # Repositories that cannot inherit the GH_APP_RELEASE_* secrets (for
-      # example repositories generated under a personal owner) would otherwise
-      # fail on `actions/create-github-app-token`, which requires a private key:
-      # when the secrets are missing the warning job is skipped instead.
-      - name: Evaluate release app credentials
-        id: evaluate-release-app
-        env:
-          GH_APP_RELEASE_CLIENT_ID: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
-          GH_APP_RELEASE_APP_KEY: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
-        run: |
-          if [ -n "$GH_APP_RELEASE_CLIENT_ID" ] && [ -n "$GH_APP_RELEASE_APP_KEY" ]; then
-            echo "configured=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-            echo "::notice title=Version plan warning skipped::GH_APP_RELEASE_CLIENT_ID and GH_APP_RELEASE_APP_KEY are not configured. Set them to enable the version-plan warning comment on pull requests."
-          fi
-
   warn-missing-version-plans:
     name: Warn Missing Version Plans
     needs: gate
-    if: ${{ github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' && needs.gate.outputs.release-app-configured == 'true' }}
+    if: ${{ github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' }}
     runs-on: ubuntu-24.04
     permissions:
       actions: read
       contents: read
       packages: read
+      pull-requests: write
     steps:
-      - name: Generate GitHub App token
-        id: generate-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
-          private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
-          permission-pull-requests: write
-
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -110,11 +84,8 @@ jobs:
           # trees, never the blobs, so nothing triggers a lazy fetch and the
           # credentials can stay out of `.git/config` (unlike `tree:0`).
           filter: blob:none
-          # The App token is only needed for the initial fetch. Keeping it out
-          # of the checkout config prevents dependency install scripts from
-          # reading a write-capable token from .git/config.
+          # No step after checkout needs persisted git credentials.
           persist-credentials: false
-          token: ${{ steps.generate-token.outputs.token }}
 
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
@@ -137,8 +108,7 @@ jobs:
       - name: Warn missing version plan coverage
         uses: pagopa/dx/actions/nx-release@main
         with:
-          app-slug: ${{ steps.generate-token.outputs.app-slug }}
-          github-token: ${{ steps.generate-token.outputs.token }}
+          github-token: ${{ github.token }}
 
   format:
     name: Format

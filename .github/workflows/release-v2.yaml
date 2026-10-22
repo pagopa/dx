@@ -89,9 +89,6 @@ jobs:
 
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
-        env:
-          GH_APP_CLIENT_ID: ${{ secrets.app-client-id }}
-          GH_APP_KEY: ${{ secrets.app-private-key }}
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
