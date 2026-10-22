@@ -27,12 +27,6 @@ on:
       GH_APP_KEY:
         description: GitHub App private key used by cloud login.
         required: false
-      GH_APP_RELEASE_APP_KEY:
-        description: Deprecated and ignored. Version-plan warnings use GITHUB_TOKEN.
-        required: false
-      GH_APP_RELEASE_CLIENT_ID:
-        description: Deprecated and ignored. Version-plan warnings use GITHUB_TOKEN.
-        required: false
       ROLE_ARN:
         description: AWS role assumed by Terraform plans.
         required: false

@@ -161,9 +161,9 @@ Used automatically on `pull_request` workflows. The action:
 5. Skips the managed `Version Packages` PR
 
 `validate-v2.yaml` uses the automatic `GITHUB_TOKEN` for this mode. Its calling
-job must grant `pull-requests: write`. The optional `GH_APP_RELEASE_CLIENT_ID`
-and `GH_APP_RELEASE_APP_KEY` secrets remain accepted for compatibility but are
-ignored. Release workflows still need their App credentials to preserve
+job must grant `pull-requests: write` and remove any explicit
+`GH_APP_RELEASE_CLIENT_ID` and `GH_APP_RELEASE_APP_KEY` validation secret
+mappings. Release workflows still need their App credentials to preserve
 downstream workflow triggers.
 
 ### Mode: `Create PR`

@@ -23,6 +23,4 @@ jobs:
       GH_APP_CLIENT_ID: $\{{ secrets.GH_APP_CLIENT_ID }}
       GH_APP_INSTALLATION_ID: $\{{ secrets.GH_APP_INSTALLATION_ID }}
       GH_APP_KEY: $\{{ secrets.GH_APP_KEY }}
-      GH_APP_RELEASE_APP_KEY: $\{{ secrets.GH_APP_RELEASE_APP_KEY }}
-      GH_APP_RELEASE_CLIENT_ID: $\{{ secrets.GH_APP_RELEASE_CLIENT_ID }}
       ROLE_ARN: $\{{ secrets.ROLE_ARN }}

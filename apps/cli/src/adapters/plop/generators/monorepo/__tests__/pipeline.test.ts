@@ -125,7 +125,10 @@ describe("monorepo generator — DX validation pipeline", () => {
     // caller's own organization or enterprise, while the scaffold supports
     // repositories under any owner.
     expect(generatedFiles[".github/workflows/validate.yaml"]).toContain(
-      "GH_APP_RELEASE_CLIENT_ID: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}",
+      "GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}",
+    );
+    expect(generatedFiles[".github/workflows/validate.yaml"]).not.toContain(
+      "GH_APP_RELEASE_",
     );
     expect(generatedFiles[".github/workflows/validate.yaml"]).toContain(
       "ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}",
