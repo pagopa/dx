@@ -131,7 +131,7 @@ const AzureSectionSchema = z
       .rest(AzureSourceSchema)
       .default([...AZURE_SOURCE_VALUES]),
     subscriptionIds: z
-      .array(z.string())
+      .array(z.string().trim().min(1))
       .min(
         1,
         "Config file must contain at least one entry in 'azure.subscriptionIds'",

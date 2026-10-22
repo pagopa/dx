@@ -3,7 +3,7 @@
  *
  * Retail prices change rarely (Azure publishes a new snapshot at most once
  * a month) so a long TTL is safe and dramatically cuts cold-start latency
- * for `dx savemoney`. Each cache entry is a JSON file whose name is the
+ * for SaveMoney. Each cache entry is a JSON file whose name is the
  * SHA-256 of the request key (the OData `$filter` string); the entry is
  * considered fresh while `now - mtime <= ttl`.
  *

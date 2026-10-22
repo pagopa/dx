@@ -1,0 +1,60 @@
+{
+  "impacted": [
+    {
+      "category": "Cost",
+      "impact": "High",
+      "recommendation": "Selected subscription finding",
+      "resourceId": "/subscriptions/A/resourceGroups/rg/providers/Microsoft.Compute/disks/disk-a",
+      "resourceType": "Microsoft.Compute/disks",
+      "subscriptionId": "d"
+    },
+    {
+      "category": "Cost",
+      "impact": "High",
+      "recommendation": "Selected subscription duplicate",
+      "resourceId": " /subscriptions/A/resourceGroups/rg/providers/Microsoft.Compute/disks/disk-a ",
+      "resourceType": "Microsoft.Compute/disks",
+      "subscriptionId": "a"
+    },
+    {
+      "category": "Cost",
+      "impact": "High",
+      "recommendation": "Outside subscription with selected metadata",
+      "resourceId": "/subscriptions/d/resourceGroups/rg/providers/Microsoft.Compute/disks/disk-d",
+      "resourceType": "Microsoft.Compute/disks",
+      "subscriptionId": "a"
+    },
+    {
+      "category": "Cost",
+      "impact": "High",
+      "recommendation": "Outside subscription finding",
+      "resourceId": "/subscriptions/e/resourceGroups/rg/providers/Microsoft.Compute/disks/disk-e",
+      "resourceType": "Microsoft.Compute/disks",
+      "subscriptionId": "e"
+    },
+    {
+      "category": "Cost",
+      "impact": "High",
+      "recommendation": "Masked subscription finding",
+      "resourceId": "/subscriptions/xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx/resourceGroups/rg/providers/Microsoft.Compute/disks/disk-masked",
+      "resourceType": "Microsoft.Compute/disks",
+      "subscriptionId": "a"
+    },
+    {
+      "category": "Cost",
+      "impact": "High",
+      "recommendation": "Unattributable finding",
+      "resourceId": "/resourceGroups/rg/providers/Microsoft.Compute/disks/disk-unattributable",
+      "resourceType": "Microsoft.Compute/disks",
+      "subscriptionId": "a"
+    },
+    {
+      "category": "Cost",
+      "impact": "High",
+      "recommendation": "Nested subscription URL",
+      "resourceId": "https://example.invalid/subscriptions/a/resourceGroups/rg/providers/Microsoft.Compute/disks/disk-url",
+      "resourceType": "Microsoft.Compute/disks",
+      "subscriptionId": "a"
+    }
+  ]
+}

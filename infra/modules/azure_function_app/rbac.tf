@@ -97,3 +97,4 @@ resource "azurerm_role_assignment" "staging_durable_function_storage_table_data_
   principal_id         = azurerm_linux_function_app_slot.this[0].identity[0].principal_id
   description          = "Allow Function App staging slot to manage tables in the Durable Function storage account"
 }
+

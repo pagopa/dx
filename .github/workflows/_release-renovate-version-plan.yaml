@@ -60,7 +60,7 @@ jobs:
           minimum_release_age: 7d
 
       - name: Install root dependencies
-        run: pnpm --filter . ci --ignore-scripts
+        run: pnpm --filter '{.}...' ci --ignore-scripts
 
       - name: Create patch version plans
         id: create-plan

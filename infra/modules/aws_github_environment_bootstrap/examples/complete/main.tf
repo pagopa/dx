@@ -7,7 +7,7 @@ module "core_values" {
 
 module "bootstrapper" {
   source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 2.0"
+  version = "~> 2.2"
 
   environment = local.environment
 

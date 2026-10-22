@@ -53,6 +53,10 @@
   --sidebar-category-icon: url("/img/sidebar-icons/dx-cli.svg");
 }
 
+.sidebar-icon-savemoney {
+  --sidebar-category-icon: url("/img/sidebar-icons/savemoney.svg");
+}
+
 .sidebar-icon-typescript {
   --sidebar-category-icon: url("/img/sidebar-icons/typescript.svg");
 }

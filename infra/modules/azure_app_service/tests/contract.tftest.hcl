@@ -73,3 +73,23 @@ run "azure_app_service_rejects_multiple_subnet_sources" {
 
   expect_failures = [var.subnet_cidr]
 }
+
+run "azure_app_service_rejects_container_image_without_tag" {
+  command = plan
+
+  variables {
+    container_image = "dxcommonacr.azurecr.io/my-app"
+  }
+
+  expect_failures = [var.container_image]
+}
+
+run "azure_app_service_rejects_container_image_with_digest" {
+  command = plan
+
+  variables {
+    container_image = "dxcommonacr.azurecr.io/my-app@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  }
+
+  expect_failures = [var.container_image]
+}

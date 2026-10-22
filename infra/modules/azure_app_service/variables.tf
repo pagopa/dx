@@ -103,6 +103,22 @@ variable "java_version" {
   description = "Java version to use."
 }
 
+variable "container_image" {
+  type        = string
+  default     = null
+  description = <<-EOT
+    Container image used to run the App Service and its staging slot instead of a deployment package (e.g. "myacr.azurecr.io/my-app:1.0.0").
+    When set, "stack", "node_version" and "java_version" are ignored and WEBSITE_RUN_FROM_PACKAGE is not configured.
+    Images without a registry are pulled from Docker Hub. The image must specify a tag.
+    The image is not managed by Terraform after creation, but instead updated by CD pipelines.
+  EOT
+
+  validation {
+    condition     = var.container_image == null ? true : can(regex("^([^/@\\s]+/)*[^/:@\\s]+:[A-Za-z0-9_][A-Za-z0-9_.-]{0,127}$", var.container_image))
+    error_message = "container_image must be an image reference with a tag, e.g. \"myacr.azurecr.io/my-app:1.0.0\"."
+  }
+}
+
 variable "application_insights_sampling_percentage" {
   type        = number
   default     = 5
