@@ -1,8 +1,7 @@
 ---
 title: SaveMoney
 sidebar_position: 1
-description:
-  Find Azure resources and recommendations worth reviewing for cost savings.
+description: Find Azure resources and recommendations worth reviewing for cost savings.
 ---
 
 # SaveMoney
