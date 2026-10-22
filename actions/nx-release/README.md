@@ -71,11 +71,11 @@ This action automates the Nx release flow in three phases:
 
 ## Inputs
 
-| Input          | Description                                                         | Default | Required           |
-| -------------- | ------------------------------------------------------------------- | ------- | ------------------ |
-| `github-token` | GitHub token; release modes require a GitHub App installation token |         | true               |
-| `app-slug`     | GitHub App slug associated with `github-token`                      |         | Release modes only |
-| `base-branch`  | Base branch where release flow runs                                 | `main`  | false              |
+| Input          | Description                                    | Default | Required |
+| -------------- | ---------------------------------------------- | ------- | -------- |
+| `github-token` | Pre-generated GitHub App installation token    |         | true     |
+| `app-slug`     | GitHub App slug associated with `github-token` |         | true     |
+| `base-branch`  | Base branch where release flow runs            | `main`  | false    |
 
 ## Outputs
 
@@ -88,8 +88,7 @@ This action automates the Nx release flow in three phases:
 
 - Repository configured with `nx.json` (Nx monorepo)
 - `gh` CLI available in the runner
-- PR warnings only need the automatic `GITHUB_TOKEN` with `pull-requests: write`; no GitHub App credentials or slug are needed
-- Release modes need a pre-generated GitHub App token plus app slug, with `contents:write` and `pull-requests:write` permissions on the repository
+- A pre-generated GitHub App token plus app slug, with `contents:write` and `pull-requests:write` permissions on the repository
 - npm packages require [OIDC Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements) configured to enable provenance signing (`id-token: write` permission must be granted)
 - GitHub Packages npm releases require the publishing job's `GITHUB_TOKEN` to have `packages: write` permission; the action configures that token for the GitHub Packages registry
 
@@ -159,12 +158,6 @@ Used automatically on `pull_request` workflows. The action:
 3. Upserts a managed warning comment only when affected projects are missing coverage
 4. Deletes the warning comment when coverage becomes complete
 5. Skips the managed `Version Packages` PR
-
-`validate-v2.yaml` uses the automatic `GITHUB_TOKEN` for this mode. Its calling
-job must grant `pull-requests: write` and remove any explicit
-`GH_APP_RELEASE_CLIENT_ID` and `GH_APP_RELEASE_APP_KEY` validation secret
-mappings. Release workflows still need their App credentials to preserve
-downstream workflow triggers.
 
 ### Mode: `Create PR`
 

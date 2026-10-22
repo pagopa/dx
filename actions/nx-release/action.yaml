@@ -3,11 +3,11 @@ description: "Creates/updates Version Packages PR from Nx version plans, or publ
 
 inputs:
   github-token:
-    description: "GitHub token; release modes require a GitHub App installation token"
+    description: "Pre-generated GitHub App installation token"
     required: true
   app-slug:
-    description: "GitHub App slug associated with github-token; required only for release modes"
-    required: false
+    description: "GitHub App slug associated with github-token"
+    required: true
   base-branch:
     description: "Base branch where release flow runs"
     required: false
@@ -70,11 +70,6 @@ runs:
         GH_TOKEN: ${{ inputs.github-token }}
       run: |
         set -euo pipefail
-
-        if [[ -z "$APP_SLUG" ]]; then
-          echo "::error::app-slug is required when creating or publishing a release."
-          exit 1
-        fi
 
         bot_login="${APP_SLUG}[bot]"
         bot_user_id="$(gh api "/users/${bot_login}" --jq .id)"

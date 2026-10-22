@@ -89,7 +89,6 @@ jobs:
 
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
-        # Terraform publishers mint a separate token for the destination organization.
         env:
           GH_APP_CLIENT_ID: ${{ secrets.app-client-id }}
           GH_APP_KEY: ${{ secrets.app-private-key }}
