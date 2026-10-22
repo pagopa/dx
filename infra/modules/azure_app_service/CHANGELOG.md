@@ -1,3 +1,13 @@
+## 5.1.0 (2026-10-22)
+
+### 🚀 Features
+
+- Add an optional `container_image` input to run the App Service and its staging slot from a container image, automatically enabling managed identity pulls for standard Azure Container Registry hostnames. ([#2355](https://github.com/pagopa/dx/pull/2355))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 5.0.6 (2026-10-15)
 
 ### 🩹 Fixes
