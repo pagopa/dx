@@ -132,7 +132,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: pnpm --filter . ci
+        run: pnpm --filter '{.}...' ci
 
       - name: Warn missing version plan coverage
         uses: pagopa/dx/actions/nx-release@main
@@ -179,7 +179,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: pnpm --filter . ci
+        run: pnpm --filter '{.}...' ci
 
       - name: Set base and head SHAs for format check
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -232,7 +232,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: pnpm --filter . ci
+        run: pnpm --filter '{.}...' ci
 
       # Avoid querying GitHub environments when the change does not affect any
       # Nx project, and let downstream jobs short circuit cleanly.
@@ -520,7 +520,7 @@ jobs:
       - name: Install dependencies
         run: |
           mise deps --skip pnpm
-          pnpm --filter . ci
+          pnpm --filter '{.}...' ci
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
