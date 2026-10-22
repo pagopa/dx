@@ -76,10 +76,27 @@ case "${1:?Expected git-api, nx, or summary}" in
       node actions/nx-release/scripts/dist/select-projects-with-target.js
     # Only version/changelog dry-run. --skip-publish prevents ANY executor from
     # running; notably Terraform's publisher does not honor NX_DRY_RUN.
-    record "Nx version/changelog dry-run (publish disabled)" pnpm nx release patch \
-      --projects=@pagopa/eslint-config --skip-publish --dry-run
+    record "Nx version/changelog dry-run (publish disabled)" pnpm nx release \
+      --projects=@pagopa/eslint-config --preid=rc --skip-publish --dry-run
     cat "$RUNNER_TEMP/auth-probe.log"
     test "$PROBE_STATUS" -eq 0
+    # Select only the audited Docker release executor, whose first dry-run
+    # branch returns before invoking Docker. Never select Terraform publishers.
+    pnpm nx graph --print > "$RUNNER_TEMP/auth-project-graph.json"
+    docker_project="$(jq -r '
+      [.graph.nodes | to_entries[]
+       | select(.value.data.targets["nx-release-publish"].executor == "@pagopa/nx-docker:release-publish")
+       | .key] | sort | .[0] // empty
+    ' "$RUNNER_TEMP/auth-project-graph.json")"
+    if [[ -n "$docker_project" ]]; then
+      record "audited Docker release executor dry-run" pnpm nx release publish \
+        --projects="$docker_project" --dry-run
+      cat "$RUNNER_TEMP/auth-probe.log"
+      test "$PROBE_STATUS" -eq 0
+    else
+      echo "No audited Docker release target found; Docker publisher not executed." \
+        | tee -a "$GITHUB_STEP_SUMMARY"
+    fi
     ;;
   summary)
     {
