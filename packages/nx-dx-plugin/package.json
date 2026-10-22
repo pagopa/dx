@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/nx-dx",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Nx plugin for PagoPA DX workspaces.",
   "repository": {
     "type": "git",
