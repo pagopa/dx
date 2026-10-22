@@ -1095,6 +1095,85 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
+  apps/savemoney:
+    dependencies:
+      '@azure/arm-advisor':
+        specifier: ^3.2.0
+        version: 3.2.0(supports-color@8.1.1)
+      '@azure/arm-appcontainers':
+        specifier: ^3.0.0
+        version: 3.0.0(supports-color@8.1.1)
+      '@azure/arm-appservice':
+        specifier: ^17.0.0
+        version: 17.0.0(supports-color@8.1.1)
+      '@azure/arm-compute':
+        specifier: ^23.3.0
+        version: 23.3.0(supports-color@8.1.1)
+      '@azure/arm-monitor':
+        specifier: ^7.0.0
+        version: 7.0.0(supports-color@8.1.1)
+      '@azure/arm-network':
+        specifier: ^34.2.0
+        version: 34.2.0(supports-color@8.1.1)
+      '@azure/arm-resources':
+        specifier: catalog:azure
+        version: 7.0.0(supports-color@8.1.1)
+      '@azure/identity':
+        specifier: 'catalog:'
+        version: 4.13.3(supports-color@8.1.1)
+      '@logtape/logtape':
+        specifier: 'catalog:'
+        version: 1.3.11
+      cli-table3:
+        specifier: ^0.6.5
+        version: 0.6.5
+      commander:
+        specifier: 'catalog:'
+        version: 14.0.3
+      js-yaml:
+        specifier: 'catalog:'
+        version: 5.4.2
+      ora:
+        specifier: ^9.4.1
+        version: 9.4.1
+      p-limit:
+        specifier: ^7.3.3
+        version: 7.3.3
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
+      '@pagopa/eslint-config':
+        specifier: workspace:^
+        version: link:../../packages/eslint-config
+      '@tsconfig/node24':
+        specifier: 'catalog:'
+        version: 24.0.4
+      '@types/js-yaml':
+        specifier: 'catalog:'
+        version: 4.0.9
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.5
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
+      eslint:
+        specifier: 'catalog:'
+        version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.9.6
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest-mock-extended:
+        specifier: 'catalog:'
+        version: 4.0.0(typescript@5.9.3)(vitest@4.1.11)
+
   apps/website:
     dependencies:
       '@docusaurus/core':
@@ -1504,85 +1583,6 @@ importers:
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/pnpm-plugin-pagopa: {}
-
-  packages/savemoney:
-    dependencies:
-      '@azure/arm-advisor':
-        specifier: ^3.2.0
-        version: 3.2.0(supports-color@8.1.1)
-      '@azure/arm-appcontainers':
-        specifier: ^3.0.0
-        version: 3.0.0(supports-color@8.1.1)
-      '@azure/arm-appservice':
-        specifier: ^17.0.0
-        version: 17.0.0(supports-color@8.1.1)
-      '@azure/arm-compute':
-        specifier: ^23.3.0
-        version: 23.3.0(supports-color@8.1.1)
-      '@azure/arm-monitor':
-        specifier: ^7.0.0
-        version: 7.0.0(supports-color@8.1.1)
-      '@azure/arm-network':
-        specifier: ^34.2.0
-        version: 34.2.0(supports-color@8.1.1)
-      '@azure/arm-resources':
-        specifier: catalog:azure
-        version: 7.0.0(supports-color@8.1.1)
-      '@azure/identity':
-        specifier: 'catalog:'
-        version: 4.13.3(supports-color@8.1.1)
-      '@logtape/logtape':
-        specifier: 'catalog:'
-        version: 1.3.11
-      cli-table3:
-        specifier: ^0.6.5
-        version: 0.6.5
-      commander:
-        specifier: 'catalog:'
-        version: 14.0.3
-      js-yaml:
-        specifier: 'catalog:'
-        version: 5.4.2
-      ora:
-        specifier: ^9.4.1
-        version: 9.4.1
-      p-limit:
-        specifier: ^7.3.3
-        version: 7.3.3
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.5
-    devDependencies:
-      '@pagopa/eslint-config':
-        specifier: workspace:^
-        version: link:../eslint-config
-      '@tsconfig/node24':
-        specifier: 'catalog:'
-        version: 24.0.4
-      '@types/js-yaml':
-        specifier: 'catalog:'
-        version: 4.0.9
-      '@types/node':
-        specifier: 'catalog:'
-        version: 22.20.5
-      '@vitest/coverage-v8':
-        specifier: 'catalog:'
-        version: 4.1.11(vitest@4.1.11)
-      eslint:
-        specifier: 'catalog:'
-        version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
-      vitest-mock-extended:
-        specifier: 'catalog:'
-        version: 4.0.0(typescript@5.9.3)(vitest@4.1.11)
 
   providers/aws: {}
 
