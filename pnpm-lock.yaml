@@ -404,11 +404,7 @@ importers:
 
   actions/convert-mermaid-svg: {}
 
-  actions/csp-login:
-    devDependencies:
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
+  actions/csp-login: {}
 
   actions/deploy: {}
 
