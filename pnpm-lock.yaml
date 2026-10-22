@@ -684,6 +684,8 @@ importers:
 
   actions/terraform-plan-upload: {}
 
+  actions/terraform-provider-lifecycle: {}
+
   apps/cli:
     dependencies:
       '@azure/arm-authorization':
