@@ -141,3 +141,23 @@ run "azure_function_app_rejects_unsupported_node_version" {
 
   expect_failures = [var.node_version]
 }
+
+run "azure_function_app_rejects_container_image_without_tag" {
+  command = plan
+
+  variables {
+    container_image = "myacr.azurecr.io/my-function"
+  }
+
+  expect_failures = [var.container_image]
+}
+
+run "azure_function_app_rejects_container_image_with_digest" {
+  command = plan
+
+  variables {
+    container_image = "myacr.azurecr.io/my-function@sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  }
+
+  expect_failures = [var.container_image]
+}
