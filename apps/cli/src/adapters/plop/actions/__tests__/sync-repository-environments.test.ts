@@ -4,29 +4,20 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import lockfile from "proper-lockfile";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Language } from "web-tree-sitter";
 
 import type { Payload } from "../../generators/environment/prompts.js";
 
-import {
-  syncRepositoryEnvironments,
-  syncRepositoryTerraformEnvironments,
-} from "../sync-repository-environments.js";
+import { updateRepositoryEnvironmentsHcl } from "../../../terraform/hcl-repository-environments.js";
+import { syncRepositoryEnvironments } from "../sync-repository-environments.js";
 
 const terraformCommand = vi.hoisted(() => vi.fn(async () => undefined));
-const terraformValidator = vi.hoisted(() =>
-  vi.fn(async () => ({ stdout: "" })),
-);
-
-vi.mock("execa", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("execa")>()),
-  execa: vi.fn(() => terraformValidator),
-}));
+const terraformValidator = vi.hoisted(() => vi.fn(async () => undefined));
 
 vi.mock("../../../execa/terraform.js", () => ({
   tf$: vi.fn(() => terraformCommand),
+  validateTerraformSource: terraformValidator,
 }));
 
 const repositoryConfig = [
@@ -65,22 +56,6 @@ const payload: Payload = {
   workspace: { domain: "payments" },
 };
 
-const createDeferred = () => {
-  let resolvePromise: (() => void) | undefined;
-  const promise = new Promise<void>((resolve) => {
-    resolvePromise = () => resolve();
-  });
-  return {
-    promise,
-    resolve: () => {
-      if (!resolvePromise) {
-        throw new Error("Deferred promise resolver is not initialized");
-      }
-      resolvePromise();
-    },
-  };
-};
-
 const inTemporaryRepository = async (
   content: string,
   check: (mainFile: string, repositoryDirectory: string) => Promise<void>,
@@ -100,17 +75,17 @@ const inTemporaryRepository = async (
   }
 };
 
-describe("syncRepositoryTerraformEnvironments", () => {
+describe("updateRepositoryEnvironmentsHcl", () => {
   it("retries loading the HCL grammar after a transient failure", async () => {
     const loadLanguage = vi
       .spyOn(Language, "load")
       .mockRejectedValueOnce(new Error("temporary grammar load failure"));
     try {
       await expect(
-        syncRepositoryTerraformEnvironments(repositoryConfig, "dev"),
+        updateRepositoryEnvironmentsHcl(repositoryConfig, "dev"),
       ).rejects.toThrow(/HCL parser/);
       await expect(
-        syncRepositoryTerraformEnvironments(repositoryConfig, "dev"),
+        updateRepositoryEnvironmentsHcl(repositoryConfig, "dev"),
       ).resolves.toContain('    environments           = ["dev", "prod"]');
       expect(loadLanguage).toHaveBeenCalledTimes(2);
     } finally {
@@ -119,7 +94,7 @@ describe("syncRepositoryTerraformEnvironments", () => {
   });
 
   it("adds a non-prod environment while preserving the implicit prod default", async () => {
-    const result = await syncRepositoryTerraformEnvironments(
+    const result = await updateRepositoryEnvironmentsHcl(
       repositoryConfig,
       "dev",
     );
@@ -132,7 +107,7 @@ describe("syncRepositoryTerraformEnvironments", () => {
     async (label) => {
       const content = repositoryConfig.replace('"github_repository"', label);
 
-      const result = await syncRepositoryTerraformEnvironments(content, "dev");
+      const result = await updateRepositoryEnvironmentsHcl(content, "dev");
 
       expect(result).toContain(`module ${label} {`);
       expect(result).toContain('    environments           = ["dev", "prod"]');
@@ -140,7 +115,7 @@ describe("syncRepositoryTerraformEnvironments", () => {
   );
 
   it("does not add an explicit environments property when prod is already implicit", async () => {
-    const result = await syncRepositoryTerraformEnvironments(
+    const result = await updateRepositoryEnvironmentsHcl(
       repositoryConfig,
       "prod",
     );
@@ -154,13 +129,13 @@ describe("syncRepositoryTerraformEnvironments", () => {
       '    reviewers_teams        = []\n    environments           = ["prod"]\n',
     );
 
-    const result = await syncRepositoryTerraformEnvironments(content, "uat");
+    const result = await updateRepositoryEnvironmentsHcl(content, "uat");
 
     expect(result).toContain('    environments           = ["uat", "prod"]');
   });
 
   it("adds a tenant-qualified environment while preserving the implicit prod default", async () => {
-    const result = await syncRepositoryTerraformEnvironments(
+    const result = await updateRepositoryEnvironmentsHcl(
       repositoryConfig,
       "ced-prod",
     );
@@ -176,7 +151,7 @@ describe("syncRepositoryTerraformEnvironments", () => {
       '    reviewers_teams        = []\n    environments           = ["dev"]\n',
     );
 
-    const result = await syncRepositoryTerraformEnvironments(content, "dev");
+    const result = await updateRepositoryEnvironmentsHcl(content, "dev");
 
     expect(result).toContain('    environments           = ["dev", "prod"]');
   });
@@ -191,7 +166,7 @@ describe("syncRepositoryTerraformEnvironments", () => {
     ].join("\n");
 
     await expect(async () =>
-      syncRepositoryTerraformEnvironments(content, "uat"),
+      updateRepositoryEnvironmentsHcl(content, "uat"),
     ).rejects.toThrow(/github_repository/);
   });
 
@@ -201,7 +176,7 @@ describe("syncRepositoryTerraformEnvironments", () => {
       '    reviewers_teams        = []\n    environments           = ["dev", "prod"]\n',
     );
 
-    const result = await syncRepositoryTerraformEnvironments(content, "dev");
+    const result = await updateRepositoryEnvironmentsHcl(content, "dev");
 
     expect(result).toBe(content);
   });
@@ -210,7 +185,7 @@ describe("syncRepositoryTerraformEnvironments", () => {
 describe("structural repository HCL updates", () => {
   it("rejects a missing repository module", async () => {
     await expect(async () =>
-      syncRepositoryTerraformEnvironments('resource "x" "y" {}', "dev"),
+      updateRepositoryEnvironmentsHcl('resource "x" "y" {}', "dev"),
     ).rejects.toThrow(/github_repository/);
   });
 
@@ -225,7 +200,7 @@ describe("structural repository HCL updates", () => {
     ].join("\n");
     const content = unrelated + repositoryConfig;
 
-    const result = await syncRepositoryTerraformEnvironments(content, "dev");
+    const result = await updateRepositoryEnvironmentsHcl(content, "dev");
 
     expect(result.startsWith(unrelated)).toBe(true);
     expect(result).toContain('    environments           = ["dev", "prod"]');
@@ -239,13 +214,13 @@ describe("structural repository HCL updates", () => {
       "",
     ].join("\n");
 
-    const result = await syncRepositoryTerraformEnvironments(content, "dev");
+    const result = await updateRepositoryEnvironmentsHcl(content, "dev");
 
     expect(result).toContain('name = "my-project", topics = ["test"]');
     expect(result).toContain('environments = ["dev", "prod"]');
-    await expect(
-      syncRepositoryTerraformEnvironments(result, "dev"),
-    ).resolves.toBe(result);
+    await expect(updateRepositoryEnvironmentsHcl(result, "dev")).resolves.toBe(
+      result,
+    );
   });
 
   it("supports literal quoted repository keys", async () => {
@@ -254,7 +229,7 @@ describe("structural repository HCL updates", () => {
       '    "name"                 = "my-project"',
     );
 
-    const result = await syncRepositoryTerraformEnvironments(content, "dev");
+    const result = await updateRepositoryEnvironmentsHcl(content, "dev");
 
     expect(result).toContain('    "name"                 = "my-project"');
     expect(result).toContain('    environments           = ["dev", "prod"]');
@@ -267,11 +242,11 @@ describe("structural repository HCL updates", () => {
     );
 
     await expect(
-      syncRepositoryTerraformEnvironments(content, "dev"),
+      updateRepositoryEnvironmentsHcl(content, "dev"),
     ).rejects.toThrow(/Duplicate repository property "name"/);
   });
 
-  it("preserves comments in and around an existing environment list", async () => {
+  it("rejects commented environment lists when an addition is needed", async () => {
     const content = repositoryConfig.replace(
       "    reviewers_teams        = []\n",
       [
@@ -283,24 +258,18 @@ describe("structural repository HCL updates", () => {
       ].join("\n"),
     );
 
-    const result = await syncRepositoryTerraformEnvironments(content, "dev");
-
-    expect(result).toContain('reviewers_teams        = ["]"] # keep reviewers');
-    expect(result).toContain("# keep prod");
-    expect(result).toContain("] # keep list");
-    expect(result).toContain('"dev"');
-    expect(result.match(/\benvironments\s*=/g)).toHaveLength(1);
     await expect(
-      syncRepositoryTerraformEnvironments(result, "dev"),
-    ).resolves.toBe(result);
+      updateRepositoryEnvironmentsHcl(content, "dev"),
+    ).rejects.toThrow("Move comments outside the list");
   });
 
-  it("keeps a comment attached to its existing list element", async () => {
+  it("leaves a commented list unchanged when both selected and prod environments exist", async () => {
     const content = repositoryConfig.replace(
       "    reviewers_teams        = []\n",
       [
         "    reviewers_teams        = []",
         "    environments = [",
+        '      "dev",',
         "      # production protection",
         '      "prod",',
         "    ]",
@@ -308,11 +277,57 @@ describe("structural repository HCL updates", () => {
       ].join("\n"),
     );
 
-    const result = await syncRepositoryTerraformEnvironments(content, "dev");
+    const result = await updateRepositoryEnvironmentsHcl(content, "dev");
 
-    expect(result).toContain(
-      '      "dev",\n      # production protection\n      "prod",',
+    expect(result).toBe(content);
+  });
+
+  it("preserves comments outside an updated environment list", async () => {
+    const content = repositoryConfig.replace(
+      "    reviewers_teams        = []\n",
+      [
+        '    reviewers_teams        = ["]"] # keep reviewers',
+        '    environments = ["prod"] # keep list',
+        "",
+      ].join("\n"),
     );
+
+    const result = await updateRepositoryEnvironmentsHcl(content, "dev");
+
+    expect(result).toContain('reviewers_teams        = ["]"] # keep reviewers');
+    expect(result).toContain('environments = ["dev", "prod"] # keep list');
+  });
+
+  it.each(["[]", '["prod",]', '[\n      "prod",\n    ]'])(
+    "normalizes an uncommented literal list when adding an environment: %s",
+    async (list) => {
+      const content = repositoryConfig.replace(
+        "    reviewers_teams        = []\n",
+        `    reviewers_teams        = []\n    environments = ${list}\n`,
+      );
+      const expected = repositoryConfig.replace(
+        "    reviewers_teams        = []\n",
+        '    reviewers_teams        = []\n    environments = ["dev", "prod"]\n',
+      );
+
+      const result = await updateRepositoryEnvironmentsHcl(content, "dev");
+
+      expect(result).toBe(expected);
+      await expect(
+        updateRepositoryEnvironmentsHcl(result, "dev"),
+      ).resolves.toBe(result);
+    },
+  );
+
+  it("rejects block comments in an empty environment list", async () => {
+    const content = repositoryConfig.replace(
+      "    reviewers_teams        = []\n",
+      "    reviewers_teams        = []\n    environments = [/* reserved */]\n",
+    );
+
+    await expect(
+      updateRepositoryEnvironmentsHcl(content, "dev"),
+    ).rejects.toThrow("Move comments outside the list");
   });
 
   it("preserves unrelated HCL containing braces and HCL-like strings", async () => {
@@ -324,7 +339,7 @@ describe("structural repository HCL updates", () => {
       "",
     ].join("\n");
 
-    const result = await syncRepositoryTerraformEnvironments(
+    const result = await updateRepositoryEnvironmentsHcl(
       unrelated + repositoryConfig,
       "ced-prod",
     );
@@ -347,7 +362,7 @@ describe("structural repository HCL updates", () => {
       "",
     ].join("\n");
 
-    const result = await syncRepositoryTerraformEnvironments(
+    const result = await updateRepositoryEnvironmentsHcl(
       unrelated + repositoryConfig,
       "dev",
     );
@@ -359,7 +374,7 @@ describe("structural repository HCL updates", () => {
   it("preserves CRLF and Unicode outside the edited range", async () => {
     const content = `# Caffè 😀\r\n${repositoryConfig.replaceAll("\n", "\r\n")}`;
 
-    const result = await syncRepositoryTerraformEnvironments(content, "dev");
+    const result = await updateRepositoryEnvironmentsHcl(content, "dev");
 
     expect(result.startsWith("# Caffè 😀\r\n")).toBe(true);
     expect(result.replaceAll("\r\n", "")).not.toContain("\n");
@@ -375,7 +390,7 @@ describe("repository HCL validation", () => {
     );
 
     await expect(async () =>
-      syncRepositoryTerraformEnvironments(content, "dev"),
+      updateRepositoryEnvironmentsHcl(content, "dev"),
     ).rejects.toThrow(/invalid HCL/i);
   });
 
@@ -390,7 +405,7 @@ describe("repository HCL validation", () => {
     );
 
     await expect(async () =>
-      syncRepositoryTerraformEnvironments(content, "uat"),
+      updateRepositoryEnvironmentsHcl(content, "uat"),
     ).rejects.toThrow(/environments/);
   });
 
@@ -403,7 +418,7 @@ describe("repository HCL validation", () => {
     ].join("\n");
 
     await expect(
-      syncRepositoryTerraformEnvironments(content, "dev"),
+      updateRepositoryEnvironmentsHcl(content, "dev"),
     ).rejects.toThrow(/repository/);
   });
 
@@ -417,7 +432,7 @@ describe("repository HCL validation", () => {
     );
 
     await expect(
-      syncRepositoryTerraformEnvironments(content, "uat"),
+      updateRepositoryEnvironmentsHcl(content, "uat"),
     ).rejects.toThrow(/environments/);
   });
 
@@ -428,7 +443,7 @@ describe("repository HCL validation", () => {
     );
 
     await expect(async () =>
-      syncRepositoryTerraformEnvironments(content, "dev"),
+      updateRepositoryEnvironmentsHcl(content, "dev"),
     ).rejects.toThrow(/environments/);
   });
 
@@ -440,7 +455,7 @@ describe("repository HCL validation", () => {
     const duplicate = repositoryConfig.replace('"github_repository"', label);
 
     await expect(
-      syncRepositoryTerraformEnvironments(repositoryConfig + duplicate, "dev"),
+      updateRepositoryEnvironmentsHcl(repositoryConfig + duplicate, "dev"),
     ).rejects.toThrow(/github_repository/);
   });
 
@@ -453,7 +468,7 @@ describe("repository HCL validation", () => {
       );
 
       await expect(
-        syncRepositoryTerraformEnvironments(content, "dev"),
+        updateRepositoryEnvironmentsHcl(content, "dev"),
       ).rejects.toThrow(/github_repository/);
     },
   );
@@ -465,7 +480,7 @@ describe("repository HCL validation", () => {
     );
 
     await expect(async () =>
-      syncRepositoryTerraformEnvironments(content, "uat"),
+      updateRepositoryEnvironmentsHcl(content, "uat"),
     ).rejects.toThrow(/environments/);
   });
 });
@@ -474,7 +489,7 @@ describe("repository module label validation", () => {
   beforeEach(() => {
     terraformCommand.mockClear();
     terraformValidator.mockReset();
-    terraformValidator.mockResolvedValue({ stdout: "" });
+    terraformValidator.mockResolvedValue(undefined);
   });
 
   it.each([
@@ -515,31 +530,68 @@ describe("syncRepositoryEnvironments", () => {
   beforeEach(() => {
     terraformCommand.mockClear();
     terraformValidator.mockReset();
-    terraformValidator.mockResolvedValue({ stdout: "" });
+    terraformValidator.mockResolvedValue(undefined);
   });
 
-  it("leaves main.tf untouched and does not apply Terraform on unsupported input", async () => {
-    const content = repositoryConfig.replace(
-      "    reviewers_teams        = []",
-      '    reviewers_teams        = []\n    environments = concat(["dev"], ["prod"])',
-    );
+  it("does not validate unchanged repository HCL", async () => {
+    await inTemporaryRepository(repositoryConfig, async (mainFile) => {
+      await syncRepositoryEnvironments({
+        ...payload,
+        env: { ...payload.env, name: "prod" },
+      });
 
-    await inTemporaryRepository(
-      content,
-      async (mainFile, repositoryDirectory) => {
-        await expect(syncRepositoryEnvironments(payload)).rejects.toThrow(
-          /environments/,
-        );
-
-        await expect(fs.readFile(mainFile, "utf8")).resolves.toBe(content);
-        await expect(fs.readdir(repositoryDirectory)).resolves.toEqual([
-          "main.tf",
-        ]);
-        expect(terraformCommand).not.toHaveBeenCalled();
-        expect(terraformValidator).not.toHaveBeenCalled();
-      },
-    );
+      expect(terraformValidator).not.toHaveBeenCalled();
+      await expect(fs.readFile(mainFile, "utf8")).resolves.toBe(
+        repositoryConfig,
+      );
+      expect(terraformCommand).toHaveBeenCalledTimes(2);
+    });
   });
+
+  it("reports a missing repository file when its directory is absent", async () => {
+    await inTemporaryRepository(repositoryConfig, async (mainFile) => {
+      const repositoryDirectory = path.dirname(mainFile);
+      await fs.rename(repositoryDirectory, `${repositoryDirectory}-saved`);
+
+      await expect(syncRepositoryEnvironments(payload)).rejects.toThrow(
+        "infra/repository/main.tf does not exist or is not readable",
+      );
+      expect(terraformValidator).not.toHaveBeenCalled();
+      expect(terraformCommand).not.toHaveBeenCalled();
+      await expect(
+        fs.readdir(path.dirname(repositoryDirectory)),
+      ).resolves.toEqual(["repository-saved"]);
+    });
+  });
+
+  it.each([
+    'environments = concat(["dev"], ["prod"])',
+    'environments = ["prod" /* keep production */]',
+  ])(
+    "leaves main.tf untouched and does not apply Terraform on unsupported input: %s",
+    async (attribute) => {
+      const content = repositoryConfig.replace(
+        "    reviewers_teams        = []",
+        `    reviewers_teams        = []\n    ${attribute}`,
+      );
+
+      await inTemporaryRepository(
+        content,
+        async (mainFile, repositoryDirectory) => {
+          await expect(syncRepositoryEnvironments(payload)).rejects.toThrow(
+            /environments/,
+          );
+
+          await expect(fs.readFile(mainFile, "utf8")).resolves.toBe(content);
+          await expect(fs.readdir(repositoryDirectory)).resolves.toEqual([
+            "main.tf",
+          ]);
+          expect(terraformCommand).not.toHaveBeenCalled();
+          expect(terraformValidator).not.toHaveBeenCalled();
+        },
+      );
+    },
+  );
 
   it("rejects invalid HCL without replacing main.tf", async () => {
     const content = repositoryConfig.replace(
@@ -565,21 +617,22 @@ describe("syncRepositoryEnvironments", () => {
 
   it("validates the candidate before replacing main.tf", async () => {
     const formatterError = new Error("Terraform rejected the candidate");
-    terraformValidator
-      .mockResolvedValueOnce({ stdout: "" })
-      .mockRejectedValueOnce(formatterError);
+    terraformValidator.mockRejectedValueOnce(formatterError);
 
     await inTemporaryRepository(
       repositoryConfig,
       async (mainFile, directory) => {
-        await expect(syncRepositoryEnvironments(payload)).rejects.toThrow(
-          "Cannot validate Terraform HCL",
+        await expect(syncRepositoryEnvironments(payload)).rejects.toBe(
+          formatterError,
         );
         await expect(fs.readFile(mainFile, "utf8")).resolves.toBe(
           repositoryConfig,
         );
         await expect(fs.readdir(directory)).resolves.toEqual(["main.tf"]);
-        expect(terraformValidator).toHaveBeenCalledTimes(2);
+        expect(terraformValidator).toHaveBeenCalledExactlyOnceWith(
+          expect.stringContaining('environments           = ["dev", "prod"]'),
+          "infra/repository/main.tf",
+        );
         expect(terraformCommand).not.toHaveBeenCalled();
       },
     );
@@ -599,74 +652,8 @@ describe("syncRepositoryEnvironments", () => {
           "640",
         );
         await expect(fs.readdir(directory)).resolves.toEqual(["main.tf"]);
-        expect(terraformValidator).toHaveBeenCalledTimes(2);
+        expect(terraformValidator).toHaveBeenCalledTimes(1);
         expect(terraformCommand).toHaveBeenCalledTimes(2);
-      },
-    );
-  });
-
-  it("does not replace main.tf when its path changes before the atomic replacement", async () => {
-    const concurrentContent = "# concurrent replacement\n";
-    await inTemporaryRepository(
-      repositoryConfig,
-      async (mainFile, directory) => {
-        const originalMainFile = path.join(directory, "original-main.tf");
-        const createTemporaryDirectory = fs.mkdtemp.bind(fs);
-        const mkdtemp = vi.spyOn(fs, "mkdtemp");
-        mkdtemp.mockImplementationOnce(async (prefix) => {
-          const temporaryDirectory = await createTemporaryDirectory(prefix);
-          await fs.rename(mainFile, originalMainFile);
-          await fs.writeFile(mainFile, concurrentContent);
-          return temporaryDirectory;
-        });
-        try {
-          await expect(syncRepositoryEnvironments(payload)).rejects.toThrow(
-            "Cannot safely update infra/repository/main.tf",
-          );
-        } finally {
-          mkdtemp.mockRestore();
-        }
-
-        await expect(fs.readFile(mainFile, "utf8")).resolves.toBe(
-          concurrentContent,
-        );
-        await expect(fs.readFile(originalMainFile, "utf8")).resolves.toBe(
-          repositoryConfig,
-        );
-        expect((await fs.readdir(directory)).sort()).toEqual([
-          "main.tf",
-          "original-main.tf",
-        ]);
-        expect(terraformCommand).not.toHaveBeenCalled();
-      },
-    );
-  });
-
-  it("does not overwrite in-place changes made during synchronization", async () => {
-    const concurrentContent = `${repositoryConfig}# concurrent update\n`;
-    await inTemporaryRepository(
-      repositoryConfig,
-      async (mainFile, directory) => {
-        const createTemporaryDirectory = fs.mkdtemp.bind(fs);
-        const mkdtemp = vi.spyOn(fs, "mkdtemp");
-        mkdtemp.mockImplementationOnce(async (prefix) => {
-          const temporaryDirectory = await createTemporaryDirectory(prefix);
-          await fs.writeFile(mainFile, concurrentContent);
-          return temporaryDirectory;
-        });
-        try {
-          await expect(syncRepositoryEnvironments(payload)).rejects.toThrow(
-            "Cannot safely update infra/repository/main.tf",
-          );
-        } finally {
-          mkdtemp.mockRestore();
-        }
-
-        await expect(fs.readFile(mainFile, "utf8")).resolves.toBe(
-          concurrentContent,
-        );
-        await expect(fs.readdir(directory)).resolves.toEqual(["main.tf"]);
-        expect(terraformCommand).not.toHaveBeenCalled();
       },
     );
   });
@@ -677,6 +664,7 @@ describe("syncRepositoryEnvironments", () => {
       const first = await fs.readFile(mainFile, "utf8");
       const firstStat = await fs.stat(mainFile);
       terraformCommand.mockClear();
+      terraformValidator.mockClear();
 
       await syncRepositoryEnvironments(payload);
 
@@ -684,6 +672,7 @@ describe("syncRepositoryEnvironments", () => {
       const secondStat = await fs.stat(mainFile);
       expect(secondStat.ino).toBe(firstStat.ino);
       expect(secondStat.mtimeMs).toBe(firstStat.mtimeMs);
+      expect(terraformValidator).not.toHaveBeenCalled();
       expect(terraformCommand).toHaveBeenCalledTimes(2);
     });
   });
@@ -716,10 +705,10 @@ describe("repository configuration UTF-8 decoding", () => {
   beforeEach(() => {
     terraformCommand.mockClear();
     terraformValidator.mockReset();
-    terraformValidator.mockResolvedValue({ stdout: "" });
+    terraformValidator.mockResolvedValue(undefined);
   });
 
-  it("preserves UTF-8 characters across read chunks", async () => {
+  it("preserves UTF-8 source outside the edited environment list", async () => {
     const content = `# ${"x".repeat(64 * 1024 - 3)}\u00e9\n${repositoryConfig}`;
     const expected = content.replace(
       "    reviewers_teams        = []\n",
@@ -773,58 +762,5 @@ describe("repository configuration UTF-8 decoding", () => {
         '    environments           = ["dev", "prod"]',
       );
     });
-  });
-});
-
-describe("concurrent repository environment updates", () => {
-  beforeEach(() => {
-    terraformCommand.mockClear();
-    terraformValidator.mockReset();
-    terraformValidator.mockResolvedValue({ stdout: "" });
-  });
-
-  it("serializes concurrent updates so neither environment is lost", async () => {
-    const firstValidationStarted = createDeferred();
-    const continueFirstValidation = createDeferred();
-    const secondLockAttempted = createDeferred();
-    const originalLock = lockfile.lock.bind(lockfile);
-    let lockAttempts = 0;
-    const lockSpy = vi
-      .spyOn(lockfile, "lock")
-      .mockImplementation((file, options) => {
-        lockAttempts += 1;
-        if (lockAttempts === 2) {
-          secondLockAttempted.resolve();
-        }
-        return originalLock(file, options);
-      });
-    terraformValidator.mockImplementationOnce(async () => {
-      firstValidationStarted.resolve();
-      await continueFirstValidation.promise;
-      return { stdout: "" };
-    });
-
-    try {
-      await inTemporaryRepository(repositoryConfig, async (mainFile) => {
-        const firstUpdate = syncRepositoryEnvironments(payload);
-        await firstValidationStarted.promise;
-        const secondUpdate = syncRepositoryEnvironments({
-          ...payload,
-          env: { ...payload.env, name: "uat" },
-        });
-        await secondLockAttempted.promise;
-        continueFirstValidation.resolve();
-
-        await Promise.all([firstUpdate, secondUpdate]);
-
-        await expect(fs.readFile(mainFile, "utf8")).resolves.toContain(
-          '    environments           = ["dev", "uat", "prod"]',
-        );
-      });
-      expect(lockAttempts).toBe(2);
-    } finally {
-      continueFirstValidation.resolve();
-      lockSpy.mockRestore();
-    }
   });
 });
