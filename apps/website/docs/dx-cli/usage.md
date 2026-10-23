@@ -167,12 +167,26 @@ adding another environment also makes `prod` explicit. The command preserves
 other HCL settings and requires a single repository module with a literal
 repository object and a list of unique, literal environment names.
 
-The repository module must have exactly one label. Unquoted labels and supported
-quoted escapes are recognized when checking for duplicate modules.
+Existing lists are normalized only when an environment needs to be added.
+Lists containing comments are left unchanged when the requested environment and
+`prod` already exist. Otherwise, the command refuses to edit them: move the
+comments outside the list or add both names manually before retrying. Comments
+outside the list are preserved.
 
-Invalid HCL, ambiguous repository modules, or dynamic `environments` values
-produce an error before this action writes `main.tf` or starts Terraform. After
-a valid edit, a later `terraform init` or `terraform apply` failure does not
+If customized HCL is rejected, restore the generated module/object layout,
+replace dynamic `environments` expressions with a literal list, remove duplicate
+names, and run `terraform fmt infra/repository/main.tf`. Formatting alone does not
+remove comments or convert dynamic expressions.
+
+Unsupported target shapes are rejected before writing. Changed candidates must
+also pass `terraform fmt -` before replacing `main.tf` or running `terraform init`
+and `terraform apply`. Terraform diagnostics are included in validation errors,
+but its formatted output is not written over unrelated source.
+
+Updates require a regular UTF-8 `main.tf` file, preserve its permissions, and use
+atomic replacement. Run commands sequentially and do not edit the file during
+synchronization: concurrent writers in the same working copy are not supported.
+After a valid edit, a later `terraform init` or `terraform apply` failure does not
 roll back the edited file or any remote changes.
 
 **Initialization and Runner App credentials**
