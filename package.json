@@ -12,6 +12,7 @@
     "@nx/js": "^23.2.1",
     "@nx/plugin": "^23.2.1",
     "@nx/vitest": "^23.2.1",
+    "@pagopa/nx-agent-plugins": "workspace:^",
     "@pagopa/nx-docker": "workspace:^",
     "@pagopa/nx-dx": "workspace:^",
     "@pagopa/nx-terraform": "workspace:^",

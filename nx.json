@@ -43,6 +43,7 @@
       "packages/*",
       "actions/*",
       "containers/*",
+      "plugins/*",
       "infra/modules/*",
       "providers/*",
       "infra/scripts"
@@ -131,7 +132,11 @@
         }
       }
     },
-    "@pagopa/nx-dx"
+    "@pagopa/nx-dx",
+    {
+      "plugin": "@pagopa/nx-agent-plugins",
+      "include": ["plugins/**"]
+    }
   ],
   "pluginsConfig": {
     "@nx/js": {
