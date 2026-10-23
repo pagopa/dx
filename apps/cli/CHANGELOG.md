@@ -1,3 +1,13 @@
+## 0.27.19 (2026-10-23)
+
+### 🚀 Features
+
+- Remove dx savemoney; migrate to @pagopa/dx-savemoney analyze --subscriptionIds <ids>. ([#2393](https://github.com/pagopa/dx/pull/2393))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.27.18 (2026-10-21)
 
 ### 🩹 Fixes

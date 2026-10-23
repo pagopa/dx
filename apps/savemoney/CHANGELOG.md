@@ -1,3 +1,17 @@
+## 0.6.10 (2026-10-23)
+
+### 🚀 Features
+
+- Add savemoney analyze and scope AZQR findings to selected subscriptions. ([#2393](https://github.com/pagopa/dx/pull/2393))
+
+### 🩹 Fixes
+
+- Update SaveMoney package repository metadata ([#2411](https://github.com/pagopa/dx/pull/2411))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.6.9 (2026-10-16)
 
 ### 🚀 Features
