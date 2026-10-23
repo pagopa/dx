@@ -11,10 +11,6 @@
   ],
   "type": "module",
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
-  },
-  "devDependencies": {
-    "prettier": "catalog:"
+    "test": "bash test.sh"
   }
 }

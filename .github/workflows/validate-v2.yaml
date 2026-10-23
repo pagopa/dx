@@ -567,7 +567,10 @@ jobs:
       # lifecycle scripts don't run with an active cloud session. The GitHub
       # App secrets are scoped to this step for the same reason.
       - name: Cloud Login
+        id: cloud-login
         uses: pagopa/dx/actions/csp-login@main
+        with:
+          export-github-token: "false"
         env:
           GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
           GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
@@ -605,13 +608,20 @@ jobs:
           registry-type: public
           mask-password: "true"
 
+      - name: Run Terraform quality checks on affected environment projects
+        env:
+          EXCLUDE: ${{ matrix.target.exclude }}
+        run: pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" --outputStyle=static
+
+      # Only Terraform plans (including init and the GitHub provider) need the
+      # App token. Do not expose it to quality checks or artifact uploads.
       - name: Run Terraform plan on affected environment projects
         env:
           EXCLUDE: ${{ matrix.target.exclude }}
+          GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github-token }}
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
         run: |
-          pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" --outputStyle=static && \
-            pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE" --outputStyle=static
+          pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE" --outputStyle=static
 
       - name: Upload Terraform plan report
         if: ${{ always() && hashFiles('.dx-tasks/**/*.json') != '' }}

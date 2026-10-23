@@ -1,6 +1,17 @@
 name: "Cloud Service Provider Login"
 description: "Login to cloud provider based on available secrets"
 
+inputs:
+  export-github-token:
+    description: "Export the GitHub App token as GITHUB_TOKEN for subsequent steps. Set to false to use the github-token output only."
+    required: false
+    default: "true"
+
+outputs:
+  github-token:
+    description: "GitHub App token, if GitHub login is configured."
+    value: ${{ steps.github-app-token.outputs.token }}
+
 runs:
   using: "composite"
 
@@ -44,21 +55,6 @@ runs:
     - name: Export Logged CSP
       shell: bash
       env:
+        EXPORT_GITHUB_TOKEN: ${{ inputs.export-github-token }}
         GH_APP_TOKEN: ${{ steps.github-app-token.outputs.token }}
-      run: |
-        csp_list=()
-        if [ -n "$ROLE_ARN" ]; then
-          csp_list+=("aws")
-        fi
-        if [ -n "$ARM_CLIENT_ID" ] && [ -n "$ARM_TENANT_ID" ] && [ -n "$ARM_SUBSCRIPTION_ID" ]; then
-          csp_list+=("azure")
-        fi
-        if [ -n "$GH_APP_CLIENT_ID" ] && [ -n "$GH_APP_KEY" ] && [ -n "$GH_APP_INSTALLATION_ID" ]; then
-          csp_list+=("github")
-        fi
-
-        csp_list_joined=$(IFS=,; echo "${csp_list[*]}")
-        echo "CSP_LIST=$csp_list_joined" >> "$GITHUB_ENV"
-        if [ -n "$GH_APP_TOKEN" ]; then
-          echo "GITHUB_TOKEN=$GH_APP_TOKEN" >> "$GITHUB_ENV"
-        fi
+      run: bash "$GITHUB_ACTION_PATH/export-credentials.sh"

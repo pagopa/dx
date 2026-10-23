@@ -43,6 +43,41 @@ When all three are set, the action creates a GitHub App token and exports it as 
 
 These variables can be set at the workflow or job level, or in `env:` on the step that invokes this composite action. Prefer step-level `env:` to limit secret exposure.
 
+## Scoped GitHub App tokens
+
+The `export-github-token` input defaults to `"true"` to preserve existing callers.
+Set it to `"false"` to leave the job's `GITHUB_TOKEN` unchanged, and pass the
+`github-token` output only to the steps that need App permissions. The output is
+empty when GitHub login is not configured. `CSP_LIST` is still exported in both modes.
+
+```yaml
+- name: Cloud Login
+  id: cloud-login
+  uses: pagopa/dx/actions/csp-login@main
+  with:
+    export-github-token: "false"
+  env:
+    GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+    GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
+    GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+
+- name: Terraform Plan
+  env:
+    GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github-token }}
+  run: terraform plan
+```
+
+`validate-v2.yaml` uses this mode: only its Terraform plan step receives the App
+token, not the separate quality checks or artifact upload steps.
+
+This is credential scoping, **not isolation from untrusted code**. Terraform plans
+and their init dependencies still run repository code with cloud credentials and,
+when configured, the App token. Quality checks in the environment job also retain
+cloud access. Run this job only for trusted revisions, enforce GitHub environment
+protection rules outside the PR-controlled workflow, and use least-privilege
+planning identities and App permissions. Do not treat a successful fork gate or
+moving credentials between steps as a sandbox.
+
 ## Example Usage
 
 ### Terraform workflows supporting both clouds
