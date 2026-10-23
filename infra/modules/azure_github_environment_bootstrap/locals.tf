@@ -7,11 +7,12 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  env_name = {
+  base_environment_name = {
     "d" = "dev"
     "u" = "uat"
     "p" = "prod"
   }[var.environment.env_short]
+  env_name = var.github_environment_prefix_enabled ? "${var.environment.prefix}-${local.base_environment_name}" : local.base_environment_name
 
   # GitHub emits immutable subject claims that embed the numeric owner and
   # repository IDs for repositories created or renamed after 2026-07-15, while
@@ -56,7 +57,7 @@ locals {
       resource_type = "managed_identity"
     }))
 
-    # e.g. infra-${local.env_name}-cd
+    # The prefix affects GitHub environment names only, not cloud resource names.
     infra_environment_name      = "infra-${local.env_name}-%s"
     automation_environment_name = "automation-${local.env_name}-%s"
     app_environment_name        = "app-${local.env_name}-%s"

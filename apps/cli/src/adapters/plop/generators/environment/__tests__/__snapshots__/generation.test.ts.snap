@@ -83,7 +83,7 @@ module "azure-DEV-DX_core_values" {
 
 module "azure-DEV-DX_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 6.0"
+  version = "~> 6.3"
 
   providers = {
     azurerm = azurerm.DEV-DX
@@ -126,7 +126,6 @@ module "azure-DEV-DX_bootstrap" {
 
   tags = local.bootstrapper_tags
 }
-
 
 ",
   "infra/bootstrapper/dev/providers.tf": "terraform {
@@ -202,7 +201,7 @@ module "azure-DEV-DX_core_values" {
 
 module "azure-DEV-DX_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 6.0"
+  version = "~> 6.3"
 
   providers = {
     azurerm = azurerm.DEV-DX
@@ -269,7 +268,6 @@ resource "azurerm_role_assignment" "infra_ci_kv_secrets_user_common_DEV-DX" {
   role_definition_name = "Key Vault Secrets User"
   principal_id         = module.azure-DEV-DX_bootstrap.identities.infra.ci.principal_id
 }
-
 ",
   "infra/core/dev/backend.tf": "
 terraform {
