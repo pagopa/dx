@@ -1,3 +1,17 @@
+## 0.5.15 (2026-10-23)
+
+### 🩹 Fixes
+
+- Build and publish dx-tasks with package exports targeting generated output. ([#2398](https://github.com/pagopa/dx/pull/2398))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.9
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.5.14 (2026-10-21)
 
 ### 🩹 Fixes
