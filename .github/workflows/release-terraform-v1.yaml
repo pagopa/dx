@@ -36,6 +36,7 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
@@ -174,6 +175,7 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
+          persist-credentials: false
 
       - name: Setup repository tools
         if: ${{ hashFiles('mise.toml') != '' }}
@@ -273,6 +275,7 @@ jobs:
         with:
           fetch-depth: 0
           filter: tree:0
+          persist-credentials: false
 
       - name: Setup repository tools
         if: ${{ hashFiles('mise.toml') != '' }}
