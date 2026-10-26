@@ -73,11 +73,6 @@ const configureLogging = async (verbose: boolean): Promise<void> => {
       // provisioned Azure resources; surfacing them is the main value of
       // `--verbose` when running `dx init` / `dx add environment`.
       { category: ["gen"], lowestLevel: level, sinks: ["console", "otel"] },
-      {
-        category: ["savemoney"],
-        lowestLevel: level,
-        sinks: ["console", "otel"],
-      },
       { category: ["json"], lowestLevel: "info", sinks: ["rawJson"] },
       {
         category: ["logtape", "meta"],

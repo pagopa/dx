@@ -1,25 +1,15 @@
 [tools]
-acli = "latest"
-act = "latest"
-copilot = "latest"
-go = "1.26"
-golangci-lint = "2.12.2"
+act = "0.2"
+go = "1.27"
+golangci-lint = "2.14.0"
 jq = "1.8"
-python = "3.14.6"
-qdns = "latest"
-ripgrep = "latest"
 shellcheck = "0.11"
 terraform-docs = "0.24"
-tflint = "0.63"
-trivy = "0.74"
-uv = "latest"
-
-[tools.aws-cli]
-version = "2.36"
-symlink_bins = "true"
-
-[tools.azure-cli]
-version = "2.87"
+tflint = "0.64"
+trivy = "0.75"
+uv = "0.13"
+azure-cli = "2.91"
+aws-cli = "2.37"
 
 [tools.github-cli]
 version = "latest"
@@ -35,7 +25,6 @@ lock = "uv lock"
 [settings]
 idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]
 minimum_release_age = "7d"
-minimum_release_age_excludes = ["copilot", "github-cli"]
 experimental = true
 lockfile = true
 

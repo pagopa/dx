@@ -16,5 +16,8 @@ jobs:
       contents: read
       actions: read
       id-token: write
+      # release-terraform-v1 installs the repository dependencies to resolve
+      # the affected Nx projects, and they may come from GitHub Packages.
+      packages: read
     uses: $/.github/workflows/release-terraform-v1.yaml
     secrets: inherit

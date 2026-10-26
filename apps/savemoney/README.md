@@ -1,0 +1,483 @@
+# SaveMoney
+
+SaveMoney finds Azure resources and recommendations worth reviewing for cost
+savings. Use the CLI or TypeScript library; analysis is read-only and does not
+modify, tag, or delete resources.
+
+## Quick Start
+
+Authenticate to Azure first (for example, run `az login`), then install and
+analyze one or more subscriptions:
+
+```bash
+npm install --global @pagopa/dx-savemoney
+savemoney analyze --subscriptionIds <subscription-id> --format table
+```
+
+Alternatively, install and enable SaveMoney for the current project with
+[mise](https://mise.jdx.dev/):
+
+```bash
+mise use npm:@pagopa/dx-savemoney
+```
+
+Use `--format json` for a machine-readable report, or `--config config.yaml` to
+load thresholds and other settings.
+
+## CLI options
+
+Run `savemoney analyze --help` for command help and valid choices. CLI options
+override YAML; subscription IDs can then come from comma-separated
+`ARM_SUBSCRIPTION_ID`. If no IDs are available, the CLI prompts in a terminal
+and fails without prompting in non-interactive execution. Built-in defaults
+fill unset values where available.
+
+| Option                       | Purpose                                      | Default                                           |
+| :--------------------------- | :------------------------------------------- | :------------------------------------------------ |
+| `--config <path>`            | Load YAML settings.                          | None                                              |
+| `--subscriptionIds <ids...>` | Subscriptions to analyze.                    | Required via CLI, YAML, or `ARM_SUBSCRIPTION_ID`. |
+| `--format <format>`          | `table`, `json`, `detailed-json`, or `lint`. | `table`                                           |
+| `--location <location>`      | Preferred Azure location.                    | `italynorth`                                      |
+| `--days <days>`              | Metric lookback period.                      | `30`                                              |
+| `--tags <tags...>`           | Filter by space-separated `key=value` tags.  | No filter                                         |
+| `--source <source>`          | `advisor`, `custom`, or `all`.               | All sources                                       |
+| `--no-pricing`               | Disable Retail Prices API estimates.         | Pricing enabled                                   |
+| `--azqr-report <path>`       | Merge findings from an AZQR JSON report.     | None                                              |
+| `--verbose`                  | Show debug logs.                             | `false`                                           |
+
+### Automated execution
+
+Use `--format json` or `detailed-json` for a JSON array on stdout. Progress and
+diagnostics go to stderr; exit code `0` means success and `1` means failure.
+Check the exit code and stderr—empty stdout alone does not mean there are no
+findings. Authenticate Azure before running; the tool is read-only. Cost-at-risk
+is not guaranteed savings, and Advisor estimates are reported separately.
+
+## Supported Cloud Provider
+
+Azure is currently the only provider supported by the CLI and library.
+
+## Architecture
+
+The SaveMoney tool follows a modular architecture designed for multi-CSP
+support:
+
+```mermaid
+flowchart LR
+    CLI[savemoney] --> Config[Config Loader]
+    Config --> Azure[Azure Analyzer]
+    subgraph svc["Azure Services"]
+        ARM[Azure Resource Manager]
+        Monitor[Azure Monitor Metrics]
+        Identity[Azure Identity]
+    end
+    subgraph rsc["Azure Resources"]
+        direction LR
+        VM[Virtual Machines]
+        Disk[Managed Disks]
+        NIC[Network Interfaces]
+        IP[Public IPs]
+        ASP[App Service Plans]
+        PE[Private Endpoints]
+        SA[Storage Accounts]
+        CA[Container Apps]
+        SS[Static Web Apps]
+    end
+    Azure --> ARM
+    Azure --> Monitor
+    Azure --> Identity
+    ARM --> rsc
+    Monitor --> rsc
+    style CLI fill:#0078d4,color:#fff
+    style Azure fill:#0078d4,color:#fff
+    style Config fill:#107c10,color:#fff
+```
+
+## Installation
+
+```bash
+npm install @pagopa/dx-savemoney
+# or
+pnpm add @pagopa/dx-savemoney
+# or
+yarn add @pagopa/dx-savemoney
+```
+
+## Azure
+
+### Main Features
+
+- **Multi-Subscription Analysis**: Scans multiple Azure subscriptions in a single command.
+- **Intelligent Detection**: Uses Azure Monitor metrics (e.g. CPU, network traffic, transactions) to scientifically identify inactive resources.
+- **Azure Advisor Integration**: Fetches Cost recommendations directly from Azure Advisor, including Reserved Instance and Savings Plan opportunities with estimated monthly savings.
+- **Orphaned Resource Identification**: Detects commonly "forgotten" resources like unattached disks, unassociated public IPs, and unused network interfaces.
+- **Cross-Source Deduplication**: Findings reported by more than one source (live scan, Azure Advisor, AZQR) are collapsed onto a single entry, keeping the one that carries the monetary estimate.
+- **Flexible Reporting**: Offers multiple output formats:
+  - `table`: A human-readable summary for the terminal.
+  - `json`: Standard format for integration with other tools.
+  - `detailed-json`: A comprehensive output with all resource metadata, ideal for in-depth analysis via AI or custom scripts.
+  - `lint`: A linter-style output grouped by resource, with risk icons and a summary — ideal for CI pipelines and quick triage.
+- **Simplified Configuration**: Supports configuration via files, command-line options, environment variables, or an interactive prompt.
+- **Configurable Thresholds**: All analysis thresholds (CPU%, memory, transaction counts, etc.) can be overridden via the `thresholds` section of the YAML config file.
+- **Tag Filtering**: Restrict the analysis to resources that match specific tag key-value pairs.
+
+### Analyzed Resources
+
+The tool analyzes the following Azure resource types with specific detection methods and risk levels:
+
+| Resource Type           | Detection Method        | Cost Risk | What's Checked                                                                                                                                              |
+| :---------------------- | :---------------------- | :-------: | :---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Virtual Machines**    | Instance View + Metrics |  🔴 High  | Deallocated/stopped state, Low CPU usage (<1%), Low network traffic (<3MB per days)                                                                         |
+| **App Service Plans**   | API Details + Metrics   |  🔴 High  | No apps deployed, Very low CPU (<5%), Very low memory (<10%)                                                                                                |
+| **Container Apps**      | API Details + Metrics   | 🟡 Medium | Not running state, Zero replicas configured, Low CPU (<0.001 cores), Low memory (<10MB), Low network traffic (<1MB)                                         |
+| **Managed Disks**       | API Details             | 🟡 Medium | Unattached state, No `managedBy` property                                                                                                                   |
+| **Public IP Addresses** | API Details + Metrics   | 🟡 Medium | Not associated with any resource, Very low network traffic (<~340KB per day)                                                                                |
+| **Network Interfaces**  | API Details             | 🟡 Medium | Not attached to VM or Private Endpoint                                                                                                                      |
+| **Private Endpoints**   | API Details             | 🟡 Medium | No private link connections (automatic or manual), Rejected/disconnected connections, No network interfaces                                                 |
+| **Storage Accounts**    | Metrics                 | 🟡 Medium | Very low transaction count (<10 per days in timespan)                                                                                                       |
+| **Static Web Apps**     | Metrics                 |  🟢 Low   | No traffic data available, Very low site hits (<100 requests in 30 days), Very low data transfer (<1MB in 30 days)                                          |
+| **Azure Advisor**       | Advisor API             | ⚪ Varies | Reserved Instance and Savings Plan opportunities, right-sizing suggestions, and other Cost recommendations — with estimated monthly savings where available |
+| **AZQR report**         | `--azqr-report` JSON    | ⚪ Varies | Optional. Billable orphans (cost) and free orphaned resources such as empty subnets or unattached NSGs (cleanup candidates) parsed from an AZQR scan        |
+
+#### Pricing Coverage
+
+SaveMoney keeps two monetary signals separate:
+
+- **Retail Prices API** estimates the monthly list-price cost at risk for custom findings on resources with predictable pricing.
+- **Azure Advisor** reports Microsoft-provided savings for Cost recommendations when available.
+
+| Resources                                                                     | Pricing source    | Notes                                                                                          |
+| :---------------------------------------------------------------------------- | :---------------- | :--------------------------------------------------------------------------------------------- |
+| Virtual Machines, Managed Disks, Public IP Addresses, empty App Service Plans | Retail Prices API | Reported as `Estimated monthly cost at risk (custom)`.                                         |
+| Azure Advisor Cost recommendations                                            | Azure Advisor     | Reported separately as `Estimated monthly savings (advisor)` when Advisor returns an estimate. |
+
+#### Generic Checks
+
+All resources are also checked for:
+
+- **Missing tags**: Added as a governance note (`operationalExcellence`) to resources already reported for other reasons; missing tags alone do not include a resource in the report
+- **Location mismatch**: Resources not in the preferred location are reported
+
+Both are governance signals, not billable waste, so they are reported under the
+`operationalExcellence` category and never carry a saving estimate.
+
+### Prerequisites
+
+1. **Node.js**: Version 22 or higher.
+2. **Azure Credentials**: The library uses `DefaultAzureCredential` from `@azure/identity`, which supports various authentication methods:
+   - Azure CLI (`az login`)
+   - Managed Identity
+   - Environment variables
+   - Visual Studio Code
+   - And more...
+
+### Usage
+
+#### Library Quick Start
+
+```typescript
+import { azure, loadConfig } from "@pagopa/dx-savemoney";
+
+// Load configuration from a file
+const config = await loadConfig("./config.yaml");
+
+// Run analysis, then generate report
+const reports = await azure.analyzeAzureResources(config);
+await azure.generateReport(reports, "table");
+```
+
+#### Configuration Inputs
+
+The tool requires the following configuration:
+
+| Input               | Type                     | Required | Default      | Description                                                               |
+| :------------------ | :----------------------- | :------: | :----------- | :------------------------------------------------------------------------ |
+| `subscriptionIds`   | `string[]`               |    ✅    | -            | Array of Azure subscription IDs to analyze                                |
+| `preferredLocation` | `string`                 |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged)              |
+| `timespanDays`      | `number`                 |    ❌    | `30`         | Number of days to look back for metrics analysis                          |
+| `sources`           | `FindingSource[]`        |    ❌    | all sources  | Restrict analysis to specific sources: `"advisor"`, `"custom"`, or both   |
+| `verbose`           | `boolean`                |    ❌    | `false`      | Enable detailed logging for each resource analyzed                        |
+| `filterTags`        | `Record<string, string>` |    ❌    | -            | Only analyze resources matching **all** the specified tag key-value pairs |
+| `thresholds`        | `Thresholds`             |    ❌    | see below    | Override the default numeric thresholds used during analysis              |
+| `azqrReportPath`    | `string`                 |    ❌    | -            | Path to an AZQR `--json` report to ingest (see AZQR Report Ingestion)     |
+
+#### Output Formats
+
+The tool supports multiple output formats for different use cases:
+
+| Format          | Description                                         | Use Case                       |
+| :-------------- | :-------------------------------------------------- | :----------------------------- |
+| `table`         | Human-readable table in terminal                    | Quick visual inspection        |
+| `json`          | Structured JSON with resource summaries             | Integration with other tools   |
+| `detailed-json` | Complete JSON with full Azure resource metadata     | AI analysis or deep inspection |
+| `lint`          | Linter-style output grouped by resource, with icons | CI pipelines and quick triage  |
+
+#### How to Load Configuration
+
+CLI options override YAML settings; built-in defaults fill other unset values.
+Subscription IDs are resolved in this order: `--subscriptionIds`, YAML,
+`ARM_SUBSCRIPTION_ID` (comma-separated), then a prompt in a terminal. Missing
+IDs fail without prompting when stdin is not a TTY. The library's
+`loadConfig()` API follows the same ID resolution and prompt behavior; pass
+`{ interactive: false }` to disable prompting.
+
+**Example:**
+
+```typescript
+// From file
+const config1 = await loadConfig("./config.yaml");
+
+// From environment variable or, in an interactive process, a prompt
+const config2 = await loadConfig();
+```
+
+#### Configuration File Example
+
+```yaml
+azure:
+  subscriptionIds:
+    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  preferredLocation: italynorth
+  timespanDays: 30
+  verbose: false
+  thresholds: # optional — omit to use built-in defaults
+    vm:
+      cpuPercent: 5
+    storage:
+      transactionsPerDay: 50
+```
+
+#### Thresholds Configuration
+
+All numeric thresholds used during analysis can be overridden by adding a
+`thresholds` section inside the `azure` block of your config YAML.
+Only the fields you want to change are required — all others keep their
+built-in defaults.
+
+**Example (full override, `config.yaml`):**
+
+```yaml
+azure:
+  subscriptionIds:
+    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  thresholds:
+    vm:
+      cpuPercent: 5
+      networkInBytesPerDay: 10485760
+    appService:
+      cpuPercent: 10
+      memoryPercent: 20
+      premiumCpuPercent: 15
+    containerApp:
+      cpuNanoCores: 5000000
+      memoryBytes: 52428800
+      networkBytes: 100000
+    storage:
+      transactionsPerDay: 50
+    publicIp:
+      bytesInDDoS: 1048576
+    staticSite:
+      siteHits: 500
+      bytesSent: 5242880
+```
+
+**Default threshold values:**
+
+| Resource       | Field                  | Default Value           | Description                                   |
+| :------------- | :--------------------- | :---------------------- | :-------------------------------------------- |
+| `vm`           | `cpuPercent`           | `1` (%)                 | Average CPU below which VM is flagged         |
+| `vm`           | `networkInBytesPerDay` | `3145728` (3 MB)        | Average inbound traffic below which flagged   |
+| `appService`   | `cpuPercent`           | `5` (%)                 | Average CPU below which plan is flagged       |
+| `appService`   | `memoryPercent`        | `10` (%)                | Average memory below which plan is flagged    |
+| `appService`   | `premiumCpuPercent`    | `10` (%)                | Deprecated (ignored): kept for compatibility. |
+| `containerApp` | `cpuNanoCores`         | `1000000` (0.001 cores) | Average CPU below which app is flagged        |
+| `containerApp` | `memoryBytes`          | `10485760` (10 MB)      | Average memory below which app is flagged     |
+| `containerApp` | `networkBytes`         | `34000` (~33 KB)        | Combined Rx+Tx below which app is flagged     |
+| `storage`      | `transactionsPerDay`   | `10`                    | Avg daily transactions below which flagged    |
+| `publicIp`     | `bytesInDDoS`          | `340000` (~332 KB)      | Avg inbound bytes/day below which flagged     |
+| `staticSite`   | `siteHits`             | `100`                   | Total requests below which site is flagged    |
+| `staticSite`   | `bytesSent`            | `1048576` (1 MB)        | Total bytes sent below which site is flagged  |
+
+#### Usage Examples
+
+##### Tag Filtering
+
+```typescript
+import { azure, loadConfig } from "@pagopa/dx-savemoney";
+
+const config = await loadConfig("./config.yaml");
+// Analyze only resources tagged with environment=prod AND team=platform
+const reports = await azure.analyzeAzureResources({
+  ...config,
+  filterTags: new Map([
+    ["environment", "prod"],
+    ["team", "platform"],
+  ]),
+});
+await azure.generateReport(reports, "lint");
+```
+
+##### Basic Usage
+
+```typescript
+import { azure, loadConfig } from "@pagopa/dx-savemoney";
+
+// Load from config file
+const config = await loadConfig("./config.yaml");
+const reports = await azure.analyzeAzureResources(config);
+await azure.generateReport(reports, "table");
+```
+
+##### Custom Configuration
+
+```typescript
+import { azure } from "@pagopa/dx-savemoney";
+import type { AzureConfig } from "@pagopa/dx-savemoney";
+
+const config: AzureConfig = {
+  subscriptionIds: ["sub-id-1", "sub-id-2"],
+  preferredLocation: "italynorth",
+  timespanDays: 30,
+  verbose: true,
+};
+
+const reports = await azure.analyzeAzureResources(config);
+await azure.generateReport(reports, "json");
+```
+
+##### Generate Detailed Report
+
+```typescript
+import { azure, loadConfig } from "@pagopa/dx-savemoney";
+
+const config = await loadConfig();
+// Generate detailed JSON with full resource metadata
+const reports = await azure.analyzeAzureResources(config);
+await azure.generateReport(reports, "detailed-json");
+```
+
+##### Using Environment Variables
+
+```typescript
+import { loadConfig, azure } from "@pagopa/dx-savemoney";
+
+// Set environment variables
+// ARM_SUBSCRIPTION_ID=sub1,sub2
+
+const config = await loadConfig(); // Will read from env vars
+const reports = await azure.analyzeAzureResources(config);
+await azure.generateReport(reports, "json");
+```
+
+#### AZQR Report Ingestion
+
+SaveMoney can enrich a live scan with an [AZQR](https://github.com/Azure/azqr)
+(`azqr scan --json`) report. Provide its path either with the `--azqr-report
+<path>` CLI flag or via the `azure.azqrReportPath` YAML key (the CLI flag takes
+precedence when both are set): the FinOps-relevant resources from the report's
+`impacted` section are merged into the normal output as findings tagged with the
+`[azqr]` source.
+
+```bash
+# Generate the AZQR report first (disable masking so resource IDs match)
+azqr scan --subscription-id <sub-id> --json --mask=false
+
+# Feed it into SaveMoney alongside the live scan
+savemoney analyze --subscriptionIds <sub-id> --azqr-report ./azqr_action_plan.json
+```
+
+Or persist the path in the YAML config:
+
+```yaml
+azure:
+  subscriptionIds:
+    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+  azqrReportPath: ./azqr_action_plan.json
+```
+
+Notes:
+
+- **Disable masking.** AZQR masks subscription IDs by default
+  (`/subscriptions/xxxxxxxx-…/`). Only findings whose `resourceId` belongs to
+  a selected subscription are imported; `resourceId` is authoritative if the
+  AZQR `subscriptionId` field disagrees. Resources in selected subscriptions
+  are included even when the live scan did not find them. Findings with masked
+  or unrecognizable subscription IDs are skipped. SaveMoney logs a warning
+  when it detects masked IDs; re-run AZQR with `--mask=false`.
+- **Noise reduction.** Rows are classified into two buckets and everything else
+  (security, reliability, high-availability best practices) is dropped:
+  - **Cost opportunities** (`cost` category): rows AZQR categorises as `Cost`,
+    plus orphaned/unassociated **billable** resources (public IPs, NAT gateways,
+    application gateways, App Service plans, SQL elastic pools, load balancers,
+    DDoS plans, VNet gateways, managed disks/snapshots).
+  - **Cleanup candidates** (`operationalExcellence` category, low severity):
+    orphaned **free** resources flagged by AZQR's `AOR` (Azure Orphan Resources)
+    checks — empty subnets, unattached NSGs, orphan API connections, unconnected
+    private endpoints. They carry no direct cost but are worth removing after
+    verifying they are unused.
+- AZQR carries no monetary estimate, so these findings have no per-finding
+  saving amount; they surface as opportunities to review.
+- **Cross-source deduplication.** An AZQR row is dropped when the live scan
+  already reports the same problem on the same resource (see below).
+
+#### Cross-Source Deduplication
+
+The three sources overlap: an unattached disk is waste whether it is spotted by
+the live analyzers, by Azure Advisor, or by AZQR. Findings are therefore
+unified on the `resourceId + recommendationId` key, where `recommendationId` is
+normalised onto a shared vocabulary — orphaned resources become
+`orphan.<resourceType>` regardless of which source detected them.
+
+When an AZQR row collides with an already-collected finding, the AZQR row is
+dropped and the surviving finding keeps the highest severity, the only
+available monetary estimate, and gains a short note recording the corroborating
+source (e.g. `Also flagged by azqr as an orphaned resource.`). This keeps a
+resource on a single line of the report while preserving its provenance.
+
+Only findings that carry a `recommendationId` participate. Custom analyzer
+sentences with a known template (e.g. `Disk is unattached.`, `Very low CPU
+usage (...)`) get a stable `custom.<id>` identity, so two custom findings
+describing the same problem on the same resource collapse just like a
+custom/advisor pair would. Sentences that match no known template keep
+`code: "custom.unknown"` and no `recommendationId`, and are never collapsed on
+guesswork.
+
+#### Cost vs Governance Findings
+
+The `cost` category means "money is being wasted". Governance and diagnostic
+observations from the custom analyzers — missing tags, a resource outside the
+preferred location, an unsupported resource type, a failed detail lookup — are
+reported as `operationalExcellence` instead, and never carry a saving estimate.
+Besides keeping the FinOps signal clean, this is what makes deduplication safe:
+a resource flagged only for missing tags is not evidence of waste, so it does
+not absorb the corresponding AZQR orphan row.
+
+## Development
+
+### Type Checking
+
+```bash
+pnpm typecheck
+```
+
+### Linting
+
+```bash
+pnpm lint        # Auto-fix issues
+pnpm lint:check  # Check without fixing
+```
+
+### Testing
+
+```bash
+pnpm test              # Run tests
+pnpm test:watch        # Watch mode
+pnpm test:coverage     # With coverage report
+```
+
+### Formatting
+
+```bash
+pnpm format        # Format code
+pnpm format:check  # Check formatting
+```

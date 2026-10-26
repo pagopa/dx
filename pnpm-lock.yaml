@@ -1,3 +1,161 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.13.0
+        version: 12.13.0
+
+packages:
+
+  '@pnpm/exe.android-arm64@12.13.0':
+    resolution: {integrity: sha512-BI++xXYAk3lTLQ1695b3pAAaLwzUTQqKyT5UukVd1NU5qv7h/rUfVCiV5hrLksdbgPMWcic8gf9uXMiqTlerzg==}
+    cpu: [arm64]
+    os: [android]
+
+  '@pnpm/exe.android-x64@12.13.0':
+    resolution: {integrity: sha512-bFq6cnbSB3fezJ0siOtuoRqLiR3VXFCZvUUFa0wlZ4a3EaJYsnnDli4ZTe8/bDfX1UhNMFxAAiSAKg7xITu+Zw==}
+    cpu: [x64]
+    os: [android]
+
+  '@pnpm/exe.darwin-arm64@12.13.0':
+    resolution: {integrity: sha512-9rRpaMGxxrv5YbptsRTIeG+q2IzQyrkRKXkD30pb7weCC6Xz6vQzfkItzrUZsb2bXyYd7fSsq+luTsreXBQYyQ==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@pnpm/exe.darwin-x64@12.13.0':
+    resolution: {integrity: sha512-A+VFQakozmXIo8kxtcP9sZCKIi94f9uB5jLXRvwnNSA5G6/G6Iq/8E17+fIPf4bm7xvR+qeM794Nz98Q52lutQ==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@pnpm/exe.freebsd-x64@12.13.0':
+    resolution: {integrity: sha512-HqT2ppLDxmpO8jTgl44BLdrBQoQXE73HHBElYRKvxL47d4maQ0sfk+fI+bfeDpRTqKzc5JZfj85yjRo7anqioA==}
+    cpu: [x64]
+    os: [freebsd]
+
+  '@pnpm/exe.linux-arm64-musl@12.13.0':
+    resolution: {integrity: sha512-yZfm/7h1Kdd1XTNf9+F2Gt5R4WuQKMRbkMIpbzCtxpzniPEKGo/2kymNxdHq3jIcfnzHnP+KBR/YONZ+4Icq+g==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [musl]
+
+  '@pnpm/exe.linux-arm64@12.13.0':
+    resolution: {integrity: sha512-jp29ia+fTNhheXzt4FRUw5CwFW9caPNEdLRuy7/Dlbv3sj+iHldfJXfCojkPE4g71NPVwMpY5Eoc7nkfWexqrA==}
+    cpu: [arm64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-ppc64@12.13.0':
+    resolution: {integrity: sha512-BO8Nz70baL6KV0G9p+Lx8l6BQYFE11KDEOTTjSNZdiUMMyN1byeDlls10ZgCIaIq5ELlLJ0F/LKieNjubOC7BA==}
+    cpu: [ppc64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-riscv64@12.13.0':
+    resolution: {integrity: sha512-LrGM+VzpNghXuHK1XSMNEsochaLscAYkllSPLF3Y4CQpaOFYmiZoX+G3TN+T3pYRxdgvwWJCqbbdwRJZFykrig==}
+    cpu: [riscv64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-s390x@12.13.0':
+    resolution: {integrity: sha512-0Xetcb9OJpXYmJ7rMDh3oFszIvbQl0F8UNh7oJnbLJY1K5PtDgYVkjqwb1JpjU0mkr0b4HKkFdZhlYh7XEGTvw==}
+    cpu: [s390x]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.linux-x64-musl@12.13.0':
+    resolution: {integrity: sha512-LSD/snRsouEGA52HrTfEbGrCGdkkr5gXfQym26Ogu3I7sc5dJHUHyp8GnA7ewXrFOSRCJXH25mnmQ6Jpit572Q==}
+    cpu: [x64]
+    os: [linux]
+    libc: [musl]
+
+  '@pnpm/exe.linux-x64@12.13.0':
+    resolution: {integrity: sha512-t4EYUFG4SPYaJJVQToWIPq/lLBquCPCxMtt9vV//HirSDl332dnxDnwgvdW29sqLg3Ob2x7zFQ69HZLyoCyfpQ==}
+    cpu: [x64]
+    os: [linux]
+    libc: [glibc]
+
+  '@pnpm/exe.win32-arm64@12.13.0':
+    resolution: {integrity: sha512-aDzzll9stgP+p6KKYHNzuShZhBCaxabv481xK5BjfvSnyFbjzu7ksKUIVlsiAw4xAXnrIqvEj0lQarsbBRcIQA==}
+    cpu: [arm64]
+    os: [win32]
+
+  '@pnpm/exe.win32-x64@12.13.0':
+    resolution: {integrity: sha512-Nkw4hDJTcmuO6zDjkTo4Dz7pG2ojEifSBGC4QbFJFIfBoRbN88GIMu/Lm1woxd7ONhJFlfJ+dJeiDyuP0NKtSA==}
+    cpu: [x64]
+    os: [win32]
+
+  pnpm@12.13.0:
+    resolution: {integrity: sha512-HlVxm/JugJ3OXFCE/euqZO+z2pA4rl1oqfimgxHxpFhByMO3ajcpjDtm9rzIBAmpt/M8eKcWij6Q+2Wl2CNa5A==}
+    engines: {node: '>=18.*'}
+    hasBin: true
+
+snapshots:
+
+  '@pnpm/exe.android-arm64@12.13.0':
+    optional: true
+
+  '@pnpm/exe.android-x64@12.13.0':
+    optional: true
+
+  '@pnpm/exe.darwin-arm64@12.13.0':
+    optional: true
+
+  '@pnpm/exe.darwin-x64@12.13.0':
+    optional: true
+
+  '@pnpm/exe.freebsd-x64@12.13.0':
+    optional: true
+
+  '@pnpm/exe.linux-arm64-musl@12.13.0':
+    optional: true
+
+  '@pnpm/exe.linux-arm64@12.13.0':
+    optional: true
+
+  '@pnpm/exe.linux-ppc64@12.13.0':
+    optional: true
+
+  '@pnpm/exe.linux-riscv64@12.13.0':
+    optional: true
+
+  '@pnpm/exe.linux-s390x@12.13.0':
+    optional: true
+
+  '@pnpm/exe.linux-x64-musl@12.13.0':
+    optional: true
+
+  '@pnpm/exe.linux-x64@12.13.0':
+    optional: true
+
+  '@pnpm/exe.win32-arm64@12.13.0':
+    optional: true
+
+  '@pnpm/exe.win32-x64@12.13.0':
+    optional: true
+
+  pnpm@12.13.0:
+    optionalDependencies:
+      '@pnpm/exe.android-arm64': 12.13.0
+      '@pnpm/exe.android-x64': 12.13.0
+      '@pnpm/exe.darwin-arm64': 12.13.0
+      '@pnpm/exe.darwin-x64': 12.13.0
+      '@pnpm/exe.freebsd-x64': 12.13.0
+      '@pnpm/exe.linux-arm64': 12.13.0
+      '@pnpm/exe.linux-arm64-musl': 12.13.0
+      '@pnpm/exe.linux-ppc64': 12.13.0
+      '@pnpm/exe.linux-riscv64': 12.13.0
+      '@pnpm/exe.linux-s390x': 12.13.0
+      '@pnpm/exe.linux-x64': 12.13.0
+      '@pnpm/exe.linux-x64-musl': 12.13.0
+      '@pnpm/exe.win32-arm64': 12.13.0
+      '@pnpm/exe.win32-x64': 12.13.0
+
+---
 lockfileVersion: '9.0'
 
 settings:
@@ -207,6 +365,9 @@ importers:
       '@pagopa/nx-docker':
         specifier: workspace:^
         version: link:packages/nx-dx-docker-plugin
+      '@pagopa/nx-dx':
+        specifier: workspace:^
+        version: link:packages/nx-dx-plugin
       '@pagopa/nx-terraform':
         specifier: workspace:^
         version: link:packages/nx-terraform-plugin
@@ -243,11 +404,9 @@ importers:
 
   actions/convert-mermaid-svg: {}
 
-  actions/csp-login:
-    devDependencies:
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
+  actions/csp-login: {}
+
+  actions/deploy: {}
 
   actions/detect-node-package-manager:
     devDependencies:
@@ -521,6 +680,8 @@ importers:
 
   actions/terraform-plan-upload: {}
 
+  actions/terraform-provider-lifecycle: {}
+
   apps/cli:
     dependencies:
       '@azure/arm-authorization':
@@ -583,9 +744,6 @@ importers:
       '@opentelemetry/sdk-logs':
         specifier: catalog:opentelemetry
         version: 0.221.0(@opentelemetry/api@1.9.1)
-      '@pagopa/dx-savemoney':
-        specifier: workspace:^
-        version: link:../../packages/savemoney
       chalk:
         specifier: ^5.6.2
         version: 5.6.2
@@ -933,6 +1091,85 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
+  apps/savemoney:
+    dependencies:
+      '@azure/arm-advisor':
+        specifier: ^3.2.0
+        version: 3.2.0(supports-color@8.1.1)
+      '@azure/arm-appcontainers':
+        specifier: ^3.0.0
+        version: 3.0.0(supports-color@8.1.1)
+      '@azure/arm-appservice':
+        specifier: ^17.0.0
+        version: 17.0.0(supports-color@8.1.1)
+      '@azure/arm-compute':
+        specifier: ^23.3.0
+        version: 23.3.0(supports-color@8.1.1)
+      '@azure/arm-monitor':
+        specifier: ^7.0.0
+        version: 7.0.0(supports-color@8.1.1)
+      '@azure/arm-network':
+        specifier: ^34.2.0
+        version: 34.2.0(supports-color@8.1.1)
+      '@azure/arm-resources':
+        specifier: catalog:azure
+        version: 7.0.0(supports-color@8.1.1)
+      '@azure/identity':
+        specifier: 'catalog:'
+        version: 4.13.3(supports-color@8.1.1)
+      '@logtape/logtape':
+        specifier: 'catalog:'
+        version: 1.3.11
+      cli-table3:
+        specifier: ^0.6.5
+        version: 0.6.5
+      commander:
+        specifier: 'catalog:'
+        version: 14.0.3
+      js-yaml:
+        specifier: 'catalog:'
+        version: 5.4.2
+      ora:
+        specifier: ^9.4.1
+        version: 9.4.1
+      p-limit:
+        specifier: ^7.3.3
+        version: 7.3.3
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
+      '@pagopa/eslint-config':
+        specifier: workspace:^
+        version: link:../../packages/eslint-config
+      '@tsconfig/node24':
+        specifier: 'catalog:'
+        version: 24.0.4
+      '@types/js-yaml':
+        specifier: 'catalog:'
+        version: 4.0.9
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.5
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
+      eslint:
+        specifier: 'catalog:'
+        version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.9.6
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest-mock-extended:
+        specifier: 'catalog:'
+        version: 4.0.0(typescript@5.9.3)(vitest@4.1.11)
+
   apps/website:
     dependencies:
       '@docusaurus/core':
@@ -1243,6 +1480,43 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
+  packages/nx-dx-plugin:
+    dependencies:
+      '@nx/devkit':
+        specifier: 23.2.1
+        version: 23.2.1(nx@23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@5.9.3))(@swc/core@1.16.1(@swc/helpers@0.5.23)))
+      tslib:
+        specifier: 'catalog:'
+        version: 2.8.1
+      zod:
+        specifier: 'catalog:'
+        version: 4.6.5
+    devDependencies:
+      '@pagopa/eslint-config':
+        specifier: workspace:^
+        version: link:../eslint-config
+      '@tsconfig/node24':
+        specifier: 'catalog:'
+        version: 24.0.4
+      '@types/node':
+        specifier: 'catalog:'
+        version: 22.20.5
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(vitest@4.1.11)
+      eslint:
+        specifier: 'catalog:'
+        version: 10.12.0(jiti@2.7.0)(supports-color@7.2.0)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      yaml:
+        specifier: ^2.9.1
+        version: 2.9.1
+
   packages/nx-terraform-plugin:
     dependencies:
       '@logtape/logtape':
@@ -1305,79 +1579,6 @@ importers:
         version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   packages/pnpm-plugin-pagopa: {}
-
-  packages/savemoney:
-    dependencies:
-      '@azure/arm-advisor':
-        specifier: ^3.2.0
-        version: 3.2.0(supports-color@8.1.1)
-      '@azure/arm-appcontainers':
-        specifier: ^3.0.0
-        version: 3.0.0(supports-color@8.1.1)
-      '@azure/arm-appservice':
-        specifier: ^17.0.0
-        version: 17.0.0(supports-color@8.1.1)
-      '@azure/arm-compute':
-        specifier: ^23.3.0
-        version: 23.3.0(supports-color@8.1.1)
-      '@azure/arm-monitor':
-        specifier: ^7.0.0
-        version: 7.0.0(supports-color@8.1.1)
-      '@azure/arm-network':
-        specifier: ^34.2.0
-        version: 34.2.0(supports-color@8.1.1)
-      '@azure/arm-resources':
-        specifier: catalog:azure
-        version: 7.0.0(supports-color@8.1.1)
-      '@azure/identity':
-        specifier: 'catalog:'
-        version: 4.13.3(supports-color@8.1.1)
-      '@logtape/logtape':
-        specifier: 'catalog:'
-        version: 1.3.11
-      cli-table3:
-        specifier: ^0.6.5
-        version: 0.6.5
-      js-yaml:
-        specifier: 'catalog:'
-        version: 5.4.2
-      p-limit:
-        specifier: ^7.3.3
-        version: 7.3.3
-      zod:
-        specifier: 'catalog:'
-        version: 4.6.5
-    devDependencies:
-      '@pagopa/eslint-config':
-        specifier: workspace:^
-        version: link:../eslint-config
-      '@tsconfig/node24':
-        specifier: 'catalog:'
-        version: 24.0.4
-      '@types/js-yaml':
-        specifier: 'catalog:'
-        version: 4.0.9
-      '@types/node':
-        specifier: 'catalog:'
-        version: 22.20.5
-      '@vitest/coverage-v8':
-        specifier: 'catalog:'
-        version: 4.1.11(vitest@4.1.11)
-      eslint:
-        specifier: 'catalog:'
-        version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
-      vitest:
-        specifier: 'catalog:'
-        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
-      vitest-mock-extended:
-        specifier: 'catalog:'
-        version: 4.0.0(typescript@5.9.3)(vitest@4.1.11)
 
   providers/aws: {}
 

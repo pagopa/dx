@@ -6,7 +6,7 @@ This module deploys an AppService with a strong opinionated configuration in ter
 
 ## Features
 
-- **AppService**: An AppService instance running Java or TypeScript code
+- **AppService**: An AppService instance running Java or TypeScript code, or a container image
 - **AppService Slot**: A slot named `Staging` to test code before switching to production
 - **App Service Plan**: A Linux-based Plan
 - **Private Endpoint**: To allow only private incoming connections
@@ -35,6 +35,52 @@ For a complete example of how to use this module, refer to the [examples/complet
 ## Diagram
 
 ![diagram](https://raw.githubusercontent.com/pagopa/dx/main/infra/modules/azure_app_service/diagram.svg)
+
+## Container Images
+
+Set `container_image` to run the App Service and its staging slot from a container image instead of a deployment package:
+
+```hcl
+module "app_service" {
+  source  = "pagopa-dx/azure-app-service/azurerm"
+  version = "~> 5.1"
+
+  # ...
+  container_image          = "myacr.azurecr.io/my-app:1.0.0"
+}
+```
+
+- The image must include a tag. Images without a registry are pulled from Docker Hub.
+- When a container image is used, `stack`, `node_version` and `java_version` are ignored and `WEBSITE_RUN_FROM_PACKAGE` is not set.
+- After creation, the image is not managed by Terraform; CD pipelines are expected to update it.
+- When the registry hostname in `container_image` ends in `.azurecr.io`, the App Service and staging slot automatically use their system-assigned managed identities to pull the image. Custom registry domains are not inferred. The module does not assign permissions on the registry, so grant the `AcrPull` role to both identities:
+
+  ```hcl
+  resource "azurerm_role_assignment" "app_service_acr_pull" {
+    scope                = var.acr_id
+    role_definition_name = "AcrPull"
+    principal_id         = module.app_service.app_service.app_service.principal_id
+  }
+
+  resource "azurerm_role_assignment" "app_service_slot_acr_pull" {
+    scope                = var.acr_id
+    role_definition_name = "AcrPull"
+    principal_id         = module.app_service.app_service.app_service.slot.principal_id
+  }
+  ```
+
+  `var.acr_id` is the Azure Container Registry resource ID.
+
+### Migrating from ZIP deployment
+
+An App Service configured for ZIP deployment cannot be converted in place to run a container image. The module intentionally ignores Docker image changes after creation so CD pipelines can own subsequent image updates. Create a separate App Service with a unique `environment.instance_number`, migrate to it, and retire the ZIP-based app after cutover.
+
+1. Confirm the tagged image is available and choose an `instance_number` that produces a unique App Service name.
+2. Add a second module instance using the same application configuration, a different `environment.instance_number`, and `container_image`. For standard ACR login server hostnames ending in `.azurecr.io`, managed identity pulls are enabled automatically. Grant `AcrPull` to the new App Service and staging slot identities before expecting private image pulls to succeed.
+3. Create and validate the container-based App Service and its staging slot while the existing ZIP-based app remains available. Migrate required application settings, data, integrations, DNS or routing, and any other dependencies; test the new app before directing traffic to it.
+4. Cut over traffic to the new App Service. Once the cutover is verified and rollback is no longer needed, remove the old ZIP-based module instance and review the Terraform plan before applying its deletion.
+
+Keep `container_image` configured on the new module instance as the bootstrap image. Docker changes remain ignored by Terraform, so CD pipelines retain ownership of subsequent production and staging image updates.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
@@ -72,6 +118,7 @@ No modules.
 | <a name="input_app_settings"></a> [app\_settings](#input\_app\_settings) | Application settings as a map of key-value pairs. | `map(string)` | n/a | yes |
 | <a name="input_application_insights_connection_string"></a> [application\_insights\_connection\_string](#input\_application\_insights\_connection\_string) | Application Insights connection string. | `string` | `null` | no |
 | <a name="input_application_insights_sampling_percentage"></a> [application\_insights\_sampling\_percentage](#input\_application\_insights\_sampling\_percentage) | Sampling percentage for Application Insights. Default is 5. | `number` | `5` | no |
+| <a name="input_container_image"></a> [container\_image](#input\_container\_image) | Container image used to run the App Service and its staging slot instead of a deployment package (e.g. "myacr.azurecr.io/my-app:1.0.0").<br/>When set, "stack", "node\_version" and "java\_version" are ignored and WEBSITE\_RUN\_FROM\_PACKAGE is not configured.<br/>Images without a registry are pulled from Docker Hub. The image must specify a tag.<br/>The image is not managed by Terraform after creation, but instead updated by CD pipelines. | `string` | `null` | no |
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Define if diagnostic settings should be enabled.<br/>If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and<br/>optionally the ID of the Storage Account where logs should be sent. | <pre>object({<br/>    enabled                                   = bool<br/>    log_analytics_workspace_id                = optional(string)<br/>    diagnostic_setting_destination_storage_id = optional(string)<br/>  })</pre> | <pre>{<br/>  "diagnostic_setting_destination_storage_id": null,<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_health_check_path"></a> [health\_check\_path](#input\_health\_check\_path) | Path of the endpoint where health probe is exposed. | `string` | n/a | yes |

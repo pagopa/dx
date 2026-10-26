@@ -62,6 +62,16 @@ jobs:
         shell: bash
         run: npm install -g npm@11.8.0
 
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder. The job keeps
+      # packages: write because the same token publishes the release.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Install dependencies (pnpm)
         if: steps.node-setup.outputs.package-manager == 'pnpm'
         shell: bash

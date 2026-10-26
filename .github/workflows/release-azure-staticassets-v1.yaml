@@ -74,10 +74,22 @@ jobs:
   build:
     name: Build Artifact
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      packages: read
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Package
         id: build-package

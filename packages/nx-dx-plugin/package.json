@@ -1,0 +1,82 @@
+{
+  "name": "@pagopa/nx-dx",
+  "version": "0.0.1",
+  "description": "Nx plugin for PagoPA DX workspaces.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/nx-dx-plugin"
+  },
+  "files": [
+    "dist",
+    "generators.json"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./version-actions": {
+      "types": "./dist/release/version-actions.d.ts",
+      "import": "./dist/release/version-actions.js",
+      "default": "./dist/release/version-actions.js"
+    }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "dependencies": {
+    "@nx/devkit": "23.2.1",
+    "tslib": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node24": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "eslint": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:",
+    "yaml": "^2.9.1"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "generators": "./generators.json",
+  "nx": {
+    "targets": {
+      "build": {
+        "executor": "@nx/js:tsc",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "options": {
+          "outputPath": "packages/nx-dx-plugin/dist",
+          "main": "packages/nx-dx-plugin/src/index.ts",
+          "rootDir": "packages/nx-dx-plugin/src",
+          "tsConfig": "packages/nx-dx-plugin/tsconfig.lib.json",
+          "generatePackageJson": false,
+          "assets": [
+            {
+              "input": "packages/nx-dx-plugin/src/generators",
+              "glob": "**/schema.json",
+              "output": "generators"
+            },
+            {
+              "input": "packages/nx-dx-plugin/src/generators",
+              "glob": "**/files/**",
+              "output": "generators"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
