@@ -57,7 +57,7 @@
         },
         {
           "version": "~> 1.15",
-          "status": "eol",
+          "status": "maintenance",
           "supportedSince": "2025-04-01",
           "eolDate": "2026-10-30",
           "notes": "No longer tested or supported in DX modules"
