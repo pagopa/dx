@@ -43,7 +43,7 @@ env:
 jobs:
   gate:
     name: Fork PR Gate
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
       release-app-configured: ${{ steps.evaluate-release-app.outputs.configured }}
@@ -84,7 +84,7 @@ jobs:
     name: Warn Missing Version Plans
     needs: gate
     if: ${{ github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' && needs.gate.outputs.release-app-configured == 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read
@@ -141,7 +141,7 @@ jobs:
     name: Format
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read
@@ -188,7 +188,7 @@ jobs:
     name: Affected Projects Assessment
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       affected-projects: ${{ steps.detect.outputs.affected-projects }}
       environments: ${{ steps.detect.outputs.environments }}
@@ -314,7 +314,7 @@ jobs:
 
   code-review:
     name: No environment
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: [gate, assess-affected-projects]
     if: ${{ needs.gate.outputs.run == 'true' && needs.assess-affected-projects.outputs.affected-projects == 'true' }}
     permissions:
@@ -350,9 +350,9 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ env.PNPM_CONFIG_STORE_DIR }}
-          key: ${{ runner.os }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ubuntu-26.04-${{ runner.arch }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
+            ubuntu-26.04-${{ runner.arch }}-pnpm-store-${{ github.workflow }}-
 
       - name: Cache TFLint plugins
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -379,10 +379,10 @@ jobs:
             .nx/cache
             .nx/workspace-data
             !.nx/workspace-data/d
-          key: ${{ runner.os }}-nx-cache-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}-${{ github.sha }}
+          key: ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('mise.toml', 'mise.lock', '.node-version', 'go.work', '.terraform-version') }}-nx-cache-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-nx-cache-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}-
-            ${{ runner.os }}-nx-cache-${{ github.workflow }}-
+            ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('mise.toml', 'mise.lock', '.node-version', 'go.work', '.terraform-version') }}-nx-cache-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}-
+            ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('mise.toml', 'mise.lock', '.node-version', 'go.work', '.terraform-version') }}-nx-cache-${{ github.workflow }}-
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
@@ -557,7 +557,7 @@ jobs:
     name: Report
     needs: code-review-with-environment
     if: ${{ always() && github.event_name == 'pull_request' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read

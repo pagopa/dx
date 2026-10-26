@@ -30,7 +30,7 @@ inventory() {
   {
     printf '## Hosted image\n\n'
     printf 'Commit: %s; image: %s (%s).\n\n' "$GITHUB_SHA" "$ImageOS" "$ImageVersion"
-    printf 'Scope: cold Node bootstrap, TLS/CSR/PFX, and synthetic plan encryption.\n'
+    printf 'Scope: cold Node bootstrap, provider unit tests, Terraform CLI, Docker/archive checks, TLS/CSR/PFX, and synthetic plan encryption.\n'
     printf 'No Azure/ACME calls, deployments, consumer builds, or external-runtime certification.\n'
   } >> "${GITHUB_STEP_SUMMARY:?}"
 }
@@ -60,6 +60,33 @@ python_version() {
   fi
   printf '%s\n' "$version"
 }
+
+archives() (
+  work_dir="$(mktemp -d)"
+  trap 'rm -rf "$work_dir"' EXIT
+  mkdir -p "$work_dir/source/nested" "$work_dir/tar" "$work_dir/zip"
+  printf 'archive compatibility\n' > "$work_dir/source/nested/file"
+  ln -s file "$work_dir/source/nested/link"
+  tar -czf "$work_dir/fixture.tar.gz" -C "$work_dir/source" .
+  tar -xzf "$work_dir/fixture.tar.gz" -C "$work_dir/tar"
+  cmp "$work_dir/source/nested/file" "$work_dir/tar/nested/link"
+  cd "$work_dir/source"
+  zip -qr "$work_dir/fixture.zip" .
+  unzip -q "$work_dir/fixture.zip" -d "$work_dir/zip"
+  cmp nested/file "$work_dir/zip/nested/file"
+  printf 'PASS: GNU tar and zip/unzip round trips\n'
+)
+
+docker_build() (
+  work_dir="$(mktemp -d)"
+  trap 'rm -rf "$work_dir"' EXIT
+  printf 'docker compatibility\n' > "$work_dir/fixture"
+  printf 'FROM scratch\nCOPY fixture /fixture\n' > "$work_dir/Dockerfile"
+  docker buildx build --no-cache --network none \
+    --output "type=local,dest=$work_dir/export" "$work_dir"
+  cmp "$work_dir/fixture" "$work_dir/export/fixture"
+  printf 'PASS: Docker Buildx build and filesystem export\n'
+)
 
 pfx() (
   work_dir="$(mktemp -d)"
@@ -112,8 +139,10 @@ case "${1:-}" in
   inventory) inventory ;;
   bootstrap) bootstrap ;;
   python-version) python_version ;;
+  archives) archives ;;
+  docker) docker_build ;;
   pfx) pfx ;;
   encrypt) encrypt ;;
   decrypt) decrypt ;;
-  *) printf 'Usage: %s {inventory|bootstrap|python-version|pfx|encrypt|decrypt}\n' "$0" >&2; exit 2 ;;
+  *) printf 'Usage: %s {inventory|bootstrap|python-version|archives|docker|pfx|encrypt|decrypt}\n' "$0" >&2; exit 2 ;;
 esac

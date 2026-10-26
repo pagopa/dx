@@ -34,7 +34,7 @@ The renewal steps install Python **3.12.15** with `actions/setup-python` and use
 ```yaml
 jobs:
   renew-certificate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: my-environment
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0

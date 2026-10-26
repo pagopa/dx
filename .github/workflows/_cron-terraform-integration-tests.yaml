@@ -19,7 +19,7 @@ env:
 jobs:
   terraform-integration-test:
     name: Run Terraform Integration Tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: automation-uat-cd
     permissions:
       id-token: write
@@ -64,9 +64,9 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx
-          key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('.node-version', '.terraform-version') }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-nx-cache-
+            ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('.node-version', '.terraform-version') }}-nx-cache-
 
       - name: Run Terraform Integration Tests
         timeout-minutes: 120

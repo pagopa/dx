@@ -7,7 +7,7 @@ jobs:
   warn-missing-version-plans:
     name: Warn Missing Version Plans
     if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read
@@ -42,7 +42,7 @@ jobs:
 
   ci:
     name: Code Review
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read
@@ -73,9 +73,9 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx
-          key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('.node-version', 'go.work', '.terraform-version') }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-nx-cache-
+            ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('.node-version', 'go.work', '.terraform-version') }}-nx-cache-
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1

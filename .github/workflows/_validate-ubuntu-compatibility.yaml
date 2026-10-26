@@ -2,13 +2,13 @@ name: Ubuntu runner compatibility
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - ces-2352-implementation
+  pull_request:
     paths:
-      - .github/workflows/_test-ubuntu-compatibility.yaml
+      - .github/workflows/**
+      - .github/actions/node-setup/**
       - .github/scripts/ubuntu-compatibility.sh
       - actions/renew-tls-certificate/**
+      - providers/**/.github/workflows/**
 
 permissions:
   contents: read
@@ -60,6 +60,28 @@ jobs:
           test "$(node --version)" = "v$(cat .node-version)"
           pnpm --version
 
+      - name: Select the providers' Go toolchain
+        uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: go.work
+          cache: false
+
+      - name: Read repository Terraform version
+        id: terraform-version
+        uses: ./.github/actions/get-terraform-version
+
+      - name: Select repository Terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: ${{ steps.terraform-version.outputs.terraform_version }}
+          terraform_wrapper: false
+
+      - name: Check Terraform CLI and Docker build/export
+        run: |
+          terraform version
+          bash .github/scripts/ubuntu-compatibility.sh archives
+          bash .github/scripts/ubuntu-compatibility.sh docker
+
       - name: Read the action's Python pin
         id: python-version
         run: |
@@ -79,6 +101,13 @@ jobs:
           python3 --version
           python3 -c 'import ssl; print(ssl.OPENSSL_VERSION)'
           pnpm nx test renew-tls-certificate --skipNxCache
+
+      - name: Run provider unit tests without Nx cache
+        env:
+          CGO_ENABLED: "0"
+          TF_ACC: ""
+          AWS_EC2_METADATA_DISABLED: "true"
+        run: pnpm nx run-many -t test -p provider-azure provider-aws --skipNxCache
 
       - name: Check PFX certificate conversion
         run: bash .github/scripts/ubuntu-compatibility.sh pfx

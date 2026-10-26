@@ -42,7 +42,7 @@ jobs:
       name: app-prod-ci
       deployment: false
     needs: deploy_to_static_web_app
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read
