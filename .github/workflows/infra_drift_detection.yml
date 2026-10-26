@@ -48,7 +48,7 @@ env:
 jobs:
   terraform_driftdetection_job:
     name: Terraform Drift Detection
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
     environment:
       name: ${{ inputs.override_github_environment == '' && inputs.environment || inputs.override_github_environment}}-ci
       deployment: false

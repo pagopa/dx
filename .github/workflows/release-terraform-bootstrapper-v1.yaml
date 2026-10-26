@@ -20,7 +20,7 @@ env:
 jobs:
   apply:
     name: Terraform Apply
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: bootstrapper-${{ inputs.environment }}-cd
     concurrency:
       group: ${{ github.workflow }}-${{ inputs.environment }}-bootstrapper
