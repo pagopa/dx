@@ -72,6 +72,7 @@ runs:
           rm -rf node_modules
           pnpm -r exec rm -rf node_modules
         fi
+        pnpm --filter '{.}...' ci
         pnpm --filter "$WORKSPACE_NAME..." install
       env:
         COMPABILITY_MODE: ${{ steps.compatibility-mode.outputs.enabled }}
