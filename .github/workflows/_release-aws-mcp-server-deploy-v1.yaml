@@ -16,7 +16,7 @@ on:
 jobs:
   promote-and-deploy:
     name: Promote and Deploy MCP on AWS Lambda
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: app-prod-cd
     env:
       AWS_REGION: eu-central-1

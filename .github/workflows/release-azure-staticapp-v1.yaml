@@ -83,7 +83,7 @@ jobs:
   build:
     name: Build Artifact
     if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
     permissions:
       contents: read
       packages: read
@@ -128,7 +128,7 @@ jobs:
 
   deploy:
     name: Deploy Static Website
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [build]
     # Allow preview cleanup on closed PRs even when the build job was skipped.
     # Note: !cancelled() blocks superseded runs.
