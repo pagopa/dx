@@ -18,7 +18,8 @@ jobs:
   renew-tls-certificate-e2e-test:
     name: Run renew TLS certificate E2E test
     if: ${{ github.ref == 'refs/heads/main' }}
-    runs-on: ubuntu-latest
+    # CES-2352: keep the existing UAT baseline until a controlled 26.04 renewal is approved.
+    runs-on: ubuntu-24.04
     environment: automation-uat-cd
     permissions:
       id-token: write
@@ -45,12 +46,12 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx
-          key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ubuntu-24.04-${{ runner.arch }}-nx-tls-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-nx-cache-
+            ubuntu-24.04-${{ runner.arch }}-nx-tls-cache-
 
       - name: Run renew TLS certificate smoke test
-        run: pnpm nx run renew-tls-certificate:test
+        run: pnpm nx run renew-tls-certificate:test --skipNxCache
 
       - name: Create staging ACME account
         id: acme-account
