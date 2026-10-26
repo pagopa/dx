@@ -1,6 +1,6 @@
 terraform {
 
-  required_version = ">= 1.16.0"
+  required_version = ">= 1.17.0"
 
   backend "azurerm" {
     resource_group_name  = "dx-u-itn-tfstate-rg-01"
