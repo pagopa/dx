@@ -1,3 +1,15 @@
+## 0.22.20 (2026-10-23)
+
+### 🩹 Fixes
+
+- Add SaveMoney user guide ([#2393](https://github.com/pagopa/dx/pull/2393))
+- Announce that DX tooling drops AzureRM v4 support on 31 December 2026 and document advisory warnings in Terraform plan/apply workflows. ([#2326](https://github.com/pagopa/dx/pull/2326))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 0.22.19 (2026-10-21)
 
 ### 🩹 Fixes

@@ -1,3 +1,13 @@
+## 0.2.2 (2026-10-23)
+
+### 🚀 Features
+
+- Add output-only GitHub App tokens to csp-login and scope validation credentials to Terraform plans instead of all subsequent steps. Existing callers retain job-wide GITHUB_TOKEN exports by default. ([#2401](https://github.com/pagopa/dx/pull/2401))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.2.1 (2026-10-12)
 
 ### 🩹 Fixes
