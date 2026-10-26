@@ -31,13 +31,23 @@ Deployment and approval jobs are not held on 24.04 solely because a separate bui
 job produces native artifacts. Those jobs consume the artifact, not its native
 runtime dependencies.
 
-## Compatibility checks
+## Historical compatibility evidence
 
-The credential-free `_validate-ubuntu-compatibility.yaml` workflow runs the same
-commit on both hosted images. It runs automatically for relevant pull requests
-and can also be started with `workflow_dispatch`.
+The temporary credential-free diagnostic workflow compared the same commit on
+both hosted images. The final
+[run 40306883479](https://github.com/pagopa/dx/actions/runs/40306883479) passed all
+six jobs at commit `acfc146f9d8349b373fdb44051dd032b22095fd9`: runtime/TLS,
+legacy wrapper, and cross-image decryption on both Ubuntu 24.04 and 26.04.
 
-It records the actual image versions and tool inventory and checks:
+After verification, `.github/workflows/_validate-ubuntu-compatibility.yaml`,
+`.github/scripts/ubuntu-compatibility.sh`, and
+`.github/scripts/ubuntu-terraform-wrapper.sh` were intentionally removed from the
+final tree. They were migration-only probes, not operational dependencies, and
+no longer run automatically. If needed, recover these paths from the tested
+commit in Git history with `git show <commit>:<path>` and restore them on an
+isolated diagnostic branch, preserving the tested runtime and action pins.
+
+The comparison recorded the actual image versions and tool inventory and checked:
 
 - Corepack before selecting project Node, pnpm, and an isolated legacy Yarn.
 - Project runtime selection and dependency installation without restored caches.
@@ -46,13 +56,13 @@ It records the actual image versions and tool inventory and checks:
 - Python 3.12.15, hash-locked TLS dependencies, imports, and CSR generation.
 - PFX conversion and synthetic encrypted-plan interoperability in both directions.
 
-A separate matrix checks the io-infra `src/domains/functions/terraform.sh` wrapper
+A separate matrix checked the io-infra `src/domains/functions/terraform.sh` wrapper
 at commit `6d928f1b2242bfd4997c8c0dea8bd2f551b31f88`, with a verified SHA-256
-and Terraform 1.15.3. Mock `az` and `terraform` commands check argument forwarding;
-the real CLI exercises init, validate, plan, saved-plan apply, and output with an
-outputs-only local backend and asserts zero resource changes.
+and Terraform 1.15.3. Mock `az` and `terraform` commands checked argument forwarding;
+the real CLI exercised init, validate, plan, saved-plan apply, and output with an
+outputs-only local backend and asserted zero resource changes.
 
-Both wrapper jobs passed on Ubuntu 24.04 and 26.04 in
+Both wrapper jobs also passed on Ubuntu 24.04 and 26.04 in the earlier
 [run 40306057849](https://github.com/pagopa/dx/actions/runs/40306057849), at commit
 `7447260c058df0fcfbfec712e52f8c1735ce9c05`. This is evidence for that pinned
 wrapper and local fixture only, not the rest of the run. It does not cover Azure
@@ -61,7 +71,7 @@ scripts, or setup-terraform's JavaScript wrapper. The actual io-infra consumer
 uses self-hosted runners; this example does not certify every hosted legacy
 caller, so both legacy Terraform 24.04 holds remain.
 
-Nx output caching is explicitly bypassed in this comparison. The regular hosted
+Nx output caching was explicitly bypassed in these comparisons. The regular hosted
 Nx caches include the OS label, architecture, and tool-version file hashes;
 Turbo caches include the image family, architecture, and selected Node version.
 Restore prefixes retain those boundaries, preventing 24.04 build outputs from
@@ -69,11 +79,11 @@ being reused on 26.04.
 
 The initial hosted comparison passed on both images in
 [run 39423934304](https://github.com/pagopa/dx/actions/runs/39423934304), covering
-Node, TLS, PFX, and encrypted-plan interoperability. Consult the pull request's
-latest checks for the expanded provider, archive, Docker, and Terraform coverage.
+Node, TLS, PFX, and encrypted-plan interoperability. The final run cited above
+also covered provider unit tests, archives, Docker, and Terraform.
 
-These checks do **not** execute cloud deployments, ACME requests, SDK publishing,
-or every consumer's build. A green comparison is evidence for the exercised
+These historical checks did **not** execute cloud deployments, ACME requests, SDK
+publishing, or every consumer's build. A green comparison is evidence for the exercised
 operations, not certification of every workflow. Local Ubuntu containers are
 useful preflight environments but are not substitutes for the hosted images.
 
