@@ -108,9 +108,9 @@ printf '\nn\n' | CI=1 npx -y @pagopa/dx-cli init \
 ## Preparing `add environment`
 
 - Use the current `spec` output as the source of truth for the `add environment` command contract.
-- Collect every value needed to avoid follow-up prompts. In practice, expect to ask for the environment name, subscription or account IDs, location mappings, prefix, domain, business unit, management team, auto-confirm choice, and all four Runner App credentials for every new GitHub environment.
+- Collect every value needed to avoid follow-up prompts. In practice, expect to ask for the environment name, subscription or account IDs, location mappings, prefix, domain, business unit, management team, auto-confirm choice, and all four Runner App credentials for every new environment.
 - Before execution, show a short preview with the exact resolved values for the current run, including subscription and location pairs plus the Runner App values.
-- Ask for the four GitHub Runner App values (`runner-app-id`, `client-id`, `installation-id`, `private-key-path`) before every `add environment` execution. Existing Azure bootstrap resources do not remove this requirement because the values must be upserted into the new GitHub environment secrets.
+- Ask for the four Runner App values (`runner-app-id`, `client-id`, `installation-id`, `private-key-path`) before every `add environment` execution. Existing Azure bootstrap resources do not remove this requirement: the numeric app ID is stored in Azure Key Vault, while the client ID, installation ID, and private key are stored as GitHub environment secrets.
 - For multi-tenant architectures, collect both the tenant-qualified environment name and the prefix. The environment name identifies the generated GitHub environment and infrastructure folder (for example `ced-prod` creates `infra/bootstrapper/ced-prod` and `infra/core/ced-prod`), while the prefix identifies the Azure resource naming prefix (for example `ced`). These are separate values and are not passed as `name=prefix`.
 
 ### Multi-Tenant Environment Names
@@ -177,7 +177,7 @@ CI=1 npx -y @pagopa/dx-cli add environment \
 - `spec` is the first source of truth for the command name, flags, and choices.
 - In practice, missing `--business-unit` or `--management-team` causes the command to stop for input, so collect them before execution.
 - The runtime requires Runner App credentials whenever it configures a new GitHub environment, regardless of whether the Azure account is already initialized. In `CI=1` mode, missing values produce an explicit error instead of being silently skipped.
-- The CLI upserts `GH_APP_ID`, `GH_APP_CLIENT_ID`, `GH_APP_INSTALLATION_ID`, and `GH_APP_KEY` in the bootstrapper CD GitHub environment. The values are encrypted by the GitHub API and are not rendered into generated Terraform or workflow files.
+- The CLI stores the numeric Runner App ID in Azure Key Vault. It upserts `GH_APP_CLIENT_ID`, `GH_APP_INSTALLATION_ID`, and `GH_APP_KEY` in the bootstrapper CD GitHub environment; those values are encrypted by the GitHub API and are not rendered into generated Terraform or workflow files.
 - Do not defer Runner App value collection to runtime prompts for non-interactive execution: collect all four flags before running the command. Interactive execution prompts for any missing fields.
 - Repeat `--account` and `--location` for multi-subscription environments.
 - For multi-tenant environments, repeat the command once per tenant/environment combination, using a different `--name` and `--prefix` when needed. Do not encode both values into one flag.

@@ -1043,7 +1043,6 @@ export class AzureCloudAccountService implements CloudAccountService {
     ];
     const releaseSecrets = runnerAppCredentials
       ? [
-          { secretName: "GH_APP_ID", secretValue: runnerAppCredentials.id },
           {
             secretName: "GH_APP_CLIENT_ID",
             secretValue: runnerAppCredentials.clientId,
