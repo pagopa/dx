@@ -491,7 +491,7 @@ Harbor injects the skills listed in the agent's `skills:` (or `--skill`) **as-is
 of every skill directory. For workspace skills the injected directory is the
 **raw workspace skill directory** (`convert` no longer stages or copies them);
 when a skill is loaded from a git source
-(`--skill https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills`), the
+(`--skill https://github.com/pagopa/dx/tree/main/plugins/paf/skills`), the
 downloaded skill always ships `evals/` together with the harness material.
 
 Harbor uploads each injected skill to `/harbor/skills/<name>` as-is, regardless
@@ -522,7 +522,7 @@ uv run --package harbor-bench harbor run \
 uv run --package harbor-bench harbor run \
   -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
   --jobs-dir runs --job-name skill-main \
-  --skill https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills \
+  --skill https://github.com/pagopa/dx/tree/main/plugins/paf/skills \
   --skill https://github.com/pagopa/dx/tree/main/plugins/tests/skills
 
 # 3. Delta report (score, tokens, cost, duration)
@@ -595,7 +595,7 @@ Notes:
   and, per skill name, last-wins — the git skill replaces the workspace one for
   the same name. Pass **every** plugin you want to compare; plugins not passed
   keep the workspace version. (Git URLs must point at the skills root, e.g.
-  `plugins/aiepdf/skills`, whose immediate children contain `SKILL.md`.)
+  `plugins/paf/skills`, whose immediate children contain `SKILL.md`.)
 - **Delta semantics**: `harbor-bench report <base> <head>` reports
   `head − base`. Each task's `result.json` contributes the verifier rewards
   (`score.<criterion>`), agent input/cache/output tokens, cost (USD), agent,
@@ -639,8 +639,8 @@ under one output directory. The report is `comparison.md` by default; pass
 
 ```bash
 uv run --package harbor-bench harbor-bench compare \
-  plugins/aiepdf/skills/dr-blacksmith \
-  https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills/dr-blacksmith \
+  plugins/paf/skills/dr-blacksmith \
+  https://github.com/pagopa/dx/tree/main/plugins/paf/skills/dr-blacksmith \
   -t 'dr-blacksmith-*-use-case-*' \
   --format html \
   --token $COPILOT_GITHUB_TOKEN
@@ -681,17 +681,17 @@ for a dependency. Each source is validated in the preflight exactly like
 base/head (local path or git source, same grammar) and passed to **both**
 `harbor run` invocations, so aux skills stay a constant of the comparison.
 They are ordered before the tested skill, so a source that itself contains the
-skill under test (e.g. the `plugins/aiepdf/skills` root) can never clobber the
+skill under test (e.g. the `plugins/paf/skills` root) can never clobber the
 base/head version — Harbor resolves duplicate names last-wins. Aux skills
 appear in the report's run-configuration section like every other injected
 skill, `(git: <repo>@<sha>)` when loaded from git.
 
 ```bash
 uv run --package harbor-bench harbor-bench compare \
-  plugins/aiepdf/skills/dr-blacksmith \
-  https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills/dr-blacksmith \
+  plugins/paf/skills/dr-blacksmith \
+  https://github.com/pagopa/dx/tree/main/plugins/paf/skills/dr-blacksmith \
   -t 'dr-blacksmith-*-intake-*' \
-  --skill plugins/aiepdf/skills/uc-engraver \
+  --skill plugins/paf/skills/uc-engraver \
   --format html \
   --token $COPILOT_GITHUB_TOKEN
 ```
