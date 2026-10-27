@@ -1,4 +1,4 @@
-Use the dr-blacksmith and uc-engraver skills in the `plugins/aiepdf` dir
+Use the dr-blacksmith and uc-engraver skills in the `plugins/paf` dir
 to generate a design review with input:
 
 1. the PRD `demo/prd.md`.

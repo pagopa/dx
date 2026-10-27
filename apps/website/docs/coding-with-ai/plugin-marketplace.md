@@ -62,7 +62,7 @@ recommendation badge in the Extensions view.
 
 The DX repository's own `.github/copilot/settings.json` is for local plugin
 development rather than a generated repository. It uses `source: "directory"`
-and `path: "./"` instead of GitHub, enables `aiepdf@pagopa-dx` instead of
+and `path: "./"` instead of GitHub, enables `paf@pagopa-dx` instead of
 `standards@pagopa-dx`, and includes a local announcement. These differences do
 not change the `dx init` defaults above.
 
