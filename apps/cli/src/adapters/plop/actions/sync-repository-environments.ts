@@ -9,6 +9,7 @@
  * Concurrent writers to the same working copy are not supported.
  */
 import { type NodePlopAPI } from "node-plop";
+import { constants } from "node:fs";
 import fs from "node:fs/promises";
 import path from "node:path";
 import { TextDecoder } from "node:util";
@@ -23,20 +24,9 @@ import {
 const readRepositoryConfig = async (
   repositoryMainPath: string,
 ): Promise<string> => {
-  const info = await fs.lstat(repositoryMainPath).catch((cause: unknown) => {
-    throw new Error(
-      `Cannot synchronize GitHub repository environments because ${path.relative(process.cwd(), repositoryMainPath)} does not exist or is not readable.`,
-      { cause },
-    );
-  });
-  if (!info.isFile()) {
-    throw new Error(
-      "Cannot safely read infra/repository/main.tf; expected a regular file",
-    );
-  }
-
-  const bytes = await fs
-    .readFile(repositoryMainPath)
+  // O_RDONLY is zero; O_NONBLOCK keeps opening FIFOs from hanging.
+  const file = await fs
+    .open(repositoryMainPath, constants.O_NONBLOCK ?? "r")
     .catch((cause: unknown) => {
       throw new Error(
         `Cannot synchronize GitHub repository environments because ${path.relative(process.cwd(), repositoryMainPath)} does not exist or is not readable.`,
@@ -45,14 +35,36 @@ const readRepositoryConfig = async (
     });
 
   try {
-    return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
-      bytes,
-    );
-  } catch (cause) {
-    throw new Error(
-      `Cannot safely read ${path.relative(process.cwd(), repositoryMainPath)}; expected valid UTF-8.`,
-      { cause },
-    );
+    // Validate the opened file; the path check only rejects symbolic links.
+    const [info, pathInfo] = await Promise.all([
+      file.stat(),
+      fs.lstat(repositoryMainPath),
+    ]);
+    if (!info.isFile() || !pathInfo.isFile()) {
+      throw new Error(
+        "Cannot safely read infra/repository/main.tf; expected a regular file",
+      );
+    }
+
+    const bytes = await file.readFile().catch((cause: unknown) => {
+      throw new Error(
+        `Cannot synchronize GitHub repository environments because ${path.relative(process.cwd(), repositoryMainPath)} does not exist or is not readable.`,
+        { cause },
+      );
+    });
+
+    try {
+      return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+        bytes,
+      );
+    } catch (cause) {
+      throw new Error(
+        `Cannot safely read ${path.relative(process.cwd(), repositoryMainPath)}; expected valid UTF-8.`,
+        { cause },
+      );
+    }
+  } finally {
+    await file.close();
   }
 };
 

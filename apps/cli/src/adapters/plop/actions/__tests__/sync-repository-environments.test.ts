@@ -1,6 +1,7 @@
 /**
  * Unit tests for keeping repository Terraform environments in sync.
  */
+import { execa } from "execa";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -706,6 +707,59 @@ describe("repository configuration reading", () => {
     terraformCommand.mockClear();
     terraformValidator.mockReset();
     terraformValidator.mockResolvedValue(undefined);
+  });
+
+  it.skipIf(process.platform === "win32")(
+    "rejects a FIFO without blocking or running Terraform",
+    async () => {
+      await inTemporaryRepository(repositoryConfig, async (mainFile) => {
+        await fs.unlink(mainFile);
+        await execa("mkfifo", [mainFile]);
+
+        await expect(syncRepositoryEnvironments(payload)).rejects.toThrow(
+          /expected a regular file/,
+        );
+        expect(terraformValidator).not.toHaveBeenCalled();
+        expect(terraformCommand).not.toHaveBeenCalled();
+      });
+    },
+  );
+
+  it("does not read a replacement symlink after checking the repository file", async () => {
+    const invalidConfig = repositoryConfig.replace(
+      "    reviewers_teams        = []",
+      '    reviewers_teams        = ["missing bracket"',
+    );
+
+    await inTemporaryRepository(invalidConfig, async (mainFile, directory) => {
+      const replacementFile = path.join(directory, "replacement.tf");
+      await fs.writeFile(replacementFile, repositoryConfig);
+      const lstat = fs.lstat.bind(fs);
+      const pathCheck = vi
+        .spyOn(fs, "lstat")
+        .mockImplementationOnce(async () => {
+          const info = await lstat(mainFile);
+          await fs.rename(mainFile, path.join(directory, "original.tf"));
+          await fs.symlink(replacementFile, mainFile);
+          return info;
+        });
+
+      try {
+        await expect(
+          syncRepositoryEnvironments({
+            ...payload,
+            env: { ...payload.env, name: "prod" },
+          }),
+        ).rejects.toThrow(/Invalid HCL/);
+        expect(terraformValidator).not.toHaveBeenCalled();
+        expect(terraformCommand).not.toHaveBeenCalled();
+      } finally {
+        pathCheck.mockRestore();
+      }
+      await expect(fs.readFile(replacementFile, "utf8")).resolves.toBe(
+        repositoryConfig,
+      );
+    });
   });
 
   it.each<Payload["env"]["name"]>(["dev", "prod"])(
