@@ -91,3 +91,6 @@ __pycache__/
 
 # Local npm credentials (may carry the GitHub Packages token)
 .npmrc
+
+
+.github/copilot/settings.local.json
