@@ -670,7 +670,7 @@ def test_render_html_links_each_git_skill_without_local_file_urls(tmp_path):
                 path="/cached/dr-blacksmith",
                 repo="pagopa/dx",
                 ref="foobar",
-                rel_path="plugins/aiepdf/skills/dr-blacksmith",
+                rel_path="plugins/paf/skills/dr-blacksmith",
             )
         ]
     )
@@ -688,7 +688,7 @@ def test_render_html_links_each_git_skill_without_local_file_urls(tmp_path):
     assert "file://" not in html
     assert (
         'href="https://github.com/pagopa/dx/tree/foobar/'
-        "plugins/aiepdf/skills/dr-blacksmith"
+        "plugins/paf/skills/dr-blacksmith"
         '"' in html
     )
     assert (
@@ -860,7 +860,7 @@ def _write_meta_trial(
 
 _GIT_SKILL = (
     "github.com/pagopa/dx/42a33a17977283eb57387f1ae7195a418b93e40f"
-    "/plugins/aiepdf/skills"
+    "/plugins/paf/skills"
 )
 
 
@@ -891,7 +891,7 @@ def test_job_meta_models_and_skill_versions(tmp_path, monkeypatch):
     assert git.kind == "git"
     assert git.repo == "pagopa/dx"
     assert git.ref == "42a33a17977283eb57387f1ae7195a418b93e40f"
-    assert git.rel_path == "plugins/aiepdf/skills"
+    assert git.rel_path == "plugins/paf/skills"
     assert git.version == "(git: pagopa/dx@42a33a17)"
 
 
@@ -931,10 +931,10 @@ def test_render_markdown_run_config_section(tmp_path, monkeypatch):
     assert "gpt-6-luna (effort: high)" in md
     assert "openai/gpt-6-luna (effort: medium)" in md
     assert "dr-blacksmith (local)" in md
-    assert "plugins/aiepdf/skills (git: pagopa/dx@42a33a17)" in md
+    assert "plugins/paf/skills (git: pagopa/dx@42a33a17)" in md
     assert (
         'git -C "$(git rev-parse --show-toplevel)" diff '
-        "42a33a17977283eb57387f1ae7195a418b93e40f -- plugins/aiepdf/skills" in md
+        "42a33a17977283eb57387f1ae7195a418b93e40f -- plugins/paf/skills" in md
     )
     assert "verifier tokens" in md
     assert "verifier duration (s)" in md
@@ -1079,6 +1079,6 @@ def test_render_json_run_config_and_skill_diffs(tmp_path, monkeypatch):
     assert rc["skills"]["base"][1]["version"] == "(git: pagopa/dx@42a33a17)"
     assert any(
         d["command"].startswith("git -C ")
-        and "plugins/aiepdf/skills" in d["command"]
+        and "plugins/paf/skills" in d["command"]
         for d in rc["skill_diffs"]
     )
