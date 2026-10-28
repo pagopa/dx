@@ -33,7 +33,6 @@ on:
 jobs:
   renew-certificate:
     name: Create or Renew Certificate
-    # CES-2352: TLS smoke checks pass; retain 24.04 until full Azure/ACME renewal passes in UAT.
     runs-on: ubuntu-24.04
     environment: ${{ inputs.environment }}-cd
     steps:

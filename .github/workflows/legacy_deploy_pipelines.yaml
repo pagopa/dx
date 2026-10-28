@@ -43,7 +43,6 @@ concurrency:
 
 jobs:
   build:
-    # CES-2352: retain 24.04 until Node/.NET artifacts are verified on the target Azure runtime.
     runs-on: ubuntu-24.04
     env:
       WORKSPACE: ${{ github.workspace }}
