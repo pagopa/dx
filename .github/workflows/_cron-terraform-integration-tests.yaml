@@ -66,13 +66,23 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
+      - name: Identify cache image
+        id: cache-image
+        shell: bash
+        run: |
+          if [[ -z "${ImageOS:-}" ]]; then
+            echo "::error::ImageOS is required to isolate hosted runner caches."
+            exit 1
+          fi
+          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
+
       - name: Cache Nx
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx
-          key: ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('.node-version', '.terraform-version') }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-image.outputs.image }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('.node-version', '.terraform-version') }}-nx-cache-
+            ${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-image.outputs.image }}-nx-cache-
 
       - name: Use the local AzureRM v5-compatible role assignments module
         if: github.event_name == 'workflow_dispatch' && contains(inputs.projects, 'azure_app_configuration')

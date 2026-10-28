@@ -84,7 +84,6 @@ jobs:
     name: "Terraform Plan"
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
-    # CES-2352: retain hosted 24.04 until caller-owned terraform.sh scripts are validated on 26.04.
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-24.04' }}
     needs: [get-terraform-version, tf-modules-check]
     environment:
@@ -158,7 +157,6 @@ jobs:
 
   tf_apply:
     name: "Terraform Apply"
-    # CES-2352: retain hosted 24.04 until caller-owned terraform.sh scripts are validated on 26.04.
     runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-24.04' }}
     needs: [get-terraform-version, tf_plan]
     environment: ${{ inputs.environment }}-cd
