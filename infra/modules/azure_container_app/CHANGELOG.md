@@ -1,3 +1,13 @@
+## 8.0.3 (2026-10-28)
+
+### 🩹 Fixes
+
+- Allow Easy Auth to omit the Entra client-secret Key Vault reference and configure unauthenticated responses, preserving the existing `RedirectToLoginPage` default while enabling `Return401` for API clients. ([#2430](https://github.com/pagopa/dx/pull/2430))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 8.0.2 (2026-10-15)
 
 ### 🩹 Fixes

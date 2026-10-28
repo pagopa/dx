@@ -1,3 +1,14 @@
+# 7.0.0 (2026-10-28)
+
+### ⚠️  Breaking Changes
+
+- Raise Terraform to 1.16 and remove the redundant empty service-endpoints argument from the VPN subnet. ([#2327](https://github.com/pagopa/dx/pull/2327))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 6.0.7 (2026-10-15)
 
 ### 🩹 Fixes

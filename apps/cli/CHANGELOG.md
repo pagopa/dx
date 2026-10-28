@@ -1,3 +1,13 @@
+## 0.27.20 (2026-10-28)
+
+### 🩹 Fixes
+
+- Stop provisioning unused GitHub App ID environment secret ([#2427](https://github.com/pagopa/dx/pull/2427))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.27.19 (2026-10-23)
 
 ### 🚀 Features

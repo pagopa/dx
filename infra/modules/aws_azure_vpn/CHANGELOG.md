@@ -1,3 +1,14 @@
+# 3.0.0 (2026-10-28)
+
+### ⚠️  Breaking Changes
+
+- Raise the AzureRM v4 minimum to 4.62 and Terraform to 1.16. ([#2327](https://github.com/pagopa/dx/pull/2327))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 2.0.6 (2026-10-15)
 
 ### 🩹 Fixes

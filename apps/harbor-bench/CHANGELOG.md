@@ -1,3 +1,14 @@
+## 0.1.7 (2026-10-28)
+
+### 🩹 Fixes
+
+- Point the benchmark documentation and fixtures at the renamed `plugins/padef` ([#2425](https://github.com/pagopa/dx/pull/2425))
+  skill layout.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.1.6 (2026-10-23)
 
 ### 🩹 Fixes
