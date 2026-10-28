@@ -27,7 +27,6 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "scripts": {
-    "build": "tsdown",
     "generate": "node src/generate-module-schema.ts"
   },
   "dependencies": {
@@ -60,16 +59,33 @@
   "nx": {
     "targets": {
       "build": {
+        "executor": "@nx/js:tsc",
+        "outputs": [
+          "{options.outputPath}"
+        ],
+        "cache": true,
         "dependsOn": [
           "^build"
         ],
-        "inputs": [
-          "default",
-          "^default"
-        ],
-        "outputs": [
-          "{projectRoot}/dist/**"
-        ]
+        "options": {
+          "outputPath": "packages/nx-terraform-plugin/dist",
+          "main": "packages/nx-terraform-plugin/src/index.ts",
+          "rootDir": "packages/nx-terraform-plugin/src",
+          "tsConfig": "packages/nx-terraform-plugin/tsconfig.lib.json",
+          "generatePackageJson": false,
+          "assets": [
+            {
+              "input": "packages/nx-terraform-plugin/src/generators",
+              "glob": "**/schema.json",
+              "output": "generators"
+            },
+            {
+              "input": "packages/nx-terraform-plugin/src/generators",
+              "glob": "**/files/**",
+              "output": "generators"
+            }
+          ]
+        }
       }
     }
   }
