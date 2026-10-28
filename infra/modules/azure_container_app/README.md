@@ -58,9 +58,7 @@ In this case, create a CNAME record manually: `api.example.com` → `url` output
 
 ## Microsoft Entra ID Authentication
 
-Set `authentication` to enable Easy Auth. `client_secret_key_vault_id` is optional; when omitted, the module does not create a Container App secret or set `clientSecretSettingName`. When provided, it must be a Key Vault secret URI and the Container App identity must be authorized to read it.
-
-`unauthenticated_client_action` defaults to `RedirectToLoginPage` to preserve the existing behavior. For API-to-API calls, configure `Return401` so unauthenticated requests receive an HTTP 401 instead of a login redirect:
+For API-to-API calls, set `unauthenticated_client_action` to `Return401` so unauthenticated requests receive HTTP 401 instead of a login redirect:
 
 ```hcl
 authentication = {
@@ -71,8 +69,6 @@ authentication = {
   }
 }
 ```
-
-Allowed `unauthenticated_client_action` values are `RedirectToLoginPage`, `AllowAnonymous`, `Return401`, and `Return403`.
 
 ## Use cases Comparison
 
