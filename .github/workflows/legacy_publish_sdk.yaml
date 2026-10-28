@@ -50,7 +50,6 @@ concurrency:
 
 jobs:
   build:
-    # CES-2352: codegen uses ambient Node before setup; validate supported consumer generators first.
     runs-on: ubuntu-24.04
     env:
       WORKSPACE: ${{ github.workspace }}
@@ -103,7 +102,6 @@ jobs:
   deploy:
     if: ${{ !github.event.act }}
     needs: [build]
-    # CES-2352: npm publish uses ambient Node/npm; validate the SDK publishing toolchain first.
     runs-on: ${{ inputs.use_private_agent == true && 'self-hosted' || 'ubuntu-24.04' }}
     environment: ${{ inputs.environment }}-cd
     permissions:

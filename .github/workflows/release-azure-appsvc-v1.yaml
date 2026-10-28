@@ -51,7 +51,6 @@ env:
 jobs:
   build:
     name: Build
-    # CES-2352: retain 24.04 until native artifacts are verified on the target Azure runtime.
     runs-on: ubuntu-24.04
 
     # Ensure only one build for the same workspace runs at a time within the same run
