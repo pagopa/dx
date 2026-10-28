@@ -17,7 +17,7 @@ env:
 jobs:
   renew-tls-certificate-e2e-test:
     name: Run renew TLS certificate E2E test
-    if: ${{ github.ref == 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/main' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/ubuntu-compatibility-prerequisites') }}
     runs-on: ubuntu-latest
     environment: automation-uat-cd
     permissions:
