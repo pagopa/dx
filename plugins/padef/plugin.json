@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
-  "name": "paf",
-  "description": "PagoPA Agentic Framework: a plugin for AI-enabled product development workflows",
-  "version": "0.5.0",
+  "name": "padef",
+  "description": "PagoPA Agentic Delivery Framework: a plugin for AI-enabled product development workflows",
+  "version": "0.6.0",
   "author": {
     "name": "PagoPA DX Team"
   },
