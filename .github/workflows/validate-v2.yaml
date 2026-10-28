@@ -58,43 +58,8 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
-  format:
-    name: Format
-    needs: gate
-    if: ${{ needs.gate.outputs.run == 'true' }}
-    runs-on: ubuntu-24.04
-    permissions:
-      actions: read
-      contents: read
-      packages: read
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0
-          # `blob:none` keeps every commit and tree but skips the historical
-          # blobs, which dominate the clone. The base/head comparisons walk the
-          # trees, never the blobs, so nothing triggers a lazy fetch and the
-          # credentials can stay out of `.git/config` (unlike `tree:0`).
-          filter: blob:none
-          # Keep the run token out of .git/config: no step after the checkout
-          # needs persisted git credentials.
-          persist-credentials: false
-
-      - name: Setup Node.js
-        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
-        with:
-          install_args: "node pnpm"
-          minimum_release_age: 7d
-
-      - name: Setup Nx Workspace
-        uses: pagopa/dx/actions/setup-nx-workspace@main
-
-      - name: Check formatting
-        run: pnpm nx format:check
-
-  assess-affected-projects:
-    name: Affected Projects Assessment
+  workspace:
+    name: Workspace
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
     runs-on: ubuntu-24.04
@@ -128,92 +93,99 @@ jobs:
       - name: Setup Nx Workspace
         uses: pagopa/dx/actions/setup-nx-workspace@main
 
-      # Avoid querying GitHub environments when the change does not affect any
-      # Nx project, and let downstream jobs short circuit cleanly.
-      - name: Assess affected projects and environments
-        id: detect
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
+      - parallel:
+          - name: Nx Sync
+            run: pnpm nx sync:check
 
-          affected_projects="$(pnpm nx show projects --affected --json)"
-          if ! jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
-            echo "affected-projects=false" >> "$GITHUB_OUTPUT"
-            echo "environments=[]" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
+          - name: Nx Format
+            run: pnpm nx format:check
 
-          echo "affected-projects=true" >> "$GITHUB_OUTPUT"
+          # Avoid querying GitHub environments when the change does not affect any
+          # Nx project, and let downstream jobs short circuit cleanly.
+          - name: Assess affected projects and environments
+            id: detect
+            env:
+              GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            run: |
+              set -euo pipefail
 
-          # GitHub environments named `infra-<env>-ci` or
-          # `bootstrapper-<env>-ci` define which credentials and runner labels
-          # are used for Terraform plans. `<env>` may contain dashes
-          # (e.g. `ced-prod`), so only the fixed prefix and suffix are stripped.
-          candidate_environments="$(
-            gh api \
-              --paginate \
-              --slurp \
-              "/repos/$GITHUB_REPOSITORY/environments?per_page=100" |
-              jq --compact-output '
-              [
-                .[].environments[]
-                | select(.name | test("^(infra|bootstrapper)-.+-ci$"))
-                | {
-                    "github-environment": .name,
-                    "env-name": (.name | capture("^(infra|bootstrapper)-(?<env>.+)-ci$").env)
-                  }
-              ]
-            '
-          )"
+              affected_projects="$(pnpm nx show projects --affected --json)"
+              if ! jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
+                echo "affected-projects=false" >> "$GITHUB_OUTPUT"
+                echo "environments=[]" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
 
-          affected_environments=()
-          while IFS= read -r environment; do
-            env_name="$(jq --raw-output '."env-name"' <<< "$environment")"
-            github_environment="$(jq --raw-output '."github-environment"' <<< "$environment")"
+              echo "affected-projects=true" >> "$GITHUB_OUTPUT"
 
-            # Bootstrapper environments plan only their bootstrapper project
-            # (plus `repository` in prod); infra environments plan the other
-            # Terraform apps tagged for the environment. The same exclusion is
-            # used here and by the plan job, so no job is started for nothing.
-            case "$github_environment" in
-              bootstrapper-prod-ci) exclude="*,!bootstrapper-${env_name},!repository" ;;
-              bootstrapper-*) exclude="*,!bootstrapper-${env_name}" ;;
-              *) exclude="!tag:env:${env_name},bootstrapper-*,repository" ;;
-            esac
+              # GitHub environments named `infra-<env>-ci` or
+              # `bootstrapper-<env>-ci` define which credentials and runner labels
+              # are used for Terraform plans. `<env>` may contain dashes
+              # (e.g. `ced-prod`), so only the fixed prefix and suffix are stripped.
+              candidate_environments="$(
+                gh api \
+                  --paginate \
+                  --slurp \
+                  "/repos/$GITHUB_REPOSITORY/environments?per_page=100" |
+                  jq --compact-output '
+                  [
+                    .[].environments[]
+                    | select(.name | test("^(infra|bootstrapper)-.+-ci$"))
+                    | {
+                        "github-environment": .name,
+                        "env-name": (.name | capture("^(infra|bootstrapper)-(?<env>.+)-ci$").env)
+                      }
+                  ]
+                '
+              )"
 
-            affected_projects="$(
-              pnpm nx show projects \
-                --affected \
-                --type=app \
-                --projects=tag:terraform \
-                --exclude="$exclude" \
-                --json
-            )"
+              affected_environments=()
+              while IFS= read -r environment; do
+                env_name="$(jq --raw-output '."env-name"' <<< "$environment")"
+                github_environment="$(jq --raw-output '."github-environment"' <<< "$environment")"
 
-            if jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
-              affected_environments+=("$(
-                jq --compact-output --arg exclude "$exclude" '. + {exclude: $exclude}' <<< "$environment"
-              )")
-            fi
-          done < <(jq --compact-output '.[]' <<< "$candidate_environments")
+                # Bootstrapper environments plan only their bootstrapper project
+                # (plus `repository` in prod); infra environments plan the other
+                # Terraform apps tagged for the environment. The same exclusion is
+                # used here and by the plan job, so no job is started for nothing.
+                case "$github_environment" in
+                  bootstrapper-prod-ci) exclude="*,!bootstrapper-${env_name},!repository" ;;
+                  bootstrapper-*) exclude="*,!bootstrapper-${env_name}" ;;
+                  *) exclude="!tag:env:${env_name},bootstrapper-*,repository" ;;
+                esac
 
-          if [ "${#affected_environments[@]}" -eq 0 ]; then
-            environments='[]'
-          else
-            environments="$(
-              printf '%s\n' "${affected_environments[@]}" |
-                jq --slurp --compact-output '.'
-            )"
-          fi
+                affected_projects="$(
+                  pnpm nx show projects \
+                    --affected \
+                    --type=app \
+                    --projects=tag:terraform \
+                    --exclude="$exclude" \
+                    --json
+                )"
 
-          printf 'environments=%s\n' "$environments" >> "$GITHUB_OUTPUT"
+                if jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
+                  affected_environments+=("$(
+                    jq --compact-output --arg exclude "$exclude" '. + {exclude: $exclude}' <<< "$environment"
+                  )")
+                fi
+              done < <(jq --compact-output '.[]' <<< "$candidate_environments")
+
+              if [ "${#affected_environments[@]}" -eq 0 ]; then
+                environments='[]'
+              else
+                environments="$(
+                  printf '%s\n' "${affected_environments[@]}" |
+                    jq --slurp --compact-output '.'
+                )"
+              fi
+
+              printf 'environments=%s\n' "$environments" >> "$GITHUB_OUTPUT"
 
   code-review:
     name: No environment
     runs-on: ubuntu-24.04
-    needs: [gate, assess-affected-projects]
-    if: ${{ needs.gate.outputs.run == 'true' && needs.assess-affected-projects.outputs.affected-projects == 'true' }}
+    needs: [gate, workspace]
+    if: ${{ needs.gate.outputs.run == 'true' && needs.workspace.outputs.affected-projects == 'true' }}
     permissions:
       actions: read
       contents: read
@@ -324,8 +296,8 @@ jobs:
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
-    needs: assess-affected-projects
-    if: ${{ needs.assess-affected-projects.outputs.environments != '[]' }}
+    needs: workspace
+    if: ${{ needs.workspace.outputs.environments != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
     environment:
       name: ${{ matrix.target.github-environment }}
@@ -339,7 +311,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJSON(needs.assess-affected-projects.outputs.environments) }}
+        target: ${{ fromJSON(needs.workspace.outputs.environments) }}
     permissions:
       actions: read
       contents: read
