@@ -455,6 +455,24 @@ run "authentication_invalid_kv_host" {
   ]
 }
 
+run "authentication_invalid_unauthenticated_client_action" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id                     = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id                     = "ffffffff-0000-1111-2222-333333333333"
+        unauthenticated_client_action = "InvalidAction"
+      }
+    }
+  }
+
+  expect_failures = [
+    var.authentication,
+  ]
+}
+
 # --- probe transport validation ---
 
 run "invalid_liveness_probe_transport" {
