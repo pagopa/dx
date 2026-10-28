@@ -87,20 +87,8 @@ jobs:
           install_args: "node pnpm"
           minimum_release_age: 7d
 
-      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The action writes a private npmrc in runner.temp with the
-      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
-      # the job, so no step has to resolve a token placeholder.
-      - name: Setup npm registry
-        uses: pagopa/dx/actions/setup-npm-registry@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install dependencies
-        run: pnpm --filter '{.}...' ci
-
-      - name: Set base and head SHAs for format check
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+      - name: Setup Nx Workspace
+        uses: pagopa/dx/actions/setup-nx-workspace@main
 
       - name: Check formatting
         run: pnpm nx format:check
@@ -137,20 +125,8 @@ jobs:
           install_args: "node pnpm"
           minimum_release_age: 7d
 
-      - name: Set base and head SHAs for affected commands
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-
-      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The action writes a private npmrc in runner.temp with the
-      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
-      # the job, so no step has to resolve a token placeholder.
-      - name: Setup npm registry
-        uses: pagopa/dx/actions/setup-npm-registry@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install dependencies
-        run: pnpm --filter '{.}...' ci
+      - name: Setup Nx Workspace
+        uses: pagopa/dx/actions/setup-nx-workspace@main
 
       # Avoid querying GitHub environments when the change does not affect any
       # Nx project, and let downstream jobs short circuit cleanly.
@@ -267,9 +243,6 @@ jobs:
           experimental: true
           minimum_release_age: 7d
 
-      - name: Sets the base and head SHAs required for `nx affected` command
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-
       - name: Cache pnpm dependencies
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
@@ -284,17 +257,18 @@ jobs:
           path: ${{ env.TFLINT_PLUGIN_DIR }}
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
-      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The action writes a private npmrc in runner.temp with the
-      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
-      # the job, so no step has to resolve a token placeholder.
-      - name: Setup npm registry
-        uses: pagopa/dx/actions/setup-npm-registry@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Nx Workspace
+        uses: pagopa/dx/actions/setup-nx-workspace@main
+
+      - name: Install Node.js dependencies
+        shell: bash
+        env:
+          pnpm_config_//npm.pkg.github.com/:_authToken: ${{ github.token }}
+        run: |
+          pnpm ci
 
       - name: Install dependencies
-        run: mise deps
+        run: mise deps --skip pnpm
 
       - name: Cache Nx
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -307,9 +281,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-cache-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}-
             ${{ runner.os }}-nx-cache-${{ github.workflow }}-
-
-      - name: Sets the base and head SHAs required for `nx affected` command
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
       - name: Assume ECR Public pull role
         id: ecr-public-credentials
@@ -426,22 +397,12 @@ jobs:
           path: ${{ env.TFLINT_PLUGIN_DIR }}
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
-      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The action writes a private npmrc in runner.temp with the
-      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
-      # the job, so no step has to resolve a token placeholder.
-      - name: Setup npm registry
-        uses: pagopa/dx/actions/setup-npm-registry@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Nx Workspace
+        uses: pagopa/dx/actions/setup-nx-workspace@main
 
       - name: Install dependencies
         run: |
           mise deps --skip pnpm
-          pnpm --filter '{.}...' ci
-
-      - name: Sets the base and head SHAs required for `nx affected` command
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
       - name: Generate Cache Key
         if: github.event_name == 'pull_request'
