@@ -1,0 +1,26 @@
+name: "Setup Nx Workspace"
+description: "Prepares the workspace to run Nx commands"
+
+inputs:
+  github-token:
+    default: ${{ github.token }}
+    description: GitHub Token to use to login to GitHub Packages
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Install Node.js dependencies
+      shell: bash
+      env:
+        pnpm_config_//npm.pkg.github.com/:_authToken: ${{ inputs.github-token }}
+      run: |
+        pnpm --filter '{.}...' ci
+
+    - name: Build root deps
+      shell: bash
+      run: |
+        pnpm nx run-many --projects . --targets build-deps
+
+    - name: Set base and head SHAs
+      uses: nrwl/nx-set-shas@e602fada7ad5987b0f7b1905e7a99ea1c661514c # v5.1.0
