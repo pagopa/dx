@@ -26,5 +26,15 @@
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
-  "packageManager": "pnpm@12.13.0"
+  "packageManager": "pnpm@12.13.0",
+  "nx": {
+    "targets": {
+      "build-deps": {
+        "executor": "nx:noop",
+        "dependsOn": [
+          "^build"
+        ]
+      }
+    }
+  }
 }
