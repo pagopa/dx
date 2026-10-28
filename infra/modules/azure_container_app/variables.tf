@@ -130,7 +130,7 @@ variable "authentication" {
     })
   })
   default     = null
-  description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. client_secret_key_vault_id is optional and, when set, must be an Azure Key Vault secret URI; the module automatically adds it to the Container App secrets. unauthenticated_client_action controls how unauthenticated requests are handled and defaults to RedirectToLoginPage."
+  description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. client_secret_key_vault_id is optional and, when set, must be an Azure Key Vault secret URI; the module automatically adds it to the Container App secrets. unauthenticated_client_action controls how unauthenticated requests are handled, defaults to RedirectToLoginPage, and accepts RedirectToLoginPage, AllowAnonymous, Return401, or Return403."
 
   validation {
     condition     = var.authentication == null || var.authentication.azure_active_directory.client_secret_key_vault_id == null || can(regex("^https://[a-z0-9-]+\\.vault\\.azure\\.net/secrets/[a-zA-Z0-9-]+(/[a-zA-Z0-9]+)?$", var.authentication.azure_active_directory.client_secret_key_vault_id))
