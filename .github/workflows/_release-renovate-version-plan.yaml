@@ -1,9 +1,9 @@
 # Generates and commits patch version plans for Renovate dependency-update pull requests.
 name: Renovate Version Plan
 
-# Keep the workflow definition and Nx execution on the trusted base; fetch the PR head only as diff input.
+# Keep Nx execution on the trusted base; fetch the PR head only as diff input.
 on:
-  pull_request_target:
+  pull_request:
     types:
       - opened
       - synchronize
