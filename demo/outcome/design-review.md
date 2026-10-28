@@ -330,7 +330,7 @@ acceptance checks remain in the child Use Cases._
 
 Two gates with different consumers. The normative criteria live in the
 `dr-blacksmith` model
-([`dr-srs-model.md`](../../plugins/paf/skills/dr-blacksmith/references/dr-srs-model.md));
+([`dr-srs-model.md`](../../plugins/padef/skills/dr-blacksmith/references/dr-srs-model.md));
 record only evidence here.
 
 **Review gate** (document-level) — `metadata.status` moves `draft` → `review` →

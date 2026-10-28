@@ -65,8 +65,8 @@ Compare the workspace version of a skill against the same skill at a git ref:
 
 ```bash
 uv run --package harbor-bench harbor-bench compare \
-  plugins/paf/skills/dr-blacksmith \
-  https://github.com/pagopa/dx/tree/main/plugins/paf/skills/dr-blacksmith \
+  plugins/padef/skills/dr-blacksmith \
+  https://github.com/pagopa/dx/tree/main/plugins/padef/skills/dr-blacksmith \
   -t 'dr-blacksmith-*-use-case-*' \
   --format html \
   --token $COPILOT_GITHUB_TOKEN

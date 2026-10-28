@@ -41,7 +41,7 @@ def make_skill_dir(tmp_path: Path, name: str, *children: str) -> Path:
 @pytest.mark.parametrize(
     "value",
     [
-        "https://github.com/pagopa/dx/tree/main/plugins/paf/skills/dr-blacksmith",
+        "https://github.com/pagopa/dx/tree/main/plugins/padef/skills/dr-blacksmith",
         "https://github.com/org/repo.git@main",
         "pagopa/dx",
         "pagopa/dx@main",
@@ -54,7 +54,7 @@ def test_is_git_source_accepts_urls_and_shorthand(value: str):
 @pytest.mark.parametrize(
     "value",
     [
-        "plugins/paf/skills/dr-blacksmith",
+        "plugins/padef/skills/dr-blacksmith",
         "./pagopa/dx",
         "skill-name",
         "~/skills/dr-blacksmith",
@@ -73,7 +73,7 @@ def test_skill_injection_keeps_tested_skill_last():
         value="pagopa/dx@main", kind="git", reference="pagopa/dx@main", name=None
     )
     tested = SkillSource(
-        value="plugins/paf/skills/dr-blacksmith",
+        value="plugins/padef/skills/dr-blacksmith",
         kind="local",
         reference="/abs/dr-blacksmith",
         name="dr-blacksmith",
@@ -91,7 +91,7 @@ def test_skill_injection_keeps_tested_skill_last():
 
 def test_parse_git_url_derives_name(tmp_path: Path):
     source = parse_skill(
-        "https://github.com/pagopa/dx/tree/foobar/plugins/paf/skills/dr-blacksmith",
+        "https://github.com/pagopa/dx/tree/foobar/plugins/padef/skills/dr-blacksmith",
         tmp_path,
     )
     assert source.kind == "git"
@@ -101,7 +101,7 @@ def test_parse_git_url_derives_name(tmp_path: Path):
 
 def test_parse_git_url_at_skills_root_has_no_name(tmp_path: Path):
     source = parse_skill(
-        "https://github.com/pagopa/dx/tree/main/plugins/paf/skills",
+        "https://github.com/pagopa/dx/tree/main/plugins/padef/skills",
         tmp_path,
     )
     assert source.kind == "git"
@@ -167,7 +167,7 @@ def test_parse_local_files_only_dir_raises(tmp_path: Path):
 
 GIT_URL = (
     "https://github.com/pagopa/dx/tree/foobar/"
-    "plugins/paf/skills/dr-blacksmith"
+    "plugins/padef/skills/dr-blacksmith"
 )
 
 
