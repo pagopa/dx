@@ -1,3 +1,13 @@
+## 0.27.22 (2026-10-29)
+
+### 🚀 Features
+
+- Update the Terraform module versions used by the DX CLI. Terraform 1.16 or later is required for the updated Azure modules. ([#2441](https://github.com/pagopa/dx/pull/2441))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.27.21 (2026-10-29)
 
 ### 🩹 Fixes
