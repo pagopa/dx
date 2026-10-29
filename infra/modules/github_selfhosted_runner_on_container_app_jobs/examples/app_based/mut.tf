@@ -15,6 +15,7 @@ module "runner" {
     max_instances               = 1
     use_labels                  = true
     override_labels             = [local.runner_label]
+    image                       = "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
   }
 
   key_vault = {
@@ -28,6 +29,7 @@ module "runner" {
 
   depends_on = [
     azurerm_key_vault_secret.github_app_id,
+    azurerm_key_vault_secret.github_app_client_id,
     azurerm_key_vault_secret.github_app_installation_id,
     azurerm_key_vault_secret.github_app_private_key,
   ]
