@@ -1,3 +1,13 @@
+## 0.27.21 (2026-10-29)
+
+### 🩹 Fixes
+
+- Stop passing the unused `GH_APP_RELEASE_*` secrets in the generated monorepo `validate.yaml` workflow ([#2431](https://github.com/pagopa/dx/pull/2431))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.27.20 (2026-10-28)
 
 ### 🩹 Fixes

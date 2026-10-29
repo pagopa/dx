@@ -1,3 +1,14 @@
+# 3.0.0 (2026-10-29)
+
+### ⚠️  Breaking Changes
+
+- Allow AzureRM v5 alongside v4 and require Terraform >= 1.16.0. The Terraform floor is a major breaking change for the 18 modules marked major here. The VPN and Cosmos Account modules receive their major upgrade through CES-2366; their minor entries here cover dual-provider support and are superseded by that major bump. ([#2339](https://github.com/pagopa/dx/pull/2339))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 2.1.1 (2026-10-15)
 
 ### 🩹 Fixes
