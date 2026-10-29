@@ -4,7 +4,8 @@ resource "random_integer" "appcs_instance" {
 }
 
 module "private_appcs" {
-  source = "../.."
+  source  = "pagopa-dx/azure-app-configuration/azurerm"
+  version = "~> 2.0"
 
   environment         = (merge(local.environment, { instance_number = random_integer.appcs_instance.result }))
   resource_group_name = azurerm_resource_group.e2e_appcs.name
