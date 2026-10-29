@@ -41,23 +41,13 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Identify cache image
-        id: cache-image
-        shell: bash
-        run: |
-          if [[ -z "${ImageOS:-}" ]]; then
-            echo "::error::ImageOS is required to isolate hosted runner caches."
-            exit 1
-          fi
-          echo "image=$ImageOS" >> "$GITHUB_OUTPUT"
-
       - name: Cache Nx
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx
-          key: ${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-image.outputs.image }}-nx-tls-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-image.outputs.image }}-nx-tls-cache-
+            ${{ runner.os }}-nx-cache-
 
       - name: Run renew TLS certificate smoke test
         run: pnpm nx run renew-tls-certificate:test
