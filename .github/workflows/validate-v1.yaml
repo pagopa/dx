@@ -93,9 +93,9 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx
-          key: ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('.node-version', 'go.work', '.terraform-version') }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: ${{ runner.os }}-nx-cache-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
-            ubuntu-26.04-${{ runner.arch }}-${{ hashFiles('.node-version', 'go.work', '.terraform-version') }}-nx-cache-
+            ${{ runner.os }}-nx-cache-
 
       - name: Sets the base and head SHAs required for `nx affected` command
         uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1

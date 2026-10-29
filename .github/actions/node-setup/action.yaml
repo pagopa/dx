@@ -42,22 +42,14 @@ runs:
         node-version-file: .node-version
         cache: ${{ steps.detect-pm.outputs.package-manager }}
 
-    - name: Identify build cache runtime
-      if: ${{ env.TURBO_CACHE_DIR != '' }}
-      id: cache-runtime
-      shell: bash
-      run: |
-        echo "image=${ImageOS:-self-hosted}" >> "$GITHUB_OUTPUT"
-        echo "node=$(node --version)" >> "$GITHUB_OUTPUT"
-
     - name: Setup turbo cache
       if: ${{ env.TURBO_CACHE_DIR != '' }}
       uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
       with:
         path: ${{ inputs.working_dir }}/${{ env.TURBO_CACHE_DIR }}
-        key: ${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-runtime.outputs.image }}-${{ steps.cache-runtime.outputs.node }}-turbo-${{ github.sha }}
+        key: ${{ runner.os }}-turbo-${{ github.sha }}
         restore-keys: |
-          ${{ runner.os }}-${{ runner.arch }}-${{ steps.cache-runtime.outputs.image }}-${{ steps.cache-runtime.outputs.node }}-turbo-
+          ${{ runner.os }}-turbo-
 
     - name: Export Package Manager
       shell: bash
