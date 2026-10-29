@@ -2,5 +2,5 @@
   "$schema": "../../../packages/nx-terraform-plugin/module.schema.json",
   "description": "Manages Azure RBAC role assignments for resources and security principals",
   "provider": "azurerm",
-  "version": "4.0.6"
+  "version": "5.0.0"
 }
