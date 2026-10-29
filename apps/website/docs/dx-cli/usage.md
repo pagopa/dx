@@ -168,8 +168,7 @@ available credentials from the environment's common Key Vault and uses them
 without asking for confirmation. Explicit credential flags take precedence. The
 CLI stores the Client ID, installation ID, and private key as GitHub environment
 secrets used by the bootstrapper workflow; they are not written to generated
-Terraform or workflow files. The common Key Vault also stores the App ID used by
-the KEDA autoscaler and the current runner image.
+Terraform or workflow files.
 
 The Azure CLI identity needs data-plane read access to that Key Vault, such as
 `Key Vault Secrets User` or `Key Vault Secrets Officer`. If a secret is absent
