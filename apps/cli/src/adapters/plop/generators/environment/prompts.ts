@@ -9,6 +9,7 @@ import {
   cloudAccountSchema,
   CloudAccountService,
   CloudRegion,
+  RunnerAppCredentialsLookup,
 } from "../../../../domain/cloud-account.js";
 import {
   EnvironmentInitStatus,
@@ -134,6 +135,15 @@ export const initialAnswersSchema = z.object({
 });
 
 export type InitialAnswers = z.infer<typeof initialAnswersSchema>;
+
+export class MissingRunnerAppCredentialsError extends Error {
+  constructor(missingOptions: string[]) {
+    super(
+      `GitHub Runner App credentials are required in non-interactive mode. Provide: ${missingOptions.join(", ")}.`,
+    );
+    this.name = "MissingRunnerAppCredentialsError";
+  }
+}
 
 /**
  * Answers gathered from the interactive base prompts. Mirrors {@link initialAnswersSchema}
@@ -417,6 +427,85 @@ const mergeRunnerAppCredentials = (
   return githubAppCredentialsSchema.parse(runnerAppCredentials);
 };
 
+const getExistingRunnerAppCredentials = async (
+  deps: PromptsDependencies,
+  payload: Payload,
+  initStatus: EnvironmentInitStatus,
+  initialCredentials: Partial<GitHubAppCredentials>,
+): Promise<RunnerAppCredentialsLookup | undefined> => {
+  if (getRunnerAppCredentialQuestions(initialCredentials).length === 0) {
+    return undefined;
+  }
+  if (payload.env.cloudAccounts.length !== 1) {
+    getLogger(["gen", "env"]).warn(
+      "Runner App credentials must be provided explicitly when multiple cloud accounts are selected.",
+    );
+    return undefined;
+  }
+  if (
+    !initStatus.initialized &&
+    initStatus.issues.some(
+      (issue) => issue.type === "CLOUD_ACCOUNT_NOT_INITIALIZED",
+    )
+  ) {
+    return undefined;
+  }
+  return deps.cloudAccountService.getRunnerAppCredentials(
+    payload.env.cloudAccounts[0],
+    payload.env,
+  );
+};
+
+const backfillRunnerAppClientId = async (
+  deps: PromptsDependencies,
+  payload: Payload,
+  lookup: RunnerAppCredentialsLookup | undefined,
+  initialCredentials: Partial<GitHubAppCredentials>,
+  credentials: GitHubAppCredentials,
+): Promise<void> => {
+  if (
+    lookup?.missingClientId &&
+    lookup.credentials.id &&
+    lookup.credentials.key &&
+    initialCredentials.id === undefined &&
+    initialCredentials.key === undefined
+  ) {
+    await deps.cloudAccountService.storeRunnerAppClientId(
+      payload.env.cloudAccounts[0],
+      payload.env,
+      credentials.clientId,
+    );
+  }
+};
+
+const getPrefilledRunnerAppCredentials = (
+  explicit: Partial<GitHubAppCredentials>,
+  lookup: RunnerAppCredentialsLookup | undefined,
+): Partial<GitHubAppCredentials> => ({
+  clientId: explicit.clientId ?? lookup?.credentials.clientId,
+  id: explicit.id ?? lookup?.credentials.id,
+  installationId: explicit.installationId ?? lookup?.credentials.installationId,
+  key: explicit.key ?? lookup?.credentials.key,
+});
+
+const requireNonInteractiveRunnerAppCredentials = (
+  credentials: Partial<GitHubAppCredentials>,
+  nonInteractive: boolean,
+): void => {
+  if (!nonInteractive) {
+    return;
+  }
+  const missingOptions = [
+    credentials.id === undefined && "--runner-app-id",
+    credentials.clientId === undefined && "--client-id",
+    credentials.installationId === undefined && "--installation-id",
+    credentials.key === undefined && "--private-key-path",
+  ].filter((option): option is string => Boolean(option));
+  if (missingOptions.length > 0) {
+    throw new MissingRunnerAppCredentialsError(missingOptions);
+  }
+};
+
 const collectBaseAnswers = async (
   promptModule: typeof inquirer,
   availableCloudAccounts: CloudAccount[],
@@ -559,17 +648,25 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
 
     logger.debug("initialization status {initStatus}", { initStatus });
 
-    const initialRunnerAppCredentials =
+    const explicitRunnerAppCredentials =
       initialAnswers.init?.runnerAppCredentials ?? {};
+    const lookup = await getExistingRunnerAppCredentials(
+      deps,
+      payload,
+      initStatus,
+      explicitRunnerAppCredentials,
+    );
+    const initialRunnerAppCredentials = getPrefilledRunnerAppCredentials(
+      explicitRunnerAppCredentials,
+      lookup,
+    );
     const runnerAppCredentialQuestions = getRunnerAppCredentialQuestions(
       initialRunnerAppCredentials,
     );
-
-    if (deps.nonInteractive && runnerAppCredentialQuestions.length > 0) {
-      throw new Error(
-        "GitHub Runner App credentials are required in non-interactive mode. Provide --runner-app-id, --client-id, --installation-id, and --private-key-path.",
-      );
-    }
+    requireNonInteractiveRunnerAppCredentials(
+      initialRunnerAppCredentials,
+      deps.nonInteractive ?? false,
+    );
 
     if (initStatus.initialized) {
       const initInput =
@@ -585,11 +682,23 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
         runnerAppCredentials,
         "GitHub Runner App credentials are required to configure the GitHub environment.",
       );
+      await backfillRunnerAppClientId(
+        deps,
+        payload,
+        lookup,
+        explicitRunnerAppCredentials,
+        runnerAppCredentials,
+      );
       payload.runnerAppCredentials = runnerAppCredentials;
       return payload;
     }
 
-    console.log(formatInitializationDetails(initStatus));
+    const initializationDetails = formatInitializationDetails(initStatus);
+    if (deps.nonInteractive) {
+      logger.info("{initializationDetails}", { initializationDetails });
+    } else {
+      console.log(initializationDetails);
+    }
 
     if (initialAnswers.init?.confirm !== true) {
       const initConfirm = await promptModule.prompt({
@@ -659,6 +768,13 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
     assert.ok(
       runnerAppCredentials,
       "GitHub Runner App credentials are required to configure the GitHub environment.",
+    );
+    await backfillRunnerAppClientId(
+      deps,
+      payload,
+      lookup,
+      explicitRunnerAppCredentials,
+      runnerAppCredentials,
     );
     payload.runnerAppCredentials = runnerAppCredentials;
     payload.init = payloadSchema.shape.init.parse({

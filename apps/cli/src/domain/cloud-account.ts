@@ -27,6 +27,11 @@ export type CloudAccountService = {
     runnerAppCredentials: GitHubAppCredentials,
   ): Promise<void>;
 
+  getRunnerAppCredentials(
+    cloudAccount: CloudAccount,
+    environment: EnvironmentId,
+  ): Promise<RunnerAppCredentialsLookup>;
+
   getTerraformBackend(
     cloudAccountId: CloudAccount["id"],
     environment: EnvironmentId,
@@ -55,6 +60,17 @@ export type CloudAccountService = {
     environment: EnvironmentId,
     tags?: Record<string, string>,
   ): Promise<TerraformBackend>;
+
+  storeRunnerAppClientId(
+    cloudAccount: CloudAccount,
+    environment: EnvironmentId,
+    clientId: string,
+  ): Promise<void>;
+};
+
+export type RunnerAppCredentialsLookup = {
+  credentials: Partial<GitHubAppCredentials>;
+  missingClientId: boolean;
 };
 
 export const cloudRegionSchema = z.object({
