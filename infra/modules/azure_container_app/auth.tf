@@ -26,6 +26,11 @@ resource "azapi_resource" "auth" {
               clientSecretSettingName = "entra-id-client-secret"
             }
           )
+          validation = {
+            defaultAuthorizationPolicy = {
+              allowedApplications = var.authentication.azure_active_directory.allowed_callers_client_ids
+            }
+          }
         }
       }
     }

@@ -126,11 +126,12 @@ variable "authentication" {
       client_id                     = string
       tenant_id                     = string
       client_secret_key_vault_id    = optional(string)
+      allowed_callers_client_ids    = list(string)
       unauthenticated_client_action = optional(string, "RedirectToLoginPage")
     })
   })
   default     = null
-  description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. client_secret_key_vault_id is optional and, when set, must be an Azure Key Vault secret URI; the module automatically adds it to the Container App secrets. unauthenticated_client_action controls how unauthenticated requests are handled, defaults to RedirectToLoginPage, and accepts RedirectToLoginPage, AllowAnonymous, Return401, or Return403."
+  description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. allowed_callers_client_ids must contain at least one calling application's client ID. client_secret_key_vault_id is optional and, when set, must be an Azure Key Vault secret URI; the module automatically adds it to the Container App secrets. unauthenticated_client_action controls how unauthenticated requests are handled, defaults to RedirectToLoginPage, and accepts RedirectToLoginPage, AllowAnonymous, Return401, or Return403."
 
   validation {
     condition     = var.authentication == null || var.authentication.azure_active_directory.client_secret_key_vault_id == null || can(regex("^https://[a-z0-9-]+\\.vault\\.azure\\.net/secrets/[a-zA-Z0-9-]+(/[a-zA-Z0-9]+)?$", var.authentication.azure_active_directory.client_secret_key_vault_id))
@@ -145,6 +146,14 @@ variable "authentication" {
       "Return403",
     ], var.authentication.azure_active_directory.unauthenticated_client_action)
     error_message = "authentication.azure_active_directory.unauthenticated_client_action must be one of RedirectToLoginPage, AllowAnonymous, Return401, or Return403."
+  }
+
+  validation {
+    condition = var.authentication == null || (
+      var.authentication.azure_active_directory.allowed_callers_client_ids != null &&
+      length(var.authentication.azure_active_directory.allowed_callers_client_ids) > 0
+    )
+    error_message = "authentication.azure_active_directory.allowed_callers_client_ids must contain at least one client ID."
   }
 }
 

@@ -276,6 +276,7 @@ run "authentication_secret_alias_cannot_collide_with_environment_variable_secret
         client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
         client_secret_key_vault_id = "https://kv-test.vault.azure.net/secrets/entra-id-secret"
+        allowed_callers_client_ids = ["11111111-2222-3333-4444-555555555555"]
       }
     }
     containers = [{
@@ -428,6 +429,7 @@ run "authentication_invalid_kv_uri" {
         client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
         client_secret_key_vault_id = "not-a-valid-kv-uri"
+        allowed_callers_client_ids = ["11111111-2222-3333-4444-555555555555"]
       }
     }
   }
@@ -446,6 +448,7 @@ run "authentication_invalid_kv_host" {
         client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
         client_secret_key_vault_id = "https://example.com/secrets/client-secret"
+        allowed_callers_client_ids = ["11111111-2222-3333-4444-555555555555"]
       }
     }
   }
@@ -463,6 +466,7 @@ run "authentication_invalid_unauthenticated_client_action" {
       azure_active_directory = {
         client_id                     = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         tenant_id                     = "ffffffff-0000-1111-2222-333333333333"
+        allowed_callers_client_ids    = ["11111111-2222-3333-4444-555555555555"]
         unauthenticated_client_action = "InvalidAction"
       }
     }
@@ -471,6 +475,46 @@ run "authentication_invalid_unauthenticated_client_action" {
   expect_failures = [
     var.authentication,
   ]
+}
+
+run "authentication_requires_allowed_callers" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
+        allowed_callers_client_ids = []
+      }
+    }
+  }
+
+  expect_failures = [
+    var.authentication,
+  ]
+}
+
+run "authentication_configures_allowed_callers" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id = "ffffffff-0000-1111-2222-333333333333"
+        allowed_callers_client_ids = [
+          "11111111-2222-3333-4444-555555555555",
+          "66666666-7777-8888-9999-000000000000",
+        ]
+      }
+    }
+  }
+
+  assert {
+    condition     = azapi_resource.auth[0].body.properties.identityProviders.azureActiveDirectory.validation.defaultAuthorizationPolicy.allowedApplications == var.authentication.azure_active_directory.allowed_callers_client_ids
+    error_message = "Entra allowed applications must use the configured caller client IDs"
+  }
 }
 
 # --- probe transport validation ---
