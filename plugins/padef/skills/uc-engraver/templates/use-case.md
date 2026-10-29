@@ -60,12 +60,15 @@ not here.
 
 - `<AREA>_<CONDITION>`: _<when it occurs>_ -> _<observable outcome>_, _<side-effect guarantee>_.
 
+**Test seam**: _<the boundary the acceptance checks are observed through, or N/A - confirmed reason>_
+
 **Acceptance checks**:
 
 Each check must be binary, independently verifiable, sufficiently detailed for
 implementation and testing, and stable across updates. Given/When/Then or
 Gherkin may be used when it improves clarity, but it is not compulsory. A
-negative check references the typed error it expects.
+negative check references the typed error it expects. Every check is observed
+through the test seam.
 
 - `AC-01`: _<binary check>_ - Evidence: _<link, test, or TBD>_
 - `AC-02`: _<binary check>_ - Evidence: _<link, test, or TBD>_

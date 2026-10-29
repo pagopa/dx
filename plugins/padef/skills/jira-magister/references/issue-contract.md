@@ -42,6 +42,23 @@ Source: DR-01 | UC-01 | AGREEMENT_EXTENSION_INVALID
   capacity. Flag the split for approval when the source does not define the
   boundary.
 
+### Wide refactors: expand, migrate, contract
+
+A refactor whose blast radius fans across many call sites is one mechanical
+change, so phase boundaries define its split instead of sprint capacity. Emit
+the phases as separate issues and sequence them:
+
+- **Expand.** Add the new form beside the old one so both work. Every later
+  phase is blocked by this Task.
+- **Migrate.** Move call sites in batches sized by blast radius. Each batch is
+  blocked by Expand and runs in parallel with the other batches.
+- **Contract.** Delete the old form and its guards. Blocked by every Migrate
+  batch.
+
+Ship each batch independently. Take the integration-branch fallback when a
+batch cannot ship alone, and record the branch in the issue so the merge order
+is explicit.
+
 ## Hierarchy and dependency links
 
 Keep ownership hierarchy separate from delivery dependencies:

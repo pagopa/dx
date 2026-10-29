@@ -56,6 +56,9 @@ criterion, the model wins.
       defines its typed errors with semantic identifiers, or a justified `N/A`;
       no error taxonomy is centralized in the DR/SRS and no error carries an
       owner.
+- [ ] Every `ready` child names the test seam its acceptance checks are observed
+      through, or a justified `N/A`, and every check passes without mocking an
+      internal collaborator.
 - [ ] `ready` children meet the minimum core defined in `dr-srs-model.md`; other
       children stay `draft` with an owner gap.
 - [ ] Open questions are not duplicated: cross-Use-Case and initiative

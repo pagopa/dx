@@ -87,7 +87,8 @@ Complete every section in the bundled template:
 - main, alternate, and exception/edge-case flows;
 - postconditions;
 - typed errors with stable semantic identifiers and no owner;
-- numbered binary acceptance checks local to the Use Case;
+- numbered binary acceptance checks local to the Use Case, and the test seam
+  they are observed through;
 - tracking events;
 - the `solution.components.*` and `contracts.*` IDs the Use Case touches, or a
   justified `N/A`;
@@ -101,6 +102,25 @@ Mermaid/PlantUML or a link to a repository diagram.
 The child document owns behavior-level detail. The parent owns the catalog and
 cross-Use Case architecture, NFRs, contracts, rollout, validation strategy,
 readiness, and change propagation.
+
+## Test seam
+
+The test seam is the boundary a test enters the behavior through without editing
+the code under test: a domain port, a contract operation, or an injection point
+that a parent `solution.components.*` entry exposes. Name it before
+implementation starts, because the tests and the code review both work from it.
+
+- Use one seam per Use Case and observe every acceptance check through it.
+- Prefer a seam that already exists over one the child introduces.
+- When the behavior needs a new seam, treat it as a component or contract
+  change and report it to the parent in step 6.
+- Reach the behavior through the interface. A check that mocks internal
+  collaborators freezes an implementation shape, and that test breaks on the
+  next refactor without a behavior change.
+
+Record the seam in `**Test seam**`. Use `N/A — <confirmed reason>` only when the
+behavior has no code boundary; otherwise raise `uc-open-XX` so an undecided seam
+stays visible.
 
 ## Workflow
 
@@ -121,11 +141,11 @@ readiness, and change propagation.
    distinguish confirmed behavior from proposed behavior, assumptions, and open
    questions.
 5. **Validate each child.** Check that flows are coherent, acceptance checks are
-   binary and traceable, tracking is explicit or justified `N/A`, a sequence
-   diagram is supplied inline or by link, links and IDs are consistent, errors
-   use semantic identifiers and each exception flow references one, open
-   questions do not repeat a parent `open.item-XX`, and no unsupported decision
-   was invented.
+   binary, traceable, and observed through the named test seam, tracking is
+   explicit or justified `N/A`, a sequence diagram is supplied inline or by
+   link, links and IDs are consistent, errors use semantic identifiers and each
+   exception flow references one, open questions do not repeat a parent
+   `open.item-XX`, and no unsupported decision was invented.
 6. **Synchronize the parent.** Update every selected row in the existing parent
    DR/SRS Use Case index in the same workflow. The parent row is only the stable
    ID, the title, and the child-document link; keep those aligned and keep
