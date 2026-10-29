@@ -14,6 +14,7 @@
     "src/executors/**/schema.json",
     "src/generators/**/schema.json"
   ],
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -29,9 +30,6 @@
   },
   "publishConfig": {
     "registry": "https://npm.pkg.github.com/"
-  },
-  "scripts": {
-    "build": "tsdown"
   },
   "dependencies": {
     "@nx/devkit": "catalog:",
@@ -59,13 +57,33 @@
   "nx": {
     "targets": {
       "build": {
-        "inputs": [
-          "default",
-          "^default"
-        ],
+        "executor": "@nx/js:tsc",
         "outputs": [
-          "{projectRoot}/dist/**"
-        ]
+          "{options.outputPath}"
+        ],
+        "cache": true,
+        "dependsOn": [
+          "^build"
+        ],
+        "options": {
+          "outputPath": "packages/nx-dx-docker-plugin/dist",
+          "main": "packages/nx-dx-docker-plugin/src/index.ts",
+          "rootDir": "packages/nx-dx-docker-plugin/src",
+          "tsConfig": "packages/nx-dx-docker-plugin/tsconfig.lib.json",
+          "generatePackageJson": false,
+          "assets": [
+            {
+              "input": "packages/nx-dx-docker-plugin/src/generators",
+              "glob": "**/schema.json",
+              "output": "generators"
+            },
+            {
+              "input": "packages/nx-dx-docker-plugin/src/generators",
+              "glob": "**/files/**",
+              "output": "generators"
+            }
+          ]
+        }
       }
     }
   }

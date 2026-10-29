@@ -43,49 +43,14 @@ jobs:
           fetch-depth: 0
           token: ${{ steps.generate-token.outputs.token }}
 
-      - name: Detect Release tool
-        id: nx-detect
-        shell: bash
-        run: |
-          if [ -f "nx.json" ]; then
-            echo "Detected Nx for managing releases."
-          else
-            echo "::error:: No supported release tool detected. Please ensure Nx is configured."
-            exit 1
-          fi
-
       - name: Setup Node.js
-        id: node-setup
-        uses: pagopa/dx/.github/actions/node-setup@main
-
-      - name: Update npm (for provenance support)
-        shell: bash
-        run: npm install -g npm@11.8.0
-
-      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The action writes a private npmrc in runner.temp with the
-      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
-      # the job, so no step has to resolve a token placeholder. The job keeps
-      # packages: write because the same token publishes the release.
-      - name: Setup npm registry
-        uses: pagopa/dx/actions/setup-npm-registry@main
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          install_args: "node pnpm"
+          minimum_release_age: 7d
 
-      - name: Install dependencies (pnpm)
-        if: steps.node-setup.outputs.package-manager == 'pnpm'
-        shell: bash
-        run: pnpm install --frozen-lockfile
-
-      - name: Install dependencies (yarn)
-        if: steps.node-setup.outputs.package-manager == 'yarn'
-        shell: bash
-        run: yarn install --immutable
-
-      - name: Install dependencies (npm)
-        if: steps.node-setup.outputs.package-manager == 'npm'
-        shell: bash
-        run: npm ci
+      - name: Setup Nx Workspace
+        uses: pagopa/dx/actions/setup-nx-workspace@main
 
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
