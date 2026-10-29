@@ -394,7 +394,7 @@ describe("environment generator — tenant-qualified bootstrap configuration", (
         ),
       ]).toHaveLength(2);
       expect([
-        ...bootstrapperFile.matchAll(/version = "~> 6\.3"/g),
+        ...bootstrapperFile.matchAll(/version = "~> 7\.1"/g),
       ]).toHaveLength(2);
     } finally {
       process.chdir(generatedEnvironment.originalCwd);

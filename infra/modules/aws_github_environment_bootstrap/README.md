@@ -22,7 +22,7 @@ Use this module in your bootstrapper configuration to create all necessary GitHu
 ```hcl
 module "github_bootstrap" {
   source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 2.2"
+  version = "~> 2.3"
 
   environment = {
     prefix          = "dx"
@@ -362,7 +362,7 @@ module "core_values" {
 
 module "bootstrap" {
   source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 2.2"
+  version = "~> 2.3"
 
   environment = var.environment
 

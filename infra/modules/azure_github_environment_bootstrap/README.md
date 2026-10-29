@@ -81,6 +81,8 @@ with `environment.prefix`. It defaults to `false`, preserving the existing
 tenant-qualified GitHub environments; for example, `prefix = "ced"` and
 `env_short = "p"` produce `infra-ced-prod-ci` and `infra-ced-prod-cd`. Cloud
 resource and identity names remain governed by the existing naming inputs.
+This option is available starting with module version 7.1.0; consumers enabling
+it need a 7.1.0-or-later lower bound (for example, `~> 7.1`).
 
 ## Using with Core Values Exporter
 
