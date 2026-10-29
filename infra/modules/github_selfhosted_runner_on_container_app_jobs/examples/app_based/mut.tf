@@ -28,6 +28,7 @@ module "runner" {
 
   depends_on = [
     azurerm_key_vault_secret.github_app_id,
+    azurerm_key_vault_secret.github_app_client_id,
     azurerm_key_vault_secret.github_app_installation_id,
     azurerm_key_vault_secret.github_app_private_key,
   ]

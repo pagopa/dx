@@ -22,9 +22,14 @@ the Key Vault must contain the following secrets:
 
 | Secret name                         | Description                                 |
 | ----------------------------------- | ------------------------------------------- |
-| `github-runner-app-id`              | The numeric GitHub App ID                   |
+| `github-runner-app-id`              | The numeric GitHub App ID used by KEDA      |
+| `github-runner-app-client-id`       | The GitHub App Client ID                    |
 | `github-runner-app-installation-id` | The App installation ID on the organization |
 | `github-runner-app-key`             | The App private key in PEM format           |
+
+The DX runner image uses the Client ID to register. The default image
+`ghcr.io/pagopa/github-self-hosted-runner-azure:latest` is maintained separately
+and currently uses the App ID for registration; KEDA also requires the App ID.
 
 See [Obtaining GitHub App credentials](https://dx.pagopa.it/docs/monorepository-setup#obtaining-github-app-credentials)
 for step-by-step instructions on how to create the App and populate these secrets.
@@ -97,7 +102,7 @@ No modules.
 | <a name="input_repository"></a> [repository](#input\_repository) | Details of the GitHub repository, including the owner and repository name. | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where the Container App Job will be deployed. Defaults to null. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_use_github_app"></a> [use\_github\_app](#input\_use\_github\_app) | Set true to use GitHub App authentication instead of a Personal Access Token.<br/>If true, the module expects the Key Vault to contain the following secrets:<br/>  - github-runner-app-installation-id: GitHub App Installation ID<br/>  - github-runner-app-id: GitHub App ID<br/>  - github-runner-app-key: GitHub App private key in PEM format | `bool` | `false` | no |
+| <a name="input_use_github_app"></a> [use\_github\_app](#input\_use\_github\_app) | Set true to use GitHub App authentication instead of a Personal Access Token.<br/>If true, the module expects the Key Vault to contain the following secrets:<br/>  - github-runner-app-installation-id: GitHub App Installation ID<br/>  - github-runner-app-id: GitHub App ID for KEDA<br/>  - github-runner-app-client-id: GitHub App Client ID for runner authentication<br/>  - github-runner-app-key: GitHub App private key in PEM format | `bool` | `false` | no |
 
 ## Outputs
 
