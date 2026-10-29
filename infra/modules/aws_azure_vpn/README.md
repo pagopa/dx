@@ -152,7 +152,7 @@ external prerequisite, not created or supplied by the module's mocked tests.
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 | <a name="requirement_awsdx"></a> [awsdx](#requirement\_awsdx) | ~> 0.1 |
 | <a name="requirement_azuredx"></a> [azuredx](#requirement\_azuredx) | ~> 0.12 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.0.0, < 6.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 5.0 |
 
 ## Modules
 

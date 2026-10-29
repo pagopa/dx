@@ -50,7 +50,7 @@ Lifecycle transitions are communicated through:
 
 DX tooling's AzureRM v4 support window ends on **31 December 2026**. Upcoming
 major releases of the twenty DX modules that already support both v4 and v5
-are planned to require `hashicorp/azurerm >= 5.0.0, < 6.0.0`. This is a
+are planned to require `hashicorp/azurerm ~> 5.0`. This is a
 future release plan, not an announcement that these majors are already
 published. Older dual-compatible module versions remain usable during the
 published v4 support window.
@@ -72,7 +72,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 5.0.0, < 6.0.0"
+      version = "~> 5.0"
     }
   }
 }
