@@ -1,3 +1,18 @@
+## 2.3.0 (2026-10-29)
+
+### 🚀 Features
+
+- Adds `github_environment_prefix_enabled` to the Azure and AWS bootstrap modules. When enabled, GitHub names include the resource prefix—for example, `infra-prod-ci` becomes `infra-ced-prod-ci`. Cloud resource names are unchanged. ([#2371](https://github.com/pagopa/dx/pull/2371))
+
+  The CLI enables this automatically for tenant-qualified environments. Existing configurations remain unchanged by default.
+  The feature is introduced in Azure module version 7.1.0 and AWS module version 2.3.0; consumers enabling the flag must use those versions or later.
+
+  Enabling the flag on an existing deployment changes where secrets are stored and, on Azure, the credentials used by workflows. Existing workflows must use the new environment names before the old configuration is removed.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 2.2.0 (2026-10-22)
 
 ### 🚀 Features
