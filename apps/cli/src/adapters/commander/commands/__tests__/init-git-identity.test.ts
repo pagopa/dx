@@ -1,9 +1,9 @@
 /**
- * Tests the git identity fallback used by the init command when the local git
- * configuration does not define user.name or user.email.
+ * Tests git setup behavior used by the init command.
  */
 
 import { Command } from "commander";
+import { ExecaError } from "execa";
 import inquirer from "inquirer";
 import { okAsync } from "neverthrow";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -35,9 +35,11 @@ const mocks = vi.hoisted(() => {
     collectMonorepoPayload: vi.fn(),
     createCommandPresenter: vi.fn(() => presenter),
     execa$: vi.fn(),
+    fetch: vi.fn<typeof fetch>(),
     getPlopInstance: vi.fn(),
     reportError,
     reportResult,
+    repositoryTerraform: vi.fn(),
     resolveOutputMode: vi.fn(
       (_env: unknown, output: "json" | "text" | undefined) => output ?? "text",
     ),
@@ -93,6 +95,14 @@ const makePayload = (
   ...overrides,
 });
 
+const makeGitFailure = (command: string, stderr: string): ExecaError => {
+  const error = new ExecaError();
+  error.exitCode = 1;
+  error.shortMessage = `Command failed with exit code 1: ${command}`;
+  error.stderr = stderr;
+  return error;
+};
+
 const runInitCommand = async () => {
   const gitHubService = mockDeep<GitHubService>();
   gitHubService.createPullRequest.mockResolvedValue(
@@ -117,22 +127,32 @@ const runInitCommand = async () => {
   await program.parseAsync(["node", "dx", "--output", "json", "init"]);
 };
 
-describe("makeInitCommand git identity fallback", () => {
+describe("makeInitCommand git setup", () => {
   let executedGitCommands: string[];
   let gitConfigValues: Record<"user.email" | "user.name", string | undefined>;
+  let pushFailure: ExecaError | undefined;
 
   beforeEach(() => {
     vi.clearAllMocks();
     executedGitCommands = [];
+    pushFailure = undefined;
     gitConfigValues = {
       "user.email": undefined,
       "user.name": undefined,
     };
 
     const payload = makePayload();
-    const repositoryTerraform = vi.fn(() =>
-      Promise.resolve({ exitCode: 0, stderr: "", stdout: "" }),
+    mocks.repositoryTerraform.mockResolvedValue({
+      exitCode: 0,
+      stderr: "",
+      stdout: "",
+    });
+    mocks.fetch.mockResolvedValue(
+      new Response(null, {
+        headers: { "X-OAuth-Scopes": "repo, workflow" },
+      }),
     );
+    vi.stubGlobal("fetch", mocks.fetch);
     const gitCommands = vi.fn(
       (strings: TemplateStringsArray, ...values: string[]) => {
         const command = strings.reduce(
@@ -140,6 +160,26 @@ describe("makeInitCommand git identity fallback", () => {
           "",
         );
         executedGitCommands.push(command);
+
+        if (command === "git remote get-url --push origin") {
+          return Promise.resolve({
+            exitCode: 0,
+            stderr: "",
+            stdout: "https://github.com/pagopa/test-repo.git",
+          });
+        }
+
+        if (command.startsWith("git config --get-urlmatch http.extraHeader ")) {
+          return Promise.resolve({ exitCode: 1, stderr: "", stdout: "" });
+        }
+
+        if (command === "git credential fill") {
+          return Promise.resolve({
+            exitCode: 0,
+            stderr: "",
+            stdout: "username=test-user\npassword=git-test-token\n",
+          });
+        }
 
         if (command === "git config --get user.name") {
           return Promise.resolve(
@@ -165,6 +205,13 @@ describe("makeInitCommand git identity fallback", () => {
           );
         }
 
+        if (
+          command === "git push -u origin features/scaffold-workspace" &&
+          pushFailure
+        ) {
+          return Promise.reject(pushFailure);
+        }
+
         return Promise.resolve({ exitCode: 0, stderr: "", stdout: "" });
       },
     );
@@ -175,10 +222,10 @@ describe("makeInitCommand git identity fallback", () => {
     mocks.tf$.mockImplementation((...args: unknown[]) =>
       Array.isArray(args[0])
         ? Promise.resolve({ stdout: "ok" })
-        : repositoryTerraform,
+        : mocks.repositoryTerraform,
     );
     mocks.execa$.mockImplementation((options?: { shell?: boolean }) =>
-      options?.shell === true
+      options?.shell !== undefined
         ? gitCommands
         : // The generated Terraform projects are initialized through Nx.
           () => Promise.resolve({ stdout: "" }),
@@ -189,6 +236,7 @@ describe("makeInitCommand git identity fallback", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
     process.exitCode = undefined;
   });
 
@@ -215,6 +263,64 @@ describe("makeInitCommand git identity fallback", () => {
 
     expect(commitCommand).toContain(
       'git -c user.name=dx-pagopa-bot -c user.email=dx-pagopa-github-bot@pagopa.it commit --no-gpg-sign -m "Scaffold workspace"',
+    );
+  });
+
+  it("checks Git's workflow scope before creating the remote repository", async () => {
+    await runInitCommand();
+
+    expect(mocks.fetch).toHaveBeenCalledBefore(mocks.repositoryTerraform);
+    expect(mocks.reportError).not.toHaveBeenCalled();
+    expect(mocks.reportResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        repository: expect.objectContaining({
+          name: "test-repo",
+          owner: "pagopa",
+        }),
+      }),
+    );
+    expect(process.exitCode).toBeUndefined();
+  });
+
+  it("stops a missing workflow scope before Terraform creates a repository or Git pushes", async () => {
+    mocks.fetch.mockResolvedValue(
+      new Response(null, {
+        headers: { "X-OAuth-Scopes": "repo" },
+      }),
+    );
+
+    await runInitCommand();
+
+    expect(mocks.repositoryTerraform).not.toHaveBeenCalled();
+    expect(executedGitCommands).not.toContain("git fetch origin main");
+    expect(executedGitCommands).not.toContain(
+      "git push -u origin features/scaffold-workspace",
+    );
+    expect(mocks.reportError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringContaining("workflow"),
+      }),
+    );
+    expect(mocks.reportResult).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(1);
+  });
+
+  it("does not switch credentials or retry when GitHub rejects the push", async () => {
+    pushFailure = makeGitFailure(
+      "git push -u origin features/scaffold-workspace",
+      "remote rejected: refusing to allow an OAuth App to create or update workflow `.github/workflows/validate.yaml` without `workflow` scope",
+    );
+
+    await runInitCommand();
+
+    expect(
+      executedGitCommands.filter((command) => command.includes(" push ")),
+    ).toEqual(["git push -u origin features/scaffold-workspace"]);
+    expect(mocks.reportError).toHaveBeenCalledWith(
+      expect.objectContaining({
+        cause: pushFailure,
+        message: "Failed to push code to GitHub.",
+      }),
     );
   });
 });

@@ -18,6 +18,7 @@ import {
   Repository,
 } from "../../../domain/github.js";
 import { tf$ } from "../../execa/terraform.js";
+import { assertGitHubWorkflowAccess } from "../../github/git-auth.js";
 import { assertGitHubPackagesAccess } from "../../github/packages.js";
 import {
   initTerraformProjects,
@@ -358,10 +359,7 @@ const initializeRepositoryTerraform = (): Promise<void> =>
 
 const createRemoteRepositoryWithPresenter =
   (presenter: CommandPresenter) =>
-  ({
-    repoName,
-    repoOwner,
-  }: MonorepoPayload): ResultAsync<Repository, Error> => {
+  (repository: Repository): ResultAsync<Repository, Error> => {
     const repo$ = tf$({ cwd: path.resolve("infra", "repository") });
 
     const applyRepositoryTerraform = () => repo$`terraform apply -auto-approve`;
@@ -373,7 +371,7 @@ const createRemoteRepositoryWithPresenter =
       mapTerraformFailure(
         "Terraform apply failed while creating the GitHub repository.",
       ),
-    ).map(() => new Repository(repoName, repoOwner));
+    ).map(() => repository);
   };
 /**
  * Exit code returned by `git remote add` when a remote with the requested name
@@ -410,7 +408,34 @@ export const mapGitRemoteAddError = (cause: unknown): Error => {
   );
 };
 
-const initializeGitRepositoryWithPresenter =
+const configureGitRemoteWithPresenter =
+  (presenter: CommandPresenter) =>
+  (repository: Repository): ResultAsync<Repository, Error> =>
+    trackStep(
+      presenter,
+      "Configuring the git remote...",
+      async () => {
+        const git$ = $({ shell: true });
+        await git$`git init`;
+        await git$`git remote add origin ${repository.origin}`;
+      },
+      mapGitRemoteAddError,
+    ).map(() => repository);
+
+const trackGitHubWorkflowAccess =
+  (presenter: CommandPresenter) =>
+  (repository: Repository): ResultAsync<Repository, Error> =>
+    trackStep(
+      presenter,
+      "Checking GitHub workflow permissions...",
+      assertGitHubWorkflowAccess,
+      (cause) =>
+        cause instanceof Error
+          ? cause
+          : new Error("Failed to check Git's workflow permissions.", { cause }),
+    ).map(() => repository);
+
+const pushGitRepositoryWithPresenter =
   (presenter: CommandPresenter) => (repository: Repository) => {
     const branchName = "features/scaffold-workspace";
     const git$ = $({
@@ -458,13 +483,6 @@ const initializeGitRepositoryWithPresenter =
         await git$`git -c user.name=${DEFAULT_SCAFFOLD_GIT_USER_NAME} -c user.email=${DEFAULT_SCAFFOLD_GIT_USER_EMAIL} commit --no-gpg-sign -m "Scaffold workspace"`;
       }
     };
-    // `git remote add` is tracked separately from the push so its documented
-    // exit codes (e.g. 3 = remote already exists) surface a specific, actionable
-    // message instead of being misreported as a push failure.
-    const configureRemote = async () => {
-      await git$`git init`;
-      await git$`git remote add origin ${repository.origin}`;
-    };
     const pushToOrigin = async () => {
       await git$`git fetch origin main`;
       await git$`git checkout -b ${branchName}`;
@@ -478,19 +496,10 @@ const initializeGitRepositoryWithPresenter =
     };
     return trackStep(
       presenter,
-      "Configuring the git remote...",
-      configureRemote,
-      mapGitRemoteAddError,
-    )
-      .andThen(() =>
-        trackStep(
-          presenter,
-          "Pushing code to GitHub...",
-          pushToOrigin,
-          asError("Failed to push code to GitHub."),
-        ),
-      )
-      .map(() => ({ branchName, repository }));
+      "Pushing code to GitHub...",
+      pushToOrigin,
+      asError("Failed to push code to GitHub."),
+    ).map(() => ({ branchName, repository }));
   };
 
 const createPullRequestWithPresenter =
@@ -519,8 +528,12 @@ const createPullRequestWithPresenter =
 const handleNewGitHubRepositoryWithPresenter =
   (context: InitActionContext) =>
   (payload: MonorepoPayload): ResultAsync<RepositoryPullRequest, Error> =>
-    createRemoteRepositoryWithPresenter(context.presenter)(payload)
-      .andThen(initializeGitRepositoryWithPresenter(context.presenter))
+    configureGitRemoteWithPresenter(context.presenter)(
+      new Repository(payload.repoName, payload.repoOwner),
+    )
+      .andThen(trackGitHubWorkflowAccess(context.presenter))
+      .andThen(createRemoteRepositoryWithPresenter(context.presenter))
+      .andThen(pushGitRepositoryWithPresenter(context.presenter))
       .andThen((localWorkspace) =>
         createPullRequestWithPresenter(context)(localWorkspace).map((pr) => ({
           pr,
