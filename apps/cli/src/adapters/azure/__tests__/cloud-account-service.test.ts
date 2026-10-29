@@ -239,7 +239,6 @@ const expectBootstrapperEnvironmentSecrets = (
     ["bootstrapper-dev-cd", "ARM_SUBSCRIPTION_ID", "sub-1"],
     ...(includesRunnerSecrets
       ? [
-          ["bootstrapper-dev-cd", "GH_APP_ID", "app-id"],
           ["bootstrapper-dev-cd", "GH_APP_CLIENT_ID", "app-client-id"],
           ["bootstrapper-dev-cd", "GH_APP_INSTALLATION_ID", "installation-id"],
           ["bootstrapper-dev-cd", "GH_APP_KEY", "private-key"],

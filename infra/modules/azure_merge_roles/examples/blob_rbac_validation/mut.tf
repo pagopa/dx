@@ -1,7 +1,7 @@
 module "blob_rw_without_delete" {
   source = "../.."
 
-  scope     = module.storage_account.id
+  scope     = azurerm_storage_account.e2e.id
   role_name = local.role_names.merged_limited
   source_roles = [
     azurerm_role_definition.source_blob_rw_without_delete.name,
@@ -19,7 +19,7 @@ module "blob_rw_without_delete" {
 module "blob_rw_with_delete_restored" {
   source = "../.."
 
-  scope     = module.storage_account.id
+  scope     = azurerm_storage_account.e2e.id
   role_name = local.role_names.merged_full
   source_roles = [
     azurerm_role_definition.source_blob_rw_without_delete.name,
@@ -37,7 +37,7 @@ module "blob_rw_with_delete_restored" {
 module "container_rw_without_delete" {
   source = "../.."
 
-  scope     = module.storage_account.id
+  scope     = azurerm_storage_account.e2e.id
   role_name = local.role_names.merged_control_limited
   source_roles = [
     azurerm_role_definition.source_container_rw_without_delete.name,
@@ -55,7 +55,7 @@ module "container_rw_without_delete" {
 module "container_rw_with_delete_restored" {
   source = "../.."
 
-  scope     = module.storage_account.id
+  scope     = azurerm_storage_account.e2e.id
   role_name = local.role_names.merged_control_full
   source_roles = [
     azurerm_role_definition.source_container_rw_without_delete.name,

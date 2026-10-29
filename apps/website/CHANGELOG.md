@@ -1,3 +1,31 @@
+## 0.22.21 (2026-10-28)
+
+### 🩹 Fixes
+
+- Document the `padef@pagopa-dx` plugin name after the AIEPDF and PAF renames. ([#2425](https://github.com/pagopa/dx/pull/2425))
+
+  ## Migration guide
+
+  The plugin was previously published as `aiepdf@pagopa-dx` and then as
+  `paf@pagopa-dx`. Replace the old entry in `enabledPlugins` with
+  `padef@pagopa-dx` to keep the plugin enabled.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.22.20 (2026-10-23)
+
+### 🩹 Fixes
+
+- Add SaveMoney user guide ([#2393](https://github.com/pagopa/dx/pull/2393))
+- Announce that DX tooling drops AzureRM v4 support on 31 December 2026 and document advisory warnings in Terraform plan/apply workflows. ([#2326](https://github.com/pagopa/dx/pull/2326))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 0.22.19 (2026-10-21)
 
 ### 🩹 Fixes

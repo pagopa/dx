@@ -10,42 +10,25 @@ resource "azurerm_resource_group" "e2e" {
   location = local.environment.location
 }
 
-data "azurerm_subnet" "pep" {
-  name = provider::dx::resource_name(merge(local.environment, {
-    app_name      = "pep",
-    resource_type = "subnet"
-    domain        = ""
-  }))
-  virtual_network_name = local.virtual_network.name
-  resource_group_name  = local.virtual_network.resource_group_name
-}
+#trivy:ignore:AZU-0012 Public access is required for the CDN origin.
+#trivy:ignore:AZU-0057 This ephemeral test fixture does not store production data.
+#trivy:ignore:AZU-0058 CDN E2E tests do not validate storage redundancy.
+#trivy:ignore:AZU-0061 This ephemeral test fixture does not require infrastructure encryption.
+resource "azurerm_storage_account" "cdn_origin" {
+  name                     = provider::dx::resource_name(merge(local.environment, { resource_type = "storage_account" }))
+  resource_group_name      = azurerm_resource_group.e2e.name
+  location                 = local.environment.location
+  account_kind             = "StorageV2"
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
 
-# Create a storage account with static website enabled
-module "storage_account" {
-  source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 4.0"
-
-  environment = local.environment
-
-  resource_group_name = azurerm_resource_group.e2e.name
-  use_case            = "default"
-  subnet_pep_id       = data.azurerm_subnet.pep.id
-  private_dns_zone_resource_group_name = provider::dx::resource_name(merge(local.environment, {
-    app_name      = "network",
-    domain        = ""
-    resource_type = "resource_group"
-  }))
-
-  force_public_network_access_enabled = true # Public network access enabled for CDN origin reachability
-
-  static_website = {
-    enabled        = true
-    index_document = "index.html"
-  }
-
-  subservices_enabled = {
-    blob = true
-  }
+  public_network_access           = "Enabled"
+  allow_nested_items_to_be_public = true
 
   tags = local.tags
+}
+
+resource "azurerm_storage_account_static_website" "cdn_origin" {
+  storage_account_id = azurerm_storage_account.cdn_origin.id
+  index_document     = "index.html"
 }

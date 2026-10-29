@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/nx-dx",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Nx plugin for PagoPA DX workspaces.",
   "repository": {
     "type": "git",
@@ -21,6 +21,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./version-actions": {
+      "types": "./dist/release/version-actions.d.ts",
+      "import": "./dist/release/version-actions.js",
+      "default": "./dist/release/version-actions.js"
     }
   },
   "publishConfig": {
@@ -28,7 +33,8 @@
   },
   "dependencies": {
     "@nx/devkit": "23.2.1",
-    "tslib": "catalog:"
+    "tslib": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",

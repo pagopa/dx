@@ -1,0 +1,312 @@
+## 0.6.10 (2026-10-23)
+
+### 🚀 Features
+
+- Add savemoney analyze and scope AZQR findings to selected subscriptions. ([#2393](https://github.com/pagopa/dx/pull/2393))
+
+### 🩹 Fixes
+
+- Update SaveMoney package repository metadata ([#2411](https://github.com/pagopa/dx/pull/2411))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.6.9 (2026-10-16)
+
+### 🚀 Features
+
+- SaveMoney noise reduction: missing tags no longer mark resources as unused (still reported as a governance note); removed the NIC "No public IP assigned", Public IP "Static IP not in use" and App Service "Premium tier with low resource utilization" rules; private endpoints now consider manual private link connections; storage transaction counts use Total aggregation per day; deallocated VMs no longer report a compute price; AZQR orphan findings fold into the matching SaveMoney finding instead of being reported twice; merged reasons are separated by a space; AZQR-only entries take their location from the AZQR inventory instead of repeating it in the reason; `json` output includes per-resource `estimatedMonthlySavings` (custom cost at risk or Advisor savings), also shown in a new `Savings` table column; multi-currency totals in the summary are joined with "+" to show they are cumulative. `thresholds.appService.premiumCpuPercent` is deprecated and ignored but still accepted. ([#2357](https://github.com/pagopa/dx/pull/2357))
+
+  Silence Azure SDK console warnings (credential-chain probes, `baseUri` deprecations) enabled by telemetry; set `AZURE_LOG_LEVEL` to restore them. `savemoney` debug logs are now shown only with `--verbose`, and console logs go to stderr so `--format json` output stays valid.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.6.8 (2026-10-08)
+
+### 🩹 Fixes
+
+- Update dependencies ([#2319](https://github.com/pagopa/dx/pull/2319))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.6.7 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+
+## 0.6.6 (2026-09-11)
+
+### 🩹 Fixes
+
+- Bump `js-yaml` from 4.3.1 to 4.3.2, picking up the fix for GHSA-2883-xcg3-v3hh (unbounded CPU usage when merging empty mappings). ([#2178](https://github.com/pagopa/dx/pull/2178))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Danilo Spinelli @gunzip
+
+## 0.6.5 (2026-09-02)
+
+### 🩹 Fixes
+
+- Deduplicate findings across sources and separate governance from cost. ([#2026](https://github.com/pagopa/dx/pull/2026))
+
+  Findings are now unified on a `resourceId + recommendationId` key: the new
+  optional `Finding.recommendationId` normalises each source's native identifier
+  onto a shared vocabulary (`orphan.<resourceType>` for orphaned resources,
+  `advisor.<recommendationTypeId>` for Azure Advisor, `azqr.<recommendationId>`
+  for the remaining AZQR rows). When an AZQR row collides with a finding already
+  reported by the live scan or by Azure Advisor for the same resource, the row is
+  dropped and the surviving finding keeps the highest severity and the only
+  available monetary estimate, gaining a note that records the corroborating
+  source. Findings without a `recommendationId` are never collapsed.
+
+  Governance and diagnostic observations from the custom analyzers — missing
+  tags, a resource outside the preferred location, an unsupported resource type,
+  a failed detail lookup — are reported as `operationalExcellence` instead of
+  `cost`, so the `cost` category means billable waste only. The direct Azure
+  Advisor Cost query is unchanged: it remains the source of per-finding
+  `estimatedMonthlySavings`.
+
+- Extend cross-source finding deduplication to custom analyzer sentences. ([#2033](https://github.com/pagopa/dx/pull/2033))
+
+  The per-resource analyzers already split their concatenated `reason` string into one `Finding` per sentence, but every sentence shared the generic `code: "custom.unknown"` and had no `recommendationId`, so two custom findings describing the same problem on the same resource were never collapsed.
+
+  Sentences that match a known template now get a stable, per-sentence `custom.<id>` identity (e.g. `custom.disk.unattached`, `custom.low-cpu-usage`), following the same convention as `advisor.<id>`/`azqr.<id>`. This lets the existing (already source-agnostic) `foldDuplicateFinding` collapse duplicate custom findings, not just cross-source ones. Sentences with no known template are unaffected: they keep `code: "custom.unknown"` and no `recommendationId`, and are never collapsed on guesswork.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.6.4 (2026-09-01)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.3
+
+## 0.6.3 (2026-08-26)
+
+### 🩹 Fixes
+
+- Add telemetry with input-source and usage attributes ([#2014](https://github.com/pagopa/dx/pull/2014))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.6.2 (2026-08-06)
+
+### 🩹 Fixes
+
+- Resolve `Pricing lookup failed` warnings caused by logtape misparsing error messages containing `{}` characters, and relax the Retail Prices API schema to accept empty-string metadata fields (e.g. `armSkuName`) that Azure legitimately returns for some meters. ([#2040](https://github.com/pagopa/dx/pull/2040))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.6.1 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2015](https://github.com/pagopa/dx/pull/2015))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.2
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.5.0 (2026-07-16)
+
+### 🚀 Features
+
+- Align `AzureConfig.sources` with the decoded configuration by making it a ([#1983](https://github.com/pagopa/dx/pull/1983))
+  required non-empty list. Callers constructing `AzureConfig` directly must now
+  provide at least one source; `loadConfig` continues to default to
+  `["advisor", "custom"]`. The supported values are available through
+  `AZURE_SOURCE_VALUES`.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.4.0 (2026-07-09)
+
+### 🚀 Features
+
+- - Add monthly cost estimation for custom findings: VM, Managed Disk, Public IP, and empty App Service Plan resources now show their estimated monthly cost when flagged as suspected unused. ([#1826](https://github.com/pagopa/dx/pull/1826), [#1939](https://github.com/pagopa/dx/issues/1939), [#1938](https://github.com/pagopa/dx/issues/1938), [#1937](https://github.com/pagopa/dx/issues/1937))
+  - Pricing data is fetched from the Azure Retail Prices API (no authentication required) and cached locally for 24 hours.
+  - Lint report shows the resource cost once per resource header `(cost at risk: € X.XX/mo)`, not next to each individual finding.
+  - Summary trailer now shows two separate totals: `Estimated monthly cost at risk (custom)` and `Estimated monthly savings (advisor)`.
+  - Add `--no-pricing` CLI flag to disable custom cost-at-risk pricing lookups.
+
+
+### 🩹 Fixes
+
+- Separate custom cost-at-risk estimates from Advisor savings and wire pricing enrichment into Azure analyzers. ([#1826](https://github.com/pagopa/dx/pull/1826), [#1939](https://github.com/pagopa/dx/issues/1939), [#1938](https://github.com/pagopa/dx/issues/1938), [#1937](https://github.com/pagopa/dx/issues/1937))
+- Introduce the internal Azure Retail Prices pricing module used by SaveMoney to estimate monthly cost-at-risk for custom findings, helping users prioritize unused resources with an approximate list-price impact. ([#1826](https://github.com/pagopa/dx/pull/1826), [#1939](https://github.com/pagopa/dx/issues/1939), [#1938](https://github.com/pagopa/dx/issues/1938), [#1937](https://github.com/pagopa/dx/issues/1937))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Copilot Autofix powered by AI @Copilot
+- Mario Mupo @mamu0
+
+## 0.3.3 (2026-07-02)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.0
+
+## 0.3.2 (2026-06-25)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.1.0
+
+## 0.3.1 (2026-06-09)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#1818](https://github.com/pagopa/dx/pull/1818))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+
+## 0.3.0 (2026-06-04)
+
+### 🚀 Features
+
+- - Add Azure Advisor integration: fetches Cost recommendations and maps them to `Finding` objects with estimated monthly savings. ([#1784](https://github.com/pagopa/dx/pull/1784))
+  - Add `SubscriptionAnalyzer` plugin interface for subscription-scoped analyzers.
+  - `analyzeAzureResources` now returns `AzureDetailedResourceReport[]`; call `generateReport(reports, format)` separately to render output.
+  - Add `azure.sources` config option to filter findings by source: `"advisor"`, `"custom"`, or both (default).
+  - Lint report shows a `[source]` badge and estimated monthly savings per finding.
+  - Switch to `cli-table3` for table output.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- Mario Mupo @mamu0
+
+## 0.2.6 (2026-05-25)
+
+### 🩹 Fixes
+
+- Impact-free refactoring to prepare SaveMoney for future implementations: ([#1775](https://github.com/pagopa/dx/pull/1775))
+
+  - Unified Finding model + adapter
+  - Interface wrapping existing analyzers
+  - Limiter
+  - In-memory cache
+  - Rewritten orchestrator (switch replaced by a registry, parallel loop)
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.2.5 (2026-05-05)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.4
+
+## 0.2.4 (2026-04-17)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#1639](https://github.com/pagopa/dx/pull/1639))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.3
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.2.3 (2026-04-01)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.0.2
+
+## 0.2.2
+
+### Patch Changes
+
+- f74034d: Move dependencies to the catalog
+
+## 0.2.1
+
+### Patch Changes
+
+- 66b392d: Update to support the newest version of @pagopa/eslint-config (eslint10, new rules)
+
+## 0.2.0
+
+### Minor Changes
+
+- d547c62: - Fix table format removing `Unused` column
+  - Fix remove `tenantId` from config file and use Azure CLI context for tenant and subscription information
+  - New `lint` output format: linter-style report grouped by resource ID with risk icons (`✖ HIGH`, `⚠ MEDIUM`, `ℹ LOW`) and a summary line
+  - New `--tags` CLI option: filter analyzed resources by Azure tag `key=value` pairs (AND logic, e.g. `env=prod,team=dx`)
+  - Convert confiiguration file to YAML for better readability
+  - Add `azure` section to config file with `subscriptionIds`, `preferredLocation`, `timespanDays`
+  - Add new optional `thresholds` configuration section to config file for customizable analysis thresholds (CPU%, transactions/day, etc.) via `--config` input YAML file
+
+## 0.1.6
+
+### Patch Changes
+
+- e0a3767: Upgrade dependencies
+
+## 0.1.5
+
+### Patch Changes
+
+- 2d3d8fb: Update tsconfig base
+
+## 0.1.4
+
+### Patch Changes
+
+- 9d4109c: Upgrade dependencies
+
+## 0.1.3
+
+### Patch Changes
+
+- cfb975f: Update SaveMoney Tool with Static Web App resource control
+
+## 0.1.2
+
+### Patch Changes
+
+- ccc9ff1: Add Container App control in azure resources, fixed metric retrieve method, update README
+
+## 0.1.1
+
+### Patch Changes
+
+- 841df11: Let the package be public
+
+## 0.1.0
+
+### Minor Changes
+
+- d8e47d0: Add a new FinOps tool for Azure that checks all resources in the subscriptions and identifies unused or underutilized resources for cost optimization opportunities

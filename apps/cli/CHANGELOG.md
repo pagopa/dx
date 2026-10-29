@@ -1,3 +1,33 @@
+## 0.27.21 (2026-10-29)
+
+### 🩹 Fixes
+
+- Stop passing the unused `GH_APP_RELEASE_*` secrets in the generated monorepo `validate.yaml` workflow ([#2431](https://github.com/pagopa/dx/pull/2431))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.27.20 (2026-10-28)
+
+### 🩹 Fixes
+
+- Stop provisioning unused GitHub App ID environment secret ([#2427](https://github.com/pagopa/dx/pull/2427))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.27.19 (2026-10-23)
+
+### 🚀 Features
+
+- Remove dx savemoney; migrate to @pagopa/dx-savemoney analyze --subscriptionIds <ids>. ([#2393](https://github.com/pagopa/dx/pull/2393))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.27.18 (2026-10-21)
 
 ### 🩹 Fixes

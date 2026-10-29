@@ -428,6 +428,53 @@ run "container_app_authentication_injects_secret" {
   }
 }
 
+run "container_app_authentication_without_client_secret" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id = "ffffffff-0000-1111-2222-333333333333"
+      }
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_container_app.this.secret) == 0
+    error_message = "No Container App secret must be created when the optional client secret URI is omitted"
+  }
+
+  assert {
+    condition     = azapi_resource.auth[0].body.properties.globalValidation.unauthenticatedClientAction == "RedirectToLoginPage"
+    error_message = "The default unauthenticated client action must preserve the existing redirect behavior"
+  }
+
+  assert {
+    condition     = !contains(keys(azapi_resource.auth[0].body.properties.identityProviders.azureActiveDirectory.registration), "clientSecretSettingName")
+    error_message = "clientSecretSettingName must be omitted when no client secret URI is configured"
+  }
+}
+
+run "container_app_authentication_returns_401_for_unauthenticated_requests" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id                     = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id                     = "ffffffff-0000-1111-2222-333333333333"
+        unauthenticated_client_action = "Return401"
+      }
+    }
+  }
+
+  assert {
+    condition     = azapi_resource.auth[0].body.properties.globalValidation.unauthenticatedClientAction == "Return401"
+    error_message = "Unauthenticated requests must return 401 when Return401 is configured"
+  }
+}
+
 # Diagnostic settings: created when log_analytics_workspace_id is provided
 run "container_app_diagnostics_enabled" {
   command = plan

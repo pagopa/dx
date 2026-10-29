@@ -1,3 +1,39 @@
+## 0.1.8 (2026-10-29)
+
+### 🩹 Fixes
+
+- Bump dependencies ([#2422](https://github.com/pagopa/dx/pull/2422))
+
+## 0.1.7 (2026-10-28)
+
+### 🩹 Fixes
+
+- Point the benchmark documentation and fixtures at the renamed `plugins/padef` ([#2425](https://github.com/pagopa/dx/pull/2425))
+  skill layout.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.6 (2026-10-23)
+
+### 🩹 Fixes
+
+- Apply the dependency publication cooldown to the generated verifier. ([#2402](https://github.com/pagopa/dx/pull/2402))
+
+  The workspace lock already quarantines newly published distributions through
+  `[tool.uv] exclude-newer`, but `harbor-rewardkit` is installed by `uvx` inside
+  the verifier container at runtime, outside that lock. Because RewardKit
+  declares `litellm>=1.83` with no upper bound, a release published minutes
+  earlier can land in a container that holds the judge credentials; the LiteLLM
+  1.107.0 compromise is exactly that scenario. The generated `tests/test.sh` now
+  exports `UV_EXCLUDE_NEWER="7 days"` before invoking `uvx`, which makes the
+  verifier honour the same seven-day cooldown as the lock.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.1.5 (2026-10-15)
 
 ### 🩹 Fixes

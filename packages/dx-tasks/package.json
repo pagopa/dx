@@ -1,16 +1,37 @@
 {
   "name": "@pagopa/dx-tasks",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "packages/dx-tasks"
   },
+  "files": [
+    "dist"
+  ],
   "type": "module",
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    "./default-dispatcher": "./src/default-dispatcher.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./default-dispatcher": {
+      "types": "./dist/default-dispatcher.d.ts",
+      "import": "./dist/default-dispatcher.js",
+      "default": "./dist/default-dispatcher.js"
+    },
+    "./tasks": {
+      "types": "./dist/tasks.d.ts",
+      "import": "./dist/tasks.js",
+      "default": "./dist/tasks.js"
+    }
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   },
   "devDependencies": {
     "@pagopa/eslint-config": "workspace:^",

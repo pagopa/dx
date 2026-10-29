@@ -81,7 +81,7 @@ def _git_name(value: str) -> str | None:
     """Skill name derived from a GitHub ``/tree/<ref>/<subdir>`` URL.
 
     The last path segment after the ref (``dr-blacksmith`` in
-    ``…/tree/main/plugins/aiepdf/skills/dr-blacksmith``); ``None`` when the URL
+    ``…/tree/main/plugins/padef/skills/dr-blacksmith``); ``None`` when the URL
     has no meaningful segment (e.g. it points at a skills root). Query and
     fragment parts are ignored.
     """

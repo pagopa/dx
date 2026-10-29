@@ -1,3 +1,18 @@
+## 0.0.10 (2026-10-28)
+
+### 🩹 Fixes
+
+- Install Python 3.12.15 for certificate renewal, with Linux x64 builds available for both Ubuntu 24.04 and 26.04. ([#2415](https://github.com/pagopa/dx/pull/2415))
+
+  Historical credential-free checks passed on Ubuntu 24.04 and 26.04 with Python
+  3.12.15, covering TLS imports, CSR generation, and PFX conversion. These checks
+  do not certify real certificate renewal, Azure/ACME integration, deployments, or
+  end-to-end consumer compatibility. No diagnostic scripts or workflows are shipped.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.0.9 (2026-10-21)
 
 ### 🩹 Fixes

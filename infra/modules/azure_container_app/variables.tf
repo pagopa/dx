@@ -123,17 +123,28 @@ variable "custom_domain" {
 variable "authentication" {
   type = object({
     azure_active_directory = object({
-      client_id                  = string
-      tenant_id                  = string
-      client_secret_key_vault_id = string
+      client_id                     = string
+      tenant_id                     = string
+      client_secret_key_vault_id    = optional(string)
+      unauthenticated_client_action = optional(string, "RedirectToLoginPage")
     })
   })
   default     = null
-  description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. Unauthenticated requests get redirected to the login page. client_secret_key_vault_id must be an Azure Key Vault secret URI; the module automatically adds it to the Container App secrets."
+  description = "Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. client_secret_key_vault_id is optional and, when set, must be an Azure Key Vault secret URI; the module automatically adds it to the Container App secrets. unauthenticated_client_action controls how unauthenticated requests are handled, defaults to RedirectToLoginPage, and accepts RedirectToLoginPage, AllowAnonymous, Return401, or Return403."
 
   validation {
-    condition     = var.authentication == null || can(regex("^https://[a-z0-9-]+\\.vault\\.azure\\.net/secrets/[a-zA-Z0-9-]+(/[a-zA-Z0-9]+)?$", var.authentication.azure_active_directory.client_secret_key_vault_id))
+    condition     = var.authentication == null || var.authentication.azure_active_directory.client_secret_key_vault_id == null || can(regex("^https://[a-z0-9-]+\\.vault\\.azure\\.net/secrets/[a-zA-Z0-9-]+(/[a-zA-Z0-9]+)?$", var.authentication.azure_active_directory.client_secret_key_vault_id))
     error_message = "authentication.azure_active_directory.client_secret_key_vault_id must be a valid Azure Key Vault secret URI."
+  }
+
+  validation {
+    condition = var.authentication == null || contains([
+      "RedirectToLoginPage",
+      "AllowAnonymous",
+      "Return401",
+      "Return403",
+    ], var.authentication.azure_active_directory.unauthenticated_client_action)
+    error_message = "authentication.azure_active_directory.unauthenticated_client_action must be one of RedirectToLoginPage, AllowAnonymous, Return401, or Return403."
   }
 }
 

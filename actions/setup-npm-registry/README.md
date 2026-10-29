@@ -36,7 +36,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install dependencies
-        run: pnpm --filter . ci
+        run: pnpm --filter '{.}...' ci
 ```
 
 The installing step needs no extra configuration: the action already exported `NPM_CONFIG_USERCONFIG`, so every later npm and pnpm invocation of the job loads the npmrc.

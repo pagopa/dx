@@ -40,12 +40,12 @@ resource "azurerm_container_app" "this" {
     }
   }
 
-  # Add Entra ID client secret if authentication is configured
+  # Add the Entra ID client secret only when a Key Vault reference is configured.
   dynamic "secret" {
-    for_each = var.authentication != null ? [1] : []
+    for_each = var.authentication == null || var.authentication.azure_active_directory.client_secret_key_vault_id == null ? [] : [var.authentication.azure_active_directory.client_secret_key_vault_id]
     content {
       name                = "entra-id-client-secret"
-      key_vault_secret_id = var.authentication.azure_active_directory.client_secret_key_vault_id
+      key_vault_secret_id = secret.value
       identity            = local.container_app_secret_identity
     }
   }
@@ -200,7 +200,7 @@ resource "azurerm_container_app" "this" {
     }
 
     precondition {
-      condition     = var.authentication == null || !contains(keys(local.key_vault_secret_ids_by_name), "entra-id-client-secret")
+      condition     = var.authentication == null || var.authentication.azure_active_directory.client_secret_key_vault_id == null || !contains(keys(local.key_vault_secret_ids_by_name), "entra-id-client-secret")
       error_message = "The normalized environment variable name 'entra-id-client-secret' is reserved when authentication is configured."
     }
 

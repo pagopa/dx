@@ -44,16 +44,23 @@
       "vendorLifecycleUrl": "https://endoflife.date/terraform",
       "versions": [
         {
-          "version": "1.16.x",
+          "version": "~> 1.17",
           "status": "active",
-          "supportedSince": "2026-09-01",
+          "supportedSince": "2026-10-22",
           "notes": "Current stable, used in DX modules"
         },
         {
-          "version": "1.15.x",
+          "version": "~> 1.16",
           "status": "active",
+          "supportedSince": "2026-09-01",
+          "notes": "Supported - minimum required by most DX modules"
+        },
+        {
+          "version": "~> 1.15",
+          "status": "maintenance",
           "supportedSince": "2025-04-01",
-          "notes": "Supported — minimum required by most DX modules"
+          "eolDate": "2026-10-30",
+          "notes": "No longer tested or supported in DX modules"
         },
         {
           "version": "~> 1.14",
@@ -75,15 +82,16 @@
       "name": "Terraform Providers",
       "category": "infra",
       "communicationChannels": [
-        "GitHub Actions warnings/errors in terraform plan/apply reusable workflows"
+        "GitHub Actions warnings and PR comments in the Terraform plan reusable workflow; job summaries during the plan phase of the Terraform apply reusable workflow"
       ],
       "lifecyclePolicy": "Only the provider versions pinned in DX modules are actively supported. Check each module's required_providers block for the exact constraints.",
       "vendorLifecycleUrl": "https://registry.terraform.io/browse/providers",
       "versions": [
         {
           "version": "azurerm (~> 4.x)",
-          "status": "active",
-          "notes": "Primary Azure provider used across core/resources/bootstrapper"
+          "status": "deprecated",
+          "eolDate": "2026-12-31",
+          "notes": "DX tooling drops AzureRM v4 support on 31 December 2026. Plan migration to AzureRM v5 and compatible DX module versions before this date; check each module's required_providers constraints."
         },
         {
           "version": "azapi (2.8.0)",

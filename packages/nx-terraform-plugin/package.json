@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/nx-terraform",
-  "version": "0.5.14",
+  "version": "0.5.15",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
@@ -27,7 +27,6 @@
     "registry": "https://npm.pkg.github.com/"
   },
   "scripts": {
-    "build": "tsdown",
     "generate": "node src/generate-module-schema.ts"
   },
   "dependencies": {
@@ -60,13 +59,33 @@
   "nx": {
     "targets": {
       "build": {
-        "inputs": [
-          "default",
-          "^default"
-        ],
+        "executor": "@nx/js:tsc",
         "outputs": [
-          "{projectRoot}/dist/**"
-        ]
+          "{options.outputPath}"
+        ],
+        "cache": true,
+        "dependsOn": [
+          "^build"
+        ],
+        "options": {
+          "outputPath": "packages/nx-terraform-plugin/dist",
+          "main": "packages/nx-terraform-plugin/src/index.ts",
+          "rootDir": "packages/nx-terraform-plugin/src",
+          "tsConfig": "packages/nx-terraform-plugin/tsconfig.lib.json",
+          "generatePackageJson": false,
+          "assets": [
+            {
+              "input": "packages/nx-terraform-plugin/src/generators",
+              "glob": "**/schema.json",
+              "output": "generators"
+            },
+            {
+              "input": "packages/nx-terraform-plugin/src/generators",
+              "glob": "**/files/**",
+              "output": "generators"
+            }
+          ]
+        }
       }
     }
   }

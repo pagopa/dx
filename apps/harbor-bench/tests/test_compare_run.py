@@ -220,7 +220,7 @@ def test_run_command_without_token_omits_ae(tmp_path: Path):
 def test_run_command_emits_injection_references_in_order(tmp_path: Path):
     """The ``--skill`` flags follow the injection (aux first, tested last)."""
     aux_local = SkillSource(
-        value="plugins/aiepdf/skills/uc-engraver",
+        value="plugins/padef/skills/uc-engraver",
         kind="local",
         reference=str(tmp_path / "uc-engraver"),
         name="uc-engraver",
@@ -232,7 +232,7 @@ def test_run_command_emits_injection_references_in_order(tmp_path: Path):
         name=None,
     )
     tested = SkillSource(
-        value="plugins/aiepdf/skills/dr-blacksmith",
+        value="plugins/padef/skills/dr-blacksmith",
         kind="local",
         reference=str(tmp_path / "dr-blacksmith"),
         name="dr-blacksmith",
@@ -329,7 +329,7 @@ def test_run_compare_preflights_invalid_head_git_source(
 
     git_head = (
         "https://github.com/pagopa/dx/tree/foobar/"
-        "plugins/aiepdf/skills/dr-blacksmith"
+        "plugins/padef/skills/dr-blacksmith"
     )
     with pytest.raises(CompareError, match=r"\[head\] invalid skill source"):
         run_compare(options(tmp_path, head_skill=git_head))
@@ -353,7 +353,7 @@ def test_run_compare_preflights_invalid_base_git_source(
     )
     git_base = (
         "https://github.com/pagopa/dx/tree/foobar/"
-        "plugins/aiepdf/skills/dr-blacksmith"
+        "plugins/padef/skills/dr-blacksmith"
     )
     with pytest.raises(CompareError, match=r"\[base\] invalid skill source"):
         run_compare(options(tmp_path, base_skill=git_base))
@@ -384,7 +384,7 @@ def test_run_compare_preflights_invalid_aux_git_source(tmp_path: Path, monkeypat
 
     aux = (
         "https://github.com/pagopa/dx/tree/foobar/"
-        "plugins/aiepdf/skills/uc-engraver"
+        "plugins/padef/skills/uc-engraver"
     )
     with pytest.raises(CompareError, match=r"\[aux .*\] invalid skill source"):
         run_compare(options(tmp_path, aux_skills=(aux,)))
@@ -412,7 +412,7 @@ def test_run_compare_valid_git_source_proceeds(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(
         "harbor_bench.compare.run.validate_git_source", lambda source: None
     )
-    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    skill_dir = tmp_path / "plugins" / "padef" / "skills" / "test-skill"
     write_evals(skill_dir)
 
     out = tmp_path / "out"
@@ -438,7 +438,7 @@ def test_run_compare_valid_git_source_proceeds(tmp_path: Path, monkeypatch):
 
     git_head = (
         "https://github.com/pagopa/dx/tree/main/"
-        "plugins/aiepdf/skills/dr-blacksmith"
+        "plugins/padef/skills/dr-blacksmith"
     )
     result = run_compare(options(tmp_path, head_skill=git_head))
 
@@ -454,7 +454,7 @@ def test_run_compare_full_flow(tmp_path: Path, monkeypatch, capsys):
     monkeypatch.setattr(
         "harbor_bench.compare.run.check_host_environment", lambda environment: None
     )
-    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    skill_dir = tmp_path / "plugins" / "padef" / "skills" / "test-skill"
     write_evals(skill_dir)
 
     out = tmp_path / "out"
@@ -513,7 +513,7 @@ def test_run_compare_runs_bundled_harbor(tmp_path: Path, monkeypatch):
         "harbor_bench.compare.run.resolve_harbor",
         lambda harbor: "/bundled/bin/harbor",
     )
-    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    skill_dir = tmp_path / "plugins" / "padef" / "skills" / "test-skill"
     write_evals(skill_dir)
 
     out = tmp_path / "out"
@@ -553,7 +553,7 @@ def test_run_compare_writes_selected_report_format(
         "harbor_bench.compare.run.check_host_environment",
         lambda environment: None,
     )
-    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    skill_dir = tmp_path / "plugins" / "padef" / "skills" / "test-skill"
     write_evals(skill_dir)
     out = tmp_path / "out"
 
@@ -598,7 +598,7 @@ def test_run_compare_sequential_uses_one_run_per_job(tmp_path: Path, monkeypatch
     monkeypatch.setattr(
         "harbor_bench.compare.run.check_host_environment", lambda environment: None
     )
-    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    skill_dir = tmp_path / "plugins" / "padef" / "skills" / "test-skill"
     write_evals(skill_dir)
 
     out = tmp_path / "out"
@@ -645,7 +645,7 @@ def test_run_compare_passes_aux_skills_to_both_runs(tmp_path: Path, monkeypatch)
     monkeypatch.setattr(
         "harbor_bench.compare.run.check_host_environment", lambda environment: None
     )
-    skill_dir = tmp_path / "plugins" / "aiepdf" / "skills" / "test-skill"
+    skill_dir = tmp_path / "plugins" / "padef" / "skills" / "test-skill"
     write_evals(skill_dir)
 
     out = tmp_path / "out"

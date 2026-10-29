@@ -1,3 +1,24 @@
+# 9.0.0 (2026-10-29)
+
+### ⚠️  Breaking Changes
+
+- Allow AzureRM v5 alongside v4 and require Terraform >= 1.16.0. The Terraform floor is a major breaking change for the 18 modules marked major here. The VPN and Cosmos Account modules receive their major upgrade through CES-2366; their minor entries here cover dual-provider support and are superseded by that major bump. ([#2339](https://github.com/pagopa/dx/pull/2339))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 8.0.3 (2026-10-28)
+
+### 🩹 Fixes
+
+- Allow Easy Auth to omit the Entra client-secret Key Vault reference and configure unauthenticated responses, preserving the existing `RedirectToLoginPage` default while enabling `Return401` for API clients. ([#2430](https://github.com/pagopa/dx/pull/2430))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 8.0.2 (2026-10-15)
 
 ### 🩹 Fixes

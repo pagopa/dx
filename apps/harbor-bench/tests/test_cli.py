@@ -238,11 +238,11 @@ def test_parser_exposes_compare_subcommand():
             "skill-a-*",
             "-t",
             "skill-b-*",
-            "plugins/aiepdf/skills/dr-blacksmith",
+            "plugins/padef/skills/dr-blacksmith",
             "pagopa/dx@main",
         ]
     )
-    assert args.base == "plugins/aiepdf/skills/dr-blacksmith"
+    assert args.base == "plugins/padef/skills/dr-blacksmith"
     assert args.head == "pagopa/dx@main"
     assert args.task_patterns == ["skill-a-*", "skill-b-*"]
 
@@ -308,7 +308,7 @@ def test_compare_flags_map_to_options(tmp_path, monkeypatch, capsys):
             "--token",
             "tok-cli",
             "--skill",
-            "plugins/aiepdf/skills/uc-engraver",
+            "plugins/padef/skills/uc-engraver",
             "--skill",
             "pagopa/dx@main",
             "base",
@@ -326,6 +326,6 @@ def test_compare_flags_map_to_options(tmp_path, monkeypatch, capsys):
     assert opts.report_format == "json"
     assert opts.token == "tok-cli"
     assert opts.aux_skills == (
-        "plugins/aiepdf/skills/uc-engraver",
+        "plugins/padef/skills/uc-engraver",
         "pagopa/dx@main",
     )

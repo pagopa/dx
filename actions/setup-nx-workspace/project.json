@@ -1,0 +1,14 @@
+{
+  "metadata": {
+    "version": "0.1.0"
+  },
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "setup-nx-workspace",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "currentVersionResolver": "disk",
+      "versionActions": "@pagopa/nx-dx/version-actions"
+    }
+  }
+}

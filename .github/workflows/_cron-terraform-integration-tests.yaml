@@ -4,6 +4,12 @@ on:
   schedule:
     - cron: "0 3 * * 6" # Every Saturday at 03:00 UTC
   workflow_dispatch:
+    inputs:
+      projects:
+        description: Optional comma-separated Nx project names to run
+        required: false
+        type: string
+        default: ""
 
 concurrency:
   group: ${{ github.workflow }}
@@ -68,10 +74,35 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-nx-cache-
 
+      - name: Use the local AzureRM v5-compatible role assignments module
+        if: github.event_name == 'workflow_dispatch' && contains(inputs.projects, 'azure_app_configuration')
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          path = Path("infra/modules/azure_app_configuration/iam.tf")
+          content = path.read_text()
+          registry_reference = '  source  = "pagopa-dx/azure-role-assignments/azurerm"\n  version = "~> 4.0"'
+          local_reference = '  source = "../azure_role_assignments"'
+
+          if registry_reference in content:
+              if content.count(registry_reference) != 1:
+                  raise SystemExit("Expected exactly one Azure role assignments registry reference")
+              path.write_text(content.replace(registry_reference, local_reference, 1))
+          elif local_reference not in content:
+              raise SystemExit("Could not find the Azure role assignments module reference")
+          PY
+
       - name: Run Terraform Integration Tests
         timeout-minutes: 120
+        env:
+          PROJECT_FILTER: ${{ inputs.projects }}
         run: |
-          pnpm nx run-many --target test-integration
+          if [ -n "$PROJECT_FILTER" ]; then
+            pnpm nx run-many --target test-integration --projects="$PROJECT_FILTER"
+          else
+            pnpm nx run-many --target test-integration
+          fi
 
       - name: Notify Slack on failure
         if: failure() && github.event_name == 'schedule'

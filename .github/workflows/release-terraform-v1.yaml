@@ -43,20 +43,8 @@ jobs:
           install_args: "node pnpm"
           minimum_release_age: 7d
 
-      - name: Set base and head SHAs for affected commands
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-
-      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The action writes a private npmrc in runner.temp with the
-      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
-      # the job, so no step has to resolve a token placeholder.
-      - name: Setup npm registry
-        uses: pagopa/dx/actions/setup-npm-registry@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install dependencies
-        run: pnpm --filter . ci
+      - name: Setup Nx Workspace
+        uses: pagopa/dx/actions/setup-nx-workspace@main
 
       - name: Assess affected projects and environments
         id: detect
@@ -190,19 +178,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
 
-      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The action writes a private npmrc in runner.temp with the
-      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
-      # the job, so no step has to resolve a token placeholder.
-      - name: Setup npm registry
-        uses: pagopa/dx/actions/setup-npm-registry@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Nx Workspace
+        uses: pagopa/dx/actions/setup-nx-workspace@main
 
       - name: Install dependencies
         run: |
           mise deps --skip pnpm
-          pnpm --filter . ci
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -289,19 +270,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
 
-      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
-      # alias. The action writes a private npmrc in runner.temp with the
-      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
-      # the job, so no step has to resolve a token placeholder.
-      - name: Setup npm registry
-        uses: pagopa/dx/actions/setup-npm-registry@main
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Setup Nx Workspace
+        uses: pagopa/dx/actions/setup-nx-workspace@main
 
       - name: Install dependencies
         run: |
           mise deps --skip pnpm
-          pnpm --filter . ci
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main

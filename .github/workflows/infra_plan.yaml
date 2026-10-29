@@ -250,7 +250,7 @@ jobs:
           TERRAFORM_VERSION: ${{ needs.get-terraform-version.outputs.terraform_version }}
         run: |
           IFS='.' read -r major minor patch <<< "$TERRAFORM_VERSION"
-          if (( major < 1 || (major == 1 && minor < 15) )); then
+          if (( major < 1 || (major == 1 && minor < 16) )); then
             echo "unsupported=true" >> "$GITHUB_OUTPUT"
           else
             echo "unsupported=false" >> "$GITHUB_OUTPUT"
@@ -264,9 +264,9 @@ jobs:
           cat > terraform-version-warning.md <<EOF
           ## ⚠️ Terraform version support
 
-          Terraform \`${TERRAFORM_VERSION}\` is deprecated in DX. Official support ends on September 30, 2026.
+          Terraform \`${TERRAFORM_VERSION}\` is deprecated in DX. Official support ends on October 30th, 2026.
 
-          Upgrade by updating the Terraform version in the root \`.terraform-version\` file to \`1.15.0\` or newer. See the [DX tooling lifecycle](https://dx.pagopa.it/docs/tooling-lifecycle).
+          Upgrade by updating the Terraform version in the root \`.terraform-version\` file to \`1.16.0\` or newer. See the [DX tooling lifecycle](https://dx.pagopa.it/docs/tooling-lifecycle).
           EOF
           cat terraform-version-warning.md >> "$GITHUB_STEP_SUMMARY"
 
@@ -281,6 +281,25 @@ jobs:
         working-directory: ${{ steps.directory.outputs.dir }}
         run: |
           terraform init -input=false
+
+      - name: Check Terraform provider support
+        id: provider-support
+        continue-on-error: true
+        uses: pagopa/dx/actions/terraform-provider-lifecycle@main
+        with:
+          working-directory: ${{ matrix.dir }}
+          write-summary: "false"
+
+      - name: Post Terraform provider warning on PR
+        if: ${{ github.event_name == 'pull_request' && steps.provider-support.outputs.notice != '' }}
+        continue-on-error: true
+        uses: pagopa/dx/actions/pr-comment@main
+        with:
+          comment-body: |
+            ### Terraform provider support (${{ matrix.dir }})
+
+            ${{ steps.provider-support.outputs.notice }}
+          search-pattern: "Terraform provider support (${{ matrix.dir }})"
 
       - name: Generate Cache Key
         if: github.event_name == 'pull_request'

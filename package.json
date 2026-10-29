@@ -2,8 +2,7 @@
   "name": "@pagopa/dx",
   "type": "module",
   "scripts": {
-    "dx": "node ./apps/cli/bin/index.js",
-    "validate": "nx affected --targets=build,test,lint,shellcheck,typecheck,docker:build --configuration=ci"
+    "dx": "node ./apps/cli/bin/index.js"
   },
   "devDependencies": {
     "@devcontainers/cli": "^0.88.0",
@@ -26,5 +25,15 @@
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
-  "packageManager": "pnpm@11.23.0"
+  "packageManager": "pnpm@12.13.0",
+  "nx": {
+    "targets": {
+      "build-deps": {
+        "executor": "nx:noop",
+        "dependsOn": [
+          "^build"
+        ]
+      }
+    }
+  }
 }

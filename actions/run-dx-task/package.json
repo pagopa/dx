@@ -1,6 +1,6 @@
 {
   "name": "run-dx-task",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "private": true,
   "description": "GitHub Action that dispatches dx-tasks tasks",
   "keywords": [
@@ -33,6 +33,9 @@
   "nx": {
     "targets": {
       "build": {
+        "dependsOn": [
+          "^build"
+        ],
         "inputs": [
           "default",
           "^default"
