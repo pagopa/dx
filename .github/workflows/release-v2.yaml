@@ -52,6 +52,11 @@ jobs:
       - name: Setup Nx Workspace
         uses: pagopa/dx/actions/setup-nx-workspace@main
 
+      - name: Install Node.js dependencies
+        env:
+          pnpm_config_//npm.pkg.github.com/:_authToken: ${{ inputs.github-token }}
+        run: pnpm ci
+
       - name: Nx Publish
         uses: pagopa/dx/actions/nx-release@main
         env:
