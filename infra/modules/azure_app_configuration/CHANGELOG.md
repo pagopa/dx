@@ -1,3 +1,13 @@
+## 3.0.1 (2026-10-29)
+
+### 🩹 Fixes
+
+- Fix AzureRM v5 initialization by upgrading the Azure role assignments dependency to v5. Allow AzureRM 5.x updates in the module examples and integration test setup. ([#2449](https://github.com/pagopa/dx/pull/2449))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 # 3.0.0 (2026-10-29)
 
 ### ⚠️  Breaking Changes

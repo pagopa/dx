@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/nx-agent-plugins",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Nx plugin for discovering and versioning agent plugins.",
   "repository": {
     "type": "git",
