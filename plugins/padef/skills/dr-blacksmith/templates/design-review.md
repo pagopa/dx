@@ -213,6 +213,12 @@ _Describe end-to-end acceptance strategy, contract validation, non-functional
 verification, observability checks, and evidence locations. Requirement-level
 acceptance checks remain in the child Use Cases._
 
+Name the boundary each validation area observes: the contract operation, event,
+or component interface that makes the behavior visible. Child Use Cases point at
+these declared surfaces, so the initiative decides where behavior is observed
+once and the Use Cases stay implementation-agnostic. The code-level seam inside a
+boundary belongs to the change that implements the Use Case.
+
 | ID                      | Validation area        | Scenario / evidence            | Owner     | Status     |
 | ----------------------- | ---------------------- | ------------------------------ | --------- | ---------- |
 | `validation.e2e`        | End-to-end             | _<scenario or link>_           | _<owner>_ | _<status>_ |

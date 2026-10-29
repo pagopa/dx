@@ -42,6 +42,9 @@ criterion, the model wins.
       evidence, owners, or explicit gaps.
 - [ ] Relevant APIs, events, data contracts, integrations, and audit behavior are
       linked or explicitly unresolved.
+- [ ] The `Validation strategy` names the boundary each validation area
+      observes, so a child acceptance check points at a declared surface instead
+      of inventing a local one.
 - [ ] Accepted RFC decisions are reflected in the DR/SRS for the impacted slices
       before they guide implementation.
 
@@ -56,9 +59,6 @@ criterion, the model wins.
       defines its typed errors with semantic identifiers, or a justified `N/A`;
       no error taxonomy is centralized in the DR/SRS and no error carries an
       owner.
-- [ ] Every `ready` child names the test seam its acceptance checks are observed
-      through, or a justified `N/A`, and every check passes without mocking an
-      internal collaborator.
 - [ ] `ready` children meet the minimum core defined in `dr-srs-model.md`; other
       children stay `draft` with an owner gap.
 - [ ] Open questions are not duplicated: cross-Use-Case and initiative
