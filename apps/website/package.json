@@ -6,6 +6,7 @@
     "docusaurus": "docusaurus",
     "start": "docusaurus start -h 0.0.0.0",
     "build": "docusaurus build",
+    "typecheck": "tsc --noEmit",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
