@@ -486,5 +486,14 @@ export const getProject = (
     targets,
   };
 
+  if (isPublishableLibrary) {
+    config.release = {
+      version: {
+        currentVersionResolver: "disk",
+        versionActions: "@pagopa/nx-dx/version-actions",
+      },
+    };
+  }
+
   return config;
 };

@@ -1524,6 +1524,9 @@ importers:
       '@pagopa/dx-tasks':
         specifier: workspace:^
         version: link:../dx-tasks
+      '@pagopa/nx-dx':
+        specifier: workspace:^
+        version: link:../nx-dx-plugin
       execa:
         specifier: 'catalog:'
         version: 9.6.1
