@@ -4,12 +4,12 @@
 # - AVD-AZU-0024: Azure enables this parameter by default.
 
 terraform {
-  required_version = ">= 1.15.0"
+  required_version = ">= 1.16.0"
 
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.23"
+      version = ">= 4.23, < 6.0.0"
     }
     dx = {
       source  = "pagopa-dx/azure"

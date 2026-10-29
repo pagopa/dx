@@ -190,9 +190,9 @@ A complete usage example can be found in the [example/complete](https://github.c
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
 | <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | ~> 2.9 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.70 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.70, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.14 |
 
