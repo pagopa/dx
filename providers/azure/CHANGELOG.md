@@ -1,3 +1,13 @@
+## 0.12.9 (2026-10-29)
+
+### 🩹 Fixes
+
+- Update GitHub Actions versions ([#2429](https://github.com/pagopa/dx/pull/2429))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.12.8 (2026-09-09)
 
 ### 🩹 Fixes
