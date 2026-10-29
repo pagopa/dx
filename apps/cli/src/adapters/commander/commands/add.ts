@@ -39,6 +39,7 @@ import {
 } from "../../azure/locations.js";
 import {
   costCenterSchema,
+  MissingRunnerAppCredentialsError,
   ownerSchema,
   workspaceSchema,
 } from "../../plop/generators/environment/prompts.js";
@@ -432,7 +433,12 @@ const addEnvironmentAction = (
           initialAnswers,
           nonInteractive,
         ),
-        asError("Failed to run the deployment environment generator"),
+        (cause) =>
+          cause instanceof MissingRunnerAppCredentialsError
+            ? cause
+            : asError("Failed to run the deployment environment generator")(
+                cause,
+              ),
       ),
     )
     .andThen(({ generator, payload }) =>

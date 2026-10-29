@@ -29,8 +29,10 @@ const {
   mockCreateResourceGroup,
   mockDeleteResourceGroup,
   mockGetIdentity,
+  mockGetSecret,
   mockGetSubscription,
   mockKeyVaultNameAvailability,
+  mockSecretClientConstructor,
   mockSetSecret,
 } = vi.hoisted(() => ({
   mockCreateFederatedIdentityCredential: vi.fn().mockResolvedValue({}),
@@ -41,10 +43,12 @@ const {
   mockCreateResourceGroup: vi.fn().mockResolvedValue({}),
   mockDeleteResourceGroup: vi.fn().mockResolvedValue({}),
   mockGetIdentity: vi.fn().mockResolvedValue({ clientId: "client-1" }),
+  mockGetSecret: vi.fn(),
   mockGetSubscription: vi.fn().mockResolvedValue({ tenantId: "tenant-1" }),
   mockKeyVaultNameAvailability: vi.fn().mockResolvedValue({
     nameAvailable: true,
   }),
+  mockSecretClientConstructor: vi.fn(),
   mockSetSecret: vi.fn().mockResolvedValue({}),
 }));
 const { mockLookup } = vi.hoisted(() => ({
@@ -119,7 +123,12 @@ vi.mock("@azure/arm-resources-subscriptions", () => ({
 
 vi.mock("@azure/keyvault-secrets", () => ({
   SecretClient: class {
+    getSecret = mockGetSecret;
+
     setSecret = mockSetSecret;
+    constructor(url: string) {
+      mockSecretClientConstructor(url);
+    }
   },
 }));
 vi.mock("node:dns/promises", () => ({
@@ -148,6 +157,7 @@ beforeEach(() => {
   mockCreateFederatedIdentityCredential.mockClear();
   mockGetIdentity.mockClear();
   mockGetIdentity.mockResolvedValue({ clientId: "client-1" });
+  mockGetSecret.mockReset();
   mockCreateIdentity.mockClear();
   mockCreateIdentity.mockResolvedValue({
     clientId: "client-1",
@@ -165,10 +175,188 @@ beforeEach(() => {
   mockProviderRegister.mockClear();
   mockRoleAssignmentsCreate.mockClear();
   mockRoleAssignmentsListForScope.mockReset();
-  mockSetSecret.mockClear();
+  mockSecretClientConstructor.mockClear();
+  mockSetSecret.mockReset();
+  mockSetSecret.mockResolvedValue({});
   mockLookup.mockReset();
   mockLookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }]);
   mockSleep.mockClear();
+});
+
+describe("Runner App credentials in the common Key Vault", () => {
+  const account = {
+    csp: "azure" as const,
+    defaultLocation: "italynorth",
+    displayName: "DEV-Test",
+    id: "sub-1",
+  };
+  const environment = { name: "dev" as const, prefix: "dx" };
+  const secrets: Record<string, string> = {
+    "github-runner-app-client-id": "client-id",
+    "github-runner-app-id": "app-id",
+    "github-runner-app-installation-id": "installation-id",
+    "github-runner-app-key": "private-key",
+  };
+
+  beforeEach(() => {
+    queryResources.mockResolvedValue({
+      data: [{ name: "dx-d-itn-common-kv-01" }],
+      totalRecords: 1,
+    });
+  });
+
+  test("reads all credentials from the selected account's common vault", async ({
+    cloudAccountService,
+  }) => {
+    mockGetSecret.mockImplementation(async (name: string) => ({
+      value: secrets[name],
+    }));
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).resolves.toEqual({
+      credentials: {
+        clientId: "client-id",
+        id: "app-id",
+        installationId: "installation-id",
+        key: "private-key",
+      },
+      missingClientId: false,
+    });
+    expect(mockSecretClientConstructor).toHaveBeenCalledWith(
+      "https://dx-d-itn-common-kv-01.vault.azure.net/",
+    );
+    expect(mockGetSecret).toHaveBeenCalledTimes(4);
+    expect(queryResources).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: expect.stringContaining(
+          JSON.stringify("^dx-d-(itn|weu)-common-kv-(0[1-9]|[1-9]\\d)$"),
+        ),
+        subscriptions: [account.id],
+      }),
+    );
+  });
+
+  test("uses the discovered vault even when its region and sequence differ", async ({
+    cloudAccountService,
+  }) => {
+    queryResources.mockResolvedValue({
+      data: [{ name: "dx-d-weu-common-kv-02" }],
+      totalRecords: 1,
+    });
+    mockGetSecret.mockImplementation(async (name: string) => ({
+      value: secrets[name],
+    }));
+
+    await cloudAccountService.getRunnerAppCredentials(account, environment);
+    await cloudAccountService.storeRunnerAppClientId(
+      account,
+      environment,
+      "client-id",
+    );
+
+    expect(mockSecretClientConstructor).toHaveBeenCalledTimes(2);
+    expect(mockSecretClientConstructor).toHaveBeenCalledWith(
+      "https://dx-d-weu-common-kv-02.vault.azure.net/",
+    );
+  });
+
+  test("does not guess a vault when discovery returns no match", async ({
+    cloudAccountService,
+  }) => {
+    queryResources.mockResolvedValue({ data: [], totalRecords: 0 });
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).resolves.toEqual({ credentials: {}, missingClientId: false });
+    expect(mockSecretClientConstructor).not.toHaveBeenCalled();
+  });
+
+  test("rejects ambiguous vault discovery", async ({ cloudAccountService }) => {
+    queryResources.mockResolvedValue({
+      data: [
+        { name: "dx-d-itn-common-kv-01" },
+        { name: "dx-d-weu-common-kv-02" },
+      ],
+      totalRecords: 2,
+    });
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).rejects.toThrow("Multiple common Key Vaults match");
+    expect(mockSecretClientConstructor).not.toHaveBeenCalled();
+  });
+
+  test("returns available credentials when a legacy vault has no client ID", async ({
+    cloudAccountService,
+  }) => {
+    mockGetSecret.mockImplementation(async (name: string) => {
+      if (name === "github-runner-app-client-id") {
+        throw { statusCode: 404 };
+      }
+      return { value: secrets[name] };
+    });
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).resolves.toEqual({
+      credentials: {
+        id: "app-id",
+        installationId: "installation-id",
+        key: "private-key",
+      },
+      missingClientId: true,
+    });
+  });
+
+  test("returns no credentials when secret access is denied", async ({
+    cloudAccountService,
+  }) => {
+    mockGetSecret.mockRejectedValue({ statusCode: 403 });
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).resolves.toEqual({ credentials: {}, missingClientId: false });
+  });
+
+  test("reports unexpected lookup failures", async ({
+    cloudAccountService,
+  }) => {
+    mockGetSecret.mockRejectedValue(new Error("network error"));
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).rejects.toThrow("Failed to read github-runner-app-");
+  });
+
+  test("backfills the client ID without changing the existing runner secrets", async ({
+    cloudAccountService,
+  }) => {
+    await cloudAccountService.storeRunnerAppClientId(
+      account,
+      environment,
+      "client-id",
+    );
+
+    expect(mockSetSecret).toHaveBeenCalledExactlyOnceWith(
+      "github-runner-app-client-id",
+      "client-id",
+    );
+  });
+
+  test("allows read-only users to continue when client ID backfill is denied", async ({
+    cloudAccountService,
+  }) => {
+    mockSetSecret.mockRejectedValue({ statusCode: 403 });
+
+    await expect(
+      cloudAccountService.storeRunnerAppClientId(
+        account,
+        environment,
+        "client-id",
+      ),
+    ).resolves.toBeUndefined();
+  });
 });
 
 const expectBootstrapperFederatedCredentials = (
@@ -537,6 +725,10 @@ describe("initialize", () => {
       ciClientId: "ci-client-1",
       owner: "example-org",
     });
+    expect(mockSetSecret).toHaveBeenCalledWith(
+      "github-runner-app-client-id",
+      "app-client-id",
+    );
   });
 
   describe("configureGitHubEnvironment", () => {
@@ -739,6 +931,6 @@ describe("initialize", () => {
     );
     expect(mockLookup).toHaveBeenCalledTimes(2);
     expect(mockSleep).toHaveBeenCalledWith(10_000);
-    expect(mockSetSecret).toHaveBeenCalledTimes(3);
+    expect(mockSetSecret).toHaveBeenCalledTimes(4);
   });
 });

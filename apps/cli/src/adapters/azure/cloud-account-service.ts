@@ -20,6 +20,7 @@ import { z } from "zod/v4";
 import {
   CloudAccount,
   type CloudAccountService,
+  type RunnerAppCredentialsLookup,
 } from "../../domain/cloud-account.js";
 import {
   type EnvironmentId,
@@ -29,6 +30,7 @@ import {
 import { type GitHubRepo } from "../../domain/github-repo.js";
 import {
   GitHubAppCredentials,
+  githubAppCredentialsSchema,
   type GitHubService,
 } from "../../domain/github.js";
 import {
@@ -108,6 +110,24 @@ const keyVaultDnsErrorSchema = z.object({
 });
 const keyVaultDnsReadyMaxAttempts = 30;
 const keyVaultDnsReadyRetryDelayMs = 10_000;
+
+const runnerAppSecretNames = {
+  clientId: "github-runner-app-client-id",
+  id: "github-runner-app-id",
+  installationId: "github-runner-app-installation-id",
+  key: "github-runner-app-key",
+} as const;
+
+const getCommonKeyVaultNamePattern = ({
+  name,
+  prefix,
+}: EnvironmentId): string =>
+  `^${prefix.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}-${getEnvironmentShort(name)}-(${Object.values(locationShort).join("|")})-common-kv-(0[1-9]|[1-9]\\d)$`;
+
+const getStatusCode = (error: unknown): number | undefined =>
+  typeof error === "object" && error !== null && "statusCode" in error
+    ? z.number().safeParse(error.statusCode).data
+    : undefined;
 
 export class AzureCloudAccountService implements CloudAccountService {
   #credential: TokenCredential;
@@ -196,6 +216,74 @@ export class AzureCloudAccountService implements CloudAccountService {
       runnerAppCredentials,
       tenantId: subscription.tenantId,
     });
+  }
+
+  async getRunnerAppCredentials(
+    cloudAccount: CloudAccount,
+    environment: EnvironmentId,
+  ): Promise<RunnerAppCredentialsLookup> {
+    const keyVaultName = await this.#findCommonKeyVaultName(
+      cloudAccount,
+      environment,
+    );
+    if (!keyVaultName) {
+      return { credentials: {}, missingClientId: false };
+    }
+    const secretClient = new SecretClient(
+      `https://${keyVaultName}.vault.azure.net/`,
+      this.#credential,
+    );
+    const logger = getLogger(["gen", "env"]);
+    const results = await Promise.all(
+      Object.entries(runnerAppSecretNames).map(async ([field, secretName]) => {
+        try {
+          const secret = await secretClient.getSecret(secretName);
+          const value = z.string().trim().min(1).safeParse(secret.value);
+          if (value.success) {
+            return { field, value: secret.value };
+          }
+          logger.warn("Secret {secretName} in {keyVaultName} is empty.", {
+            keyVaultName,
+            secretName,
+          });
+          return { field, missing: true };
+        } catch (cause) {
+          const statusCode = getStatusCode(cause);
+          if (statusCode === 403 || statusCode === 404) {
+            logger.warn(
+              "Cannot read {secretName} from {keyVaultName} ({reason}); provide it manually if needed.",
+              {
+                keyVaultName,
+                reason: statusCode === 403 ? "access denied" : "not found",
+                secretName,
+              },
+            );
+            return { field, missing: statusCode === 404 };
+          }
+          throw new Error(
+            `Failed to read ${secretName} from ${keyVaultName}.`,
+            {
+              cause,
+            },
+          );
+        }
+      }),
+    );
+
+    return {
+      credentials: githubAppCredentialsSchema
+        .partial()
+        .parse(
+          Object.fromEntries(
+            results
+              .filter((result) => result.value !== undefined)
+              .map(({ field, value }) => [field, value]),
+          ),
+        ),
+      missingClientId: results.some(
+        (result) => result.field === "clientId" && result.missing === true,
+      ),
+    };
   }
 
   async getTerraformBackend(
@@ -613,6 +701,41 @@ export class AzureCloudAccountService implements CloudAccountService {
     });
   }
 
+  async storeRunnerAppClientId(
+    cloudAccount: CloudAccount,
+    environment: EnvironmentId,
+    clientId: string,
+  ): Promise<void> {
+    const keyVaultName = await this.#findCommonKeyVaultName(
+      cloudAccount,
+      environment,
+    );
+    if (!keyVaultName) {
+      return;
+    }
+    const secretClient = new SecretClient(
+      `https://${keyVaultName}.vault.azure.net/`,
+      this.#credential,
+    );
+    try {
+      await secretClient.setSecret(runnerAppSecretNames.clientId, clientId);
+    } catch (cause) {
+      if (getStatusCode(cause) === 403) {
+        getLogger(["gen", "env"]).warn(
+          "Cannot save the Runner App Client ID to {keyVaultName}; it may be required again on the next run.",
+          { keyVaultName },
+        );
+        return;
+      }
+      throw new Error(
+        `Failed to save the Runner App Client ID to ${keyVaultName}.`,
+        {
+          cause,
+        },
+      );
+    }
+  }
+
   async #areProvidersRegistered(subscriptionId: string): Promise<boolean> {
     const client = new ResourceManagementClient(
       this.#credential,
@@ -917,6 +1040,39 @@ export class AzureCloudAccountService implements CloudAccountService {
     return `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${roleDefinitionId}`;
   }
 
+  async #findCommonKeyVaultName(
+    cloudAccount: CloudAccount,
+    environment: EnvironmentId,
+  ): Promise<string | undefined> {
+    assert.equal(cloudAccount.csp, "azure", "Cloud account must be Azure");
+    const pattern = JSON.stringify(getCommonKeyVaultNamePattern(environment));
+    const result = await this.#resourceGraphClient.resources({
+      query: `resources
+        | where type == 'microsoft.keyvault/vaults'
+        | where name matches regex ${pattern}
+        | project name
+        | take 2`,
+      subscriptions: [cloudAccount.id],
+    });
+    const vaults = z
+      .array(z.object({ name: z.string().regex(/^[a-z0-9-]{3,24}$/i) }))
+      .parse(result.data);
+
+    if (vaults.length > 1) {
+      throw new Error(
+        `Multiple common Key Vaults match environment "${environment.name}" in subscription ${cloudAccount.id}.`,
+      );
+    }
+    if (vaults.length === 0) {
+      getLogger(["gen", "env"]).warn(
+        "No common Key Vault found for {environmentName} in subscription {subscriptionId}; provide Runner App credentials manually.",
+        { environmentName: environment.name, subscriptionId: cloudAccount.id },
+      );
+      return undefined;
+    }
+    return vaults[0].name;
+  }
+
   async #getBootstrapperIdentity({
     cloudAccountId,
     identityName,
@@ -1098,13 +1254,17 @@ export class AzureCloudAccountService implements CloudAccountService {
     );
 
     await Promise.all([
-      secretClient.setSecret("github-runner-app-id", runnerAppCredentials.id),
+      secretClient.setSecret(runnerAppSecretNames.id, runnerAppCredentials.id),
       secretClient.setSecret(
-        "github-runner-app-installation-id",
+        runnerAppSecretNames.clientId,
+        runnerAppCredentials.clientId,
+      ),
+      secretClient.setSecret(
+        runnerAppSecretNames.installationId,
         runnerAppCredentials.installationId,
       ),
       secretClient.setSecret(
-        "github-runner-app-key",
+        runnerAppSecretNames.key,
         runnerAppCredentials.key.trimEnd(), // strip trailing newlines from PEM keys
       ),
     ]);
