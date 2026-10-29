@@ -20,6 +20,7 @@ locals {
 
   github_app = {
     id              = "placeholder-app-id"
+    client_id       = "placeholder-client-id"
     installation_id = "placeholder-installation-id"
     private_key     = "placeholder-private-key"
   }
