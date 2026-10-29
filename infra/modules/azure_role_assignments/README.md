@@ -65,6 +65,11 @@ module "role_assignments" {
 
 For usage examples, refer to the [examples folder](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples), which includes:
 
+The Function App example uses the v5-compatible exposed Function App module.
+It demonstrates managed-identity permissions, not private networking. Review
+its public access and changed fixture resources before reusing existing
+example state.
+
 - A [Function App example](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples/function_app) demonstrating role assignments for a Function App.
 - A [Service Bus example](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples/service_bus) demonstrating role assignments for a Service Bus.
 - A [Users Assigned Identity example](https://github.com/pagopa-dx/terraform-azurerm-azure-role-assignments/tree/main/examples/users_assigned_identity) showcasing role assignments for Storage Blobs, Queues, and Tables to a user.
@@ -89,7 +94,7 @@ This module supports both Redis flavors through two distinct inputs:
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.60, < 6.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.0.0, < 6.0.0 |
 
 ## Modules
 

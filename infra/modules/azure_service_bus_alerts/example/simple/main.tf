@@ -16,33 +16,30 @@ resource "azurerm_monitor_action_group" "dx" {
   tags = local.tags
 }
 
-module "sbns" {
-  source  = "pagopa-dx/azure-service-bus-namespace/azurerm"
-  version = "~> 2.0"
-
-  environment         = local.environment
+resource "azurerm_servicebus_namespace" "example" {
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = "example",
+    resource_type = "servicebus_namespace"
+  }))
+  location            = local.environment.location
   resource_group_name = azurerm_resource_group.example.name
-
-  use_case = "default"
-
-  allowed_ips = ["127.0.0.1"]
-
-  tags = local.tags
+  sku                 = "Standard"
+  tags                = local.tags
 }
 
 resource "azurerm_servicebus_queue" "example" {
   name         = "my-queue"
-  namespace_id = module.sbns.id
+  namespace_id = azurerm_servicebus_namespace.example.id
 }
 
 resource "azurerm_servicebus_topic" "example" {
   name         = "my-topic"
-  namespace_id = module.sbns.id
+  namespace_id = azurerm_servicebus_namespace.example.id
 }
 
 module "sbns_alert" {
   source  = "pagopa-dx/azure-service-bus-alerts/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   environment = local.environment
 
@@ -54,7 +51,7 @@ module "sbns_alert" {
     description = "A test alert"
   }
 
-  service_bus_namespace_id = module.sbns.id
+  service_bus_namespace_id = azurerm_servicebus_namespace.example.id
 
   action_group_ids = [azurerm_monitor_action_group.dx.id]
 

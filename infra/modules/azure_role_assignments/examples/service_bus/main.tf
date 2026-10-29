@@ -11,7 +11,7 @@ data "azurerm_subnet" "pep" {
 
 module "app_service_exposed" {
   source  = "pagopa-dx/azure-function-app-exposed/azurerm"
-  version = "~> 5.0"
+  version = "~> 6.0"
 
   environment = local.environment
 
@@ -26,7 +26,7 @@ module "app_service_exposed" {
 
 module "service_bus" {
   source  = "pagopa-dx/azure-service-bus-namespace/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
@@ -66,7 +66,7 @@ resource "azurerm_servicebus_subscription" "example2" {
 
 module "roles" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   principal_id    = module.app_service_exposed.function_app.function_app.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id

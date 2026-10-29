@@ -4,26 +4,19 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 5.0.0, < 6.0.0"
     }
   }
 }
 
 module "azure_function_app" {
-  source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 7.0"
+  source  = "pagopa-dx/azure-function-app-exposed/azurerm"
+  version = "~> 6.0"
 
   environment         = var.environment
   use_case            = "default"
   resource_group_name = var.resource_group_name
   app_service_plan_id = var.app_service_plan_id
-
-  virtual_network = {
-    name                = var.virtual_network.name
-    resource_group_name = var.virtual_network.resource_group_name
-  }
-  subnet_pep_id = var.subnet_pep_id
-  subnet_id     = var.subnet_id
 
   app_settings      = {}
   slot_app_settings = {}

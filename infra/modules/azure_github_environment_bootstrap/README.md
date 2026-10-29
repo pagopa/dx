@@ -449,7 +449,7 @@ This module includes practical examples to help you get started quickly:
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.0, < 6.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.0.0, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.13 |
 
@@ -457,8 +457,8 @@ This module includes practical examples to help you get started quickly:
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
-| <a name="module_github_runner_dx"></a> [github\_runner\_dx](#module\_github\_runner\_dx) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
+| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 4.0 |
+| <a name="module_github_runner_dx"></a> [github\_runner\_dx](#module\_github\_runner\_dx) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 4.0 |
 
 ## Resources
 

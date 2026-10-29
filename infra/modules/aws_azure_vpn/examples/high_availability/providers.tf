@@ -4,7 +4,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 5.0.0, < 6.0.0"
     }
 
     azuread = {
@@ -14,12 +14,12 @@ terraform {
 
     azuredx = {
       source  = "pagopa-dx/azure"
-      version = "~> 0.0"
+      version = "~> 0.12"
     }
 
     awsdx = {
       source  = "pagopa-dx/aws"
-      version = "~> 0.0"
+      version = "~> 0.1"
     }
   }
 
@@ -41,16 +41,4 @@ provider "aws" {
   default_tags {
     tags = local.tags
   }
-}
-
-provider "awsdx" {
-  prefix      = local.aws_environment.prefix
-  environment = local.aws_environment.env_short
-  region      = local.aws_environment.region
-}
-
-provider "azuredx" {
-  prefix      = local.azure_environment.prefix
-  environment = local.azure_environment.env_short
-  location    = local.azure_environment.location
 }

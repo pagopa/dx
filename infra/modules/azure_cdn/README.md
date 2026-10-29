@@ -15,6 +15,12 @@ This Terraform module provisions an Azure CDN Front Door profile with endpoints,
 
 > **Note:** The module includes support for managed identity authentication to storage origins with automatic RBAC assignment. This feature is currently in preview and disabled by validation. It will be enabled once the feature becomes generally available. See [Azure documentation](https://learn.microsoft.com/en-us/azure/frontdoor/origin-authentication-with-managed-identities) for more information.
 
+The basic and advanced examples use standalone AzureRM v5 storage accounts and
+static website resources instead of the v4-only Storage Account module. The
+advanced example retains blob private endpoints alongside public CDN origins.
+These are fresh-deployment fixtures; review changed resource addresses before
+reusing existing example state.
+
 ### Routing rules
 
 The module returns the id of a FrontDoor rule set via the `rule_set_id` output. The user can then implement ad-hoc rules for the created FrontDoor endpoint as follows:
@@ -30,24 +36,23 @@ resource "azurerm_cdn_frontdoor_rule" "example" {
   name                      = "examplerule"
   cdn_frontdoor_rule_set_id = module.azure_cdn.rule_set_id
   order                     = 1
-  behavior_on_match         = "Continue"
+  behaviour_on_match        = "Continue"
 
   actions {
-    url_redirect_action {
+    url_redirect {
       redirect_type        = "PermanentRedirect"
       redirect_protocol    = "MatchRequest"
       query_string         = "clientIp={client_ip}"
       destination_path     = "/exampleredirection"
-      destination_hostname = "contoso.com"
+      destination_host_name = "contoso.com"
       destination_fragment = "UrlRedirect"
     }
   }
 
   conditions {
-    host_name_condition {
+    host_name {
       operator         = "Equal"
-      negate_condition = false
-      match_values     = ["www.contoso.com", "images.contoso.com", "video.contoso.com"]
+      values           = ["www.contoso.com", "images.contoso.com", "video.contoso.com"]
       transforms       = ["Lowercase", "Trim"]
     }
   }
@@ -147,7 +152,7 @@ Complete examples of how to use this module can be found in the [examples/basic]
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.15, < 6.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.0.0, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules

@@ -34,14 +34,14 @@ For examples of how to use this module, refer to the [examples](https://github.c
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.0, < 6.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 5.0.0, < 6.0.0 |
 | <a name="requirement_pagopa-dx"></a> [pagopa-dx](#requirement\_pagopa-dx) | ~> 0.12 |
 
 ## Modules
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_appconfig_team_roles"></a> [appconfig\_team\_roles](#module\_appconfig\_team\_roles) | pagopa-dx/azure-role-assignments/azurerm | ~> 4.0 |
+| <a name="module_appconfig_team_roles"></a> [appconfig\_team\_roles](#module\_appconfig\_team\_roles) | pagopa-dx/azure-role-assignments/azurerm | ~> 5.0 |
 
 ## Resources
 
