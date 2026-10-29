@@ -83,7 +83,7 @@ module "azure-DEV-DX_core_values" {
 
 module "azure-DEV-DX_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 7.0"
+  version = "~> 7.1"
 
   providers = {
     azurerm = azurerm.DEV-DX
@@ -201,7 +201,7 @@ module "azure-DEV-DX_core_values" {
 
 module "azure-DEV-DX_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 7.0"
+  version = "~> 7.1"
 
   providers = {
     azurerm = azurerm.DEV-DX

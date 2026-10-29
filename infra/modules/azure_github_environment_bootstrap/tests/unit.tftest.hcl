@@ -480,3 +480,92 @@ run "azure_github_environment_bootstrap_user_owner_identities" {
     error_message = "User-owned repositories must not query the GitHub organization data source"
   }
 }
+
+run "azure_github_environment_bootstrap_default_environment_secrets" {
+  command = plan
+
+  assert {
+    condition = alltrue([
+      github_actions_environment_secret.infra_ci["ARM_CLIENT_ID"].environment == "infra-uat-ci",
+      github_actions_environment_secret.automation_ci["ARM_CLIENT_ID"].environment == "automation-uat-ci",
+      github_actions_environment_secret.app_ci["ARM_CLIENT_ID"].environment == "app-uat-ci",
+      github_actions_environment_secret.opex_ci["ARM_CLIENT_ID"].environment == "opex-uat-ci",
+      github_actions_environment_secret.infra_cd["ARM_CLIENT_ID"].environment == "infra-uat-cd",
+      github_actions_environment_secret.automation_cd["ARM_CLIENT_ID"].environment == "automation-uat-cd",
+      github_actions_environment_secret.app_cd["ARM_CLIENT_ID"].environment == "app-uat-cd",
+      github_actions_environment_secret.opex_cd["ARM_CLIENT_ID"].environment == "opex-uat-cd",
+    ])
+    error_message = "The default prefix flag must preserve existing GitHub secret environment names"
+  }
+}
+
+run "azure_github_environment_bootstrap_prefix_flag_preserves_cloud_names" {
+  command = plan
+
+  variables {
+    github_environment_prefix_enabled = true
+  }
+
+  assert {
+    condition = alltrue([
+      github_actions_environment_secret.infra_ci["ARM_CLIENT_ID"].environment == "infra-dx-uat-ci",
+      azurerm_user_assigned_identity.infra_ci.name == "dx-u-itn-test-infra-github-ci-id-02",
+    ])
+    error_message = "The prefix flag must affect GitHub environment names only"
+  }
+}
+
+run "azure_github_environment_bootstrap_ced_tenant_environment" {
+  command = plan
+
+  variables {
+    environment = merge(var.environment, {
+      env_short = "p"
+      prefix    = "ced"
+    })
+    github_environment_prefix_enabled = true
+  }
+
+  assert {
+    condition = alltrue([
+      github_actions_environment_secret.infra_ci["ARM_CLIENT_ID"].environment == "infra-ced-prod-ci",
+      github_actions_environment_secret.automation_ci["ARM_CLIENT_ID"].environment == "automation-ced-prod-ci",
+      github_actions_environment_secret.app_ci["ARM_CLIENT_ID"].environment == "app-ced-prod-ci",
+      github_actions_environment_secret.opex_ci["ARM_CLIENT_ID"].environment == "opex-ced-prod-ci",
+      github_actions_environment_secret.infra_cd["ARM_CLIENT_ID"].environment == "infra-ced-prod-cd",
+      github_actions_environment_secret.automation_cd["ARM_CLIENT_ID"].environment == "automation-ced-prod-cd",
+      github_actions_environment_secret.app_cd["ARM_CLIENT_ID"].environment == "app-ced-prod-cd",
+      github_actions_environment_secret.opex_cd["ARM_CLIENT_ID"].environment == "opex-ced-prod-cd",
+      azurerm_user_assigned_identity.infra_ci.name == "ced-p-itn-test-infra-github-ci-id-02",
+      azurerm_federated_identity_credential.github_infra_ci.name == "dx-test-monorepo-starter-pack-environment-infra-ced-prod-ci",
+      azurerm_federated_identity_credential.github_infra_ci.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:infra-ced-prod-ci",
+      azurerm_federated_identity_credential.github_infra_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:infra-ced-prod-ci",
+      azurerm_federated_identity_credential.github_infra_cd.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:infra-ced-prod-cd",
+      azurerm_federated_identity_credential.github_infra_cd_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:infra-ced-prod-cd",
+    ])
+    error_message = "The ced prefix must scope GitHub secrets and OIDC subjects without changing resource naming rules"
+  }
+}
+
+run "azure_github_environment_bootstrap_cgn_tenant_environment" {
+  command = plan
+
+  variables {
+    environment = merge(var.environment, {
+      env_short = "p"
+      prefix    = "cgn"
+    })
+    github_environment_prefix_enabled = true
+  }
+
+  assert {
+    condition = alltrue([
+      github_actions_environment_secret.infra_ci["ARM_CLIENT_ID"].environment == "infra-cgn-prod-ci",
+      github_actions_environment_secret.infra_cd["ARM_CLIENT_ID"].environment == "infra-cgn-prod-cd",
+      azurerm_federated_identity_credential.github_infra_ci.name == "dx-test-monorepo-starter-pack-environment-infra-cgn-prod-ci",
+      azurerm_federated_identity_credential.github_infra_ci.subject == "repo:pagopa/dx-test-monorepo-starter-pack:environment:infra-cgn-prod-ci",
+      azurerm_federated_identity_credential.github_infra_ci_immutable.subject == "repo:pagopa@57742367/dx-test-monorepo-starter-pack@1373623344:environment:infra-cgn-prod-ci",
+    ])
+    error_message = "The cgn prefix must use its own GitHub environments and OIDC subjects"
+  }
+}

@@ -22,7 +22,7 @@ Use this module in your bootstrapper configuration to create all necessary GitHu
 ```hcl
 module "github_bootstrap" {
   source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 2.2"
+  version = "~> 2.3"
 
   environment = {
     prefix          = "dx"
@@ -63,14 +63,15 @@ module "github_bootstrap" {
 
 ## Variables Reference
 
-| Variable                | Description                                      | Required |
-| ----------------------- | ------------------------------------------------ | :------: |
-| `environment`           | Resource naming and location configuration       |    ✅    |
-| `repository`            | GitHub repository details (owner, name)           |    ✅    |
-| `vpc`                   | VPC configuration for self-hosted runner          |    ✅    |
-| `github_private_runner` | Self-hosted runner configuration                 |    ✅    |
-| `oidc_provider_arn`      | ARN of the GitHub OIDC provider                   |    ✅    |
-| `tags`                  | Resource tags for cost allocation and management |    ✅    |
+| Variable                            | Description                                               | Required |
+| ----------------------------------- | --------------------------------------------------------- | :------: |
+| `environment`                       | Resource naming and location configuration                |    ✅    |
+| `repository`                        | GitHub repository details (owner, name)                   |    ✅    |
+| `vpc`                               | VPC configuration for self-hosted runner                  |    ✅    |
+| `github_private_runner`             | Self-hosted runner configuration                          |    ✅    |
+| `oidc_provider_arn`                 | ARN of the GitHub OIDC provider                           |    ✅    |
+| `tags`                              | Resource tags for cost allocation and management          |    ✅    |
+| `github_environment_prefix_enabled` | Prefix GitHub environment names with `environment.prefix` | Optional |
 
 ### Detailed Variable Explanations
 
@@ -88,6 +89,13 @@ environment = {
   instance_number = "01"         # Instance number for uniqueness
 }
 ```
+
+Set `github_environment_prefix_enabled = true` to prefix GitHub environment
+secrets with `environment.prefix`; for example, `prefix = "ced"` and
+`env_short = "p"` produce `infra-ced-prod-ci` and `infra-ced-prod-cd`. The flag
+defaults to `false`, preserving the existing `env_short` mapping
+(`d`/`u`/`p` to `dev`/`uat`/`prod`). It does not change AWS resource names or the
+repository-scoped OIDC trust policy.
 
 #### `repository`
 
@@ -354,7 +362,7 @@ module "core_values" {
 
 module "bootstrap" {
   source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 2.2"
+  version = "~> 2.3"
 
   environment = var.environment
 
@@ -488,7 +496,8 @@ resource "aws_iam_policy" "custom_app_policy" {
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and region short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    region          = string<br/>    domain          = string<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and region short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    region          = string<br/>    domain          = string<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_github_environment_prefix_enabled"></a> [github\_environment\_prefix\_enabled](#input\_github\_environment\_prefix\_enabled) | Prefix GitHub environment names with environment.prefix. | `bool` | `false` | no |
 | <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for the GitHub self-hosted runner, including tier, code connection ARN, personal access token, environment variables, and secrets. Either codeconnection\_arn or personal\_access\_token must be set, but not both. | <pre>object({<br/>    tier               = optional(string, "m")<br/>    codeconnection_arn = optional(string, null)<br/>    personal_access_token = optional(object({<br/>      ssm_parameter_name = optional(string, null)<br/>      value              = optional(string, null)<br/>    }), null)<br/>    env_variables = optional(map(string), {})<br/>    secrets = map(object({<br/>      ssm_parameter_name   = optional(string, null)<br/>      secrets_manager_name = optional(string, null)<br/>    }))<br/>  })</pre> | n/a | yes |
 | <a name="input_oidc_provider_arn"></a> [oidc\_provider\_arn](#input\_oidc\_provider\_arn) | The ARN of the OIDC provider for GitHub Actions. | `string` | n/a | yes |
 | <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including owner and name. | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |
