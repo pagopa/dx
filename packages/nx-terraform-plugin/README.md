@@ -39,8 +39,9 @@ To enable module publishing, add the publish fields to the project's
 ```
 
 Publishing metadata is validated before the `nx-release-publish` target is
-inferred. The plugin does not configure Nx Release versioning for these
-projects.
+inferred. Publishable Terraform libraries use the shared
+`@pagopa/nx-dx/version-actions` implementation to read and update
+`metadata.version` in `project.json`.
 
 The plugin only infers targets; project names, tags, named inputs, and other
 project-level configuration are defined by each project's `project.json`.

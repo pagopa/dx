@@ -375,9 +375,8 @@ describe("getProject applications", () => {
 
     it("does not add docs to applications", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
-      const targets = getTargetsOrThrow(
-        getProject(defaultOptions, root, true, publishManifest),
-      );
+      const project = getProject(defaultOptions, root, true, publishManifest);
+      const targets = getTargetsOrThrow(project);
 
       expect(Object.keys(targets)).toEqual([
         "init",
@@ -395,6 +394,7 @@ describe("getProject applications", () => {
       ]);
       expect(targets["docs"]).toBeUndefined();
       expect(targets["nx-release-publish"]).toBeUndefined();
+      expect(project.release).toBeUndefined();
     });
     it("sets correct dependency chains", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
@@ -822,6 +822,26 @@ describe("getProject libraries", () => {
       vi.doUnmock("../publish-options.ts");
       vi.resetModules();
     });
+  });
+});
+
+describe("getProject release configuration", () => {
+  it("uses the shared project.json version action for publishable libraries", () => {
+    const root = path.join("infra", "modules", "network_stack");
+    const project = getProject(
+      defaultOptions,
+      root,
+      false,
+      publishManifestWithOwner,
+    );
+
+    expect(project.release).toEqual({
+      version: {
+        currentVersionResolver: "disk",
+        versionActions: "@pagopa/nx-dx/version-actions",
+      },
+    });
+    expect(getProject(defaultOptions, root).release).toBeUndefined();
   });
 });
 

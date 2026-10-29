@@ -541,6 +541,9 @@ importers:
       prettier:
         specifier: 'catalog:'
         version: 3.9.6
+      tsdown:
+        specifier: 'catalog:'
+        version: 0.22.14(oxc-resolver@11.24.2)(tsx@4.23.15)(typescript@5.9.3)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -1571,6 +1574,9 @@ importers:
       '@pagopa/dx-tasks':
         specifier: workspace:^
         version: link:../dx-tasks
+      '@pagopa/nx-dx':
+        specifier: workspace:^
+        version: link:../nx-dx-plugin
       execa:
         specifier: 'catalog:'
         version: 9.6.1
@@ -1608,9 +1614,6 @@ importers:
       prettier:
         specifier: 'catalog:'
         version: 3.9.6
-      tsdown:
-        specifier: 'catalog:'
-        version: 0.22.14(oxc-resolver@11.24.2)(tsx@4.23.15)(typescript@5.9.3)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -22624,7 +22627,7 @@ snapshots:
       obug: 2.2.1
       std-env: 4.3.0
       tinyrainbow: 3.2.0
-      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
+      vitest: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@26.6.4)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@26.6.4)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   '@vitest/eslint-plugin@1.6.27(@typescript-eslint/eslint-plugin@8.71.0(@typescript-eslint/parser@8.71.0(eslint@10.12.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@10.12.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3))(eslint@10.12.0(jiti@2.7.0)(supports-color@8.1.1))(supports-color@8.1.1)(typescript@5.9.3)(vitest@4.1.11)':
     dependencies:

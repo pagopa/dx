@@ -31,6 +31,7 @@
     "@nx/devkit": "catalog:",
     "@octokit/auth-app": "catalog:",
     "@pagopa/dx-tasks": "workspace:^",
+    "@pagopa/nx-dx": "workspace:^",
     "execa": "catalog:",
     "octokit": "catalog:",
     "semver": "catalog:",
