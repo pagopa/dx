@@ -10,7 +10,7 @@ runs:
   using: "composite"
 
   steps:
-    - name: Install Node.js dependencies
+    - name: Install root Node.js dependencies
       shell: bash
       env:
         pnpm_config_//npm.pkg.github.com/:_authToken: ${{ inputs.github-token }}
