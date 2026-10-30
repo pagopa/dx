@@ -37,7 +37,11 @@ export const createCliStateFixture = async () => {
     ],
     [
       "GET https://nodejs.org/dist/index.json",
-      () => Response.json([{ lts: "Jod", version: "v22.18.0" }]),
+      () => Response.json([{ lts: "Krypton", version: "v24.0.0" }]),
+    ],
+    [
+      "GET https://npm.pkg.github.com/%40pagopa%2Fnx-terraform",
+      () => Response.json({ name: "@pagopa/nx-terraform" }),
     ],
     [
       "POST https://api.github.com/repos/pagopa/test-repo/pulls",
@@ -120,6 +124,7 @@ export const createCliStateFixture = async () => {
       authorizationService: makeAzureAuthorizationService(gitHubService),
       gitHubService,
     });
+  vi.stubEnv("GITHUB_TOKEN", "fixture-token");
   return {
     ...fixture,
     consoleOutput,
