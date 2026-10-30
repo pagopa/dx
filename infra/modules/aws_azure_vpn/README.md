@@ -26,6 +26,20 @@ The module creates secure IPSec tunnels between your AWS and Azure networks with
 
 For detailed usage examples, refer to the [examples folder](./examples/) that includes both a cheaper and less reliable [development example](./examples/development/) and a more expensive [high availability example](./examples/high_availability/) that demonstrates all features and configuration.
 
+The v5-compatible examples accept existing Azure foundation values through
+the `azure` input instead of deploying the v4-only Core Infra module in the
+same configuration. Supply a VNet with GatewaySubnet and reachable DNS
+forwarding; the VPN module creates its own DNS resolver, so do not supply a
+VNet that already contains one. AWS fixtures use the VPC module with
+one NAT gateway for development and one per availability zone for HA, avoiding
+the legacy DX AWS provider required by older Core Infra versions.
+These are fresh-deployment examples. For an already-applied example, first
+plan an explicit state-ownership migration of the previously managed Azure
+and AWS foundation resources to their new owners. Do not apply or destroy
+the revised example as a shortcut: removed module blocks would otherwise
+schedule deletion of those resources. This is an example-fixture migration,
+not a change to the runtime VPN module's resource addresses.
+
 ## Prerequisites
 
 Before using this module, ensure you have:
@@ -35,7 +49,31 @@ Before using this module, ensure you have:
 ✅ **Non-overlapping IP ranges** between AWS and Azure networks  
 ✅ **Appropriate permissions** in both AWS and Azure accounts
 
-**Important:** For development use case, ensure your AWS core infrastructure has `nat_gateway_count` set to at least 1.
+**Important:** The development example enables one NAT gateway for its AWS
+private subnets.
+
+For the examples, pass the Azure foundation values in a `.tfvars` file:
+
+```hcl
+azure = {
+  resource_group_name = "existing-network-rg"
+  location            = "italynorth"
+  vnet_id             = "/subscriptions/<subscription-id>/resourceGroups/existing-network-rg/providers/Microsoft.Network/virtualNetworks/existing-vnet"
+  vnet_name           = "existing-vnet"
+  vnet_cidr           = "10.51.0.0/16"
+  dns_forwarder_ip    = "10.51.1.4"
+  private_dns_zones   = ["azure.example.internal"]
+}
+```
+
+In HA mode, the module creates the inbound DNS endpoint and does not use
+`dns_forwarder_ip`. Foundation modules can be managed separately with their
+own provider versions and state.
+
+The examples reference the planned v5-only VPN major. Until it is published
+and indexed by the Terraform Registry, initialization requires a temporary
+local module source for development. The Azure foundation input is an
+external prerequisite, not created or supplied by the module's mocked tests.
 
 ## Use Cases
 
@@ -56,7 +94,7 @@ Before using this module, ensure you have:
    - Route tables that need VPN connectivity
 
 2. **Azure Prerequisites**:
-   - Virtual Network with GatewaySubnet (minimum /27) - created by the azure-core-infra module
+   - Virtual Network with GatewaySubnet (minimum /27)
    - Resource group for network resources
    - DNS forwarder IP (if using cross-cloud DNS)
 
@@ -114,7 +152,7 @@ Before using this module, ensure you have:
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 | <a name="requirement_awsdx"></a> [awsdx](#requirement\_awsdx) | ~> 0.1 |
 | <a name="requirement_azuredx"></a> [azuredx](#requirement\_azuredx) | ~> 0.12 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.62, < 6.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 5.0 |
 
 ## Modules
 

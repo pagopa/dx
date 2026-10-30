@@ -13,6 +13,11 @@ This Terraform module provisions alerts to monitor the amount of messages in bot
 
 An example of how to use this module can be found in the [example/simple](https://github.com/pagopa-dx/terraform-azurerm-azure-service-bus-dlq-alert/tree/main/example/simple) directory.
 
+The example uses a standalone AzureRM v5 Standard namespace to demonstrate
+alerts without depending on private-network foundation inputs. It is a
+fresh-deployment fixture, not a migration of an existing namespace module's
+state.
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -20,7 +25,7 @@ An example of how to use this module can be found in the [example/simple](https:
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.0, < 6.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 5.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules

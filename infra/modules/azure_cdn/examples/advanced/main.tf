@@ -16,44 +16,60 @@ data "azurerm_subnet" "pep" {
   resource_group_name  = local.virtual_network.resource_group_name
 }
 
-# Create a storage account with static website enabled
-module "storage_account" {
-  source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 4.0"
+resource "azurerm_storage_account" "origin" {
+  for_each = toset(["primary", "secondary"])
 
-  environment = local.environment
-
-  resource_group_name = azurerm_resource_group.example.name
-  use_case            = "default"
-  # Setting subnet_pep_id also creates a private endpoint for the enabled
-  # subservices below, in addition to the public endpoint used by the CDN
-  # origin, so the storage account is reachable both publicly (via Front
-  # Door/CDN) and privately from workloads inside the network.
-  subnet_pep_id = data.azurerm_subnet.pep.id
-  private_dns_zone_resource_group_name = provider::dx::resource_name(merge(local.environment, {
-    app_name      = "network",
-    domain        = ""
-    resource_type = "resource_group"
+  name = provider::dx::resource_name(merge(local.naming_config, {
+    name          = each.key == "primary" ? local.environment.app_name : "media",
+    resource_type = "storage_account"
   }))
+  resource_group_name      = azurerm_resource_group.example.name
+  location                 = azurerm_resource_group.example.location
+  account_kind             = "StorageV2"
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  public_network_access    = "Enabled"
+  tags                     = local.tags
+}
 
-  force_public_network_access_enabled = true # Public network access enabled for CDN origin reachability
+resource "azurerm_storage_account_static_website" "origin" {
+  for_each = azurerm_storage_account.origin
 
-  static_website = {
-    enabled        = true
-    index_document = "index.html"
+  storage_account_id = each.value.id
+  index_document     = "index.html"
+}
+
+data "azurerm_private_dns_zone" "blob" {
+  name                = "privatelink.blob.core.windows.net"
+  resource_group_name = local.virtual_network.resource_group_name
+}
+
+resource "azurerm_private_endpoint" "origin" {
+  for_each = azurerm_storage_account.origin
+
+  name                = "${each.value.name}-blob-pep"
+  resource_group_name = azurerm_resource_group.example.name
+  location            = azurerm_resource_group.example.location
+  subnet_id           = data.azurerm_subnet.pep.id
+  tags                = local.tags
+
+  private_service_connection {
+    name                           = "${each.value.name}-blob"
+    private_connection_resource_id = each.value.id
+    subresource_names              = ["blob"]
+    is_manual_connection           = false
   }
 
-  subservices_enabled = {
-    blob = true
+  private_dns_zone_group {
+    name                 = "blob"
+    private_dns_zone_ids = [data.azurerm_private_dns_zone.blob.id]
   }
-
-  tags = local.tags
 }
 
 # Example 1: Create a CDN profile with WAF enabled
 module "azure_cdn_with_waf" {
   source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   resource_group_name = azurerm_resource_group.example.name
 
@@ -64,12 +80,14 @@ module "azure_cdn_with_waf" {
 
   origins = {
     primary = {
-      host_name = module.storage_account.primary_web_host
+      host_name = azurerm_storage_account.origin["primary"].primary_web_host
       priority  = 1
     }
   }
 
   tags = local.tags
+
+  depends_on = [azurerm_storage_account_static_website.origin]
 }
 
 # Example 2: Reuse the existing CDN profile and add a new endpoint with different origin
@@ -78,37 +96,9 @@ module "azure_cdn_with_waf" {
 # To work around this, use the -target argument to first apply only example 1,
 # then apply the full configuration including example 2.
 
-module "storage_account_secondary" {
-  source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 4.0"
-
-  environment = merge(local.environment, {
-    app_name        = "media"
-    instance_number = "01"
-  })
-
-  resource_group_name                  = azurerm_resource_group.example.name
-  use_case                             = "default"
-  subnet_pep_id                        = data.azurerm_subnet.pep.id
-  private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
-
-  force_public_network_access_enabled = true
-
-  static_website = {
-    enabled        = true
-    index_document = "index.html"
-  }
-
-  subservices_enabled = {
-    blob = true
-  }
-
-  tags = local.tags
-}
-
 module "azure_cdn_reuse_profile" {
   source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   resource_group_name = azurerm_resource_group.example.name
 
@@ -125,7 +115,7 @@ module "azure_cdn_reuse_profile" {
 
   origins = {
     secondary = {
-      host_name = module.storage_account_secondary.primary_web_host
+      host_name = azurerm_storage_account.origin["secondary"].primary_web_host
       priority  = 1
     }
   }
