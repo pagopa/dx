@@ -319,6 +319,36 @@ run "azure_github_environment_bootstrap_dx_runner_configuration" {
   }
 }
 
+run "azure_github_environment_bootstrap_dx_runner_not_provisioned_for_other_prefixes" {
+  command = plan
+
+  variables {
+    environment = merge(var.environment, {
+      prefix = "ced"
+    })
+  }
+
+  assert {
+    condition     = output.github_dx_runner == null
+    error_message = "The DX runner should not be provisioned when the environment prefix does not start with dx"
+  }
+}
+
+run "azure_github_environment_bootstrap_dx_runner_provisioned_for_dx_prefix_variants" {
+  command = plan
+
+  variables {
+    environment = merge(var.environment, {
+      prefix = "dx1"
+    })
+  }
+
+  assert {
+    condition     = output.github_dx_runner != null
+    error_message = "The DX runner should be provisioned when the environment prefix starts with dx"
+  }
+}
+
 run "azure_github_environment_bootstrap_dx_runner_instance_number_boundary" {
   command = plan
 
