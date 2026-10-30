@@ -16,7 +16,7 @@ The following diagram illustrates the architecture and relationships between the
 - **Flexible Ingress**: Configure external or environment-only access via the `allow_access_from_environment_only` variable (default: `false`).
 - **Custom Domain with Managed or Uploaded SSL**: Optionally bind a custom domain (e.g., `api.example.com`) via the `custom_domain` variable. Supports auto-provisioned Azure-managed certificates (provide `dns` block) or pre-uploaded certificates via `certificate_id`.
 - **Managed Identity**: Provides System Assigned Managed Identity for secure authentication with Azure resources.
-- **Easy Auth with Microsoft Entra ID**: Optionally configure authentication with or without a client secret and restrict access to an allowlist of caller application client IDs. The unauthenticated request action defaults to `RedirectToLoginPage`; API clients can use `Return401`.
+- **Easy Auth with Microsoft Entra ID**: Optionally configure authentication with or without a client secret and optionally restrict access to caller application client IDs. The unauthenticated request action defaults to `RedirectToLoginPage`; API clients can use `Return401`.
 - **Key Vault-backed Environment Variables**: Converts Azure Key Vault secret URIs in ordered environment variables into native Container App secret references.
 - **Health Probes**: Configurable liveness, readiness, and startup probes to monitor and ensure container health.
 - **Ingress Configuration**: Supports secure ingress with options for external or internal access and target port configuration.
@@ -58,23 +58,44 @@ In this case, create a CNAME record manually: `api.example.com` → `url` output
 
 ## Microsoft Entra ID Authentication
 
-For API-to-API calls, set `unauthenticated_client_action` to `Return401` so unauthenticated requests receive HTTP 401 instead of a login redirect:
+When `authentication` is configured, the module enables Microsoft Entra ID
+authentication. `allowed_callers_client_ids` is optional: omit it to allow any
+client application in the configured tenant to authenticate, or set one or more
+caller **Application (client) IDs** to restrict access. An explicitly empty
+list is invalid. Omitting the allowlist does not enable anonymous access.
+
+For network-only access without Entra authentication, omit `authentication` and
+configure ingress and the Container Apps Environment accordingly.
+`allow_access_from_environment_only` restricts access to apps in the same
+Container Apps Environment; it is not a general VNet allowlist.
+
+For API-to-API calls, set `unauthenticated_client_action` to `Return401` so
+unauthenticated requests receive HTTP 401 instead of a login redirect. To allow
+an API Management managed identity, look up its service principal and pass its
+client ID in `allowed_callers_client_ids` (not its service principal object ID):
+
+```hcl
+data "azuread_service_principal" "apim" {
+  display_name = "example-apim"
+}
+```
+
+Add this argument to your existing `module "container_app"` block:
 
 ```hcl
 authentication = {
   azure_active_directory = {
     client_id                     = "00000000-0000-0000-0000-000000000000"
-    tenant_id                     = "00000000-0000-0000-0000-000000000000"
-    allowed_callers_client_ids    = [
-      "11111111-1111-1111-1111-111111111111"
-    ]
+    tenant_id                     = "11111111-1111-1111-1111-111111111111"
+    client_secret_key_vault_id    = "https://example.vault.azure.net/secrets/entra-client-secret"
+    allowed_callers_client_ids    = [data.azuread_service_principal.apim.client_id]
     unauthenticated_client_action = "Return401"
   }
 }
 ```
 
-Provide each caller's **Application (client) ID**, not its service principal
-object ID. The list must contain at least one client ID.
+`client_id` is the application configured for Easy Auth. The APIM managed
+identity client ID is the caller ID restricted by the allowlist.
 
 ## Use cases Comparison
 
@@ -226,7 +247,7 @@ No modules.
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_acr_registry"></a> [acr\_registry](#input\_acr\_registry) | Indicates the Azure Container Registry to pull images from. Use this variable only if the registry service is an Azure Container Registry. Value must match the registry specified in the image name. | `string` | `null` | no |
 | <a name="input_allow_access_from_environment_only"></a> [allow\_access\_from\_environment\_only](#input\_allow\_access\_from\_environment\_only) | If false (default), the Container App is accessible via public internet or within the VNet, depending on the Container App Environment configuration.<br/>If true, the Container App is accessible only from other apps on the same Container App Environment. | `bool` | `false` | no |
-| <a name="input_authentication"></a> [authentication](#input\_authentication) | Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. allowed\_callers\_client\_ids must contain at least one calling application's client ID. client\_secret\_key\_vault\_id is optional and, when set, must be an Azure Key Vault secret URI; the module automatically adds it to the Container App secrets. unauthenticated\_client\_action controls how unauthenticated requests are handled, defaults to RedirectToLoginPage, and accepts RedirectToLoginPage, AllowAnonymous, Return401, or Return403. | <pre>object({<br/>    azure_active_directory = object({<br/>      client_id                     = string<br/>      tenant_id                     = string<br/>      client_secret_key_vault_id    = optional(string)<br/>      allowed_callers_client_ids    = list(string)<br/>      unauthenticated_client_action = optional(string, "RedirectToLoginPage")<br/>    })<br/>  })</pre> | `null` | no |
+| <a name="input_authentication"></a> [authentication](#input\_authentication) | Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. allowed\_callers\_client\_ids is optional: when omitted, no caller-application allowlist is configured; when set, it must contain one or more Application (client) IDs (for example, the APIM managed identity client ID, not its service principal object ID) and only those callers are allowed. client\_secret\_key\_vault\_id is optional and, when set, must be an Azure Key Vault secret URI; the module automatically adds it to the Container App secrets. unauthenticated\_client\_action controls how unauthenticated requests are handled, defaults to RedirectToLoginPage, and accepts RedirectToLoginPage, AllowAnonymous, Return401, or Return403. | <pre>object({<br/>    azure_active_directory = object({<br/>      client_id                     = string<br/>      tenant_id                     = string<br/>      client_secret_key_vault_id    = optional(string)<br/>      allowed_callers_client_ids    = optional(list(string))<br/>      unauthenticated_client_action = optional(string, "RedirectToLoginPage")<br/>    })<br/>  })</pre> | `null` | no |
 | <a name="input_autoscaler"></a> [autoscaler](#input\_autoscaler) | Autoscaler configuration. It includes minimum and maximum replicas, and a list of scalers for Azure Queue, HTTP calls and Custom scaling rules. Custom scalers are available on Keda website at https://keda.sh/docs/latest/scalers/ | <pre>object({<br/>    replicas = optional(object({<br/>      minimum = number<br/>      maximum = number<br/>    }), null)<br/><br/>    azure_queue_scalers = optional(list(object({<br/>      queue_name   = string<br/>      queue_length = number<br/><br/>      authentication = object({<br/>        secret_name       = string<br/>        trigger_parameter = string<br/>      })<br/>    })), [])<br/><br/>    http_scalers = optional(list(object({<br/>      name                = string<br/>      concurrent_requests = number,<br/>    })), [])<br/><br/>    custom_scalers = optional(list(object({<br/>      name             = string<br/>      custom_rule_type = string<br/>      metadata         = map(string),<br/><br/>      authentication = optional(object({<br/>        secret_name       = string<br/>        trigger_parameter = string<br/>      }))<br/>    })), [])<br/>  })</pre> | `null` | no |
 | <a name="input_container_app_environment_id"></a> [container\_app\_environment\_id](#input\_container\_app\_environment\_id) | The ID of the Azure Container App Environment where the container app will be deployed. | `string` | n/a | yes |
 | <a name="input_container_port"></a> [container\_port](#input\_container\_port) | The port on which the container app will listen for incoming traffic. | `number` | `8080` | no |

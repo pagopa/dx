@@ -477,7 +477,7 @@ run "authentication_invalid_unauthenticated_client_action" {
   ]
 }
 
-run "authentication_requires_allowed_callers" {
+run "authentication_rejects_empty_allowed_callers" {
   command = plan
 
   variables {

@@ -458,6 +458,26 @@ run "container_app_authentication_without_client_secret" {
   }
 }
 
+run "container_app_authentication_without_allowed_callers" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id = "ffffffff-0000-1111-2222-333333333333"
+      }
+    }
+  }
+
+  assert {
+    condition = !can(
+      azapi_resource.auth[0].body.properties.identityProviders.azureActiveDirectory.validation.defaultAuthorizationPolicy.allowedApplications
+    )
+    error_message = "No allowed-applications policy must be configured when caller client IDs are omitted"
+  }
+}
+
 run "container_app_authentication_returns_401_for_unauthenticated_requests" {
   command = plan
 
