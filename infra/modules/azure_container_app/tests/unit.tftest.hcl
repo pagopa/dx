@@ -410,6 +410,7 @@ run "container_app_authentication_injects_secret" {
         client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
         client_secret_key_vault_id = "https://kv-test.vault.azure.net/secrets/entra-id-secret"
+        allowed_callers_client_ids = ["11111111-2222-3333-4444-555555555555"]
       }
     }
   }
@@ -434,8 +435,9 @@ run "container_app_authentication_without_client_secret" {
   variables {
     authentication = {
       azure_active_directory = {
-        client_id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
-        tenant_id = "ffffffff-0000-1111-2222-333333333333"
+        client_id                  = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id                  = "ffffffff-0000-1111-2222-333333333333"
+        allowed_callers_client_ids = ["11111111-2222-3333-4444-555555555555"]
       }
     }
   }
@@ -456,6 +458,26 @@ run "container_app_authentication_without_client_secret" {
   }
 }
 
+run "container_app_authentication_without_allowed_callers" {
+  command = plan
+
+  variables {
+    authentication = {
+      azure_active_directory = {
+        client_id = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+        tenant_id = "ffffffff-0000-1111-2222-333333333333"
+      }
+    }
+  }
+
+  assert {
+    condition = !can(
+      azapi_resource.auth[0].body.properties.identityProviders.azureActiveDirectory.validation.defaultAuthorizationPolicy.allowedApplications
+    )
+    error_message = "No allowed-applications policy must be configured when caller client IDs are omitted"
+  }
+}
+
 run "container_app_authentication_returns_401_for_unauthenticated_requests" {
   command = plan
 
@@ -464,6 +486,7 @@ run "container_app_authentication_returns_401_for_unauthenticated_requests" {
       azure_active_directory = {
         client_id                     = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
         tenant_id                     = "ffffffff-0000-1111-2222-333333333333"
+        allowed_callers_client_ids    = ["11111111-2222-3333-4444-555555555555"]
         unauthenticated_client_action = "Return401"
       }
     }
