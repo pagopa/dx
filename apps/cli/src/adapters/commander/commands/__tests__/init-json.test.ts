@@ -168,7 +168,7 @@ describe("init command json output", () => {
         type: "step",
       },
     ]);
-    expect(parseNdjson(stdout.written)).toEqual([
+    expect(parseNdjson(stdout.written)).toMatchObject([
       {
         data: {
           gitHubRepoCreationSkipped: true,

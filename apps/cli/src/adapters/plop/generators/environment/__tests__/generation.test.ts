@@ -59,6 +59,17 @@ const registerEnvironmentSetup = (
     "setupCloudTools",
     async () => "Cloud CLI tools configured",
   );
+  plop.setActionType("prepareRepositoryState", async (data) => {
+    data.repositoryState = {
+      destination: {
+        backend: mockTerraformBackend,
+        containerName: "terraform-state",
+        key: "dx/mytest/repository.tfstate",
+      },
+      status: "remote-verified",
+    };
+    return "Repository state: remote and verified";
+  });
   // The formatting pass shells out to the repository Nx tasks: it is covered
   // by its own test, and stubbed here to keep the generated files untouched.
   plop.setActionType(

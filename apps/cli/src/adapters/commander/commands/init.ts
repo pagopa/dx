@@ -39,11 +39,21 @@ import {
 type GitHubRepoCreationSkippedResult = {
   gitHubRepoCreationSkipped: true;
   payload: MonorepoPayload;
+  repositoryState: {
+    nextStep: string;
+    path: string;
+    status: "not-created";
+  };
 };
 
 type InitResult = {
   pr?: PullRequest;
   repository?: Repository;
+  repositoryState?: {
+    nextStep: string;
+    path: string;
+    status: "local-temporary";
+  };
 };
 
 type SummaryInput = GitHubRepoCreationSkippedResult | InitResult;
@@ -99,6 +109,9 @@ const displaySummary = (input: SummaryInput) => {
       `       ${chalk.cyan(`cd ${payload.repoName}/infra/repository && terraform init && terraform apply`)}`,
     );
     console.log(
+      "       Terraform will create temporary local state. Keep it until `dx add environment` migrates it.",
+    );
+    console.log(
       `${step++}. Push the scaffolded code to the newly created repository:`,
     );
     console.log(
@@ -116,6 +129,13 @@ const displaySummary = (input: SummaryInput) => {
   if (repository) {
     console.log(`- Name: ${chalk.cyan(repository.name)}`);
     console.log(`- GitHub Repository: ${chalk.cyan(repository.url)}\n`);
+    console.log(
+      chalk.yellow(
+        "Repository state is temporarily local at infra/repository/terraform.tfstate.\n" +
+          "Do not delete it or run repository apply from another device.\n" +
+          "Run `dx add environment`; the CLI will migrate and verify state before modifying GitHub environments.",
+      ),
+    );
   } else {
     console.log(
       chalk.yellow(
@@ -525,6 +545,11 @@ const handleNewGitHubRepositoryWithPresenter =
         createPullRequestWithPresenter(context)(localWorkspace).map((pr) => ({
           pr,
           repository: localWorkspace.repository,
+          repositoryState: {
+            nextStep: "dx add environment",
+            path: "infra/repository/terraform.tfstate",
+            status: "local-temporary" as const,
+          },
         })),
       );
 
@@ -632,7 +657,16 @@ const runInitAction = ({
               gitHubService,
               presenter,
             })(payload)
-          : okAsync({ gitHubRepoCreationSkipped: true, payload }),
+          : okAsync({
+              gitHubRepoCreationSkipped: true,
+              payload,
+              repositoryState: {
+                nextStep:
+                  "Apply infra/repository manually, then run dx add environment",
+                path: "infra/repository/terraform.tfstate",
+                status: "not-created" as const,
+              },
+            }),
       ),
     );
 };
