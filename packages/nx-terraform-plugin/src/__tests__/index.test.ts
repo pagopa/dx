@@ -388,11 +388,10 @@ describe("createNodes existing project inference", () => {
       }),
     );
 
-    const result = await createNodes[1](
-      configFiles,
-      parseOptions(undefined),
-      { nxJsonConfiguration: {}, workspaceRoot },
-    );
+    const result = await createNodes[1](configFiles, parseOptions(undefined), {
+      nxJsonConfiguration: {},
+      workspaceRoot,
+    });
     const projects = new Map(
       result.flatMap(([, node]) => Object.entries(node.projects ?? {})),
     );

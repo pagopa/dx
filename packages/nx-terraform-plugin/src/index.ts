@@ -134,10 +134,8 @@ export const getDiscoveryStateWithValidation = async (
   configFiles: readonly string[],
   workspaceRoot: string,
 ) => {
-  const {
-    terraformConfigFiles,
-    testCapabilitiesByRoot,
-  } = getDiscoveryState(configFiles);
+  const { terraformConfigFiles, testCapabilitiesByRoot } =
+    getDiscoveryState(configFiles);
   const publishableMetadataByRoot = await getPublishableMetadataByRoot(
     Array.from(new Set(terraformConfigFiles.map(path.dirname))),
     workspaceRoot,

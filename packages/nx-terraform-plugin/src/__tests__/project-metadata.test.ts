@@ -38,7 +38,8 @@ describe("parseTerraformProjectMetadata", () => {
       description: "Terraform module description",
       version: "1.2.3",
     };
-    const parseResult = terraformProjectMetadataSchema.safeParse(invalidManifest);
+    const parseResult =
+      terraformProjectMetadataSchema.safeParse(invalidManifest);
     expect(parseResult.success).toBe(false);
     if (parseResult.success) {
       return;
@@ -64,7 +65,8 @@ describe("parseTerraformProjectMetadata", () => {
 
   it("formats multiple validation errors concisely", () => {
     const invalidManifest = {};
-    const parseResult = terraformProjectMetadataSchema.safeParse(invalidManifest);
+    const parseResult =
+      terraformProjectMetadataSchema.safeParse(invalidManifest);
     expect(parseResult.success).toBe(false);
     if (parseResult.success) {
       return;
