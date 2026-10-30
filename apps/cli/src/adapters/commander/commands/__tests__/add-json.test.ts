@@ -279,5 +279,4 @@ describe("add environment command json output", () => {
       },
     );
   });
-
 });
