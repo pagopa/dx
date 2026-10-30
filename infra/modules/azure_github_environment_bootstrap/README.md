@@ -240,14 +240,6 @@ before applying this module. See
 [Obtaining GitHub App credentials](https://dx.pagopa.it/docs/monorepository-setup#obtaining-github-app-credentials)
 for step-by-step instructions.
 
-The DX runner uses the `latest` image tag, but this bootstrap module currently
-pins runner module 3.x, which does not supply `GITHUB_APP_CLIENT_ID`. Before
-releasing the Client ID-based DX image as `latest`, upgrade and release this
-bootstrap module against the new runner module major and apply that upgrade to
-existing environments. Those environments must also have
-`github-runner-app-client-id` in the common Key Vault. Pinning the DX image is
-not configurable through this bootstrap module.
-
 ```hcl
 github_private_runner = {
   # Required: Container App Environment where the runner will be deployed
