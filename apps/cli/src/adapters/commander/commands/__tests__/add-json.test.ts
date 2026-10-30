@@ -20,6 +20,7 @@ import {
   AuthorizationResult,
   type AuthorizationService,
 } from "../../../../domain/authorization.js";
+import { MissingRunnerAppCredentialsError } from "../../../plop/generators/environment/prompts.js";
 
 const mocks = vi.hoisted(() => ({
   collectDeploymentEnvironmentPayload: vi.fn(),
@@ -106,6 +107,45 @@ const parseNdjson = (written: string[]) =>
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line));
+
+describe("add environment command CI errors", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("reports missing Runner App flags in the CI JSON error", async () => {
+    const stdout = captureStream(process.stdout);
+    captureStream(process.stderr);
+    const previousExitCode = process.exitCode;
+    mocks.getPlopInstance.mockResolvedValue({});
+    mocks.collectDeploymentEnvironmentPayload.mockRejectedValue(
+      new MissingRunnerAppCredentialsError(["--client-id"]),
+    );
+    const requireGitHubAuth: GitHubAuthFactory = () =>
+      okAsync({
+        authorizationService: mockDeep<AuthorizationService>(),
+        gitHubService: mockDeep<GitHubService>(),
+      });
+    const program = new Command()
+      .option("--output <mode>", "Output mode", "text")
+      .addCommand(makeAddCommand(requireGitHubAuth, { CI: true }));
+
+    try {
+      await program.parseAsync(["node", "dx", "add", "environment"]);
+
+      expect(parseNdjson(stdout.written)).toEqual([
+        {
+          error:
+            "GitHub Runner App credentials are required in non-interactive mode. Provide: --client-id.",
+          ok: false,
+        },
+      ]);
+      expect(process.exitCode).toBe(1);
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+  });
+});
 
 describe("add environment command json output", () => {
   beforeEach(() => {

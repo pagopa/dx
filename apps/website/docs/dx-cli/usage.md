@@ -163,9 +163,24 @@ both `--name` and `--prefix` when the tenant changes.
 The initialization confirmation and Terraform backend selection are conditional
 on the environment state. Runner App credentials are required whenever a new
 GitHub environment is configured, including when the Azure bootstrap resources
-already exist. The CLI stores them as GitHub environment secrets used by the
-bootstrapper workflow; they are not written to generated Terraform or workflow
-files.
+already exist. For an initialized subscription, the CLI automatically reads
+available credentials from the environment's common Key Vault and uses them
+without asking for confirmation. Explicit credential flags take precedence. The
+CLI stores the Client ID, installation ID, and private key as GitHub environment
+secrets used by the bootstrapper workflow; they are not written to generated
+Terraform or workflow files.
+
+The Azure CLI identity needs data-plane read access to that Key Vault, such as
+`Key Vault Secrets User` or `Key Vault Secrets Officer`. If a secret is absent
+or access is denied, the CLI explains the problem and prompts only for the
+missing values. It never displays the private key.
+
+Key Vaults created by older CLI versions do not contain the Client ID. When
+reusing the App ID and private key from such a vault, supply the Client ID once:
+the CLI attempts to save it to the common vault for later runs. If the identity
+has only read access, the command continues but the Client ID must be supplied
+again until it is added to the vault. When multiple subscriptions are selected,
+provide the Runner App credentials explicitly.
 
 The CLI omits Runner App credentials from its JSON success result. This also
 applies when `CI=1` selects JSON output automatically.
@@ -179,7 +194,8 @@ applies when `CI=1` selects JSON output automatically.
 | **GitHub Runner App Installation ID**              | The `Installation ID` retrieved in the same section.                                                                 |
 | **GitHub Runner App Private Key**                  | An editor will open — paste the full content of the `.pem` private key file, then save and close the editor.         |
 
-For non-interactive execution, provide all four Runner App values explicitly:
+For non-interactive execution, the CLI also reuses available vault credentials.
+Provide any missing values explicitly. For a new environment, supply all four:
 
 ```bash
 CI=1 npx @pagopa/dx-cli add environment \
@@ -199,8 +215,9 @@ CI=1 npx @pagopa/dx-cli add environment \
   -y
 ```
 
-If any Runner App value is missing in `CI=1` mode, the command stops with an
-explicit error before configuring the GitHub environment.
+If any Runner App value remains missing in `CI=1` mode, the command stops with
+an explicit error listing the required options before configuring the GitHub
+environment.
 
 #### Example Usage
 
