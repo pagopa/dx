@@ -287,6 +287,11 @@ describe("createNodes publish inference", () => {
     );
 
     expect(result[0]?.[1].projects?.[moduleRoot]).toEqual({
+      namedInputs: {
+        default: ["{projectRoot}/*.{tf,tfvars}"],
+        examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
+      },
+      projectType: "library",
       release: {
         version: {
           currentVersionResolver: "disk",
@@ -415,7 +420,7 @@ describe("createNodes existing project inference", () => {
       [...applicationRoots, libraryRoot].sort(),
     );
     expect(Object.keys(projects.get(applicationRoots[0]) ?? {}).sort()).toEqual(
-      ["root", "tags", "targets"],
+      ["namedInputs", "projectType", "root", "tags", "targets"],
     );
     expect(projects.get(applicationRoots[0])?.targets).toEqual(
       expect.objectContaining({
