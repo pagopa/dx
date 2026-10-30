@@ -185,6 +185,8 @@ export const createNodes: CreateNodes<TerraformPluginOptions> = [
         return {
           projects: {
             [root]: {
+              namedInputs: project.namedInputs,
+              projectType: project.projectType,
               root,
               tags: project.tags,
               targets: project.targets,
