@@ -333,6 +333,7 @@ const toPublicEnvironmentPayload = ({
   env,
   github,
   init,
+  repositoryState,
   tags,
   terraform,
   workspace,
@@ -345,6 +346,7 @@ const toPublicEnvironmentPayload = ({
       terraformBackend: init.terraformBackend,
     },
   }),
+  ...(repositoryState && { repositoryState }),
   tags,
   ...(terraform && {
     terraform: {

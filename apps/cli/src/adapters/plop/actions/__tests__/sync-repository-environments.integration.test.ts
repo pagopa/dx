@@ -33,6 +33,19 @@ const payload: Payload = {
     prefix: "dx",
   },
   github: { owner: "pagopa", repo: "my-project" },
+  repositoryState: {
+    destination: {
+      backend: {
+        resourceGroupName: "state-rg",
+        storageAccountName: "statest",
+        subscriptionId: "test-subscription",
+        type: "azurerm",
+      },
+      containerName: "terraform-state",
+      key: "dx/payments/repository.tfstate",
+    },
+    status: "remote-verified",
+  },
   tags: {
     CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
     Owner: "DX Platform",

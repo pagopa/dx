@@ -399,7 +399,7 @@ if (tool === "terraform") {
   }
 } else if (
   tool === "mise" &&
-  ["--version", "exec", "install", "lock", "use"].includes(args[0])
+  ["--version", "exec", "install", "lock", "trust", "use"].includes(args[0])
 ) {
   output("mise fixture\n");
 } else if (tool === "az" && args.join(" ") === "account show") {
