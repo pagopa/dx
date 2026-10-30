@@ -73,7 +73,7 @@ env:
 jobs:
   build:
     name: Build Artifact
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       packages: read
@@ -116,7 +116,7 @@ jobs:
 
   deploy:
     name: Deploy
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
     needs: [build]
     if: ${{ !github.event.act }}
     environment: ${{ inputs.environment }}-cd
