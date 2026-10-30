@@ -174,18 +174,20 @@ export const createNodes: CreateNodes<TerraformPluginOptions> = [
             projects: {},
           };
         }
+        const project = getProject(
+          opts,
+          context.workspaceRoot,
+          root,
+          hasRootTflintConfig,
+          publishableMetadataByRoot.get(root),
+          testCapabilitiesByRoot.get(root),
+        );
         return {
           projects: {
             [root]: {
               root,
-              targets: getProject(
-                opts,
-                context.workspaceRoot,
-                root,
-                hasRootTflintConfig,
-                publishableMetadataByRoot.get(root),
-                testCapabilitiesByRoot.get(root),
-              ).targets,
+              tags: project.tags,
+              targets: project.targets,
             },
           },
         };
