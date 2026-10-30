@@ -1,3 +1,8 @@
 {
-  "name": "azure_event_hub"
+  "name": "azure_event_hub",
+  "metadata": {
+    "description": "Creates an Azure Event Hub with monitoring and network configuration",
+    "provider": "azurerm",
+    "version": "3.0.0"
+  }
 }

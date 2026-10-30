@@ -4,7 +4,7 @@ locals {
     var.tags,
     {
       ModuleSource  = "DX",
-      ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"),
+      ModuleVersion = try(jsondecode(file("${path.module}/project.json")).metadata.version, "unknown"),
       ModuleName    = try(jsondecode(file("${path.module}/project.json")).name, "unknown")
     }
   )

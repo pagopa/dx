@@ -9,25 +9,44 @@ applying, security scanning, documentation, and module publishing.
 The plugin is now named `@pagopa/nx-terraform` and published to GitHub Packages.
 Replace the previous package dependency and update the plugin entry in
 `nx.json`, any explicit executor prefixes, and the
-`release.version.versionActions` path to use `@pagopa/nx-terraform`.
-Regenerate your package-manager lockfile after updating the dependency.
-The source directory remains `packages/nx-terraform-plugin`.
+plugin entry in `nx.json` to use `@pagopa/nx-terraform`. Regenerate your
+package-manager lockfile after updating the dependency. The source directory
+remains `packages/nx-terraform-plugin`.
 
 ## Terraform project discovery
 
-Terraform configurations outside `modules` or `_modules` are always inferred as
-application projects. Configurations inside those directories are inferred as
-library projects only when their own root contains a `module.json` file. This
-keeps nested implementation modules, such as `modules/<module>/modules/<child>`,
-from becoming standalone projects.
+The plugin adds Terraform targets to projects that already have a `project.json`
+at the Terraform configuration root. Project names and other project-level
+configuration remain owned by Nx; the plugin does not create Terraform project
+nodes. Roots conventionally inside `modules` or `_modules` receive library
+targets, while other Terraform roots receive application targets.
 
-Every application includes the `_modules` tree beside the first recognized
-environment directory in its root as a static Nx input. For example,
-`infra/resources/prod/networking` uses `infra/resources/_modules`, so any file
-added or changed there affects all applications in that area, whether or not
-they reference that module. If no supported environment segment is present,
-the input remains beside the application root. Unmanifested `_modules`
-directories still do not become standalone projects.
+To enable module publishing, add the publish fields to the project's
+`project.json` metadata:
+
+```json
+{
+  "name": "azure-core-infra",
+  "metadata": {
+    "description": "Core Azure infrastructure module.",
+    "provider": "azurerm",
+    "version": "6.0.7",
+    "github": {
+      "owner": "pagopa-dx"
+    }
+  }
+}
+```
+
+Publishing metadata is validated before the `nx-release-publish` target is
+inferred. Publishable Terraform libraries use the shared
+`@pagopa/nx-dx/version-actions` implementation to read and update
+`metadata.version` in `project.json`.
+
+The plugin only infers targets; project names, tags, named inputs, and other
+project-level configuration are defined by each project's `project.json`.
+Terraform files in shared `_modules` trees are not automatically added as
+application inputs.
 
 ## Trivy
 

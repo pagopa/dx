@@ -1,3 +1,8 @@
 {
-  "name": "azure_cdn"
+  "name": "azure_cdn",
+  "metadata": {
+    "description": "Allows to easily create an Azure FrontDoor CDN",
+    "provider": "azurerm",
+    "version": "3.0.0"
+  }
 }

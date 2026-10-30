@@ -1,3 +1,8 @@
 {
-  "name": "azure_service_bus_namespace"
+  "name": "azure_service_bus_namespace",
+  "metadata": {
+    "description": "Creates an Azure Service Bus Namepsace with network, authentication and scaling built-in capabilities",
+    "provider": "azurerm",
+    "version": "3.0.0"
+  }
 }

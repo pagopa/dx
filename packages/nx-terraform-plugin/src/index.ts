@@ -1,25 +1,22 @@
 import {
-  CreateDependencies,
+  type CreateDependencies,
+  type CreateNodes,
   createNodesFromFiles,
-  CreateNodesV2,
 } from "@nx/devkit";
 import fs from "node:fs/promises";
 import path from "node:path";
 
-import { readModulePublishManifest } from "./discovery.ts";
+import type { TerraformProjectMetadata } from "./project-metadata.ts";
+
+import { readTerraformProjectMetadata } from "./discovery.ts";
 import { getStaticDependenciesFromFile } from "./fs.ts";
 import { configureLogger } from "./logger.ts";
-import { ModulePublishManifest } from "./manifest.ts";
-import { parseOptions, TerraformPluginOptions } from "./options.ts";
+import { parseOptions, type TerraformPluginOptions } from "./options.ts";
 import { getTerraformProjectFiles } from "./project-file.ts";
-import {
-  getProject,
-  isTerraformLibraryRoot,
-  TerraformTestCapabilities,
-} from "./project.ts";
+import { getProject, type TerraformTestCapabilities } from "./project.ts";
 
 const ignoreModules = ["tests", "_tests", "examples", "example"];
-const moduleManifestFileName = "module.json";
+const projectConfigurationFileName = "project.json";
 const testCapabilityByFileName: Record<
   string,
   keyof TerraformTestCapabilities
@@ -59,7 +56,7 @@ const fileExists = async (filePath: string) => {
 
 export const getDiscoveryState = (configFiles: readonly string[]) => {
   const terraformConfigFiles: string[] = [];
-  const moduleManifestRoots = new Set<string>();
+  const projectConfigurationRoots = new Set<string>();
   const testConfigFiles: string[] = [];
   const testCapabilitiesByRoot = new Map<string, TerraformTestCapabilities>();
 
@@ -73,8 +70,8 @@ export const getDiscoveryState = (configFiles: readonly string[]) => {
     if (isIgnoredRoot(root)) {
       continue;
     }
-    if (fileName === moduleManifestFileName) {
-      moduleManifestRoots.add(root);
+    if (fileName === projectConfigurationFileName) {
+      projectConfigurationRoots.add(root);
       continue;
     }
     terraformConfigFiles.push(configFile);
@@ -82,7 +79,7 @@ export const getDiscoveryState = (configFiles: readonly string[]) => {
 
   const projectTerraformConfigFiles = terraformConfigFiles.filter((file) => {
     const root = path.dirname(file);
-    return !isTerraformLibraryRoot(root) || moduleManifestRoots.has(root);
+    return projectConfigurationRoots.has(root);
   });
   const terraformRoots = new Set(projectTerraformConfigFiles.map(path.dirname));
   for (const testConfigFile of testConfigFiles) {
@@ -107,28 +104,28 @@ export const getDiscoveryState = (configFiles: readonly string[]) => {
   }
 
   return {
-    moduleManifestRoots,
+    projectConfigurationRoots,
     terraformConfigFiles: projectTerraformConfigFiles,
     testCapabilitiesByRoot,
   };
 };
 
-export const getPublishableManifestByRoot = async (
-  moduleManifestRoots: readonly string[],
+export const getPublishableMetadataByRoot = async (
+  projectConfigurationRoots: readonly string[],
   workspaceRoot: string,
-): Promise<Map<string, ModulePublishManifest>> => {
+): Promise<Map<string, TerraformProjectMetadata>> => {
   const validationResults = await Promise.all(
-    moduleManifestRoots.map(async (root) => {
+    projectConfigurationRoots.map(async (root) => {
       const absoluteRoot = path.join(workspaceRoot, root);
-      const manifest = await readModulePublishManifest(absoluteRoot);
-      return manifest ? [root, manifest] : null;
+      const metadata = await readTerraformProjectMetadata(absoluteRoot);
+      return metadata ? [root, metadata] : null;
     }),
   );
 
   return new Map(
     validationResults.filter(
-      (rootManifest): rootManifest is [string, ModulePublishManifest] =>
-        rootManifest !== null,
+      (rootMetadata): rootMetadata is [string, TerraformProjectMetadata] =>
+        rootMetadata !== null,
     ),
   );
 };
@@ -137,23 +134,23 @@ export const getDiscoveryStateWithValidation = async (
   configFiles: readonly string[],
   workspaceRoot: string,
 ) => {
-  const { moduleManifestRoots, terraformConfigFiles, testCapabilitiesByRoot } =
+  const { terraformConfigFiles, testCapabilitiesByRoot } =
     getDiscoveryState(configFiles);
-  const publishableManifestByRoot = await getPublishableManifestByRoot(
-    Array.from(moduleManifestRoots),
+  const publishableMetadataByRoot = await getPublishableMetadataByRoot(
+    Array.from(new Set(terraformConfigFiles.map(path.dirname))),
     workspaceRoot,
   );
 
   return {
-    publishableManifestByRoot,
+    publishableMetadataByRoot,
     terraformConfigFiles,
     testCapabilitiesByRoot,
   };
 };
 
-export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
+export const createNodes: CreateNodes<TerraformPluginOptions> = [
   // Test files participate in graph invalidation without becoming projects.
-  "**/{*.tf,module.json,tests/*.tftest.hcl,tests/*_test.go}",
+  "**/{*.tf,project.json,tests/*.tftest.hcl,tests/*_test.go}",
   async (configFiles, options, context) => {
     await configureLogger();
     const opts = parseOptions(options);
@@ -161,7 +158,7 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
       path.join(context.workspaceRoot, ".tflint.hcl"),
     );
     const {
-      publishableManifestByRoot,
+      publishableMetadataByRoot,
       terraformConfigFiles,
       testCapabilitiesByRoot,
     } = await getDiscoveryStateWithValidation(
@@ -177,16 +174,24 @@ export const createNodesV2: CreateNodesV2<TerraformPluginOptions> = [
             projects: {},
           };
         }
+        const project = getProject(
+          opts,
+          context.workspaceRoot,
+          root,
+          hasRootTflintConfig,
+          publishableMetadataByRoot.get(root),
+          testCapabilitiesByRoot.get(root),
+        );
         return {
           projects: {
-            [root]: getProject(
-              opts,
-              context.workspaceRoot,
+            [root]: {
+              namedInputs: project.namedInputs,
+              projectType: project.projectType,
               root,
-              hasRootTflintConfig,
-              publishableManifestByRoot.get(root),
-              testCapabilitiesByRoot.get(root),
-            ),
+              tags: project.tags,
+              targets: project.targets,
+              ...(project.release ? { release: project.release } : {}),
+            },
           },
         };
       },

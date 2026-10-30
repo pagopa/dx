@@ -3,19 +3,28 @@ import path from "node:path";
 
 import { getPackageLogger } from "./logger.ts";
 import {
-  ModulePublishManifest,
-  ModulePublishManifestError,
-  parseModulePublishManifest,
-} from "./manifest.ts";
+  parseTerraformProjectMetadata,
+  type TerraformProjectMetadata,
+  TerraformProjectMetadataError,
+} from "./project-metadata.ts";
 
-export const readModulePublishManifest = async (
-  moduleRoot: string,
-): Promise<ModulePublishManifest | undefined> => {
-  const manifestPath = path.join(moduleRoot, "module.json");
+export const readTerraformProjectMetadata = async (
+  projectRoot: string,
+): Promise<TerraformProjectMetadata | undefined> => {
+  const projectJsonPath = path.join(projectRoot, "project.json");
   const logger = getPackageLogger(["discovery"]);
   try {
-    const rawManifest = await fs.readFile(manifestPath, "utf-8");
-    return parseModulePublishManifest(JSON.parse(rawManifest));
+    const projectJson: unknown = JSON.parse(
+      await fs.readFile(projectJsonPath, "utf-8"),
+    );
+    if (
+      typeof projectJson !== "object" ||
+      projectJson === null ||
+      !("metadata" in projectJson)
+    ) {
+      return undefined;
+    }
+    return parseTerraformProjectMetadata(projectJson.metadata);
   } catch (error) {
     if (
       typeof error === "object" &&
@@ -27,14 +36,14 @@ export const readModulePublishManifest = async (
     }
     if (error instanceof SyntaxError) {
       logger.warn(
-        `Invalid module manifest at ${manifestPath}. ${error.message}`,
+        `Invalid project configuration at ${projectJsonPath}. ${error.message}`,
       );
       return undefined;
     }
-    if (error instanceof ModulePublishManifestError) {
-      logger.warn("Invalid manifest file", {
+    if (error instanceof TerraformProjectMetadataError) {
+      logger.warn("Invalid Terraform publishing metadata", {
         issues: error.issues,
-        path: manifestPath,
+        path: projectJsonPath,
       });
       return undefined;
     }
@@ -42,10 +51,10 @@ export const readModulePublishManifest = async (
   }
 };
 
-// Determines whether a Terraform module root is publishable by validating module.json.
-export const hasPublishableModuleManifest = async (
-  moduleRoot: string,
+// Determines whether a Terraform module is publishable by validating its project metadata.
+export const hasPublishableTerraformMetadata = async (
+  projectRoot: string,
 ): Promise<boolean> => {
-  const manifest = await readModulePublishManifest(moduleRoot);
-  return manifest !== undefined;
+  const metadata = await readTerraformProjectMetadata(projectRoot);
+  return metadata !== undefined;
 };

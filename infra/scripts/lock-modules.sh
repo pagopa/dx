@@ -171,8 +171,10 @@ function get_module_version() {
     local module_path="$1"
     local module_version=""
 
-    if [[ -f "$module_path/module.json" ]]; then
-        module_version=$(jq -r '.version // empty' "$module_path/module.json")
+    if [[ -f "$module_path/project.json" ]]; then
+        module_version=$(
+            jq -r '.metadata.version // empty' "$module_path/project.json"
+        )
     fi
 
     if [[ -z "$module_version" && -f "$module_path/package.json" ]]; then

@@ -9,8 +9,9 @@ import {
 } from "@nx/devkit";
 import path from "node:path";
 
+import type { TerraformProjectMetadata } from "./project-metadata.ts";
+
 import { getPackageLogger } from "./logger.ts";
-import { ModulePublishManifest } from "./manifest.ts";
 import { TerraformPluginOptions } from "./options.ts";
 import { mergePublishOptions, PublishOptionsError } from "./publish-options.ts";
 
@@ -55,7 +56,6 @@ export const getProjectNameFromRoot = (root: string) =>
     .join("-");
 
 // Identifies roots that conventionally contain reusable Terraform modules.
-// Discovery additionally requires module.json before inferring these as projects.
 export const isTerraformLibraryRoot = (root: string): boolean => {
   const rootSegments = new Set(root.split(path.sep));
   return rootSegments.has("modules") || rootSegments.has("_modules");
@@ -82,10 +82,10 @@ const getEnvironmentIndex = (
 const getPublishTarget = (
   opts: TerraformPluginOptions,
   root: string,
-  publishManifest: ModulePublishManifest,
+  publishMetadata: TerraformProjectMetadata,
 ): [string, TargetConfiguration] | undefined => {
   try {
-    const publishOptions = mergePublishOptions(opts.publish, publishManifest);
+    const publishOptions = mergePublishOptions(opts.publish, publishMetadata);
     return [
       "nx-release-publish",
       {
@@ -96,7 +96,7 @@ const getPublishTarget = (
           githubOwner: publishOptions.github.owner,
           projectRoot: "{projectRoot}",
           // Only an owner explicitly configured in nx.json enables App auth;
-          // an owner inherited from module.json keeps the legacy token flow.
+          // an owner inherited from project metadata keeps the legacy token flow.
           useGitHubAppAuthentication: opts.publish.github?.owner !== undefined,
           workspaceRoot: "{workspaceRoot}",
         },
@@ -106,7 +106,7 @@ const getPublishTarget = (
     if (error instanceof PublishOptionsError) {
       logger.warn("Invalid publish options", {
         issues: error.issues,
-        path: path.join(root, "module.json"),
+        path: path.join(root, "project.json"),
       });
       return undefined;
     }
@@ -257,7 +257,7 @@ const getTargets = (
   root: string,
   projectType: ProjectType,
   hasRootTflintConfig: boolean,
-  publishManifest: ModulePublishManifest | undefined,
+  publishMetadata: TerraformProjectMetadata | undefined,
   testCapabilities: TerraformTestCapabilities,
 ): Record<string, TargetConfiguration> => {
   const formatArgs = ["-list=true", "-recursive=true"];
@@ -351,8 +351,8 @@ const getTargets = (
       },
     ]);
 
-    if (publishManifest) {
-      const publishTarget = getPublishTarget(opts, root, publishManifest);
+    if (publishMetadata) {
+      const publishTarget = getPublishTarget(opts, root, publishMetadata);
       if (publishTarget) {
         targets.push(publishTarget);
       }
@@ -429,7 +429,7 @@ export const getProject = (
   workspaceRoot: string,
   root: string,
   hasRootTflintConfig = false,
-  publishManifest: ModulePublishManifest | undefined = undefined,
+  publishMetadata: TerraformProjectMetadata | undefined = undefined,
   testCapabilities: TerraformTestCapabilities = noTerraformTestCapabilities,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
@@ -447,14 +447,14 @@ export const getProject = (
     .split(path.sep)
     .join("/");
   const isPublishableLibrary =
-    projectType === "library" && publishManifest !== undefined;
+    projectType === "library" && publishMetadata !== undefined;
   const targets = getTargets(
     opts,
     workspaceRoot,
     root,
     projectType,
     hasRootTflintConfig,
-    publishManifest,
+    publishMetadata,
     testCapabilities,
   );
   const environmentTag =
@@ -481,18 +481,16 @@ export const getProject = (
     root,
     // We assign the 'terraform' tag to all Terraform projects, add the
     // environment tag for applications, and add 'terraform:public'
-    // for publishable module libraries discovered from module.json.
+    // for publishable module libraries discovered from project.json metadata.
     tags,
     targets,
   };
 
-  // Add Nx Release configuration for publishable libraries
   if (isPublishableLibrary) {
     config.release = {
       version: {
         currentVersionResolver: "disk",
-        manifestRootsToUpdate: ["{projectRoot}"],
-        versionActions: "@pagopa/nx-terraform/release/version-actions",
+        versionActions: "@pagopa/nx-dx/version-actions",
       },
     };
   }

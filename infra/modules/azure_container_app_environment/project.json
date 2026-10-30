@@ -1,3 +1,8 @@
 {
-  "name": "azure_container_app_environment"
+  "name": "azure_container_app_environment",
+  "metadata": {
+    "description": "Provisions an Azure Container App Environment with a given configuration",
+    "provider": "azurerm",
+    "version": "5.0.0"
+  }
 }

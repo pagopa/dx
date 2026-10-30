@@ -1,3 +1,8 @@
 {
-  "name": "aws_azure_vpn"
+  "name": "aws_azure_vpn",
+  "metadata": {
+    "description": "Deploy a site-to-site vpn to enable network reachability between an AWS VPC and an Azure VNet",
+    "provider": "aws",
+    "version": "3.1.0"
+  }
 }

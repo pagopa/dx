@@ -1,3 +1,8 @@
 {
-  "name": "azure_function_app"
+  "name": "azure_function_app",
+  "metadata": {
+    "description": "Deploys an Azure Function App with storage, networking and RBAC configuration",
+    "provider": "azurerm",
+    "version": "7.1.0"
+  }
 }

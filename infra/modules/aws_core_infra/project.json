@@ -1,3 +1,8 @@
 {
-  "name": "aws_core_infra"
+  "name": "aws_core_infra",
+  "metadata": {
+    "description": "Sets up the core AWS infrastructure including all necessary networking resources. Useful to bootstrap production or development environments.",
+    "provider": "aws",
+    "version": "2.0.2"
+  }
 }

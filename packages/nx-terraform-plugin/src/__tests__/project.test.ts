@@ -375,9 +375,8 @@ describe("getProject applications", () => {
 
     it("does not add docs to applications", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
-      const targets = getTargetsOrThrow(
-        getProject(defaultOptions, root, true, publishManifest),
-      );
+      const project = getProject(defaultOptions, root, true, publishManifest);
+      const targets = getTargetsOrThrow(project);
 
       expect(Object.keys(targets)).toEqual([
         "init",
@@ -395,6 +394,7 @@ describe("getProject applications", () => {
       ]);
       expect(targets["docs"]).toBeUndefined();
       expect(targets["nx-release-publish"]).toBeUndefined();
+      expect(project.release).toBeUndefined();
     });
     it("sets correct dependency chains", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
@@ -825,6 +825,26 @@ describe("getProject libraries", () => {
   });
 });
 
+describe("getProject release configuration", () => {
+  it("uses the shared project.json version action for publishable libraries", () => {
+    const root = path.join("infra", "modules", "network_stack");
+    const project = getProject(
+      defaultOptions,
+      root,
+      false,
+      publishManifestWithOwner,
+    );
+
+    expect(project.release).toEqual({
+      version: {
+        currentVersionResolver: "disk",
+        versionActions: "@pagopa/nx-dx/version-actions",
+      },
+    });
+    expect(getProject(defaultOptions, root).release).toBeUndefined();
+  });
+});
+
 describe("library initialization", () => {
   it("uses plain Terraform initialization without module locking", () => {
     const root = path.join("infra", "modules", "network_stack");
@@ -896,48 +916,5 @@ describe("getProject prefixed target names", () => {
       getExpectedPublishTarget("pagopa-dx", false),
     );
     expect(targets["tf-nx-release-publish"]).toBeUndefined();
-  });
-});
-
-describe("getProject release configuration", () => {
-  describe("when the library is publishable", () => {
-    it("infers release.version config for publishable Terraform libraries", () => {
-      const root = path.join("infra", "modules", "network_stack");
-      const project = getProject(
-        defaultOptions,
-        root,
-        true,
-        publishManifestWithOwner,
-      );
-
-      expect(project.release).toBeDefined();
-      expect(project.release?.version).toBeDefined();
-      expect(project.release?.version).toEqual({
-        currentVersionResolver: "disk",
-        manifestRootsToUpdate: ["{projectRoot}"],
-        versionActions: "@pagopa/nx-terraform/release/version-actions",
-      });
-    });
-
-    it("does not infer release config for libraries without publish manifest", () => {
-      const root = path.join("infra", "modules", "network_stack");
-      const project = getProject(defaultOptions, root, true);
-
-      expect(project.release).toBeUndefined();
-    });
-  });
-
-  describe("when the root is an application", () => {
-    it("does not infer release config for applications even with publish manifest", () => {
-      const root = path.join("infra", "resources", "prod", "my_stack");
-      const project = getProject(
-        defaultOptions,
-        root,
-        true,
-        publishManifestWithOwner,
-      );
-
-      expect(project.release).toBeUndefined();
-    });
   });
 });

@@ -21,7 +21,7 @@ Use this workflow before writing any raw Terraform resource.
    - `main.tf`
    - supporting `.tf` files
    - `examples/`
-   - `module.json`
+   - `project.json` (`metadata.version`)
 5. Build a capability map from the source:
    - supported `use_case` values and their intended environments
    - optional variables and defaults
@@ -30,7 +30,8 @@ Use this workflow before writing any raw Terraform resource.
    - generated resources and IAM/RBAC behavior
    - examples showing common configurations
 6. If a module covers the capability, use it instead of raw `azurerm_*` or `aws_*` resources.
-7. Pin the module version with `~> major.minor`, deriving the version from `module.json`.
+7. Pin the module version with `~> major.minor`, deriving the version from
+   `project.json` metadata.
 8. Use raw provider resources only for capabilities not covered by DX modules, and explain why.
 
 ## Commonly Missed Module Categories
