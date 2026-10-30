@@ -1,3 +1,8 @@
 {
-  "name": "azure_app_service_plan_autoscaler"
+  "name": "azure_app_service_plan_autoscaler",
+  "metadata": {
+    "description": "Configures autoscaling rules for Azure App Service Plans",
+    "provider": "azurerm",
+    "version": "5.0.0"
+  }
 }

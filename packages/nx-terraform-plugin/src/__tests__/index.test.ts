@@ -269,7 +269,15 @@ describe("createNodes publish inference", () => {
     await fs.writeFile(path.join(workspaceRoot, moduleRoot, "main.tf"), "");
     await fs.writeFile(
       path.join(workspaceRoot, moduleRoot, "project.json"),
-      JSON.stringify({ name: "configured-module" }),
+      JSON.stringify({
+        metadata: {
+          description: "Terraform module description",
+          github: { owner: "pagopa" },
+          provider: "aws",
+          version: "1.2.3",
+        },
+        name: "configured-module",
+      }),
     );
 
     const result = await createNodes[1](
@@ -279,12 +287,19 @@ describe("createNodes publish inference", () => {
     );
 
     expect(result[0]?.[1].projects?.[moduleRoot]).toEqual({
+      release: {
+        version: {
+          currentVersionResolver: "disk",
+          versionActions: "@pagopa/nx-dx/version-actions",
+        },
+      },
       root: moduleRoot,
-      tags: ["terraform"],
+      tags: ["terraform", "terraform:public"],
       targets: expect.objectContaining({
         docs: expect.any(Object),
         fmt: expect.any(Object),
         init: expect.any(Object),
+        "nx-release-publish": expect.any(Object),
       }),
     });
   });

@@ -1,3 +1,8 @@
 {
-  "name": "azure_api_management"
+  "name": "azure_api_management",
+  "metadata": {
+    "description": "Deploys an Azure API Management service with monitoring and network configuration",
+    "provider": "azurerm",
+    "version": "4.2.3"
+  }
 }

@@ -1,3 +1,8 @@
 {
-  "name": "azure_merge_roles"
+  "name": "azure_merge_roles",
+  "metadata": {
+    "description": "Easily merge multiple RBAC built-in roles into a single custom role to save on the number of the required role assignments",
+    "provider": "azurerm",
+    "version": "3.0.0"
+  }
 }

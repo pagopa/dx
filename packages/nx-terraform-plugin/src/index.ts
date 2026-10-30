@@ -188,6 +188,7 @@ export const createNodes: CreateNodes<TerraformPluginOptions> = [
               root,
               tags: project.tags,
               targets: project.targets,
+              ...(project.release ? { release: project.release } : {}),
             },
           },
         };

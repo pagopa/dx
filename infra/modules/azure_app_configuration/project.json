@@ -1,3 +1,8 @@
 {
-  "name": "azure_app_configuration"
+  "name": "azure_app_configuration",
+  "metadata": {
+    "description": "Privisions App Configuration instance with private connection and IAM access mode",
+    "provider": "azurerm",
+    "version": "3.0.1"
+  }
 }

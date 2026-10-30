@@ -1,3 +1,8 @@
 {
-  "name": "azure_function_app_exposed"
+  "name": "azure_function_app_exposed",
+  "metadata": {
+    "description": "Creates an Azure Function App configured for external access",
+    "provider": "azurerm",
+    "version": "6.0.0"
+  }
 }

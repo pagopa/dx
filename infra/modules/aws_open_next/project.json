@@ -1,3 +1,8 @@
 {
-  "name": "aws_open_next"
+  "name": "aws_open_next",
+  "metadata": {
+    "description": "Deploy a serverless and scalable OpenNext solution on AWS",
+    "provider": "aws",
+    "version": "2.1.1"
+  }
 }

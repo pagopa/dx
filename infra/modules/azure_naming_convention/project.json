@@ -1,3 +1,8 @@
 {
-  "name": "azure_naming_convention"
+  "name": "azure_naming_convention",
+  "metadata": {
+    "description": "Provides standardized naming convention for Azure resources following best practices and organizational patterns",
+    "provider": "azurerm",
+    "version": "2.0.2"
+  }
 }
