@@ -8,8 +8,7 @@
   },
   "files": [
     "dist",
-    "executors.json",
-    "src/executors/**/schema.json"
+    "executors.json"
   ],
   "type": "module",
   "main": "./dist/index.js",
