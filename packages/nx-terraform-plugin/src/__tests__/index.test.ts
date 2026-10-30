@@ -262,7 +262,7 @@ describe("createNodes publish inference", () => {
     expect(result).toEqual([]);
   });
 
-  it("returns only inferred targets for a project.json root", async () => {
+  it("adds Terraform tags and inferred targets to a project.json root", async () => {
     const workspaceRoot = await createWorkspaceRoot();
     const moduleRoot = path.join("infra", "_modules", "configured");
     await fs.mkdir(path.join(workspaceRoot, moduleRoot), { recursive: true });
@@ -280,6 +280,7 @@ describe("createNodes publish inference", () => {
 
     expect(result[0]?.[1].projects?.[moduleRoot]).toEqual({
       root: moduleRoot,
+      tags: ["terraform"],
       targets: expect.objectContaining({
         docs: expect.any(Object),
         fmt: expect.any(Object),
@@ -399,7 +400,7 @@ describe("createNodes existing project inference", () => {
       [...applicationRoots, libraryRoot].sort(),
     );
     expect(Object.keys(projects.get(applicationRoots[0]) ?? {}).sort()).toEqual(
-      ["root", "targets"],
+      ["root", "tags", "targets"],
     );
     expect(projects.get(applicationRoots[0])?.targets).toEqual(
       expect.objectContaining({
