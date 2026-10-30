@@ -35,6 +35,7 @@ const mocks = vi.hoisted(() => {
 
   return {
     assertGitHubPackagesAccess: vi.fn(),
+    assertGitHubWorkflowAccess: vi.fn(),
     collectMonorepoPayload: vi.fn(),
     createCommandPresenter: vi.fn(() => presenter),
     execa$: vi.fn<() => ExecaTemplate>(
@@ -75,6 +76,9 @@ vi.mock("../../../plop/index.js", () => ({
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
 vi.mock("../../../github/packages.js", () => ({
   assertGitHubPackagesAccess: mocks.assertGitHubPackagesAccess,
+}));
+vi.mock("../../../github/git-auth.js", () => ({
+  assertGitHubWorkflowAccess: mocks.assertGitHubWorkflowAccess,
 }));
 vi.mock("../../presenters/index.js", () => ({
   createCommandPresenter: mocks.createCommandPresenter,
@@ -377,6 +381,7 @@ describe("makeInitCommand", () => {
     expect(mocks.reportResult).toHaveBeenCalledWith(
       expect.objectContaining({ gitHubRepoCreationSkipped: true }),
     );
+    expect(mocks.assertGitHubWorkflowAccess).not.toHaveBeenCalled();
   });
 
   it("uses the command presenter to report json errors", async () => {

@@ -77,6 +77,21 @@ and `--help`. Authenticate using one of the following (checked in this order):
 
 If no credential is found, the CLI exits with an error asking you to log in.
 
+Publishing with `init` also uses Git's configured authentication, which can differ
+from the CLI token above. For HTTPS OAuth/classic tokens, Git's credential must
+include the `workflow` scope because the scaffold contains GitHub Actions workflows.
+To use GitHub CLI authentication for HTTPS Git:
+
+```bash
+gh auth refresh --hostname github.com --scopes workflow
+gh auth setup-git --hostname github.com
+```
+
+The publishing check runs before the remote repository is created. SSH does not
+use OAuth scopes. If scope metadata is unavailable (for example, with fine-grained
+or GitHub App tokens), the CLI warns and continues without claiming verification.
+The CLI never switches credentials or changes global Git settings automatically.
+
 > Telemetry is emitted only for members of the `pagopa` GitHub organization;
 > all other users can use the CLI normally with telemetry disabled.
 
@@ -140,7 +155,7 @@ This command will:
 - **Check that the target GitHub repository does not already exist before proceeding**
 - Generate a monorepo structure following PagoPA DevEx guidelines
 - Ask whether the scaffolded workspace should be published to GitHub immediately
-- If confirmed, create the remote GitHub repository using Terraform and push the initial codebase
+- If confirmed, check Git's workflow permissions before creating the remote GitHub repository using Terraform and pushing the initial codebase
 
 If the specified GitHub repository already exists, the command will fail early with a clear error message, preventing accidental overwrites.
 
