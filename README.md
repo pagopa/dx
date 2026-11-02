@@ -2,7 +2,7 @@
 
 <img src="./assets/pagopa-logo.png" width="100" alt="PagoPA logo">
 
-# DevEx Initiative
+# Agentic DevEx
 
 <p align="center">
   <i align="center">Transforming the Development and Agentic Experience 🚀</i>
@@ -14,13 +14,9 @@
 
 <h4 align="center">
 
-DevEx initiative consists in a set of tools, patterns, and best practices aimed to innovate the Developer Experience (DevEx) and Agentic Experience (AEx).
-
 ![Maintenance](https://img.shields.io/maintenance/yes/2026)
 [![CodeQL](https://github.com/pagopa/dx/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/pagopa/dx/actions/workflows/github-code-scanning/codeql)
 ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/pagopa/dx?style=flat-square&logo=github&label=commits&cacheSeconds=60)
-
-**&searr;&nbsp;&nbsp;Resources&nbsp;&nbsp;&swarr;**
 
 [Documentation][docs_url] · [Blog][blog_url]
 
