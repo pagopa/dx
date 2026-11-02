@@ -329,7 +329,7 @@ run "azure_github_environment_bootstrap_dx_runner_not_provisioned_for_other_pref
   }
 
   assert {
-    condition     = output.github_dx_runner == null
+    condition     = output.github_dx_runner == null && length(module.github_runner_dx) == 0
     error_message = "The DX runner should not be provisioned when the environment prefix does not start with dx"
   }
 }
