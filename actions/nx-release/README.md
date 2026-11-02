@@ -121,8 +121,8 @@ jobs:
       - uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
         id: app-token
         with:
-          client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
-          private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
+          client-id: ${{ secrets.GH_APP_CLIENT_ID }}
+          private-key: ${{ secrets.GH_APP_KEY }}
           permission-contents: write
           permission-pull-requests: write
 
