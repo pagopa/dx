@@ -8,7 +8,7 @@
  *     --name dx-metrics-scope-secret --query value -o tsv)"
  *
  * The link is deterministic: the same tag set always produces the same URL, so
- * re-running this command is safe. See docs/scoped-access.md.
+ * re-running this command is safe. See docs/adr/0001-repository-scopes.md.
  */
 
 import { dxMetricsConfig } from "@pagopa/dx-metrics-core/config";
