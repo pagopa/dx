@@ -203,7 +203,6 @@ jobs:
       GH_APP_CLIENT_ID: $\{{ secrets.GH_APP_CLIENT_ID }}
       GH_APP_INSTALLATION_ID: $\{{ secrets.GH_APP_INSTALLATION_ID }}
       GH_APP_KEY: $\{{ secrets.GH_APP_KEY }}
-
 ```
 
 With this in place, pull requests receive a warning only when a version plan is
