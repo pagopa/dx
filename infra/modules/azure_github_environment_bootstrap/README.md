@@ -7,7 +7,7 @@ The Azure GitHub Environment Bootstrap module is designed for users who have jus
 The module performs the following actions:
 
 - Creates the **GitHub Private Runner** associated with the repository.
-- Creates a **DX GitHub Private Runner** alongside the legacy runner.
+- Creates a **DX GitHub Private Runner** alongside the legacy runner only when `environment.prefix` starts with `dx`. For other prefixes Terraform removes the DX runner, and the `github_dx_runner` output is `null`.
 - Creates Azure user-assigned **Managed Identities** to let GitHub workflows deploy:
   1. Infrastructure resources (IaC).
   2. Applications.
@@ -273,8 +273,10 @@ github_private_runner = {
 
 The `github_private_runner` configuration is shared by both runners. The
 legacy runner keeps the configured environment label, while the DX runner uses
-the `ghcr.io/pagopa/dx-github-self-hosted-runner:latest` image and the `dx`
-label. Workflows can target it with `runs-on: [self-hosted, dx]`.
+the `ghcr.io/pagopa/dx-github-self-hosted-runner:latest` image and appends the
+`dx` label. Workflows can target it with `runs-on: [self-hosted, dx]`. The DX
+runner is provisioned only when `environment.prefix` starts with `dx`; otherwise
+the runner is removed and `github_dx_runner` is `null`.
 
 #### `private_dns_zone_resource_group_id`
 
@@ -564,7 +566,7 @@ This module includes practical examples to help you get started quickly:
 
 | Name | Description |
 | ---- | ----------- |
-| <a name="output_github_dx_runner"></a> [github\_dx\_runner](#output\_github\_dx\_runner) | Details of the DX GitHub self-hosted runner, including ID, name, resource group name, image, and labels. |
+| <a name="output_github_dx_runner"></a> [github\_dx\_runner](#output\_github\_dx\_runner) | Details of the DX GitHub self-hosted runner, or null when environment.prefix does not start with dx. |
 | <a name="output_github_private_runner"></a> [github\_private\_runner](#output\_github\_private\_runner) | Details of the GitHub private runner, including ID, name, and resource group name. |
 | <a name="output_identities"></a> [identities](#output\_identities) | Details of the user-assigned identities for app, infra, and opex, including IDs and names. |
 | <a name="output_repository"></a> [repository](#output\_repository) | GitHub repository name and owner. |
