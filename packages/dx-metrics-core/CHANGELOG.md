@@ -1,3 +1,13 @@
+## 0.1.13 (2026-11-02)
+
+### 🩹 Fixes
+
+- Track additional PagoPA repositories in DX Metrics ([#2460](https://github.com/pagopa/dx/pull/2460))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.1.12 (2026-10-08)
 
 ### 🩹 Fixes
