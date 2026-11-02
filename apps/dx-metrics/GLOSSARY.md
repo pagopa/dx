@@ -77,10 +77,34 @@ declares it.
 
 **Imported repository**
 : A repository the importer scans. It is a subset of the organisation: the
-configured repository list. Statements about "all repositories" mean "all
-imported repositories".
+configured repository list, independent of who is looking.
 
 **Snapshot**
 : Current state with no history. Module usage and DX pipeline usage are
 snapshots: the importer replaces them on every run, so they are not affected by
 the selected range.
+
+## Visibility
+
+**Portfolio**
+: The complete set of imported repositories — everything the portal holds,
+whoever is looking. Statements about "all repositories" mean "the portfolio".
+_Avoid_: all repositories, organization
+
+**Tag**
+: A static label on an imported repository that groups it with other
+repositories by programme or ownership. A repository may carry several tags, and
+tags may overlap.
+_Avoid_: label, group, team
+
+**Scope**
+: The subset of the portfolio one visitor may see, derived from the tags their
+magic link carries. The full portfolio is itself a scope, not the absence of
+one.
+_Avoid_: permission, tenant, filter
+
+**Magic link**
+: A URL that carries a scope and grants access to it when opened. It is a shared
+credential, not a personal identity: everyone holding the same link sees the
+same scope.
+_Avoid_: invite link, login link

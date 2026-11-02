@@ -4,9 +4,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getPrLeadTimeBenchmark } from "@/adapters/db/benchmark/queries";
 import { fetchPrDashboard } from "@/adapters/db/pull-requests/queries";
 import { db } from "@/db/instance";
-import { jsonWithCache } from "@/lib/api-cache";
-import { ORGANIZATION, REPOSITORIES } from "@/lib/config";
-import { parseDashboardQuery, resolveRepositories } from "@/lib/query-params";
+import { jsonWithNoStore } from "@/lib/api-cache";
+import { ORGANIZATION } from "@/lib/config";
+import { parseDashboardQuery } from "@/lib/query-params";
+import { resolveVisibleRepositories } from "@/lib/scope/scope";
+import { requireScope } from "@/lib/scope/server";
 import { percentileRank } from "@/lib/stats";
 
 /** Peer comparison shape consumed by the pull-request insights. */
@@ -69,10 +71,13 @@ const buildPeerBenchmark = (
 };
 
 export async function GET(req: NextRequest) {
+  const auth = requireScope(req);
+  if ("error" in auth) return auth.error;
+
   const parsed = parseDashboardQuery(req);
   if ("error" in parsed) return parsed.error;
   const { days, end, start } = parsed.query;
-  const repositories = resolveRepositories(parsed.query, "dx");
+  const repositories = resolveVisibleRepositories(parsed.query, auth.scope);
   const fullNames = repositories.map(
     (repository) => `${ORGANIZATION}/${repository}`,
   );
@@ -83,7 +88,7 @@ export async function GET(req: NextRequest) {
     // resolved before the dashboard builds its insights. Losing it must not
     // fail the dashboard — insights simply lose the peer reading.
     const leadTimeBenchmark = await getPrLeadTimeBenchmark(db, {
-      configuredRepositories: REPOSITORIES,
+      configuredRepositories: [...auth.scope.repositories],
       days,
       end,
       start,
@@ -99,7 +104,7 @@ export async function GET(req: NextRequest) {
       peerBenchmark: buildPeerBenchmark(leadTimeBenchmark, repositories),
       start,
     });
-    return jsonWithCache(result);
+    return jsonWithNoStore(result);
   } catch (error) {
     console.error("PR dashboard error:", error);
     return NextResponse.json({ error: "Query failed" }, { status: 500 });

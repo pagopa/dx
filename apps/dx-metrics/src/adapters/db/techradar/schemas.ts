@@ -6,6 +6,13 @@ import { sqlNumberSchema, sqlTimestampSchema } from "../shared/sql-parsing";
 
 export const getTechRadarDashboardInputSchema = z.object({
   configuredRepositories: z.array(z.string().min(1)),
+  /**
+   * Whether to include the adoption trend. The trend is aggregated per tool
+   * with no repository dimension, so a scope narrower than the portfolio must
+   * not receive it. Required rather than defaulted: a caller that forgets it
+   * must fail to compile, not publish the organisation-wide trend.
+   */
+  includeUsageTrend: z.boolean(),
 });
 
 export const techRadarUsageRowSchema = z.object({

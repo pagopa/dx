@@ -3,7 +3,7 @@
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo } from "react";
 
-import { DEFAULT_REPOSITORY, REPOSITORIES } from "@/lib/config";
+import { useScope } from "@/components/ScopeProvider";
 import { calendarDaysBetween, isCalendarDate } from "@/lib/date-range";
 
 export type DashboardFilterMode =
@@ -19,11 +19,6 @@ interface DashboardFilterUpdates {
 
 interface UseDashboardFiltersOptions {
   defaultDays?: number;
-  /**
-   * Repositories selected when the URL carries no repository parameter.
-   * Defaults to the single configured default repository.
-   */
-  defaultRepositories?: readonly string[];
   mode?: DashboardFilterMode;
 }
 
@@ -33,40 +28,29 @@ const DEFAULT_MODE: DashboardFilterMode = "repository-and-time";
 const isPositiveInteger = (value: number) =>
   Number.isInteger(value) && value > 0;
 
-/** Keeps only known repositories, preserving the caller's order. */
-const sanitizeRepositories = (repositories: readonly string[]): string[] =>
-  Array.from(
-    new Set(
-      repositories.filter((repository) => REPOSITORIES.includes(repository)),
-    ),
-  );
+const splitRepositories = (value: string): string[] =>
+  value
+    .split(",")
+    .map((repository) => repository.trim())
+    .filter((repository) => repository.length > 0);
 
 /**
- * Resolves the selection from the URL.
- *
- * `repositories` is the canonical parameter: absent falls back to the default,
- * while an explicitly empty value means "no repository selected" and yields an
- * empty result set. `repository` is the legacy single-value alias, honoured so
- * old bookmarks keep working.
+ * Resolves the selection from the URL. The rules mirror the API's
+ * `resolveVisibleRepositories`: an out-of-scope value yields an empty selection,
+ * never the whole scope, so the select and the dashboard cannot disagree.
  */
-const resolveRepositories = (
+const resolveSelection = (
   rawRepositories: null | string,
   rawRepository: null | string,
   fallbackRepositories: readonly string[],
+  sanitize: (repositories: readonly string[]) => string[],
 ): string[] => {
   if (rawRepositories !== null) {
-    return sanitizeRepositories(
-      rawRepositories
-        .split(",")
-        .map((repository) => repository.trim())
-        .filter((repository) => repository.length > 0),
-    );
+    return sanitize(splitRepositories(rawRepositories));
   }
 
   if (rawRepository !== null) {
-    return REPOSITORIES.includes(rawRepository)
-      ? [rawRepository]
-      : [...fallbackRepositories];
+    return sanitize([rawRepository]);
   }
 
   return [...fallbackRepositories];
@@ -78,21 +62,29 @@ const readCalendarDate = (value: null | string): string | undefined =>
 
 export function useDashboardFilters({
   defaultDays = DEFAULT_DAYS,
-  defaultRepositories = [DEFAULT_REPOSITORY],
   mode = DEFAULT_MODE,
 }: UseDashboardFiltersOptions = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const { repositories: scopeRepositories } = useScope();
 
-  const sanitizedDefaults = sanitizeRepositories(defaultRepositories);
-  const resolvedDefaultRepositories =
-    sanitizedDefaults.length > 0 ? sanitizedDefaults : [DEFAULT_REPOSITORY];
+  /** Keeps only the repositories the scope allows, preserving the order. */
+  const sanitizeRepositories = useCallback(
+    (repositories: readonly string[]) => {
+      const visible = new Set(scopeRepositories);
+      return Array.from(
+        new Set(repositories.filter((repository) => visible.has(repository))),
+      );
+    },
+    [scopeRepositories],
+  );
 
-  const repositories = resolveRepositories(
+  const repositories = resolveSelection(
     searchParams.get("repositories"),
     searchParams.get("repository"),
-    resolvedDefaultRepositories,
+    scopeRepositories,
+    sanitizeRepositories,
   );
 
   const requestedDays = Number(searchParams.get("days"));
@@ -168,7 +160,7 @@ export function useDashboardFilters({
 
       router.push(queryString ? `${pathname}?${queryString}` : pathname);
     },
-    [mode, pathname, repositories, router, searchParams],
+    [mode, pathname, repositories, router, sanitizeRepositories, searchParams],
   );
 
   const setRepositories = useCallback(

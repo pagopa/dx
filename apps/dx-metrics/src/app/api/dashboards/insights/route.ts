@@ -23,11 +23,13 @@ import { getTrackerDashboard } from "@/adapters/db/tracker/queries";
 import { getWorkflowDashboard } from "@/adapters/db/workflows/queries";
 import { resolveWindow } from "@/adapters/db/shared/window";
 import { db } from "@/db/instance";
-import { jsonWithCache } from "@/lib/api-cache";
-import { ORGANIZATION, REPOSITORIES } from "@/lib/config";
+import { jsonWithNoStore } from "@/lib/api-cache";
+import { ORGANIZATION } from "@/lib/config";
 import { sortInsights } from "@/lib/insights/insight-helpers";
 import type { Insight, WithInsights } from "@/lib/insights/types";
-import { parseDashboardQuery, resolveRepositories } from "@/lib/query-params";
+import { parseDashboardQuery } from "@/lib/query-params";
+import { resolveVisibleRepositories } from "@/lib/scope/scope";
+import { requireScope } from "@/lib/scope/server";
 
 /** Dashboards whose insights feed the executive summary. */
 const ENDPOINT_LABELS = {
@@ -72,10 +74,13 @@ const earliestDate = (dates: readonly string[]): null | string =>
   }, null);
 
 export async function GET(req: NextRequest) {
+  const auth = requireScope(req);
+  if ("error" in auth) return auth.error;
+
   const parsed = parseDashboardQuery(req);
   if ("error" in parsed) return parsed.error;
   const { days, end, start } = parsed.query;
-  const fullNames = resolveRepositories(parsed.query, "dx").map(
+  const fullNames = resolveVisibleRepositories(parsed.query, auth.scope).map(
     (repository) => `${ORGANIZATION}/${repository}`,
   );
 
@@ -116,20 +121,27 @@ export async function GET(req: NextRequest) {
     {
       key: "techradar",
       request: getTechRadarDashboard(db, {
-        configuredRepositories: REPOSITORIES.map(
+        configuredRepositories: auth.scope.repositories.map(
           (name) => `${ORGANIZATION}/${name}`,
         ),
+        includeUsageTrend: auth.scope.all,
       }),
     },
-    {
-      key: "dx-team",
-      request: fetchDxTeamDashboard(db, {
-        days,
-        end,
-        organization: ORGANIZATION,
-        start,
-      }),
-    },
+    // DX Team is organisation-wide and refuses a narrowed scope; asking for it
+    // would only add a failed dashboard to the summary.
+    ...(auth.scope.all
+      ? [
+          {
+            key: "dx-team" as const,
+            request: fetchDxTeamDashboard(db, {
+              days,
+              end,
+              organization: ORGANIZATION,
+              start,
+            }),
+          },
+        ]
+      : []),
     { key: "tracker", request: getTrackerDashboard(db) },
     { key: "releases", request: getReleasesDashboard(db) },
   ];
@@ -192,7 +204,7 @@ export async function GET(req: NextRequest) {
         })
       : null;
 
-  return jsonWithCache({
+  return jsonWithNoStore({
     insights: sortInsights(insights),
     meta: {
       // Lets the summary say "N of M" without hard-coding the dashboard count.

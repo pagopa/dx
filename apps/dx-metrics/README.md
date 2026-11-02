@@ -38,7 +38,9 @@ the shared schema lives.
 Follow the importer usage documented in
 [`apps/dx-metrics-import`](../dx-metrics-import/README.md).
 
-4. **Access dashboards** at http://localhost:3000 (anonymous access; no GitHub login required)
+4. **Access dashboards** at http://localhost:3000. Every visitor needs a magic
+   link carrying their repository scope; see
+   [Repository scopes](#repository-scopes).
 
 ## Starting the Application
 
@@ -82,12 +84,30 @@ Typical configuration fields include:
 | Field          | Default                  | Description                                               |
 | -------------- | ------------------------ | --------------------------------------------------------- |
 | `organization` | `pagopa`                 | GitHub organization                                       |
-| `repositories` | (see shared config)      | List of repositories to analyze                           |
+| `repositories` | (see shared config)      | Repositories to analyze, each with its visibility tags    |
 | `dxTeamSlug`   | `engineering-team-devex` | GitHub team slug — members are resolved via API at import |
 | `dxRepo`       | `dx`                     | The DX repository name                                    |
 
 Importer runtime configuration and GitHub authentication are documented in
 [`apps/dx-metrics-import`](../dx-metrics-import/README.md).
+
+## Repository scopes
+
+A visitor sees only the repositories their magic link grants. Links are signed
+and carry tags, not repository names, so editing a tag changes what every
+existing link sees. The model, the token format, the per-dashboard rules and the
+rollout are documented in [`docs/scoped-access.md`](docs/scoped-access.md); the
+rationale is in [`docs/adr/0001-repository-scopes.md`](docs/adr/0001-repository-scopes.md).
+
+Mint a link with the signing secret in the environment:
+
+```bash
+pnpm --filter dx-metrics scope:link --tags p4pa
+pnpm --filter dx-metrics scope:link --all
+```
+
+`DX_METRICS_SCOPE_SECRET` is required in every environment. Rotating it
+invalidates every link in circulation.
 
 ## Development
 
@@ -95,6 +115,21 @@ Importer runtime configuration and GitHub authentication are documented in
 pnpm install
 pnpm dev
 ```
+
+The portal serves no data without a scope, so local development needs a secret
+and a link:
+
+```bash
+# Any 32+ character secret: local links only have to match this process.
+export DX_METRICS_SCOPE_SECRET="$(openssl rand -base64 32)"
+pnpm dev
+
+# In another shell, with the same secret:
+pnpm --filter dx-metrics scope:link --tags dx --base-url http://localhost:3000
+```
+
+Opening the printed URL sets the scope cookie and redirects to the overview.
+Without it, every page lands on `/access`.
 
 ## Database Connection
 
