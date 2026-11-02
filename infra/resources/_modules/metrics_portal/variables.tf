@@ -80,3 +80,9 @@ variable "auth_entra_id_client_id" {
   description = "Azure Entra ID application (client) ID for authentication. When set, enables managed authentication on the Container App. Not sensitive — it is a public application identifier."
   default     = "90565e12-fde8-4a60-95ee-a282409d3b86"
 }
+
+variable "scope_enforcement_enabled" {
+  type        = bool
+  description = "Whether a visitor without a valid repository-scope link is refused. Set to false to roll the magic-link mechanism out: links, filtering and the no-store policy go live, but an unscoped visitor still sees the full portfolio. Defaults to enforcing so a missing value closes the portal rather than opening it."
+  default     = true
+}

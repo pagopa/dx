@@ -69,6 +69,14 @@ module "container_app" {
           name  = "DATABASE_URL"
           value = azurerm_key_vault_secret.database_url.versionless_id
         },
+        {
+          name  = "DX_METRICS_SCOPE_SECRET"
+          value = azurerm_key_vault_secret.scope_secret.versionless_id
+        },
+        {
+          name  = "DX_METRICS_SCOPE_ENFORCE"
+          value = var.scope_enforcement_enabled ? "true" : "false"
+        },
       ]
 
       liveness_probe = {

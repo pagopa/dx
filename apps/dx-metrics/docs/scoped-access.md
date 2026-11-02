@@ -233,30 +233,63 @@ Secret storage: `azurerm_key_vault_secret.scope_secret` in
 `infra/resources/_modules/metrics_portal/scope.tf`, using the same
 `value_wo = "placeholder"` pattern as `azuread_client_secret` so rotation is a
 Key Vault operation rather than a Terraform apply. The value is injected into
-the container as `DX_METRICS_SCOPE_SECRET` by `versionless_id`.
+the container as `DX_METRICS_SCOPE_SECRET` by its versionless id, and the
+Container App module turns a Key Vault URI in an environment value into a
+secret reference on its own. The container identity already reads secrets from
+the vault (`key_vault.roles.secrets = "reader"` in `iam.tf`), so the new secret
+needs no extra permission.
 
-Rotation invalidates every link; the procedure is: set a new version of the
-secret, restart the Container App revision, redistribute links.
+The secret ships with a placeholder value, longer than the runtime's minimum so
+that an unconfigured deployment rejects links as invalid instead of failing with
+a configuration error. It must be replaced once, out of band, before the first
+link can be verified:
+
+```bash
+az keyvault secret set \
+  --vault-name dx-p-itn-common-kv-01 \
+  --name dx-metrics-scope-secret \
+  --value "$(openssl rand -base64 32)"
+
+az containerapp revision restart \
+  --name dx-p-itn-metrics-portal-ca-01 \
+  --resource-group dx-p-itn-common-rg-01
+```
+
+The restart is what makes the change immediate. Container Apps refreshes
+versionless Key Vault references on its own, but asynchronously, so a link sent
+seconds after `az keyvault secret set` can still be rejected.
+
+Never increment `value_wo_version` in `scope.tf`: a bump makes Terraform write
+the placeholder back over the real secret and breaks every distributed link.
+Rotation is a Key Vault operation followed by a revision restart, then a
+redistribution of the links.
 
 ### Rollout
 
 Enforcement is gated by `DX_METRICS_SCOPE_ENFORCE`, default `true` in code and
-set to `false` in Terraform for the first deploy. Sequence:
+driven by the module's `scope_enforcement_enabled` variable. The prod module
+call sets it to `false`, so the first deploy is safe. Sequence:
 
-1. Deploy with `DX_METRICS_SCOPE_ENFORCE = "false"`: tags, `/auth/scope`,
-   cookie issuance and filtering are live, but a request without a valid scope
-   still sees the portfolio.
-2. Generate the full-portfolio link and send it to every current user.
-3. Delete the `DX_METRICS_SCOPE_ENFORCE = "false"` line: the default enforces.
-4. In a follow-up PR, delete the flag and the fail-open branch.
+1. Deploy with `scope_enforcement_enabled = false`: tags, `/auth/scope`, cookie
+   issuance and filtering are live, but a request without a valid scope still
+   sees the portfolio.
+2. Set the real secret out of band, restart the revision, and check that a
+   freshly minted link actually opens the overview. Then generate the
+   full-portfolio link and send it to every current user. This step is not
+   optional: enabling enforcement while the placeholder is still in the vault
+   would scope the portal with a secret that is public in the repository.
+3. Delete the `scope_enforcement_enabled = false` line from the prod module
+   call: the variable defaults to enforcing.
+4. In a follow-up PR, delete the flag, the fail-open branch and the variable.
 
 The default is `true` on purpose: a missing variable in production must lock
 people out, not open the portfolio. Local development mints its own link.
 
 ## Work
 
-Steps 1–8 are implemented. Step 9 is not: until the Key Vault secret exists
-the deployed portal cannot verify a single link.
+All steps are implemented. The secret is created with a placeholder, so the
+first deploy still needs the out-of-band `az keyvault secret set` described
+above before any link works.
 
 1. **Shared config** — `packages/dx-metrics-core/src/config.ts`: tag the 112
    repositories, change `DxMetricsConfig`, derive `defaultImportFileConfig`;
@@ -281,7 +314,8 @@ the deployed portal cannot verify a single link.
 8. **Minting** — `scripts/mint-scope-link.ts`, `scope:link` script, `tsx` in
    `devDependencies`, README section.
 9. **Infra** — `scope.tf` (Key Vault secret), `DX_METRICS_SCOPE_SECRET`,
-   `DX_METRICS_SCOPE_ENFORCE`, README runbook.
+   `DX_METRICS_SCOPE_ENFORCE` and `scope_enforcement_enabled` on the prod module
+   call, runbook above.
 
 ## Tests
 
