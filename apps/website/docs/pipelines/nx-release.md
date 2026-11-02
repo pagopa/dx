@@ -6,8 +6,8 @@ sidebar_position: 11
 
 :::info Reusable Workflows
 
-| Workflow                     | Version | Source                                                                                         |
-| ---------------------------- | ------- | ---------------------------------------------------------------------------------------------- |
+| Workflow                     | Version | Source                                                                                        |
+| ---------------------------- | ------- | --------------------------------------------------------------------------------------------- |
 | **Release** (publish to npm) | v2      | [`release-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-v2.yaml) |
 
 :::
