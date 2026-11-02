@@ -43,8 +43,12 @@ jobs:
           fi
           printf 'env_name=%s\n' "${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
 
-      - name: Checkout repository
+      - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
@@ -162,11 +166,12 @@ jobs:
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
     steps:
-      - name: Checkout mise configuration
+      - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          sparse-checkout: mise.toml
-          sparse-checkout-cone-mode: false
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
 
       - name: Setup Node.js
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
@@ -204,11 +209,12 @@ jobs:
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
     steps:
-      - name: Checkout mise configuration
+      - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          sparse-checkout: mise.toml
-          sparse-checkout-cone-mode: false
+          fetch-depth: 0
+          filter: blob:none
+          persist-credentials: false
 
       - name: Setup Azure CLI
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
