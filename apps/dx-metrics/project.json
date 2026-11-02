@@ -1,10 +1,5 @@
 {
   "projectType": "application",
-  "release": {
-    "docker": {
-      "repositoryName": "pagopa/dx-metrics"
-    }
-  },
   "metadata": {
     "pagopa-dx": {
       "targetResources": [
