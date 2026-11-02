@@ -95,9 +95,11 @@ Importer runtime configuration and GitHub authentication are documented in
 
 A visitor sees only the repositories their magic link grants. Links are signed
 and carry tags, not repository names, so editing a tag changes what every
-existing link sees. The model, the token format, the per-dashboard rules and the
-rollout are documented in [`docs/scoped-access.md`](docs/scoped-access.md); the
-rationale is in [`docs/adr/0001-repository-scopes.md`](docs/adr/0001-repository-scopes.md).
+existing link sees. The rationale is in
+[`docs/adr/0001-repository-scopes.md`](docs/adr/0001-repository-scopes.md).
+
+Only public repositories are configured: a link grants no GitHub permission, so
+a private repository would be published to people who cannot open it.
 
 Mint a link with the signing secret in the environment:
 
@@ -106,8 +108,9 @@ pnpm --filter dx-metrics scope:link --tags p4pa
 pnpm --filter dx-metrics scope:link --all
 ```
 
-`DX_METRICS_SCOPE_SECRET` is required in every environment. Rotating it
-invalidates every link in circulation.
+`DX_METRICS_SCOPE_SECRET` is required in every environment, and the portal
+serves nothing until it holds a real value. Rotating it invalidates every link
+in circulation.
 
 ## Development
 
