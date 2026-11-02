@@ -6,9 +6,10 @@ sidebar_position: 11
 
 :::info Reusable Workflows
 
-| Workflow                     | Version | Source                                                                                        |
-| ---------------------------- | ------- | --------------------------------------------------------------------------------------------- |
-| **Release** (publish to npm) | v2      | [`release-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-v2.yaml) |
+| Workflow                             | Version | Source                                                                                          |
+| ------------------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
+| **Validate** (PR version-plan check) | v2      | [`validate-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v2.yaml) |
+| **Release** (publish to npm)         | v2      | [`release-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-v2.yaml)   |
 
 :::
 
@@ -26,6 +27,8 @@ for setup and tag strategy details.
 
 ## Features
 
+- ⚠️ Can show a pull request warning when changes need a version plan but none
+  is present
 - 🔄 Automatically creates or updates a `Version Packages` pull request when new
   version plans are pushed to `main`
 - 📦 Publishes packages to npm when the `Version Packages` PR is merged
@@ -42,6 +45,10 @@ The workflow automates the release lifecycle in two steps:
 2. **When the `Version Packages` PR is merged** — the workflow publishes the
    packages to npm with provenance, creates git tags, and creates the
    corresponding GitHub Releases.
+
+If you also enable the DX validation workflow, pull requests can receive a
+warning comment when the changes look releasable but the PR does not include a
+matching version plan.
 
 :::tip Recovery
 
@@ -149,8 +156,6 @@ jobs:
     with:
       environment: npm-prod-cd
     secrets:
-      app-client-id: ${{ secrets.GH_APP_CLIENT_ID }}
-      app-private-key: ${{ secrets.GH_APP_KEY }}
       github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
@@ -168,6 +173,41 @@ ignores that file, so a Yarn Berry repository must configure the `pagopa` scope
 in `.yarnrc.yml` itself.
 
 :::
+
+### Optional: enable the pull request warning
+
+If you also want a warning comment on pull requests, add a validation workflow
+that uses `validate-v2.yaml`:
+
+```yaml
+name: Code Review
+
+on:
+  workflow_dispatch:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  validate:
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      packages: read
+      pull-requests: write
+    uses: pagopa/dx/.github/workflows/validate-v2.yaml@main
+    secrets:
+      ARM_CLIENT_ID: $\{{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: $\{{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: $\{{ secrets.ARM_TENANT_ID }}
+      GH_APP_CLIENT_ID: $\{{ secrets.GH_APP_CLIENT_ID }}
+      GH_APP_INSTALLATION_ID: $\{{ secrets.GH_APP_INSTALLATION_ID }}
+      GH_APP_KEY: $\{{ secrets.GH_APP_KEY }}
+
+```
+
+With this in place, pull requests receive a warning only when a version plan is
+missing or incomplete.
 
 ## Inputs
 
@@ -195,6 +235,16 @@ permissions:
 A release starts by committing a **version plan** to `main`. A version plan is a
 small file that records which packages changed and how their version should be
 bumped.
+
+## Pull Request Warning
+
+When the optional validation workflow is enabled, a pull request can receive a
+warning comment if it changes something that should have a version plan but does
+not include one.
+
+To clear the warning, add or fix the files in `.nx/version-plans/` and push the
+update. The comment is refreshed automatically and disappears when everything is
+covered.
 
 ### 1. Generate the version plan
 
@@ -238,6 +288,13 @@ as well.
 - Ensure `.nx/version-plans/` contains version plan files on `main`
 - Verify the GitHub token has `pull-requests: write` permission
 - Run `nx release --dry-run` locally to check for errors
+
+### PR warning comment is not created
+
+- Ensure the validation workflow runs on `pull_request`
+- Ensure the PR really needs a version plan
+- Ensure the PR includes the correct files in `.nx/version-plans/`
+- The warning is only managed on same-repository pull requests
 
 ### Publish fails
 
