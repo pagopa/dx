@@ -1,3 +1,19 @@
+## 7.1.1 (2026-11-02)
+
+### 🩹 Fixes
+
+- Provision the DX runner only when the environment prefix starts with dx. ([#2453](https://github.com/pagopa/dx/pull/2453))
+
+  ## Migration guide
+
+  For prefixes that do not start with `dx`, applying this version removes the existing DX runner and changes `github_dx_runner` to `null`. Before applying, migrate workflows targeting that runner to another available runner and update consumers of `github_dx_runner` to handle `null`.
+
+  For prefixes starting with `dx`, the existing runner is retained through the included Terraform state move; no manual state migration is required.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 7.1.0 (2026-10-29)
 
 ### 🚀 Features
