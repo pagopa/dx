@@ -22,10 +22,10 @@ export const SCOPE_COOKIE_NAME = "dx_metrics_scope";
 export const SCOPE_COOKIE_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
 
 /**
- * Rollout switch: when set to `false` a request without a valid scope keeps
- * seeing the full portfolio. Defaults to enforcing, so a missing variable in
- * production closes the portal instead of opening it. Removed once every link
- * is distributed.
+ * Emergency switch: setting it to `false` serves the full portfolio to any
+ * request without a valid scope, so access can be restored without a redeploy
+ * if the mechanism misbehaves. It is not a rollout tool, and the default
+ * enforces: a missing variable must close the portal, not open it.
  */
 const ENFORCEMENT_DISABLED = "false";
 

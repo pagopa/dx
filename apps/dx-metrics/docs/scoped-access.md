@@ -264,32 +264,33 @@ the placeholder back over the real secret and breaks every distributed link.
 Rotation is a Key Vault operation followed by a revision restart, then a
 redistribution of the links.
 
-### Rollout
+### First deploy
 
-Enforcement is gated by `DX_METRICS_SCOPE_ENFORCE`, default `true` in code and
-driven by the module's `scope_enforcement_enabled` variable. The prod module
-call sets it to `false`, so the first deploy is safe. Sequence:
+Enforcement is on from the first deploy: the prod module call does not override
+`scope_enforcement_enabled`, whose default is `true`. The portal therefore
+serves no data until the secret is written, which is intended — no visitor
+keeps access they are about to lose.
 
-1. Deploy with `scope_enforcement_enabled = false`: tags, `/auth/scope`, cookie
-   issuance and filtering are live, but a request without a valid scope still
-   sees the portfolio.
-2. Set the real secret out of band, restart the revision, and check that a
-   freshly minted link actually opens the overview. Then generate the
-   full-portfolio link and send it to every current user. This step is not
-   optional: enabling enforcement while the placeholder is still in the vault
-   would scope the portal with a secret that is public in the repository.
-3. Delete the `scope_enforcement_enabled = false` line from the prod module
-   call: the variable defaults to enforcing.
-4. In a follow-up PR, delete the flag, the fail-open branch and the variable.
+Sequence:
 
-The default is `true` on purpose: a missing variable in production must lock
-people out, not open the portfolio. Local development mints its own link.
+1. Apply. The Container App starts, the secret exists with its placeholder, and
+   every request without a link lands on `/access`.
+2. Write the real secret, restart the revision, and check that a freshly minted
+   link opens the overview.
+3. Mint the full-portfolio link and send it to every current user. Mint it
+   after step 2: a link signed with the placeholder verifies against the
+   placeholder, so it stops working the moment the real secret lands.
+4. Mint per-programme links as teams ask for them.
+
+`scope_enforcement_enabled = false` remains available as an emergency switch —
+it serves the full portfolio to every caller, including one presenting an
+invalid link — but it is not part of the rollout, and a missing value enforces.
+Local development mints its own link.
 
 ## Work
 
-All steps are implemented. The secret is created with a placeholder, so the
-first deploy still needs the out-of-band `az keyvault secret set` described
-above before any link works.
+All steps are implemented. The first deploy lands dark by design: it needs the
+out-of-band `az keyvault secret set` described above before any link works.
 
 1. **Shared config** — `packages/dx-metrics-core/src/config.ts`: tag the 112
    repositories, change `DxMetricsConfig`, derive `defaultImportFileConfig`;
@@ -314,8 +315,8 @@ above before any link works.
 8. **Minting** — `scripts/mint-scope-link.ts`, `scope:link` script, `tsx` in
    `devDependencies`, README section.
 9. **Infra** — `scope.tf` (Key Vault secret), `DX_METRICS_SCOPE_SECRET`,
-   `DX_METRICS_SCOPE_ENFORCE` and `scope_enforcement_enabled` on the prod module
-   call, runbook above.
+   `DX_METRICS_SCOPE_ENFORCE` and the `scope_enforcement_enabled` emergency
+   switch, runbook above.
 
 ## Tests
 

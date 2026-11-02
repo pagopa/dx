@@ -59,11 +59,6 @@ module "metrics_portal" {
   log_analytics_workspace_id                        = module.azure_core_values.common_log_analytics_workspace.id
 
   network_resource_group_name = module.azure_core_values.network_resource_group_name
-
-  # Rollout step 1: the scope secret exists as a write-only placeholder, and
-  # enforcing now would lock every current visitor out before the links have
-  # been distributed. Remove this line once the full-portfolio link is out.
-  scope_enforcement_enabled = false
 }
 
 module "dx_website" {

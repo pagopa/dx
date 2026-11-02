@@ -83,6 +83,6 @@ variable "auth_entra_id_client_id" {
 
 variable "scope_enforcement_enabled" {
   type        = bool
-  description = "Whether a visitor without a valid repository-scope link is refused. Set to false to roll the magic-link mechanism out: links, filtering and the no-store policy go live, but an unscoped visitor still sees the full portfolio. Defaults to enforcing so a missing value closes the portal rather than opening it."
+  description = "Whether a visitor without a valid repository-scope link is refused. Defaults to enforcing. Set it to false only as an emergency switch: it serves the full portfolio to every caller, including one presenting an invalid link."
   default     = true
 }

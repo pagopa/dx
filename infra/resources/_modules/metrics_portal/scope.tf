@@ -2,19 +2,24 @@
 #
 # Anyone holding it can mint a link for any scope, including the full portfolio,
 # so its value is set out of band and never reaches the repository or the
-# Terraform state. The placeholder is longer than the runtime's 32-character
-# minimum on purpose: until the real value is written, every link is rejected as
-# invalid instead of the app failing with a configuration error.
+# Terraform state.
 #
-# Set the real value once with:
+# Enforcement is on from the first apply, so the portal serves no data between
+# this resource being created and the value being written. The sequence is:
 #
+#   terraform apply
 #   az keyvault secret set \
 #     --vault-name <vault> --name dx-metrics-scope-secret \
 #     --value "$(openssl rand -base64 32)"
+#   az containerapp revision restart \
+#     --name <container-app> --resource-group <resource-group>
 #
-# Rotation invalidates every link in circulation and follows the same command:
-# write the new value, restart the Container App revision so it re-reads the
-# versionless reference immediately, then redistribute the links.
+# then mint the links and distribute them. The placeholder is longer than the
+# runtime's 32-character minimum on purpose: a link presented before the real
+# value lands is rejected as invalid rather than crashing the request.
+#
+# Rotation invalidates every link in circulation and follows the same secret-set
+# and restart pair.
 #
 # Do not increment `value_wo_version`: a bump makes Terraform rewrite the
 # placeholder over the real secret and breaks every distributed link. Rotation
