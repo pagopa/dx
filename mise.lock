@@ -5,10 +5,7 @@ lockfile_version = 3
 [[tools.act]]
 version = "0.2.89"
 backend = "aqua:nektos/act"
-specifiers = [
-    "0.2",
-    "latest",
-]
+specifiers = ["0.2"]
 
 [tools.act."platforms.linux-arm64"]
 checksum = "sha256:daa8679ba9615a74d2d0cec321dc593f21948a2a11bb65862b063d8b930f4bcb"
@@ -51,15 +48,19 @@ backend = "aqua:aws/aws-cli"
 specifiers = ["2.37"]
 
 [tools.aws-cli."platforms.linux-arm64"]
+checksum = "sha256:f937a72a824c25f8cf38ff4249257c96840578c7eaea1d29117cdc249cbd3ebe"
 url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.37.13.zip"
 
 [tools.aws-cli."platforms.linux-arm64-musl"]
+checksum = "sha256:f937a72a824c25f8cf38ff4249257c96840578c7eaea1d29117cdc249cbd3ebe"
 url = "https://awscli.amazonaws.com/awscli-exe-linux-aarch64-2.37.13.zip"
 
 [tools.aws-cli."platforms.linux-x64"]
+checksum = "sha256:c92fde59827622889d3d38a44e2089a137894ce151a2c658a3988ecde4860caa"
 url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.37.13.zip"
 
 [tools.aws-cli."platforms.linux-x64-musl"]
+checksum = "sha256:c92fde59827622889d3d38a44e2089a137894ce151a2c658a3988ecde4860caa"
 url = "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-2.37.13.zip"
 
 [tools.aws-cli."platforms.macos-arm64"]
@@ -67,13 +68,14 @@ checksum = "blake3:82ea0bf0e2be77a20b3623489be280786588eadc2c4ff9adf9cadfe469e1c
 url = "https://awscli.amazonaws.com/AWSCLIV2-2.37.13.pkg"
 
 [tools.aws-cli."platforms.macos-x64"]
+checksum = "sha256:2eefd8d0759fbdcd03038a0979479abc9a660326d1f4e36034f1c9307afa0732"
 url = "https://awscli.amazonaws.com/AWSCLIV2-2.37.13.pkg"
 
 [[tools.azure-cli]]
 version = "2.91.0"
 backend = "pypi:azure-cli"
 specifiers = ["2.91"]
-uv = { path = ".mise/locks/azure-cli/2.91.0~a837e014", digest = "sha256:0e1e09523efb594c8a18798a835f95532d3f6d3925ea66879ac232456b727a15" }
+uv = { path = ".mise/locks/azure-cli/2.91.0~a837e014", digest = "sha256:05d9988aaa650666b9e5ddaa63f165264c2ca10a31db5d7e63d25f50eb4f7af9" }
 
 [tools.azure-cli.options]
 dependency_prereleases = "allow"
@@ -583,10 +585,7 @@ provenance = "cosign"
 [[tools.uv]]
 version = "0.13.0"
 backend = "aqua:astral-sh/uv"
-specifiers = [
-    "0.13",
-    "latest",
-]
+specifiers = ["0.13"]
 
 [tools.uv."platforms.linux-arm64"]
 checksum = "sha256:3ccfb6af6e242433eb552f7d9676abd5412c6595c497e990d9c8cb7b5bd4d2c3"
