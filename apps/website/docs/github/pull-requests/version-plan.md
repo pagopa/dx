@@ -48,14 +48,15 @@ Alternatively, you can create the file manually — see the
 When you later run `pnpm nx release`, Nx uses the files in `.nx/version-plans/`
 as the source of truth for version bumps.
 
-## Pull Request Warning Comment
+## Version Plans in Pull Requests
 
-If your repository enables the DX validation workflow, pull requests can show a
-warning comment when a version plan is missing or incomplete.
+DX does not provide an automated pull request warning for missing or incomplete
+version plans. The Code Review workflow runs CI checks but does not check
+version-plan coverage.
 
-In that case run `pnpm nx release plan` early in the development process, so the
-version plan is included in the pull request and reviewers can see the intended
-version bump and release notes.
+Run `pnpm nx release plan` early in development and verify that the plan is
+included in the pull request so reviewers can see the intended version bump and
+release notes.
 
 ## Breaking Changes
 

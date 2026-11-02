@@ -196,16 +196,6 @@ A release starts by committing a **version plan** to `main`. A version plan is a
 small file that records which packages changed and how their version should be
 bumped.
 
-## Pull Request Warning
-
-When the optional validation workflow is enabled, a pull request can receive a
-warning comment if it changes something that should have a version plan but does
-not include one.
-
-To clear the warning, add or fix the files in `.nx/version-plans/` and push the
-update. The comment is refreshed automatically and disappears when everything is
-covered.
-
 ### 1. Generate the version plan
 
 From the root of the repository, run:
@@ -241,6 +231,17 @@ as well.
 
 :::
 
+## Migration from the Previous Validation Workflow
+
+The optional workflow that commented on pull requests when version plans were
+missing or incomplete has been retired. Remove its call from your repository's
+validation workflow. Use the supported
+[`validate-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v2.yaml)
+workflow for code review and CI checks; it does not check version-plan coverage,
+and there is no automated replacement for that warning. Run
+`pnpm nx release plan` and verify `.nx/version-plans/` before opening a pull
+request.
+
 ## Troubleshooting
 
 ### Version Packages PR is not created
@@ -248,13 +249,6 @@ as well.
 - Ensure `.nx/version-plans/` contains version plan files on `main`
 - Verify the GitHub token has `pull-requests: write` permission
 - Run `nx release --dry-run` locally to check for errors
-
-### PR warning comment is not created
-
-- Ensure the validation workflow runs on `pull_request`
-- Ensure the PR really needs a version plan
-- Ensure the PR includes the correct files in `.nx/version-plans/`
-- The warning is only managed on same-repository pull requests
 
 ### Publish fails
 
