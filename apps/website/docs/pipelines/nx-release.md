@@ -231,11 +231,6 @@ as well.
 
 :::
 
-## Previous Validation Workflow
-
-The optional `validate-v1` workflow for pull-request version-plan warnings was
-removed because it was unused.
-
 ## Troubleshooting
 
 ### Version Packages PR is not created
