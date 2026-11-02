@@ -34,7 +34,7 @@ runs:
     - name: GitHub Login
       if: env.GH_APP_CLIENT_ID && env.GH_APP_KEY && env.GH_APP_INSTALLATION_ID
       id: github-app-token
-      uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3.1.1
+      uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
       with:
         client-id: ${{ env.GH_APP_CLIENT_ID }}
         private-key: ${{ env.GH_APP_KEY }}
