@@ -1,6 +1,6 @@
 {
   "name": "dx-metrics",
-  "version": "0.5.25",
+  "version": "0.5.26",
   "private": true,
   "type": "module",
   "scripts": {
@@ -35,5 +35,12 @@
     "tailwindcss": "^4.3.3",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "nx": {
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/dx-metrics"
+      }
+    }
   }
 }

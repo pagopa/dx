@@ -18,6 +18,7 @@ import {
   ORGANIZATION,
   WEEKLY_BUCKET_THRESHOLD_DAYS,
 } from "@/lib/config";
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatNumber, formatShortDate } from "@/lib/format";
 import {
   severityFromTargetWithTrend,
@@ -88,26 +89,36 @@ interface PrDashboardData {
   unmergedPrs: { date: string; openPrs: number }[];
   previousLeadTime: null | number;
   insights: Insight[];
-  meta: { referenceDate: string };
+  meta: DashboardMetaView;
 }
 
 export default function PullRequestsDashboard() {
   const colors = useSeriesColors();
-  const { days, repositories, setDays, setRepositories } =
-    useDashboardFilters();
+  const {
+    days,
+    end,
+    repositories,
+    setRange,
+    setRepositories,
+    start,
+    timeParams,
+  } = useDashboardFilters();
 
   const { data, error, loading, refetch } = useDashboardData<PrDashboardData>(
     "pull-requests",
     {
-      days,
+      ...timeParams,
       repositories,
     },
   );
 
   // The SQL bucket switches from day to week above the shared threshold; the
   // caption repeats it on the chart so a point is never read as the wrong unit.
+  // Use the applied window length: the server clamps a longer request to the
+  // available history, so the requested `days` can disagree with the buckets.
+  const appliedDays = data?.meta.days ?? days;
   const bucketCaption =
-    days < WEEKLY_BUCKET_THRESHOLD_DAYS ? "per day" : "per week";
+    appliedDays < WEEKLY_BUCKET_THRESHOLD_DAYS ? "per day" : "per week";
 
   // Deep links need a single repository: with a multi-repository selection
   // there is no one repository the rows belong to, so the tables show plain
@@ -142,12 +153,18 @@ export default function PullRequestsDashboard() {
       ? percentChange(current, previous)
       : null;
 
-  // The window is anchored to the latest activity, not to today, so the exact
-  // range is shown on the contributor count.
-  const { range } = useDateFormatters();
-  const periodBreakdown = data
-    ? [{ label: "period", value: range(data.meta.referenceDate, days) }]
-    : undefined;
+  // The window is explicitly selected, so the card states the range actually
+  // applied (the server clamps it to the available data).
+  const { short } = useDateFormatters();
+  const periodBreakdown =
+    data?.meta.windowStart !== undefined && data?.meta.windowEnd !== undefined
+      ? [
+          {
+            label: "period",
+            value: `${short(data.meta.windowStart)} – ${short(data.meta.windowEnd)}`,
+          },
+        ]
+      : undefined;
 
   // One comparison everywhere: the current period versus the immediately
   // preceding, equally-sized window — the same value shown as `previous` — so
@@ -215,10 +232,13 @@ export default function PullRequestsDashboard() {
       </div>
 
       <DashboardFilters
+        availableFrom={data?.meta.availableFrom}
+        availableTo={data?.meta.availableTo}
+        onRangeChange={setRange}
         onRepositoriesChange={setRepositories}
-        onTimeIntervalChange={setDays}
+        rangeEnd={data?.meta.windowEnd ?? end}
+        rangeStart={data?.meta.windowStart ?? start}
         repositories={repositories}
-        timeInterval={days}
       />
       <DashboardRequestState
         error={error}
@@ -229,10 +249,16 @@ export default function PullRequestsDashboard() {
       {data && (
         <div className="space-y-8">
           <DataFreshness
+            availableFrom={data.meta.availableFrom}
+            availableTo={data.meta.availableTo}
             referenceDate={data.meta.referenceDate}
-            windowDays={days}
+            windowEnd={data.meta.windowEnd}
+            windowStart={data.meta.windowStart}
           />
-          <InsightsPanel insights={data.insights} periodDays={days} />
+          <InsightsPanel
+            insights={data.insights}
+            periodDays={data.meta.days ?? days}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard

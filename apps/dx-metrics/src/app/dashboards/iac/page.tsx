@@ -12,6 +12,7 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
 import { METRIC_TARGETS } from "@/lib/config";
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatNumber } from "@/lib/format";
 import type { Insight } from "@/lib/insights/types";
 import { useDateFormatters } from "@/lib/locale";
@@ -37,19 +38,26 @@ interface IacDashboardData {
     runDate: string;
   }[];
   insights: Insight[];
-  meta: { referenceDate: string };
+  meta: DashboardMetaView;
 }
 
 export default function IacDashboard() {
   const colors = useSeriesColors();
-  const { days, repositories, setDays, setRepositories } =
-    useDashboardFilters();
+  const {
+    days,
+    end,
+    repositories,
+    setRange,
+    setRepositories,
+    start,
+    timeParams,
+  } = useDashboardFilters();
   const { short: formatShortDate } = useDateFormatters();
 
   const { data, error, loading, refetch } = useDashboardData<IacDashboardData>(
     "iac",
     {
-      days,
+      ...timeParams,
       repositories,
     },
   );
@@ -73,10 +81,13 @@ export default function IacDashboard() {
         />
       </div>
       <DashboardFilters
+        availableFrom={data?.meta.availableFrom}
+        availableTo={data?.meta.availableTo}
+        onRangeChange={setRange}
         onRepositoriesChange={setRepositories}
-        onTimeIntervalChange={setDays}
+        rangeEnd={data?.meta.windowEnd ?? end}
+        rangeStart={data?.meta.windowStart ?? start}
         repositories={repositories}
-        timeInterval={days}
       />
       <DashboardRequestState
         error={error}
@@ -88,13 +99,16 @@ export default function IacDashboard() {
         <>
           <DataFreshness
             className="mb-2"
+            availableFrom={data.meta.availableFrom}
+            availableTo={data.meta.availableTo}
             referenceDate={data.meta.referenceDate}
-            windowDays={days}
+            windowEnd={data.meta.windowEnd}
+            windowStart={data.meta.windowStart}
           />
           <InsightsPanel
             className="mb-4"
             insights={data.insights}
-            periodDays={days}
+            periodDays={data?.meta.days ?? days}
           />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimpleBarChart

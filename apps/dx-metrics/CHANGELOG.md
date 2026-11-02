@@ -1,3 +1,17 @@
+## 0.5.26 (2026-11-02)
+
+### 🚀 Features
+
+- Add custom date ranges, per-pipeline trend charts and per-module Terraform usage to DX Metrics ([#2457](https://github.com/pagopa/dx/pull/2457))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.13
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.25 (2026-10-08)
 
 ### 🩹 Fixes

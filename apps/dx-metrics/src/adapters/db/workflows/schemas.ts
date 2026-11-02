@@ -43,9 +43,18 @@ export const workflowFailureSchema = z.object({
   workflowName: z.string().min(1),
 });
 
-export const workflowInfraDurationSchema = z.object({
-  durationMinutes: sqlNumberSchema,
-  runTimestamp: sqlTimestampSchema,
+/** One bucket of the top-2 slowest pipelines' average duration trend. */
+export const workflowDurationTrendSchema = z.object({
+  averageDurationMinutes: sqlNumberSchema,
+  bucket: sqlDateSchema,
+  workflowName: z.string().min(1),
+});
+
+/** One bucket of the top-2 most failing pipelines' failure trend. */
+export const workflowFailureTrendSchema = z.object({
+  bucket: sqlDateSchema,
+  failedRuns: sqlNumberSchema,
+  workflowName: z.string().min(1),
 });
 
 export const workflowRunCountSchema = z.object({
@@ -98,12 +107,12 @@ export const workflowDashboardSchema = z.object({
   durationPercentiles: percentileRowSchema,
   dxVsNonDx: z.array(workflowDxVsNonDxSchema),
   failures: z.array(workflowFailureSchema),
-  infraApply: z.array(workflowInfraDurationSchema),
-  infraPlan: z.array(workflowInfraDurationSchema),
   runCount: z.array(workflowRunCountSchema),
   successRatio: z.array(workflowSuccessRatioSchema),
   successRateStats: workflowSuccessRateStatsSchema,
   summary: workflowSummarySchema.optional(),
+  topFailureTrend: z.array(workflowFailureTrendSchema),
+  topSlowestDurationTrend: z.array(workflowDurationTrendSchema),
   triggerBreakdown: z.array(workflowTriggerBreakdownSchema),
   triggerTypes: z.array(workflowTriggerTypeSchema),
 });
@@ -117,9 +126,10 @@ export type WorkflowCumulativeDuration = z.infer<
 >;
 export type WorkflowDashboardResult = z.infer<typeof workflowDashboardSchema>;
 export type WorkflowDeployment = z.infer<typeof workflowDeploymentSchema>;
+export type WorkflowDurationTrend = z.infer<typeof workflowDurationTrendSchema>;
 export type WorkflowDxVsNonDx = z.infer<typeof workflowDxVsNonDxSchema>;
 export type WorkflowFailure = z.infer<typeof workflowFailureSchema>;
-export type WorkflowInfraDuration = z.infer<typeof workflowInfraDurationSchema>;
+export type WorkflowFailureTrend = z.infer<typeof workflowFailureTrendSchema>;
 export type WorkflowRunCount = z.infer<typeof workflowRunCountSchema>;
 export type WorkflowSuccessRatio = z.infer<typeof workflowSuccessRatioSchema>;
 export type WorkflowSummary = z.infer<typeof workflowSummarySchema>;
