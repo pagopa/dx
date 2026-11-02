@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   js_code_review:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     env:
       TURBO_CACHE_DIR: .turbo-cache

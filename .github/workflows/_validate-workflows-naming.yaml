@@ -8,7 +8,7 @@ on:
 jobs:
   validate-naming:
     name: Validate Workflow Naming Convention
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     concurrency:
       group: ${{ github.workflow }}-ci
       cancel-in-progress: true

@@ -40,7 +40,7 @@ env:
 jobs:
   gate:
     name: Fork PR Gate
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
     steps:
@@ -62,7 +62,7 @@ jobs:
     name: Workspace
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       affected-projects: ${{ steps.detect.outputs.affected-projects }}
       environments: ${{ steps.detect.outputs.environments }}
@@ -183,7 +183,7 @@ jobs:
 
   code-review:
     name: No environment
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     needs: [gate, workspace]
     if: ${{ needs.gate.outputs.run == 'true' && needs.workspace.outputs.affected-projects == 'true' }}
     permissions:
@@ -488,7 +488,7 @@ jobs:
     name: Report
     needs: code-review-with-environment
     if: ${{ always() && github.event_name == 'pull_request' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read
