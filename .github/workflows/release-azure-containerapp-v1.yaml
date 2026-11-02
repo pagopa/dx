@@ -69,7 +69,7 @@ jobs:
   build:
     name: Build Docker Image
     if: ${{ inputs.docker_image_tag == '' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       id-token: write
@@ -97,7 +97,7 @@ jobs:
 
   release:
     name: Deploy Container App Revision
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: build
     if: ${{ always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
     environment: ${{ inputs.environment }}-cd
@@ -289,7 +289,7 @@ jobs:
 
   auto_approve_deploy:
     name: Approve Deployment
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: build
     # If auto approval fails, the deployment can be approved manually.
     continue-on-error: true
@@ -339,7 +339,7 @@ jobs:
 
   swap:
     name: Activate Container App Revision
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: release
     if: ${{ !github.event.act && needs.release.result == 'success' && needs.release.outputs.revision_mode == 'Multiple' && needs.release.outputs.skip_remaining_steps == 'false' }}
     environment: ${{ inputs.environment }}-cd

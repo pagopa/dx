@@ -56,7 +56,7 @@ env:
 jobs:
   build:
     name: Build Artifact
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       WORKSPACE: ${{ inputs.workspace_name }}
 
@@ -143,7 +143,7 @@ jobs:
 
   deploy:
     name: Deploy
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
     needs: [build]
     if: ${{ !github.event.act && !inputs.auto_deploy_to_staging }}
     environment: ${{ inputs.environment }}-cd
@@ -196,7 +196,7 @@ jobs:
   # Automatically approve deployment to staging slot
   approve_staging:
     name: Auto-Approve Staging Slot Deployment
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [build]
     if: ${{ !github.event.act && inputs.use_staging_slot && inputs.auto_deploy_to_staging }}
 
@@ -241,7 +241,7 @@ jobs:
 
   deploy_staging:
     name: Deploy to Staging
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
     needs: [build]
     if: ${{ !github.event.act && inputs.use_staging_slot && inputs.auto_deploy_to_staging }}
     environment: ${{ inputs.environment }}-cd
@@ -273,7 +273,7 @@ jobs:
 
   deploy_prod:
     name: Deploy to Production
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
     needs: [deploy_staging]
     if: ${{ !github.event.act && inputs.use_staging_slot && inputs.auto_deploy_to_staging }}
     environment: ${{ inputs.environment }}-cd
