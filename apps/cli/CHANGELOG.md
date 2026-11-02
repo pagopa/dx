@@ -1,3 +1,31 @@
+## 0.27.24 (2026-10-30)
+
+### 🩹 Fixes
+
+- Parse repository HCL before updating environments, preserving unrelated ([#2267](https://github.com/pagopa/dx/pull/2267))
+  Terraform configuration and leaving unsupported files unchanged. Validate
+  changed candidates with Terraform before atomic replacement and report its
+  diagnostics when validation fails.
+
+  The generated-repository workflow is unchanged. If a customized
+  `infra/repository/main.tf` is rejected, keep a single
+  `module "github_repository"` with a literal `repository` object and a unique
+  list of literal environment names. Convert dynamic expressions and remove
+  duplicate entries before retrying.
+
+  Lists containing comments are left unchanged when they already include the
+  requested environment and `prod`. Otherwise, move the comments outside the list
+  or add both names manually. Run `terraform fmt infra/repository/main.tf` after
+  adjusting the file; formatting alone does not remove comments or convert
+  dynamic expressions.
+
+  Run updates sequentially: concurrent CLI runs or other writers in the same
+  working copy are not supported.
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.27.23 (2026-10-29)
 
 ### 🚀 Features

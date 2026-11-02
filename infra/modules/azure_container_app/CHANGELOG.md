@@ -1,3 +1,17 @@
+## 9.1.0 (2026-10-30)
+
+### 🚀 Features
+
+- Add opt-in Microsoft Entra ID authentication for Container Apps with ([#2443](https://github.com/pagopa/dx/pull/2443))
+  configurable unauthenticated-request handling and an optional caller-application
+  allowlist. Omitting the allowlist keeps authentication enabled without
+  restricting client applications; when supplied, only those Application (client)
+  IDs, such as an APIM managed identity, are allowed.
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 # 9.0.0 (2026-10-29)
 
 ### ⚠️  Breaking Changes
