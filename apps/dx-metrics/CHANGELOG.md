@@ -1,3 +1,13 @@
+## 0.5.27 (2026-11-02)
+
+### 🩹 Fixes
+
+- Move nx.release metadata to package.json ([#2461](https://github.com/pagopa/dx/pull/2461))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.5.26 (2026-11-02)
 
 ### 🚀 Features
