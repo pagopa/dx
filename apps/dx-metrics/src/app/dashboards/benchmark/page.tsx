@@ -204,8 +204,8 @@ export default function BenchmarkDashboard() {
         availableTo={data?.meta.availableTo}
         mode="time-only"
         onRangeChange={setRange}
-        rangeEnd={end ?? data?.meta.windowEnd}
-        rangeStart={start ?? data?.meta.windowStart}
+        rangeEnd={data?.meta.windowEnd ?? end}
+        rangeStart={data?.meta.windowStart ?? start}
       />
       <DashboardRequestState
         error={error}

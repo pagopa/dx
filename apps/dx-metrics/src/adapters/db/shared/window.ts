@@ -9,19 +9,30 @@
  * - **Trailing window** (`days`): the legacy behaviour, kept for bookmarks and
  *   for callers that never send dates. It ends at the latest data point.
  *
- * Every adapter still builds its SQL as `>= reference - days` and `<= reference`,
- * so a resolved window exposes `days` and `endDate` instead of forcing each
- * query to take two explicit bounds.
+ * Every query filters with an explicit closed interval, `startDate` and
+ * `endDate`, instead of a trailing `reference - days` length: a custom range can
+ * end before the latest data point, so the upper bound has to be enforced as
+ * well. `windowStart` / `windowEnd` are the calendar dates the UI displays,
+ * while `days` is the inclusive length used for bucketing and period labels.
  */
 
 import {
   addCalendarDays,
   calendarDaysBetween,
   clampCalendarDate,
+  MS_PER_DAY,
   toCalendarDate,
 } from "@/lib/date-range";
 
 import type { DashboardMeta } from "./types";
+
+/** A closed interval of timestamps, `[startDate, endDate]`. */
+export interface WindowBounds {
+  /** Inclusive upper bound for the SQL predicates. */
+  readonly endDate: string;
+  /** Inclusive lower bound for the SQL predicates. */
+  readonly startDate: string;
+}
 
 /** Inputs for {@link resolveWindow}. Timestamps may be full ISO values. */
 export interface ResolveWindowInput {
@@ -38,18 +49,23 @@ export interface ResolveWindowInput {
 }
 
 /** A window ready to be used by the adapters and exposed in the payload meta. */
-export interface ResolvedWindow {
+export interface ResolvedWindow extends WindowBounds {
   readonly availableFrom: string;
   readonly availableTo: string;
   /** Inclusive length of the window, used by "previous period" comparisons. */
   readonly days: number;
-  /** Upper bound for the SQL predicates (inclusive end of the last day). */
-  readonly endDate: string;
   /** Latest data timestamp, kept for the freshness note. */
   readonly referenceDate: string;
   readonly windowEnd: string;
   readonly windowStart: string;
 }
+
+const startOfDay = (date: string): string => `${date}T00:00:00.000Z`;
+const endOfDay = (date: string): string => `${date}T23:59:59.999Z`;
+
+/** Shifts a timestamp by whole days, keeping the value in UTC. */
+const shiftTimestamp = (timestamp: string, deltaDays: number): string =>
+  new Date(Date.parse(timestamp) + deltaDays * MS_PER_DAY).toISOString();
 
 /**
  * Resolves the window from the request and the data the adapter can see.
@@ -78,6 +94,7 @@ export const resolveWindow = ({
       // bookmark renders exactly what it rendered before this change.
       endDate: availableTo,
       referenceDate: availableTo,
+      startDate: shiftTimestamp(availableTo, -days),
       windowEnd: lastDay,
       windowStart: addCalendarDays(lastDay, -days),
     };
@@ -95,10 +112,51 @@ export const resolveWindow = ({
     availableFrom: firstDay,
     availableTo: lastDay,
     days: calendarDaysBetween(windowStart, windowEnd),
-    endDate: `${windowEnd} 23:59:59.999`,
+    endDate: endOfDay(windowEnd),
     referenceDate: availableTo,
+    startDate: startOfDay(windowStart),
     windowEnd,
     windowStart,
+  };
+};
+
+/**
+ * The equally-sized window immediately before `window`.
+ *
+ * Anchored to the window itself rather than to the latest data point, so a
+ * historical selection compares against the months before it instead of the
+ * months before today. The upper bound is exclusive by contract: callers use
+ * `< previousWindow.endDate`.
+ */
+export const previousWindow = ({
+  days,
+  startDate,
+}: ResolvedWindow): WindowBounds => ({
+  endDate: startDate,
+  startDate: shiftTimestamp(startDate, -days),
+});
+
+/**
+ * Splits a window into its recent half and the preceding half.
+ *
+ * The cards compare the two halves of the selected window; keeping the split
+ * relative to the resolved bounds means a historical range is not compared
+ * against the latest data point.
+ */
+export const splitWindow = (
+  window: ResolvedWindow,
+): {
+  readonly current: WindowBounds;
+  readonly halfDays: number;
+  readonly previous: WindowBounds;
+} => {
+  const halfDays = Math.max(1, Math.floor(window.days / 2));
+  const halfStart = shiftTimestamp(window.endDate, -halfDays);
+
+  return {
+    current: { endDate: window.endDate, startDate: halfStart },
+    halfDays,
+    previous: { endDate: halfStart, startDate: window.startDate },
   };
 };
 

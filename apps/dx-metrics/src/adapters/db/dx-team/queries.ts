@@ -26,6 +26,7 @@ import {
   timeBucketInterval,
 } from "../shared/sql-fragments";
 import { parseSqlRows } from "../shared/sql-parsing";
+import type { ResolvedWindow } from "../shared/window";
 import { resolveWindow, windowMeta } from "../shared/window";
 import {
   commitsByRepoRowSchema,
@@ -61,8 +62,6 @@ export const fetchDxTeamDashboard = async (
     end,
     start,
   });
-  const { days, endDate: referenceDate } = window;
-
   const [
     ioInfraPrs,
     dxCommits,
@@ -72,10 +71,10 @@ export const fetchDxTeamDashboard = async (
     dxPipelinesUsage,
     terraformModules,
   ] = await Promise.all([
-    fetchIoInfraPrs(db, days, org, referenceDate),
-    fetchDxCommits(db, days, org, referenceDate),
-    fetchIoInfraPrTable(db, days, org, referenceDate),
-    fetchCommitsByRepo(db, days, org, referenceDate),
+    fetchIoInfraPrs(db, window, org),
+    fetchDxCommits(db, window, org),
+    fetchIoInfraPrTable(db, window, org),
+    fetchCommitsByRepo(db, window, org),
     fetchDxAdoptingProjects(db),
     fetchDxPipelinesUsage(db),
     fetchTerraformModules(db),
@@ -101,17 +100,17 @@ export const fetchDxTeamDashboard = async (
 /** PRs on the io-infra repository: DX vs non-DX members. */
 const fetchIoInfraPrs = async (
   db: Database,
-  days: number,
+  window: ResolvedWindow,
   org: string,
-  referenceDate: string,
 ) => {
+  const { days, endDate, startDate } = window;
   const result = await db.execute(sql`
     WITH dx_members AS (SELECT username FROM dx_team_members),
     date_series AS (
       SELECT ${timeBucket("d", days)} AS date
       FROM generate_series(
-        (${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days}))::date,
-        (${referenceDate}::timestamptz)::date,
+        (${startDate}::timestamptz)::date,
+        (${endDate}::timestamptz)::date,
         ${timeBucketInterval(days)}
       ) d
     ),
@@ -122,7 +121,8 @@ const fetchIoInfraPrs = async (
         SUM(CASE WHEN pr.author NOT IN (SELECT username FROM dx_members) THEN 1 ELSE 0 END) AS "nonDxPr"
       FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
       WHERE r.full_name = ${`${org}/${DX_TEAM_IO_INFRA_REPOSITORY}`}
-        AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        AND pr.created_at >= ${startDate}::timestamptz
+        AND pr.created_at <= ${endDate}::timestamptz
         AND (pr.draft IS NULL OR pr.draft = 0)
         AND ${botAuthorsExclusion("pr.author")}
       GROUP BY "prDate"
@@ -138,15 +138,16 @@ const fetchIoInfraPrs = async (
 /** DX members' commits on non-DX repositories. */
 const fetchDxCommits = async (
   db: Database,
-  days: number,
+  window: ResolvedWindow,
   org: string,
-  referenceDate: string,
 ) => {
+  const { endDate, startDate } = window;
   const result = await db.execute(sql`
     SELECT committer_date::date AS "committerDate", author AS "memberName", COUNT(*) AS "repositoryCommits"
     FROM commits
     WHERE author IN (SELECT username FROM dx_team_members)
-      AND committer_date >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND committer_date >= ${startDate}::timestamptz
+      AND committer_date <= ${endDate}::timestamptz
       AND repository_full_name LIKE ${`${org}/%`}
       AND ${notLikeAll("repository_full_name", DX_TEAM_COMMIT_EXCLUDED_SUBSTRINGS)}
     GROUP BY committer_date::date, author ORDER BY "committerDate"
@@ -157,15 +158,16 @@ const fetchDxCommits = async (
 /** io-infra PR table (list of PRs with author and date). */
 const fetchIoInfraPrTable = async (
   db: Database,
-  days: number,
+  window: ResolvedWindow,
   org: string,
-  referenceDate: string,
 ) => {
+  const { endDate, startDate } = window;
   const result = await db.execute(sql`
     SELECT pr.author, pr.created_at AS "createdAt"
     FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
     WHERE r.full_name = ${`${org}/${DX_TEAM_IO_INFRA_REPOSITORY}`}
-      AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.created_at >= ${startDate}::timestamptz
+      AND pr.created_at <= ${endDate}::timestamptz
       AND (pr.draft IS NULL OR pr.draft = 0)
       AND ${botAuthorsExclusion("pr.author")}
     ORDER BY "createdAt" DESC
@@ -180,15 +182,16 @@ const fetchIoInfraPrTable = async (
 /** DX members' commits by repository. */
 const fetchCommitsByRepo = async (
   db: Database,
-  days: number,
+  window: ResolvedWindow,
   org: string,
-  referenceDate: string,
 ) => {
+  const { endDate, startDate } = window;
   const result = await db.execute(sql`
     SELECT author AS "memberName", repository_full_name AS "fullName", COUNT(*) AS "repositoryCommits"
     FROM commits
     WHERE author IN (SELECT username FROM dx_team_members)
-      AND committer_date >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND committer_date >= ${startDate}::timestamptz
+      AND committer_date <= ${endDate}::timestamptz
       AND repository_full_name LIKE ${`${org}/%`}
       AND ${notLikeAll("repository_full_name", DX_TEAM_COMMITS_BY_REPO_EXCLUDED_SUBSTRINGS)}
     GROUP BY author, repository_full_name ORDER BY author, "repositoryCommits" DESC

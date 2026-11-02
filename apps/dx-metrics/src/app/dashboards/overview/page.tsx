@@ -60,8 +60,8 @@ export default function OverviewDashboard() {
         availableTo={data?.meta.availableTo}
         onRangeChange={setRange}
         onRepositoriesChange={setRepositories}
-        rangeEnd={end ?? data?.meta.windowEnd}
-        rangeStart={start ?? data?.meta.windowStart}
+        rangeEnd={data?.meta.windowEnd ?? end}
+        rangeStart={data?.meta.windowStart ?? start}
         repositories={repositories}
       />
       <DashboardRequestState
@@ -99,7 +99,7 @@ export default function OverviewDashboard() {
         defaultOpen
         insights={data?.insights ?? []}
         limit={9}
-        periodDays={days}
+        periodDays={data?.meta.days ?? days}
       />
     </div>
   );

@@ -75,6 +75,20 @@ describe("buildDataRangeQuery", () => {
     );
     expect(rendered.params).toEqual(["pagopa/dx"]);
   });
+
+  it("takes the minimum from a separate expression when provided", () => {
+    const rendered = dialect.sqlToQuery(
+      buildDataRangeQuery({
+        column: "GREATEST(pr.created_at, pr.merged_at)",
+        from: "pull_requests pr",
+        minColumn: "pr.created_at",
+      }),
+    );
+
+    expect(rendered.sql).toBe(
+      'SELECT COALESCE(MIN(pr.created_at), NOW()) AS "availableFrom", COALESCE(MAX(GREATEST(pr.created_at, pr.merged_at)), NOW()) AS "availableTo" FROM pull_requests pr',
+    );
+  });
 });
 
 describe("parseDataRange", () => {

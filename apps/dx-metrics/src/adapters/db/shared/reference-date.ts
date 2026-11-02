@@ -21,6 +21,21 @@ export interface ReferenceDateQuery {
   readonly where?: SQL;
 }
 
+/** Inputs for {@link buildDataRangeQuery}. */
+export interface DataRangeQuery extends ReferenceDateQuery {
+  /**
+   * Expression for the earliest available date, when it differs from
+   * {@link column}.
+   *
+   * The maximum usually reads a combined "latest activity" expression
+   * (`GREATEST(created_at, merged_at, updated_at)`); taking its `MIN` would
+   * return the earliest *last* activity and hide older creation history. Pass
+   * the creation timestamp here so the selectable range starts at the first
+   * event instead of at the first row that has finished moving.
+   */
+  readonly minColumn?: SQL | string;
+}
+
 const asFragment = (expression: SQL | string): SQL =>
   typeof expression === "string" ? sql.raw(expression) : expression;
 
@@ -47,9 +62,10 @@ export const parseReferenceDate = (row: unknown, context: string): string =>
 export const buildDataRangeQuery = ({
   column,
   from,
+  minColumn,
   where,
-}: ReferenceDateQuery): SQL =>
-  sql`SELECT COALESCE(MIN(${asFragment(column)}), NOW()) AS "availableFrom", COALESCE(MAX(${asFragment(column)}), NOW()) AS "availableTo" FROM ${asFragment(from)}${where ? sql` WHERE ${where}` : sql``}`;
+}: DataRangeQuery): SQL =>
+  sql`SELECT COALESCE(MIN(${asFragment(minColumn ?? column)}), NOW()) AS "availableFrom", COALESCE(MAX(${asFragment(column)}), NOW()) AS "availableTo" FROM ${asFragment(from)}${where ? sql` WHERE ${where}` : sql``}`;
 
 /** Parses the row produced by {@link buildDataRangeQuery}. */
 export const parseDataRange = (

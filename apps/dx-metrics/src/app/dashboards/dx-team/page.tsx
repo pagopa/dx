@@ -84,8 +84,8 @@ export default function DxTeamDashboard() {
         availableTo={data?.meta.availableTo}
         mode="time-only"
         onRangeChange={setRange}
-        rangeEnd={end ?? data?.meta.windowEnd}
-        rangeStart={start ?? data?.meta.windowStart}
+        rangeEnd={data?.meta.windowEnd ?? end}
+        rangeStart={data?.meta.windowStart ?? start}
       />
       <DashboardRequestState
         error={error}
@@ -106,7 +106,7 @@ export default function DxTeamDashboard() {
           <InsightsPanel
             className="mb-4"
             insights={data.insights}
-            periodDays={days}
+            periodDays={data?.meta.days ?? days}
           />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimpleBarChart

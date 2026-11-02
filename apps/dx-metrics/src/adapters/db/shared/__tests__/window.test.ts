@@ -2,7 +2,11 @@
 
 import { describe, expect, it } from "vitest";
 
-import { resolveWindow } from "@/adapters/db/shared/window";
+import {
+  previousWindow,
+  resolveWindow,
+  splitWindow,
+} from "@/adapters/db/shared/window";
 
 const available = {
   availableFrom: "2025-01-15T09:30:00.000Z",
@@ -17,6 +21,7 @@ describe("resolveWindow", () => {
     // The legacy upper bound stays the exact latest timestamp so old bookmarks
     // render exactly what they rendered before the custom range existed.
     expect(window.endDate).toBe(available.availableTo);
+    expect(window.startDate).toBe("2026-07-05T03:12:00.000Z");
     expect(window.referenceDate).toBe(available.availableTo);
     expect(window.windowEnd).toBe("2026-11-02");
     expect(window.windowStart).toBe("2026-07-05");
@@ -33,11 +38,35 @@ describe("resolveWindow", () => {
     });
 
     expect(window.days).toBe(155);
-    expect(window.endDate).toBe("2026-11-02 23:59:59.999");
+    expect(window.startDate).toBe("2026-06-01T00:00:00.000Z");
+    expect(window.endDate).toBe("2026-11-02T23:59:59.999Z");
     expect(window.windowStart).toBe("2026-06-01");
     expect(window.windowEnd).toBe("2026-11-02");
     // The freshness note still reports the latest data timestamp.
     expect(window.referenceDate).toBe(available.availableTo);
+  });
+
+  it("derives previous and half windows from the applied bounds", () => {
+    const window = resolveWindow({
+      ...available,
+      days: 120,
+      end: "2026-06-30",
+      start: "2026-06-01",
+    });
+
+    // The preceding window is anchored to the selection, not to the latest data.
+    expect(previousWindow(window)).toEqual({
+      endDate: "2026-06-01T00:00:00.000Z",
+      startDate: "2026-05-02T00:00:00.000Z",
+    });
+
+    const split = splitWindow(window);
+    expect(split.halfDays).toBe(15);
+    expect(split.previous).toEqual({
+      endDate: split.current.startDate,
+      startDate: window.startDate,
+    });
+    expect(split.current.endDate).toBe(window.endDate);
   });
 
   it("clamps both ends to the available data range", () => {

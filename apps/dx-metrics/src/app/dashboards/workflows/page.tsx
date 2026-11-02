@@ -165,8 +165,8 @@ export default function WorkflowsDashboard() {
         availableTo={data?.meta.availableTo}
         onRangeChange={setRange}
         onRepositoriesChange={setRepositories}
-        rangeEnd={end ?? data?.meta.windowEnd}
-        rangeStart={start ?? data?.meta.windowStart}
+        rangeEnd={data?.meta.windowEnd ?? end}
+        rangeStart={data?.meta.windowStart ?? start}
         repositories={repositories}
       />
       <DashboardRequestState
@@ -174,7 +174,11 @@ export default function WorkflowsDashboard() {
         loading={loading}
         onRetry={refetch}
       />
-      {data && <WorkflowsDashboardContent data={data} days={days} />}
+      {data && (
+        // Captions and insight periods describe the window the server applied,
+        // which can be shorter than the requested one after clamping.
+        <WorkflowsDashboardContent data={data} days={data.meta.days ?? days} />
+      )}
     </div>
   );
 }
@@ -298,7 +302,7 @@ function WorkflowsDashboardContent({
       <InsightsPanel
         className="mb-6"
         insights={data.insights}
-        periodDays={days}
+        periodDays={data.meta.days ?? days}
       />
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <MetricCard

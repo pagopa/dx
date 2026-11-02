@@ -18,7 +18,7 @@ import {
   repositoryIn,
 } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
-import { resolveWindow, windowMeta } from "../shared/window";
+import { previousWindow, resolveWindow, windowMeta } from "../shared/window";
 import {
   copilotAuthoredPrRowSchema,
   copilotCardsSchema,
@@ -42,7 +42,9 @@ export const getCopilotDashboard = async (
   const rangeResult = await db.execute(sql`
     SELECT COALESCE(
       LEAST(
-        (SELECT MIN(GREATEST(pr.created_at, pr.merged_at))
+        -- Creation is the earliest PR event; merged_at only bounds the maximum
+        -- below, otherwise a June PR merged in November would hide June.
+        (SELECT MIN(pr.created_at)
           FROM pull_requests pr
           JOIN repositories r ON pr.repository_id = r.id
           WHERE ${repositoryIn("r.full_name", fullNames)}),
@@ -75,7 +77,8 @@ export const getCopilotDashboard = async (
     end,
     start,
   });
-  const { days, endDate: referenceDate } = window;
+  const { days, endDate, startDate } = window;
+  const previous = previousWindow(window);
 
   // --- Headline metrics (population: pull requests merged in the window) ---
   // "Copilot review" means a review from the Copilot reviewer bot. Lead time is
@@ -107,7 +110,8 @@ export const getCopilotDashboard = async (
       WHERE ${isCopilotReview("prr")}
     ) copilot_review ON copilot_review.pull_request_id = pr.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.merged_at >= ${startDate}::timestamptz
+      AND pr.merged_at <= ${endDate}::timestamptz
       AND pr.merged_at IS NOT NULL
       AND ${humanPullRequest("pr")}
   `);
@@ -126,8 +130,8 @@ export const getCopilotDashboard = async (
         FROM pull_requests pr
         JOIN repositories r ON pr.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
-          AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.merged_at >= ${previous.startDate}::timestamptz
+          AND pr.merged_at < ${previous.endDate}::timestamptz
           AND pr.merged_at IS NOT NULL
           AND ${humanPullRequest("pr")}) AS "previousCoverageShare",
       (SELECT COUNT(*) FILTER (WHERE EXISTS (
@@ -137,8 +141,8 @@ export const getCopilotDashboard = async (
         FROM pull_requests pr
         JOIN repositories r ON pr.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
-          AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.merged_at >= ${previous.startDate}::timestamptz
+          AND pr.merged_at < ${previous.endDate}::timestamptz
           AND pr.merged_at IS NOT NULL
           AND ${humanPullRequest("pr")}) AS "previousCopilotReviewedPrs",
       (SELECT ROUND(
@@ -147,8 +151,8 @@ export const getCopilotDashboard = async (
         FROM pull_requests pr
         JOIN repositories r ON pr.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
-          AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.merged_at >= ${previous.startDate}::timestamptz
+          AND pr.merged_at < ${previous.endDate}::timestamptz
           AND pr.merged_at IS NOT NULL
           AND ${humanPullRequest("pr")}
           AND EXISTS (
@@ -159,15 +163,15 @@ export const getCopilotDashboard = async (
         FROM commits c
         JOIN repositories r ON c.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND c.committer_date >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
-          AND c.committer_date < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND c.committer_date >= ${previous.startDate}::timestamptz
+          AND c.committer_date < ${previous.endDate}::timestamptz
           AND ${copilotCoauthorTrailerMatch("c.message")}) AS "previousCopilotCoauthoredCommits",
       (SELECT COUNT(*)
         FROM pull_requests pr
         JOIN repositories r ON pr.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
-          AND pr.created_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.created_at >= ${previous.startDate}::timestamptz
+          AND pr.created_at < ${previous.endDate}::timestamptz
           AND pr.author = ${COPILOT_PR_AUTHOR}) AS "previousCopilotAuthoredPrs"
   `);
 
@@ -181,26 +185,30 @@ export const getCopilotDashboard = async (
         FROM pull_requests pr
         JOIN repositories r ON pr.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.created_at >= ${startDate}::timestamptz
+          AND pr.created_at <= ${endDate}::timestamptz
           AND pr.author = ${COPILOT_PR_AUTHOR}) AS "copilotAuthoredPrs",
       (SELECT COUNT(*)
         FROM pull_requests pr
         JOIN repositories r ON pr.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.created_at >= ${startDate}::timestamptz
+          AND pr.created_at <= ${endDate}::timestamptz
           AND pr.author = ${COPILOT_PR_AUTHOR}
           AND pr.merged_at IS NOT NULL) AS "copilotAuthoredMergedPrs",
       (SELECT COUNT(*)
         FROM commits c
         JOIN repositories r ON c.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND c.committer_date >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND c.committer_date >= ${startDate}::timestamptz
+          AND c.committer_date <= ${endDate}::timestamptz
           AND ${copilotCoauthorTrailerMatch("c.message")}) AS "copilotCoauthoredCommits",
       (SELECT COUNT(*)
         FROM commits c
         JOIN repositories r ON c.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND c.committer_date >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})) AS "totalTeamCommits",
+          AND c.committer_date >= ${startDate}::timestamptz
+          AND c.committer_date <= ${endDate}::timestamptz) AS "totalTeamCommits",
       (SELECT ROUND(
           COUNT(*) FILTER (WHERE ${copilotCoauthorTrailerMatch("c.message")})::numeric
           / NULLIF(COUNT(*), 0)
@@ -208,7 +216,8 @@ export const getCopilotDashboard = async (
         FROM commits c
         JOIN repositories r ON c.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND c.committer_date >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})) AS "coauthoredCommitShare"
+          AND c.committer_date >= ${startDate}::timestamptz
+          AND c.committer_date <= ${endDate}::timestamptz) AS "coauthoredCommitShare"
   `);
 
   // --- Who reviewed the merged PRs: Copilot, a human, both, or neither ---
@@ -233,7 +242,8 @@ export const getCopilotDashboard = async (
       FROM pull_requests pr
       JOIN repositories r ON pr.repository_id = r.id
       WHERE ${repositoryIn("r.full_name", fullNames)}
-        AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        AND pr.merged_at >= ${startDate}::timestamptz
+        AND pr.merged_at <= ${endDate}::timestamptz
         AND pr.merged_at IS NOT NULL
         AND ${humanPullRequest("pr")}
     ) reviewed
@@ -265,7 +275,8 @@ export const getCopilotDashboard = async (
     FROM pull_requests pr
     JOIN repositories r ON pr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.merged_at >= ${startDate}::timestamptz
+      AND pr.merged_at <= ${endDate}::timestamptz
       AND pr.merged_at IS NOT NULL
       AND ${humanPullRequest("pr")}
     GROUP BY bucket
@@ -281,7 +292,8 @@ export const getCopilotDashboard = async (
     JOIN repositories r ON prr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
       AND ${isCopilotReview("prr")}
-      AND prr.submitted_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND prr.submitted_at >= ${startDate}::timestamptz
+      AND prr.submitted_at <= ${endDate}::timestamptz
     GROUP BY week
     ORDER BY week
   `);
@@ -294,8 +306,8 @@ export const getCopilotDashboard = async (
   const coauthorLeadTimeTrendQuery = db.execute(sql`
     WITH bounds AS (
       SELECT
-        DATE_TRUNC('week', ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days}))::date AS start_week,
-        DATE_TRUNC('week', ${referenceDate}::timestamptz)::date AS end_week
+        DATE_TRUNC('week', ${startDate}::timestamptz)::date AS start_week,
+        DATE_TRUNC('week', ${endDate}::timestamptz)::date AS end_week
     ),
     weeks AS (
       SELECT generate_series(start_week, end_week, '1 week'::interval)::date AS week
@@ -307,7 +319,8 @@ export const getCopilotDashboard = async (
       FROM commits c
       JOIN repositories r ON c.repository_id = r.id
       WHERE ${repositoryIn("r.full_name", fullNames)}
-        AND c.committer_date >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        AND c.committer_date >= ${startDate}::timestamptz
+        AND c.committer_date <= ${endDate}::timestamptz
         AND ${copilotCoauthorTrailerMatch("c.message")}
       GROUP BY 1
     ),
@@ -317,7 +330,8 @@ export const getCopilotDashboard = async (
       FROM pull_requests pr
       JOIN repositories r ON pr.repository_id = r.id
       WHERE ${repositoryIn("r.full_name", fullNames)}
-        AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        AND pr.merged_at >= ${startDate}::timestamptz
+        AND pr.merged_at <= ${endDate}::timestamptz
         AND pr.merged_at IS NOT NULL
         AND ${humanPullRequest("pr")}
       GROUP BY 1
@@ -349,7 +363,8 @@ export const getCopilotDashboard = async (
       FROM pull_requests pr
       JOIN repositories r ON pr.repository_id = r.id
       WHERE ${repositoryIn("r.full_name", fullNames)}
-        AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        AND pr.merged_at >= ${startDate}::timestamptz
+        AND pr.merged_at <= ${endDate}::timestamptz
         AND pr.merged_at IS NOT NULL
         AND ${humanPullRequest("pr")}
       GROUP BY week
@@ -366,7 +381,8 @@ export const getCopilotDashboard = async (
     FROM commits c
     JOIN repositories r ON c.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND c.committer_date >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND c.committer_date >= ${startDate}::timestamptz
+      AND c.committer_date <= ${endDate}::timestamptz
       AND ${copilotCoauthorTrailerMatch("c.message")}
     GROUP BY r.full_name
     ORDER BY commits DESC
@@ -384,7 +400,8 @@ export const getCopilotDashboard = async (
     FROM pull_requests pr
     JOIN repositories r ON pr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.created_at >= ${startDate}::timestamptz
+      AND pr.created_at <= ${endDate}::timestamptz
       AND pr.author = ${COPILOT_PR_AUTHOR}
     ORDER BY pr.created_at DESC
     LIMIT 20

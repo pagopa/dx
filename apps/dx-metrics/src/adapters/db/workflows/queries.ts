@@ -26,7 +26,13 @@ import {
   parseSqlRow,
   parseSqlRows,
 } from "../shared/sql-parsing";
-import { resolveWindow, windowMeta } from "../shared/window";
+import type { ResolvedWindow } from "../shared/window";
+import {
+  previousWindow,
+  resolveWindow,
+  splitWindow,
+  windowMeta,
+} from "../shared/window";
 import {
   workflowAvgDurationSchema,
   workflowCumulativeDurationSchema,
@@ -58,13 +64,6 @@ export const getWorkflowDashboard = async (
     end,
     start,
   });
-  // The legacy queries take a trailing window: a single upper bound plus a
-  // length. The resolver turns a custom range into exactly that shape.
-  const { days, endDate: referenceDate } = window;
-
-  // Card/insight deltas compare the two halves of the selected window.
-  const half = Math.max(1, Math.floor(days / 2));
-
   const [
     deployments,
     dxVsNonDx,
@@ -81,20 +80,20 @@ export const getWorkflowDashboard = async (
     topSlowestDurationTrend,
     topFailureTrend,
   ] = await Promise.all([
-    fetchDeployments(db, fullNames, days, referenceDate),
-    fetchDxVsNonDx(db, fullNames, days, referenceDate),
-    fetchFailures(db, fullNames, days, referenceDate),
-    fetchAvgDuration(db, fullNames, days, referenceDate),
-    fetchRunCount(db, fullNames, days, referenceDate),
-    fetchCumulativeDuration(db, fullNames, days, referenceDate),
-    fetchSuccessRatio(db, fullNames, days, referenceDate),
-    fetchSummary(db, fullNames, days, referenceDate),
-    fetchSuccessRateStats(db, fullNames, days, half, referenceDate),
-    fetchDurationPercentiles(db, fullNames, days, referenceDate),
-    fetchTriggerTypes(db, fullNames, days, referenceDate),
-    fetchTriggerBreakdown(db, fullNames, days, referenceDate),
-    fetchTopSlowestDurationTrend(db, fullNames, days, referenceDate),
-    fetchTopFailureTrend(db, fullNames, days, referenceDate),
+    fetchDeployments(db, fullNames, window),
+    fetchDxVsNonDx(db, fullNames, window),
+    fetchFailures(db, fullNames, window),
+    fetchAvgDuration(db, fullNames, window),
+    fetchRunCount(db, fullNames, window),
+    fetchCumulativeDuration(db, fullNames, window),
+    fetchSuccessRatio(db, fullNames, window),
+    fetchSummary(db, fullNames, window),
+    fetchSuccessRateStats(db, fullNames, window),
+    fetchDurationPercentiles(db, fullNames, window),
+    fetchTriggerTypes(db, fullNames, window),
+    fetchTriggerBreakdown(db, fullNames, window),
+    fetchTopSlowestDurationTrend(db, fullNames, window),
+    fetchTopFailureTrend(db, fullNames, window),
   ]);
 
   const dashboard = {
@@ -142,9 +141,9 @@ const fetchDataRange = async (db: Database, fullNames: readonly string[]) => {
 const fetchDeployments = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { endDate, startDate } = window;
   // Heuristic deployment frequency: workflow runs whose name suggests a
   // deploy/release/apply step. The data model has no explicit environment or
   // deployment event, so this is a proxy — the UI labels it accordingly.
@@ -157,7 +156,8 @@ const fetchDeployments = async (
     WHERE ${repositoryIn("r.full_name", fullNames)}
       AND ${deployWorkflowMatch("w.name")}
       AND TRIM(wr.conclusion) = 'success'
-      AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND wr.created_at >= ${startDate}::timestamptz
+      AND wr.created_at <= ${endDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
     GROUP BY DATE_TRUNC('week', wr.created_at) ORDER BY "runWeek"
   `);
@@ -171,9 +171,9 @@ const fetchDeployments = async (
 const fetchDxVsNonDx = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { endDate, startDate } = window;
   const r = await db.execute(sql`
     SELECT "runDate", "pipelineType",
       SUM("dailyCount") OVER (PARTITION BY "pipelineType" ORDER BY "runDate") AS "cumulativeCount"
@@ -185,7 +185,8 @@ const fetchDxVsNonDx = async (
       JOIN workflows w ON wr.workflow_id = w.id
       JOIN repositories r ON wr.repository_id = r.id
       WHERE ${repositoryIn("r.full_name", fullNames)}
-        AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        AND wr.created_at >= ${startDate}::timestamptz
+        AND wr.created_at <= ${endDate}::timestamptz
         AND ${workflowNameExclusion("w.name")}
       -- Group by the output alias: the CASE binds parameters, so repeating the
       -- expression here would use different placeholders and PostgreSQL would
@@ -199,9 +200,9 @@ const fetchDxVsNonDx = async (
 const fetchFailures = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { endDate, startDate } = window;
   const r = await db.execute(sql`
     SELECT ${dxWorkflowNameLabel("w.name", "w.pipeline")} AS "workflowName",
       COUNT(*) AS "failedRuns"
@@ -210,7 +211,8 @@ const fetchFailures = async (
     JOIN repositories r ON wr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
       AND TRIM(wr.conclusion) = 'failure'
-      AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND wr.created_at >= ${startDate}::timestamptz
+      AND wr.created_at <= ${endDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
     GROUP BY "workflowName" ORDER BY "workflowName"
   `);
@@ -220,9 +222,9 @@ const fetchFailures = async (
 const fetchAvgDuration = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { endDate, startDate } = window;
   const r = await db.execute(sql`
     SELECT ${dxWorkflowNameLabel("w.name", "w.pipeline")} AS "workflowName",
       AVG(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60 AS "averageDurationMinutes"
@@ -231,8 +233,8 @@ const fetchAvgDuration = async (
     JOIN repositories r ON wr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
-      AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND wr.updated_at <= ${maxDate}::timestamptz
+      AND wr.updated_at >= ${startDate}::timestamptz
+      AND wr.updated_at <= ${endDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
     GROUP BY "workflowName" ORDER BY "workflowName"
   `);
@@ -246,9 +248,9 @@ const fetchAvgDuration = async (
 const fetchRunCount = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { endDate, startDate } = window;
   const r = await db.execute(sql`
     SELECT ${dxWorkflowNameLabel("w.name", "w.pipeline")} AS "workflowName",
       COUNT(*) AS "runCount"
@@ -257,8 +259,8 @@ const fetchRunCount = async (
     JOIN repositories r ON wr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
-      AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND wr.updated_at <= ${maxDate}::timestamptz
+      AND wr.updated_at >= ${startDate}::timestamptz
+      AND wr.updated_at <= ${endDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
     GROUP BY "workflowName" ORDER BY "workflowName"
   `);
@@ -268,9 +270,9 @@ const fetchRunCount = async (
 const fetchCumulativeDuration = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { endDate, startDate } = window;
   const r = await db.execute(sql`
     SELECT ${dxWorkflowNameLabel("w.name", "w.pipeline")} AS "workflowName",
       SUM(EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at))) / 60 AS "cumulativeDurationMinutes"
@@ -279,8 +281,8 @@ const fetchCumulativeDuration = async (
     JOIN repositories r ON wr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
-      AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND wr.updated_at <= ${maxDate}::timestamptz
+      AND wr.updated_at >= ${startDate}::timestamptz
+      AND wr.updated_at <= ${endDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
     GROUP BY "workflowName" ORDER BY "workflowName"
   `);
@@ -294,9 +296,9 @@ const fetchCumulativeDuration = async (
 const fetchSuccessRatio = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { endDate, startDate } = window;
   const r = await db.execute(sql`
     SELECT ${dxWorkflowNameLabel("w.name", "w.pipeline")} AS "workflowName", COUNT(*) AS "totalRuns",
       SUM(CASE WHEN TRIM(wr.conclusion) = 'success' THEN 1 ELSE 0 END) AS "successfulRuns",
@@ -307,7 +309,8 @@ const fetchSuccessRatio = async (
     JOIN repositories r ON wr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
       AND TRIM(wr.conclusion) IN ('success', 'failure')
-      AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND wr.created_at >= ${startDate}::timestamptz
+      AND wr.created_at <= ${endDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
     GROUP BY w.name, w.pipeline ORDER BY "totalRuns" DESC
   `);
@@ -321,9 +324,10 @@ const fetchSuccessRatio = async (
 const fetchSummary = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { endDate, startDate } = window;
+  const previous = previousWindow(window);
   // One scan of the two-window population, split into current and previous with
   // a boolean instead of four repeated scalar subqueries: the previous-period
   // cards share the same joins and date filters, so reaggregating them per
@@ -334,14 +338,15 @@ const fetchSummary = async (
         wr.created_at,
         EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)) / 60 AS "durationMinutes",
         TRIM(wr.conclusion) AS "conclusion",
-        (wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})) AS "inCurrentWindow"
+        (wr.updated_at >= ${startDate}::timestamptz
+          AND wr.updated_at <= ${endDate}::timestamptz) AS "inCurrentWindow"
       FROM workflow_runs wr
       JOIN workflows w ON wr.workflow_id = w.id
       JOIN repositories r ON wr.repository_id = r.id
       WHERE ${repositoryIn("r.full_name", fullNames)}
         AND wr.status = 'completed' AND TRIM(wr.conclusion) IN ('success', 'failure')
-        AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
-        AND wr.updated_at <= ${maxDate}::timestamptz
+        AND wr.updated_at >= ${previous.startDate}::timestamptz
+        AND wr.updated_at <= ${endDate}::timestamptz
         AND ${workflowNameExclusion("w.name")}
     )
     SELECT
@@ -366,12 +371,12 @@ const fetchSummary = async (
 const fetchSuccessRateStats = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  half: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
   // Current = recent half of the window, previous = first half, so the delta
   // describes a change inside the visible window.
+  const split = splitWindow(window);
+  const { endDate, startDate } = window;
   const r = await db.execute(sql`
     SELECT
       ROUND(
@@ -386,16 +391,16 @@ const fetchSuccessRateStats = async (
        JOIN workflows w2 ON wr2.workflow_id = w2.id
        JOIN repositories r2 ON wr2.repository_id = r2.id
        WHERE ${repositoryIn("r2.full_name", fullNames)}
-         AND wr2.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-         AND wr2.updated_at < ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${half})
+         AND wr2.updated_at >= ${startDate}::timestamptz
+         AND wr2.updated_at < ${split.previous.endDate}::timestamptz
          AND ${workflowNameExclusion("w2.name")}
       ) AS "previous"
     FROM workflow_runs wr
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${half})
-      AND wr.updated_at <= ${maxDate}::timestamptz
+      AND wr.updated_at >= ${split.current.startDate}::timestamptz
+      AND wr.updated_at <= ${endDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
   `);
   return parseSqlRow(
@@ -408,9 +413,9 @@ const fetchSuccessRateStats = async (
 const fetchDurationPercentiles = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { endDate, startDate } = window;
   const r = await db.execute(sql`
     SELECT
       COUNT(*) AS "count",
@@ -428,8 +433,8 @@ const fetchDurationPercentiles = async (
     JOIN repositories r ON wr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
       AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
-      AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND wr.updated_at <= ${maxDate}::timestamptz
+      AND wr.updated_at >= ${startDate}::timestamptz
+      AND wr.updated_at <= ${endDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
   `);
   return parseSqlRow(
@@ -450,9 +455,9 @@ const fetchDurationPercentiles = async (
 const fetchTriggerTypes = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { endDate, startDate } = window;
   const r = await db.execute(sql`
     SELECT
       CASE
@@ -465,8 +470,8 @@ const fetchTriggerTypes = async (
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND wr.created_at <= ${maxDate}::timestamptz
+      AND wr.created_at >= ${startDate}::timestamptz
+      AND wr.created_at <= ${endDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
     GROUP BY "triggerType" ORDER BY "runCount" DESC
   `);
@@ -487,9 +492,9 @@ const fetchTriggerTypes = async (
 const fetchTriggerBreakdown = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { endDate, startDate } = window;
   const r = await db.execute(sql`
     SELECT ${dxWorkflowNameLabel("w.name", "w.pipeline")} AS "workflowName",
       COUNT(*) FILTER (WHERE wr.event = 'workflow_dispatch') AS "manual",
@@ -501,8 +506,8 @@ const fetchTriggerBreakdown = async (
     JOIN workflows w ON wr.workflow_id = w.id
     JOIN repositories r ON wr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND wr.created_at <= ${maxDate}::timestamptz
+      AND wr.created_at >= ${startDate}::timestamptz
+      AND wr.created_at <= ${endDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
     GROUP BY "workflowName"
     ORDER BY COUNT(*) DESC
@@ -525,9 +530,9 @@ const fetchTriggerBreakdown = async (
 const fetchTopSlowestDurationTrend = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { days, endDate, startDate } = window;
   const r = await db.execute(sql`
     WITH runs AS (
       SELECT ${dxWorkflowNameLabel("w.name", "w.pipeline")} AS "workflowName",
@@ -538,8 +543,8 @@ const fetchTopSlowestDurationTrend = async (
       JOIN repositories r ON wr.repository_id = r.id
       WHERE ${repositoryIn("r.full_name", fullNames)}
         AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
-        AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-        AND wr.updated_at <= ${maxDate}::timestamptz
+        AND wr.updated_at >= ${startDate}::timestamptz
+        AND wr.updated_at <= ${endDate}::timestamptz
         AND ${workflowNameExclusion("w.name")}
     ),
     ranked AS (
@@ -571,9 +576,9 @@ const fetchTopSlowestDurationTrend = async (
 const fetchTopFailureTrend = async (
   db: Database,
   fullNames: readonly string[],
-  days: number,
-  maxDate: string,
+  window: ResolvedWindow,
 ) => {
+  const { days, endDate, startDate } = window;
   const r = await db.execute(sql`
     WITH runs AS (
       SELECT ${dxWorkflowNameLabel("w.name", "w.pipeline")} AS "workflowName",
@@ -583,8 +588,8 @@ const fetchTopFailureTrend = async (
       JOIN repositories r ON wr.repository_id = r.id
       WHERE ${repositoryIn("r.full_name", fullNames)}
         AND TRIM(wr.conclusion) = 'failure'
-        AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-        AND wr.created_at <= ${maxDate}::timestamptz
+        AND wr.created_at >= ${startDate}::timestamptz
+        AND wr.created_at <= ${endDate}::timestamptz
         AND ${workflowNameExclusion("w.name")}
     ),
     ranked AS (

@@ -108,6 +108,11 @@ describe("DashboardQuerySchema", () => {
     expect(DashboardQuerySchema.safeParse({ end: "2026-02-30" }).success).toBe(
       false,
     );
+    // Only the first ten characters are a valid date; the schema must reject the
+    // value rather than forward `2026-06-30garbage` to PostgreSQL.
+    expect(
+      DashboardQuerySchema.safeParse({ end: "2026-06-30garbage" }).success,
+    ).toBe(false);
   });
 
   it("still applies the days default when only a range is provided", () => {

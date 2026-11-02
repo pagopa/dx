@@ -27,7 +27,14 @@ describe("parseCalendarDate", () => {
   it("rejects malformed and impossible dates", () => {
     expect(parseCalendarDate("02/11/2026")).toBeNull();
     expect(parseCalendarDate("2026-13-01")).toBeNull();
+    expect(parseCalendarDate("2026-06-30garbage")).toBeNull();
     expect(isCalendarDate("2026-02-30")).toBe(false);
+  });
+
+  it("only accepts a bare date as a query parameter", () => {
+    expect(isCalendarDate("2026-11-02")).toBe(true);
+    expect(isCalendarDate("2026-06-30garbage")).toBe(false);
+    expect(isCalendarDate("2026-11-02T03:12:00.000Z")).toBe(false);
   });
 
   it("formats UTC milliseconds back to a calendar date", () => {

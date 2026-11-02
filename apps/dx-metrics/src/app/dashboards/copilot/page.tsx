@@ -182,8 +182,8 @@ export default function CopilotDashboard() {
         availableTo={data?.meta.availableTo}
         onRangeChange={setRange}
         onRepositoriesChange={setRepositories}
-        rangeEnd={end ?? data?.meta.windowEnd}
-        rangeStart={start ?? data?.meta.windowStart}
+        rangeEnd={data?.meta.windowEnd ?? end}
+        rangeStart={data?.meta.windowStart ?? start}
         repositories={repositories}
       />
       <DashboardRequestState
@@ -205,7 +205,7 @@ export default function CopilotDashboard() {
           <InsightsPanel
             className="mb-6"
             insights={data.insights}
-            periodDays={days}
+            periodDays={data?.meta.days ?? days}
           />
 
           <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">

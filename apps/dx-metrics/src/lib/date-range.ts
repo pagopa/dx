@@ -17,9 +17,18 @@ export const toCalendarDate = (value: string): string => value.slice(0, 10);
 
 /** Parses a `YYYY-MM-DD` (or a timestamp) to UTC midnight, or `null`. */
 export const parseCalendarDate = (value: string): null | number => {
-  const day = toCalendarDate(value);
+  const isBareDate = ISO_DATE_PATTERN.test(value);
+  // A timestamp contributes its date part; anything else (including a date
+  // followed by junk such as `2026-06-30garbage`) is rejected below.
+  const day = isBareDate ? value : toCalendarDate(value);
 
   if (!ISO_DATE_PATTERN.test(day)) {
+    return null;
+  }
+
+  // Validate the whole input: `toCalendarDate` alone would accept trailing
+  // garbage, and the query schema would then forward it to PostgreSQL.
+  if (!isBareDate && Number.isNaN(Date.parse(value))) {
     return null;
   }
 
@@ -38,9 +47,15 @@ export const parseCalendarDate = (value: string): null | number => {
 export const formatCalendarDate = (ms: number): string =>
   new Date(ms).toISOString().slice(0, 10);
 
-/** True when the value is a valid `YYYY-MM-DD` date. */
+/**
+ * True when the value is exactly a valid `YYYY-MM-DD` date.
+ *
+ * Timestamps are deliberately rejected here even though
+ * {@link parseCalendarDate} accepts them: this guards the query parameters, and
+ * a timestamp would be concatenated into SQL bounds as if it were a date.
+ */
 export const isCalendarDate = (value: string): boolean =>
-  parseCalendarDate(value) !== null;
+  ISO_DATE_PATTERN.test(value) && parseCalendarDate(value) !== null;
 
 /** Shifts a calendar date by whole days. Returns the input when invalid. */
 export const addCalendarDays = (date: string, delta: number): string => {

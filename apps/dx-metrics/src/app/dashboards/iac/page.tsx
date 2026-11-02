@@ -85,8 +85,8 @@ export default function IacDashboard() {
         availableTo={data?.meta.availableTo}
         onRangeChange={setRange}
         onRepositoriesChange={setRepositories}
-        rangeEnd={end ?? data?.meta.windowEnd}
-        rangeStart={start ?? data?.meta.windowStart}
+        rangeEnd={data?.meta.windowEnd ?? end}
+        rangeStart={data?.meta.windowStart ?? start}
         repositories={repositories}
       />
       <DashboardRequestState
@@ -108,7 +108,7 @@ export default function IacDashboard() {
           <InsightsPanel
             className="mb-4"
             insights={data.insights}
-            periodDays={days}
+            periodDays={data?.meta.days ?? days}
           />
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimpleBarChart

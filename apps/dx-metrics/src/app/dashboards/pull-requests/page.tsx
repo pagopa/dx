@@ -114,8 +114,11 @@ export default function PullRequestsDashboard() {
 
   // The SQL bucket switches from day to week above the shared threshold; the
   // caption repeats it on the chart so a point is never read as the wrong unit.
+  // Use the applied window length: the server clamps a longer request to the
+  // available history, so the requested `days` can disagree with the buckets.
+  const appliedDays = data?.meta.days ?? days;
   const bucketCaption =
-    days < WEEKLY_BUCKET_THRESHOLD_DAYS ? "per day" : "per week";
+    appliedDays < WEEKLY_BUCKET_THRESHOLD_DAYS ? "per day" : "per week";
 
   // Deep links need a single repository: with a multi-repository selection
   // there is no one repository the rows belong to, so the tables show plain
@@ -233,8 +236,8 @@ export default function PullRequestsDashboard() {
         availableTo={data?.meta.availableTo}
         onRangeChange={setRange}
         onRepositoriesChange={setRepositories}
-        rangeEnd={end ?? data?.meta.windowEnd}
-        rangeStart={start ?? data?.meta.windowStart}
+        rangeEnd={data?.meta.windowEnd ?? end}
+        rangeStart={data?.meta.windowStart ?? start}
         repositories={repositories}
       />
       <DashboardRequestState
@@ -252,7 +255,10 @@ export default function PullRequestsDashboard() {
             windowEnd={data.meta.windowEnd}
             windowStart={data.meta.windowStart}
           />
-          <InsightsPanel insights={data.insights} periodDays={days} />
+          <InsightsPanel
+            insights={data.insights}
+            periodDays={data.meta.days ?? days}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
