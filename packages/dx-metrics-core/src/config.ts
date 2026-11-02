@@ -21,6 +21,11 @@ export interface DxMetricsRepository {
  * Repository list grouped by visibility tag. Every repository must carry at
  * least one tag, or it is visible to nobody: the portal's test suite rejects a
  * list where that happens.
+ *
+ * Only public repositories belong here. The portal publishes their metrics to
+ * anyone holding a scope link, and a link grants no GitHub permission of its
+ * own, so listing a private repository would show it to people who cannot open
+ * it on GitHub.
  */
 export const dxMetricsConfig: DxMetricsConfig = {
   dxRepo: "dx",
@@ -129,22 +134,16 @@ export const dxMetricsConfig: DxMetricsConfig = {
 
     // P4PA.
     { name: "p4pa-analytics-deploy-aks", tags: ["p4pa"] },
-    { name: "p4pa-automation", tags: ["p4pa"] },
-    { name: "p4pa-cie", tags: ["p4pa"] },
-    { name: "p4pa-cie-batch", tags: ["p4pa"] },
-    { name: "p4pa-cie-fe", tags: ["p4pa"] },
     { name: "p4pa-classification", tags: ["p4pa"] },
     { name: "p4pa-debt-positions", tags: ["p4pa"] },
     { name: "p4pa-doc", tags: ["p4pa"] },
     { name: "p4pa-fileshare", tags: ["p4pa"] },
-    { name: "p4pa-infra-api-spec", tags: ["p4pa"] },
     { name: "p4pa-payhub-deploy-aks", tags: ["p4pa"] },
     { name: "p4pa-pu-bff", tags: ["p4pa"] },
     { name: "p4pa-pu-fe", tags: ["p4pa"] },
     { name: "p4pa-pu-feature-test", tags: ["p4pa"] },
     { name: "p4pa-pu-sil", tags: ["p4pa"] },
     { name: "p4pa-registries", tags: ["p4pa"] },
-    { name: "p4pa-send-bff", tags: ["p4pa"] },
     { name: "p4pa-send-notification", tags: ["p4pa"] },
     { name: "p4pa-workflow-hub", tags: ["p4pa"] },
     { name: "p4pa-workflow-worker", tags: ["p4pa"] },
@@ -152,7 +151,6 @@ export const dxMetricsConfig: DxMetricsConfig = {
     // Onboarding and PDV (Privacy Data Vault), one category.
     { name: "onemail", tags: ["bb"] },
     { name: "oneidentity", tags: ["bb"] },
-    { name: "pdv-export-data", tags: ["bb"] },
     { name: "pdv-lambda-expose-usage-plan-details", tags: ["bb"] },
     { name: "pdv-lambda-usage-plans", tags: ["bb"] },
     { name: "pdv-load-tests", tags: ["bb"] },
