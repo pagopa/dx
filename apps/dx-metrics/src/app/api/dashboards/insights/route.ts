@@ -21,6 +21,7 @@ import { getReleasesDashboard } from "@/adapters/db/releases/queries";
 import { getTechRadarDashboard } from "@/adapters/db/techradar/queries";
 import { getTrackerDashboard } from "@/adapters/db/tracker/queries";
 import { getWorkflowDashboard } from "@/adapters/db/workflows/queries";
+import { resolveWindow } from "@/adapters/db/shared/window";
 import { db } from "@/db/instance";
 import { jsonWithCache } from "@/lib/api-cache";
 import { ORGANIZATION, REPOSITORIES } from "@/lib/config";
@@ -52,10 +53,28 @@ const latestReferenceDate = (dates: readonly string[]): null | string =>
     return latest;
   }, null);
 
+/** Metadata fields the summary aggregates across the source dashboards. */
+interface SourceMeta {
+  availableFrom?: string;
+  availableTo?: string;
+  referenceDate?: string;
+}
+
+const readSourceMeta = (value: unknown): SourceMeta =>
+  typeof value === "object" && value !== null ? (value as SourceMeta) : {};
+
+const earliestDate = (dates: readonly string[]): null | string =>
+  dates.reduce<null | string>((earliest, current) => {
+    if (earliest === null || current < earliest) {
+      return current;
+    }
+    return earliest;
+  }, null);
+
 export async function GET(req: NextRequest) {
   const parsed = parseDashboardQuery(req);
   if ("error" in parsed) return parsed.error;
-  const { days } = parsed.query;
+  const { days, end, start } = parsed.query;
   const fullNames = resolveRepositories(parsed.query, "dx").map(
     (repository) => `${ORGANIZATION}/${repository}`,
   );
@@ -70,21 +89,29 @@ export async function GET(req: NextRequest) {
   }[] = [
     {
       key: "pull-requests",
-      request: fetchPrDashboard(db, { days, fullNames }),
+      request: fetchPrDashboard(db, { days, end, fullNames, start }),
     },
     {
       key: "pull-requests-review",
-      request: getPullRequestsReviewDashboard(db, { days, fullNames }),
+      request: getPullRequestsReviewDashboard(db, {
+        days,
+        end,
+        fullNames,
+        start,
+      }),
     },
     {
       key: "copilot",
-      request: getCopilotDashboard(db, { days, fullNames }),
+      request: getCopilotDashboard(db, { days, end, fullNames, start }),
     },
     {
       key: "workflows",
-      request: getWorkflowDashboard(db, { days, fullNames }),
+      request: getWorkflowDashboard(db, { days, end, fullNames, start }),
     },
-    { key: "iac", request: getIacDashboard(db, { days, fullNames }) },
+    {
+      key: "iac",
+      request: getIacDashboard(db, { days, end, fullNames, start }),
+    },
     { key: "dx-adoption", request: fetchDxAdoption(db, { fullNames }) },
     {
       key: "techradar",
@@ -96,7 +123,12 @@ export async function GET(req: NextRequest) {
     },
     {
       key: "dx-team",
-      request: fetchDxTeamDashboard(db, { days, organization: ORGANIZATION }),
+      request: fetchDxTeamDashboard(db, {
+        days,
+        end,
+        organization: ORGANIZATION,
+        start,
+      }),
     },
     { key: "tracker", request: getTrackerDashboard(db) },
     { key: "releases", request: getReleasesDashboard(db) },
@@ -108,6 +140,8 @@ export async function GET(req: NextRequest) {
 
   const insights: Insight[] = [];
   const referenceDates: string[] = [];
+  const availableFroms: string[] = [];
+  const availableTos: string[] = [];
   const failed: string[] = [];
 
   settled.forEach((result, index) => {
@@ -125,9 +159,15 @@ export async function GET(req: NextRequest) {
       ...dashboardInsights.map((insight) => ({ ...insight, source: label })),
     );
 
-    const referenceDate = (meta as { referenceDate?: string })?.referenceDate;
-    if (typeof referenceDate === "string") {
-      referenceDates.push(referenceDate);
+    const sourceMeta = readSourceMeta(meta);
+    if (typeof sourceMeta.referenceDate === "string") {
+      referenceDates.push(sourceMeta.referenceDate);
+    }
+    if (typeof sourceMeta.availableFrom === "string") {
+      availableFroms.push(sourceMeta.availableFrom);
+    }
+    if (typeof sourceMeta.availableTo === "string") {
+      availableTos.push(sourceMeta.availableTo);
     }
   });
 
@@ -136,6 +176,22 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Query failed" }, { status: 500 });
   }
 
+  // The summary spans dashboards with different data ranges. The selectable
+  // range is their union, resolved with the same rules each adapter uses, so the
+  // filter shows one coherent interval even though some sources start later.
+  const unionFrom = earliestDate(availableFroms);
+  const unionTo = latestReferenceDate(availableTos);
+  const window =
+    unionFrom !== null && unionTo !== null
+      ? resolveWindow({
+          availableFrom: unionFrom,
+          availableTo: unionTo,
+          days,
+          end,
+          start,
+        })
+      : null;
+
   return jsonWithCache({
     insights: sortInsights(insights),
     meta: {
@@ -143,6 +199,15 @@ export async function GET(req: NextRequest) {
       dashboardCount: settled.length,
       failed,
       referenceDate: latestReferenceDate(referenceDates),
+      ...(window === null
+        ? {}
+        : {
+            availableFrom: window.availableFrom,
+            availableTo: window.availableTo,
+            days: window.days,
+            windowEnd: window.windowEnd,
+            windowStart: window.windowStart,
+          }),
     },
   });
 }

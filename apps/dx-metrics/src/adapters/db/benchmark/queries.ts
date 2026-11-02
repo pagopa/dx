@@ -8,17 +8,14 @@ import {
   type BenchmarkValueRow,
 } from "@/lib/benchmark";
 
-import type { Database } from "../shared/types";
+import type { Database, DashboardMeta } from "../shared/types";
 import type {
   BenchmarkInput,
   PrBenchmarkRow,
   WorkflowBenchmarkRow,
 } from "./schemas";
 
-import {
-  buildReferenceDateQuery,
-  parseReferenceDate,
-} from "../shared/reference-date";
+import { buildDataRangeQuery, parseDataRange } from "../shared/reference-date";
 import { parseSqlRows } from "../shared/sql-parsing";
 import {
   botAuthorsExclusion,
@@ -26,13 +23,18 @@ import {
   textArray,
   workflowNameExclusion,
 } from "../shared/sql-fragments";
+import type { ResolvedWindow } from "../shared/window";
+import { resolveWindow, windowMeta } from "../shared/window";
 import { prBenchmarkRowSchema, workflowBenchmarkRowSchema } from "./schemas";
 
 /** Result of the cross-repository benchmark. */
 export interface BenchmarkResult {
-  readonly meta: { readonly days: number; readonly referenceDate: string };
+  readonly meta: DashboardMeta;
   readonly metrics: readonly BenchmarkMetric[];
 }
+
+const earliestDate = (left: string, right: string): string =>
+  new Date(left).getTime() <= new Date(right).getTime() ? left : right;
 
 const laterDate = (left: string, right: string): string =>
   new Date(left).getTime() >= new Date(right).getTime() ? left : right;
@@ -59,26 +61,30 @@ const padRows = (
   });
 };
 
-/** Latest PR and workflow activity dates, used to anchor benchmark windows. */
-interface BenchmarkReferenceDates {
-  readonly prReference: string;
-  readonly wrReference: string;
+/** First and last PR/workflow activity dates, used to bound benchmark windows. */
+interface BenchmarkDataRanges {
+  readonly prFrom: string;
+  readonly prTo: string;
+  readonly wrFrom: string;
+  readonly wrTo: string;
 }
 
-const fetchReferenceDates = async (
+const fetchDataRanges = async (
   db: Database,
   repositories: SQL,
-): Promise<BenchmarkReferenceDates> => {
-  const [prReferenceResult, wrReferenceResult] = await Promise.all([
+): Promise<BenchmarkDataRanges> => {
+  const [prRangeResult, wrRangeResult] = await Promise.all([
     db.execute(
-      buildReferenceDateQuery({
+      buildDataRangeQuery({
         column: "GREATEST(pr.created_at, pr.merged_at)",
         from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
+        // Creation is the earliest event; the maximum above is "latest activity".
+        minColumn: "pr.created_at",
         where: sql`r.name = ANY(${repositories})`,
       }),
     ),
     db.execute(
-      buildReferenceDateQuery({
+      buildDataRangeQuery({
         column: "wr.created_at",
         from: "workflow_runs wr JOIN repositories r ON wr.repository_id = r.id",
         where: sql`r.name = ANY(${repositories})`,
@@ -86,24 +92,29 @@ const fetchReferenceDates = async (
     ),
   ]);
 
+  const prRange = parseDataRange(
+    prRangeResult.rows[0],
+    "benchmark pr data range",
+  );
+  const wrRange = parseDataRange(
+    wrRangeResult.rows[0],
+    "benchmark wr data range",
+  );
+
   return {
-    prReference: parseReferenceDate(
-      prReferenceResult.rows[0],
-      "benchmark pr referenceDate",
-    ),
-    wrReference: parseReferenceDate(
-      wrReferenceResult.rows[0],
-      "benchmark wr referenceDate",
-    ),
+    prFrom: prRange.availableFrom,
+    prTo: prRange.availableTo,
+    wrFrom: wrRange.availableFrom,
+    wrTo: wrRange.availableTo,
   };
 };
 
 const fetchPrBenchmarkRows = async (
   db: Database,
   repositories: SQL,
-  days: number,
-  prReference: string,
+  window: ResolvedWindow,
 ): Promise<PrBenchmarkRow[]> => {
+  const { endDate, startDate } = window;
   const result = await db.execute(sql`
     WITH pr AS (
       SELECT r.name AS repository,
@@ -112,10 +123,10 @@ const fetchPrBenchmarkRows = async (
           AS first_review_hours,
         pr.additions AS additions,
         COALESCE(pr.total_comments_count, 0) AS comments,
-        (pr.merged_at >= ${prReference}::timestamptz - MAKE_INTERVAL(days => ${days}))
-          AS merged_in_window,
-        (pr.created_at >= ${prReference}::timestamptz - MAKE_INTERVAL(days => ${days}))
-          AS created_in_window,
+        (pr.merged_at >= ${startDate}::timestamptz
+          AND pr.merged_at <= ${endDate}::timestamptz) AS merged_in_window,
+        (pr.created_at >= ${startDate}::timestamptz
+          AND pr.created_at <= ${endDate}::timestamptz) AS created_in_window,
         NOT EXISTS (
           SELECT 1 FROM pull_request_reviews rr
           WHERE rr.pull_request_id = pr.id
@@ -129,8 +140,10 @@ const fetchPrBenchmarkRows = async (
         ORDER BY submitted_at ASC LIMIT 1
       ) first_review ON true
       WHERE r.name = ANY(${repositories})
-        AND (pr.merged_at >= ${prReference}::timestamptz - MAKE_INTERVAL(days => ${days})
-          OR pr.created_at >= ${prReference}::timestamptz - MAKE_INTERVAL(days => ${days}))
+        AND ((pr.merged_at >= ${startDate}::timestamptz
+            AND pr.merged_at <= ${endDate}::timestamptz)
+          OR (pr.created_at >= ${startDate}::timestamptz
+            AND pr.created_at <= ${endDate}::timestamptz))
         AND pr.created_at IS NOT NULL
         AND ${botAuthorsExclusion("pr.author")}
         AND (pr.draft IS NULL OR pr.draft = 0)
@@ -158,9 +171,9 @@ const fetchPrBenchmarkRows = async (
 const fetchWorkflowBenchmarkRows = async (
   db: Database,
   repositories: SQL,
-  days: number,
-  wrReference: string,
+  window: ResolvedWindow,
 ): Promise<WorkflowBenchmarkRow[]> => {
+  const { endDate, startDate } = window;
   const result = await db.execute(sql`
     SELECT r.name AS repository,
       COUNT(*) FILTER (WHERE TRIM(wr.conclusion) = 'success') AS "durationCount",
@@ -186,8 +199,8 @@ const fetchWorkflowBenchmarkRows = async (
     JOIN repositories r ON wr.repository_id = r.id
     WHERE r.name = ANY(${repositories})
       AND wr.status = 'completed'
-      AND wr.updated_at >= ${wrReference}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND wr.updated_at <= ${wrReference}::timestamptz
+      AND wr.updated_at >= ${startDate}::timestamptz
+      AND wr.updated_at <= ${endDate}::timestamptz
       AND ${workflowNameExclusion("w.name")}
     GROUP BY r.name
   `);
@@ -205,18 +218,42 @@ const fetchWorkflowBenchmarkRows = async (
  */
 export const getBenchmarkDashboard = async (
   db: Database,
-  { configuredRepositories, days }: BenchmarkInput,
+  { configuredRepositories, days: requestedDays, end, start }: BenchmarkInput,
 ): Promise<BenchmarkResult> => {
   const repositories = textArray(configuredRepositories);
 
-  const { prReference, wrReference } = await fetchReferenceDates(
-    db,
-    repositories,
-  );
+  const ranges = await fetchDataRanges(db, repositories);
+  // PR and workflow metrics share one window so a reader compares them at the
+  // same point in time; the selectable range is the union of both populations.
+  const window = resolveWindow({
+    availableFrom: earliestDate(ranges.prFrom, ranges.wrFrom),
+    availableTo: laterDate(ranges.prTo, ranges.wrTo),
+    days: requestedDays,
+    end,
+    start,
+  });
+  // A legacy `?days=N` bookmark anchors each population to its own latest data
+  // point, exactly as before this change. A custom range is shared so PR and
+  // workflow metrics describe the same interval.
+  const explicitRange = start !== undefined || end !== undefined;
+  const prWindow = explicitRange
+    ? window
+    : resolveWindow({
+        availableFrom: ranges.prFrom,
+        availableTo: ranges.prTo,
+        days: requestedDays,
+      });
+  const workflowWindow = explicitRange
+    ? window
+    : resolveWindow({
+        availableFrom: ranges.wrFrom,
+        availableTo: ranges.wrTo,
+        days: requestedDays,
+      });
 
   const [prRows, workflowRows] = await Promise.all([
-    fetchPrBenchmarkRows(db, repositories, days, prReference),
-    fetchWorkflowBenchmarkRows(db, repositories, days, wrReference),
+    fetchPrBenchmarkRows(db, repositories, prWindow),
+    fetchWorkflowBenchmarkRows(db, repositories, workflowWindow),
   ]);
 
   const metrics = [
@@ -358,7 +395,7 @@ export const getBenchmarkDashboard = async (
   ];
 
   return {
-    meta: { days, referenceDate: laterDate(prReference, wrReference) },
+    meta: windowMeta(window),
     metrics,
   };
 };
@@ -370,29 +407,32 @@ export const getBenchmarkDashboard = async (
  */
 export const getPrLeadTimeBenchmark = async (
   db: Database,
-  { configuredRepositories, days }: BenchmarkInput,
+  { configuredRepositories, days: requestedDays, end, start }: BenchmarkInput,
 ): Promise<BenchmarkMetric> => {
   const repositories = textArray(configuredRepositories);
 
-  const prReference = parseReferenceDate(
+  const prRange = parseDataRange(
     (
       await db.execute(
-        buildReferenceDateQuery({
+        buildDataRangeQuery({
           column: "GREATEST(pr.created_at, pr.merged_at)",
           from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
+          minColumn: "pr.created_at",
           where: sql`r.name = ANY(${repositories})`,
         }),
       )
     ).rows[0],
-    "benchmark pr referenceDate",
+    "benchmark pr data range",
   );
+  const window = resolveWindow({
+    availableFrom: prRange.availableFrom,
+    availableTo: prRange.availableTo,
+    days: requestedDays,
+    end,
+    start,
+  });
 
-  const prRows = await fetchPrBenchmarkRows(
-    db,
-    repositories,
-    days,
-    prReference,
-  );
+  const prRows = await fetchPrBenchmarkRows(db, repositories, window);
 
   return buildBenchmarkMetric({
     category: "delivery",

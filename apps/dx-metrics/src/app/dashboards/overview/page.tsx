@@ -5,6 +5,7 @@ import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import TooltipIcon from "@/components/TooltipIcon";
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
@@ -13,7 +14,7 @@ import { overviewTooltips as tooltipContent } from "./tooltips";
 
 interface ExecutiveSummaryData {
   insights: Insight[];
-  meta: {
+  meta: Partial<DashboardMetaView> & {
     /** Total dashboards feeding the summary, so the failure count is not hard-coded. */
     dashboardCount?: number;
     /** Dashboards whose insights could not be computed; the summary is partial. */
@@ -23,15 +24,22 @@ interface ExecutiveSummaryData {
 }
 
 export default function OverviewDashboard() {
-  const { days, repositories, setDays, setRepositories } =
-    useDashboardFilters();
+  const {
+    days,
+    end,
+    repositories,
+    setRange,
+    setRepositories,
+    start,
+    timeParams,
+  } = useDashboardFilters();
 
   // A single aggregated endpoint replaces the previous nine per-dashboard
   // fetches: the server runs every adapter in parallel and returns only the
   // insights, so the browser makes one request instead of nine.
   const { data, error, loading, refetch } =
     useDashboardData<ExecutiveSummaryData>("insights", {
-      days,
+      ...timeParams,
       repositories,
     });
 
@@ -48,10 +56,13 @@ export default function OverviewDashboard() {
       </p>
 
       <DashboardFilters
+        availableFrom={data?.meta.availableFrom}
+        availableTo={data?.meta.availableTo}
+        onRangeChange={setRange}
         onRepositoriesChange={setRepositories}
-        onTimeIntervalChange={setDays}
+        rangeEnd={data?.meta.windowEnd ?? end}
+        rangeStart={data?.meta.windowStart ?? start}
         repositories={repositories}
-        timeInterval={days}
       />
       <DashboardRequestState
         error={error}
@@ -60,10 +71,16 @@ export default function OverviewDashboard() {
       />
 
       {data?.meta.referenceDate && (
-        // The summary aggregates dashboards with independent reference dates and
-        // some all-time insights, so it deliberately shows only the latest date
-        // rather than one shared window range.
-        <DataFreshness referenceDate={data.meta.referenceDate} />
+        // The summary aggregates dashboards whose data starts at different
+        // dates; the range shown is their union, while each insight is still
+        // computed on its own dashboard's window.
+        <DataFreshness
+          availableFrom={data.meta.availableFrom}
+          availableTo={data.meta.availableTo}
+          referenceDate={data.meta.referenceDate}
+          windowEnd={data.meta.windowEnd}
+          windowStart={data.meta.windowStart}
+        />
       )}
 
       {data && data.meta.failed.length > 0 && (
@@ -82,7 +99,7 @@ export default function OverviewDashboard() {
         defaultOpen
         insights={data?.insights ?? []}
         limit={9}
-        periodDays={days}
+        periodDays={data?.meta.days ?? days}
       />
     </div>
   );

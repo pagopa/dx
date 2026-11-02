@@ -1,9 +1,10 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 
 import { DEFAULT_REPOSITORY, REPOSITORIES } from "@/lib/config";
+import { calendarDaysBetween, isCalendarDate } from "@/lib/date-range";
 
 export type DashboardFilterMode =
   | "repository-and-time"
@@ -11,8 +12,9 @@ export type DashboardFilterMode =
   | "time-only";
 
 interface DashboardFilterUpdates {
-  days?: number;
+  end?: string;
   repositories?: string[];
+  start?: string;
 }
 
 interface UseDashboardFiltersOptions {
@@ -70,6 +72,10 @@ const resolveRepositories = (
   return [...fallbackRepositories];
 };
 
+/** Reads a valid `YYYY-MM-DD` value, ignoring anything else in the URL. */
+const readCalendarDate = (value: null | string): string | undefined =>
+  value !== null && isCalendarDate(value) ? value : undefined;
+
 export function useDashboardFilters({
   defaultDays = DEFAULT_DAYS,
   defaultRepositories = [DEFAULT_REPOSITORY],
@@ -88,8 +94,36 @@ export function useDashboardFilters({
     searchParams.get("repository"),
     resolvedDefaultRepositories,
   );
+
   const requestedDays = Number(searchParams.get("days"));
-  const days = isPositiveInteger(requestedDays) ? requestedDays : defaultDays;
+  const rawStart = readCalendarDate(searchParams.get("start"));
+  const rawEnd = readCalendarDate(searchParams.get("end"));
+  // A custom range wins over `days`. Both dates must be present: a half-range is
+  // treated as "no range" and the server falls back to the trailing window.
+  const hasRange = rawStart !== undefined && rawEnd !== undefined;
+  const start = hasRange ? rawStart : undefined;
+  const end = hasRange ? rawEnd : undefined;
+  const days =
+    start !== undefined && end !== undefined
+      ? calendarDaysBetween(start, end)
+      : isPositiveInteger(requestedDays)
+        ? requestedDays
+        : defaultDays;
+
+  /**
+   * Time parameters ready for `useDashboardData`. A custom range replaces the
+   * trailing window entirely; `days` remains the fallback so legacy URLs and
+   * first renders keep their previous behaviour.
+   */
+  const timeParams = useMemo<Record<string, number | string>>(() => {
+    if (start !== undefined && end !== undefined) {
+      const range: Record<string, number | string> = { end, start };
+      return range;
+    }
+
+    const trailing: Record<string, number | string> = { days };
+    return trailing;
+  }, [days, end, start]);
 
   const updateFilters = useCallback(
     (newParams: DashboardFilterUpdates) => {
@@ -105,6 +139,8 @@ export function useDashboardFilters({
 
       if (mode === "repository-only") {
         params.delete("days");
+        params.delete("end");
+        params.delete("start");
       }
 
       if (mode !== "time-only") {
@@ -116,8 +152,16 @@ export function useDashboardFilters({
         params.set("repositories", nextRepositories.join(","));
       }
 
-      if (mode !== "repository-only" && newParams.days !== undefined) {
-        params.set("days", newParams.days.toString());
+      if (
+        mode !== "repository-only" &&
+        newParams.start !== undefined &&
+        newParams.end !== undefined
+      ) {
+        params.set("start", newParams.start);
+        params.set("end", newParams.end);
+        // The explicit range replaces the trailing window; keeping both would
+        // hide which one wins.
+        params.delete("days");
       }
 
       const queryString = params.toString();
@@ -134,19 +178,28 @@ export function useDashboardFilters({
     [updateFilters],
   );
 
-  const setDays = useCallback(
-    (nextDays: number) => {
-      updateFilters({
-        days: isPositiveInteger(nextDays) ? nextDays : defaultDays,
-      });
+  const setRange = useCallback(
+    (nextStart: string, nextEnd: string) => {
+      if (!isCalendarDate(nextStart) || !isCalendarDate(nextEnd)) {
+        return;
+      }
+
+      updateFilters(
+        nextStart <= nextEnd
+          ? { end: nextEnd, start: nextStart }
+          : { end: nextStart, start: nextEnd },
+      );
     },
-    [defaultDays, updateFilters],
+    [updateFilters],
   );
 
   return {
     days,
+    end,
     repositories,
-    setDays,
+    setRange,
     setRepositories,
+    start,
+    timeParams,
   };
 }

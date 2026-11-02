@@ -11,10 +11,7 @@ import type {
   PullRequestsReviewDashboard,
 } from "./schemas";
 
-import {
-  buildReferenceDateQuery,
-  parseReferenceDate,
-} from "../shared/reference-date";
+import { buildDataRangeQuery, parseDataRange } from "../shared/reference-date";
 import {
   botAuthorsExclusion,
   humanPullRequest,
@@ -23,6 +20,7 @@ import {
 } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import { percentileRowSchema } from "../shared/schemas";
+import { previousWindow, resolveWindow, windowMeta } from "../shared/window";
 import {
   commentSummaryRowSchema,
   mergedWithoutActivityShareRowSchema,
@@ -37,19 +35,36 @@ import {
 
 export const getPullRequestsReviewDashboard = async (
   db: Database,
-  { days, fullNames }: GetPullRequestsReviewDashboardInput,
+  {
+    days: requestedDays,
+    end,
+    fullNames,
+    start,
+  }: GetPullRequestsReviewDashboardInput,
 ): Promise<PullRequestsReviewDashboard & WithInsights & WithMeta> => {
-  const referenceDateResult = await db.execute(
-    buildReferenceDateQuery({
-      column: "GREATEST(pr.created_at, pr.merged_at)",
-      from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
-      where: repositoryIn("r.full_name", fullNames),
-    }),
+  const range = parseDataRange(
+    (
+      await db.execute(
+        buildDataRangeQuery({
+          column: "GREATEST(pr.created_at, pr.merged_at)",
+          from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
+          // Creation is the earliest event; the maximum above is "latest activity".
+          minColumn: "pr.created_at",
+          where: repositoryIn("r.full_name", fullNames),
+        }),
+      )
+    ).rows[0],
+    "pull-requests-review data range",
   );
-  const referenceDate = parseReferenceDate(
-    referenceDateResult.rows[0],
-    "pull-requests-review referenceDate",
-  );
+  const window = resolveWindow({
+    availableFrom: range.availableFrom,
+    availableTo: range.availableTo,
+    days: requestedDays,
+    end,
+    start,
+  });
+  const { endDate, startDate } = window;
+  const previous = previousWindow(window);
 
   // --- Time to First Review (population: PRs created in the window) ---
   // The "first review" is the earliest review from a human who is not the
@@ -67,7 +82,8 @@ export const getPullRequestsReviewDashboard = async (
       ORDER BY submitted_at ASC LIMIT 1
     ) first_review ON true
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.created_at >= ${startDate}::timestamptz
+      AND pr.created_at <= ${endDate}::timestamptz
       AND ${humanPullRequest("pr")}
   `);
 
@@ -85,7 +101,8 @@ export const getPullRequestsReviewDashboard = async (
       ORDER BY submitted_at ASC LIMIT 1
     ) first_review ON true
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.created_at >= ${startDate}::timestamptz
+      AND pr.created_at <= ${endDate}::timestamptz
       AND ${humanPullRequest("pr")}
     GROUP BY week
     ORDER BY week
@@ -105,7 +122,8 @@ export const getPullRequestsReviewDashboard = async (
       ORDER BY submitted_at DESC LIMIT 1
     ) last_approval ON true
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.merged_at >= ${startDate}::timestamptz
+      AND pr.merged_at <= ${endDate}::timestamptz
       AND ${humanPullRequest("pr")}
   `);
 
@@ -123,7 +141,8 @@ export const getPullRequestsReviewDashboard = async (
       ORDER BY submitted_at DESC LIMIT 1
     ) last_approval ON true
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.merged_at >= ${startDate}::timestamptz
+      AND pr.merged_at <= ${endDate}::timestamptz
       AND ${humanPullRequest("pr")}
     GROUP BY week
     ORDER BY week
@@ -147,7 +166,8 @@ export const getPullRequestsReviewDashboard = async (
         ORDER BY submitted_at ASC LIMIT 1
       ) first_review ON true
       WHERE ${repositoryIn("r.full_name", fullNames)}
-        AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        AND pr.created_at >= ${startDate}::timestamptz
+        AND pr.created_at <= ${endDate}::timestamptz
         AND ${humanPullRequest("pr")}
     ) first_review_hours
   `);
@@ -176,7 +196,8 @@ export const getPullRequestsReviewDashboard = async (
     FROM pull_requests pr
     JOIN repositories r ON pr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.merged_at >= ${startDate}::timestamptz
+      AND pr.merged_at <= ${endDate}::timestamptz
       AND pr.merged_at IS NOT NULL
       AND ${humanPullRequest("pr")}
   `);
@@ -200,22 +221,22 @@ export const getPullRequestsReviewDashboard = async (
           ORDER BY submitted_at ASC LIMIT 1
         ) first_review ON true
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
-          AND pr.created_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.created_at >= ${previous.startDate}::timestamptz
+          AND pr.created_at < ${previous.endDate}::timestamptz
           AND ${humanPullRequest("pr")}) AS "previousAvgTimeToFirstReview",
       (SELECT COALESCE(SUM(pr.total_comments_count), 0)
         FROM pull_requests pr
         JOIN repositories r ON pr.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
-          AND pr.created_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.created_at >= ${previous.startDate}::timestamptz
+          AND pr.created_at < ${previous.endDate}::timestamptz
           AND ${humanPullRequest("pr")}) AS "previousTotalComments",
       (SELECT ROUND(SUM(pr.total_comments_count)::numeric / NULLIF(COUNT(*), 0), 2)
         FROM pull_requests pr
         JOIN repositories r ON pr.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
-          AND pr.created_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.created_at >= ${previous.startDate}::timestamptz
+          AND pr.created_at < ${previous.endDate}::timestamptz
           AND ${humanPullRequest("pr")}) AS "previousCommentsPerPr",
       (SELECT ROUND(
           COUNT(*) FILTER (WHERE COALESCE(pr.total_comments_count, 0) = 0)::numeric
@@ -224,8 +245,8 @@ export const getPullRequestsReviewDashboard = async (
         FROM pull_requests pr
         JOIN repositories r ON pr.repository_id = r.id
         WHERE ${repositoryIn("r.full_name", fullNames)}
-          AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days * 2})
-          AND pr.merged_at < ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+          AND pr.merged_at >= ${previous.startDate}::timestamptz
+          AND pr.merged_at < ${previous.endDate}::timestamptz
           AND pr.merged_at IS NOT NULL
           AND ${humanPullRequest("pr")}) AS "previousMergedWithoutCommentsPct"
   `);
@@ -244,7 +265,8 @@ export const getPullRequestsReviewDashboard = async (
     JOIN pull_requests pr ON prr.pull_request_id = pr.id
     JOIN repositories r ON prr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND prr.submitted_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND prr.submitted_at >= ${startDate}::timestamptz
+      AND prr.submitted_at <= ${endDate}::timestamptz
       AND ${humanPullRequest("pr")}
       AND ${isHumanReview("prr", "pr")}
     GROUP BY reviewer
@@ -257,7 +279,8 @@ export const getPullRequestsReviewDashboard = async (
     JOIN pull_requests pr ON prr.pull_request_id = pr.id
     JOIN repositories r ON prr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND prr.submitted_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND prr.submitted_at >= ${startDate}::timestamptz
+      AND prr.submitted_at <= ${endDate}::timestamptz
       AND ${humanPullRequest("pr")}
       AND ${isHumanReview("prr", "pr")}
     GROUP BY pr.author, prr.reviewer
@@ -275,7 +298,8 @@ export const getPullRequestsReviewDashboard = async (
     FROM pull_requests pr
     JOIN repositories r ON pr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND pr.merged_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.merged_at >= ${startDate}::timestamptz
+      AND pr.merged_at <= ${endDate}::timestamptz
       AND pr.merged_at IS NOT NULL
       AND pr.merged_by IS NOT NULL
       AND ${botAuthorsExclusion("merged_by")}
@@ -298,7 +322,8 @@ export const getPullRequestsReviewDashboard = async (
     FROM pull_requests pr
     JOIN repositories r ON pr.repository_id = r.id
     WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND pr.created_at >= ${referenceDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+      AND pr.created_at >= ${startDate}::timestamptz
+      AND pr.created_at <= ${endDate}::timestamptz
       AND ${humanPullRequest("pr")}
   `);
   const commentSummary = parseSqlRow(
@@ -372,6 +397,6 @@ export const getPullRequestsReviewDashboard = async (
   return {
     ...dashboard,
     insights: buildPullRequestsReviewInsights(dashboard),
-    meta: { days, referenceDate },
+    meta: windowMeta(window),
   };
 };

@@ -88,6 +88,38 @@ describe("DashboardQuerySchema", () => {
     expect(result.success).toBe(true);
     expect(result.success && result.data.repositories).toBeUndefined();
   });
+
+  it("accepts an explicit start and end range", () => {
+    const result = DashboardQuerySchema.safeParse({
+      end: "2026-11-02",
+      start: "2026-06-01",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.start).toBe("2026-06-01");
+      expect(result.data.end).toBe("2026-11-02");
+    }
+  });
+
+  it("rejects malformed and impossible range dates", () => {
+    expect(
+      DashboardQuerySchema.safeParse({ start: "01/06/2026" }).success,
+    ).toBe(false);
+    expect(DashboardQuerySchema.safeParse({ end: "2026-02-30" }).success).toBe(
+      false,
+    );
+    // Only the first ten characters are a valid date; the schema must reject the
+    // value rather than forward `2026-06-30garbage` to PostgreSQL.
+    expect(
+      DashboardQuerySchema.safeParse({ end: "2026-06-30garbage" }).success,
+    ).toBe(false);
+  });
+
+  it("still applies the days default when only a range is provided", () => {
+    const result = DashboardQuerySchema.safeParse({ start: "2026-06-01" });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.days).toBe(120);
+  });
 });
 
 describe("resolveRepositories", () => {

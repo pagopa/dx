@@ -33,6 +33,10 @@ export const workflowBenchmarkRowSchema = z.object({
 export interface BenchmarkInput {
   readonly configuredRepositories: readonly string[];
   readonly days: number;
+  /** End of the custom range (`YYYY-MM-DD`), inclusive. */
+  readonly end?: string;
+  /** Start of the custom range (`YYYY-MM-DD`), inclusive. */
+  readonly start?: string;
 }
 
 export type PrBenchmarkRow = z.infer<typeof prBenchmarkRowSchema>;

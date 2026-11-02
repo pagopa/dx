@@ -10,12 +10,14 @@ import { parseDashboardQuery } from "@/lib/query-params";
 export async function GET(req: NextRequest) {
   const parsed = parseDashboardQuery(req);
   if ("error" in parsed) return parsed.error;
-  const { days } = parsed.query;
+  const { days, end, start } = parsed.query;
 
   try {
     const result = await getBenchmarkDashboard(db, {
       configuredRepositories: REPOSITORIES,
       days,
+      end,
+      start,
     });
     return jsonWithCache(result);
   } catch (error) {

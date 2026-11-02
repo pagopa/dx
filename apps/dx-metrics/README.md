@@ -56,9 +56,21 @@ chmod +x start.sh
 | **IaC PRs**       | Infrastructure PR lead times, supervised vs unsupervised |
 | **DX Adoption**   | DX pipeline and Terraform module adoption                |
 | **Techradar**     | Discoverable tool adoption mapped to DX Techradar        |
-| **DX Team**       | Team commits across repositories                         |
+| **DX Team**       | Team commits across repositories, DX module adoption     |
 | **Copilot**       | Copilot review, agent PRs and co-authored commits        |
 | **Tracker**       | DX request tracking and trends                           |
+
+## Time range
+
+Every time-windowed dashboard reads an explicit calendar range from the URL
+(`?start=2026-06-01&end=2026-11-02`). Both ends are clamped to the data the
+portal has imported: `start` cannot precede the first imported data point and
+`end` cannot follow the last one. A range shorter than 240 days is charted by
+day, longer ranges by week.
+
+The legacy `?days=120` parameter still works: it resolves to the 120 days that
+end at the latest imported data point, which is no longer the same as "today"
+when the importer lags behind.
 
 ## Configuration
 

@@ -11,6 +11,7 @@ import {
   copilotReviewCombinationSchema,
 } from "@/adapters/db/copilot/schemas";
 import { versionDriftSummaryRowSchema } from "@/adapters/db/dx-adoption/schemas";
+import { terraformModuleRowSchema } from "@/adapters/db/dx-team/schemas";
 import {
   dxMemberRowSchema,
   maxDateRowSchema,
@@ -43,6 +44,8 @@ import {
 } from "@/adapters/db/tracker/schemas";
 import {
   workflowDeploymentSchema,
+  workflowDurationTrendSchema,
+  workflowFailureTrendSchema,
   workflowSummarySchema,
   workflowTriggerTypeSchema,
 } from "@/adapters/db/workflows/schemas";
@@ -445,6 +448,84 @@ it("parses Copilot dashboard rows", () => {
     repository: "pagopa/dx",
     title: "Remove dx catalog from pnpm-plugin-pagopa",
   });
+});
+
+it("parses workflow trend rows", () => {
+  expect(
+    parseSqlRows(
+      workflowDurationTrendSchema,
+      [
+        {
+          averageDurationMinutes: "12.5",
+          bucket: "2026-10-26",
+          workflowName: "DX Deploy",
+        },
+      ],
+      "workflow duration trend",
+    ),
+  ).toEqual([
+    {
+      averageDurationMinutes: 12.5,
+      bucket: "2026-10-26",
+      workflowName: "DX Deploy",
+    },
+  ]);
+
+  expect(
+    parseSqlRows(
+      workflowFailureTrendSchema,
+      [
+        {
+          bucket: "2026-10-26",
+          failedRuns: "4",
+          workflowName: "Code Review",
+        },
+      ],
+      "workflow failure trend",
+    ),
+  ).toEqual([
+    { bucket: "2026-10-26", failedRuns: 4, workflowName: "Code Review" },
+  ]);
+});
+
+it("parses per-module Terraform usage rows", () => {
+  expect(
+    parseSqlRows(
+      terraformModuleRowSchema,
+      [
+        {
+          module: "pagopa-dx/azure-role-assignments/azurerm",
+          moduleType: "DX",
+          repositoryCount: "24",
+          sources: ["pagopa-dx/azure-role-assignments/azurerm"],
+          usageCount: "31",
+        },
+        {
+          module: "github.com/pagopa/terraform-azurerm-v3//api_management",
+          moduleType: "Non-DX",
+          repositoryCount: "3",
+          sources: ["github.com/pagopa/terraform-azurerm-v3//api_management"],
+          usageCount: "5",
+        },
+      ],
+      "dx-team terraformModules",
+    ),
+  ).toEqual([
+    {
+      module: "pagopa-dx/azure-role-assignments/azurerm",
+      moduleType: "DX",
+      repositoryCount: 24,
+      sources: ["pagopa-dx/azure-role-assignments/azurerm"],
+      usageCount: 31,
+    },
+    {
+      module: "github.com/pagopa/terraform-azurerm-v3//api_management",
+      moduleType: "Non-DX",
+      repositoryCount: 3,
+      sources: ["github.com/pagopa/terraform-azurerm-v3//api_management"],
+      usageCount: 5,
+    },
+  ]);
 });
 
 it("throws a descriptive error when a SQL row does not match the schema", () => {

@@ -71,7 +71,7 @@ const buildPeerBenchmark = (
 export async function GET(req: NextRequest) {
   const parsed = parseDashboardQuery(req);
   if ("error" in parsed) return parsed.error;
-  const { days } = parsed.query;
+  const { days, end, start } = parsed.query;
   const repositories = resolveRepositories(parsed.query, "dx");
   const fullNames = repositories.map(
     (repository) => `${ORGANIZATION}/${repository}`,
@@ -85,6 +85,8 @@ export async function GET(req: NextRequest) {
     const leadTimeBenchmark = await getPrLeadTimeBenchmark(db, {
       configuredRepositories: REPOSITORIES,
       days,
+      end,
+      start,
     }).catch((benchmarkError) => {
       console.error("PR peer benchmark error:", benchmarkError);
       return null;
@@ -92,8 +94,10 @@ export async function GET(req: NextRequest) {
 
     const result = await fetchPrDashboard(db, {
       days,
+      end,
       fullNames,
       peerBenchmark: buildPeerBenchmark(leadTimeBenchmark, repositories),
+      start,
     });
     return jsonWithCache(result);
   } catch (error) {
