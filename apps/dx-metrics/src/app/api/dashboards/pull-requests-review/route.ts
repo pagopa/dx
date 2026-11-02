@@ -10,13 +10,18 @@ import { parseDashboardQuery, resolveRepositories } from "@/lib/query-params";
 export async function GET(req: NextRequest) {
   const parsed = parseDashboardQuery(req);
   if ("error" in parsed) return parsed.error;
-  const { days } = parsed.query;
+  const { days, end, start } = parsed.query;
   const fullNames = resolveRepositories(parsed.query, "dx").map(
     (repository) => `${ORGANIZATION}/${repository}`,
   );
 
   try {
-    const data = await getPullRequestsReviewDashboard(db, { days, fullNames });
+    const data = await getPullRequestsReviewDashboard(db, {
+      days,
+      end,
+      fullNames,
+      start,
+    });
     return jsonWithCache(data);
   } catch (error) {
     console.error("PR review dashboard error:", error);

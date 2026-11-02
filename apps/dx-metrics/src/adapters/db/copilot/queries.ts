@@ -9,7 +9,7 @@ import type { WithInsights } from "@/lib/insights/types";
 import type { Database, WithMeta } from "../shared/types";
 import type { CopilotDashboard, GetCopilotDashboardInput } from "./schemas";
 
-import { parseReferenceDate } from "../shared/reference-date";
+import { parseDataRange } from "../shared/reference-date";
 import {
   copilotCoauthorTrailerMatch,
   humanPullRequest,
@@ -18,6 +18,7 @@ import {
   repositoryIn,
 } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
+import { resolveWindow, windowMeta } from "../shared/window";
 import {
   copilotAuthoredPrRowSchema,
   copilotCardsSchema,
@@ -31,15 +32,28 @@ import {
 
 export const getCopilotDashboard = async (
   db: Database,
-  { days, fullNames }: GetCopilotDashboardInput,
+  { days: requestedDays, end, fullNames, start }: GetCopilotDashboardInput,
 ): Promise<CopilotDashboard & WithInsights & WithMeta> => {
-  // The dashboard reads pull requests and commits, so the window is anchored to
-  // the newest timestamp across both: anchoring to pull requests alone would
-  // exclude newer commits, and a selection with no pull requests would fall back
-  // to NOW() and misreport the commit data. GREATEST ignores NULLs, so the
-  // COALESCE only kicks in when neither source has any row.
-  const referenceDateResult = await db.execute(sql`
+  // The dashboard reads pull requests and commits, so the selectable range
+  // spans both: bounding it on pull requests alone would exclude newer commits,
+  // and a selection with no pull requests would fall back to NOW() and misreport
+  // the commit data. LEAST/GREATEST ignore NULLs, so the COALESCE only kicks in
+  // when neither source has any row.
+  const rangeResult = await db.execute(sql`
     SELECT COALESCE(
+      LEAST(
+        (SELECT MIN(GREATEST(pr.created_at, pr.merged_at))
+          FROM pull_requests pr
+          JOIN repositories r ON pr.repository_id = r.id
+          WHERE ${repositoryIn("r.full_name", fullNames)}),
+        (SELECT MIN(c.committer_date)
+          FROM commits c
+          JOIN repositories r ON c.repository_id = r.id
+          WHERE ${repositoryIn("r.full_name", fullNames)})
+      ),
+      NOW()
+    ) AS "availableFrom",
+    COALESCE(
       GREATEST(
         (SELECT MAX(GREATEST(pr.created_at, pr.merged_at))
           FROM pull_requests pr
@@ -51,12 +65,17 @@ export const getCopilotDashboard = async (
           WHERE ${repositoryIn("r.full_name", fullNames)})
       ),
       NOW()
-    ) AS "referenceDate"
+    ) AS "availableTo"
   `);
-  const referenceDate = parseReferenceDate(
-    referenceDateResult.rows[0],
-    "copilot referenceDate",
-  );
+  const range = parseDataRange(rangeResult.rows[0], "copilot data range");
+  const window = resolveWindow({
+    availableFrom: range.availableFrom,
+    availableTo: range.availableTo,
+    days: requestedDays,
+    end,
+    start,
+  });
+  const { days, endDate: referenceDate } = window;
 
   // --- Headline metrics (population: pull requests merged in the window) ---
   // "Copilot review" means a review from the Copilot reviewer bot. Lead time is
@@ -449,6 +468,6 @@ export const getCopilotDashboard = async (
   return {
     ...dashboard,
     insights: buildCopilotInsights(dashboard),
-    meta: { days, referenceDate },
+    meta: windowMeta(window),
   };
 };

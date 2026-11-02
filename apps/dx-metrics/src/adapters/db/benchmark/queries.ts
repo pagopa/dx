@@ -8,17 +8,14 @@ import {
   type BenchmarkValueRow,
 } from "@/lib/benchmark";
 
-import type { Database } from "../shared/types";
+import type { Database, DashboardMeta } from "../shared/types";
 import type {
   BenchmarkInput,
   PrBenchmarkRow,
   WorkflowBenchmarkRow,
 } from "./schemas";
 
-import {
-  buildReferenceDateQuery,
-  parseReferenceDate,
-} from "../shared/reference-date";
+import { buildDataRangeQuery, parseDataRange } from "../shared/reference-date";
 import { parseSqlRows } from "../shared/sql-parsing";
 import {
   botAuthorsExclusion,
@@ -26,13 +23,17 @@ import {
   textArray,
   workflowNameExclusion,
 } from "../shared/sql-fragments";
+import { resolveWindow, windowMeta } from "../shared/window";
 import { prBenchmarkRowSchema, workflowBenchmarkRowSchema } from "./schemas";
 
 /** Result of the cross-repository benchmark. */
 export interface BenchmarkResult {
-  readonly meta: { readonly days: number; readonly referenceDate: string };
+  readonly meta: DashboardMeta;
   readonly metrics: readonly BenchmarkMetric[];
 }
+
+const earliestDate = (left: string, right: string): string =>
+  new Date(left).getTime() <= new Date(right).getTime() ? left : right;
 
 const laterDate = (left: string, right: string): string =>
   new Date(left).getTime() >= new Date(right).getTime() ? left : right;
@@ -59,26 +60,28 @@ const padRows = (
   });
 };
 
-/** Latest PR and workflow activity dates, used to anchor benchmark windows. */
-interface BenchmarkReferenceDates {
-  readonly prReference: string;
-  readonly wrReference: string;
+/** First and last PR/workflow activity dates, used to bound benchmark windows. */
+interface BenchmarkDataRanges {
+  readonly prFrom: string;
+  readonly prTo: string;
+  readonly wrFrom: string;
+  readonly wrTo: string;
 }
 
-const fetchReferenceDates = async (
+const fetchDataRanges = async (
   db: Database,
   repositories: SQL,
-): Promise<BenchmarkReferenceDates> => {
-  const [prReferenceResult, wrReferenceResult] = await Promise.all([
+): Promise<BenchmarkDataRanges> => {
+  const [prRangeResult, wrRangeResult] = await Promise.all([
     db.execute(
-      buildReferenceDateQuery({
+      buildDataRangeQuery({
         column: "GREATEST(pr.created_at, pr.merged_at)",
         from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
         where: sql`r.name = ANY(${repositories})`,
       }),
     ),
     db.execute(
-      buildReferenceDateQuery({
+      buildDataRangeQuery({
         column: "wr.created_at",
         from: "workflow_runs wr JOIN repositories r ON wr.repository_id = r.id",
         where: sql`r.name = ANY(${repositories})`,
@@ -86,15 +89,20 @@ const fetchReferenceDates = async (
     ),
   ]);
 
+  const prRange = parseDataRange(
+    prRangeResult.rows[0],
+    "benchmark pr data range",
+  );
+  const wrRange = parseDataRange(
+    wrRangeResult.rows[0],
+    "benchmark wr data range",
+  );
+
   return {
-    prReference: parseReferenceDate(
-      prReferenceResult.rows[0],
-      "benchmark pr referenceDate",
-    ),
-    wrReference: parseReferenceDate(
-      wrReferenceResult.rows[0],
-      "benchmark wr referenceDate",
-    ),
+    prFrom: prRange.availableFrom,
+    prTo: prRange.availableTo,
+    wrFrom: wrRange.availableFrom,
+    wrTo: wrRange.availableTo,
   };
 };
 
@@ -205,18 +213,26 @@ const fetchWorkflowBenchmarkRows = async (
  */
 export const getBenchmarkDashboard = async (
   db: Database,
-  { configuredRepositories, days }: BenchmarkInput,
+  { configuredRepositories, days: requestedDays, end, start }: BenchmarkInput,
 ): Promise<BenchmarkResult> => {
   const repositories = textArray(configuredRepositories);
 
-  const { prReference, wrReference } = await fetchReferenceDates(
-    db,
-    repositories,
-  );
+  const ranges = await fetchDataRanges(db, repositories);
+  // PR and workflow metrics share one window so a reader compares them at the
+  // same point in time; the selectable range is the union of both populations.
+  const window = resolveWindow({
+    availableFrom: earliestDate(ranges.prFrom, ranges.wrFrom),
+    availableTo: laterDate(ranges.prTo, ranges.wrTo),
+    days: requestedDays,
+    end,
+    start,
+  });
+  const days = window.days;
+  const reference = window.endDate;
 
   const [prRows, workflowRows] = await Promise.all([
-    fetchPrBenchmarkRows(db, repositories, days, prReference),
-    fetchWorkflowBenchmarkRows(db, repositories, days, wrReference),
+    fetchPrBenchmarkRows(db, repositories, days, reference),
+    fetchWorkflowBenchmarkRows(db, repositories, days, reference),
   ]);
 
   const metrics = [
@@ -358,7 +374,7 @@ export const getBenchmarkDashboard = async (
   ];
 
   return {
-    meta: { days, referenceDate: laterDate(prReference, wrReference) },
+    meta: windowMeta(window),
     metrics,
   };
 };
@@ -370,28 +386,35 @@ export const getBenchmarkDashboard = async (
  */
 export const getPrLeadTimeBenchmark = async (
   db: Database,
-  { configuredRepositories, days }: BenchmarkInput,
+  { configuredRepositories, days: requestedDays, end, start }: BenchmarkInput,
 ): Promise<BenchmarkMetric> => {
   const repositories = textArray(configuredRepositories);
 
-  const prReference = parseReferenceDate(
+  const prRange = parseDataRange(
     (
       await db.execute(
-        buildReferenceDateQuery({
+        buildDataRangeQuery({
           column: "GREATEST(pr.created_at, pr.merged_at)",
           from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
           where: sql`r.name = ANY(${repositories})`,
         }),
       )
     ).rows[0],
-    "benchmark pr referenceDate",
+    "benchmark pr data range",
   );
+  const window = resolveWindow({
+    availableFrom: prRange.availableFrom,
+    availableTo: prRange.availableTo,
+    days: requestedDays,
+    end,
+    start,
+  });
 
   const prRows = await fetchPrBenchmarkRows(
     db,
     repositories,
-    days,
-    prReference,
+    window.days,
+    window.endDate,
   );
 
   return buildBenchmarkMetric({

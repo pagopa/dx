@@ -13,6 +13,7 @@ import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatNumber } from "@/lib/format";
 import { severityFromTarget } from "@/lib/insights/insight-helpers";
 import type { Insight } from "@/lib/insights/types";
@@ -60,17 +61,24 @@ interface PrReviewDashboardData {
   timeToFirstReviewTrend: { avgHoursToFirstReview: number; week: string }[];
   timeToMergeTrend: { avgHoursToMerge: number; week: string }[];
   insights: Insight[];
-  meta: { referenceDate: string };
+  meta: DashboardMetaView;
 }
 
 export default function PullRequestsReviewDashboard() {
   const colors = useSeriesColors();
-  const { days, repositories, setDays, setRepositories } =
-    useDashboardFilters();
+  const {
+    days,
+    end,
+    repositories,
+    setRange,
+    setRepositories,
+    start,
+    timeParams,
+  } = useDashboardFilters();
 
   const { data, error, loading, refetch } =
     useDashboardData<PrReviewDashboardData>("pull-requests-review", {
-      days,
+      ...timeParams,
       repositories,
     });
 
@@ -142,10 +150,13 @@ export default function PullRequestsReviewDashboard() {
         />
       </div>
       <DashboardFilters
+        availableFrom={data?.meta.availableFrom}
+        availableTo={data?.meta.availableTo}
+        onRangeChange={setRange}
         onRepositoriesChange={setRepositories}
-        onTimeIntervalChange={setDays}
+        rangeEnd={end ?? data?.meta.windowEnd}
+        rangeStart={start ?? data?.meta.windowStart}
         repositories={repositories}
-        timeInterval={days}
       />
       <DashboardRequestState
         error={error}
@@ -157,8 +168,11 @@ export default function PullRequestsReviewDashboard() {
         <>
           <DataFreshness
             className="mb-2"
+            availableFrom={data.meta.availableFrom}
+            availableTo={data.meta.availableTo}
             referenceDate={data.meta.referenceDate}
-            windowDays={days}
+            windowEnd={data.meta.windowEnd}
+            windowStart={data.meta.windowStart}
           />
           <InsightsPanel
             className="mb-6"

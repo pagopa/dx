@@ -8,8 +8,8 @@
 
 import { sql, type SQL } from "drizzle-orm";
 
+import { dataRangeRowSchema, referenceDateRowSchema } from "./schemas";
 import { parseSqlRow } from "./sql-parsing";
-import { referenceDateRowSchema } from "./schemas";
 
 /** Inputs for {@link buildReferenceDateQuery}. */
 export interface ReferenceDateQuery {
@@ -38,3 +38,22 @@ export const buildReferenceDateQuery = ({
 /** Parses the row produced by {@link buildReferenceDateQuery}. */
 export const parseReferenceDate = (row: unknown, context: string): string =>
   parseSqlRow(referenceDateRowSchema, row, context).referenceDate;
+
+/**
+ * Builds a single-row query returning the first and last timestamp a dashboard
+ * has data for, so the custom date range can be bounded by what actually exists.
+ * Both ends fall back to `NOW()` when the scoped table is empty.
+ */
+export const buildDataRangeQuery = ({
+  column,
+  from,
+  where,
+}: ReferenceDateQuery): SQL =>
+  sql`SELECT COALESCE(MIN(${asFragment(column)}), NOW()) AS "availableFrom", COALESCE(MAX(${asFragment(column)}), NOW()) AS "availableTo" FROM ${asFragment(from)}${where ? sql` WHERE ${where}` : sql``}`;
+
+/** Parses the row produced by {@link buildDataRangeQuery}. */
+export const parseDataRange = (
+  row: unknown,
+  context: string,
+): { availableFrom: string; availableTo: string } =>
+  parseSqlRow(dataRangeRowSchema, row, context);

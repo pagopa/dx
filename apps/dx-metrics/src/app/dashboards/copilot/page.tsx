@@ -15,6 +15,7 @@ import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
 import { COPILOT_REVIEW_ADOPTION_PCT, INSIGHT_THRESHOLDS } from "@/lib/config";
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatDecimal, formatNumber } from "@/lib/format";
 import { severityFromTarget } from "@/lib/insights/insight-helpers";
 import type { Insight } from "@/lib/insights/types";
@@ -80,18 +81,25 @@ interface CopilotDashboardData {
   };
   weeklyTrend: { reviewedPrs: number; reviews: number; week: string }[];
   insights: Insight[];
-  meta: { referenceDate: string };
+  meta: DashboardMetaView;
 }
 
 export default function CopilotDashboard() {
   const colors = useSeriesColors();
   const { short } = useDateFormatters();
-  const { days, repositories, setDays, setRepositories } =
-    useDashboardFilters();
+  const {
+    days,
+    end,
+    repositories,
+    setRange,
+    setRepositories,
+    start,
+    timeParams,
+  } = useDashboardFilters();
 
   const { data, error, loading, refetch } =
     useDashboardData<CopilotDashboardData>("copilot", {
-      days,
+      ...timeParams,
       repositories,
     });
 
@@ -170,10 +178,13 @@ export default function CopilotDashboard() {
         <TooltipIcon content={tooltipContent.title} label="Copilot" />
       </div>
       <DashboardFilters
+        availableFrom={data?.meta.availableFrom}
+        availableTo={data?.meta.availableTo}
+        onRangeChange={setRange}
         onRepositoriesChange={setRepositories}
-        onTimeIntervalChange={setDays}
+        rangeEnd={end ?? data?.meta.windowEnd}
+        rangeStart={start ?? data?.meta.windowStart}
         repositories={repositories}
-        timeInterval={days}
       />
       <DashboardRequestState
         error={error}
@@ -185,8 +196,11 @@ export default function CopilotDashboard() {
         <>
           <DataFreshness
             className="mb-2"
+            availableFrom={data.meta.availableFrom}
+            availableTo={data.meta.availableTo}
             referenceDate={data.meta.referenceDate}
-            windowDays={days}
+            windowEnd={data.meta.windowEnd}
+            windowStart={data.meta.windowStart}
           />
           <InsightsPanel
             className="mb-6"

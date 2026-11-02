@@ -9,13 +9,11 @@ import { IAC_EXCLUDED_PR_TITLES } from "@/lib/config";
 import type { Database, WithMeta } from "../shared/types";
 import type { GetIacDashboardInput, IacDashboardResult } from "./schemas";
 
-import {
-  buildReferenceDateQuery,
-  parseReferenceDate,
-} from "../shared/reference-date";
+import { buildDataRangeQuery, parseDataRange } from "../shared/reference-date";
 import { notInValues, repositoryIn } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
 import { percentileRowSchema } from "../shared/schemas";
+import { resolveWindow, windowMeta } from "../shared/window";
 import { buildMemberMatchSql } from "./member-match-sql";
 import {
   dxMemberRowSchema,
@@ -35,21 +33,21 @@ const iacTitleFilter = (column: string): SQL =>
   notInValues(column, IAC_EXCLUDED_PR_TITLES);
 
 /**
- * Resolves the latest data point date for the given repository.
- * All time-window filters are relative to this reference date.
+ * Resolves the range of IaC lead-time data the dashboard can see. All
+ * time-window filters are relative to the end of this range.
  */
-const getReferenceDate = async (
+const getDataRange = async (
   db: Database,
   fullNames: readonly string[],
-): Promise<string> => {
+): Promise<{ availableFrom: string; availableTo: string }> => {
   const result = await db.execute(
-    buildReferenceDateQuery({
+    buildDataRangeQuery({
       column: "GREATEST(created_at, merged_at)",
       from: "iac_pr_lead_times",
       where: repositoryIn("repository_full_name", fullNames),
     }),
   );
-  return parseReferenceDate(result.rows[0], "iac referenceDate");
+  return parseDataRange(result.rows[0], "iac data range");
 };
 
 /** Fetches the list of DX team member usernames. */
@@ -228,9 +226,17 @@ export const getIacDashboard = async (
   db: Database,
   params: GetIacDashboardInput,
 ): Promise<IacDashboardResult & WithInsights & WithMeta> => {
-  const { days, fullNames } = params;
+  const { days: requestedDays, end, fullNames, start } = params;
 
-  const referenceDate = await getReferenceDate(db, fullNames);
+  const range = await getDataRange(db, fullNames);
+  const window = resolveWindow({
+    availableFrom: range.availableFrom,
+    availableTo: range.availableTo,
+    days: requestedDays,
+    end,
+    start,
+  });
+  const { days, endDate: referenceDate } = window;
   const dxMembers = await getDxMembers(db);
 
   const [
@@ -291,6 +297,6 @@ export const getIacDashboard = async (
   return {
     ...dashboard,
     insights: buildIacInsights(dashboard),
-    meta: { days, referenceDate },
+    meta: windowMeta(window),
   };
 };

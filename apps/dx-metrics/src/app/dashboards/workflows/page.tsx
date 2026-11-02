@@ -13,6 +13,8 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
+import { WEEKLY_BUCKET_THRESHOLD_DAYS } from "@/lib/config";
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatInteger, formatNumber } from "@/lib/format";
 import type { Insight } from "@/lib/insights/types";
 import { useDateFormatters } from "@/lib/locale";
@@ -42,8 +44,6 @@ interface WorkflowDashboardData {
     runDate: string;
   }[];
   failures: { failedRuns: number; workflowName: string }[];
-  infraApply: { durationMinutes: number; runTimestamp: string }[];
-  infraPlan: { durationMinutes: number; runTimestamp: string }[];
   runCount: { runCount: number; workflowName: string }[];
   successRatio: {
     failedRuns: number;
@@ -75,17 +75,78 @@ interface WorkflowDashboardData {
     unknown: number;
     workflowName: string;
   }[];
+  /** Daily/weekly failure counts for the two most failing pipelines. */
+  topFailureTrend: {
+    bucket: string;
+    failedRuns: number;
+    workflowName: string;
+  }[];
+  /** Daily/weekly average duration for the two slowest pipelines. */
+  topSlowestDurationTrend: {
+    averageDurationMinutes: number;
+    bucket: string;
+    workflowName: string;
+  }[];
   insights: Insight[];
-  meta: { referenceDate: string };
+  meta: DashboardMetaView;
 }
 
+interface WorkflowTrendRow {
+  bucket: string;
+  workflowName: string;
+}
+
+/**
+ * Pivots long-format `(bucket, workflow)` rows into one row per bucket with a
+ * column per workflow, which is the shape the line chart reads. Missing buckets
+ * stay undefined so the chart shows a gap instead of inventing a zero.
+ */
+const pivotWorkflowTrend = <TRow extends WorkflowTrendRow>(
+  rows: readonly TRow[],
+  valueKey: keyof TRow,
+): { data: Record<string, unknown>[]; workflowNames: string[] } => {
+  const buckets = new Map<string, Record<string, unknown>>();
+  const totals = new Map<string, number>();
+
+  for (const row of rows) {
+    const entry = buckets.get(row.bucket) ?? { bucket: row.bucket };
+    entry[row.workflowName] = row[valueKey];
+    buckets.set(row.bucket, entry);
+
+    const value = Number(row[valueKey]);
+    totals.set(
+      row.workflowName,
+      (totals.get(row.workflowName) ?? 0) +
+        (Number.isFinite(value) ? value : 0),
+    );
+  }
+
+  return {
+    data: [...buckets.values()].sort((left, right) =>
+      String(left.bucket).localeCompare(String(right.bucket)),
+    ),
+    // Highest total first so the ranking colour also goes to the leading
+    // pipeline, matching the ranked bar chart above.
+    workflowNames: [...totals.entries()]
+      .sort(([, left], [, right]) => right - left)
+      .map(([workflowName]) => workflowName),
+  };
+};
+
 export default function WorkflowsDashboard() {
-  const { days, repositories, setDays, setRepositories } =
-    useDashboardFilters();
+  const {
+    days,
+    end,
+    repositories,
+    setRange,
+    setRepositories,
+    start,
+    timeParams,
+  } = useDashboardFilters();
 
   const { data, error, loading, refetch } =
     useDashboardData<WorkflowDashboardData>("workflows", {
-      days,
+      ...timeParams,
       repositories,
     });
 
@@ -100,10 +161,13 @@ export default function WorkflowsDashboard() {
         />
       </div>
       <DashboardFilters
+        availableFrom={data?.meta.availableFrom}
+        availableTo={data?.meta.availableTo}
+        onRangeChange={setRange}
         onRepositoriesChange={setRepositories}
-        onTimeIntervalChange={setDays}
+        rangeEnd={end ?? data?.meta.windowEnd}
+        rangeStart={start ?? data?.meta.windowStart}
         repositories={repositories}
-        timeInterval={days}
       />
       <DashboardRequestState
         error={error}
@@ -176,6 +240,25 @@ function WorkflowsDashboardContent({
     .filter((row) => row.triggerType !== "Unknown")
     .map((row) => ({ name: row.triggerType, value: row.runCount }));
 
+  // The two historical charts cover the top-2 pipelines of the window. Their
+  // ranking comes from the same datasets as the bar charts above, so the trend
+  // and the ranking cannot disagree.
+  const durationTrend = pivotWorkflowTrend(
+    data.topSlowestDurationTrend,
+    "averageDurationMinutes",
+  );
+  const failureTrend = pivotWorkflowTrend(data.topFailureTrend, "failedRuns");
+  const isWeeklyBucket = days >= WEEKLY_BUCKET_THRESHOLD_DAYS;
+  const bucketCaption = isWeeklyBucket ? "per week" : "per day";
+  const trendSeries = (
+    workflowNames: readonly string[],
+  ): { color: string; key: string; name: string }[] =>
+    workflowNames.map((name, index) => ({
+      color: index === 0 ? colors.blue : colors.red,
+      key: name,
+      name,
+    }));
+
   // Match the pie by dropping the unknown segment, then rank by the runs that
   // are actually drawn so the kept bars are the largest recorded totals; a
   // workflow with only unknown runs would render as an empty bar, so it is
@@ -206,8 +289,11 @@ function WorkflowsDashboardContent({
     <>
       <DataFreshness
         className="mb-2"
+        availableFrom={data.meta.availableFrom}
+        availableTo={data.meta.availableTo}
         referenceDate={data.meta.referenceDate}
-        windowDays={days}
+        windowEnd={data.meta.windowEnd}
+        windowStart={data.meta.windowStart}
       />
       <InsightsPanel
         className="mb-6"
@@ -328,6 +414,7 @@ function WorkflowsDashboardContent({
               name: "Failed Runs",
             },
           ]}
+          caption="top 10"
           data={data.failures}
           layout="vertical"
           maxItems={10}
@@ -339,6 +426,17 @@ function WorkflowsDashboardContent({
           xKey="workflowName"
         />
         <SimpleBarChart
+          bars={trendSeries(failureTrend.workflowNames)}
+          caption={`${bucketCaption} · top 2 pipelines by failed runs`}
+          data={failureTrend.data}
+          title="Top 2 Most Failing Pipelines — Failures in Time"
+          tooltip={tooltipContent.failureTrend}
+          tooltipFormatter={(value) => value.toFixed(0)}
+          unit="failures"
+          xKey="bucket"
+          xValueFormatter={shortDateTick}
+        />
+        <SimpleBarChart
           bars={[
             {
               color: colors.blue,
@@ -346,8 +444,10 @@ function WorkflowsDashboardContent({
               name: "Avg Duration",
             },
           ]}
+          caption="top 10"
           data={data.avgDuration}
           layout="vertical"
+          maxItems={10}
           sortKey="averageDurationMinutes"
           title="Pipeline Average Duration (minutes)"
           tooltip={tooltipContent.avgPipelineDuration}
@@ -355,9 +455,22 @@ function WorkflowsDashboardContent({
           xKey="workflowName"
         />
         <SimpleBarChart
+          bars={trendSeries(durationTrend.workflowNames)}
+          caption={`${bucketCaption} · top 2 pipelines by average duration`}
+          data={durationTrend.data}
+          title="Top 2 Slowest Pipelines — Average Duration (minutes)"
+          tooltip={tooltipContent.durationTrend}
+          tooltipFormatter={(value) => value.toFixed(1)}
+          unit="min"
+          xKey="bucket"
+          xValueFormatter={shortDateTick}
+        />
+        <SimpleBarChart
           bars={[{ color: colors.green, key: "runCount", name: "Run Count" }]}
+          caption="top 10"
           data={data.runCount}
           layout="vertical"
+          maxItems={10}
           sortKey="runCount"
           title="Pipeline Run Count"
           tooltip={tooltipContent.pipelineRunCount}
@@ -373,43 +486,15 @@ function WorkflowsDashboardContent({
               name: "Cumulative Duration",
             },
           ]}
+          caption="top 10"
           data={data.cumulativeDuration}
           layout="vertical"
+          maxItems={10}
           sortKey="cumulativeDurationMinutes"
           title="Pipeline Cumulative Duration (minutes)"
           tooltip={tooltipContent.cumulativeDuration}
           unit="min"
           xKey="workflowName"
-        />
-        <SimpleLineChart
-          data={data.infraPlan}
-          lines={[
-            {
-              color: colors.blue,
-              key: "durationMinutes",
-              name: "Duration",
-            },
-          ]}
-          title="Infra Plan Duration (minutes)"
-          tooltip={tooltipContent.infraPlanDuration}
-          unit="min"
-          xKey="runTimestamp"
-          xValueFormatter={shortDateTick}
-        />
-        <SimpleLineChart
-          data={data.infraApply}
-          lines={[
-            {
-              color: colors.green,
-              key: "durationMinutes",
-              name: "Duration",
-            },
-          ]}
-          title="Infra Apply Duration (minutes)"
-          tooltip={tooltipContent.infraApplyDuration}
-          unit="min"
-          xKey="runTimestamp"
-          xValueFormatter={shortDateTick}
         />
         <SimplePieChart
           caption={triggerExclusionCaption}

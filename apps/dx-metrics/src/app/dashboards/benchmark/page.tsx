@@ -7,6 +7,7 @@ import { DataFreshness } from "@/components/DataFreshness";
 import TooltipIcon from "@/components/TooltipIcon";
 import { classifyPercentile } from "@/lib/benchmark";
 import { useSeriesColors } from "@/lib/chart-theme";
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatInteger, formatNumber, formatWithUnit } from "@/lib/format";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
@@ -31,7 +32,7 @@ interface BenchmarkMetric {
 }
 
 interface BenchmarkData {
-  meta: { days: number; referenceDate: string };
+  meta: DashboardMetaView;
   metrics: BenchmarkMetric[];
 }
 
@@ -177,11 +178,13 @@ const BenchmarkMetricTable = ({ metric }: { metric: BenchmarkMetric }) => {
 };
 
 export default function BenchmarkDashboard() {
-  const { days, setDays } = useDashboardFilters({ mode: "time-only" });
+  const { end, setRange, start, timeParams } = useDashboardFilters({
+    mode: "time-only",
+  });
 
   const { data, error, loading, refetch } = useDashboardData<BenchmarkData>(
     "benchmark",
-    { days },
+    timeParams,
   );
 
   return (
@@ -197,9 +200,12 @@ export default function BenchmarkDashboard() {
       </div>
 
       <DashboardFilters
+        availableFrom={data?.meta.availableFrom}
+        availableTo={data?.meta.availableTo}
         mode="time-only"
-        onTimeIntervalChange={setDays}
-        timeInterval={days}
+        onRangeChange={setRange}
+        rangeEnd={end ?? data?.meta.windowEnd}
+        rangeStart={start ?? data?.meta.windowStart}
       />
       <DashboardRequestState
         error={error}
@@ -209,12 +215,13 @@ export default function BenchmarkDashboard() {
 
       {data && (
         <>
-          {/* No window range here: PR-based and workflow-based metrics are
-              anchored to their own reference dates, so a single exact range
-              would not describe the earlier of the two. */}
           <DataFreshness
             className="mb-4"
+            availableFrom={data.meta.availableFrom}
+            availableTo={data.meta.availableTo}
             referenceDate={data.meta.referenceDate}
+            windowEnd={data.meta.windowEnd}
+            windowStart={data.meta.windowStart}
           />
           <div className="space-y-6">
             {CATEGORY_ORDER.map((category) => {

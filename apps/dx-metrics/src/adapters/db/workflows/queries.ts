@@ -11,16 +11,14 @@ import type {
   WorkflowDashboardResult,
 } from "./schemas";
 
-import {
-  buildReferenceDateQuery,
-  parseReferenceDate,
-} from "../shared/reference-date";
+import { buildDataRangeQuery, parseDataRange } from "../shared/reference-date";
 import { percentileRowSchema } from "../shared/schemas";
 import {
   deployWorkflowMatch,
   dxPipelineCase,
   dxWorkflowNameLabel,
   repositoryIn,
+  timeBucket,
   workflowNameExclusion,
 } from "../shared/sql-fragments";
 import {
@@ -28,13 +26,15 @@ import {
   parseSqlRow,
   parseSqlRows,
 } from "../shared/sql-parsing";
+import { resolveWindow, windowMeta } from "../shared/window";
 import {
   workflowAvgDurationSchema,
   workflowCumulativeDurationSchema,
   workflowDeploymentSchema,
+  workflowDurationTrendSchema,
   workflowDxVsNonDxSchema,
   workflowFailureSchema,
-  workflowInfraDurationSchema,
+  workflowFailureTrendSchema,
   workflowRunCountSchema,
   workflowSuccessRatioSchema,
   workflowSuccessRateStatsSchema,
@@ -48,9 +48,19 @@ export const getWorkflowDashboard = async (
   db: Database,
   params: GetWorkflowDashboardInput,
 ): Promise<WorkflowDashboardResult & WithInsights & WithMeta> => {
-  const { days, fullNames } = params;
+  const { days: requestedDays, end, fullNames, start } = params;
 
-  const referenceDate = await fetchReferenceDate(db, fullNames);
+  const range = await fetchDataRange(db, fullNames);
+  const window = resolveWindow({
+    availableFrom: range.availableFrom,
+    availableTo: range.availableTo,
+    days: requestedDays,
+    end,
+    start,
+  });
+  // The legacy queries take a trailing window: a single upper bound plus a
+  // length. The resolver turns a custom range into exactly that shape.
+  const { days, endDate: referenceDate } = window;
 
   // Card/insight deltas compare the two halves of the selected window.
   const half = Math.max(1, Math.floor(days / 2));
@@ -62,14 +72,14 @@ export const getWorkflowDashboard = async (
     avgDuration,
     runCount,
     cumulativeDuration,
-    infraPlan,
-    infraApply,
     successRatio,
     summaryResult,
     successRateStats,
     durationPercentiles,
     triggerTypes,
     triggerBreakdown,
+    topSlowestDurationTrend,
+    topFailureTrend,
   ] = await Promise.all([
     fetchDeployments(db, fullNames, days, referenceDate),
     fetchDxVsNonDx(db, fullNames, days, referenceDate),
@@ -77,14 +87,14 @@ export const getWorkflowDashboard = async (
     fetchAvgDuration(db, fullNames, days, referenceDate),
     fetchRunCount(db, fullNames, days, referenceDate),
     fetchCumulativeDuration(db, fullNames, days, referenceDate),
-    fetchInfraPlan(db, fullNames, days, referenceDate),
-    fetchInfraApply(db, fullNames, days, referenceDate),
     fetchSuccessRatio(db, fullNames, days, referenceDate),
     fetchSummary(db, fullNames, days, referenceDate),
     fetchSuccessRateStats(db, fullNames, days, half, referenceDate),
     fetchDurationPercentiles(db, fullNames, days, referenceDate),
     fetchTriggerTypes(db, fullNames, days, referenceDate),
     fetchTriggerBreakdown(db, fullNames, days, referenceDate),
+    fetchTopSlowestDurationTrend(db, fullNames, days, referenceDate),
+    fetchTopFailureTrend(db, fullNames, days, referenceDate),
   ]);
 
   const dashboard = {
@@ -94,12 +104,12 @@ export const getWorkflowDashboard = async (
     durationPercentiles,
     dxVsNonDx,
     failures,
-    infraApply,
-    infraPlan,
     runCount,
     successRatio,
     successRateStats,
     summary: summaryResult,
+    topFailureTrend,
+    topSlowestDurationTrend,
     triggerBreakdown,
     triggerTypes,
   };
@@ -111,25 +121,22 @@ export const getWorkflowDashboard = async (
       // selection has no one repository to link to.
       fullNames.length === 1 ? `https://github.com/${fullNames[0]}` : undefined,
     ),
-    meta: { days, referenceDate },
+    meta: windowMeta(window),
   };
 };
 
-const fetchReferenceDate = async (
-  db: Database,
-  fullNames: readonly string[],
-) => {
-  // Some metrics filter on `created_at` and others on `updated_at`; anchoring
-  // the window to the latest activity in either column keeps both populations
-  // inside the same window instead of silently truncating one of them.
+const fetchDataRange = async (db: Database, fullNames: readonly string[]) => {
+  // Some metrics filter on `created_at` and others on `updated_at`; exposing the
+  // range over both keeps the selectable dates aligned with every metric on the
+  // dashboard instead of silently truncating one of them.
   const result = await db.execute(
-    buildReferenceDateQuery({
+    buildDataRangeQuery({
       column: "GREATEST(wr.created_at, wr.updated_at)",
       from: "workflow_runs wr JOIN repositories r ON wr.repository_id = r.id",
       where: repositoryIn("r.full_name", fullNames),
     }),
   );
-  return parseReferenceDate(result.rows[0], "workflows referenceDate");
+  return parseDataRange(result.rows[0], "workflows data range");
 };
 
 const fetchDeployments = async (
@@ -281,58 +288,6 @@ const fetchCumulativeDuration = async (
     workflowCumulativeDurationSchema,
     r.rows,
     "workflows cumulativeDuration",
-  );
-};
-
-const fetchInfraPlan = async (
-  db: Database,
-  fullNames: readonly string[],
-  days: number,
-  maxDate: string,
-) => {
-  const r = await db.execute(sql`
-    SELECT wr.created_at AS "runTimestamp",
-      EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)) / 60 AS "durationMinutes"
-    FROM workflow_runs wr
-    JOIN workflows w ON wr.workflow_id = w.id
-    JOIN repositories r ON wr.repository_id = r.id
-    WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND wr.status = 'completed'
-      AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND wr.created_at <= ${maxDate}::timestamptz
-      AND w.pipeline LIKE '%infra_plan.yaml%' AND ${workflowNameExclusion("w.name")}
-    ORDER BY "runTimestamp"
-  `);
-  return parseSqlRows(
-    workflowInfraDurationSchema,
-    r.rows,
-    "workflows infraPlan",
-  );
-};
-
-const fetchInfraApply = async (
-  db: Database,
-  fullNames: readonly string[],
-  days: number,
-  maxDate: string,
-) => {
-  const r = await db.execute(sql`
-    SELECT wr.created_at AS "runTimestamp",
-      EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)) / 60 AS "durationMinutes"
-    FROM workflow_runs wr
-    JOIN workflows w ON wr.workflow_id = w.id
-    JOIN repositories r ON wr.repository_id = r.id
-    WHERE ${repositoryIn("r.full_name", fullNames)}
-      AND wr.status = 'completed'
-      AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
-      AND wr.created_at <= ${maxDate}::timestamptz
-      AND w.pipeline LIKE '%infra_apply.yaml%' AND ${workflowNameExclusion("w.name")}
-    ORDER BY "runTimestamp"
-  `);
-  return parseSqlRows(
-    workflowInfraDurationSchema,
-    r.rows,
-    "workflows infraApply",
   );
 };
 
@@ -556,5 +511,99 @@ const fetchTriggerBreakdown = async (
     workflowTriggerBreakdownSchema,
     r.rows,
     "workflows triggerBreakdown",
+  );
+};
+
+/**
+ * Average duration trend for the two slowest pipelines of the window.
+ *
+ * The ranking reuses the population of "Pipeline Average Duration"
+ * (completed, successful runs), so the chart and the ranking cannot disagree.
+ * Bucketing follows {@link timeBucket}: days for short windows, weeks above the
+ * shared threshold, which keeps a 30-day range readable.
+ */
+const fetchTopSlowestDurationTrend = async (
+  db: Database,
+  fullNames: readonly string[],
+  days: number,
+  maxDate: string,
+) => {
+  const r = await db.execute(sql`
+    WITH runs AS (
+      SELECT ${dxWorkflowNameLabel("w.name", "w.pipeline")} AS "workflowName",
+        wr.created_at AS "createdAt",
+        EXTRACT(EPOCH FROM (wr.updated_at - wr.created_at)) / 60 AS "durationMinutes"
+      FROM workflow_runs wr
+      JOIN workflows w ON wr.workflow_id = w.id
+      JOIN repositories r ON wr.repository_id = r.id
+      WHERE ${repositoryIn("r.full_name", fullNames)}
+        AND wr.status = 'completed' AND TRIM(wr.conclusion) = 'success'
+        AND wr.updated_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        AND wr.updated_at <= ${maxDate}::timestamptz
+        AND ${workflowNameExclusion("w.name")}
+    ),
+    ranked AS (
+      SELECT "workflowName" FROM runs
+      GROUP BY "workflowName"
+      ORDER BY AVG("durationMinutes") DESC NULLS LAST
+      LIMIT 2
+    )
+    SELECT ${timeBucket('r."createdAt"', days)} AS "bucket",
+      r."workflowName",
+      AVG(r."durationMinutes") AS "averageDurationMinutes"
+    FROM runs r
+    WHERE r."workflowName" IN (SELECT "workflowName" FROM ranked)
+    GROUP BY 1, 2
+    ORDER BY 1, 2
+  `);
+  return parseSqlRows(
+    workflowDurationTrendSchema,
+    r.rows,
+    "workflows topSlowestDurationTrend",
+  );
+};
+
+/**
+ * Failure trend for the two pipelines with the most failed runs in the window.
+ * Mirrors the population of "Pipeline Failures" (runs created in the window) so
+ * the trend and the ranked bar chart agree on what a failure is.
+ */
+const fetchTopFailureTrend = async (
+  db: Database,
+  fullNames: readonly string[],
+  days: number,
+  maxDate: string,
+) => {
+  const r = await db.execute(sql`
+    WITH runs AS (
+      SELECT ${dxWorkflowNameLabel("w.name", "w.pipeline")} AS "workflowName",
+        wr.created_at AS "createdAt"
+      FROM workflow_runs wr
+      JOIN workflows w ON wr.workflow_id = w.id
+      JOIN repositories r ON wr.repository_id = r.id
+      WHERE ${repositoryIn("r.full_name", fullNames)}
+        AND TRIM(wr.conclusion) = 'failure'
+        AND wr.created_at >= ${maxDate}::timestamptz - MAKE_INTERVAL(days => ${days})
+        AND wr.created_at <= ${maxDate}::timestamptz
+        AND ${workflowNameExclusion("w.name")}
+    ),
+    ranked AS (
+      SELECT "workflowName" FROM runs
+      GROUP BY "workflowName"
+      ORDER BY COUNT(*) DESC
+      LIMIT 2
+    )
+    SELECT ${timeBucket('r."createdAt"', days)} AS "bucket",
+      r."workflowName",
+      COUNT(*) AS "failedRuns"
+    FROM runs r
+    WHERE r."workflowName" IN (SELECT "workflowName" FROM ranked)
+    GROUP BY 1, 2
+    ORDER BY 1, 2
+  `);
+  return parseSqlRows(
+    workflowFailureTrendSchema,
+    r.rows,
+    "workflows topFailureTrend",
   );
 };

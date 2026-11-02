@@ -10,13 +10,13 @@ import { parseDashboardQuery, resolveRepositories } from "@/lib/query-params";
 export async function GET(req: NextRequest) {
   const parsed = parseDashboardQuery(req);
   if ("error" in parsed) return parsed.error;
-  const { days } = parsed.query;
+  const { days, end, start } = parsed.query;
   const fullNames = resolveRepositories(parsed.query, "io-infra").map(
     (repository) => `${ORGANIZATION}/${repository}`,
   );
 
   try {
-    const result = await getIacDashboard(db, { days, fullNames });
+    const result = await getIacDashboard(db, { days, end, fullNames, start });
     return jsonWithCache(result);
   } catch (error) {
     console.error("IaC dashboard error:", error);

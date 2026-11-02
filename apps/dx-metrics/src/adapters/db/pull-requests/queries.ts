@@ -16,10 +16,7 @@ import type {
   PrSummaryCards,
 } from "./schemas";
 
-import {
-  buildReferenceDateQuery,
-  parseReferenceDate,
-} from "../shared/reference-date";
+import { buildDataRangeQuery, parseDataRange } from "../shared/reference-date";
 import { percentileRowSchema, previousValueRowSchema } from "../shared/schemas";
 import {
   humanPullRequest,
@@ -29,6 +26,7 @@ import {
   timeBucketInterval,
 } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
+import { resolveWindow, windowMeta } from "../shared/window";
 import {
   prCommentsRowSchema,
   prCumulativeCountRowSchema,
@@ -67,26 +65,26 @@ const prSizeSortOrderExpression = sql`CASE ${sql.join(
 )} ELSE ${PR_SIZE_BUCKETS.length} END`;
 
 /**
- * Resolves the latest PR activity timestamp used to anchor time windows.
+ * Resolves the range of PR activity the dashboard can see.
  *
  * Closure and update activity are included alongside creation/merge: the
- * backlog metrics read `closed_at` and `updated_at`, so anchoring only to
- * `created_at`/`merged_at` would let a PR closed after the reference date leak
- * into the window and distort the stale age.
+ * backlog metrics read `closed_at` and `updated_at`, so bounding the range only
+ * on `created_at`/`merged_at` would let a PR closed after the last selected day
+ * leak into the window and distort the stale age.
  */
-const fetchReferenceDate = async (
+const fetchDataRange = async (
   db: Database,
   fullNames: readonly string[],
-): Promise<string> => {
+): Promise<{ availableFrom: string; availableTo: string }> => {
   const result = await db.execute(
-    buildReferenceDateQuery({
+    buildDataRangeQuery({
       column:
         "GREATEST(pr.created_at, pr.merged_at, pr.closed_at, pr.updated_at)",
       from: "pull_requests pr JOIN repositories r ON pr.repository_id = r.id",
       where: repositoryIn("r.full_name", fullNames),
     }),
   );
-  return parseReferenceDate(result.rows[0], "pull-requests referenceDate");
+  return parseDataRange(result.rows[0], "pull-requests data range");
 };
 
 /** Fetches the complete pull-request dashboard for a repository. */
@@ -94,9 +92,17 @@ export const fetchPrDashboard = async (
   db: Database,
   params: FetchPrDashboardInput,
 ): Promise<PrDashboardResult & WithInsights & WithMeta> => {
-  const { days, fullNames, peerBenchmark } = params;
+  const { days: requestedDays, end, fullNames, peerBenchmark, start } = params;
 
-  const referenceDate = await fetchReferenceDate(db, fullNames);
+  const range = await fetchDataRange(db, fullNames);
+  const window = resolveWindow({
+    availableFrom: range.availableFrom,
+    availableTo: range.availableTo,
+    days: requestedDays,
+    end,
+    start,
+  });
+  const { days, endDate: referenceDate } = window;
 
   const [
     cards,
@@ -134,7 +140,7 @@ export const fetchPrDashboard = async (
       fullNames.length === 1 ? `https://github.com/${fullNames[0]}` : undefined,
       peerBenchmark,
     ),
-    meta: { days, referenceDate },
+    meta: windowMeta(window),
   };
 };
 

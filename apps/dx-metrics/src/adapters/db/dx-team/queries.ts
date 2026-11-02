@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 
 import { buildDxTeamInsights } from "@/lib/insights/dx-team";
 import type { WithInsights } from "@/lib/insights/types";
+import { aggregateTerraformModuleUsage } from "@/lib/terraform-module-name";
 import {
   DX_ADOPTION_CODE_SEARCH_QUERY,
   DX_TEAM_COMMITS_BY_REPO_EXCLUDED_SUBSTRINGS,
@@ -17,10 +18,7 @@ import type {
   FetchDxTeamDashboardInput,
 } from "./schemas";
 
-import {
-  buildReferenceDateQuery,
-  parseReferenceDate,
-} from "../shared/reference-date";
+import { buildDataRangeQuery, parseDataRange } from "../shared/reference-date";
 import {
   botAuthorsExclusion,
   notLikeAll,
@@ -28,6 +26,7 @@ import {
   timeBucketInterval,
 } from "../shared/sql-fragments";
 import { parseSqlRows } from "../shared/sql-parsing";
+import { resolveWindow, windowMeta } from "../shared/window";
 import {
   commitsByRepoRowSchema,
   dxAdoptingProjectRowSchema,
@@ -35,6 +34,7 @@ import {
   dxPipelinesUsageRowSchema,
   ioInfraPrRowSchema,
   ioInfraPrTableRowSchema,
+  terraformModuleDeclarationRowSchema,
 } from "./schemas";
 
 /** Fetches all data for the DX Team dashboard. */
@@ -42,15 +42,26 @@ export const fetchDxTeamDashboard = async (
   db: Database,
   params: FetchDxTeamDashboardInput,
 ): Promise<DxTeamDashboardResult & WithInsights & WithMeta> => {
-  const { days, organization: org } = params;
+  const { days: requestedDays, end, organization: org, start } = params;
 
-  const referenceDateResult = await db.execute(
-    buildReferenceDateQuery({ column: "committer_date", from: "commits" }),
+  // Commits are the widest dataset on this dashboard and the one every windowed
+  // query is anchored to, so they define the selectable range too.
+  const range = parseDataRange(
+    (
+      await db.execute(
+        buildDataRangeQuery({ column: "committer_date", from: "commits" }),
+      )
+    ).rows[0],
+    "dx-team data range",
   );
-  const referenceDate = parseReferenceDate(
-    referenceDateResult.rows[0],
-    "dx-team referenceDate",
-  );
+  const window = resolveWindow({
+    availableFrom: range.availableFrom,
+    availableTo: range.availableTo,
+    days: requestedDays,
+    end,
+    start,
+  });
+  const { days, endDate: referenceDate } = window;
 
   const [
     ioInfraPrs,
@@ -59,6 +70,7 @@ export const fetchDxTeamDashboard = async (
     commitsByRepo,
     dxAdoptingProjects,
     dxPipelinesUsage,
+    terraformModules,
   ] = await Promise.all([
     fetchIoInfraPrs(db, days, org, referenceDate),
     fetchDxCommits(db, days, org, referenceDate),
@@ -66,6 +78,7 @@ export const fetchDxTeamDashboard = async (
     fetchCommitsByRepo(db, days, org, referenceDate),
     fetchDxAdoptingProjects(db),
     fetchDxPipelinesUsage(db),
+    fetchTerraformModules(db),
   ]);
 
   const dashboard = {
@@ -75,12 +88,13 @@ export const fetchDxTeamDashboard = async (
     dxPipelinesUsage,
     ioInfraPrs,
     ioInfraPrTable,
+    terraformModules,
   };
 
   return {
     ...dashboard,
     insights: buildDxTeamInsights(dashboard),
-    meta: { days, referenceDate },
+    meta: windowMeta(window),
   };
 };
 
@@ -216,4 +230,34 @@ const fetchDxPipelinesUsage = async (db: Database) => {
     result.rows,
     "dx-team dxPipelinesUsage",
   );
+};
+
+/**
+ * Terraform module usage across every imported repository, one row per module
+ * after normalising module sources to their short name.
+ *
+ * Grouping happens in TypeScript because the name has to be derived from several
+ * source shapes (registry, git, HTTP) before any count is meaningful; doing it
+ * in SQL would need a fragile regular-expression ladder. The table is small
+ * (one row per declaration) and is read wholesale. Local modules (`./`, `../`)
+ * are excluded because they are not reusable modules.
+ *
+ * `usageCount` counts declarations (repository + file), so a module declared in
+ * several files of the same repository counts several times. `repositoryCount`
+ * counts the distinct repositories using it. The table is a per-repository
+ * snapshot: the importer deletes and reinserts each repository's rows, so this is
+ * current state, not a time series.
+ */
+const fetchTerraformModules = async (db: Database) => {
+  const result = await db.execute(sql`
+    SELECT repository, module
+    FROM terraform_modules
+    WHERE module NOT LIKE './%' AND module NOT LIKE '../%'
+  `);
+  const declarations = parseSqlRows(
+    terraformModuleDeclarationRowSchema,
+    result.rows,
+    "dx-team terraformModules",
+  );
+  return aggregateTerraformModuleUsage(declarations);
 };
