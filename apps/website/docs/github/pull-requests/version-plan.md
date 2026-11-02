@@ -50,13 +50,11 @@ as the source of truth for version bumps.
 
 ## Version Plans in Pull Requests
 
-DX does not provide an automated pull request warning for missing or incomplete
-version plans. The Code Review workflow runs CI checks but does not check
-version-plan coverage.
+The optional `validate-v1` workflow for pull-request version-plan warnings was
+removed because it was unused.
 
-Run `pnpm nx release plan` early in development and verify that the plan is
-included in the pull request so reviewers can see the intended version bump and
-release notes.
+Run `pnpm nx release plan` early in development and include the plan in the pull
+request so reviewers can see the intended version bump and release notes.
 
 ## Breaking Changes
 

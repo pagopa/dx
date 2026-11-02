@@ -231,16 +231,10 @@ as well.
 
 :::
 
-## Migration from the Previous Validation Workflow
+## Previous Validation Workflow
 
-The optional workflow that commented on pull requests when version plans were
-missing or incomplete has been retired. Remove its call from your repository's
-validation workflow. Use the supported
-[`validate-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v2.yaml)
-workflow for code review and CI checks; it does not check version-plan coverage,
-and there is no automated replacement for that warning. Run
-`pnpm nx release plan` and verify `.nx/version-plans/` before opening a pull
-request.
+The optional `validate-v1` workflow for pull-request version-plan warnings was
+removed because it was unused.
 
 ## Troubleshooting
 
