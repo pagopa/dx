@@ -200,7 +200,7 @@ locals {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
     Environment    = "Prod"
     BusinessUnit   = "App IO"
@@ -618,7 +618,7 @@ locals {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
     Environment    = "Prod"            # Based on folder: Prod, Dev, Uat
     BusinessUnit   = "<business-unit>"
