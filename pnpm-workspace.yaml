@@ -143,3 +143,5 @@ minimumReleaseAgeExclude:
   - image-size@2.0.3
   # Renovate security update: js-yaml@4.3.2
   - js-yaml@4.3.2
+  # Renovate security update: glob@14.0.2
+  - glob@14.0.2
