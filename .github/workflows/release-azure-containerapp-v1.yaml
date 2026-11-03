@@ -78,6 +78,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
         name: Checkout
 
       - name: Docker Build and Push
@@ -121,6 +123,8 @@ jobs:
       - name: Checkout
         if: ${{ inputs.docker_image_tag == '' }}
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Get Short SHA of Latest Commit
         id: get_commit_sha
