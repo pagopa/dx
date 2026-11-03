@@ -1,3 +1,16 @@
+## 0.22.22 (2026-11-03)
+
+### 🩹 Fixes
+
+- Retire the optional version-plan warning workflow ([#2458](https://github.com/pagopa/dx/pull/2458))
+
+  The optional `validate-v1` workflow for pull-request version-plan warnings was
+  removed because it was unused.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.22.21 (2026-10-28)
 
 ### 🩹 Fixes

@@ -28,10 +28,10 @@ This GitHub Action supports staging a new version and incrementally rolling it o
 ## Phases
 
 - `stage`
-  - `Container Apps`: Creates a healthy `staging` revision from the revision receiving 100% of traffic. Fails if traffic is split; if the image is unchanged, makes no changes. On health-check failure, deactivates the staged revision and leaves traffic unchanged.
+  - `Container Apps`: Creates a healthy `staging` revision from the revision receiving 100% of traffic, including when traffic targets the latest ready revision. Fails if traffic is split or the current revision cannot be resolved; if the image is unchanged, makes no changes. On health-check failure, deactivates the staged revision and leaves traffic unchanged.
   - `App Service/Function Apps`: Sets the image on the existing `staging` slot of Linux web apps and Function Apps. Requires production and staging to be configured for containers; does not configure registry access, create slots, change production traffic, or wait for application health.
 - `rollout`
-  - `Container Apps`: Moves traffic from the current revision to `staging`, gradually with a canary script or immediately without one. On success, removes the `staging` label and deactivates the old revision; on failure, restores traffic and deactivates the staged revision. No-op if no staged revision exists.
+  - `Container Apps`: Resolves the revision receiving 100% of traffic, including a latest-ready target, then moves traffic explicitly to the revision labeled `staging`, gradually with a canary script or immediately without one. On success, removes the `staging` label and deactivates the old revision; on failure, restores traffic and deactivates the staged revision. No-op if no staged revision exists.
   - `App Service/Function Apps`: Shifts traffic to the `staging` slot in canary steps, then swaps slots. Without a canary script, swaps immediately. On canary failure, clears traffic routing.
 
 ## How It Works

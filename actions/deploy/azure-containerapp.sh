@@ -14,7 +14,7 @@
 # Rollout:
 #   1. Find the `staging` revision and the previous one (100% traffic, no
 #      label). Without a `staging` label there is nothing to roll out.
-#   2. Shift traffic to the `latest` revision (step by step with a canary
+#   2. Shift traffic to the staged revision (step by step with a canary
 #      script, otherwise all at once).
 #   3. Success: remove the `staging` label and deactivate the previous revision.
 #   4. Any failure: move all traffic back to the previous revision and
@@ -34,6 +34,31 @@ az config set extension.use_dynamic_install=yes_without_prompt
 
 # Default resource group for every az command in this process.
 export AZURE_DEFAULTS_GROUP="$resource_group_name"
+
+resolve_full_traffic_revision() {
+  local traffic="$1" traffic_target current_revision
+  traffic_target=$(jq -c '[.[] | select(.weight == 100)] | if length == 1 then .[0] else null end' <<< "$traffic") || return 1
+  if [[ "$traffic_target" == "null" ]]; then
+    echo "::error::No single revision receives 100% of traffic - complete or revert the ongoing rollout first" >&2
+    return 1
+  fi
+
+  # A `latestRevision` traffic target may not include a revisionName. Resolve
+  # the latest ready revision, not the latest created one, which may be unready.
+  if [[ "$(jq -r '.latestRevision // false' <<< "$traffic_target")" == "true" ]]; then
+    current_revision=$(az containerapp show \
+      --name "$resource_name" \
+      --query "properties.latestReadyRevisionName" \
+      --output tsv) || return 1
+  else
+    current_revision=$(jq -r '.revisionName // empty' <<< "$traffic_target") || return 1
+  fi
+  if [[ -z "$current_revision" ]]; then
+    echo "::error::Could not resolve the revision receiving 100% of traffic" >&2
+    return 1
+  fi
+  printf '%s\n' "$current_revision"
+}
 
 __stage() {
   if [[ -z "${image:-}" ]]; then
@@ -55,11 +80,7 @@ __stage() {
   traffic=$(az containerapp ingress traffic show \
     --name "$resource_name" \
     --output json)
-  current_revision=$(jq -r '[.[] | select(.weight == 100)][0].revisionName // empty' <<< "$traffic")
-  if [[ -z "$current_revision" ]]; then
-    echo "::error::No single revision receives 100% of traffic - complete or revert the ongoing rollout first"
-    return 1
-  fi
+  current_revision=$(resolve_full_traffic_revision "$traffic") || return 1
   echo "::notice::Current revision: $current_revision"
 
   # Pin traffic before copying: with `latest` weights, the new revision would
@@ -139,9 +160,9 @@ __prepare_rollout() {
     exit 0
   fi
 
-  previous_revision=$(jq -r '[.[] | select(.weight == 100 and .label != "staging")][0].revisionName // empty' <<< "$traffic")
-  if [[ -z "$previous_revision" ]]; then
-    echo "::error::No revision other than the staged one receives 100% of traffic"
+  previous_revision=$(resolve_full_traffic_revision "$traffic") || exit 1
+  if [[ "$previous_revision" == "$staged_revision" ]]; then
+    echo "::error::The staged revision already receives 100% of traffic"
     exit 1
   fi
 
@@ -174,9 +195,10 @@ __revert_traffic() {
 
 __set_traffic() {
   local staging_percentage="$3"
+  # Address both revisions explicitly: `latest` can change after staging.
   az containerapp ingress traffic set \
     --name "$resource_name" \
-    --revision-weight "latest=${staging_percentage}"
+    --revision-weight "$previous_revision=$((100 - staging_percentage))" "$staged_revision=$staging_percentage"
 }
 
 __swap_versions() {
