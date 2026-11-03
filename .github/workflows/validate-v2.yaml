@@ -242,9 +242,7 @@ jobs:
       - name: Install dependencies
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: |
-          mise deps --skip pnpm
-          bash .github/scripts/verify-tflint-auth.sh
+        run: mise deps --skip pnpm
 
       - name: Cache Nx
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
