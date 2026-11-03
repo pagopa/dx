@@ -26,7 +26,7 @@ resource "azurerm_subscription_policy_assignment" "specific_tags_assignment" {
 
   parameters = jsonencode({
     allowedCostCenters = {
-      value = ["TS000 - TECNOLOGIA & SERVIZI"]
+      value = ["TS720 - DEV EX"]
     }
     allowedOwners = {
       value = ["DevEx"]
