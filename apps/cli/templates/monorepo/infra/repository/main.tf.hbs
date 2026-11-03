@@ -5,7 +5,7 @@ module "github_repository" {
   repository = {
     name                   = "{{ repoName }}"
     description            = "{{ repoDescription }}"
-    topics                 = []
+    topics                 = [{{#each repoTopics}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}]
     reviewers_teams        = []
   }
 }

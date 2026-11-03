@@ -136,7 +136,7 @@ dx init
 This command will:
 
 - Check that required tools (Terraform CLI and Corepack) are installed
-- Interactively prompt for repository name, GitHub organization, and description
+- Interactively prompt for repository name, GitHub organization, description, and optional comma-separated topics
 - **Check that the target GitHub repository does not already exist before proceeding**
 - Generate a monorepo structure following PagoPA DevEx guidelines
 - Ask whether the scaffolded workspace should be published to GitHub immediately
@@ -151,6 +151,7 @@ $ dx init
 ? Name my-monorepo
 ? GitHub Organization pagopa
 ? Description My new PagoPA monorepo
+? Repository topics (comma-separated, optional) typescript,pagopa
 ? The project is created on my-monorepo. Would you like to publish it to GitHub at pagopa/my-monorepo now? Yes
 ...
 
@@ -167,6 +168,12 @@ Workspace created successfully!
 > [!NOTE]
 > The command will fail early if required tools are missing.
 > If you choose not to publish immediately, the CLI prints the manual Terraform and git steps required to finish the setup later.
+
+Use `--topics "typescript,pagopa"` to set topics without prompting, or
+`--topics ""` to explicitly leave them empty. Topics must use lowercase letters,
+numbers, and hyphens (up to 20 topics, each at most 50 characters).
+In CI or without an interactive terminal, omitted topics default to an empty
+array in `infra/repository/main.tf`.
 
 #### `spec`
 

@@ -97,6 +97,7 @@ describe("monorepo generator — file generation", () => {
     repoDescription: "A test repository for DX",
     repoName: "my-test-repo",
     repoOwner: "pagopa",
+    repoTopics: [],
   };
 
   beforeAll(async () => {
@@ -145,6 +146,7 @@ describe("monorepo generator — file generation", () => {
       ...payload,
       repoName: "my-custom-owner-repo",
       repoOwner: "example-org",
+      repoTopics: ["typescript", "pagopa-dx"],
     };
 
     const result = await plop
@@ -165,6 +167,23 @@ describe("monorepo generator — file generation", () => {
     );
     expect(generatedFiles["infra/repository/providers.tf"]).not.toContain(
       'owner = "pagopa"',
+    );
+    const repositoryFiles = await readGeneratedFiles(
+      path.join(tmpDir, customPayload.repoName),
+      ["infra/repository/main.tf"],
+    );
+    expect(repositoryFiles["infra/repository/main.tf"]).toContain(
+      'topics                 = ["typescript", "pagopa-dx"]',
+    );
+  });
+
+  it("renders an empty topics array when no topics are selected", async () => {
+    const files = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["infra/repository/main.tf"],
+    );
+    expect(files["infra/repository/main.tf"]).toContain(
+      "topics                 = []",
     );
   });
 
