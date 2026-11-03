@@ -336,3 +336,15 @@ run "audit_retention_days_out_of_range" {
 
   expect_failures = [var.audit_retention_days]
 }
+
+run "static_website_requires_a_document" {
+  command = plan
+
+  variables {
+    static_website = {
+      enabled = true
+    }
+  }
+
+  expect_failures = [var.static_website]
+}
