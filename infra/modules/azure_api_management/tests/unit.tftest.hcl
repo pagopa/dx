@@ -110,8 +110,12 @@ run "azure_api_management_cost_optimized_defaults" {
   }
 
   assert {
-    condition     = azurerm_private_dns_a_record.apim_azure_api_net.zone_name == "azure-api.net" && azurerm_private_dns_a_record.apim_management_azure_api_net.zone_name == "management.azure-api.net" && azurerm_private_dns_a_record.apim_scm_azure_api_net.zone_name == "scm.azure-api.net"
-    error_message = "APIM DNS A records must use their fixed Azure API Management zone names."
+    condition = (
+      azurerm_private_dns_a_record.apim_azure_api_net.private_dns_zone_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/azure-api.net" &&
+      azurerm_private_dns_a_record.apim_management_azure_api_net.private_dns_zone_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/management.azure-api.net" &&
+      azurerm_private_dns_a_record.apim_scm_azure_api_net.private_dns_zone_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/scm.azure-api.net"
+    )
+    error_message = "APIM DNS A records must use the fixed zone IDs in the VNet subscription and DNS resource group."
   }
 
   assert {
@@ -218,6 +222,24 @@ run "azure_api_management_high_load_public_ip_and_autoscale" {
 
   variables {
     use_case = "high_load"
+  }
+
+  run "azure_api_management_private_dns_resource_group_override" {
+    command = plan
+
+    variables {
+      virtual_network                      = "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-test"
+      private_dns_zone_resource_group_name = "rg-dns"
+    }
+
+    assert {
+      condition = (
+        azurerm_private_dns_a_record.apim_azure_api_net.private_dns_zone_id == "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/azure-api.net" &&
+        azurerm_private_dns_a_record.apim_management_azure_api_net.private_dns_zone_id == "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/management.azure-api.net" &&
+        azurerm_private_dns_a_record.apim_scm_azure_api_net.private_dns_zone_id == "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/scm.azure-api.net"
+      )
+      error_message = "DNS IDs must follow the VNet subscription and overridden DNS resource group."
+    }
   }
 
   assert {
@@ -361,6 +383,15 @@ run "azure_api_management_hostname_certificate_normalization" {
   assert {
     condition     = length(azurerm_api_management.this.hostname_configuration[0].portal) == 1 && length(azurerm_api_management.this.hostname_configuration[0].developer_portal) == 1 && length(azurerm_api_management.this.hostname_configuration[0].scm) == 1
     error_message = "All supported custom-domain endpoint types must remain configurable."
+  }
+
+  assert {
+    condition = (
+      azurerm_api_management.this.hostname_configuration[0].portal[0].key_vault_certificate_id == "https://kv-test.vault.azure.net/secrets/cert-portal" &&
+      azurerm_api_management.this.hostname_configuration[0].developer_portal[0].key_vault_certificate_id == "https://kv-test.vault.azure.net/secrets/cert-developer" &&
+      azurerm_api_management.this.hostname_configuration[0].scm[0].key_vault_certificate_id == "https://kv-test.vault.azure.net/secrets/cert-scm"
+    )
+    error_message = "All custom-domain certificate values must map to the AzureRM v5 certificate ID argument."
   }
 }
 
@@ -522,4 +553,5 @@ run "azure_api_management_development_honors_explicit_alerts" {
     condition     = length(azurerm_monitor_metric_alert.this) == 1 && azurerm_monitor_metric_alert.this["custom_requests"].criteria[0].metric_name == "Requests"
     error_message = "Explicit metric alerts must be honored for development."
   }
+
 }
