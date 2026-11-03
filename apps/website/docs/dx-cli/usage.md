@@ -41,17 +41,10 @@ npx @pagopa/dx-cli init --name my-project --owner pagopa \
 
 In CI or without an interactive terminal, organization initialization fails if
 code owners are missing. Personal namespaces automatically include `@owner`.
-Without `--publish`, non-interactive initialization leaves the scaffold local.
-Existing unattended organization commands must add at least one `--code-owner`.
 
 The CLI validates account existence and team visibility and organization.
-An organization name alone is not a code owner: use `@organization/team`.
 Teams must belong to the repository organization and cannot own code in personal
-repositories. Only root teams are accepted because the existing Terraform
-repository module does not resolve nested teams as deployment reviewers.
-GitHub lookup or permission failures stop initialization before
-scaffolding; team lookup requires a token with organization access (including
-`read:org` when applicable).
+repositories.
 
 All validated owners appear on one `*` line in the root `CODEOWNERS` file. The same
 team slugs populate `repository.reviewers_teams` in `infra/repository/main.tf`.
@@ -62,23 +55,12 @@ repository Write access. For PagoPA repositories, its next steps tell you to ope
 a PR in [pagopa/eng-github-authorization](https://github.com/pagopa/eng-github-authorization)
 to register the repository, grant these same teams/users Write access (or higher),
 and associate the product GitHub App. For other organizations, follow their
-authorization process; personal repositories may need collaborator invitations.
-The JSON result includes an `ownership` object with owners, reviewer teams,
-permission status, and these instructions.
+authorization process.
 
 Code-owner review requests only become effective after access is granted and
 CODEOWNERS is present on the PR's base branch. Adding CODEOWNERS in the scaffold
 PR therefore does not automatically request its owners on that initial PR.
 CODEOWNERS and deployment reviewer settings do not grant repository access.
-
-:::note Personal repository limitation
-
-Personal ownership validation and CODEOWNERS generation are supported, but the
-existing repository Terraform module still queries organization teams.
-End-to-end personal repository publication may fail at that existing dependency;
-this ownership change does not modify the Terraform module.
-
-:::
 
 ### Example Usage
 
