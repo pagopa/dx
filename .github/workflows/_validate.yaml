@@ -2,17 +2,12 @@ name: "Code Review"
 
 on:
   workflow_dispatch:
-    inputs:
-      smoke-only:
-        description: Run only the temporary cold-cache TFLint authentication smoke test.
-        type: boolean
-        default: false
   pull_request:
     types: [opened, synchronize]
 
 jobs:
   validate:
-    if: ${{ github.actor != 'dx-pagopa-bot' && !inputs.smoke-only }}
+    if: ${{ github.actor != 'dx-pagopa-bot' }}
     permissions:
       contents: read
       actions: read
@@ -21,26 +16,3 @@ jobs:
       id-token: write
     uses: $/.github/workflows/validate-v2.yaml
     secrets: inherit
-
-  tflint-auth-smoke:
-    name: TFLint authentication smoke
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.smoke-only }}
-    runs-on: ubuntu-26.04
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup TFLint
-        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
-        with:
-          install_args: tflint
-          minimum_release_age: 7d
-
-      - name: Verify cold-cache GitHub authentication
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: bash .github/scripts/verify-tflint-auth.sh
