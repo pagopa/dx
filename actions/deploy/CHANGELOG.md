@@ -1,3 +1,13 @@
+## 0.0.3 (2026-11-03)
+
+### 🩹 Fixes
+
+- Fix Azure Container Apps traffic resolution and target the staged revision during rollout. ([#2465](https://github.com/pagopa/dx/pull/2465))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.0.2 (2026-10-22)
 
 ### 🚀 Features

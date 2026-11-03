@@ -1,3 +1,36 @@
+## 0.5.28 (2026-11-03)
+
+### 🚀 Features
+
+- Scope dashboard data to signed magic links ([#2466](https://github.com/pagopa/dx/pull/2466))
+
+  The portal no longer serves every repository to every visitor. A visitor's scope
+  comes from the magic link they open, and every dashboard endpoint filters its
+  data to that scope. The full portfolio is a scope of its own, carried by its own
+  link.
+
+  Repositories are grouped by static tags in the shared configuration, so the link
+  carries tags rather than a frozen repository list and keeps working when a
+  repository is added to a tag.
+
+  - Mint links with `pnpm --filter dx-metrics scope:link`.
+  - Dashboard responses are now `private, no-store`: the payload depends on the
+    caller's cookie, so no shared cache may store it.
+  - Deployments need `DX_METRICS_SCOPE_SECRET` before the portal serves any data:
+    without it, no link can be verified.
+
+  Breaking: `DxMetricsConfig.repositories` is now a list of objects with `name` and
+  `tags`, not a list of strings. Consumers that only need the names can use
+  `defaultImportFileConfig.repositories`.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.14
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.27 (2026-11-02)
 
 ### 🩹 Fixes
