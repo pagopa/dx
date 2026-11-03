@@ -76,6 +76,7 @@ variable "github_private_runner" {
     min_instances                = optional(number, 0)
     max_instances                = optional(number, 30)
     labels                       = optional(list(string), [])
+    enable_dx_runner             = optional(bool, false)
     key_vault = object({
       name                = string
       resource_group_name = string
@@ -87,27 +88,7 @@ variable "github_private_runner" {
     memory         = optional(string, "3Gi")
   })
 
-  description = "Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration."
-}
-
-variable "github_dx_runner" {
-  type = object({
-    enabled           = optional(bool, true)
-    labels            = list(string)
-    image             = string
-    no_default_labels = optional(bool, true)
-  })
-  default     = null
-  description = "Opt-in DX runner configuration. Null preserves existing prefix-based provisioning and labels. The image must support RUNNER_NO_DEFAULT_LABELS."
-
-  validation {
-    condition = var.github_dx_runner == null ? true : (
-      length(var.github_dx_runner.labels) > 0 &&
-      alltrue([for label in var.github_dx_runner.labels : trimspace(label) != ""]) &&
-      trimspace(var.github_dx_runner.image) != ""
-    )
-    error_message = "The DX runner requires nonempty labels and an image."
-  }
+  description = "Configuration for GitHub private runners, including scaling and Key Vault integration. Set enable_dx_runner to add an isolated DX runner with an automatically generated environment-dx label; existing prefix-based provisioning is preserved when false."
 }
 
 variable "additional_resource_group_ids" {

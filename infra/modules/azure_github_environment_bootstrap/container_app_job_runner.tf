@@ -70,10 +70,10 @@ module "github_runner_dx" {
     max_instances               = var.github_private_runner.max_instances
     use_labels                  = true
     override_labels             = local.dx_runner_labels
-    no_default_labels           = var.github_dx_runner == null ? false : var.github_dx_runner.no_default_labels
+    no_default_labels           = var.github_private_runner.enable_dx_runner
     cpu                         = var.github_private_runner.cpu
     memory                      = var.github_private_runner.memory
-    image                       = local.dx_runner_image
+    image                       = "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
   }
 
   key_vault = {

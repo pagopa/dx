@@ -303,11 +303,8 @@ run "explicit_dx_runner_for_other_prefix" {
   command = plan
 
   variables {
-    environment = merge(var.environment, { prefix = "ced" })
-    github_dx_runner = {
-      labels = ["ced-uat-dx"]
-      image  = "ghcr.io/pagopa/dx-github-self-hosted-runner:rfc-reference"
-    }
+    environment           = merge(var.environment, { prefix = "ced" })
+    github_private_runner = merge(var.github_private_runner, { enable_dx_runner = true })
   }
 
   assert {
@@ -316,8 +313,8 @@ run "explicit_dx_runner_for_other_prefix" {
   }
 
   assert {
-    condition     = output.github_dx_runner.labels == tolist(["ced-uat-dx"]) && output.github_dx_runner.image == var.github_dx_runner.image
-    error_message = "The configured image and labels must be used without extra labels."
+    condition     = tolist(output.github_dx_runner.labels) == tolist(["uat-dx"]) && output.github_dx_runner.image == "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
+    error_message = "DX image and dedicated environment label must be configured automatically."
   }
 
   assert {
@@ -326,20 +323,31 @@ run "explicit_dx_runner_for_other_prefix" {
   }
 }
 
-run "explicit_dx_runner_disabled" {
+run "dx_runner_uses_github_environment_name" {
   command = plan
 
   variables {
-    github_dx_runner = {
-      enabled = false
-      labels  = ["uat-dx"]
-      image   = "ghcr.io/pagopa/dx-github-self-hosted-runner:rfc-reference"
-    }
+    environment                       = merge(var.environment, { prefix = "ced" })
+    github_environment_prefix_enabled = true
+    github_private_runner             = merge(var.github_private_runner, { enable_dx_runner = true })
   }
 
   assert {
-    condition     = output.github_dx_runner == null && output.github_private_runner != null
-    error_message = "Disabling DX must preserve the legacy runner."
+    condition     = tolist(output.github_dx_runner.labels) == tolist(["ced-uat-dx"])
+    error_message = "The DX label must follow the configured GitHub environment name."
+  }
+}
+
+run "existing_dx_runner_can_use_dedicated_labels" {
+  command = plan
+
+  variables {
+    github_private_runner = merge(var.github_private_runner, { enable_dx_runner = true, labels = ["uat", "custom"] })
+  }
+
+  assert {
+    condition     = tolist(output.github_dx_runner.labels) == tolist(["uat-dx"]) && output.github_private_runner != null
+    error_message = "Opt-in must isolate an existing DX runner without inheriting legacy labels or removing the legacy runner."
   }
 }
 
@@ -358,7 +366,7 @@ run "azure_github_environment_bootstrap_dx_runner_configuration" {
   }
 
   assert {
-    condition     = output.github_dx_runner.labels == ["uat", "dx"]
+    condition     = tolist(output.github_dx_runner.labels) == tolist(["uat", "dx"])
     error_message = "The DX GitHub self-hosted runner should preserve configured labels and append dx"
   }
 }

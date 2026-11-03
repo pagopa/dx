@@ -13,9 +13,8 @@ locals {
     "p" = "prod"
   }[var.environment.env_short]
   env_name          = var.github_environment_prefix_enabled ? "${var.environment.prefix}-${local.base_environment_name}" : local.base_environment_name
-  dx_runner_enabled = var.github_dx_runner == null ? startswith(var.environment.prefix, "dx") : var.github_dx_runner.enabled
-  dx_runner_labels  = var.github_dx_runner == null ? concat(var.github_private_runner.labels, ["dx"]) : var.github_dx_runner.labels
-  dx_runner_image   = var.github_dx_runner == null ? "ghcr.io/pagopa/dx-github-self-hosted-runner:latest" : var.github_dx_runner.image
+  dx_runner_enabled = startswith(var.environment.prefix, "dx") || var.github_private_runner.enable_dx_runner
+  dx_runner_labels  = var.github_private_runner.enable_dx_runner ? ["${local.env_name}-dx"] : concat(var.github_private_runner.labels, ["dx"])
 
   # GitHub emits immutable subject claims that embed the numeric owner and
   # repository IDs for repositories created or renamed after 2026-07-15, while

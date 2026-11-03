@@ -135,14 +135,14 @@ printf "ℹ️ Working Directory: %s\n\t" "$WORK_DIR"
 # https://github.com/actions/runner/blob/097ada9374c9bde944aa9fa3de59ae2e656e79cf/src/Runner.Listener/Runner.cs#L1068
 if [ ! -f ".runner" ]; then
   echo "Configuring the runner..."
-  config_args=()
+  default_label_args=()
   case "${RUNNER_NO_DEFAULT_LABELS:-false}" in
     true)
       if [[ -z "${LABELS//[[:space:],]/}" ]]; then
         echo "ERROR: Disabling default labels requires at least one custom label" >&2
         exit 1
       fi
-      config_args+=(--no-default-labels)
+      default_label_args+=(--no-default-labels)
       ;;
     false) ;;
     *)
@@ -160,7 +160,7 @@ if [ ! -f ".runner" ]; then
     --replace \
     --ephemeral \
     --disableupdate \
-    "${config_args[@]}"
+    "${default_label_args[@]}"
 fi
 
 # Cleanup

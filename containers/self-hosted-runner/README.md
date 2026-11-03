@@ -46,8 +46,6 @@ The Docker image includes an entrypoint script (`entrypoint.sh`) that is respons
 `GITHUB_PAT` with `REGISTRATION_TOKEN_API_URL`; or all three GitHub App
 variables with `REGISTRATION_TOKEN_API_URL`.
 
-## Writable tool directories
-
 ### Dedicated runner labels
 
 Set `RUNNER_NO_DEFAULT_LABELS=true` to register with only the custom `LABELS`
@@ -62,6 +60,8 @@ still requires an end-to-end pilot.
 
 Run the credential-free registration check with
 `bash containers/self-hosted-runner/tests/registration.test.sh`.
+
+## Writable tool directories
 
 Mise backends do not share a fixed set of tool-specific paths. The runner user
 therefore owns the standard XDG roots used by repository tools without changing

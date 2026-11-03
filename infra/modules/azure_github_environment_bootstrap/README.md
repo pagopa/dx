@@ -7,7 +7,7 @@ The Azure GitHub Environment Bootstrap module is designed for users who have jus
 The module performs the following actions:
 
 - Creates the **GitHub Private Runner** associated with the repository.
-- Creates a **DX GitHub Private Runner** alongside the legacy runner only when `environment.prefix` starts with `dx`. For other prefixes Terraform removes the DX runner, and the `github_dx_runner` output is `null`.
+- Creates a **DX GitHub Private Runner** alongside the legacy runner when `github_private_runner.enable_dx_runner` is `true` or `environment.prefix` starts with `dx`.
 - Creates Azure user-assigned **Managed Identities** to let GitHub workflows deploy:
   1. Infrastructure resources (IaC).
   2. Applications.
@@ -271,45 +271,37 @@ github_private_runner = {
 }
 ```
 
-### RFC reference: opt-in dedicated DX job
+### Enable an isolated DX runner
 
-This branch is an implementation reference, not a deployed Azure pilot.
-The DX job uses the sibling runner module so this diff can exercise its new
-input before a registry release. Before production publication, restore the
-registry source with a version containing `no_default_labels`; the legacy job
-keeps its existing registry dependency.
-
-Pass an explicit configuration to add a DX job for any product prefix:
+Add one setting to the existing runner configuration:
 
 ```hcl
-github_dx_runner = {
-  enabled           = true
-  labels            = ["ced-prod-dx"]
-  image             = "ghcr.io/pagopa/dx-github-self-hosted-runner:<tested-version>"
-  no_default_labels = true
+github_private_runner = {
+  # Existing Container App Environment, Key Vault and scaling settings
+  enable_dx_runner = true
 }
 ```
 
-The image must contain the updated entrypoint supporting
-`RUNNER_NO_DEFAULT_LABELS`; the example tag is a placeholder, not a published
-image. Use `runs-on: ced-prod-dx` or `override_labels: ced-prod-dx` in workflows
-that support that input. Existing jobs requesting `self-hosted` remain on the
-legacy runner. Both jobs reuse the supplied Container App Environment.
+The module selects the DX image, generates the label from the GitHub environment
+name (`dev-dx`, `uat-dx`, `prod-dx`, or `ced-prod-dx` when environment prefixes are
+enabled), and disables automatic labels in registration and scaling.
+For development, use `runs-on: dev-dx`, or `override_labels: dev-dx` in shared
+workflows that support that input. The legacy runner is unchanged, and both jobs
+reuse the supplied Container App Environment.
 
-Omitting `github_dx_runner` preserves existing prefix-based activation, image,
-and labels. Setting `enabled=false` removes only the DX job on the next apply:
-drain active work and update workflows before disabling it.
+The default is `false`, preserving existing prefix-based provisioning and labels.
+Enabling this setting on an existing DX job replaces its labels; update workflows
+that currently request `dx`. Disabling it restores the previous behavior: a DX
+job remains for prefixes starting with `dx` and is removed for other prefixes.
 
-Changing labels on an already enabled DX job may affect workflows currently
-requesting `dx`; coordinate that opt-in migration. Nothing is applied by this
-reference branch. Azure support for `noDefaultLabels` remains to be verified.
+Before release, publish the image with the updated entrypoint and replace the
+temporary sibling module source with its updated registry version. Consumers do
+not need to select an image or configure `no_default_labels`. Support for
+`noDefaultLabels` in the managed Azure scaler still needs an end-to-end check.
 
-The `github_private_runner` configuration is shared by both runners. The
-legacy runner keeps the configured environment label, while the DX runner uses
-the `ghcr.io/pagopa/dx-github-self-hosted-runner:latest` image and appends the
-`dx` label. Workflows can target it with `runs-on: [self-hosted, dx]`. The DX
-runner is provisioned only when `environment.prefix` starts with `dx`; otherwise
-the runner is removed and `github_dx_runner` is `null`.
+With `enable_dx_runner = false`, the previous DX configuration is preserved:
+only prefixes starting with `dx` have a DX job, its labels include the configured
+legacy labels plus `dx`, and workflows can still use `runs-on: [self-hosted, dx]`.
 
 #### `private_dns_zone_resource_group_id`
 
@@ -587,9 +579,8 @@ This module includes practical examples to help you get started quickly:
 | <a name="input_additional_resource_group_ids"></a> [additional\_resource\_group\_ids](#input\_additional\_resource\_group\_ids) | A set of IDs for existing resource groups owned by the domain team. | `set(string)` | `[]` | no |
 | <a name="input_entraid_groups"></a> [entraid\_groups](#input\_entraid\_groups) | The Azure Entra ID groups to give role to. | <pre>object({<br/>    admins_object_id    = string<br/>    devs_object_id      = string<br/>    externals_object_id = optional(string, null)<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and location short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
-| <a name="input_github_dx_runner"></a> [github\_dx\_runner](#input\_github\_dx\_runner) | Opt-in DX runner configuration. Null preserves existing prefix-based provisioning and labels. The image must support RUNNER\_NO\_DEFAULT\_LABELS. | <pre>object({<br/>    enabled           = optional(bool, true)<br/>    labels            = list(string)<br/>    image             = string<br/>    no_default_labels = optional(bool, true)<br/>  })</pre> | `null` | no |
 | <a name="input_github_environment_prefix_enabled"></a> [github\_environment\_prefix\_enabled](#input\_github\_environment\_prefix\_enabled) | Prefix GitHub environment names with environment.prefix. | `bool` | `false` | no |
-| <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration. | <pre>object({<br/>    container_app_environment_id = string<br/>    replica_timeout_in_seconds   = optional(number, 1800)<br/>    polling_interval_in_seconds  = optional(number, 30)<br/>    min_instances                = optional(number, 0)<br/>    max_instances                = optional(number, 30)<br/>    labels                       = optional(list(string), [])<br/>    key_vault = object({<br/>      name                = string<br/>      resource_group_name = string<br/>      secret_name         = optional(string, "github-runner-pat")<br/>      use_rbac            = optional(bool, false)<br/>    })<br/>    use_github_app = optional(bool, false)<br/>    cpu            = optional(number, 1.5)<br/>    memory         = optional(string, "3Gi")<br/>  })</pre> | n/a | yes |
+| <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for GitHub private runners, including scaling and Key Vault integration. Set enable\_dx\_runner to add an isolated DX runner with an automatically generated environment-dx label; existing prefix-based provisioning is preserved when false. | <pre>object({<br/>    container_app_environment_id = string<br/>    replica_timeout_in_seconds   = optional(number, 1800)<br/>    polling_interval_in_seconds  = optional(number, 30)<br/>    min_instances                = optional(number, 0)<br/>    max_instances                = optional(number, 30)<br/>    labels                       = optional(list(string), [])<br/>    enable_dx_runner             = optional(bool, false)<br/>    key_vault = object({<br/>      name                = string<br/>      resource_group_name = string<br/>      secret_name         = optional(string, "github-runner-pat")<br/>      use_rbac            = optional(bool, false)<br/>    })<br/>    use_github_app = optional(bool, false)<br/>    cpu            = optional(number, 1.5)<br/>    memory         = optional(string, "3Gi")<br/>  })</pre> | n/a | yes |
 | <a name="input_opex_resource_group_id"></a> [opex\_resource\_group\_id](#input\_opex\_resource\_group\_id) | The ID of the resource group containing Opex dashboards. | `string` | n/a | yes |
 | <a name="input_private_dns_zone_resource_group_id"></a> [private\_dns\_zone\_resource\_group\_id](#input\_private\_dns\_zone\_resource\_group\_id) | The ID of the resource group containing private DNS zones. | `string` | n/a | yes |
 | <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository. `owner` is the GitHub login or organization name; `owner_id` is the positive numeric GitHub owner ID used in immutable OIDC subjects. For personal-account repositories, set `owner_id` to `owner.id` from `GET /repos/{owner}/{repo}`. | <pre>object({<br/>    owner    = optional(string, "pagopa")<br/>    name     = string<br/>    owner_id = optional(number)<br/>  })</pre> | n/a | yes |
@@ -600,7 +591,7 @@ This module includes practical examples to help you get started quickly:
 
 | Name | Description |
 | ---- | ----------- |
-| <a name="output_github_dx_runner"></a> [github\_dx\_runner](#output\_github\_dx\_runner) | Details of the DX GitHub self-hosted runner, or null when environment.prefix does not start with dx. |
+| <a name="output_github_dx_runner"></a> [github\_dx\_runner](#output\_github\_dx\_runner) | Details of the DX GitHub self-hosted runner, or null when enable\_dx\_runner is false and environment.prefix does not start with dx. |
 | <a name="output_github_private_runner"></a> [github\_private\_runner](#output\_github\_private\_runner) | Details of the GitHub private runner, including ID, name, and resource group name. |
 | <a name="output_identities"></a> [identities](#output\_identities) | Details of the user-assigned identities for app, infra, and opex, including IDs and names. |
 | <a name="output_repository"></a> [repository](#output\_repository) | GitHub repository name and owner. |

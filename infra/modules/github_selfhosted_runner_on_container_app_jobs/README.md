@@ -29,9 +29,7 @@ the Key Vault must contain the following secrets:
 See [Obtaining GitHub App credentials](https://dx.pagopa.it/docs/monorepository-setup#obtaining-github-app-credentials)
 for step-by-step instructions on how to create the App and populate these secrets.
 
-## Usage Example
-
-### Dedicated labels (RFC reference)
+## Dedicated labels
 
 Set `container_app_environment.no_default_labels = true` together with
 `use_labels = true` and nonempty `override_labels` to align the Azure scaling
@@ -41,7 +39,9 @@ scaling rule and `RUNNER_NO_DEFAULT_LABELS=true` in the container.
 The image must implement that environment variable; setting it on an older or
 unrelated image does not remove GitHub's default labels. The default is false,
 so existing consumers retain their configuration. Azure managed-scaler support
-must be confirmed in a real pilot before deployment. Example
+must be confirmed in a real pilot before deployment.
+
+## Usage Example
 
 ```hcl
 module "github_runner" {

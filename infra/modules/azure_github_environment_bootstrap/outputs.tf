@@ -25,12 +25,12 @@ output "github_private_runner" {
 }
 
 output "github_dx_runner" {
-  description = "Details of the DX GitHub self-hosted runner, or null when environment.prefix does not start with dx."
+  description = "Details of the DX GitHub self-hosted runner, or null when enable_dx_runner is false and environment.prefix does not start with dx."
   value = local.dx_runner_enabled ? {
     id                  = module.github_runner_dx[0].container_app_job.id
     name                = module.github_runner_dx[0].container_app_job.name
     resource_group_name = module.github_runner_dx[0].container_app_job.resource_group_name
-    image               = local.dx_runner_image
+    image               = "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
     labels              = local.dx_runner_labels
   } : null
 }
