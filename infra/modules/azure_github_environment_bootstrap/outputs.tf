@@ -30,8 +30,8 @@ output "github_dx_runner" {
     id                  = module.github_runner_dx[0].container_app_job.id
     name                = module.github_runner_dx[0].container_app_job.name
     resource_group_name = module.github_runner_dx[0].container_app_job.resource_group_name
-    image               = "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
-    labels              = concat(var.github_private_runner.labels, ["dx"])
+    image               = local.dx_runner_image
+    labels              = local.dx_runner_labels
   } : null
 }
 

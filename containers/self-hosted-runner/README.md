@@ -48,6 +48,21 @@ variables with `REGISTRATION_TOKEN_API_URL`.
 
 ## Writable tool directories
 
+### Dedicated runner labels
+
+Set `RUNNER_NO_DEFAULT_LABELS=true` to register with only the custom `LABELS`
+and omit GitHub's automatic `self-hosted`, `Linux`, and `X64` labels. The default
+is `false`, preserving existing registration. Only `true` and `false` are accepted,
+and at least one custom label is required when enabled.
+
+For `LABELS=dev-dx`, use `runs-on: dev-dx`, not
+`runs-on: [self-hosted, dev-dx]`. The Azure job's scaling metadata must also use
+`noDefaultLabels=true` and the same labels. Support in the managed Azure scaler
+still requires an end-to-end pilot.
+
+Run the credential-free registration check with
+`bash containers/self-hosted-runner/tests/registration.test.sh`.
+
 Mise backends do not share a fixed set of tool-specific paths. The runner user
 therefore owns the standard XDG roots used by repository tools without changing
 ownership outside those locations:

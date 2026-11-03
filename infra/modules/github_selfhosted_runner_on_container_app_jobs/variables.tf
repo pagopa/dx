@@ -42,6 +42,7 @@ variable "container_app_environment" {
     max_instances               = optional(number, 30)
     use_labels                  = optional(bool, false)
     override_labels             = optional(list(string), [])
+    no_default_labels           = optional(bool, false)
     cpu                         = optional(number, 1.5)
     memory                      = optional(string, "3Gi")
     image                       = optional(string, "ghcr.io/pagopa/github-self-hosted-runner-azure:latest")
@@ -50,6 +51,15 @@ variable "container_app_environment" {
   })
 
   description = "Configuration for the Container App Environment."
+
+  validation {
+    condition = !var.container_app_environment.no_default_labels || (
+      var.container_app_environment.use_labels &&
+      length(var.container_app_environment.override_labels) > 0 &&
+      alltrue([for label in var.container_app_environment.override_labels : trimspace(label) != ""])
+    )
+    error_message = "Disabling default labels requires use_labels=true and nonempty override_labels."
+  }
 }
 
 variable "key_vault" {

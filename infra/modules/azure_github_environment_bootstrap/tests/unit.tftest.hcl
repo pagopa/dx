@@ -299,6 +299,50 @@ run "azure_github_environment_bootstrap_dx_runner" {
   }
 }
 
+run "explicit_dx_runner_for_other_prefix" {
+  command = plan
+
+  variables {
+    environment = merge(var.environment, { prefix = "ced" })
+    github_dx_runner = {
+      labels = ["ced-uat-dx"]
+      image  = "ghcr.io/pagopa/dx-github-self-hosted-runner:rfc-reference"
+    }
+  }
+
+  assert {
+    condition     = output.github_dx_runner != null && output.github_private_runner != null
+    error_message = "Opt-in must add DX without removing the legacy runner."
+  }
+
+  assert {
+    condition     = output.github_dx_runner.labels == tolist(["ced-uat-dx"]) && output.github_dx_runner.image == var.github_dx_runner.image
+    error_message = "The configured image and labels must be used without extra labels."
+  }
+
+  assert {
+    condition     = length(module.github_runner_dx) == 1
+    error_message = "The opt-in configuration must create a DX job."
+  }
+}
+
+run "explicit_dx_runner_disabled" {
+  command = plan
+
+  variables {
+    github_dx_runner = {
+      enabled = false
+      labels  = ["uat-dx"]
+      image   = "ghcr.io/pagopa/dx-github-self-hosted-runner:rfc-reference"
+    }
+  }
+
+  assert {
+    condition     = output.github_dx_runner == null && output.github_private_runner != null
+    error_message = "Disabling DX must preserve the legacy runner."
+  }
+}
+
 run "azure_github_environment_bootstrap_dx_runner_configuration" {
   command = plan
 

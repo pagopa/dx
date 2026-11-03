@@ -271,6 +271,39 @@ github_private_runner = {
 }
 ```
 
+### RFC reference: opt-in dedicated DX job
+
+This branch is an implementation reference, not a deployed Azure pilot.
+The DX job uses the sibling runner module so this diff can exercise its new
+input before a registry release. Before production publication, restore the
+registry source with a version containing `no_default_labels`; the legacy job
+keeps its existing registry dependency.
+
+Pass an explicit configuration to add a DX job for any product prefix:
+
+```hcl
+github_dx_runner = {
+  enabled           = true
+  labels            = ["ced-prod-dx"]
+  image             = "ghcr.io/pagopa/dx-github-self-hosted-runner:<tested-version>"
+  no_default_labels = true
+}
+```
+
+The image must contain the updated entrypoint supporting
+`RUNNER_NO_DEFAULT_LABELS`; the example tag is a placeholder, not a published
+image. Use `runs-on: ced-prod-dx` or `override_labels: ced-prod-dx` in workflows
+that support that input. Existing jobs requesting `self-hosted` remain on the
+legacy runner. Both jobs reuse the supplied Container App Environment.
+
+Omitting `github_dx_runner` preserves existing prefix-based activation, image,
+and labels. Setting `enabled=false` removes only the DX job on the next apply:
+drain active work and update workflows before disabling it.
+
+Changing labels on an already enabled DX job may affect workflows currently
+requesting `dx`; coordinate that opt-in migration. Nothing is applied by this
+reference branch. Azure support for `noDefaultLabels` remains to be verified.
+
 The `github_private_runner` configuration is shared by both runners. The
 legacy runner keeps the configured environment label, while the DX runner uses
 the `ghcr.io/pagopa/dx-github-self-hosted-runner:latest` image and appends the
@@ -472,7 +505,7 @@ This module includes practical examples to help you get started quickly:
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
-| <a name="module_github_runner_dx"></a> [github\_runner\_dx](#module\_github\_runner\_dx) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
+| <a name="module_github_runner_dx"></a> [github\_runner\_dx](#module\_github\_runner\_dx) | ../github_selfhosted_runner_on_container_app_jobs | n/a |
 
 ## Resources
 
@@ -554,6 +587,7 @@ This module includes practical examples to help you get started quickly:
 | <a name="input_additional_resource_group_ids"></a> [additional\_resource\_group\_ids](#input\_additional\_resource\_group\_ids) | A set of IDs for existing resource groups owned by the domain team. | `set(string)` | `[]` | no |
 | <a name="input_entraid_groups"></a> [entraid\_groups](#input\_entraid\_groups) | The Azure Entra ID groups to give role to. | <pre>object({<br/>    admins_object_id    = string<br/>    devs_object_id      = string<br/>    externals_object_id = optional(string, null)<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and location short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_github_dx_runner"></a> [github\_dx\_runner](#input\_github\_dx\_runner) | Opt-in DX runner configuration. Null preserves existing prefix-based provisioning and labels. The image must support RUNNER\_NO\_DEFAULT\_LABELS. | <pre>object({<br/>    enabled           = optional(bool, true)<br/>    labels            = list(string)<br/>    image             = string<br/>    no_default_labels = optional(bool, true)<br/>  })</pre> | `null` | no |
 | <a name="input_github_environment_prefix_enabled"></a> [github\_environment\_prefix\_enabled](#input\_github\_environment\_prefix\_enabled) | Prefix GitHub environment names with environment.prefix. | `bool` | `false` | no |
 | <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration. | <pre>object({<br/>    container_app_environment_id = string<br/>    replica_timeout_in_seconds   = optional(number, 1800)<br/>    polling_interval_in_seconds  = optional(number, 30)<br/>    min_instances                = optional(number, 0)<br/>    max_instances                = optional(number, 30)<br/>    labels                       = optional(list(string), [])<br/>    key_vault = object({<br/>      name                = string<br/>      resource_group_name = string<br/>      secret_name         = optional(string, "github-runner-pat")<br/>      use_rbac            = optional(bool, false)<br/>    })<br/>    use_github_app = optional(bool, false)<br/>    cpu            = optional(number, 1.5)<br/>    memory         = optional(string, "3Gi")<br/>  })</pre> | n/a | yes |
 | <a name="input_opex_resource_group_id"></a> [opex\_resource\_group\_id](#input\_opex\_resource\_group\_id) | The ID of the resource group containing Opex dashboards. | `string` | n/a | yes |

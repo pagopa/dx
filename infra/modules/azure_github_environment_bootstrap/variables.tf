@@ -90,6 +90,26 @@ variable "github_private_runner" {
   description = "Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration."
 }
 
+variable "github_dx_runner" {
+  type = object({
+    enabled           = optional(bool, true)
+    labels            = list(string)
+    image             = string
+    no_default_labels = optional(bool, true)
+  })
+  default     = null
+  description = "Opt-in DX runner configuration. Null preserves existing prefix-based provisioning and labels. The image must support RUNNER_NO_DEFAULT_LABELS."
+
+  validation {
+    condition = var.github_dx_runner == null ? true : (
+      length(var.github_dx_runner.labels) > 0 &&
+      alltrue([for label in var.github_dx_runner.labels : trimspace(label) != ""]) &&
+      trimspace(var.github_dx_runner.image) != ""
+    )
+    error_message = "The DX runner requires nonempty labels and an image."
+  }
+}
+
 variable "additional_resource_group_ids" {
   type        = set(string)
   default     = []

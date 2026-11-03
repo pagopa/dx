@@ -37,7 +37,8 @@ resource "azurerm_container_app_job" "github_runner" {
             applicationIDFromEnv  = "GITHUB_APP_ID"
             installationIDFromEnv = "GITHUB_APP_INSTALLATION_ID"
           } : {},
-          var.container_app_environment.use_labels ? { labels = local.labels } : {}
+          var.container_app_environment.use_labels ? { labels = local.labels } : {},
+          var.container_app_environment.no_default_labels ? { noDefaultLabels = "true" } : {}
         )
 
         authentication {
@@ -63,6 +64,14 @@ resource "azurerm_container_app_job" "github_runner" {
       image  = var.container_app_environment.image
       memory = var.container_app_environment.memory
       name   = "github-runner"
+
+      dynamic "env" {
+        for_each = var.container_app_environment.no_default_labels ? [1] : []
+        content {
+          name  = "RUNNER_NO_DEFAULT_LABELS"
+          value = "true"
+        }
+      }
 
       dynamic "env" {
         for_each = var.container_app_environment.use_labels ? [1] : []

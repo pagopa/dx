@@ -34,6 +34,57 @@ variables {
 
 mock_provider "azurerm" {}
 
+run "default_labels_preserved" {
+  command = plan
+
+  assert {
+    condition     = !contains(keys(azurerm_container_app_job.github_runner.event_trigger_config[0].scale[0].rules[0].metadata), "noDefaultLabels")
+    error_message = "Default behavior must not change the scaler's default labels."
+  }
+
+  assert {
+    condition     = !contains([for env in azurerm_container_app_job.github_runner.template[0].container[0].env : env.name], "RUNNER_NO_DEFAULT_LABELS")
+    error_message = "Existing images must not receive the new registration setting."
+  }
+}
+
+run "dedicated_labels" {
+  command = plan
+
+  variables {
+    container_app_environment = merge(var.container_app_environment, {
+      use_labels        = true
+      override_labels   = ["ced-prod-dx"]
+      no_default_labels = true
+    })
+  }
+
+  assert {
+    condition     = azurerm_container_app_job.github_runner.event_trigger_config[0].scale[0].rules[0].metadata["noDefaultLabels"] == "true" && azurerm_container_app_job.github_runner.event_trigger_config[0].scale[0].rules[0].metadata["labels"] == "ced-prod-dx"
+    error_message = "The scaler must use only the dedicated labels."
+  }
+
+  assert {
+    condition = anytrue([
+      for env in azurerm_container_app_job.github_runner.template[0].container[0].env :
+      env.name == "RUNNER_NO_DEFAULT_LABELS" && env.value == "true"
+    ])
+    error_message = "The container must disable automatic registration labels."
+  }
+}
+
+run "dedicated_labels_required" {
+  command = plan
+
+  variables {
+    container_app_environment = merge(var.container_app_environment, {
+      no_default_labels = true
+    })
+  }
+
+  expect_failures = [var.container_app_environment]
+}
+
 override_data {
   target = data.azurerm_client_config.current
   values = {

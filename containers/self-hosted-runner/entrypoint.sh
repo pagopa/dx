@@ -135,6 +135,21 @@ printf "ℹ️ Working Directory: %s\n\t" "$WORK_DIR"
 # https://github.com/actions/runner/blob/097ada9374c9bde944aa9fa3de59ae2e656e79cf/src/Runner.Listener/Runner.cs#L1068
 if [ ! -f ".runner" ]; then
   echo "Configuring the runner..."
+  config_args=()
+  case "${RUNNER_NO_DEFAULT_LABELS:-false}" in
+    true)
+      if [[ -z "${LABELS//[[:space:],]/}" ]]; then
+        echo "ERROR: Disabling default labels requires at least one custom label" >&2
+        exit 1
+      fi
+      config_args+=(--no-default-labels)
+      ;;
+    false) ;;
+    *)
+      echo "ERROR: RUNNER_NO_DEFAULT_LABELS must be true or false" >&2
+      exit 1
+      ;;
+  esac
   ./config.sh \
     --url "$REPO_URL" \
     --token "$RUNNER_TOKEN" \
@@ -144,7 +159,8 @@ if [ ! -f ".runner" ]; then
     --unattended \
     --replace \
     --ephemeral \
-    --disableupdate
+    --disableupdate \
+    "${config_args[@]}"
 fi
 
 # Cleanup
