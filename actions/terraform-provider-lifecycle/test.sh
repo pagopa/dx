@@ -32,6 +32,7 @@ for version in 4.0.0 4.99.1; do
   export TERRAFORM_OUTPUT="{\"provider_selections\":{\"registry.terraform.io/hashicorp/azurerm\":\"$version\",\"registry.terraform.io/hashicorp/aws\":\"6.0.0\"}}"
   run_check
   grep -q '^::warning title=AzureRM v4 support::' "$OUTPUT_FILE"
+  grep -q 'https://dx\.pagopa\.it/docs/tooling-lifecycle$' "$OUTPUT_FILE"
   grep -q '31 December 2026' "$OUTPUT_FILE"
   grep -q '31 December 2026' "$GITHUB_STEP_SUMMARY"
   grep -q 'https://dx.pagopa.it/docs/tooling-lifecycle' "$GITHUB_STEP_SUMMARY"
@@ -66,6 +67,7 @@ done
 export TERRAFORM_OUTPUT='not JSON'
 run_check
 grep -q '^::warning title=AzureRM lifecycle check::Unable to determine' "$OUTPUT_FILE"
+grep -q 'https://dx\.pagopa\.it/docs/tooling-lifecycle$' "$OUTPUT_FILE"
 test ! -s "$GITHUB_OUTPUT"
 test "$(cat "$GITHUB_STEP_SUMMARY")" = "Existing summary"
 
@@ -73,6 +75,7 @@ export TERRAFORM_OUTPUT='{"provider_selections":{"registry.terraform.io/hashicor
 export TERRAFORM_EXIT_CODE=1
 run_check
 grep -q '^::warning title=AzureRM lifecycle check::Unable to determine' "$OUTPUT_FILE"
+grep -q 'https://dx\.pagopa\.it/docs/tooling-lifecycle$' "$OUTPUT_FILE"
 test ! -s "$GITHUB_OUTPUT"
 test "$(cat "$GITHUB_STEP_SUMMARY")" = "Existing summary"
 
