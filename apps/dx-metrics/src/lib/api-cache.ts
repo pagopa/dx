@@ -3,15 +3,16 @@
 import { NextResponse } from "next/server";
 
 /**
- * Dashboard data is refreshed by the importer, not per request, so responses
- * can be cached for a short window. `stale-while-revalidate` keeps the UI fast
- * while a fresh copy is fetched in the background.
+ * Dashboard payloads are scoped per visitor, so they must never enter a shared
+ * cache: a `public` response is keyed by URL alone and a proxy would hand one
+ * scope's payload to another visitor. `private, no-store` keeps every copy out
+ * of every cache; `useDashboardData` still keeps its own short-lived in-memory
+ * cache on the client.
  */
-export const DASHBOARD_CACHE_CONTROL =
-  "public, s-maxage=300, stale-while-revalidate=600";
+export const DASHBOARD_CACHE_CONTROL = "private, no-store";
 
-/** Builds a JSON response carrying the shared dashboard cache policy. */
-export const jsonWithCache = <TPayload>(payload: TPayload) =>
+/** Builds a JSON response carrying the dashboard no-store policy. */
+export const jsonWithNoStore = <TPayload>(payload: TPayload) =>
   NextResponse.json(payload, {
     headers: { "Cache-Control": DASHBOARD_CACHE_CONTROL },
   });

@@ -30,7 +30,7 @@ import {
 /** Fetches tech-radar usages and builds the aggregated dashboard payload. */
 export const getTechRadarDashboard = async (
   db: Database,
-  { configuredRepositories }: GetTechRadarDashboardInput,
+  { configuredRepositories, includeUsageTrend }: GetTechRadarDashboardInput,
 ): Promise<
   TechRadarDashboardResult &
     WithInsights &
@@ -73,20 +73,25 @@ export const getTechRadarDashboard = async (
       asc(techRadarUsages.toolName),
     );
 
-  const usageTrendRows = await db
-    .select({
-      capturedAt: techRadarSnapshots.capturedAt,
-      radarRing: techRadarSnapshots.radarRing,
-      radarStatus: techRadarSnapshots.radarStatus,
-      repositoryCount: techRadarSnapshots.repositoryCount,
-      toolKey: techRadarSnapshots.toolKey,
-      toolName: techRadarSnapshots.toolName,
-    })
-    .from(techRadarSnapshots)
-    .orderBy(
-      asc(techRadarSnapshots.capturedAt),
-      asc(techRadarSnapshots.toolKey),
-    );
+  // `tech_radar_snapshots` aggregates per tool with no repository column, so it
+  // cannot be narrowed to a scope. A restricted scope gets no trend at all
+  // rather than the organisation-wide one.
+  const usageTrendRows = includeUsageTrend
+    ? await db
+        .select({
+          capturedAt: techRadarSnapshots.capturedAt,
+          radarRing: techRadarSnapshots.radarRing,
+          radarStatus: techRadarSnapshots.radarStatus,
+          repositoryCount: techRadarSnapshots.repositoryCount,
+          toolKey: techRadarSnapshots.toolKey,
+          toolName: techRadarSnapshots.toolName,
+        })
+        .from(techRadarSnapshots)
+        .orderBy(
+          asc(techRadarSnapshots.capturedAt),
+          asc(techRadarSnapshots.toolKey),
+        )
+    : [];
 
   const usageTrend = parseSqlRows(
     techRadarUsageTrendRowSchema,

@@ -5,8 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 /**
  * Dashboard payloads are refreshed by the importer, not per request, so keeping
  * them in memory for a short window makes navigating between dashboards instant
- * and removes redundant database work. The server still owns the authoritative
- * `s-maxage` policy; this only avoids re-fetching within one session.
+ * and removes redundant database work. This is the only cache: responses are
+ * scoped per visitor, so the server marks them `private, no-store`.
  */
 const CLIENT_CACHE_TTL_MS = 60_000;
 

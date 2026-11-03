@@ -3,16 +3,6 @@
 import { dxMetricsConfig } from "@pagopa/dx-metrics-core/config";
 
 export const ORGANIZATION: string = dxMetricsConfig.organization;
-/**
- * Configured repositories, sorted alphabetically so a long list is easy to
- * scan in the filter. The configured order is kept separately to pick the
- * default repository, which must not change when the list is re-sorted.
- */
-const configuredRepositories: readonly string[] = dxMetricsConfig.repositories;
-export const REPOSITORIES: string[] = [...configuredRepositories].sort((a, b) =>
-  a.localeCompare(b),
-);
-export const DEFAULT_REPOSITORY = configuredRepositories[0] ?? "dx";
 export const DX_TEAM_SLUG: string = dxMetricsConfig.dxTeamSlug;
 export const DX_REPO: string = dxMetricsConfig.dxRepo;
 

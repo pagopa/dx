@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 
+import { useScope } from "@/components/ScopeProvider";
 import { cn, focusRing } from "@/lib/utils";
 
 const navGroups = [
@@ -78,6 +79,23 @@ interface SidebarProps {
   onToggleCollapsed: () => void;
 }
 
+const DX_TEAM_HREF = "/dashboards/dx-team";
+
+/**
+ * DX Team reports on the whole organisation — member commits, `io-infra` pull
+ * requests, adoption across every repository — so a narrowed scope cannot show
+ * it and must not offer the link.
+ */
+const groupsForScope = (all: boolean) =>
+  all
+    ? navGroups
+    : navGroups
+        .map((group) => ({
+          ...group,
+          items: group.items.filter((item) => item.href !== DX_TEAM_HREF),
+        }))
+        .filter((group) => group.items.length > 0);
+
 export function Sidebar({
   isCollapsed,
   isOpen,
@@ -87,6 +105,8 @@ export function Sidebar({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
+  const { all } = useScope();
+  const groups = groupsForScope(all);
 
   return (
     <>
@@ -152,7 +172,7 @@ export function Sidebar({
           aria-label="Dashboards"
           className="custom-scrollbar mt-4 flex-1 overflow-y-auto px-2"
         >
-          {navGroups.map((group, groupIndex) => (
+          {groups.map((group, groupIndex) => (
             <div className={cn(groupIndex > 0 && "mt-4")} key={group.label}>
               {/*
                 The section heading stays in the accessibility tree in every

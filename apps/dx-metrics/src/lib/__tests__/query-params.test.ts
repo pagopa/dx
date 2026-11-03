@@ -133,22 +133,24 @@ describe("resolveRepositories", () => {
 
   it("returns the explicit list when repositories is provided", () => {
     expect(
-      resolveRepositories(parse({ repositories: "dx,io-infra" }), "dx"),
+      resolveRepositories(parse({ repositories: "dx,io-infra" }), ["dx"]),
     ).toEqual(["dx", "io-infra"]);
   });
 
   it("returns the explicit empty list when repositories is empty", () => {
-    expect(resolveRepositories(parse({ repositories: "" }), "dx")).toEqual([]);
+    expect(resolveRepositories(parse({ repositories: "" }), ["dx"])).toEqual(
+      [],
+    );
   });
 
   it("falls back to the legacy single repository value", () => {
     expect(
-      resolveRepositories(parse({ repository: "io-infra" }), "dx"),
+      resolveRepositories(parse({ repository: "io-infra" }), ["dx"]),
     ).toEqual(["io-infra"]);
   });
 
   it("falls back to the default when neither parameter is present", () => {
-    expect(resolveRepositories(parse({}), "io-infra")).toEqual(["io-infra"]);
+    expect(resolveRepositories(parse({}), ["io-infra"])).toEqual(["io-infra"]);
   });
 });
 

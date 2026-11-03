@@ -1,9 +1,10 @@
 "use client";
 
 import { RepositoryMultiSelect } from "@/components/RepositoryMultiSelect";
+import { useScope } from "@/components/ScopeProvider";
 import type { DashboardFilterMode } from "@/lib/useDashboardFilters";
 
-import { REPOSITORIES, TIME_INTERVALS } from "@/lib/config";
+import { TIME_INTERVALS } from "@/lib/config";
 import { addCalendarDays } from "@/lib/date-range";
 import { focusRing } from "@/lib/utils";
 
@@ -46,6 +47,7 @@ export function DashboardFilters({
 }: DashboardFiltersProps) {
   const showRepository = showsRepositoryFilter(mode);
   const showTimeInterval = showsTimeIntervalFilter(mode);
+  const { repositories: scopeRepositories } = useScope();
   // Presets end at the latest data point: "last 30 days" means the last 30 days
   // of imported data, the same anchor the trailing window used before the
   // custom range existed.
@@ -134,7 +136,7 @@ export function DashboardFilters({
         <div className="w-full min-w-0">
           <RepositoryMultiSelect
             onChange={(next) => onRepositoriesChange?.(next)}
-            options={REPOSITORIES}
+            options={scopeRepositories}
             value={repositories}
           />
         </div>

@@ -47,12 +47,12 @@ export type DashboardQuery = z.infer<typeof DashboardQuerySchema>;
 
 /**
  * Resolves the requested repositories, preserving the three-way distinction
- * between "not provided" (route default), "single legacy value" and "explicitly
- * empty" (empty results).
+ * between "not provided" (the default selection), "single legacy value" and
+ * "explicitly empty" (empty results).
  */
 export function resolveRepositories(
   query: DashboardQuery,
-  defaultRepository: string,
+  defaultRepositories: readonly string[],
 ): string[] {
   if (query.repositories !== undefined) {
     return query.repositories;
@@ -62,7 +62,7 @@ export function resolveRepositories(
     return [query.repository];
   }
 
-  return [defaultRepository];
+  return [...defaultRepositories];
 }
 
 /**
