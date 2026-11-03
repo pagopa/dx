@@ -1,4 +1,3 @@
-## Cosmos Account
 resource "azurerm_subnet" "apim" {
   name = provider::dx::resource_name(merge({
     resource_type   = "apim_subnet",
