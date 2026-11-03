@@ -27,7 +27,7 @@ locals {
   runner_label = "e2e-github-selfhosted-runner-app"
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
     Environment    = "Uat"
     Owner          = "DevEx"

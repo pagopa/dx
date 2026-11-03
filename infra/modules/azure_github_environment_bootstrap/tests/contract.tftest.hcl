@@ -34,7 +34,7 @@ variables {
   opex_resource_group_id             = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-opex-rg-01"
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
     Environment    = "Uat"
     Owner          = "DevEx"

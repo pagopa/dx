@@ -25,7 +25,7 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS000 - TECNOLOGIA & SERVIZI"
+    CostCenter     = "TS720 - DEV EX"
     Environment    = "Uat"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/<module_name>/tests"
     TestName       = "<Module Name> unit tests"
