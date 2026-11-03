@@ -25,4 +25,9 @@ runs:
     - name: Set Nx base and head
       shell: bash
       run: |
-        printf 'NX_BASE=%s\nNX_HEAD=HEAD\n' "${GITHUB_BASE_REF:-HEAD~1}" >> "$GITHUB_ENV"
+        if [[ -n "${GITHUB_BASE_REF:-}" ]]; then
+          nx_base="origin/${GITHUB_BASE_REF}"
+        else
+          nx_base="HEAD~1"
+        fi
+        printf 'NX_BASE=%s\nNX_HEAD=HEAD\n' "$nx_base" >> "$GITHUB_ENV"
