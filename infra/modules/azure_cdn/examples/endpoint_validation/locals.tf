@@ -20,7 +20,7 @@ locals {
   }
 
   tags = {
-    CostCenter  = "TS000 - TECNOLOGIA & SERVIZI"
+    CostCenter  = "TS720 - DEV EX"
     Environment = "Uat"
     Source      = "https://github.com/pagopa/dx/modules/azure_cdn/examples/endpoint_validation"
   }

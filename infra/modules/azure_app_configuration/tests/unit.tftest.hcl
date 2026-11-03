@@ -10,7 +10,7 @@ variables {
 
   tags = {
     BusinessUnit   = "DevEx"
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
     Environment    = "Uat"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_app_configuration/tests"
