@@ -165,8 +165,8 @@ run "storage_account_delegated_access_use_case" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
-    error_message = "public_network_access_enabled must be true for delegated_access use case"
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
+    error_message = "public_network_access must be Enabled for delegated_access use case"
   }
 
   assert {
@@ -266,8 +266,8 @@ run "storage_account_public_network" {
   command = plan
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
-    error_message = "public_network_access_enabled must be true when force_public=true"
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
+    error_message = "public_network_access must be Enabled when force_public=true"
   }
 
   assert {
@@ -300,8 +300,8 @@ run "storage_account_private_network" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == false
-    error_message = "public_network_access_enabled must be false when force_public=false"
+    condition     = azurerm_storage_account.this.public_network_access == "Disabled"
+    error_message = "public_network_access must be Disabled when force_public=false"
   }
 
   assert {
@@ -329,8 +329,8 @@ run "storage_account_public_network_with_subnet_pep_id" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
-    error_message = "public_network_access_enabled must remain true when force_public=true, even with private endpoint inputs set"
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
+    error_message = "public_network_access must remain Enabled when force_public=true, even with private endpoint inputs set"
   }
 
   assert {
@@ -626,13 +626,13 @@ run "storage_account_static_website" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.static_website[0].index_document == "index.html"
-    error_message = "static_website index_document must be set correctly"
+    condition     = azurerm_storage_account_static_website.this[0].index_document == "index.html"
+    error_message = "static website index_document must be set correctly"
   }
 
   assert {
-    condition     = azurerm_storage_account.this.static_website[0].error_404_document == "404.html"
-    error_message = "static_website error_404_document must be set correctly"
+    condition     = azurerm_storage_account_static_website.this[0].error_404_document == "404.html"
+    error_message = "static website error_404_document must be set correctly"
   }
 }
 
