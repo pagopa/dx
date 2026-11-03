@@ -8,7 +8,7 @@ sidebar_position: 11
 
 | Workflow                             | Version | Source                                                                                          |
 | ------------------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
-| **Validate** (PR version-plan check) | v1      | [`validate-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v1.yaml) |
+| **Validate** (PR version-plan check) | v2      | [`validate-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v2.yaml) |
 | **Release** (publish to npm)         | v2      | [`release-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-v2.yaml)   |
 
 :::
@@ -177,23 +177,32 @@ in `.yarnrc.yml` itself.
 ### Optional: enable the pull request warning
 
 If you also want a warning comment on pull requests, add a validation workflow
-that uses `validate-v1.yaml`:
+that uses `validate-v2.yaml`:
 
 ```yaml
-name: Validate
+name: Code Review
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [opened, synchronize]
 
 jobs:
   validate:
     permissions:
-      contents: read
       actions: read
+      contents: read
+      id-token: write
       packages: read
       pull-requests: write
-    uses: pagopa/dx/.github/workflows/validate-v1.yaml@main
+    uses: pagopa/dx/.github/workflows/validate-v2.yaml@main
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+      GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+      GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
 ```
 
 With this in place, pull requests receive a warning only when a version plan is
