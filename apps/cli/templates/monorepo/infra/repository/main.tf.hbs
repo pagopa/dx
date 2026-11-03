@@ -6,6 +6,6 @@ module "github_repository" {
     name                   = "{{ repoName }}"
     description            = "{{ repoDescription }}"
     topics                 = []
-    reviewers_teams        = []
+    reviewers_teams        = [{{#each ownership.reviewerTeams}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}]
   }
 }

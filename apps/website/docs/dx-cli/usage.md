@@ -10,10 +10,10 @@ description: Available @pagopa/dx-cli commands and how to use them.
 
 Bootstrap a new project following DevEx conventions.
 
-**Always provisions**:
+**Generates**:
 
-- The monorepository, both locally and remotely on GitHub.com, with dotfiles and
-  a locked mise toolchain configuration.
+- A local monorepository with dotfiles and a locked mise toolchain configuration.
+  Publication to GitHub.com is optional.
 
 Before generating anything, the command checks that Terraform and mise are
 installed and that the GitHub token can read the DX packages from GitHub
@@ -24,11 +24,61 @@ Packages (see [Installation](./requirements.md)).
 The `init` command is interactive. The tables below explain what each prompt
 expects and where to find the required values.
 
-| Prompt                  | What to enter                                                                                 |
-| ----------------------- | --------------------------------------------------------------------------------------------- |
-| **Name**                | The GitHub repository name. Use lowercase letters and hyphens (e.g., `eng-myteam-myproject`). |
-| **GitHub Organization** | The GitHub organization that will own the repository. Defaults to `pagopa`.                   |
-| **Description**         | A short description of the project (optional).                                                |
+| Prompt           | What to enter                                                                                                                                                                                                              |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Name**         | The GitHub repository name. Use lowercase letters and hyphens (e.g., `eng-myteam-myproject`).                                                                                                                              |
+| **GitHub owner** | The GitHub organization or personal account that will own the repository. Defaults to `pagopa`.                                                                                                                            |
+| **Description**  | A short description of the project (optional).                                                                                                                                                                             |
+| **Code owners**  | One or more `@username` or `@organization/team` references, separated by spaces. Required for organization repositories. A personal repository automatically includes its owner's username; additional users are optional. |
+
+Use the repeatable `--code-owner` flag to supply owners without prompting:
+
+```bash
+npx @pagopa/dx-cli init --name my-project --owner pagopa \
+  --code-owner @pagopa/product-team \
+  --code-owner @pagopa/platform-team --publish
+```
+
+In CI or without an interactive terminal, organization initialization fails if
+code owners are missing. Personal namespaces automatically include `@owner`.
+Without `--publish`, non-interactive initialization leaves the scaffold local.
+Existing unattended organization commands must add at least one `--code-owner`.
+
+The CLI validates account existence and team visibility and organization.
+An organization name alone is not a code owner: use `@organization/team`.
+Teams must belong to the repository organization and cannot own code in personal
+repositories. Only root teams are accepted because the existing Terraform
+repository module does not resolve nested teams as deployment reviewers.
+GitHub lookup or permission failures stop initialization before
+scaffolding; team lookup requires a token with organization access (including
+`read:org` when applicable).
+
+All validated owners appear on one `*` line in `.github/CODEOWNERS`. The same
+team slugs populate `repository.reviewers_teams` in `infra/repository/main.tf`.
+Individual owners do not become deployment reviewer teams.
+
+**Access grants are a separate manual step.** The CLI does not grant or verify
+repository Write access. For PagoPA repositories, its next steps tell you to open
+a PR in [pagopa/eng-github-authorization](https://github.com/pagopa/eng-github-authorization)
+to register the repository, grant these same teams/users Write access (or higher),
+and associate the product GitHub App. For other organizations, follow their
+authorization process; personal repositories may need collaborator invitations.
+The JSON result includes an `ownership` object with owners, reviewer teams,
+permission status, and these instructions.
+
+Code-owner review requests only become effective after access is granted and
+CODEOWNERS is present on the PR's base branch. Adding CODEOWNERS in the scaffold
+PR therefore does not automatically request its owners on that initial PR.
+CODEOWNERS and deployment reviewer settings do not grant repository access.
+
+:::note Personal repository limitation
+
+Personal ownership validation and CODEOWNERS generation are supported, but the
+existing repository Terraform module still queries organization teams.
+End-to-end personal repository publication may fail at that existing dependency;
+this ownership change does not modify the Terraform module.
+
+:::
 
 ### Example Usage
 
@@ -38,8 +88,9 @@ npx @pagopa/dx-cli init
 ✔ Terraform is installed!
 
 ? Name test-project
-? GitHub Organization pagopa-dx
+? GitHub owner pagopa-dx
 ? Description a custom description
+? Code owners (@username or @pagopa-dx/team, separated by spaces; required) @pagopa-dx/product-team
 ✔ Workspace files created successfully!
 
 ✔ GitHub repository created successfully!
@@ -53,6 +104,9 @@ Workspace created successfully!
 Next Steps:
 1. Review the Pull Request in the GitHub repository: https://github.com/pagopa-dx/test-project/pull/1
 2. Visit https://dx.pagopa.it/getting-started to deploy your first project
+
+Code ownership and access:
+- Use pagopa-dx's authorization process to grant @pagopa-dx/product-team Write access (or higher) to pagopa-dx/test-project.
 ```
 
 After the command completes, you will have a new GitHub repository with an open

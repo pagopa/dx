@@ -6,6 +6,12 @@ import semverParse from "semver/functions/parse.js";
 import semverSort from "semver/functions/sort.js";
 
 import {
+  type GitHubAccount,
+  githubAccountSchema,
+  type GitHubTeam,
+  githubTeamSchema,
+} from "../../domain/code-ownership.js";
+import {
   CreateBranchParams,
   CreateOrUpdateEnvironmentSecretParams,
   FileContent,
@@ -22,6 +28,14 @@ type GitHubReleaseParam = {
   client: Octokit;
   owner: string;
   repo: string;
+};
+
+const ownershipLookupError = (target: string, cause: unknown): Error => {
+  const detail =
+    cause instanceof RequestError
+      ? `GitHub returned HTTP ${cause.status}: ${cause.message}. Check that the account/team exists and your token can read it (including organization access/read:org for teams); check rate limits if applicable.`
+      : `${cause instanceof Error ? cause.message : "Unexpected lookup failure"}. Check GitHub connectivity and retry.`;
+  return new Error(`Cannot validate ${target}. ${detail}`, { cause });
 };
 
 export class OctokitGitHubService implements GitHubService {
@@ -136,6 +150,23 @@ export class OctokitGitHubService implements GitHubService {
     }
   }
 
+  async getAccount(login: string): Promise<GitHubAccount> {
+    try {
+      const { data } = await this.#octokit.rest.users.getByUsername({
+        username: login,
+      });
+      const parsed = githubAccountSchema.safeParse(data);
+      if (!parsed.success) {
+        throw new Error("GitHub returned an unsupported account.", {
+          cause: parsed.error,
+        });
+      }
+      return parsed.data;
+    } catch (cause) {
+      throw ownershipLookupError(`GitHub account @${login}`, cause);
+    }
+  }
+
   async getFileContent(params: GetFileContentParams): Promise<FileContent> {
     try {
       const { data } = await this.#octokit.rest.repos.getContent({
@@ -181,6 +212,24 @@ export class OctokitGitHubService implements GitHubService {
       throw new Error(`Failed to fetch repository ${owner}/${name}`, {
         cause: error,
       });
+    }
+  }
+
+  async getTeam(organization: string, slug: string): Promise<GitHubTeam> {
+    try {
+      const { data } = await this.#octokit.rest.teams.getByName({
+        org: organization,
+        team_slug: slug,
+      });
+      const parsed = githubTeamSchema.safeParse(data);
+      if (!parsed.success) {
+        throw new Error("GitHub returned an unsupported team.", {
+          cause: parsed.error,
+        });
+      }
+      return parsed.data;
+    } catch (cause) {
+      throw ownershipLookupError(`GitHub team @${organization}/${slug}`, cause);
     }
   }
 

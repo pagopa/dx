@@ -296,13 +296,28 @@ terraform apply
 
 ### Step 3 — Register the new repository
 
+`dx init` prints this manual authorization step and the exact code owners
+selected with `--code-owner`. It does not open this GitHub authorization PR
+automatically. The Azure authorization PRs from `dx add environment` do not
+grant GitHub repository access.
+
 Open a Pull Request against the
 [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
 to do two things:
 
 1. **Add the new repository to the organization census**, including GitHub user
-   permissions
+   permissions. Grant the same teams selected with `dx init --code-owner`
+   repository **Write** access (or higher), and ensure any individual code owners
+   also have Write access. Keep the team associations aligned with
+   `.github/CODEOWNERS` and `repository.reviewers_teams` in
+   `infra/repository/main.tf`; setting either does not grant repository access.
 2. **Add the new repository to the GitHub App** — update the `repositories`
    array in `authorizations/<your-product>/data/apps.json` of the
    [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
    to include the new one.
+
+The CLI validates owner existence and team visibility/organization before
+scaffolding, but defers effective Write-access validation to this manual process.
+Code-owner review requests become effective once the grants are applied and
+CODEOWNERS is merged into the relevant base branch. `dx add environment`
+preserves the reviewer teams already configured in `infra/repository/main.tf`.

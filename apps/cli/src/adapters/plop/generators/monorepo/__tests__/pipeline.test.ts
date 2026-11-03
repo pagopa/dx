@@ -34,6 +34,11 @@ const registerStubActions = (plop: NodePlopAPI) => {
 };
 
 const payload: Payload = {
+  ownership: {
+    namespaceType: "Organization",
+    owners: ["@pagopa/devex"],
+    reviewerTeams: ["devex"],
+  },
   repoDescription: "A test repository for DX",
   repoName: "my-test-repo",
   repoOwner: "pagopa",

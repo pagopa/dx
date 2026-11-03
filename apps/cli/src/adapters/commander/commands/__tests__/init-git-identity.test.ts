@@ -87,6 +87,11 @@ const silentOutput = {
 const makePayload = (
   overrides: Partial<MonorepoPayload> = {},
 ): MonorepoPayload => ({
+  ownership: {
+    namespaceType: "Organization",
+    owners: ["@pagopa/devex"],
+    reviewerTeams: ["devex"],
+  },
   repoDescription: "A test repo",
   repoName: "test-repo",
   repoOwner: "pagopa",
@@ -114,7 +119,14 @@ const runInitCommand = async () => {
     .option("--output <mode>", "Output mode", "json")
     .addCommand(initCommand);
 
-  await program.parseAsync(["node", "dx", "--output", "json", "init"]);
+  await program.parseAsync([
+    "node",
+    "dx",
+    "--output",
+    "json",
+    "init",
+    "--publish",
+  ]);
 };
 
 describe("makeInitCommand git identity fallback", () => {
