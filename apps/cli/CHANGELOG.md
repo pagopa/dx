@@ -1,3 +1,13 @@
+## 0.27.27 (2026-11-03)
+
+### 🩹 Fixes
+
+- Fix the getting-started documentation URL in init and add environment summaries. ([#2482](https://github.com/pagopa/dx/pull/2482))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.27.26 (2026-11-03)
 
 ### 🩹 Fixes
