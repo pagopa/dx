@@ -97,9 +97,14 @@ describe("setupPnpm", () => {
       prompts: [],
     });
 
-    return await plop
-      .getGenerator("test")
-      .runActions({ repoName: "generated-repo" });
+    return await plop.getGenerator("test").runActions({
+      ownership: {
+        namespaceType: "Organization",
+        owners: ["@pagopa/devex"],
+        reviewerTeams: ["devex"],
+      },
+      repoName: "generated-repo",
+    });
   };
 
   it("installs the DX dependencies from the GitHub Packages registry", async () => {

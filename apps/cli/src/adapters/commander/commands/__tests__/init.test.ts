@@ -82,6 +82,7 @@ vi.mock("../../presenters/index.js", () => ({
   resolveOutputMode: mocks.resolveOutputMode,
 }));
 
+import { extractCliSpec } from "../../spec.js";
 import {
   confirmGitHubRepoCreation,
   getMonorepoInitialAnswers,
@@ -93,6 +94,11 @@ import {
 const makePayload = (
   overrides: Partial<MonorepoPayload> = {},
 ): MonorepoPayload => ({
+  ownership: {
+    namespaceType: "Organization",
+    owners: ["@pagopa/devex"],
+    reviewerTeams: ["devex"],
+  },
   repoDescription: "A test repo",
   repoName: "test-repo",
   repoOwner: "pagopa",
@@ -111,6 +117,7 @@ const silentOutput = {
 const runInitCommand = async (
   output: "json" | "text" = "json",
   gitHubService: GitHubService = mockDeep<GitHubService>(),
+  publish = false,
 ) => {
   const requireGitHubAuth: GitHubAuthFactory = () =>
     okAsync({
@@ -126,7 +133,14 @@ const runInitCommand = async (
     .option("--output <mode>", "Output mode", output)
     .addCommand(initCommand);
 
-  await program.parseAsync(["node", "dx", "--output", output, "init"]);
+  await program.parseAsync([
+    "node",
+    "dx",
+    "--output",
+    output,
+    "init",
+    ...(publish ? ["--publish"] : []),
+  ]);
 };
 
 const makeExecaError = ({
@@ -207,6 +221,15 @@ describe("confirmGitHubRepoCreation", () => {
 });
 
 describe("parseInitCommandOptions", () => {
+  it("accepts repeated code owners and rejects explicit blank owners", () => {
+    expect(
+      parseInitCommandOptions({ codeOwner: [" @alice ", "@pagopa/team"] }),
+    ).toEqual({ codeOwner: ["@alice", "@pagopa/team"] });
+    expect(() => parseInitCommandOptions({ codeOwner: [" "] })).toThrow(
+      "Invalid init command options",
+    );
+  });
+
   it("returns the provided init flags", () => {
     expect(
       parseInitCommandOptions({
@@ -290,7 +313,7 @@ describe("mapGitRemoteAddError", () => {
   });
 });
 
-describe("makeInitCommand", () => {
+const registerInitCommandHooks = () => {
   const payload = makePayload();
 
   beforeEach(() => {
@@ -307,7 +330,10 @@ describe("makeInitCommand", () => {
     vi.restoreAllMocks();
     process.exitCode = undefined;
   });
+};
 
+describe("makeInitCommand options", () => {
+  registerInitCommandHooks();
   it("registers flags for every init input", () => {
     const requireGitHubAuth: GitHubAuthFactory = () =>
       okAsync({
@@ -325,12 +351,133 @@ describe("makeInitCommand", () => {
       expect.arrayContaining([
         "--name <name>",
         "--owner <owner>",
+        "--code-owner <@user|@org/team>",
         "--description <description>",
         "--publish",
       ]),
     );
   });
 
+  it("exposes the ownership contract in help and the generated spec", () => {
+    const command = makeInitCommand(
+      () =>
+        okAsync({
+          authorizationService: mockDeep<AuthorizationService>(),
+          gitHubService: mockDeep<GitHubService>(),
+        }),
+      { CI: false },
+    );
+    expect(command.helpInformation().replace(/\s+/g, " ")).toContain(
+      "required for organizations",
+    );
+    const spec = extractCliSpec(new Command().addCommand(command), "0.0.0");
+    expect(spec.commands[0]?.options).toContainEqual(
+      expect.objectContaining({
+        description: expect.stringContaining("repeatable"),
+        flags: "--code-owner <@user|@org/team>",
+      }),
+    );
+  });
+
+  it("forwards every repeated code-owner flag into payload collection", async () => {
+    const command = makeInitCommand(
+      () =>
+        okAsync({
+          authorizationService: mockDeep<AuthorizationService>(),
+          gitHubService: mockDeep<GitHubService>(),
+        }),
+      { CI: true },
+    );
+    await new Command()
+      .addCommand(command)
+      .parseAsync(
+        [
+          "init",
+          "--name",
+          "test-repo",
+          "--code-owner",
+          "@alice",
+          "--code-owner",
+          "@pagopa/devex",
+        ],
+        { from: "user" },
+      );
+    expect(mocks.collectMonorepoPayload).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      { codeOwners: ["@alice", "@pagopa/devex"], repoName: "test-repo" },
+      { nonInteractive: true },
+    );
+    expect(inquirer.prompt).not.toHaveBeenCalled();
+  });
+});
+
+describe("init ownership guidance", () => {
+  registerInitCommandHooks();
+  it("reports selected owners and pending grants in publication-skipped JSON results", async () => {
+    await runInitCommand("json");
+    expect(mocks.reportResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownership: expect.objectContaining({
+          authorizationRepository:
+            "https://github.com/pagopa/eng-github-authorization",
+          owners: ["@pagopa/devex"],
+          permissionStatus: "manual-authorization-required",
+          reviewerTeams: ["devex"],
+        }),
+      }),
+    );
+  });
+
+  it.each([true, false])(
+    "prints authorization guidance when scaffold PR creation succeeds: %s",
+    async (succeeds) => {
+      const output = vi
+        .spyOn(console, "log")
+        .mockImplementation(() => undefined);
+      const github = mockDeep<GitHubService>();
+      if (succeeds) {
+        github.createPullRequest.mockResolvedValue({
+          url: "https://github.com/pagopa/test-repo/pull/1",
+        });
+      } else {
+        github.createPullRequest.mockRejectedValue(
+          new Error("Cannot create scaffold PR"),
+        );
+      }
+      mocks.tf$.mockImplementation((...args: unknown[]) =>
+        Array.isArray(args[0])
+          ? Promise.resolve({ stdout: "ok" })
+          : () => Promise.resolve({ stdout: "" }),
+      );
+      await runInitCommand("text", github, true);
+      const text = output.mock.calls.flat().join("\n");
+      expect(text).toContain(
+        "Open a PR in https://github.com/pagopa/eng-github-authorization",
+      );
+      expect(text).toContain("@pagopa/devex");
+      expect(text).toContain("Write access");
+      expect(text).toContain("not been validated or granted");
+      expect(github.createPullRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Scaffold repository",
+        }),
+      );
+    },
+  );
+
+  it("prints authorization guidance when publication is skipped", async () => {
+    const output = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    await runInitCommand("text");
+    expect(output.mock.calls.flat().join("\n")).toContain(
+      "grant @pagopa/devex repository Write access",
+    );
+  });
+});
+
+describe("makeInitCommand execution", () => {
+  const payload = makePayload();
+  registerInitCommandHooks();
   it("uses the command presenter to report json progress and results", async () => {
     await runInitCommand("json");
 
@@ -398,7 +545,7 @@ describe("makeInitCommand", () => {
 
     expect(mocks.reportError).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: "Failed to run the generator",
+        message: "Failed to run the generator: generator failed",
       }),
     );
     expect(process.exitCode).toBe(1);
@@ -433,7 +580,7 @@ describe("makeInitCommand", () => {
         : repoTerraform,
     );
 
-    await runInitCommand("json");
+    await runInitCommand("json", mockDeep<GitHubService>(), true);
 
     const reportedError = mocks.reportError.mock.lastCall?.[0];
     expect(reportedError).toMatchObject({ cause: terraformError });
