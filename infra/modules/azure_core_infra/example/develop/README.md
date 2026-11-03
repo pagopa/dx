@@ -1,35 +1,19 @@
 # Example: Development Environment
 
-This example demonstrates how to deploy a development environment using the `pagopa-dx/azure-core-infra/azurerm` module along with additional resources tailored for developer use.
+This example demonstrates how to deploy a development environment using the `pagopa-dx/azure-core-infra/azurerm` module and an Azure Cosmos DB account.
 
 ## Overview
 
 The configuration in this example:
 
 - Deploys core infrastructure components via the `azure-core-infra` module.
-- Creates an Azure API Management service.
 - Provisions an Azure Cosmos DB account with a database.
-- Deploys an Azure Storage Account.
-
-## Infrastructure Components
-
-### API Management
-
-The API Management service is deployed in a dedicated subnet within the core virtual network. It supports internal access via private networking and allows public access when required.
-
-For detailed configuration options, refer to the [Terraform module documentation](https://registry.terraform.io/modules/pagopa-dx/azure-api-management/azurerm/latest).
 
 ### Cosmos DB
 
 An Azure Cosmos DB account is provisioned with a SQL database to store application data.
 
 For detailed configuration options, refer to the [Terraform module documentation](https://registry.terraform.io/modules/pagopa-dx/azure-cosmos-account/azurerm/latest).
-
-### Storage Account
-
-An Azure Storage Account is created with a specific focus on Blob Storage.
-
-For detailed configuration options, refer to the [Terraform module documentation](https://registry.terraform.io/modules/pagopa-dx/azure-storage-account/azurerm/latest).
 
 ## Note
 
