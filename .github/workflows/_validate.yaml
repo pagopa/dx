@@ -25,7 +25,7 @@ jobs:
     env:
       MISE_ENV: ""
       APP_TOKEN_PERMISSION: ${{ matrix.permission }}
-      SMOKE_RESULTS: ${{ github.workspace }}/.app-token-smoke-results
+      SMOKE_RESULTS: ${{ github.workspace }}/app-token-smoke-results
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -64,7 +64,7 @@ jobs:
           path: |
             ${{ env.SMOKE_RESULTS }}/*.json
             ${{ env.SMOKE_RESULTS }}/*.log
-          if-no-files-found: warn
+          if-no-files-found: error
           retention-days: 7
 
   validate:

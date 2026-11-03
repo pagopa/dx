@@ -234,6 +234,7 @@ def download():
         print("Three real cold-cache downloads succeeded and the plugin loaded each time.")
     finally:
         save("downloads.json", report)
+        print(json.dumps(report, indent=2))
 
 
 def revoke():
