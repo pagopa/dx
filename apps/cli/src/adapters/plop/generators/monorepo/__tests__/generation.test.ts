@@ -96,11 +96,16 @@ const registerOwnershipTests = (
   it("uses the same teams for wildcard code ownership and deployment reviewers", async () => {
     const files = await readGeneratedFiles(
       path.join(getTempDir(), payload.repoName),
-      [".github/CODEOWNERS", "infra/repository/main.tf"],
+      ["CODEOWNERS", "infra/repository/main.tf"],
     );
-    expect(files[".github/CODEOWNERS"]).toBe(
+    expect(files["CODEOWNERS"]).toBe(
       "# see https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file\n\n* @pagopa/product-team @alice @pagopa/platform-team\n",
     );
+    await expect(
+      fs.access(
+        path.join(getTempDir(), payload.repoName, ".github", "CODEOWNERS"),
+      ),
+    ).rejects.toMatchObject({ code: "ENOENT" });
     expect(files["infra/repository/main.tf"]).toContain(
       'reviewers_teams        = ["product-team", "platform-team"]',
     );
@@ -123,9 +128,9 @@ const registerOwnershipTests = (
     expect(result.failures).toEqual([]);
     const files = await readGeneratedFiles(
       path.join(getTempDir(), personalPayload.repoName),
-      [".github/CODEOWNERS", "infra/repository/main.tf"],
+      ["CODEOWNERS", "infra/repository/main.tf"],
     );
-    expect(files[".github/CODEOWNERS"]).toBe(
+    expect(files["CODEOWNERS"]).toBe(
       "# see https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file\n\n* @alice @bob\n",
     );
     expect(files["infra/repository/main.tf"]).toContain(

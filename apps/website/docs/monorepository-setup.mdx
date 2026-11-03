@@ -309,7 +309,7 @@ to do two things:
    permissions. Grant the same teams selected with `dx init --code-owner`
    repository **Write** access (or higher), and ensure any individual code owners
    also have Write access. Keep the team associations aligned with
-   `.github/CODEOWNERS` and `repository.reviewers_teams` in
+   the root `CODEOWNERS` file and `repository.reviewers_teams` in
    `infra/repository/main.tf`; setting either does not grant repository access.
 2. **Add the new repository to the GitHub App** — update the `repositories`
    array in `authorizations/<your-product>/data/apps.json` of the
