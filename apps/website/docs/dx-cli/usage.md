@@ -53,7 +53,7 @@ GitHub lookup or permission failures stop initialization before
 scaffolding; team lookup requires a token with organization access (including
 `read:org` when applicable).
 
-All validated owners appear on one `*` line in `.github/CODEOWNERS`. The same
+All validated owners appear on one `*` line in the root `CODEOWNERS` file. The same
 team slugs populate `repository.reviewers_teams` in `infra/repository/main.tf`.
 Individual owners do not become deployment reviewer teams.
 

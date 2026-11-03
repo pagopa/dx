@@ -228,11 +228,7 @@ describe("environment generator ownership preservation", () => {
       mockGitHubService: createMockGitHubService(),
       payload: structuredClone(payload),
       prepareRepository: async (directory) => {
-        await fs.mkdir(path.join(directory, ".github"), { recursive: true });
-        await fs.writeFile(
-          path.join(directory, ".github", "CODEOWNERS"),
-          codeOwners,
-        );
+        await fs.writeFile(path.join(directory, "CODEOWNERS"), codeOwners);
         const main = path.join(directory, "infra", "repository", "main.tf");
         const content = await fs.readFile(main, "utf8");
         await fs.writeFile(
@@ -247,10 +243,10 @@ describe("environment generator ownership preservation", () => {
     });
     try {
       const files = await readGeneratedFiles(generated.tmpDir, [
-        ".github/CODEOWNERS",
+        "CODEOWNERS",
         "infra/repository/main.tf",
       ]);
-      expect(files[".github/CODEOWNERS"]).toBe(codeOwners);
+      expect(files["CODEOWNERS"]).toBe(codeOwners);
       expect(files["infra/repository/main.tf"]).toContain(
         'reviewers_teams        = ["product-team"]',
       );
