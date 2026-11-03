@@ -82,7 +82,7 @@ const trackStep = <T, E>(
   ResultAsync.fromPromise(presenter.trackStep(name, task), mapError);
 
 const displaySummary = (input: SummaryInput) => {
-  const docsUrl = "https://dx.pagopa.it/getting-started";
+  const docsUrl = "https://dx.pagopa.it/docs/getting-started";
 
   if (isGitHubRepoCreationSkipped(input)) {
     const { payload } = input;

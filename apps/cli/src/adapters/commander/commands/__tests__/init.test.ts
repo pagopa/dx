@@ -2,6 +2,7 @@
  * Tests for confirmGitHubRepoCreation in the init command.
  */
 
+import chalk from "chalk";
 import { Command } from "commander";
 import { ExecaError } from "execa";
 import inquirer from "inquirer";
@@ -350,6 +351,16 @@ describe("makeInitCommand", () => {
         gitHubRepoCreationSkipped: true,
         payload,
       }),
+    );
+  });
+
+  it("prints the getting-started documentation URL without trailing punctuation", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await runInitCommand("text");
+
+    expect(log).toHaveBeenCalledWith(
+      `3. Visit ${chalk.underline("https://dx.pagopa.it/docs/getting-started")} to deploy your first project\n`,
     );
   });
 
