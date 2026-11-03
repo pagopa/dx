@@ -2,73 +2,12 @@ name: "Code Review"
 
 on:
   workflow_dispatch:
-    inputs:
-      app-token-smoke:
-        description: Run only the temporary restricted GitHub App token smoke test.
-        type: boolean
-        default: false
   pull_request:
     types: [opened, synchronize]
 
 jobs:
-  app-token-smoke:
-    name: App token smoke (${{ matrix.permission }})
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.app-token-smoke }}
-    runs-on: ubuntu-26.04
-    timeout-minutes: 10
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        permission: [contents, metadata]
-    env:
-      MISE_ENV: ""
-      APP_TOKEN_PERMISSION: ${{ matrix.permission }}
-      SMOKE_RESULTS: ${{ github.workspace }}/app-token-smoke-results
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup TFLint
-        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
-        with:
-          install_args: tflint
-          minimum_release_age: 7d
-
-      - name: Mint and inspect restricted token
-        id: app-token
-        env:
-          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
-          GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
-        run: python3 .github/scripts/tflint-app-token-smoke.py mint
-
-      - name: Verify authenticated cold-cache downloads
-        env:
-          DEPS_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: python3 .github/scripts/tflint-app-token-smoke.py download
-
-      - name: Revoke token and verify rejection
-        if: ${{ always() && steps.app-token.outputs.token != '' }}
-        env:
-          DEPS_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: python3 .github/scripts/tflint-app-token-smoke.py revoke
-
-      - name: Upload sanitized evidence
-        if: ${{ always() }}
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: app-token-smoke-${{ matrix.permission }}
-          path: |
-            ${{ env.SMOKE_RESULTS }}/*.json
-            ${{ env.SMOKE_RESULTS }}/*.log
-          if-no-files-found: error
-          retention-days: 7
-
   validate:
-    if: ${{ github.actor != 'dx-pagopa-bot' && !(github.event_name == 'workflow_dispatch' && inputs.app-token-smoke) }}
+    if: ${{ github.actor != 'dx-pagopa-bot' }}
     permissions:
       contents: read
       actions: read
