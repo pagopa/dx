@@ -102,13 +102,6 @@ optional properties of the `repository` variable:
 
 The default branch name can be changed via the `default_branch_name` property.
 
-### Required environment reviewers
-
-GitHub allows up to six required reviewers per environment, counting users and
-teams together. This module configures team reviewers through `reviewers_teams`;
-provide no more than six distinct team slugs. Repeated slugs do not count as
-additional reviewers.
-
 ### Setting up a custom GitHub environment
 
 If the GitHub repository configuration provided by the module is not sufficient to meet the team's requirements, it is possible to expand the capabilities using the information exported by the module. A custom GitHub environment can be set up with a specific deployment policy using module's outputs:
