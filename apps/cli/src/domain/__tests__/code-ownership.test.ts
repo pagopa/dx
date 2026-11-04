@@ -40,6 +40,55 @@ describe("code-owner syntax", () => {
 });
 
 describe("resolveCodeOwnership", () => {
+  it("accepts six canonical teams without counting aliases, case variants, or individual owners", async () => {
+    const github = mock<GitHubService>();
+    github.getTeam.mockImplementation(async (_organization, slug) => ({
+      privacy: "closed",
+      slug: slug === "alias" ? "TEAM-1" : slug,
+    }));
+    github.getAccount.mockImplementation(async (login) => ({
+      login,
+      type: "User",
+    }));
+    const teams = Array.from({ length: 6 }, (_, index) => `team-${index + 1}`);
+    const users = Array.from({ length: 7 }, (_, index) => `@user-${index + 1}`);
+
+    await expect(
+      resolveCodeOwnership(
+        organization,
+        [
+          ...teams.map((team) => `@pagopa/${team}`),
+          "@PAGOPA/TEAM-1",
+          "@pagopa/alias",
+          ...users,
+        ],
+        github,
+      ),
+    ).resolves.toEqual({
+      namespaceType: "Organization",
+      owners: [...teams.map((team) => `@pagopa/${team}`), ...users],
+      reviewerTeams: teams,
+    });
+  });
+
+  it("rejects seven distinct deployment reviewer teams", async () => {
+    const github = mock<GitHubService>();
+    github.getTeam.mockImplementation(async (_organization, slug) => ({
+      privacy: "closed",
+      slug,
+    }));
+    const owners = Array.from(
+      { length: 7 },
+      (_, index) => `@pagopa/team-${index + 1}`,
+    );
+
+    await expect(
+      resolveCodeOwnership(organization, owners, github),
+    ).rejects.toThrow(
+      "at most 6 deployment reviewer teams; received 7 distinct teams",
+    );
+  });
+
   it("resolves canonical owners and deduplicates users and team slugs", async () => {
     const github = mock<GitHubService>();
     github.getAccount.mockResolvedValue(personal);

@@ -307,7 +307,7 @@ export const runAddEnvironmentPreconditions = (presenter: CommandPresenter) =>
 const DEFAULT_GITHUB_PUBLISH_CONFIRMATION = true;
 
 export const initCommandOptionsSchema = z.object({
-  codeOwner: z.array(codeOwnerSchema).min(1).optional(),
+  codeOwners: z.array(codeOwnerSchema).min(1).optional(),
   description: z.string().optional(),
   name: z.string().trim().min(1, "Repository name cannot be empty").optional(),
   owner: z.string().trim().min(1, "GitHub owner cannot be empty").optional(),
@@ -331,7 +331,7 @@ export const parseInitCommandOptions = (input: unknown): InitCommandOptions => {
 };
 
 export const getMonorepoInitialAnswers = ({
-  codeOwner,
+  codeOwners,
   description,
   name,
   owner,
@@ -339,8 +339,8 @@ export const getMonorepoInitialAnswers = ({
 }: InitCommandOptions): InitInitialAnswers => {
   const initialAnswers: InitInitialAnswers = {};
 
-  if (codeOwner !== undefined) {
-    initialAnswers.codeOwners = codeOwner;
+  if (codeOwners !== undefined) {
+    initialAnswers.codeOwners = codeOwners;
   }
   if (description) {
     initialAnswers.repoDescription = description;
@@ -723,9 +723,12 @@ export const makeInitCommand = (
       ),
     )
     .addOption(
-      new Option(
-        "--code-owner <@user|@org/team>",
-        "Code owner (repeatable); required for organizations, personal repository owner is included automatically",
+      Object.assign(
+        new Option(
+          "--code-owner <@user|@org/team>",
+          "Code owner (repeatable); required for organizations, personal repository owner is included automatically",
+        ),
+        { attributeName: () => "codeOwners" },
       ).argParser((value: string, previous: string[] = []) => [
         ...previous,
         value,
