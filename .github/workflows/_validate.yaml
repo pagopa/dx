@@ -18,7 +18,7 @@ jobs:
       contents: read
       id-token: write
       packages: read
-    uses: $/.github/workflows/_oidc-cloud-probe.yaml
+    uses: $/.github/workflows/validate-oidc-cloud-probe-v1.yaml
     with:
       expect-oidc: true
     secrets: inherit
@@ -29,7 +29,7 @@ jobs:
       actions: read
       contents: read
       packages: read
-    uses: $/.github/workflows/_oidc-cloud-probe.yaml
+    uses: $/.github/workflows/validate-oidc-cloud-probe-v1.yaml
     with:
       expect-oidc: false
     secrets: inherit

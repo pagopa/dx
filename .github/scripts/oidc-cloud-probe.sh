@@ -61,7 +61,7 @@ cloud_probe() {
     --region "$AWS_REGION" \
     --output json \
     > "$private_dir/$kind-credentials.json" 2> "$private_dir/$kind-error.log"; then
-    record "${kind}_sts" denied
+    record "${kind}_sts" failed
     record "${kind}_sts_error" "$(aws_error_code "$private_dir/$kind-error.log")"
     return
   fi
@@ -85,7 +85,7 @@ cloud_probe() {
     aws s3 ls > "$private_dir/$kind-s3.log" 2> "$private_dir/$kind-error.log"; then
     record "${kind}_s3_list" succeeded
   else
-    record "${kind}_s3_list" denied
+    record "${kind}_s3_list" failed
     record "${kind}_s3_error" "$(aws_error_code "$private_dir/$kind-error.log")"
   fi
 }
