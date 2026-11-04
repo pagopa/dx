@@ -145,3 +145,5 @@ minimumReleaseAgeExclude:
   - js-yaml@4.3.2
   # Renovate security update: glob@14.0.2
   - glob@14.0.2
+  # Renovate security update: next@16.4.1
+  - next@16.4.1
