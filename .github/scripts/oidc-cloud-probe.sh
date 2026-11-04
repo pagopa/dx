@@ -68,6 +68,11 @@ aws_error_code() {
   fi
 }
 
+aws() {
+  # Resolve mise's AWS CLI shim using the same tool configuration as the real job.
+  (cd "$GITHUB_WORKSPACE" && command aws "$@")
+}
+
 cloud_probe() {
   local kind=$1 access_key secret_key session_token expected_identity actual_identity aws_status
   local session_name="dx-oidc-${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-1}-${kind}"
@@ -136,7 +141,7 @@ request_oidc() {
 
 payload() {
   local version aws_status
-  : "${PROBE_RESULTS:?}" "${EXPECT_OIDC:?}" "${API_TOKEN_PROFILE:?}" "${GITHUB_TOKEN:?}" "${ROLE_ARN:?}" "${RUNNER_TEMP:?}"
+  : "${PROBE_RESULTS:?}" "${EXPECT_OIDC:?}" "${API_TOKEN_PROFILE:?}" "${GITHUB_TOKEN:?}" "${ROLE_ARN:?}" "${RUNNER_TEMP:?}" "${GITHUB_WORKSPACE:?}"
   [[ "$EXPECT_OIDC" == true || "$EXPECT_OIDC" == false ]] || fail "Invalid OIDC expectation"
   [[ "$API_TOKEN_PROFILE" == actions || "$API_TOKEN_PROFILE" == app-metadata ]] || fail "Invalid API token profile"
   mkdir -p -- "$PROBE_RESULTS"
