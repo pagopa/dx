@@ -22,5 +22,12 @@ runs:
       run: |
         pnpm nx run-many --projects . --targets build-deps
 
-    - name: Set base and head SHAs
-      uses: nrwl/nx-set-shas@e602fada7ad5987b0f7b1905e7a99ea1c661514c # v5.1.0
+    - name: Set Nx base and head
+      shell: bash
+      run: |
+        if [[ -n "${GITHUB_BASE_REF:-}" ]]; then
+          nx_base="origin/${GITHUB_BASE_REF}"
+        else
+          nx_base="HEAD~1"
+        fi
+        printf 'NX_BASE=%s\nNX_HEAD=HEAD\n' "$nx_base" >> "$GITHUB_ENV"
