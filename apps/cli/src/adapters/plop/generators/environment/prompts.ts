@@ -58,7 +58,7 @@ export const costCenterValues = [
   "TS310 - PAGAMENTI & SERVIZI",
   "TS320 - PIATTAFORMA NOTIFICHE DIGITALI",
   "TS330 - PDND & INTEROPERABILITA'",
-  "TS720 - DEV EX"
+  "TS720 - DEV EX",
 ] as const;
 
 export const costCenterSchema = z.enum(costCenterValues);
