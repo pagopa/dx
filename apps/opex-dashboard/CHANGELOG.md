@@ -1,3 +1,13 @@
+## 0.2.18 (2026-11-04)
+
+### 🩹 Fixes
+
+- Bump dependencies to address security advisories ([#2492](https://github.com/pagopa/dx/pull/2492))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.2.17 (2026-10-08)
 
 ### 🩹 Fixes
