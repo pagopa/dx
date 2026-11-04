@@ -1,3 +1,13 @@
+## 3.0.3 (2026-11-04)
+
+### 🩹 Fixes
+
+- Limit environment reviewers to six distinct teams ([#2495](https://github.com/pagopa/dx/pull/2495))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 3.0.2 (2026-10-15)
 
 ### 🩹 Fixes
