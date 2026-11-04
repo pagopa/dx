@@ -27,7 +27,7 @@ overrides:
   "docusaurus-plugin-llms>minimatch": 9.0.9
   "mysql2": 3.24.5
   "@docusaurus/core>tinypool": 2.2.0
-  "nx>undici": 7.30.0
+  "nx>undici": 8.12.2
   "nx>smol-toml": 1.9.0
   "nx>brace-expansion": 5.0.12
   "nx>axios": 1.20.0
@@ -136,7 +136,8 @@ minimumReleaseAgeExclude:
   - sharp@0.35.0
   - fast-xml-parser@5.10.1
   - valibot@1.4.2
-  - undici@6.28.0 || 7.29.0
+  # Renovate security update: undici@8.12.2
+  - undici@6.28.0 || 7.29.0 || 8.12.2
   - ip-address@10.2.1 || 10.2.2 || 10.3.1
   - hono@4.12.34
   - mermaid@11.16.1
