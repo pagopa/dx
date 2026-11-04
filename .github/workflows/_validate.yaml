@@ -2,12 +2,40 @@ name: "Code Review"
 
 on:
   workflow_dispatch:
+    inputs:
+      oidc-cloud-probe:
+        description: Run only the temporary infra-dev-ci OIDC capability proof.
+        type: boolean
+        default: false
   pull_request:
     types: [opened, synchronize]
 
 jobs:
+  probe-with-oidc:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.oidc-cloud-probe }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      packages: read
+    uses: $/.github/workflows/_oidc-cloud-probe.yaml
+    with:
+      expect-oidc: true
+    secrets: inherit
+
+  probe-without-oidc:
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.oidc-cloud-probe }}
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+    uses: $/.github/workflows/_oidc-cloud-probe.yaml
+    with:
+      expect-oidc: false
+    secrets: inherit
+
   validate:
-    if: ${{ github.actor != 'dx-pagopa-bot' }}
+    if: ${{ github.actor != 'dx-pagopa-bot' && !(github.event_name == 'workflow_dispatch' && inputs.oidc-cloud-probe) }}
     permissions:
       contents: read
       actions: read

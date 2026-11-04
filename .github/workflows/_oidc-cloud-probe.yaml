@@ -1,0 +1,72 @@
+name: Temporary dev OIDC capability proof
+
+on:
+  workflow_call:
+    inputs:
+      expect-oidc:
+        description: Whether the caller grants id-token write; never enables it itself.
+        type: boolean
+        required: true
+
+jobs:
+  probe:
+    name: ${{ matrix.api-token }} / OIDC ${{ inputs.expect-oidc }}
+    runs-on: [self-hosted, dev]
+    timeout-minutes: 10
+    environment:
+      name: infra-dev-ci
+      deployment: false
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        api-token: [actions, app-metadata]
+    env:
+      MISE_ENV: ""
+      ROLE_ARN: ${{ secrets.ROLE_ARN }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      EXPECT_OIDC: ${{ inputs.expect-oidc }}
+      API_TOKEN_PROFILE: ${{ matrix.api-token }}
+      PROBE_RESULTS: ${{ github.workspace }}/oidc-cloud-probe-results
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup mise and AWS CLI
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          install_args: "aws-cli jq"
+          minimum_release_age: 7d
+
+      - name: Generate metadata-only App token
+        if: ${{ matrix.api-token == 'app-metadata' }}
+        id: app-token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ secrets.GH_APP_CLIENT_ID }}
+          private-key: ${{ secrets.GH_APP_KEY }}
+          repositories: ${{ github.repository }}
+          permission-metadata: read
+
+      - name: Run mise dependency with Actions token
+        if: ${{ matrix.api-token == 'actions' }}
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: bash .github/scripts/oidc-cloud-probe.sh invoke
+
+      - name: Run mise dependency with metadata-only App token
+        if: ${{ matrix.api-token == 'app-metadata' }}
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: bash .github/scripts/oidc-cloud-probe.sh invoke
+
+      - name: Upload sanitized capability results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: oidc-probe-${{ inputs.expect-oidc }}-${{ matrix.api-token }}
+          path: ${{ env.PROBE_RESULTS }}/result.json
+          if-no-files-found: error
+          retention-days: 7
