@@ -73,6 +73,14 @@ export type RunnerAppCredentialsLookup = {
   missingClientId: boolean;
 };
 
+/** A credential lookup failure whose message is safe for command output. */
+export class RunnerAppCredentialsError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "RunnerAppCredentialsError";
+  }
+}
+
 export const cloudRegionSchema = z.object({
   displayName: z.string().min(1),
   name: z.string().min(1),

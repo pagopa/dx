@@ -26,6 +26,7 @@ import {
   AuthorizationService,
   requestAuthorizationInputSchema,
 } from "../../../domain/authorization.js";
+import { RunnerAppCredentialsError } from "../../../domain/cloud-account.js";
 import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import {
   environmentSchema,
@@ -434,7 +435,8 @@ const addEnvironmentAction = (
           nonInteractive,
         ),
         (cause) =>
-          cause instanceof MissingRunnerAppCredentialsError
+          cause instanceof MissingRunnerAppCredentialsError ||
+          cause instanceof RunnerAppCredentialsError
             ? cause
             : asError("Failed to run the deployment environment generator")(
                 cause,

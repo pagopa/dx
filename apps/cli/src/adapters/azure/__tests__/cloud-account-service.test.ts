@@ -326,7 +326,31 @@ describe("Runner App credentials in the common Key Vault", () => {
 
     await expect(
       cloudAccountService.getRunnerAppCredentials(account, environment),
-    ).rejects.toThrow("Failed to read github-runner-app-");
+    ).rejects.toMatchObject({
+      cause: new Error("network error"),
+      message:
+        "Failed to read github-runner-app-client-id from dx-d-itn-common-kv-01.",
+      name: "RunnerAppCredentialsError",
+    });
+  });
+
+  test("reports unexpected client ID backfill failures safely", async ({
+    cloudAccountService,
+  }) => {
+    mockSetSecret.mockRejectedValue(new Error("network error"));
+
+    await expect(
+      cloudAccountService.storeRunnerAppClientId(
+        account,
+        environment,
+        "client-id",
+      ),
+    ).rejects.toMatchObject({
+      cause: new Error("network error"),
+      message:
+        "Failed to save the Runner App Client ID to dx-d-itn-common-kv-01.",
+      name: "RunnerAppCredentialsError",
+    });
   });
 
   test("backfills the client ID without changing the existing runner secrets", async ({

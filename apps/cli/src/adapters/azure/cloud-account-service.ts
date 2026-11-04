@@ -20,6 +20,7 @@ import { z } from "zod/v4";
 import {
   CloudAccount,
   type CloudAccountService,
+  RunnerAppCredentialsError,
   type RunnerAppCredentialsLookup,
 } from "../../domain/cloud-account.js";
 import {
@@ -260,7 +261,7 @@ export class AzureCloudAccountService implements CloudAccountService {
             );
             return { field, missing: statusCode === 404 };
           }
-          throw new Error(
+          throw new RunnerAppCredentialsError(
             `Failed to read ${secretName} from ${keyVaultName}.`,
             {
               cause,
@@ -727,7 +728,7 @@ export class AzureCloudAccountService implements CloudAccountService {
         );
         return;
       }
-      throw new Error(
+      throw new RunnerAppCredentialsError(
         `Failed to save the Runner App Client ID to ${keyVaultName}.`,
         {
           cause,
@@ -1059,7 +1060,7 @@ export class AzureCloudAccountService implements CloudAccountService {
       .parse(result.data);
 
     if (vaults.length > 1) {
-      throw new Error(
+      throw new RunnerAppCredentialsError(
         `Multiple common Key Vaults match environment "${environment.name}" in subscription ${cloudAccount.id}.`,
       );
     }
