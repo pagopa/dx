@@ -110,9 +110,15 @@ export const resolveCodeOwnership = async (
       "Organization repositories require at least one code owner. Pass --code-owner @username or --code-owner @organization/team.",
     );
   }
+  const resolvedReviewerTeams = unique(reviewerTeams);
+  if (resolvedReviewerTeams.length > 6) {
+    throw new Error(
+      `GitHub environments support at most 6 deployment reviewer teams; received ${resolvedReviewerTeams.length} distinct teams. Choose at most 6 team code owners with --code-owner. Individual code owners do not count toward this limit.`,
+    );
+  }
   return {
     namespaceType: namespace.type,
     owners: unique(owners),
-    reviewerTeams: unique(reviewerTeams),
+    reviewerTeams: resolvedReviewerTeams,
   };
 };
