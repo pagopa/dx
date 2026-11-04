@@ -76,6 +76,33 @@ describe("collectCodeOwnership", () => {
 });
 
 describe("collectMonorepoPayload", () => {
+  it("rejects more than six reviewer teams before checking or scaffolding the repository", async () => {
+    const github = mock<GitHubService>();
+    github.getAccount.mockResolvedValue(organization);
+    github.getTeam.mockImplementation(async (_organization, slug) => ({
+      privacy: "closed",
+      slug,
+    }));
+
+    await expect(
+      collectMonorepoPayload(
+        await nodePlop(),
+        github,
+        {
+          codeOwners: Array.from(
+            { length: 7 },
+            (_, index) => `@pagopa/team-${index + 1}`,
+          ),
+          repoName: "new-repository",
+          repoOwner: "pagopa",
+        },
+        { nonInteractive: true },
+      ),
+    ).rejects.toThrow("at most 6 deployment reviewer teams");
+    expect(github.getRepository).not.toHaveBeenCalled();
+    expect(inquirer.prompt).not.toHaveBeenCalled();
+  });
+
   it("fails before generation when organization owners are missing", async () => {
     const github = mock<GitHubService>();
     github.getAccount.mockResolvedValue(organization);

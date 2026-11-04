@@ -223,9 +223,9 @@ describe("confirmGitHubRepoCreation", () => {
 describe("parseInitCommandOptions", () => {
   it("accepts repeated code owners and rejects explicit blank owners", () => {
     expect(
-      parseInitCommandOptions({ codeOwner: [" @alice ", "@pagopa/team"] }),
-    ).toEqual({ codeOwner: ["@alice", "@pagopa/team"] });
-    expect(() => parseInitCommandOptions({ codeOwner: [" "] })).toThrow(
+      parseInitCommandOptions({ codeOwners: [" @alice ", "@pagopa/team"] }),
+    ).toEqual({ codeOwners: ["@alice", "@pagopa/team"] });
+    expect(() => parseInitCommandOptions({ codeOwners: [" "] })).toThrow(
       "Invalid init command options",
     );
   });
@@ -259,12 +259,14 @@ describe("getMonorepoInitialAnswers", () => {
   it("maps init CLI options to the monorepo payload keys", () => {
     expect(
       getMonorepoInitialAnswers({
+        codeOwners: ["@alice", "@pagopa/team"],
         description: "My DX workspace",
         name: "my-dx-workspace",
         owner: "pagopa",
         publish: true,
       }),
     ).toEqual({
+      codeOwners: ["@alice", "@pagopa/team"],
       publishToGitHub: true,
       repoDescription: "My DX workspace",
       repoName: "my-dx-workspace",
@@ -408,6 +410,10 @@ describe("makeInitCommand options", () => {
       { codeOwners: ["@alice", "@pagopa/devex"], repoName: "test-repo" },
       { nonInteractive: true },
     );
+    expect(command.opts()).toMatchObject({
+      codeOwners: ["@alice", "@pagopa/devex"],
+    });
+    expect(command.opts()).not.toHaveProperty("codeOwner");
     expect(inquirer.prompt).not.toHaveBeenCalled();
   });
 });

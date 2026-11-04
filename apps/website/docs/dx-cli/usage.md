@@ -48,7 +48,10 @@ repositories.
 
 All validated owners appear on one `*` line in the root `CODEOWNERS` file. The same
 team slugs populate `repository.reviewers_teams` in `infra/repository/main.tf`.
-Individual owners do not become deployment reviewer teams.
+GitHub permits at most six distinct deployment reviewer teams; the CLI rejects
+larger selections before scaffolding. Duplicate teams do not count twice.
+Individual owners do not become deployment reviewer teams and do not count toward
+this limit.
 
 **Access grants are a separate manual step.** The CLI does not grant or verify
 repository Write access. For PagoPA repositories, its next steps tell you to open
