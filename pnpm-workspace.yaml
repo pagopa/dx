@@ -24,7 +24,7 @@ overrides:
   "@logtape/otel>@opentelemetry/exporter-logs-otlp-grpc": ^0.218.0
   "@logtape/otel>@opentelemetry/exporter-logs-otlp-http": ^0.218.0
   "@logtape/otel>@opentelemetry/exporter-logs-otlp-proto": ^0.218.0
-  "docusaurus-plugin-llms>minimatch": 9.0.9
+  "docusaurus-plugin-llms>minimatch": 11.0.1
   "mysql2": 3.24.5
   "@docusaurus/core>tinypool": 2.2.0
   "nx>undici": 7.30.0
@@ -117,7 +117,8 @@ trustLockfile: true
 
 minimumReleaseAgeExclude:
   - esbuild@0.24.3 || 0.28.1
-  - minimatch@9.0.6 || 9.0.7
+  # Renovate security update: minimatch@11.0.1
+  - minimatch@9.0.6 || 9.0.7 || 11.0.1
   - yaml@2.8.3
   - postcss@8.5.10 || 8.5.12 || 8.5.18
   - uuid@11.1.1
