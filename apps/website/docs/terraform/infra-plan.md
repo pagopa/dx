@@ -21,19 +21,6 @@ project detection from
 instead of `infra_plan.yaml`. This page remains as reference for repositories
 that still use the legacy workflow.
 
-The Nx workflow runs `mise deps --skip pnpm` in a separate GitHub-hosted job
-with only `contents: read`, without OIDC or cloud secrets. Validation jobs
-restore the platform-specific dependency archive from the same run instead
-of repeating that installation. Artifacts are retained for one day, with no
-cleanup job. Node.js dependency installation, `build-deps`, and tool setup
-remain in the existing jobs.
-
-The `mise-deps-artifact-paths` workflow input lists the workspace-relative
-outputs to transfer, one literal path per line. It defaults to
-`.tflint.d/plugins`; repositories with other mise providers must include
-their outputs too. See [dependency preparation](./infra-apply.md#dependency-preparation)
-for the contract and portability requirements.
-
 :::
 
 This page describes the GitHub workflow that automates Terraform plan

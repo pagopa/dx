@@ -2,12 +2,6 @@ name: Release Terraform
 
 on:
   workflow_call:
-    inputs:
-      mise-deps-artifact-paths:
-        description: "Newline-separated workspace-relative output paths to share after mise deps --skip pnpm. Include every configured provider's outputs; no globs or credentials."
-        type: string
-        required: false
-        default: .tflint.d/plugins
 
 concurrency:
   group: terraform-release
@@ -15,13 +9,15 @@ concurrency:
   queue: single
 
 env:
+  ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
   ARM_USE_OIDC: true
   ARM_USE_AZUREAD: true
   ARM_STORAGE_USE_AZUREAD: true
+  ROLE_ARN: ${{ secrets.ROLE_ARN }}
+  AWS_REGION: ${{ secrets.AWS_REGION }}
   TF_IN_AUTOMATION: true
   PNPM_CONFIG_STORE_DIR: ~/.local/share/pnpm/store
   MISE_ENV: ""
-  TFLINT_PLUGIN_DIR: ${{ github.workspace }}/.tflint.d/plugins
   TFPLAN_FILE: tf-outcome-${{ github.sha }}
 
 jobs:
@@ -144,71 +140,9 @@ jobs:
 
           printf 'project-targets=%s\n' "$project_targets" >> "$GITHUB_OUTPUT"
 
-  install-deps:
-    name: Prepare dependencies
-    needs: assess-affected-projects
-    if: ${{ needs.assess-affected-projects.outputs.project-targets != '[]' }}
-    runs-on: ${{ matrix.runner }}
-    permissions:
-      contents: read
-    strategy:
-      fail-fast: false
-      matrix:
-        runner: [ubuntu-26.04, ubuntu-26.04-arm]
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
-      - name: Setup repository tools
-        if: ${{ hashFiles('mise.toml') != '' }}
-        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
-        with:
-          experimental: true
-          minimum_release_age: 7d
-
-      - name: Cache TFLint plugins
-        if: ${{ hashFiles('mise.toml') != '' && hashFiles('.tflint.hcl') != '' }}
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.TFLINT_PLUGIN_DIR }}
-          key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
-
-      - name: Install dependencies
-        if: ${{ hashFiles('mise.toml') != '' }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: mise deps --skip pnpm
-
-      - name: Package mise dependencies
-        env:
-          MISE_DEPS_ARTIFACT_PATHS: ${{ inputs.mise-deps-artifact-paths }}
-        run: |
-          set -euo pipefail
-          if printf '%s\n' "$MISE_DEPS_ARTIFACT_PATHS" | grep -E '(^/|(^|/)\.\.?(/|$)|(^|/)\.git(/|$))' > /dev/null; then
-            echo "::error::Dependency artifact paths must be workspace-relative, without dot segments or .git."
-            exit 1
-          fi
-          mkdir -p .tflint.d/plugins
-          printf '%s\n' "$MISE_DEPS_ARTIFACT_PATHS" |
-            sed '/^[[:space:]]*$/d' |
-            tr '\n' '\0' |
-            tar -czf "$RUNNER_TEMP/mise-deps.tar.gz" --null -T -
-
-      - name: Upload mise dependencies
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
-        with:
-          name: release-mise-deps-${{ runner.os }}-${{ runner.arch }}
-          path: ${{ runner.temp }}/mise-deps.tar.gz
-          compression-level: 0
-          if-no-files-found: error
-          overwrite: true
-          retention-days: 1
-
   release-plan:
     name: "Plan: ${{ matrix.target.project }}"
-    needs: [assess-affected-projects, install-deps]
+    needs: assess-affected-projects
     if: ${{ needs.assess-affected-projects.outputs.project-targets != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
     environment: ${{ matrix.target.plan-github-environment }}
@@ -221,10 +155,6 @@ jobs:
       contents: read
       id-token: write
       packages: read
-    env:
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ROLE_ARN: ${{ secrets.ROLE_ARN }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
       - name: Check out repository
@@ -251,14 +181,11 @@ jobs:
       - name: Setup Nx Workspace
         uses: pagopa/dx/actions/setup-nx-workspace@main
 
-      - name: Download mise dependencies
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: release-mise-deps-${{ runner.os }}-${{ runner.arch }}
-          path: ${{ runner.temp }}/mise-deps
-
-      - name: Restore mise dependencies
-        run: tar -xzf "$RUNNER_TEMP/mise-deps/mise-deps.tar.gz"
+      - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mise deps --skip pnpm
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -309,7 +236,7 @@ jobs:
 
   release-apply:
     name: "Apply: ${{ matrix.target.project }}"
-    needs: [assess-affected-projects, install-deps, release-plan]
+    needs: [assess-affected-projects, release-plan]
     if: ${{ needs.assess-affected-projects.outputs.project-targets != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
     environment: ${{ matrix.target.apply-github-environment }}
@@ -322,10 +249,6 @@ jobs:
       contents: read
       id-token: write
       packages: read
-    env:
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ROLE_ARN: ${{ secrets.ROLE_ARN }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
 
     steps:
       - name: Check out repository
@@ -352,14 +275,11 @@ jobs:
       - name: Setup Nx Workspace
         uses: pagopa/dx/actions/setup-nx-workspace@main
 
-      - name: Download mise dependencies
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: release-mise-deps-${{ runner.os }}-${{ runner.arch }}
-          path: ${{ runner.temp }}/mise-deps
-
-      - name: Restore mise dependencies
-        run: tar -xzf "$RUNNER_TEMP/mise-deps/mise-deps.tar.gz"
+      - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mise deps --skip pnpm
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main

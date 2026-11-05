@@ -201,52 +201,6 @@ Apply** flow, so the plan a reviewer approves is what gets applied:
 
 If no matching Nx project is found, both jobs are skipped.
 
-### Dependency preparation
-
-Before planning, a dedicated `install-deps` job runs `mise deps --skip pnpm`
-once per platform, on GitHub-hosted Linux X64 and ARM64 runners. This job has
-only `contents: read` for checkout, exposes no cloud secrets, and cannot
-request OIDC tokens. Its GitHub API token is scoped to the installation step.
-Providers must not require cloud credentials or private-package permissions.
-
-The `mise-deps-artifact-paths` input lists the outputs of those providers to
-transfer, one literal workspace-relative path per line. The default,
-`.tflint.d/plugins`, covers the TFLint provider configured by `dx init`.
-Repositories with additional providers must include **all** their required
-outputs, for example:
-
-```yaml
-with:
-  mise-deps-artifact-paths: |
-    .tflint.d/plugins
-    src/generated
-```
-
-Paths must not contain glob patterns, dot segments, `.git`, secrets, or
-authentication configuration. Missing listed paths fail packaging. The
-default plugin directory is created even when no TFLint provider is configured,
-so repositories without plugins can share an empty archive.
-
-Plugins are still cached between runs. The selected outputs are packaged in
-a tar archive to preserve executable permissions and symlinks, then uploaded
-as architecture-specific artifacts retained for **one day**. No cleanup job
-deletes them at the end of the run. Plan and apply restore the matching archive
-from the same run, without repeating `mise deps --skip pnpm`.
-
-The outputs must be relocatable and compatible with the consumer runner's
-OS, architecture, tool versions, and system libraries. A provider that installs
-outside the workspace, or produces a virtualenv with absolute paths, needs a
-portable output configuration before it can use this transfer. Mise's freshness
-state is not transferred: providers with `auto = true` can still reinstall
-when later commands invoke `mise exec` or `mise run`.
-
-Node.js dependency installation, `build-deps`, and repository tool setup remain
-in the existing jobs. Moving this step does not isolate those operations, or
-the later execution of installed plugins, from the cloud jobs.
-
-Because dependency artifacts expire after one day, rerunning consumers or
-approving an apply after expiry requires rerunning preparation as well.
-
 The complete release is serialized through planning, approval and apply. Active
 runs are never cancelled. Only one run remains pending; a newer run replaces the
 pending one and generates its plan after the active release ends. The queue does
