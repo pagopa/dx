@@ -12,8 +12,8 @@ Bootstrap a new project following DevEx conventions.
 
 **Always provisions**:
 
-- The monorepository, both locally and remotely on GitHub.com, with dotfiles and
-  a locked mise toolchain configuration.
+- A local monorepository with dotfiles and a locked mise toolchain
+  configuration.
 
 Before generating anything, the command checks that Terraform and mise are
 installed and that the GitHub token can read the DX packages from GitHub
@@ -55,8 +55,11 @@ Next Steps:
 2. Visit https://dx.pagopa.it/getting-started to deploy your first project
 ```
 
-After the command completes, you will have a new GitHub repository with an open
-Pull Request to merge the initial project structure.
+After the command completes, you will have a local monorepository. The example
+above shows the optional publication path: if you choose to publish, the
+command creates a remote repository, pushes the workspace and attempts to open a
+pull request. If you decline, the local workspace remains available. The
+command still performs its normal authentication and prerequisite checks.
 
 ## `add` - Scaffold New Components
 
@@ -255,8 +258,11 @@ npx @pagopa/dx-cli add environment
 ✔ Environment created successfully!
 ```
 
-After the command completes, you will have a new GitHub repository with an open
-Pull Request to merge the initial project structure.
+After the command completes, the workspace contains the generated environment
+configuration. If authorization pull requests were created, review the links
+in the output. Environment creation does not itself confirm that every
+authorization request was created or approved; check any warnings before
+proceeding.
 
 ## `doctor` – Repository Validation
 
