@@ -240,6 +240,8 @@ jobs:
           pnpm ci
 
       - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: mise deps --skip pnpm
 
       - name: Cache Nx
@@ -373,6 +375,8 @@ jobs:
         uses: pagopa/dx/actions/setup-nx-workspace@main
 
       - name: Install dependencies
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           mise deps --skip pnpm
 
