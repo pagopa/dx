@@ -1,0 +1,33 @@
+"""compare subpackage: two-run skill comparison (workspace vs git ref)."""
+
+from .run import (
+    CompareError,
+    CompareOptions,
+    CompareResult,
+    HarborRunError,
+    check_harbor_cli,
+    run_compare,
+)
+from .sources import (
+    SkillInjection,
+    SkillSource,
+    derive_globs,
+    is_git_source,
+    parse_skill,
+    validate_git_source,
+)
+
+__all__ = [
+    "SkillInjection",
+    "SkillSource",
+    "derive_globs",
+    "is_git_source",
+    "parse_skill",
+    "validate_git_source",
+    "CompareError",
+    "CompareOptions",
+    "CompareResult",
+    "HarborRunError",
+    "check_harbor_cli",
+    "run_compare",
+]

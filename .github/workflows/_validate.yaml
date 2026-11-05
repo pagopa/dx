@@ -11,7 +11,8 @@ jobs:
     permissions:
       contents: read
       actions: read
+      packages: read
       pull-requests: write
       id-token: write
-    uses: ./.github/workflows/validate-v2.yaml
+    uses: $/.github/workflows/validate-v2.yaml
     secrets: inherit

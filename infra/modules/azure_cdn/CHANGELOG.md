@@ -1,3 +1,166 @@
+## 3.0.1 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+# 3.0.0 (2026-10-29)
+
+### ⚠️  Breaking Changes
+
+- Allow AzureRM v5 alongside v4 and require Terraform >= 1.16.0. The Terraform floor is a major breaking change for the 18 modules marked major here. The VPN and Cosmos Account modules receive their major upgrade through CES-2366; their minor entries here cover dual-provider support and are superseded by that major bump. ([#2339](https://github.com/pagopa/dx/pull/2339))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 2.2.1 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 2.2.0 (2026-10-14)
+
+### 🚀 Features
+
+- Add per-origin preserve_host_header option to forward the incoming Host header when enabled, preserving the existing default behavior. ([#2338](https://github.com/pagopa/dx/pull/2338))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 2.1.7 (2026-10-13)
+
+### 🩹 Fixes
+
+- Update internal examples and AzureRM constraints ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 2.1.6 (2026-09-30)
+
+### 🩹 Fixes
+
+- Configure storage account private DNS zone resource groups in examples and test setup ([#2270](https://github.com/pagopa/dx/pull/2270))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 2.1.5 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
+## 2.1.4 (2026-09-15)
+
+### 🩹 Fixes
+
+- Update examples to target UAT environment ([#2192](https://github.com/pagopa/dx/pull/2192))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 2.1.3 (2026-09-08)
+
+### 🩹 Fixes
+
+- Update internal dependencies ([#2120](https://github.com/pagopa/dx/pull/2120))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 2.1.2 (2026-09-08)
+
+### 🩹 Fixes
+
+- Change Tests environment to UAT ([#2123](https://github.com/pagopa/dx/pull/2123))
+
+### ❤️ Thank You
+
+- Krusty93
+- Mario Mupo @mamu0
+
+## 2.1.1 (2026-09-04)
+
+### 🩹 Fixes
+
+- Fix Azure Front Door compression configuration ([#2148](https://github.com/pagopa/dx/pull/2148))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot @Copilot
+
+## 2.1.0 (2026-09-02)
+
+### 🚀 Features
+
+- Enable response compression for Azure Front Door routes. ([#2097](https://github.com/pagopa/dx/pull/2097))
+
+  > "Azure Front Door configuration changes take up to 10 mins to propagate
+  > throughout the network." — [Microsoft Learn](https://learn.microsoft.com/azure/frontdoor/standard-premium/how-to-compression)
+
+  Compression requires route caching and can cause 503 responses for byte range
+  requests when `Accept-Encoding` produces different origin content lengths.
+
+  For routes serving ranged content (for example media streaming, resumable
+  downloads, or PDF viewers), consumers should add a Front Door rule to the
+  route's rule set:
+
+  1. Match requests where the `Range` request header exists.
+  2. Remove the `Accept-Encoding` request header.
+  3. Associate the rule set with only the affected route.
+
+  This preserves compression for all other requests while following Microsoft's
+  recommendation to remove `Accept-Encoding` from byte range requests.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot @Copilot
+
+# 2.0.0 (2026-09-01)
+
+### ⚠️  Breaking Changes
+
+- Drop support for Terraform versions older than 1.14.0. The minimum required Terraform version is now 1.15.0, and it is suggested to use 1.16.0 or later. ([#2086](https://github.com/pagopa/dx/pull/2086))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 1.0.1 (2026-08-26)
+
+### 🩹 Fixes
+
+- Read module tags from module manifests ([#2053](https://github.com/pagopa/dx/pull/2053))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 # 1.0.0 (2026-07-06)
 
 ### ⚠️  Breaking Changes

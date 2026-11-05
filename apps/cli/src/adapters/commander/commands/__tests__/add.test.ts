@@ -31,7 +31,12 @@ const makeEnvPayload = (
     prefix: "dx",
   },
   github: { owner: "pagopa", repo: "test-repo" },
-  tags: { BusinessUnit: "BU", CostCenter: "TS000", ManagementTeam: "MT" },
+  tags: {
+    BusinessUnit: "BU",
+    CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+    ManagementTeam: "MT",
+    Owner: "DX Platform",
+  },
   workspace: { domain: "" },
   ...overrides,
 });
@@ -90,7 +95,10 @@ describe("authorizeCloudAccounts edge cases", () => {
 
     expect(authService.requestAuthorization).toHaveBeenCalledWith(
       expect.objectContaining({
-        bootstrapIdentityId: "dx-d-itn-bootstrap-id-01",
+        bootstrapIdentityIds: {
+          cd: "dx-d-itn-bootstrap-id-01",
+          ci: "dx-d-itn-bootstrap-ci-id-01",
+        },
         envShort: "d",
         prefix: "dx",
         subscriptionName: "DEV-FooBar",
@@ -155,7 +163,10 @@ describe("authorizeCloudAccounts", () => {
     expect(result.isOk()).toBe(true);
     expect(authService.requestAuthorization).toHaveBeenCalledWith(
       expect.objectContaining({
-        bootstrapIdentityId: "io-p-weu-bootstrap-id-01",
+        bootstrapIdentityIds: {
+          cd: "io-p-weu-bootstrap-id-01",
+          ci: "io-p-weu-bootstrap-ci-id-01",
+        },
         envShort: "p",
         prefix: "io",
         subscriptionName: "PROD-Bar",

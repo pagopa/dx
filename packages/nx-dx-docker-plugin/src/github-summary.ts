@@ -16,7 +16,7 @@ const appendSummary = (markdown: string, env: NodeJS.ProcessEnv): void => {
   } catch (err) {
     // A summary write failure must never fail the actual build/push.
     console.warn(
-      "[@pagopa/nx-dx-docker-plugin] Could not write to GITHUB_STEP_SUMMARY",
+      "[@pagopa/nx-docker] Could not write to GITHUB_STEP_SUMMARY",
       err,
     );
   }

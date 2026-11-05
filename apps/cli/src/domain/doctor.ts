@@ -3,7 +3,7 @@ import { ResultAsync } from "neverthrow";
 import { Config } from "../config.js";
 import { Dependencies } from "./dependencies.js";
 import { checkMonorepoScripts } from "./package-json.js";
-import { checkNxConfig, checkPreCommitConfig } from "./repository.js";
+import { checkNxConfig, checkNxTerraformPlugin } from "./repository.js";
 import { ValidationCheck, ValidationCheckResult } from "./validation.js";
 import { checkWorkspaces } from "./workspace.js";
 
@@ -35,8 +35,8 @@ export const runDoctor = async (dependencies: Dependencies, config: Config) => {
 
   const doctorChecks = [
     ResultAsync.fromPromise(
-      checkPreCommitConfig(dependencies, repositoryRoot),
-      () => new Error("Error checking pre-commit configuration"),
+      checkNxTerraformPlugin(dependencies, repositoryRoot),
+      () => new Error("Error checking the Nx Terraform plugin configuration"),
     ),
     ResultAsync.fromPromise(
       checkNxConfig(dependencies, repositoryRoot, config),

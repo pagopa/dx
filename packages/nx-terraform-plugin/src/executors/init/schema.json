@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/schema",
+  "version": 2,
+  "title": "Terraform init executor",
+  "description": "Initializes Terraform and locks downloaded Registry modules",
+  "type": "object",
+  "properties": {
+    "projectRoot": {
+      "description": "Terraform project root used as the working directory",
+      "type": "string"
+    },
+    "args": {
+      "description": "Additional arguments passed to terraform init",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    },
+    "frozenLockfile": {
+      "description": "Fail instead of updating tfmodules.lock.json or when .terraform.lock.hcl changes",
+      "type": "boolean",
+      "default": false
+    },
+    "platforms": {
+      "description": "Additional Terraform provider lock platforms",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
+    }
+  },
+  "required": ["projectRoot"]
+}

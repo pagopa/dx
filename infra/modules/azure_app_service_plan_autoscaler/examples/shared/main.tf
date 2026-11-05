@@ -11,7 +11,7 @@ resource "azurerm_resource_group" "example" {
 
 module "azure_function_app_1" {
   source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 4.1"
+  version = "~> 7.0"
 
   environment         = local.environment
   use_case            = "default"
@@ -34,7 +34,7 @@ module "azure_function_app_1" {
 
 module "azure_function_app_2" {
   source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 4.1"
+  version = "~> 7.0"
 
   environment         = merge(local.environment, { instance_number = "02" })
   use_case            = "default"
@@ -59,7 +59,7 @@ module "azure_function_app_2" {
 
 module "azure_app_service_1" {
   source  = "pagopa-dx/azure-app-service/azurerm"
-  version = "~> 2.0"
+  version = "~> 5.0"
 
   environment         = local.environment
   use_case            = "default"
@@ -85,7 +85,7 @@ module "azure_app_service_1" {
 
 module "func_autoscaler" {
   source  = "pagopa-dx/azure-app-service-plan-autoscaler/azurerm"
-  version = "~> 2.0"
+  version = "~> 4.0"
 
   resource_group_name = azurerm_resource_group.example.name
   location            = local.environment.location

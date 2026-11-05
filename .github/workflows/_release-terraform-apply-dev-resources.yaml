@@ -2,16 +2,9 @@ name: Terraform apply on dev resources
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "infra/resources/dev/**"
-      - "infra/resources/_modules/**"
-      - ".github/workflows/_release-terraform-apply-dev-resources.yaml"
 jobs:
   dev_itn_common_deploy:
-    uses: pagopa/dx/.github/workflows/infra_apply.yaml@main
+    uses: $/.github/workflows/infra_apply.yaml
     name: Dev - Deploy
     secrets: inherit
     with:

@@ -1,7 +1,0 @@
-{
-  "name": "azure_naming_convention",
-  "version": "1.0.0",
-  "private": true,
-  "provider": "azurerm",
-  "description": "Provides standardized naming convention for Azure resources following best practices and organizational patterns"
-}

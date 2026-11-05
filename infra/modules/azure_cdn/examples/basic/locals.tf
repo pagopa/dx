@@ -1,7 +1,7 @@
 locals {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -28,9 +28,9 @@ locals {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     BusinessUnit   = "DevEx"
     ManagementTeam = "Developer Experience"
     Source         = "https://github.com/pagopa/dx/modules/azure_cdn/examples/basic"

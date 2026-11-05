@@ -1,10 +1,15 @@
+# Trivy suppressions:
+# - AVD-AZU-0019: Azure enables this parameter by default.
+# - AVD-AZU-0021: This parameter is not documented for Flexible Server.
+# - AVD-AZU-0024: Azure enables this parameter by default.
+
 terraform {
-  required_version = ">= 1.14.0"
+  required_version = ">= 1.16.0"
 
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.23"
+      version = ">= 4.23, < 6.0.0"
     }
     dx = {
       source  = "pagopa-dx/azure"
@@ -17,6 +22,9 @@ terraform {
 # PostgreSQL Flexible Server #
 #----------------------------#
 
+# trivy:ignore:AVD-AZU-0019 Ensure server parameter ’log_connections’ is set to ‘ON’ for PostgreSQL Database Server
+# trivy:ignore:AVD-AZU-0021 Ensure server parameter ’connection_throttling’ is set to ‘ON’ for PostgreSQL Database Server
+# trivy:ignore:AVD-AZU-0024 Ensure server parameter ’log_checkpoints’ is set to ‘ON’ for PostgreSQL Database Server
 resource "azurerm_postgresql_flexible_server" "this" {
   name                = local.db.name
   resource_group_name = var.resource_group_name

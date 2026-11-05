@@ -1,3 +1,202 @@
+## 9.1.1 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 9.1.0 (2026-10-30)
+
+### 🚀 Features
+
+- Add opt-in Microsoft Entra ID authentication for Container Apps with ([#2443](https://github.com/pagopa/dx/pull/2443))
+  configurable unauthenticated-request handling and an optional caller-application
+  allowlist. Omitting the allowlist keeps authentication enabled without
+  restricting client applications; when supplied, only those Application (client)
+  IDs, such as an APIM managed identity, are allowed.
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+# 9.0.0 (2026-10-29)
+
+### ⚠️  Breaking Changes
+
+- Allow AzureRM v5 alongside v4 and require Terraform >= 1.16.0. The Terraform floor is a major breaking change for the 18 modules marked major here. The VPN and Cosmos Account modules receive their major upgrade through CES-2366; their minor entries here cover dual-provider support and are superseded by that major bump. ([#2339](https://github.com/pagopa/dx/pull/2339))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 8.0.3 (2026-10-28)
+
+### 🩹 Fixes
+
+- Allow Easy Auth to omit the Entra client-secret Key Vault reference and configure unauthenticated responses, preserving the existing `RedirectToLoginPage` default while enabling `Return401` for API clients. ([#2430](https://github.com/pagopa/dx/pull/2430))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 8.0.2 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 8.0.1 (2026-10-13)
+
+### 🩹 Fixes
+
+- Update internal examples and AzureRM constraints ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+# 8.0.0 (2026-10-02)
+
+### ⚠️  Breaking Changes
+
+- Replace `app_settings`, `secret_names`, and `secrets` with ordered Container App environment variables. Values matching Azure Key Vault secret URIs, with an optional secret version, are configured as native Container App secret references. ([#2206](https://github.com/pagopa/dx/pull/2206))
+
+  ## Migration path
+
+  1. Remove the top-level `secrets` input and the per-container `app_settings` and `secret_names` inputs.
+  2. Replace them with `containers[*].environment_variables`, preserving the desired environment-variable order:
+
+  	 ```hcl
+  	 # Before
+  	 secrets = [{
+  		 name                = "API_KEY"
+  		 key_vault_secret_id = "https://my-kv.vault.azure.net/secrets/api-key"
+  	 }]
+
+  	 containers = [{
+  		 image        = "ghcr.io/pagopa/example:latest"
+  		 app_settings = { API_BASE_URL = "https://api.example.com" }
+  		 secret_names = ["API_KEY"]
+  		 liveness_probe = {
+  			 path = "/health"
+  		 }
+  	 }]
+
+  	 # After
+  	 containers = [{
+  		 image = "ghcr.io/pagopa/example:latest"
+  		 environment_variables = [
+  			 {
+  				 name  = "API_BASE_URL"
+  				 value = "https://api.example.com"
+  			 },
+  			 {
+  				 name  = "API_KEY"
+  				 value = "https://my-kv.vault.azure.net/secrets/api-key"
+  			 },
+  		 ]
+  		 liveness_probe = {
+  			 path = "/health"
+  		 }
+  	 }]
+  	 ```
+
+  3. For Key Vault-backed variables, grant the Container App identity permission to read the referenced secret. The generated Container App secret name is the environment variable name lowercased with underscores replaced by hyphens; use that name in autoscaler authentication settings.
+  4. Append new environment variables when possible to avoid positional replacements in Terraform plans.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 7.0.4 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
+## 7.0.3 (2026-09-15)
+
+### 🩹 Fixes
+
+- Update examples to target UAT environment ([#2192](https://github.com/pagopa/dx/pull/2192))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 7.0.2 (2026-09-08)
+
+### 🩹 Fixes
+
+- Update internal dependencies ([#2120](https://github.com/pagopa/dx/pull/2120))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 7.0.1 (2026-09-08)
+
+### 🩹 Fixes
+
+- Few changes to `ignore_changes` block: ([#2145](https://github.com/pagopa/dx/pull/2145))
+
+  - Add `ingress[0].traffic_weight` to ignored properties
+  - Remove `latest_revision_fqdn` from ignored_properties
+  - Remove `url_latest_revision` output because it was causing a drift after each application deployment
+
+- Change Tests environment to UAT ([#2123](https://github.com/pagopa/dx/pull/2123))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot Autofix powered by AI @Copilot
+- Krusty93
+- Mario Mupo @mamu0
+
+# 7.0.0 (2026-09-01)
+
+### ⚠️  Breaking Changes
+
+- Drop support for Terraform versions older than 1.14.0. The minimum required Terraform version is now 1.15.0, and it is suggested to use 1.16.0 or later. ([#2086](https://github.com/pagopa/dx/pull/2086))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 6.1.1 (2026-08-26)
+
+### 🩹 Fixes
+
+- Read module tags from module manifests ([#2053](https://github.com/pagopa/dx/pull/2053))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 6.1.0 (2026-08-05)
+
+### 🚀 Features
+
+- Add OTEL_SERVICE_NAME environment variable to set the service name in Open Telemetry sessions ([#2043](https://github.com/pagopa/dx/pull/2043))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 6.0.2 (2026-07-16)
 
 ### 🩹 Fixes

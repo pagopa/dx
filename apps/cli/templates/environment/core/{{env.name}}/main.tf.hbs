@@ -2,7 +2,7 @@
 {{#each this}}
 module "azure-{{displayName}}_core" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 4.0"
+  version = "~> 7.0"
 
   providers = {
     azurerm = azurerm.{{displayName}}
@@ -19,5 +19,4 @@ module "azure-{{displayName}}_core" {
 
 {{/each}}
 {{/with}}
-
 

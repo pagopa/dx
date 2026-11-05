@@ -55,7 +55,7 @@ const maskPemBlocks = (input: string): string => {
 
 export const maskOutput = (
   input: string,
-  additionalKeys: string[] = [],
+  additionalKeys: string[] = ["hidden-link", "APPINSIGHTS_INSTRUMENTATIONKEY"],
 ): string => {
   const keys = additionalKeys.map((k) => k.trim()).filter((k) => k.length > 0);
 

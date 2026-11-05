@@ -3,7 +3,7 @@ variables {
 
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -11,9 +11,9 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_cdn/tests"
     ManagementTeam = "Developer Experience"
@@ -130,6 +130,11 @@ run "cdn_single_origin" {
   }
 
   assert {
+    condition     = azurerm_cdn_frontdoor_origin.this["primary"].origin_host_header == "test.blob.core.windows.net"
+    error_message = "Origin Host header must default to the origin hostname"
+  }
+
+  assert {
     condition     = azurerm_cdn_frontdoor_origin.this["primary"].priority == 1
     error_message = "Primary origin should have default priority of 1"
   }
@@ -142,6 +147,56 @@ run "cdn_single_origin" {
   assert {
     condition     = azurerm_cdn_frontdoor_origin.this["primary"].certificate_name_check_enabled == true
     error_message = "Certificate name check must be enabled"
+  }
+}
+
+run "cdn_preserve_host_header" {
+  command = plan
+
+  variables {
+    origins = {
+      primary = {
+        host_name            = "distribution.cloudfront.net"
+        preserve_host_header = true
+      }
+    }
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_origin.this["primary"].origin_host_header == null
+    error_message = "Origin Host header must be omitted when preserve_host_header is true so Front Door forwards the incoming Host header"
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_origin.this["primary"].host_name == "distribution.cloudfront.net"
+    error_message = "Preserving the incoming Host header must not change the origin hostname"
+  }
+}
+
+run "cdn_preserve_host_header_per_origin" {
+  command = plan
+
+  variables {
+    origins = {
+      primary = {
+        host_name            = "primary.blob.core.windows.net"
+        preserve_host_header = false
+      }
+      secondary = {
+        host_name            = "distribution.cloudfront.net"
+        preserve_host_header = true
+      }
+    }
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_origin.this["primary"].origin_host_header == "primary.blob.core.windows.net"
+    error_message = "Explicitly setting preserve_host_header to false must use the origin hostname"
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_origin.this["secondary"].origin_host_header == null
+    error_message = "Preserving the incoming Host header must affect only the selected origin"
   }
 }
 
@@ -188,6 +243,16 @@ run "cdn_route_configuration" {
   assert {
     condition     = azurerm_cdn_frontdoor_route.this.https_redirect_enabled == true
     error_message = "HTTPS redirect must be enabled"
+  }
+
+  assert {
+    condition     = azurerm_cdn_frontdoor_route.this.cache[0].compression_enabled == true
+    error_message = "Route compression must be enabled"
+  }
+
+  assert {
+    condition     = toset(azurerm_cdn_frontdoor_route.this.cache[0].content_types_to_compress) == toset(local.compression_content_types)
+    error_message = "Route compression must use the supported content types"
   }
 
   assert {

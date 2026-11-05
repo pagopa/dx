@@ -8,7 +8,7 @@ on:
 jobs:
   validate-naming:
     name: Validate Workflow Naming Convention
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     concurrency:
       group: ${{ github.workflow }}-ci
       cancel-in-progress: true
@@ -17,7 +17,7 @@ jobs:
       actions: read
     steps:
       - name: Checkout repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -59,12 +59,19 @@ jobs:
           # Define the naming pattern.
           # Pattern is: [_]<scope>[-<description>][-vN].yaml
           NAMING_PATTERN='^_?(release|validate|cron)(-[a-z0-9]+)*(-v[0-9]+)?\.yaml$'
+          # Workflows allowed to bypass the scope convention.
+          ALLOWED_NAMES=("deploy-v1.yaml" "_deploy.yaml")
           FOUND_FILES=0
 
           # Check each new or renamed file
           while IFS= read -r -d '' FILE; do
             FOUND_FILES=1
             FILE_NAME=$(basename "$FILE")
+
+            if [[ " ${ALLOWED_NAMES[*]} " == *" $FILE_NAME "* ]]; then
+              echo "Skipping '$FILE_NAME': allowed by exception."
+              continue
+            fi
 
             if ! [[ "$FILE_NAME" =~ ^_ ]]; then
               # Reusable workflows must end with an explicit major version.

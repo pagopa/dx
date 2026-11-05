@@ -1,3 +1,125 @@
+## 2.3.1 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 2.3.0 (2026-10-29)
+
+### 🚀 Features
+
+- Adds `github_environment_prefix_enabled` to the Azure and AWS bootstrap modules. When enabled, GitHub names include the resource prefix—for example, `infra-prod-ci` becomes `infra-ced-prod-ci`. Cloud resource names are unchanged. ([#2371](https://github.com/pagopa/dx/pull/2371))
+
+  The CLI enables this automatically for tenant-qualified environments. Existing configurations remain unchanged by default.
+  The feature is introduced in Azure module version 7.1.0 and AWS module version 2.3.0; consumers enabling the flag must use those versions or later.
+
+  Enabling the flag on an existing deployment changes where secrets are stored and, on Azure, the credentials used by workflows. Existing workflows must use the new environment names before the old configuration is removed.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 2.2.0 (2026-10-22)
+
+### 🚀 Features
+
+- Always create a dedicated token-only OIDC role and the repository-level ECR_PUBLIC_ROLE_ARN secret in the AWS bootstrap. Ignore subsequent secret value changes to avoid ARN churn between environment states. Initial creation can overwrite an existing secret, and destroying an instance can delete the shared secret; coordinate creation, role rotation and retirement across states. ECR Public authentication still requires organization policies to permit us-east-1. Validation uses only the official AWS authentication actions, with optional non-blocking login; it does not clear pre-existing Docker credentials, which must be managed on self-hosted runners. ([#2388](https://github.com/pagopa/dx/pull/2388))
+
+  Grant sts:GetServiceBearerToken without a service-name condition, matching the documented AWS ECR Public policy and avoiding a condition-dependent implicit Deny. The role still grants only the two token actions; bearer-token permission is no longer limited to ECR Public, and no repository write or additional service API permissions are added.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 2.1.2 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 2.1.1 (2026-10-05)
+
+### 🩹 Fixes
+
+- Update the CodeBuild self-hosted runner dependency to version 3. ([#2256](https://github.com/pagopa/dx/pull/2256))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Christian Calabrese
+
+## 2.1.0 (2026-09-22)
+
+### 🚀 Features
+
+- Federate managed identities and IAM roles with GitHub repositories that emit immutable OIDC subject claims (created or renamed after 2026-07-15). The DX CLI and the Azure and AWS Terraform modules now also trust the immutable subject embedding the numeric GitHub owner and repository IDs, keeping the name-based trust for older repositories.  ([#2219](https://github.com/pagopa/dx/pull/2219))
+
+  See https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 2.0.3 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
+## 2.0.2 (2026-09-15)
+
+### 🩹 Fixes
+
+- Update examples to target UAT environment ([#2192](https://github.com/pagopa/dx/pull/2192))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 2.0.1 (2026-09-08)
+
+### 🩹 Fixes
+
+- Update internal dependencies ([#2120](https://github.com/pagopa/dx/pull/2120))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+# 2.0.0 (2026-09-01)
+
+### ⚠️  Breaking Changes
+
+- Drop support for Terraform versions older than 1.14.0. The minimum required Terraform version is now 1.15.0, and it is suggested to use 1.16.0 or later. ([#2086](https://github.com/pagopa/dx/pull/2086))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 1.0.1 (2026-08-26)
+
+### 🩹 Fixes
+
+- Read module tags from module manifests ([#2053](https://github.com/pagopa/dx/pull/2053))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 # 1.0.0 (2026-07-06)
 
 ### ⚠️  Breaking Changes

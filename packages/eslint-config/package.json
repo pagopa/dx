@@ -1,45 +1,37 @@
 {
   "name": "@pagopa/eslint-config",
-  "type": "module",
-  "version": "6.2.0",
-  "main": "index.js",
-  "exports": {
-    ".": "./index.js",
-    "./jest": "./jest.js"
-  },
+  "version": "7.0.1",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "packages/eslint-config"
-  },
-  "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
   },
   "files": [
     "base.js",
     "index.js",
     "jest.js"
   ],
+  "type": "module",
+  "main": "index.js",
+  "exports": {
+    ".": "./index.js",
+    "./jest": "./jest.js"
+  },
   "dependencies": {
-    "@vitest/eslint-plugin": "^1.6.20",
+    "@vitest/eslint-plugin": "^1.6.27",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-perfectionist": "^5.9.1",
-    "eslint-plugin-prettier": "^5.5.6",
+    "eslint-plugin-perfectionist": "^5.12.1",
     "typescript": "catalog:",
-    "typescript-eslint": "^8.62.0"
+    "typescript-eslint": "^8.71.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "catalog:",
-    "eslint-plugin-jest": "^29.0.0",
-    "prettier": "catalog:"
+    "eslint": "^10.12.0"
   },
   "peerDependencies": {
     "@eslint/js": "^9.0.0 || ^10.0.0",
     "eslint": "^9.0.0 || ^10.0.0",
-    "eslint-plugin-jest": "^29.0.0",
-    "prettier": ">=3.0.0"
+    "eslint-plugin-jest": "^29.0.0"
   },
   "peerDependenciesMeta": {
     "eslint-plugin-jest": {

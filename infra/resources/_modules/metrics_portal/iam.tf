@@ -2,7 +2,7 @@
 # This is required for Key Vault references in Container App secrets and environment variables.
 module "container_app_key_vault_roles" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 1.0"
+  version = "~> 4.0"
 
   principal_id    = var.container_app_user_assigned_identity_principal_id
   subscription_id = local.key_vault_subscription_id

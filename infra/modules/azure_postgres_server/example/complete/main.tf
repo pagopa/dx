@@ -66,7 +66,7 @@ resource "azurerm_key_vault_secret" "postgres_username" {
 
 module "azure_postgres" {
   source  = "pagopa-dx/azure-postgres-server/azurerm"
-  version = "~> 2.0"
+  version = "~> 5.0"
 
   environment                          = local.environment
   resource_group_name                  = azurerm_resource_group.example.name

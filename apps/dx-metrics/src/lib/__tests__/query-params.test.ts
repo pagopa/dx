@@ -1,7 +1,11 @@
 import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 
-import { DashboardQuerySchema, parseDashboardQuery } from "../query-params.js";
+import {
+  DashboardQuerySchema,
+  parseDashboardQuery,
+  resolveRepositories,
+} from "../query-params.js";
 
 const makeRequest = (params: Record<string, string> = {}) => {
   const url = new URL("http://localhost/api/dashboard");
@@ -50,6 +54,104 @@ describe("DashboardQuerySchema", () => {
     expect(result.success).toBe(true);
     expect(result.success && result.data.repository).toBeUndefined();
   });
+
+  it("parses a comma-separated repositories list", () => {
+    const result = DashboardQuerySchema.safeParse({
+      repositories: "dx,io-infra",
+    });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.repositories).toEqual([
+      "dx",
+      "io-infra",
+    ]);
+  });
+
+  it("trims and drops empty entries in the repositories list", () => {
+    const result = DashboardQuerySchema.safeParse({
+      repositories: " dx , , io-infra ",
+    });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.repositories).toEqual([
+      "dx",
+      "io-infra",
+    ]);
+  });
+
+  it("parses an explicitly empty repositories value as an empty list", () => {
+    const result = DashboardQuerySchema.safeParse({ repositories: "" });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.repositories).toEqual([]);
+  });
+
+  it("leaves repositories undefined when omitted", () => {
+    const result = DashboardQuerySchema.safeParse({});
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.repositories).toBeUndefined();
+  });
+
+  it("accepts an explicit start and end range", () => {
+    const result = DashboardQuerySchema.safeParse({
+      end: "2026-11-02",
+      start: "2026-06-01",
+    });
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data.start).toBe("2026-06-01");
+      expect(result.data.end).toBe("2026-11-02");
+    }
+  });
+
+  it("rejects malformed and impossible range dates", () => {
+    expect(
+      DashboardQuerySchema.safeParse({ start: "01/06/2026" }).success,
+    ).toBe(false);
+    expect(DashboardQuerySchema.safeParse({ end: "2026-02-30" }).success).toBe(
+      false,
+    );
+    // Only the first ten characters are a valid date; the schema must reject the
+    // value rather than forward `2026-06-30garbage` to PostgreSQL.
+    expect(
+      DashboardQuerySchema.safeParse({ end: "2026-06-30garbage" }).success,
+    ).toBe(false);
+  });
+
+  it("still applies the days default when only a range is provided", () => {
+    const result = DashboardQuerySchema.safeParse({ start: "2026-06-01" });
+    expect(result.success).toBe(true);
+    expect(result.success && result.data.days).toBe(120);
+  });
+});
+
+describe("resolveRepositories", () => {
+  const parse = (input: Record<string, string>) => {
+    const result = DashboardQuerySchema.safeParse(input);
+    if (!result.success) {
+      throw new Error("expected the query to parse");
+    }
+    return result.data;
+  };
+
+  it("returns the explicit list when repositories is provided", () => {
+    expect(
+      resolveRepositories(parse({ repositories: "dx,io-infra" }), ["dx"]),
+    ).toEqual(["dx", "io-infra"]);
+  });
+
+  it("returns the explicit empty list when repositories is empty", () => {
+    expect(resolveRepositories(parse({ repositories: "" }), ["dx"])).toEqual(
+      [],
+    );
+  });
+
+  it("falls back to the legacy single repository value", () => {
+    expect(
+      resolveRepositories(parse({ repository: "io-infra" }), ["dx"]),
+    ).toEqual(["io-infra"]);
+  });
+
+  it("falls back to the default when neither parameter is present", () => {
+    expect(resolveRepositories(parse({}), ["io-infra"])).toEqual(["io-infra"]);
+  });
 });
 
 describe("parseDashboardQuery", () => {
@@ -67,6 +169,15 @@ describe("parseDashboardQuery", () => {
     if ("query" in result) {
       expect(result.query.days).toBe(30);
       expect(result.query.repository).toBe("myrepo");
+    }
+  });
+
+  it("parses the comma-separated repositories parameter", () => {
+    const req = makeRequest({ repositories: "dx,io-infra" });
+    const result = parseDashboardQuery(req);
+    expect("query" in result).toBe(true);
+    if ("query" in result) {
+      expect(result.query.repositories).toEqual(["dx", "io-infra"]);
     }
   });
 

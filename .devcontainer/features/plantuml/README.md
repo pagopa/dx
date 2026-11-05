@@ -1,4 +1,3 @@
-
 # PlantUML (plantuml)
 
 Installs PlantUML
@@ -13,9 +12,9 @@ Installs PlantUML
 
 ## Options
 
-| Options Id | Description | Type | Default Value |
-|-----|-----|-----|-----|
-| version | The version of PlantUML to install | string | latest |
+| Options Id | Description                        | Type   | Default Value |
+| ---------- | ---------------------------------- | ------ | ------------- |
+| version    | The version of PlantUML to install | string | latest        |
 
 ## Customizations
 
@@ -23,8 +22,6 @@ Installs PlantUML
 
 - `jebbs.plantuml`
 
-
-
 ---
 
-_Note: This file was auto-generated from the [devcontainer-feature.json](devcontainer-feature.json).  Add additional notes to a `NOTES.md`._
+_Note: This file was auto-generated from the [devcontainer-feature.json](devcontainer-feature.json). Add additional notes to a `NOTES.md`._

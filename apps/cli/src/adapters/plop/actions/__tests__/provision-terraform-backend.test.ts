@@ -11,6 +11,7 @@ import { provisionTerraformBackend } from "../provision-terraform-backend.js";
 const createMockCloudAccountService = (
   overrides: Partial<CloudAccountService> = {},
 ): CloudAccountService => ({
+  configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
   getTerraformBackend: vi.fn().mockResolvedValue(undefined),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),
@@ -61,7 +62,10 @@ const createMockPayload = (overrides: Partial<Payload> = {}): Payload => ({
       cloudAccount: createMockCloudAccount(),
     },
   },
-  tags: {},
+  tags: {
+    CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+    Owner: "DX Platform",
+  },
   workspace: {
     domain: "test",
   },
@@ -115,7 +119,7 @@ describe("provisionTerraformBackend", () => {
     expect(provisionMock).toHaveBeenCalledWith(
       cloudAccount,
       expect.objectContaining({ name: "prod", prefix: "io" }),
-      {},
+      payload.tags,
     );
   });
 
@@ -168,7 +172,7 @@ describe("provisionTerraformBackend", () => {
     expect(provisionMock).toHaveBeenCalledWith(
       backendCloudAccount,
       expect.objectContaining({ name: "uat", prefix: "dx" }),
-      {},
+      payload.tags,
     );
   });
 });

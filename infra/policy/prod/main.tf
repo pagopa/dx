@@ -1,0 +1,22 @@
+terraform {
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4"
+    }
+  }
+
+  backend "azurerm" {
+    resource_group_name  = "dx-p-itn-tfstate-rg-01"
+    storage_account_name = "dxpitntfstatest01"
+    container_name       = "terraform-state"
+    key                  = "dx.policy.prod.italynorth.tfstate"
+    use_azuread_auth     = true
+  }
+}
+
+provider "azurerm" {
+  features {
+  }
+  storage_use_azuread = true
+}

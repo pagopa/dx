@@ -34,7 +34,23 @@ const makeEnv = () => {
 
 const makeSampleInput = (): RequestAuthorizationInput =>
   requestAuthorizationInputSchema.parse({
-    bootstrapIdentityId: "test-bootstrap-identity-id",
+    bootstrapIdentityIds: {
+      cd: "test-bootstrap-identity-id",
+      ci: "test-bootstrap-ci-identity-id",
+    },
+    envShort: "d",
+    prefix: "test",
+    repoName: "test-repo",
+    repoOwner: "pagopa",
+    subscriptionName: "test-subscription",
+  });
+
+const makeBootstrapIdentityPairInput = (): RequestAuthorizationInput =>
+  requestAuthorizationInputSchema.parse({
+    bootstrapIdentityIds: {
+      cd: "test-d-itn-bootstrap-id-01",
+      ci: "test-d-itn-bootstrap-ci-id-01",
+    },
     envShort: "d",
     prefix: "test",
     repoName: "test-repo",
@@ -45,8 +61,466 @@ const makeSampleInput = (): RequestAuthorizationInput =>
 const FILE_PATH =
   "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars.json";
 
+const configureSuccessfulAuthorizationUpdate = (
+  gitHubService: ReturnType<typeof makeEnv>["gitHubService"],
+  content: string,
+  sha: string,
+): void => {
+  gitHubService.createBranch.mockResolvedValue(undefined);
+  gitHubService.getFileContent.mockResolvedValue({ content, sha });
+  gitHubService.updateFile.mockResolvedValue(undefined);
+  gitHubService.createPullRequest.mockResolvedValue(
+    new PullRequest(
+      "https://github.com/pagopa/eng-azure-authorization/pull/73",
+    ),
+  );
+};
+
 // eslint-disable-next-line max-lines-per-function
 describe("PagoPA AuthorizationService", () => {
+  describe("bootstrap identity pair", () => {
+    it("adds both identities while preserving existing principals and fields", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeBootstrapIdentityPairInput();
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: ["existing-identity"],
+            some_other_field: "keep-me",
+          },
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "identity-pair-sha",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/70",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+      expect(updatedParsed.directory_readers.service_principals_name).toEqual([
+        "existing-identity",
+        "test-d-itn-bootstrap-id-01",
+        "test-d-itn-bootstrap-ci-id-01",
+      ]);
+      expect(updatedParsed.directory_readers.some_other_field).toBe("keep-me");
+    });
+
+    it("adds only the missing CI identity", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeBootstrapIdentityPairInput();
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: ["test-d-itn-bootstrap-id-01"],
+          },
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "missing-ci-sha",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/71",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+      expect(updatedParsed.directory_readers.service_principals_name).toEqual([
+        "test-d-itn-bootstrap-id-01",
+        "test-d-itn-bootstrap-ci-id-01",
+      ]);
+    });
+
+    it("removes duplicate identities while preserving their first occurrence", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeBootstrapIdentityPairInput();
+      const groups = DEFAULT_GROUP_SPECS.map((spec) => ({
+        members: [],
+        name: makeGroupName("test", "d", spec.groupName),
+        roles: [...spec.roles],
+      }));
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "existing-identity",
+              "test-d-itn-bootstrap-id-01",
+              "test-d-itn-bootstrap-id-01",
+              "existing-identity",
+              "test-d-itn-bootstrap-ci-id-01",
+              "test-d-itn-bootstrap-ci-id-01",
+            ],
+          },
+          groups,
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "duplicate-identities-sha",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/72",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updateCall = gitHubService.updateFile.mock.calls[0][0];
+      const updatedParsed = JSON.parse(updateCall.content);
+      expect(updatedParsed.directory_readers.service_principals_name).toEqual([
+        "existing-identity",
+        "test-d-itn-bootstrap-id-01",
+        "test-d-itn-bootstrap-ci-id-01",
+      ]);
+    });
+
+    it("skips the pull request when both identities and groups are current", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeBootstrapIdentityPairInput();
+      const groups = DEFAULT_GROUP_SPECS.map((spec) => ({
+        members: [],
+        name: makeGroupName("test", "d", spec.groupName),
+        roles: [...spec.roles],
+      }));
+      const originalContent = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "test-d-itn-bootstrap-id-01",
+              "test-d-itn-bootstrap-ci-id-01",
+            ],
+          },
+          groups,
+        },
+        null,
+        2,
+      );
+
+      gitHubService.createBranch.mockResolvedValue(undefined);
+      gitHubService.getFileContent.mockResolvedValue({
+        content: originalContent,
+        sha: "identity-pair-noop-sha",
+      });
+      gitHubService.updateFile.mockResolvedValue(undefined);
+      gitHubService.createPullRequest.mockResolvedValue(
+        new PullRequest(
+          "https://github.com/pagopa/eng-azure-authorization/pull/72",
+        ),
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      expect(result._unsafeUnwrap().url).toBeUndefined();
+      expect(gitHubService.createBranch).not.toHaveBeenCalled();
+      expect(gitHubService.updateFile).not.toHaveBeenCalled();
+      expect(gitHubService.createPullRequest).not.toHaveBeenCalled();
+    });
+  });
+
+  // eslint-disable-next-line max-lines-per-function
+  describe("managed authorization groups", () => {
+    it("keeps Technology-owned names and applies least-privilege roles", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const content = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
+          },
+          groups: [],
+        },
+        null,
+        2,
+      );
+
+      configureSuccessfulAuthorizationUpdate(
+        gitHubService,
+        content,
+        "managed-groups-sha",
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updatedParsed = JSON.parse(
+        gitHubService.updateFile.mock.calls[0][0].content,
+      );
+      expect(updatedParsed.groups).toEqual([
+        {
+          members: [],
+          name: "test-d-adgroup-admin",
+          roles: ["Contributor"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-developers",
+          roles: ["Reader"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-externals",
+          roles: ["Reader"],
+        },
+      ]);
+    });
+
+    it("preserves Technology-owned organizational groups without managing them", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const organizationalGroups = [
+        {
+          members: ["operations@example.com"],
+          metadata: { owner: "technology" },
+          name: "test-d-adgroup-operations",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["security@example.com"],
+          metadata: { owner: "technology" },
+          name: "test-d-adgroup-security",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["tpm@example.com"],
+          metadata: { owner: "technology" },
+          name: "test-d-adgroup-technical-project-managers",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["product@example.com"],
+          metadata: { owner: "technology" },
+          name: "test-d-adgroup-product-owners",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["oncall@example.com"],
+          metadata: { owner: "technology" },
+          name: "test-d-adgroup-oncall",
+          roles: ["Technology-defined role"],
+        },
+      ];
+      const content = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
+          },
+          groups: organizationalGroups,
+        },
+        null,
+        2,
+      );
+
+      configureSuccessfulAuthorizationUpdate(
+        gitHubService,
+        content,
+        "organizational-groups-sha",
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updatedParsed = JSON.parse(
+        gitHubService.updateFile.mock.calls[0][0].content,
+      );
+      expect(
+        updatedParsed.groups.slice(0, organizationalGroups.length),
+      ).toEqual(organizationalGroups);
+      expect(updatedParsed.groups.slice(organizationalGroups.length)).toEqual([
+        {
+          members: [],
+          name: "test-d-adgroup-admin",
+          roles: ["Contributor"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-developers",
+          roles: ["Reader"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-externals",
+          roles: ["Reader"],
+        },
+      ]);
+    });
+
+    it("migrates managed group roles while preserving members and fields", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const managedGroups = [
+        {
+          members: ["admin@example.com"],
+          metadata: { source: "legacy" },
+          name: "test-d-adgroup-admin",
+          roles: ["Owner"],
+        },
+        {
+          members: ["developer@example.com"],
+          metadata: { source: "legacy" },
+          name: "test-d-adgroup-developers",
+          roles: ["Owner"],
+        },
+        {
+          members: ["external@example.com"],
+          metadata: { source: "legacy" },
+          name: "test-d-adgroup-externals",
+          roles: ["Owner"],
+        },
+      ];
+      const content = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
+          },
+          groups: managedGroups,
+        },
+        null,
+        2,
+      );
+
+      configureSuccessfulAuthorizationUpdate(
+        gitHubService,
+        content,
+        "managed-role-migration-sha",
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updatedParsed = JSON.parse(
+        gitHubService.updateFile.mock.calls[0][0].content,
+      );
+      expect(updatedParsed.groups).toEqual([
+        {
+          ...managedGroups[0],
+          roles: ["Contributor"],
+        },
+        {
+          ...managedGroups[1],
+          roles: ["Reader"],
+        },
+        {
+          ...managedGroups[2],
+          roles: ["Reader"],
+        },
+      ]);
+    });
+
+    it("skips a pull request when only unmanaged group roles differ", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const groups = [
+        {
+          members: [],
+          name: "test-d-adgroup-admin",
+          roles: ["Contributor"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-developers",
+          roles: ["Reader"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-externals",
+          roles: ["Reader"],
+        },
+        {
+          members: ["operations@example.com"],
+          name: "test-d-adgroup-operations",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["security@example.com"],
+          name: "test-d-adgroup-security",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["tpm@example.com"],
+          name: "test-d-adgroup-technical-project-managers",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["product@example.com"],
+          name: "test-d-adgroup-product-owners",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["oncall@example.com"],
+          name: "test-d-adgroup-oncall",
+          roles: ["Technology-defined role"],
+        },
+      ];
+      const content = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
+          },
+          groups,
+        },
+        null,
+        2,
+      );
+
+      configureSuccessfulAuthorizationUpdate(
+        gitHubService,
+        content,
+        "unmanaged-role-noop-sha",
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      expect(result._unsafeUnwrap().url).toBeUndefined();
+      expect(gitHubService.createBranch).not.toHaveBeenCalled();
+      expect(gitHubService.updateFile).not.toHaveBeenCalled();
+      expect(gitHubService.createPullRequest).not.toHaveBeenCalled();
+    });
+  });
+
   // eslint-disable-next-line max-lines-per-function
   describe("happy path", () => {
     it("should create a pull request when all steps succeed", async () => {
@@ -96,7 +570,8 @@ describe("PagoPA AuthorizationService", () => {
       expect(gitHubService.updateFile).toHaveBeenCalledWith(
         expect.objectContaining({
           branch: "feats/add-test-repo-test-subscription-bootstrap-identity",
-          message: "Add bootstrap identity and AD groups for test-subscription",
+          message:
+            "Authorize bootstrap identities and configure AD groups for test-subscription",
           owner: "pagopa",
           path: FILE_PATH,
           repo: "eng-azure-authorization",
@@ -106,18 +581,22 @@ describe("PagoPA AuthorizationService", () => {
 
       expect(gitHubService.createPullRequest).toHaveBeenCalledWith({
         base: "main",
-        body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers and configures AD groups for subscription `test-subscription`.",
+        body: "This PR ensures the bootstrap identities `test-bootstrap-identity-id` and `test-bootstrap-ci-identity-id` are directory readers and configures AD groups for subscription `test-subscription`.",
         head: "feats/add-test-repo-test-subscription-bootstrap-identity",
         owner: "pagopa",
         repo: "eng-azure-authorization",
-        title: "Add bootstrap identity and AD groups for test-subscription",
+        title:
+          "Authorize bootstrap identities and configure AD groups for test-subscription",
       });
     });
 
     it("should target the authorization repository under the selected owner", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = requestAuthorizationInputSchema.parse({
-        bootstrapIdentityId: "test-bootstrap-identity-id",
+        bootstrapIdentityIds: {
+          cd: "test-bootstrap-identity-id",
+          ci: "test-bootstrap-ci-identity-id",
+        },
         envShort: "d",
         prefix: "test",
         repoName: "test-repo",
@@ -159,15 +638,16 @@ describe("PagoPA AuthorizationService", () => {
       });
       expect(gitHubService.createPullRequest).toHaveBeenCalledWith({
         base: "main",
-        body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers and configures AD groups for subscription `test-subscription`.",
+        body: "This PR ensures the bootstrap identities `test-bootstrap-identity-id` and `test-bootstrap-ci-identity-id` are directory readers and configures AD groups for subscription `test-subscription`.",
         head: "feats/add-test-repo-test-subscription-bootstrap-identity",
         owner: "pagopa-dx",
         repo: "eng-azure-authorization",
-        title: "Add bootstrap identity and AD groups for test-subscription",
+        title:
+          "Authorize bootstrap identities and configure AD groups for test-subscription",
       });
     });
 
-    it("should add all default AD groups when none exist", async () => {
+    it("should add all managed AD groups when none exist", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const originalContent = JSON.stringify(
@@ -242,7 +722,7 @@ describe("PagoPA AuthorizationService", () => {
       const updateCall = gitHubService.updateFile.mock.calls[0][0];
       const updatedParsed = JSON.parse(updateCall.content);
 
-      // All default groups should be present
+      // All managed groups should be present
       expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length);
 
       // Admin group should preserve existing member
@@ -260,7 +740,7 @@ describe("PagoPA AuthorizationService", () => {
           directory_readers: { service_principals_name: [] },
           groups: [
             {
-              // externals normally gets "Owner" but file has "Reader"
+              // Externals should keep the managed "Reader" role.
               members: ["bob@pagopa.it"],
               name: "test-d-adgroup-externals",
               roles: ["Reader"],
@@ -292,13 +772,13 @@ describe("PagoPA AuthorizationService", () => {
       const externalsGroup = updatedParsed.groups.find(
         (g: { name: string }) => g.name === "test-d-adgroup-externals",
       );
-      // Roles updated to default
-      expect(externalsGroup.roles).toEqual(["Owner"]);
+      // Roles remain aligned with the managed contract.
+      expect(externalsGroup.roles).toEqual(["Reader"]);
       // Members preserved
       expect(externalsGroup.members).toContain("bob@pagopa.it");
     });
 
-    it("should preserve custom (non-default) groups", async () => {
+    it("should preserve unmanaged groups", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const originalContent = JSON.stringify(
@@ -340,7 +820,7 @@ describe("PagoPA AuthorizationService", () => {
       );
       expect(customGroup).toBeDefined();
       expect(customGroup.members).toContain("carol@pagopa.it");
-      // All defaults also present
+      // All managed groups also present
       expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length + 1);
     });
 
@@ -381,19 +861,22 @@ describe("PagoPA AuthorizationService", () => {
       const updateCall = gitHubService.updateFile.mock.calls[0][0];
       const updatedParsed = JSON.parse(updateCall.content);
 
-      // Identity added
+      // Identities added
       expect(updatedParsed.directory_readers.service_principals_name).toContain(
         "test-bootstrap-identity-id",
+      );
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "test-bootstrap-ci-identity-id",
       );
       // Extra fields preserved
       expect(updatedParsed.directory_readers.some_other_field).toBe("keep-me");
       expect(updatedParsed.entra_groups).toEqual({ readers: ["reader-group"] });
       expect(updatedParsed.other_top_level).toBe(true);
-      // All default groups added
+      // All managed groups added
       expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length);
     });
 
-    it("should append identity to an existing non-empty list", async () => {
+    it("should append identities to an existing non-empty list", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const originalContent = JSON.stringify(
@@ -426,6 +909,9 @@ describe("PagoPA AuthorizationService", () => {
       const updatedParsed = JSON.parse(updateCall.content);
       expect(updatedParsed.directory_readers.service_principals_name).toContain(
         "test-bootstrap-identity-id",
+      );
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "test-bootstrap-ci-identity-id",
       );
       expect(updatedParsed.directory_readers.service_principals_name).toContain(
         "existing-identity",
@@ -468,13 +954,13 @@ describe("PagoPA AuthorizationService", () => {
 
       expect(gitHubService.updateFile).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: "Add bootstrap identity for test-subscription",
+          message: "Authorize bootstrap identities for test-subscription",
         }),
       );
       expect(gitHubService.createPullRequest).toHaveBeenCalledWith(
         expect.objectContaining({
-          body: "This PR adds the bootstrap identity `test-bootstrap-identity-id` to the directory readers for subscription `test-subscription`.",
-          title: "Add bootstrap identity for test-subscription",
+          body: "This PR ensures the bootstrap identities `test-bootstrap-identity-id` and `test-bootstrap-ci-identity-id` are directory readers for subscription `test-subscription`.",
+          title: "Authorize bootstrap identities for test-subscription",
         }),
       );
     });
@@ -486,7 +972,10 @@ describe("PagoPA AuthorizationService", () => {
       const originalContent = JSON.stringify(
         {
           directory_readers: {
-            service_principals_name: ["test-bootstrap-identity-id"],
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
           },
         },
         null,
@@ -522,10 +1011,10 @@ describe("PagoPA AuthorizationService", () => {
       );
     });
 
-    it("should preserve original group order and append missing defaults at end", async () => {
+    it("should preserve original group order and append missing managed groups at end", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
-      // Start with custom group + one default group (externals) in deliberate order
+      // Start with an unmanaged group and one managed group in deliberate order
       const originalContent = JSON.stringify(
         {
           directory_readers: { service_principals_name: [] },
@@ -570,7 +1059,7 @@ describe("PagoPA AuthorizationService", () => {
       // Original groups preserve their order
       expect(groupNames[0]).toBe("test-d-adgroup-custom-team");
       expect(groupNames[1]).toBe("test-d-adgroup-externals");
-      // Missing defaults appended after existing groups
+      // Missing managed groups appended after existing groups
       expect(groupNames.length).toBe(DEFAULT_GROUP_SPECS.length + 1);
     });
 
@@ -643,14 +1132,17 @@ describe("PagoPA AuthorizationService", () => {
       expect(gitHubService.updateFile).not.toHaveBeenCalled();
     });
 
-    it("should upsert groups and create PR when identity already exists", async () => {
+    it("should upsert groups and create PR when identities already exist", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
-      // Identity already present, no groups yet
+      // Identities already present, no groups yet
       const content = JSON.stringify(
         {
           directory_readers: {
-            service_principals_name: ["test-bootstrap-identity-id"],
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
           },
         },
         null,
@@ -677,25 +1169,28 @@ describe("PagoPA AuthorizationService", () => {
         "https://github.com/pagopa/eng-azure-authorization/pull/55",
       );
 
-      // Identity must NOT be duplicated
+      // Identities must NOT be duplicated
       const updateCall = gitHubService.updateFile.mock.calls[0][0];
       const updatedParsed = JSON.parse(updateCall.content);
       expect(
         updatedParsed.directory_readers.service_principals_name,
-      ).toHaveLength(1);
+      ).toHaveLength(2);
       expect(updatedParsed.directory_readers.service_principals_name).toContain(
         "test-bootstrap-identity-id",
       );
+      expect(updatedParsed.directory_readers.service_principals_name).toContain(
+        "test-bootstrap-ci-identity-id",
+      );
 
-      // All default groups must be created
+      // All managed groups must be created
       expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length);
     });
 
-    it("should skip update and PR when identity exists and groups are already correct", async () => {
+    it("should skip update and PR when identities exist and groups are already correct", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
 
-      // Build a file where the identity is present and all groups are already correct
+      // Build a file where both identities and all groups are already correct
       const allGroups = DEFAULT_GROUP_SPECS.map((spec) => ({
         members: [],
         name: makeGroupName("test", "d", spec.groupName),
@@ -704,7 +1199,10 @@ describe("PagoPA AuthorizationService", () => {
       const content = JSON.stringify(
         {
           directory_readers: {
-            service_principals_name: ["test-bootstrap-identity-id"],
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
           },
           groups: allGroups,
         },
@@ -729,15 +1227,18 @@ describe("PagoPA AuthorizationService", () => {
       expect(gitHubService.createPullRequest).not.toHaveBeenCalled();
     });
 
-    it("should update group roles and create PR when identity exists with wrong roles", async () => {
+    it("should update group roles and create PR when identities exist with wrong roles", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
 
-      // Identity present, but externals group has wrong roles
+      // Identities present, but externals group has wrong roles
       const content = JSON.stringify(
         {
           directory_readers: {
-            service_principals_name: ["test-bootstrap-identity-id"],
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
           },
           groups: [
             {
@@ -776,13 +1277,13 @@ describe("PagoPA AuthorizationService", () => {
       const externalsGroup = updatedParsed.groups.find(
         (g: { name: string }) => g.name === "test-d-adgroup-externals",
       );
-      expect(externalsGroup.roles).toEqual(["Owner"]);
+      expect(externalsGroup.roles).toEqual(["Reader"]);
       // Member preserved
       expect(externalsGroup.members).toContain("bob@pagopa.it");
-      // Identity not duplicated
+      // Identities not duplicated
       expect(
         updatedParsed.directory_readers.service_principals_name,
-      ).toHaveLength(1);
+      ).toHaveLength(2);
     });
 
     it("should return error when file content is not valid JSON", async () => {

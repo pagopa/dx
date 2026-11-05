@@ -46,11 +46,10 @@ data "azurerm_private_dns_zone" "container_apps" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "container_apps" {
-  name                  = azurerm_virtual_network.this.name
-  resource_group_name   = data.azurerm_resource_group.network.name
-  private_dns_zone_name = data.azurerm_private_dns_zone.container_apps.name
-  virtual_network_id    = azurerm_virtual_network.this.id
-  registration_enabled  = false
+  name                 = azurerm_virtual_network.this.name
+  private_dns_zone_id  = data.azurerm_private_dns_zone.container_apps.id
+  virtual_network_id   = azurerm_virtual_network.this.id
+  registration_enabled = false
 
   tags = var.tags
 }

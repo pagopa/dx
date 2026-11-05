@@ -1,3 +1,188 @@
+## 0.5.16 (2026-11-04)
+
+### 🩹 Fixes
+
+- Bump dependencies to address security advisories ([#2492](https://github.com/pagopa/dx/pull/2492))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.15 (2026-10-23)
+
+### 🩹 Fixes
+
+- Build and publish dx-tasks with package exports targeting generated output. ([#2398](https://github.com/pagopa/dx/pull/2398))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.9
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.5.14 (2026-10-21)
+
+### 🩹 Fixes
+
+- Resolve the published entry points from the built output instead of the ([#2376](https://github.com/pagopa/dx/pull/2376))
+  TypeScript sources.
+
+  The `require` condition of the `.` and `./release/version-actions` exports
+  pointed at `src/*.ts`. Node refuses to strip types for files under
+  `node_modules`, so consumers that resolved the package through the CommonJS
+  condition — Nx loading the plugin, or `nx release` resolving `versionActions` —
+  failed with "Stripping types is currently unsupported for files under
+  node_modules". The conditions are removed, so every loader resolves
+  `./dist/*.js`, matching `@pagopa/nx-docker`.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.13 (2026-10-09)
+
+### 🩹 Fixes
+
+- Include shared Terraform module files in all application affected inputs ([#2303](https://github.com/pagopa/dx/pull/2303))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.5.12 (2026-10-08)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+- Updated @pagopa/dx-tasks to 0.2.8
+
+## 0.5.11 (2026-10-06)
+
+### 🚀 Features
+
+- Rename the Nx Terraform plugin to `@pagopa/nx-terraform` and publish it to GitHub Packages. Replace the old package dependency, Nx plugin registration, executor prefixes, and release version-actions references with the new name. ([#2301](https://github.com/pagopa/dx/pull/2301))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.5.10 (2026-10-06)
+
+### 🚀 Features
+
+- Use shared output masking for Terraform plans and saved-plan applies through Nx, ([#2286](https://github.com/pagopa/dx/pull/2286))
+  preserving CI initialization and interactive local applies.
+
+  For saved-plan applies, replace positional Terraform arguments with
+  `nx run <project>:apply --configuration=ci --planFile=<file>`.
+  Interactive `nx run <project>:apply` remains available without a plan file.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.7
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.5.9 (2026-09-22)
+
+### 🩹 Fixes
+
+- Add configurable Terraform provider lock platforms to the init task. ([#2203](https://github.com/pagopa/dx/pull/2203))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+- Updated @pagopa/dx-tasks to 0.2.6
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.5.8 (2026-09-08)
+
+### 🩹 Fixes
+
+- Isolate Trivy caches per Terraform project to support parallel scans. ([#2150](https://github.com/pagopa/dx/pull/2150))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot App @Copilot
+
+## 0.5.7 (2026-09-04)
+
+### 🚀 Features
+
+- Add `ci` configuration to `docs` target ([#2138](https://github.com/pagopa/dx/pull/2138))
+- Add an inferred Trivy target for Terraform projects. ([#2117](https://github.com/pagopa/dx/pull/2117))
+
+### 🩹 Fixes
+
+- Require module.json for inferred Terraform library projects ([#2147](https://github.com/pagopa/dx/pull/2147))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Danilo Spinelli @gunzip
+- Luca Cavallaro
+
+## 0.5.6 (2026-09-02)
+
+### 🚀 Features
+
+- Add shared Terraform initialization with version 2 Registry module content locking ([#2118](https://github.com/pagopa/dx/pull/2118))
+- Simplify Terraform target configuration with a shared prefix. Remove individual ([#2115](https://github.com/pagopa/dx/pull/2115))
+  target-name overrides and set `targetNamePrefix` to their common stem; the
+  plugin joins it to task names with a hyphen. `nx-release-publish` remains fixed.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.5
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Luca Cavallaro
+
+## 0.5.5 (2026-09-01)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.3
+- Updated @pagopa/dx-tasks to 0.2.4
+
+## 0.5.4 (2026-08-27)
+
+### 🩹 Fixes
+
+- Simplify tflint integration ([#2069](https://github.com/pagopa/dx/pull/2069))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.5.3 (2026-08-26)
+
+### 🩹 Fixes
+
+- Move Terraform integration and e2e tests to dedicated Nx target configurations. ([#2054](https://github.com/pagopa/dx/pull/2054))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Luca Cavallaro
+
+## 0.5.2 (2026-07-28)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.2
+- Updated @pagopa/dx-tasks to 0.2.3
+
 ## 0.5.0 (2026-07-16)
 
 ### 🚀 Features

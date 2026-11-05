@@ -4,12 +4,22 @@ import {
   DataTable,
   SimpleBarChart,
   SimpleLineChart,
+  SimplePieChart,
 } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
+import { DataFreshness } from "@/components/DataFreshness";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
+import { WEEKLY_BUCKET_THRESHOLD_DAYS } from "@/lib/config";
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
+import { formatInteger, formatNumber } from "@/lib/format";
+import type { Insight } from "@/lib/insights/types";
+import { useDateFormatters } from "@/lib/locale";
 import { pivotCumulativeSeries } from "@/lib/pivot-cumulative-series";
+import { percentChange } from "@/lib/stats";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
@@ -22,14 +32,18 @@ interface WorkflowDashboardData {
     workflowName: string;
   }[];
   deployments: { runWeek: string; weeklyDeploymentCount: number }[];
+  durationPercentiles: {
+    count: number;
+    p50: null | number;
+    p85: null | number;
+    p95: null | number;
+  };
   dxVsNonDx: {
     cumulativeCount: number;
     pipelineType: string;
     runDate: string;
   }[];
   failures: { failedRuns: number; workflowName: string }[];
-  infraApply: { durationMinutes: number; runTimestamp: string }[];
-  infraPlan: { durationMinutes: number; runTimestamp: string }[];
   runCount: { runCount: number; workflowName: string }[];
   successRatio: {
     failedRuns: number;
@@ -40,57 +54,144 @@ interface WorkflowDashboardData {
   }[];
   summary: {
     avgDurationMinutes: number;
+    failedDurationMinutes: null | number;
     firstPipelineDate: string;
+    /** Same card metrics over the immediately preceding, equally-sized window. */
+    previousAvgDurationMinutes: null | number;
+    previousFailedDurationMinutes: null | number;
+    previousTotalDurationMinutes: null | number;
+    previousTotalPipelines: null | number;
     totalDurationMinutes: number;
     totalPipelines: number;
   };
+  triggerTypes: { runCount: number; triggerType: string }[];
+  /**
+   * Optional so a cached payload from before this field existed still renders:
+   * the chart falls back to an empty list instead of throwing.
+   */
+  triggerBreakdown?: {
+    automatic: number;
+    manual: number;
+    unknown: number;
+    workflowName: string;
+  }[];
+  /** Daily/weekly failure counts for the two most failing pipelines. */
+  topFailureTrend: {
+    bucket: string;
+    failedRuns: number;
+    workflowName: string;
+  }[];
+  /** Daily/weekly average duration for the two slowest pipelines. */
+  topSlowestDurationTrend: {
+    averageDurationMinutes: number;
+    bucket: string;
+    workflowName: string;
+  }[];
+  insights: Insight[];
+  meta: DashboardMetaView;
 }
 
+interface WorkflowTrendRow {
+  bucket: string;
+  workflowName: string;
+}
+
+/**
+ * Pivots long-format `(bucket, workflow)` rows into one row per bucket with a
+ * column per workflow, which is the shape the line chart reads. Missing buckets
+ * stay undefined so the chart shows a gap instead of inventing a zero.
+ */
+const pivotWorkflowTrend = <TRow extends WorkflowTrendRow>(
+  rows: readonly TRow[],
+  valueKey: keyof TRow,
+): { data: Record<string, unknown>[]; workflowNames: string[] } => {
+  const buckets = new Map<string, Record<string, unknown>>();
+  const totals = new Map<string, number>();
+
+  for (const row of rows) {
+    const entry = buckets.get(row.bucket) ?? { bucket: row.bucket };
+    entry[row.workflowName] = row[valueKey];
+    buckets.set(row.bucket, entry);
+
+    const value = Number(row[valueKey]);
+    totals.set(
+      row.workflowName,
+      (totals.get(row.workflowName) ?? 0) +
+        (Number.isFinite(value) ? value : 0),
+    );
+  }
+
+  return {
+    data: [...buckets.values()].sort((left, right) =>
+      String(left.bucket).localeCompare(String(right.bucket)),
+    ),
+    // Highest total first so the ranking colour also goes to the leading
+    // pipeline, matching the ranked bar chart above.
+    workflowNames: [...totals.entries()]
+      .sort(([, left], [, right]) => right - left)
+      .map(([workflowName]) => workflowName),
+  };
+};
+
 export default function WorkflowsDashboard() {
-  const { days, repository, setDays, setRepository } = useDashboardFilters();
+  const {
+    days,
+    end,
+    repositories,
+    setRange,
+    setRepositories,
+    start,
+    timeParams,
+  } = useDashboardFilters();
 
   const { data, error, loading, refetch } =
-    useDashboardData<WorkflowDashboardData>("workflows", { days, repository });
+    useDashboardData<WorkflowDashboardData>("workflows", {
+      ...timeParams,
+      repositories,
+    });
 
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">Workflow Metrics</h2>
-        <TooltipIcon content={tooltipContent.title} side="right" />
+        <h2 className="text-xl font-bold text-foreground">Workflow Metrics</h2>
+        <TooltipIcon
+          content={tooltipContent.title}
+          label="Workflow Metrics"
+          side="right"
+        />
       </div>
       <DashboardFilters
-        onRepositoryChange={setRepository}
-        onTimeIntervalChange={setDays}
-        repository={repository}
-        timeInterval={days}
+        availableFrom={data?.meta.availableFrom}
+        availableTo={data?.meta.availableTo}
+        onRangeChange={setRange}
+        onRepositoriesChange={setRepositories}
+        rangeEnd={data?.meta.windowEnd ?? end}
+        rangeStart={data?.meta.windowStart ?? start}
+        repositories={repositories}
       />
       <DashboardRequestState
         error={error}
         loading={loading}
         onRetry={refetch}
       />
-      {data && <WorkflowsDashboardContent data={data} />}
+      {data && (
+        // Captions and insight periods describe the window the server applied,
+        // which can be shorter than the requested one after clamping.
+        <WorkflowsDashboardContent data={data} days={data.meta.days ?? days} />
+      )}
     </div>
   );
 }
 
-function formatDate(value: unknown): string {
-  const str = String(value);
-  if (!str) return str;
-  try {
-    const date = new Date(str);
-    if (isNaN(date.getTime())) return str;
-    return date.toLocaleDateString("it-IT", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  } catch {
-    return str;
-  }
-}
-
-function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
+function WorkflowsDashboardContent({
+  data,
+  days,
+}: {
+  data: WorkflowDashboardData;
+  days: number;
+}) {
+  const colors = useSeriesColors();
+  const { full: formatFullDate, short: formatShortDate } = useDateFormatters();
   const dxVsNonDxPivoted = pivotCumulativeSeries(
     data.dxVsNonDx,
     "pipelineType",
@@ -100,21 +201,138 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
     },
   );
 
+  // Chart axes accept `unknown`; route them through the shared locale-aware
+  // formatters so a category value is never mistaken for a date.
+  const shortDateTick = (value: unknown) => formatShortDate(String(value));
+
+  // The headline duration is a run-weighted mean; the median and p95 keep a
+  // skewed distribution visible next to it.
+  const durationBreakdown = [
+    {
+      label: "median",
+      value: `${formatNumber(data.durationPercentiles.p50, 1)} min`,
+    },
+    {
+      label: "p95",
+      value: `${formatNumber(data.durationPercentiles.p95, 1)} min`,
+    },
+  ];
+
+  // "Unknown" (trigger not recorded on rows imported before the column existed)
+  // would dwarf the split and make the percentages describe only the subset that
+  // happens to be recorded, so it is excluded from both trigger charts. The
+  // excluded share is surfaced in the caption instead. Both charts share it
+  // because they cover the same population.
+  const triggerCoverage = data.triggerTypes.reduce(
+    (coverage, row) => ({
+      total: coverage.total + row.runCount,
+      unknown:
+        coverage.unknown + (row.triggerType === "Unknown" ? row.runCount : 0),
+    }),
+    { total: 0, unknown: 0 },
+  );
+  const triggerExclusionCaption =
+    triggerCoverage.total > 0 && triggerCoverage.unknown > 0
+      ? `${formatInteger(triggerCoverage.unknown)} runs (${Math.round(
+          (triggerCoverage.unknown / triggerCoverage.total) * 100,
+        )}%) without a recorded trigger, excluded`
+      : undefined;
+
+  // The trigger query already returns display-ready categories (Manual,
+  // Automatic, Unknown); the pie primitive wants `name`/`value`.
+  const triggerDistribution = data.triggerTypes
+    .filter((row) => row.triggerType !== "Unknown")
+    .map((row) => ({ name: row.triggerType, value: row.runCount }));
+
+  // The two historical charts cover the top-2 pipelines of the window. Their
+  // ranking comes from the same datasets as the bar charts above, so the trend
+  // and the ranking cannot disagree.
+  const durationTrend = pivotWorkflowTrend(
+    data.topSlowestDurationTrend,
+    "averageDurationMinutes",
+  );
+  const failureTrend = pivotWorkflowTrend(data.topFailureTrend, "failedRuns");
+  const isWeeklyBucket = days >= WEEKLY_BUCKET_THRESHOLD_DAYS;
+  const bucketCaption = isWeeklyBucket ? "per week" : "per day";
+  const trendSeries = (
+    workflowNames: readonly string[],
+  ): { color: string; key: string; name: string }[] =>
+    workflowNames.map((name, index) => ({
+      color: index === 0 ? colors.blue : colors.red,
+      key: name,
+      name,
+    }));
+
+  // Match the pie by dropping the unknown segment, then rank by the runs that
+  // are actually drawn so the kept bars are the largest recorded totals; a
+  // workflow with only unknown runs would render as an empty bar, so it is
+  // dropped too. Missing data yields an empty chart, not a crash.
+  const triggerBreakdown = [...(data.triggerBreakdown ?? [])]
+    .filter((row) => row.automatic + row.manual > 0)
+    .sort(
+      (left, right) =>
+        right.automatic + right.manual - (left.automatic + left.manual),
+    )
+    .map(({ automatic, manual, workflowName }) => ({
+      automatic,
+      manual,
+      workflowName,
+    }));
+
+  // Same current-vs-previous comparison on every summary card, so a repo's
+  // trend is readable without opening another dashboard.
+  const deltaFromPrevious = (
+    current: null | number,
+    previous: null | number,
+  ) =>
+    current != null && previous != null
+      ? percentChange(current, previous)
+      : null;
+
   return (
     <>
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <DataFreshness
+        className="mb-2"
+        availableFrom={data.meta.availableFrom}
+        availableTo={data.meta.availableTo}
+        referenceDate={data.meta.referenceDate}
+        windowEnd={data.meta.windowEnd}
+        windowStart={data.meta.windowStart}
+      />
+      <InsightsPanel
+        className="mb-6"
+        insights={data.insights}
+        periodDays={data.meta.days ?? days}
+      />
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <MetricCard
-          label="First Run"
+          label="First Run in Period"
           tooltip={tooltipContent.firstRun}
-          value={formatDate(data.summary.firstPipelineDate)}
+          value={formatFullDate(data.summary.firstPipelineDate)}
         />
         <MetricCard
-          label="Runs Count"
+          deltaDirection="higher-is-better"
+          deltaLabel="vs prev"
+          deltaPct={deltaFromPrevious(
+            data.summary.totalPipelines,
+            data.summary.previousTotalPipelines,
+          )}
+          label="Successful Runs"
+          previousValue={data.summary.previousTotalPipelines}
           tooltip={tooltipContent.runsCount}
           value={data.summary.totalPipelines}
         />
         <MetricCard
+          breakdown={durationBreakdown}
+          deltaDirection="lower-is-better"
+          deltaLabel="vs prev"
+          deltaPct={deltaFromPrevious(
+            data.summary.avgDurationMinutes,
+            data.summary.previousAvgDurationMinutes,
+          )}
           label="Average Duration"
+          previousValue={data.summary.previousAvgDurationMinutes}
+          sampleSize={data.durationPercentiles.count}
           suffix="min"
           tooltip={tooltipContent.avgDuration}
           value={
@@ -124,7 +342,14 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
           }
         />
         <MetricCard
+          deltaDirection="lower-is-better"
+          deltaLabel="vs prev"
+          deltaPct={deltaFromPrevious(
+            data.summary.totalDurationMinutes,
+            data.summary.previousTotalDurationMinutes,
+          )}
           label="Total Duration"
+          previousValue={data.summary.previousTotalDurationMinutes}
           suffix="min"
           tooltip={tooltipContent.totalDuration}
           value={
@@ -133,97 +358,178 @@ function WorkflowsDashboardContent({ data }: { data: WorkflowDashboardData }) {
               : "—"
           }
         />
+        <MetricCard
+          deltaDirection="lower-is-better"
+          deltaLabel="vs prev"
+          deltaPct={deltaFromPrevious(
+            data.summary.failedDurationMinutes,
+            data.summary.previousFailedDurationMinutes,
+          )}
+          label="Time in Failed Runs"
+          previousValue={data.summary.previousFailedDurationMinutes}
+          suffix="min"
+          tooltip={tooltipContent.failedRunDuration}
+          value={
+            data.summary.failedDurationMinutes !== null &&
+            data.summary.failedDurationMinutes !== undefined
+              ? Number(data.summary.failedDurationMinutes).toFixed(0)
+              : "—"
+          }
+        />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <SimpleBarChart
           bars={[
             {
-              color: "#2563eb",
+              color: colors.blue,
               key: "weeklyDeploymentCount",
               name: "Deployments",
             },
           ]}
           data={data.deployments}
-          title="Deployments to Production (weekly)"
+          title="Deploy / Release Workflow Runs (weekly)"
           tooltip={tooltipContent.deploymentsToProduction}
+          unit="runs"
           xKey="runWeek"
-          xValueFormatter={formatDate}
+          xValueFormatter={shortDateTick}
         />
         <SimpleLineChart
           data={dxVsNonDxPivoted}
           lines={[
-            { color: "#2563eb", key: "dx", name: "DX Pipelines" },
-            { color: "#dc2626", key: "non_dx", name: "Non-DX Pipelines" },
+            { color: colors.blue, key: "dx", name: "DX Pipelines" },
+            {
+              color: colors.red,
+              key: "non_dx",
+              name: "Non-DX Pipelines",
+            },
           ]}
           title="DX VS Non-DX Pipeline Runs (Cumulative)"
           tooltip={tooltipContent.dxVsNonDx}
+          unit="runs"
           xKey="runDate"
-          xValueFormatter={formatDate}
-        />
-        <SimpleBarChart
-          bars={[{ color: "#c97d9b", key: "failedRuns", name: "Failed Runs" }]}
-          data={data.failures}
-          layout="vertical"
-          title="Pipeline Failures"
-          tooltip={tooltipContent.pipelineFailures}
-          xKey="workflowName"
+          xValueFormatter={shortDateTick}
         />
         <SimpleBarChart
           bars={[
             {
-              color: "#2563eb",
+              color: colors.red,
+              key: "failedRuns",
+              name: "Failed Runs",
+            },
+          ]}
+          caption="top 10"
+          data={data.failures}
+          layout="vertical"
+          maxItems={10}
+          sortKey="failedRuns"
+          title="Pipeline Failures"
+          tooltip={tooltipContent.pipelineFailures}
+          tooltipFormatter={(value) => value.toFixed(0)}
+          unit="failures"
+          xKey="workflowName"
+        />
+        <SimpleBarChart
+          bars={trendSeries(failureTrend.workflowNames)}
+          caption={`${bucketCaption} · top 2 pipelines by failed runs`}
+          data={failureTrend.data}
+          title="Top 2 Most Failing Pipelines — Failures in Time"
+          tooltip={tooltipContent.failureTrend}
+          tooltipFormatter={(value) => value.toFixed(0)}
+          unit="failures"
+          xKey="bucket"
+          xValueFormatter={shortDateTick}
+        />
+        <SimpleBarChart
+          bars={[
+            {
+              color: colors.blue,
               key: "averageDurationMinutes",
               name: "Avg Duration",
             },
           ]}
+          caption="top 10"
           data={data.avgDuration}
           layout="vertical"
+          maxItems={10}
+          sortKey="averageDurationMinutes"
           title="Pipeline Average Duration (minutes)"
           tooltip={tooltipContent.avgPipelineDuration}
+          unit="min"
           xKey="workflowName"
         />
         <SimpleBarChart
-          bars={[{ color: "#16a34a", key: "runCount", name: "Run Count" }]}
+          bars={trendSeries(durationTrend.workflowNames)}
+          caption={`${bucketCaption} · top 2 pipelines by average duration`}
+          data={durationTrend.data}
+          title="Top 2 Slowest Pipelines — Average Duration (minutes)"
+          tooltip={tooltipContent.durationTrend}
+          tooltipFormatter={(value) => value.toFixed(1)}
+          unit="min"
+          xKey="bucket"
+          xValueFormatter={shortDateTick}
+        />
+        <SimpleBarChart
+          bars={[{ color: colors.green, key: "runCount", name: "Run Count" }]}
+          caption="top 10"
           data={data.runCount}
           layout="vertical"
+          maxItems={10}
+          sortKey="runCount"
           title="Pipeline Run Count"
           tooltip={tooltipContent.pipelineRunCount}
+          tooltipFormatter={(value) => value.toFixed(0)}
+          unit="runs"
           xKey="workflowName"
         />
         <SimpleBarChart
           bars={[
             {
-              color: "#7c3aed",
+              color: colors.purple,
               key: "cumulativeDurationMinutes",
               name: "Cumulative Duration",
             },
           ]}
+          caption="top 10"
           data={data.cumulativeDuration}
           layout="vertical"
+          maxItems={10}
+          sortKey="cumulativeDurationMinutes"
           title="Pipeline Cumulative Duration (minutes)"
           tooltip={tooltipContent.cumulativeDuration}
+          unit="min"
           xKey="workflowName"
         />
-        <SimpleLineChart
-          data={data.infraPlan}
-          lines={[
-            { color: "#2563eb", key: "durationMinutes", name: "Duration" },
-          ]}
-          title="Infra Plan Duration (minutes)"
-          tooltip={tooltipContent.infraPlanDuration}
-          xKey="runTimestamp"
-          xValueFormatter={formatDate}
+        <SimplePieChart
+          caption={triggerExclusionCaption}
+          data={triggerDistribution}
+          title="Workflow Runs by Trigger"
+          tooltip={tooltipContent.triggerTypes}
         />
-        <SimpleLineChart
-          data={data.infraApply}
-          lines={[
-            { color: "#16a34a", key: "durationMinutes", name: "Duration" },
+        <SimpleBarChart
+          bars={[
+            {
+              color: colors.blue,
+              key: "automatic",
+              name: "Automatic",
+              stackId: "trigger",
+            },
+            {
+              color: colors.amber,
+              key: "manual",
+              name: "Manual",
+              stackId: "trigger",
+            },
           ]}
-          title="Infra Apply Duration (minutes)"
-          tooltip={tooltipContent.infraApplyDuration}
-          xKey="runTimestamp"
-          xValueFormatter={formatDate}
+          caption={triggerExclusionCaption}
+          data={triggerBreakdown}
+          layout="vertical"
+          maxItems={10}
+          title="Trigger Breakdown by Workflow"
+          tooltip={tooltipContent.triggerBreakdown}
+          tooltipFormatter={(value) => value.toFixed(0)}
+          unit="runs"
+          xKey="workflowName"
         />
       </div>
 

@@ -6,13 +6,15 @@ resource "azurerm_key_vault_secret" "azuread_client_secret" {
 
   value_wo         = "placeholder"
   value_wo_version = 1
+
+  tags = var.tags
 }
 
 
 # Publicly accessible Container App hosting the Next.js application.
 module "container_app" {
   source  = "pagopa-dx/azure-container-app/azurerm"
-  version = "~> 4.2"
+  version = "~> 8.0"
 
   environment         = merge(var.environment, { env_short = var.environment.environment })
   resource_group_name = var.resource_group_name
@@ -21,17 +23,18 @@ module "container_app" {
   container_app_environment_id = var.container_app_env_id
   user_assigned_identity_id    = var.container_app_user_assigned_identity_id
 
-  revision_mode = "Single"
-  use_case      = "default"
+  deployment_strategy = "Incremental"
+  use_case            = "default"
 
   size = {
     cpu    = 0.5
     memory = "1Gi"
   }
 
-  target_port = 3000
+  container_port             = 3000
+  log_analytics_workspace_id = var.log_analytics_workspace_id
 
-  public_access_enabled = true
+  allow_access_from_environment_only = false
   custom_domain = {
     host_name = var.custom_domain_host_name
     dns = {
@@ -48,22 +51,33 @@ module "container_app" {
     }
   }
 
-  secrets = [
-    {
-      name                = "DATABASE_URL"
-      key_vault_secret_id = azurerm_key_vault_secret.database_url.versionless_id
-    }
-  ]
-
-  container_app_templates = [
+  containers = [
     {
       image = var.container_app_image
       name  = "metrics-portal"
 
-      app_settings = {
-        NODE_ENV = "production"
-        PORT     = "3000"
-      }
+      environment_variables = [
+        {
+          name  = "NODE_ENV"
+          value = "production"
+        },
+        {
+          name  = "PORT"
+          value = "3000"
+        },
+        {
+          name  = "DATABASE_URL"
+          value = azurerm_key_vault_secret.database_url.versionless_id
+        },
+        {
+          name  = "DX_METRICS_SCOPE_SECRET"
+          value = azurerm_key_vault_secret.scope_secret.versionless_id
+        },
+        {
+          name  = "DX_METRICS_SCOPE_ENFORCE"
+          value = var.scope_enforcement_enabled ? "true" : "false"
+        },
+      ]
 
       liveness_probe = {
         path          = "/api/health"

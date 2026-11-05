@@ -4,9 +4,9 @@ sidebar_position: 2
 
 # Release Docker images with the Nx Docker plugin
 
-This page describes `@pagopa/nx-dx-docker-plugin`, the Nx plugin that infers
-`docker:build` and `docker:push` targets for every project with a `Dockerfile`,
-regardless of its language or framework.
+This page describes `@pagopa/nx-docker`, the Nx plugin that infers
+`docker:build`, `docker:push`, and `docker:run` targets for every project with a
+`Dockerfile`, regardless of its language or framework.
 
 ## When to use this guide
 
@@ -20,41 +20,36 @@ Use this guide if your repository:
 - prefers DX conventions and inferred metadata over workspace-specific plugin
   configuration
 
-## Why not `@nx/docker`'s release configuration alone
+## Why use the DX plugin alone
 
-`@nx/docker` provides Nx Release integration and the `docker:run` convenience
-target, but its generated build and publish targets do not provide the full OCI
-metadata and tag aliases required by DX repositories.
+`@pagopa/nx-docker` owns every inferred Docker target. It adds OCI
+labels and annotations, reproducible build flags, multi-platform builds, the DX
+tag strategy, and a local `docker:run` workflow.
 
-`@pagopa/nx-dx-docker-plugin` owns `docker:build` and `docker:push`, adding OCI
-labels and annotations, reproducible build flags, multi-platform builds, and the
-DX tag strategy. For projects configured with
-`nx.release.docker.repositoryName`, it also replaces the Docker release
-publisher so a release pushes the primary semver tag and its aliases.
+Do not register `@nx/docker` alongside this plugin. Its Docker Release
+integration treats Docker targets as release-versioning inputs and can prompt
+for an interactive `production` or `hotfix` scheme. The DX plugin uses
+`container-image` target metadata instead, so `nx release` does not enter that
+interactive flow. For projects configured with
+`nx.release.docker.repositoryName`, the plugin adds a custom publisher that
+pushes the primary semver tag and its aliases.
 
 ## nx.json configuration
 
-Install and configure both plugins with:
+Install and configure the plugin with:
 
 ```bash
-pnpm nx add @pagopa/nx-dx-docker-plugin
+pnpm nx add @pagopa/nx-docker
 ```
 
-The generator registers both plugins, in this order (`@nx/docker` first, then
-`@pagopa/nx-dx-docker-plugin`). For a manual configuration, use:
+The generator registers `@pagopa/nx-docker`. For a manual
+configuration, use:
 
 ```json
 {
   "plugins": [
     {
-      "plugin": "@nx/docker",
-      "options": {
-        "buildTarget": "docker:build",
-        "runTarget": "docker:run"
-      }
-    },
-    {
-      "plugin": "@pagopa/nx-dx-docker-plugin",
+      "plugin": "@pagopa/nx-docker",
       "options": {
         "imageAuthors": "Custom Team",
         "imageNamePrefix": "custom/repository",
@@ -64,9 +59,6 @@ The generator registers both plugins, in this order (`@nx/docker` first, then
   ]
 }
 ```
-
-Plugin order matters: register the DX plugin after `@nx/docker` so its inferred
-`docker:build` target wins.
 
 While no options are strictly required since they all have default values, they
 can still be fully customized when the inferred DX conventions do not fit. The
@@ -91,6 +83,8 @@ For every project with a `Dockerfile`, the plugin infers:
 - **`docker:build`** — builds the image, tagging it with the strategy described
   below
 - **`docker:push`** — pushes the built tags to the configured `registry`
+- **`docker:run`** — builds the image if needed, then runs its local untagged
+  alias
 
 Application compilation and packaging stay inside the Dockerfile. The plugin
 does not assume Node.js, pnpm, or any application framework.
@@ -100,6 +94,7 @@ Run them like any other Nx target:
 ```bash
 pnpm nx run my-project:docker:build
 pnpm nx run my-project:docker:push
+pnpm nx run my-project:docker:run -- --port 3000:3000
 ```
 
 When running inside a GitHub Actions job, `docker:build`, `docker:push` and
@@ -141,25 +136,66 @@ need the default npm publisher. Projects that publish both an npm package and a
 Docker image should configure `nx.docker.repositoryName` and publish the image
 from a release-tag workflow.
 
-## Nx Release configuration
-
-Use the semantic version produced by Nx version actions as the Docker version:
+For a JavaScript project released only as a Docker image, set `"private": true`
+in `package.json`. This prevents Nx's JavaScript/package plugin from inferring
+npm publishing, but it does **not** disable the custom Docker
+`nx-release-publish` target inferred from `nx.release.docker.repositoryName`.
+Keep Docker build settings, such as `platform`, under `nx.docker`:
 
 ```json
 {
-  "release": {
+  "private": true,
+  "nx": {
     "docker": {
-      "registryUrl": "ghcr.io",
-      "versionSchemes": {
-        "production": "{versionActionsVersion}"
+      "platform": "linux/amd64"
+    },
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/my-image-name"
       }
     }
   }
 }
 ```
 
-This keeps Git release tags, package versions, and Docker image versions
-aligned.
+### Container-only projects
+
+For a Docker-only project without `package.json`, keep its durable release
+version in `project.json` and use the plugin's VersionActions implementation:
+
+```json
+{
+  "metadata": {
+    "docker": {
+      "contextPath": "containers/my-container",
+      "platform": "linux/amd64",
+      "repositoryName": "pagopa/my-container"
+    },
+    "version": "0.0.2"
+  },
+  "release": {
+    "version": {
+      "currentVersionResolver": "disk",
+      "versionActions": "@pagopa/nx-docker/release/version-actions"
+    }
+  }
+}
+```
+
+`metadata.docker` accepts the same `contextPath`, `dockerfilePath`, and
+`platform` build overrides as `nx.docker`. The plugin infers
+`nx-release-publish` from `metadata.docker.repositoryName`. `pnpm nx release`
+updates `metadata.version`; the publish step builds and pushes the image using
+that version. No package manifest or temporary version file is needed.
+
+## Nx Release configuration
+
+Do not configure `release.docker.versionSchemes` or an `@nx/docker` plugin for
+this flow. The DX publisher reads the version produced by Nx from the project's
+`package.json`, or `project.json` `metadata.version` for a container-only
+project, then derives the Docker aliases itself. This keeps Git release tags,
+package versions, and Docker image versions aligned without interactive scheme
+selection.
 
 ## Tag strategy
 
@@ -190,7 +226,7 @@ locally), wire the plugin's `docker-prebuild` script into your `nx.json`:
 {
   "release": {
     "docker": {
-      "preVersionCommand": "node ./node_modules/@pagopa/nx-dx-docker-plugin/dist/docker-prebuild.js",
+      "preVersionCommand": "node ./node_modules/@pagopa/nx-docker/dist/docker-prebuild.js",
     },
   },
 }
@@ -207,7 +243,7 @@ NX_RELEASE_DOCKER_PROJECTS=my-project \
 ## Installing in another repository
 
 ```bash
-pnpm add -D @pagopa/nx-dx-docker-plugin
+pnpm add -D @pagopa/nx-docker
 ```
 
 After installing, register the plugin in your own `nx.json` exactly as shown in

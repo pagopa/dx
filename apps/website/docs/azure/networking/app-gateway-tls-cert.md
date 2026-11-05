@@ -34,7 +34,7 @@ resource "azurerm_key_vault" "this" {
 
   network_acls {
     bypass         = "AzureServices"
-    default_action = "Allow" #tfsec:ignore:AZU020
+    default_action = "Allow" #trivy:ignore:azure-keyvault-specify-network-acl
   }
 }
 

@@ -4,57 +4,47 @@
 
 ## Getting Started
 
-### Using Devcontainer
-
-The preferred way to setup your development environment is to use [Devcontainer](https://containers.dev) ([Host system requirements](https://code.visualstudio.com/docs/devcontainers/containers#_system-requirements)).
-
-> [!TIP]
-> If you are on macOS we recommend using [Rancher Desktop](https://rancherdesktop.io/) configured to use `VZ` as _Virtual Machine Type_ and `virtiofs` as volume _Mount Type_.
-
-#### Visual Studio Code
-
-1. Make sure `docker` is available and running in your host system
-2. Install the [Devcontainer Extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
-3. Open the project root folder and select `Dev Containers: Reopen in Container` from the command palette
-4. Visual Studio Code will build the devcontainer image and then open the project inside the container, with all the needed tools and extension configured
-
-#### Console
-
-If you use a code editor that doesn't support Dev Container, you can still run it in your terminal.
-
-1. Follow the instructions of the following chapter ("Using local machine") to setup your local environment
-2. Run devcontainer from your terminal
-```bash
-pnpm devcontainer up --workspace-folder .
-pnpm devcontainer exec --workspace-folder . /bin/bash
-```
-
 ### Using local machine
 
-This project uses specific versions of `node`, `pnpm` and `terraform`. To make sure your development setup matches with production follow the recommended installation methods.
+This project uses specific versions of `node`, `pnpm` and `terraform`. The
+resolved toolchain is recorded in `mise.lock`. To make sure your development
+setup matches with production, use [mise](https://mise.jdx.dev/) to install the
+required tools.
 
-1. Install and configure the following tools in your machine
+1. Install [mise](https://mise.jdx.dev/installing-mise.html)
 
-- [nodenv](https://github.com/nodenv/nodenv) - Node version manager
-- [tfenv](https://github.com/tfutils/tfenv) - Terraform version manager
-- [terraform-docs](https://terraform-docs.io/user-guide/installation/) - Generate Terraform modules documentation in various formats
-- [tflint](https://github.com/terraform-linters/tflint) - A Pluggable Terraform Linter
-- [pre-commit](https://pre-commit.com/) - A framework for managing and maintaining multi-language pre-commit hooks
-
-2. Install `node` at the right version used by this project
+2. Install the locked toolchain declared in `mise.toml` and `mise.lock`
 
 ```bash
-cd {{ repoName }}
-nodenv install
+mise install
 ```
 
 3. Install dependencies using `pnpm`
 
-```bashbash
+DX packages are served by GitHub Packages and are installed through pnpm's
+built-in `gh:` alias, so the rest of the dependencies keep resolving from the
+default registry. Your GitHub token must include the `read:packages` scope. If
+you use the GitHub CLI, add it with:
+
+```bash
+gh auth refresh --scopes read:packages
+```
+
+`dx init` wrote the credential to a local, git-ignored `.npmrc`. On a fresh
+clone, recreate it with:
+
+```bash
+install -m 600 /dev/null .npmrc && printf '//npm.pkg.github.com/:_authToken=%s\n' "$(gh auth token)" > .npmrc
+```
+
+Then install the dependencies:
+
+```bash
 pnpm install
 ```
 
 4. Build all the workspaces contained by this repo
+
 ```bash
 pnpm nx run-many -t build
 ```
@@ -141,7 +131,7 @@ pnpm nx release plan
 
 - When opening a Pull Request with a change intended to be published, add a version plan file that describes the change and the version bump type (patch, minor, major) for each involved app or package.
 - Once the Pull Request is merged, a new Pull Request named `Version Packages` will be automatically opened with all the release changes such as version bumping for each involved app or package and changelog update; if an open `Version Packages` PR already exists, it will be updated and the package versions calculated accordingly.
-Only apps and packages mentioned in the version plan files will be bumped.
+  Only apps and packages mentioned in the version plan files will be bumped.
 - Review the `Version Packages` PR and merge it when ready. Version plan files will be deleted.
 - A Release entry is created for each app or package whose version has been bumped.
 
@@ -164,6 +154,23 @@ terraform init
 terraform plan
 terraform apply
 ```
+
 ### Workflow automation
 
-The workflow `infra_plan.yaml` is executed on every PR that edits the `infra/resources` folder or the workflow definition itself. It executes a `terraform plan` and comments the PR with the result. If the plan fails, the workflow fails.
+The workflow `validate.yaml` runs the DX Code Review on every Pull Request and
+delegates to the reusable
+[`validate-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v2.yaml)
+workflow. It formats, lints, scans and plans every Nx project affected by the
+change; Terraform plans run under the `infra-<env>-ci` GitHub environment
+(or `bootstrapper-<env>-ci` for bootstrapper projects) and the result is
+published as a comment on the Pull Request. The workflow fails when a plan
+fails.
+
+Terraform roots under `infra/` are Nx projects inferred by
+`@pagopa/nx-terraform`, which provides the `fmt`, `validate`, `trivy`, `docs`,
+`plan` and `apply` targets. Shared Terraform modules live in `_modules`
+directories (for example `infra/bootstrapper/_modules`): changes there mark
+every project in the same area as affected.
+
+Projects that contain a `Dockerfile` are inferred by `@pagopa/nx-docker`,
+which provides the `docker:build`, `docker:push` and `docker:run` targets.

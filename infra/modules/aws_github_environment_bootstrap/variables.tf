@@ -13,7 +13,13 @@ variable "environment" {
     instance_number = string
   })
 
-  description = "Values which are used to generate resource names and region short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
+  description = "Values used to generate resource names and region short names."
+}
+
+variable "github_environment_prefix_enabled" {
+  type        = bool
+  default     = false
+  description = "Prefix GitHub environment names with environment.prefix."
 }
 
 variable "repository" {

@@ -1,0 +1,29 @@
+name: "Terraform Provider Lifecycle"
+description: "Warns about upcoming DX provider support deadlines without blocking Terraform operations."
+
+inputs:
+  working-directory:
+    description: "Terraform project directory, already initialized with terraform init."
+    required: false
+    default: "."
+  write-summary:
+    description: "Whether to append the lifecycle notice to the job summary."
+    required: false
+    default: "true"
+
+outputs:
+  notice:
+    description: "Markdown lifecycle notice, empty when no deprecated provider is selected."
+    value: ${{ steps.check-support.outputs.notice }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check AzureRM support
+      id: check-support
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      env:
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+        WRITE_SUMMARY: ${{ inputs.write-summary }}
+      run: bash "$GITHUB_ACTION_PATH/check-support.sh"

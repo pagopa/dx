@@ -78,12 +78,15 @@ describe("runDockerCommand", () => {
         ".",
         "--file",
         "apps/my-app/Dockerfile",
+        "--platform",
+        "linux/amd64",
         "--tag",
         "apps-my-app",
         "--tag",
         "ghcr.io/pagopa/dx/my-app:dev",
       ]),
     );
+    expect(args).not.toContain("linux/amd64,linux/arm64");
     expect(args).not.toContain("--push");
     expect(githubSummaryMocks.summarizeDockerPush).not.toHaveBeenCalled();
   });
@@ -140,6 +143,24 @@ describe("runDockerCommand", () => {
       "my-app",
       "ghcr.io/pagopa/dx/my-app",
       ["main", "latest"],
+    );
+  });
+
+  it("uses manifest annotations for a single-platform push", () => {
+    dockerImageMocks.computeImageTags.mockReturnValue(["latest"]);
+    childProcessMocks.execFileSync.mockReturnValue("abc1234\n");
+    childProcessMocks.spawnSync.mockReturnValue({ status: 0 });
+
+    runDockerCommand(
+      "push",
+      { ...baseOptions, platform: "linux/amd64" },
+      "/workspace",
+    );
+
+    const [, args] = childProcessMocks.spawnSync.mock.calls[0];
+    expect(args).toContain("manifest:org.opencontainers.image.title=my-app");
+    expect(args).not.toContain(
+      "index,manifest:org.opencontainers.image.title=my-app",
     );
   });
 

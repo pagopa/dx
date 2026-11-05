@@ -13,10 +13,11 @@ The following diagram illustrates the architecture and relationships between the
 ## Features
 
 - **Container App Deployment**: Deploys a containerized application in the specified Azure Container App Environment.
-- **Flexible Ingress**: Configure external (public) or internal-only access via the `public_access_enabled` variable (default: `true`). Only effective when the parent Container App Environment has `public_network_access_enabled` set to `true`.
+- **Flexible Ingress**: Configure external or environment-only access via the `allow_access_from_environment_only` variable (default: `false`).
 - **Custom Domain with Managed or Uploaded SSL**: Optionally bind a custom domain (e.g., `api.example.com`) via the `custom_domain` variable. Supports auto-provisioned Azure-managed certificates (provide `dns` block) or pre-uploaded certificates via `certificate_id`.
-- **Private Endpoint Integration**: Creates a private DNS A record for the container app, enabling secure internal communication when `public_network_access_enabled` is set to `false`.
 - **Managed Identity**: Provides System Assigned Managed Identity for secure authentication with Azure resources.
+- **Easy Auth with Microsoft Entra ID**: Optionally configure authentication with or without a client secret and optionally restrict access to caller application client IDs. The unauthenticated request action defaults to `RedirectToLoginPage`; API clients can use `Return401`.
+- **Key Vault-backed Environment Variables**: Converts Azure Key Vault secret URIs in ordered environment variables into native Container App secret references.
 - **Health Probes**: Configurable liveness, readiness, and startup probes to monitor and ensure container health.
 - **Ingress Configuration**: Supports secure ingress with options for external or internal access and target port configuration.
 - **Dynamic Templates**: Allows defining multiple container templates with customizable settings, including environment variables and probes.
@@ -54,6 +55,54 @@ custom_domain = {
 ```
 
 In this case, create a CNAME record manually: `api.example.com` → `url` output, and a TXT record `asuid.api` → `custom_domain_verification_id` attribute of the container app.
+
+## Microsoft Entra ID Authentication
+
+When `authentication` is configured, the module enables Microsoft Entra ID
+authentication. `allowed_callers_client_ids` is optional: omit it to allow any
+client application in the configured tenant to authenticate, or set one or more
+caller **Application (client) IDs** to restrict access. An explicitly empty
+list is invalid. Omitting the allowlist does not enable anonymous access.
+
+For network-only access without Entra authentication, omit `authentication` and
+configure ingress and the Container Apps Environment accordingly.
+`allow_access_from_environment_only` restricts access to apps in the same
+Container Apps Environment; it is not a general VNet allowlist.
+
+For API-to-API calls, set `unauthenticated_client_action` to `Return401` so
+unauthenticated requests receive HTTP 401 instead of a login redirect. To allow
+an API Management managed identity, look up its service principal and pass its
+client ID in `allowed_callers_client_ids` (not its service principal object ID).
+The Easy Auth `client_id` is a different value: it identifies the app
+registration that represents the Container App API.
+
+```hcl
+data "azuread_application" "entra_auth_app" {
+  display_name = "example-entra-auth-app"
+}
+
+data "azuread_service_principal" "apim" {
+  display_name = "example-apim"
+}
+```
+
+Add this argument to your existing `module "container_app"` block:
+
+```hcl
+authentication = {
+  azure_active_directory = {
+    client_id                     = data.azuread_application.entra_auth_app.client_id
+    tenant_id                     = "11111111-1111-1111-1111-111111111111"
+    client_secret_key_vault_id    = "https://example.vault.azure.net/secrets/entra-client-secret"
+    allowed_callers_client_ids    = [data.azuread_service_principal.apim.client_id]
+    unauthenticated_client_action = "Return401"
+  }
+}
+```
+
+Here, the application data source supplies the Easy Auth registration ID, while
+the APIM service principal data source supplies the caller ID restricted by
+the allowlist.
 
 ## Use cases Comparison
 
@@ -97,8 +146,7 @@ Moreover, the Container App Service adds a couple of built-in scalers:
 Autoscalers can authenticate with external services using Managed Identity or connection strings.
 
 - **Managed Identity**: [Currently supported](https://learn.microsoft.com/en-us/azure/container-apps/scale-app?pivots=azure-cli#authentication-2) for Azure Queue Storage, Service Bus, and Event Hub only. Moreover, it must be configured manually as not currently supported by Terraform.
-- **Connection String**: Use the `authentication` object:
-  - `secret_name`: Name of the secret holding the connection string (must also be stored as a secret in the Container App)
+- **Connection String**: Set `secret_name` to the native Container App secret name. The module creates that secret when an environment variable with the corresponding name has an Azure Key Vault secret URI as its `value`. Environment-variable names are lowercased and underscores are converted to hyphens to derive the secret name. The Container App identity must have permission to read the Key Vault secret.
   - `trigger_parameter`: Name of the authentication parameter expected by the autoscaler (see Keda docs for each scaler)
 
 ### Example of an Autoscaler Configuration with Authentication
@@ -115,13 +163,57 @@ custom_scalers = [{
     blobCount         = "5"
   }
   authentication = {
-    secret_name       = "blob-connection-string-in-container-app-secrets"
+    secret_name       = "blob-connection-string"
     trigger_parameter = "connection"
+  }
+}]
+
+containers = [{
+  image = "ghcr.io/pagopa/example:latest"
+  environment_variables = [{
+    name  = "BLOB_CONNECTION_STRING"
+    value = "https://my-kv.vault.azure.net/secrets/blob-connection-string"
+  }]
+  liveness_probe = {
+    path = "/health"
   }
 }]
 ```
 
 ---
+
+## Environment Variables and Secrets
+
+AzureRM models Container App environment variables as an ordered list. Use
+`containers[*].environment_variables` to control that order and avoid unrelated
+environment variables appearing as replacements when a value is added. Append
+new entries to keep existing positions stable.
+
+An environment variable value matching an Azure Key Vault secret URI, with an
+optional secret version, is configured as a native Container App secret
+reference; other values are passed through as plain environment values. The
+generated secret name is the variable name lowercased with underscores replaced
+by hyphens. Grant the Container App identity read access to the referenced Key
+Vault secrets.
+
+```hcl
+containers = [{
+  image = "ghcr.io/pagopa/example:latest"
+  environment_variables = [
+    {
+      name  = "API_BASE_URL"
+      value = "https://api.example.com"
+    },
+    {
+      name  = "API_KEY"
+      value = "https://my-kv.vault.azure.net/secrets/api-key"
+    }
+  ]
+  liveness_probe = {
+    path = "/health"
+  }
+}]
+```
 
 ## Usage Example
 
@@ -131,10 +223,10 @@ A complete usage example can be found in the [example/complete](https://github.c
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
 | <a name="requirement_azapi"></a> [azapi](#requirement\_azapi) | ~> 2.9 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.70 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.70, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.14 |
 
@@ -145,7 +237,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azapi_resource.auth](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) | resource |
 | [azapi_resource.managed_certificate](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/resource) | resource |
 | [azapi_update_resource.bind_certificate](https://registry.terraform.io/providers/azure/azapi/latest/docs/resources/update_resource) | resource |
@@ -159,20 +251,19 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_acr_registry"></a> [acr\_registry](#input\_acr\_registry) | Indicates the Azure Container Registry to pull images from. Use this variable only if the registry service is an Azure Container Registry. Value must match the registry specified in the image name. | `string` | `null` | no |
 | <a name="input_allow_access_from_environment_only"></a> [allow\_access\_from\_environment\_only](#input\_allow\_access\_from\_environment\_only) | If false (default), the Container App is accessible via public internet or within the VNet, depending on the Container App Environment configuration.<br/>If true, the Container App is accessible only from other apps on the same Container App Environment. | `bool` | `false` | no |
-| <a name="input_authentication"></a> [authentication](#input\_authentication) | Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. Unauthenticated requests get redirected to the login page. client\_secret\_key\_vault\_id must be the versionless\_id of the KV secret; the module automatically adds it to the Container App secrets. | <pre>object({<br/>    azure_active_directory = object({<br/>      client_id                  = string<br/>      tenant_id                  = string<br/>      client_secret_key_vault_id = string<br/>    })<br/>  })</pre> | `null` | no |
+| <a name="input_authentication"></a> [authentication](#input\_authentication) | Azure Managed Authentication (EasyAuth) configuration using Microsoft Entra ID. When set, enables authentication on the Container App. client\_id identifies the application registration configured for Easy Auth. allowed\_callers\_client\_ids is optional: when omitted, no caller-application allowlist is configured; when set, it must contain one or more caller Application (client) IDs (for example, the APIM managed identity client ID from its service principal, not the service principal object ID), and only those callers are allowed. client\_secret\_key\_vault\_id is optional and, when set, must be an Azure Key Vault secret URI; the module automatically adds it to the Container App secrets. unauthenticated\_client\_action controls how unauthenticated requests are handled, defaults to RedirectToLoginPage, and accepts RedirectToLoginPage, AllowAnonymous, Return401, or Return403. | <pre>object({<br/>    azure_active_directory = object({<br/>      client_id                     = string<br/>      tenant_id                     = string<br/>      client_secret_key_vault_id    = optional(string)<br/>      allowed_callers_client_ids    = optional(list(string))<br/>      unauthenticated_client_action = optional(string, "RedirectToLoginPage")<br/>    })<br/>  })</pre> | `null` | no |
 | <a name="input_autoscaler"></a> [autoscaler](#input\_autoscaler) | Autoscaler configuration. It includes minimum and maximum replicas, and a list of scalers for Azure Queue, HTTP calls and Custom scaling rules. Custom scalers are available on Keda website at https://keda.sh/docs/latest/scalers/ | <pre>object({<br/>    replicas = optional(object({<br/>      minimum = number<br/>      maximum = number<br/>    }), null)<br/><br/>    azure_queue_scalers = optional(list(object({<br/>      queue_name   = string<br/>      queue_length = number<br/><br/>      authentication = object({<br/>        secret_name       = string<br/>        trigger_parameter = string<br/>      })<br/>    })), [])<br/><br/>    http_scalers = optional(list(object({<br/>      name                = string<br/>      concurrent_requests = number,<br/>    })), [])<br/><br/>    custom_scalers = optional(list(object({<br/>      name             = string<br/>      custom_rule_type = string<br/>      metadata         = map(string),<br/><br/>      authentication = optional(object({<br/>        secret_name       = string<br/>        trigger_parameter = string<br/>      }))<br/>    })), [])<br/>  })</pre> | `null` | no |
 | <a name="input_container_app_environment_id"></a> [container\_app\_environment\_id](#input\_container\_app\_environment\_id) | The ID of the Azure Container App Environment where the container app will be deployed. | `string` | n/a | yes |
 | <a name="input_container_port"></a> [container\_port](#input\_container\_port) | The port on which the container app will listen for incoming traffic. | `number` | `8080` | no |
-| <a name="input_containers"></a> [containers](#input\_containers) | List of containers and related settings to be deployed in the same Container App.<br/>The second and subsequent containers in the list will be deployed as sidecars.<br/>Each container must specify an image, and can optionally specify a name (if not provided, a name will be generated from the image name), environment variables (app\_settings), secrets to be exposed (secret\_names) and liveness, readiness and startup probes.<br/>Probes are used by Azure to determine container health status and to automatically restart it if necessary.<br/>For more details on probe configuration, refer to https://learn.microsoft.com/en-us/azure/container-apps/containers#probes. | <pre>list(object({<br/>    image        = string<br/>    name         = optional(string, "")<br/>    app_settings = optional(map(string), {})<br/>    secret_names = optional(list(string), [])<br/><br/>    liveness_probe = object({<br/>      failure_count_threshold = optional(number, 3)<br/>      header = optional(object({<br/>        name  = string<br/>        value = string<br/>      }))<br/>      initial_delay    = optional(number, 30)<br/>      interval_seconds = optional(number, 10)<br/>      path             = string<br/>      timeout          = optional(number, 5)<br/>      transport        = optional(string, "HTTP")<br/>    })<br/><br/>    readiness_probe = optional(object({<br/>      failure_count_threshold = optional(number, 10)<br/>      header = optional(object({<br/>        name  = string<br/>        value = string<br/>      }))<br/>      interval_seconds        = optional(number, 10)<br/>      initial_delay           = optional(number, 30)<br/>      path                    = string<br/>      success_count_threshold = optional(number, 3)<br/>      timeout                 = optional(number, 5)<br/>      transport               = optional(string, "HTTP")<br/>    }), null)<br/><br/>    startup_probe = optional(object({<br/>      failure_count_threshold = optional(number, 10)<br/>      header = optional(object({<br/>        name  = string<br/>        value = string<br/>      }))<br/>      interval_seconds = optional(number, 10)<br/>      path             = string<br/>      timeout          = optional(number, 5)<br/>      transport        = optional(string, "HTTP")<br/>    }), null)<br/>  }))</pre> | n/a | yes |
+| <a name="input_containers"></a> [containers](#input\_containers) | List of containers and related settings to be deployed in the same Container App.<br/>The second and subsequent containers in the list will be deployed as sidecars.<br/>Each container must specify an image, and can optionally specify a name (if not provided, a name will be generated from the image name), ordered environment variables, and liveness, readiness and startup probes. Environment variable values that are Azure Key Vault secret URIs, with an optional secret version, are configured as Container App secret references. The generated secret name is the environment variable name lowercased with underscores replaced by hyphens. The Container App identity must be authorized to read the referenced Key Vault secrets.<br/>Probes are used by Azure to determine container health status and to automatically restart it if necessary.<br/>For more details on probe configuration, refer to https://learn.microsoft.com/en-us/azure/container-apps/containers#probes. | <pre>list(object({<br/>    image = string<br/>    name  = optional(string, "")<br/>    environment_variables = optional(list(object({<br/>      name  = string<br/>      value = string<br/>    })), [])<br/><br/>    liveness_probe = object({<br/>      failure_count_threshold = optional(number, 3)<br/>      header = optional(object({<br/>        name  = string<br/>        value = string<br/>      }))<br/>      initial_delay    = optional(number, 30)<br/>      interval_seconds = optional(number, 10)<br/>      path             = string<br/>      timeout          = optional(number, 5)<br/>      transport        = optional(string, "HTTP")<br/>    })<br/><br/>    readiness_probe = optional(object({<br/>      failure_count_threshold = optional(number, 10)<br/>      header = optional(object({<br/>        name  = string<br/>        value = string<br/>      }))<br/>      interval_seconds        = optional(number, 10)<br/>      initial_delay           = optional(number, 30)<br/>      path                    = string<br/>      success_count_threshold = optional(number, 3)<br/>      timeout                 = optional(number, 5)<br/>      transport               = optional(string, "HTTP")<br/>    }), null)<br/><br/>    startup_probe = optional(object({<br/>      failure_count_threshold = optional(number, 10)<br/>      header = optional(object({<br/>        name  = string<br/>        value = string<br/>      }))<br/>      interval_seconds = optional(number, 10)<br/>      path             = string<br/>      timeout          = optional(number, 5)<br/>      transport        = optional(string, "HTTP")<br/>    }), null)<br/>  }))</pre> | n/a | yes |
 | <a name="input_custom_domain"></a> [custom\_domain](#input\_custom\_domain) | Custom domain configuration for the container app. Provide 'certificate\_id' to use a pre-uploaded azurerm\_container\_app\_environment\_certificate, or 'dns' to auto-provision an Azure-managed certificate (CNAME and TXT records are created automatically). At least one of 'certificate\_id' or 'dns' must be specified. | <pre>object({<br/>    host_name      = string<br/>    certificate_id = optional(string)<br/>    dns = optional(object({<br/>      zone_name                = string<br/>      zone_resource_group_name = string<br/>    }))<br/>  })</pre> | `null` | no |
 | <a name="input_deployment_strategy"></a> [deployment\_strategy](#input\_deployment\_strategy) | The strategy for new deployments.<br/>With `Incremental`, the new version the gradually deployed until it reaches the 100% of the traffic.<br/>Optionally, you can provide a script to monitor specific APIs during this phase and using automatic rollbacks in case of issues.<br/>With `Latest`, the new version immediately replaces the previous one as soon as it becomes responsive and required number of replicas are provisioned, with no gradual deployment. | `string` | `"Incremental"` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to send diagnostics to.<br/>Mandatory for use cases other than 'development'. | `string` | `null` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the Azure Resource Group where the resources will be deployed. | `string` | n/a | yes |
-| <a name="input_secrets"></a> [secrets](#input\_secrets) | List of Key Vault secret references to define in the Container App.<br/>Secrets are exposed to containers only when explicitly referenced in `containers[*].secret_names`.<br/>To remove a secret without downtime, first deploy the application version that no longer needs it, then remove it from every container `secret_names` list, and finally remove it from `secrets`. | <pre>list(object({<br/>    name                = string<br/>    key_vault_secret_id = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_size"></a> [size](#input\_size) | Container app memory and cpu sizes. For allowed values consult table at https://learn.microsoft.com/en-us/azure/container-apps/containers#allocations. If not set, it will be determined by the use\_case. | <pre>object({<br/>    cpu    = number<br/>    memory = string<br/>  })</pre> | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
 | <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Container app use case. Allowed values: 'default', 'development' | `string` | `"default"` | no |
@@ -181,12 +272,11 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_custom_domain"></a> [custom\_domain](#output\_custom\_domain) | Custom domain binding. Only populated if the 'custom\_domain' variable was provided. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Container App resource. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Container App resource. |
 | <a name="output_principal_id"></a> [principal\_id](#output\_principal\_id) | The principal ID of the system-assigned managed identity associated with this Container App. |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | The name of the Azure Resource Group where the Container App is deployed. |
 | <a name="output_url"></a> [url](#output\_url) | The URL of the Container App. |
-| <a name="output_url_latest_revision"></a> [url\_latest\_revision](#output\_url\_latest\_revision) | The URL of the latest revision deployed Container App. |
 <!-- END_TF_DOCS -->

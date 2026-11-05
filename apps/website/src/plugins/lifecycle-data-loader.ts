@@ -4,7 +4,7 @@ import type { Plugin } from "@docusaurus/types";
 
 import fs from "node:fs/promises";
 import path from "node:path";
-import { z } from "zod";
+import * as z from "zod";
 
 const VersionStatus = z.enum(["active", "maintenance", "deprecated", "eol"]);
 

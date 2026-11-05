@@ -1,3 +1,119 @@
+## 7.0.1 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+# 7.0.0 (2026-10-28)
+
+### ⚠️  Breaking Changes
+
+- Raise Terraform to 1.16 and remove the redundant empty service-endpoints argument from the VPN subnet. ([#2327](https://github.com/pagopa/dx/pull/2327))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 6.0.7 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 6.0.6 (2026-10-13)
+
+### 🩹 Fixes
+
+- Update internal examples and AzureRM constraints ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 6.0.5 (2026-09-30)
+
+### 🩹 Fixes
+
+- Configure storage account private DNS zone resource groups in examples and test setup ([#2270](https://github.com/pagopa/dx/pull/2270))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 6.0.4 (2026-09-23)
+
+### 🩹 Fixes
+
+- Grant the Infra CI merged role the permissions Terraform needs to refresh Static Web Apps and App Configuration. ([#2242](https://github.com/pagopa/dx/pull/2242))
+
+  The `azurerm` provider reads the computed secrets of both resources on every plan (`staticSites/listSecrets` and `configurationStores/listKeys`), so once a repository creates a Static Web App or an App Configuration store, the next plan fails with a 403 under the Infra CI identity. Add the `PagoPA Static Web Apps List Secrets` role and the App Configuration `listKeys` action to `DX Infra CI Resource Groups`.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 6.0.3 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
+## 6.0.2 (2026-09-08)
+
+### 🩹 Fixes
+
+- Update internal dependencies ([#2120](https://github.com/pagopa/dx/pull/2120))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 6.0.1 (2026-09-08)
+
+### 🩹 Fixes
+
+- Change Tests environment to UAT ([#2123](https://github.com/pagopa/dx/pull/2123))
+
+### ❤️ Thank You
+
+- Krusty93
+- Mario Mupo @mamu0
+
+# 6.0.0 (2026-09-01)
+
+### ⚠️  Breaking Changes
+
+- Drop support for Terraform versions older than 1.14.0. The minimum required Terraform version is now 1.15.0, and it is suggested to use 1.16.0 or later. ([#2086](https://github.com/pagopa/dx/pull/2086))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 5.0.1 (2026-08-26)
+
+### 🩹 Fixes
+
+- Read module tags from module manifests ([#2053](https://github.com/pagopa/dx/pull/2053))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 # 5.0.0 (2026-07-06)
 
 ### ⚠️  Breaking Changes

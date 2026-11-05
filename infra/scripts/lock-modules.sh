@@ -167,6 +167,21 @@ function get_module_registry_url() {
   fi
 }
 
+function get_module_version() {
+    local module_path="$1"
+    local module_version=""
+
+    if [[ -f "$module_path/module.json" ]]; then
+        module_version=$(jq -r '.version // empty' "$module_path/module.json")
+    fi
+
+    if [[ -z "$module_version" && -f "$module_path/package.json" ]]; then
+        module_version=$(jq -r '.version // empty' "$module_path/package.json")
+    fi
+
+    echo "${module_version:-unknown}"
+}
+
 # Ensure Terraform modules are initialized
 # This function refreshes the local module cache to ensure we're working with the latest versions
 # and to maintain consistency across environments
@@ -207,13 +222,11 @@ function process_module() {
     local -r module_name=$(basename "$module_path")
     local -r new_hash=$(calculate_hash "$module_path")
     local previous_hash
-    local module_version="unknown"
+    local module_version=$(get_module_version "$module_path")
     local module_folder_name="unknown"
     local module_source=$(get_module_registry_url "$module_name")
 
-    # Try to get module version from package.json if it exists
     if [[ -f "$module_path/package.json" ]]; then
-        module_version=$(jq -r '.version // "unknown"' "$module_path/package.json")
         module_folder_name=$(jq -r '.name // "unknown"' "$module_path/package.json")
     fi
 
@@ -346,11 +359,7 @@ function process_directory() {
         while IFS= read -r module_key; do
             if [[ -n "$module_key" ]]; then
                 local module_path="$MODULES_DIR/$module_key"
-                local module_version="unknown"
-                # Get module version
-                if [[ -f "$module_path/package.json" ]]; then
-                    module_version=$(jq -r '.version // "unknown"' "$module_path/package.json")
-                fi
+                local module_version=$(get_module_version "$module_path")
                 # Process module if directory exists
                 if [[ -d "$module_path" ]]; then
                     info "Processing module: $module_path with version $module_version"

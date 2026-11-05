@@ -23,7 +23,7 @@ management.
 
 ## Plugin resources
 
-- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/tests/.plugin/plugin.json)
+- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/tests/plugin.json)
 
 ## Available skills
 

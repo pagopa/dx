@@ -8,7 +8,7 @@ sidebar_position: 11
 
 | Workflow                             | Version | Source                                                                                          |
 | ------------------------------------ | ------- | ----------------------------------------------------------------------------------------------- |
-| **Validate** (PR version-plan check) | v1      | [`validate-v1.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v1.yaml) |
+| **Validate** (PR version-plan check) | v2      | [`validate-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/validate-v2.yaml) |
 | **Release** (publish to npm)         | v2      | [`release-v2.yaml`](https://github.com/pagopa/dx/blob/main/.github/workflows/release-v2.yaml)   |
 
 :::
@@ -65,24 +65,6 @@ creating only the missing tags and releases.
 - npm packages require
   [OIDC Trusted Publishing](https://docs.npmjs.com/generating-provenance-statements)
   configured (`id-token: write` permission must be granted)
-- Public packages must be tagged as public in their Nx project configuration.
-  The `nx-release` workflow treats any tag equal to `public` or ending with
-  `:public` (for example, `npm:public`) as publishable.
-
-### Marking a package as public
-
-To mark a package as public, set `"private": false` in the package's
-`package.json` file. This is necessary for the publish workflow to process the
-package:
-
-```json
-{
-  "name": "@pagopa/my-package",
-  "version": "1.0.0",
-  "private": false,
-  ... other package.json fields
-}
-```
 
 ### nx.json configuration
 
@@ -166,6 +148,9 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      # The release job installs the repository dependencies and publishes the
+      # DX packages, both through GitHub Packages.
+      packages: write
       pull-requests: write
     uses: pagopa/dx/.github/workflows/release-v2.yaml@main
     with:
@@ -174,25 +159,50 @@ jobs:
       github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+:::info[GitHub Packages permissions]
+
+The calling job must grant `packages: write` so the workflow can both install
+dependencies hosted on GitHub Packages and publish the release. A reusable
+workflow can only downgrade the permissions granted by its caller: a
+`permissions` block without `packages` sets the scope to `none`. The call is not
+rejected upfront; the install fails later, when the registry refuses the token
+with `401`.
+
+The setup step authenticates npm and pnpm through an npmrc. Yarn 2+ (Berry)
+ignores that file, so a Yarn Berry repository must configure the `pagopa` scope
+in `.yarnrc.yml` itself.
+
+:::
+
 ### Optional: enable the pull request warning
 
 If you also want a warning comment on pull requests, add a validation workflow
-that uses `validate-v1.yaml`:
+that uses `validate-v2.yaml`:
 
 ```yaml
-name: Validate
+name: Code Review
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [opened, synchronize]
 
 jobs:
   validate:
     permissions:
-      contents: read
       actions: read
+      contents: read
+      id-token: write
+      packages: read
       pull-requests: write
-    uses: pagopa/dx/.github/workflows/validate-v1.yaml@main
+    uses: pagopa/dx/.github/workflows/validate-v2.yaml@main
+    secrets:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+      GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+      GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
 ```
 
 With this in place, pull requests receive a warning only when a version plan is

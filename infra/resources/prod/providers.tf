@@ -2,7 +2,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 4.70"
     }
 
     azuread = {
@@ -12,12 +12,12 @@ terraform {
 
     azuredx = {
       source  = "pagopa-dx/azure"
-      version = "~> 0.0"
+      version = "~> 0.12"
     }
 
     azapi = {
       source  = "Azure/azapi"
-      version = "2.8.0"
+      version = "~> 2.9"
     }
 
     aws = {
@@ -32,7 +32,7 @@ terraform {
 
     awsdx = {
       source  = "pagopa-dx/aws"
-      version = "~> 0.0"
+      version = "~> 0.1"
     }
   }
 
@@ -57,21 +57,24 @@ provider "azapi" {}
 
 provider "aws" {
   region = "eu-south-1"
+
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "aws" {
   alias  = "eu-central-1"
   region = "eu-central-1"
+
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "awscc" {
   alias  = "eu-central-1"
   region = "eu-central-1"
-}
-
-provider "aws" {
-  alias  = "us-east-1"
-  region = "us-east-1"
 }
 
 provider "awsdx" {}

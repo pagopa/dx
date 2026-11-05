@@ -1,0 +1,10 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // @nx/js:tsc may compile from a generated tsconfig under the workspace
+    // tmp/ folder, so @types must be resolved relative to this file.
+    "typeRoots": ["./node_modules/@types"]
+  },
+  "include": ["./src/**/*.ts"],
+  "exclude": ["./src/**/*.test.ts", "./src/**/*.spec.ts"]
+}

@@ -121,6 +121,10 @@ export class Repository {
   constructor(
     public readonly name: string,
     public readonly owner: string,
+    /** Numeric GitHub repository ID, available when fetched from the API. */
+    public readonly id?: number,
+    /** Numeric GitHub owner (user or organization) ID, available when fetched from the API. */
+    public readonly ownerId?: number,
   ) {}
 }
 

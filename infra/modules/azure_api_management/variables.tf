@@ -181,11 +181,9 @@ variable "log_analytics_workspace_id" {
 }
 
 variable "metric_alerts" {
-  default = {}
+  default = null
 
-  description = <<EOD
-Map of name = criteria objects
-EOD
+  description = "Optional map of metric alert definitions. When null, the module creates supported defaults for the selected use_case."
 
   type = map(object({
     description   = string
@@ -227,6 +225,25 @@ EOD
       }
     ))
   }))
+}
+
+variable "metric_alert_thresholds" {
+  type        = map(number)
+  default     = {}
+  description = "Optional overrides for built-in metric alerts. Set a positive threshold to override it or null to disable that alert; omitted alerts keep their defaults."
+
+  validation {
+    condition = var.metric_alerts == null ? alltrue([
+      for alert_name, threshold in var.metric_alert_thresholds :
+      contains(local.metric_alert_names, alert_name) && (
+        threshold == null || (
+          contains(keys(local.default_metric_alerts[var.use_case]), alert_name) &&
+          threshold > 0
+        )
+      )
+    ]) : length(var.metric_alert_thresholds) == 0
+    error_message = "metric_alert_thresholds can only use built-in alert names. Set a positive threshold for alerts supported by the selected use_case, or null to disable an alert. Use metric_alerts for custom alert definitions."
+  }
 }
 
 variable "action_group_id" {

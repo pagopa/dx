@@ -1,5 +1,5 @@
 resource "azurerm_container_app" "this" {
-  name                         = provider::dx::resource_name(merge(var.environment, { resource_type = "container_app" }))
+  name                         = local.container_app_name
   container_app_environment_id = var.container_app_environment_id
   resource_group_name          = var.resource_group_name
   revision_mode                = local.revision_mode
@@ -29,20 +29,23 @@ resource "azurerm_container_app" "this" {
   }
 
   dynamic "secret" {
-    for_each = var.secrets
+    for_each = {
+      for name, key_vault_secret_ids in local.key_vault_secret_ids_by_name :
+      name => key_vault_secret_ids[0]
+    }
     content {
-      name                = replace(lower(secret.value.name), "_", "-")
-      key_vault_secret_id = secret.value.key_vault_secret_id
+      name                = secret.key
+      key_vault_secret_id = secret.value
       identity            = local.container_app_secret_identity
     }
   }
 
-  # Add Entra ID client secret if authentication is configured
+  # Add the Entra ID client secret only when a Key Vault reference is configured.
   dynamic "secret" {
-    for_each = var.authentication != null ? [1] : []
+    for_each = var.authentication == null || var.authentication.azure_active_directory.client_secret_key_vault_id == null ? [] : [var.authentication.azure_active_directory.client_secret_key_vault_id]
     content {
       name                = "entra-id-client-secret"
-      key_vault_secret_id = var.authentication.azure_active_directory.client_secret_key_vault_id
+      key_vault_secret_id = secret.value
       identity            = local.container_app_secret_identity
     }
   }
@@ -103,23 +106,18 @@ resource "azurerm_container_app" "this" {
         memory = local.memory_size
 
         dynamic "env" {
-          for_each = container.value.app_settings
-
-          content {
-            name  = env.key
-            value = env.value
-          }
-        }
-
-        dynamic "env" {
-          for_each = [
-            for secret in var.secrets : secret
-            if contains(container.value.secret_names, secret.name)
-          ]
+          for_each = concat(
+            contains([for environment_variable in container.value.environment_variables : environment_variable.name], "OTEL_SERVICE_NAME") ? [] : [{
+              name  = "OTEL_SERVICE_NAME"
+              value = local.container_app_name
+            }],
+            container.value.environment_variables,
+          )
 
           content {
             name        = env.value.name
-            secret_name = replace(lower(env.value.name), "_", "-")
+            value       = can(regex(local.key_vault_secret_uri_pattern, env.value.value)) ? null : env.value.value
+            secret_name = can(regex(local.key_vault_secret_uri_pattern, env.value.value)) ? replace(lower(env.value.name), "_", "-") : null
           }
         }
 
@@ -197,17 +195,19 @@ resource "azurerm_container_app" "this" {
 
   lifecycle {
     precondition {
-      condition = length(setsubtract(
-        toset(flatten([for template in var.containers : template.secret_names])),
-        toset([for secret in var.secrets : secret.name])
-      )) == 0
-      error_message = "Each containers[*].secret_names entry must match a secret defined in var.secrets."
+      condition     = alltrue([for key_vault_secret_ids in values(local.key_vault_secret_ids_by_name) : length(toset(key_vault_secret_ids)) == 1])
+      error_message = "Environment variables with the same normalized name must use the same Key Vault secret URI."
+    }
+
+    precondition {
+      condition     = var.authentication == null || var.authentication.azure_active_directory.client_secret_key_vault_id == null || !contains(keys(local.key_vault_secret_ids_by_name), "entra-id-client-secret")
+      error_message = "The normalized environment variable name 'entra-id-client-secret' is reserved when authentication is configured."
     }
 
     ignore_changes = [
       # The image is not managed by Terraform, but instead updated by CD pipelines
       template[0].container[0].image,
-      latest_revision_fqdn,
+      ingress[0].traffic_weight
     ]
   }
 

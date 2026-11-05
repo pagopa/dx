@@ -18,7 +18,6 @@ const commandFactoryMocks = vi.hoisted(() => ({
   makeDoctorCommand: vi.fn(() => new Command("doctor")),
   makeInfoCommand: vi.fn(() => new Command("info")),
   makeInitCommand: vi.fn(() => new Command("init")),
-  makeSavemoneyCommand: vi.fn(() => new Command("savemoney")),
 }));
 
 vi.mock("../commands/add.js", () => ({
@@ -36,10 +35,6 @@ vi.mock("../commands/info.js", () => ({
 vi.mock("../commands/init.js", () => ({
   makeInitCommand: commandFactoryMocks.makeInitCommand,
 }));
-vi.mock("../commands/savemoney.js", () => ({
-  makeSavemoneyCommand: commandFactoryMocks.makeSavemoneyCommand,
-}));
-
 import { type CliDependencies, makeCli } from "../index.js";
 
 describe("makeCli", () => {

@@ -12,8 +12,8 @@ locals {
 data "azurerm_client_config" "current" {}
 
 data "azurerm_user_assigned_identity" "integration_github" {
-  name                = "dx-d-itn-devex-integration-id-01"
-  resource_group_name = "dx-d-itn-devex-rg-01"
+  name                = "dx-u-itn-devex-integration-id-01"
+  resource_group_name = "dx-u-itn-devex-rg-01"
 }
 
 data "azurerm_resource_group" "test" {
@@ -58,7 +58,7 @@ resource "random_integer" "kv_instance" {
   max = 99
 }
 
-#tfsec:ignore:AVD-AZU-0013
+#trivy:ignore:AVD-AZU-0013
 resource "azurerm_key_vault" "kv" {
   name                          = provider::dx::resource_name(merge(var.environment, { resource_type = "key_vault", domain = "int", instance_number = random_integer.kv_instance.result }))
   location                      = azurerm_resource_group.sut.location

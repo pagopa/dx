@@ -1,3 +1,398 @@
+## 0.27.28 (2026-11-04)
+
+### 🩹 Fixes
+
+- Bump dependencies to address security advisories ([#2492](https://github.com/pagopa/dx/pull/2492))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.27.27 (2026-11-03)
+
+### 🩹 Fixes
+
+- Fix the getting-started documentation URL in init and add environment summaries. ([#2482](https://github.com/pagopa/dx/pull/2482))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.27.26 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.27.25 (2026-11-03)
+
+### 🩹 Fixes
+
+- Bump dependencies ([#2467](https://github.com/pagopa/dx/pull/2467))
+
+## 0.27.24 (2026-10-30)
+
+### 🩹 Fixes
+
+- Parse repository HCL before updating environments, preserving unrelated ([#2267](https://github.com/pagopa/dx/pull/2267))
+  Terraform configuration and leaving unsupported files unchanged. Validate
+  changed candidates with Terraform before atomic replacement and report its
+  diagnostics when validation fails.
+
+  The generated-repository workflow is unchanged. If a customized
+  `infra/repository/main.tf` is rejected, keep a single
+  `module "github_repository"` with a literal `repository` object and a unique
+  list of literal environment names. Convert dynamic expressions and remove
+  duplicate entries before retrying.
+
+  Lists containing comments are left unchanged when they already include the
+  requested environment and `prod`. Otherwise, move the comments outside the list
+  or add both names manually. Run `terraform fmt infra/repository/main.tf` after
+  adjusting the file; formatting alone does not remove comments or convert
+  dynamic expressions.
+
+  Run updates sequentially: concurrent CLI runs or other writers in the same
+  working copy are not supported.
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.27.23 (2026-10-29)
+
+### 🚀 Features
+
+- Adds `github_environment_prefix_enabled` to the Azure and AWS bootstrap modules. When enabled, GitHub names include the resource prefix—for example, `infra-prod-ci` becomes `infra-ced-prod-ci`. Cloud resource names are unchanged. ([#2371](https://github.com/pagopa/dx/pull/2371))
+
+  The CLI enables this automatically for tenant-qualified environments. Existing configurations remain unchanged by default.
+  The feature is introduced in Azure module version 7.1.0 and AWS module version 2.3.0; consumers enabling the flag must use those versions or later.
+
+  Enabling the flag on an existing deployment changes where secrets are stored and, on Azure, the credentials used by workflows. Existing workflows must use the new environment names before the old configuration is removed.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.27.22 (2026-10-29)
+
+### 🚀 Features
+
+- Update the Terraform module versions used by the DX CLI. Terraform 1.16 or later is required for the updated Azure modules. ([#2441](https://github.com/pagopa/dx/pull/2441))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.27.21 (2026-10-29)
+
+### 🩹 Fixes
+
+- Stop passing the unused `GH_APP_RELEASE_*` secrets in the generated monorepo `validate.yaml` workflow ([#2431](https://github.com/pagopa/dx/pull/2431))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.27.20 (2026-10-28)
+
+### 🩹 Fixes
+
+- Stop provisioning unused GitHub App ID environment secret ([#2427](https://github.com/pagopa/dx/pull/2427))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.27.19 (2026-10-23)
+
+### 🚀 Features
+
+- Remove dx savemoney; migrate to @pagopa/dx-savemoney analyze --subscriptionIds <ids>. ([#2393](https://github.com/pagopa/dx/pull/2393))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.27.18 (2026-10-21)
+
+### 🩹 Fixes
+
+- Add optional ECR Public authentication for Docker in `validate-v2` using `ECR_PUBLIC_ROLE_ARN`. Missing credentials or authentication failures do not block validation. Forward the optional secret from generated `dx init` workflows. ([#2387](https://github.com/pagopa/dx/pull/2387))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.27.17 (2026-10-21)
+
+### 🚀 Features
+
+- Align the dx init scaffold with the validate-v2 pipeline. ([#2347](https://github.com/pagopa/dx/pull/2347))
+
+  The generated repository now configures @pagopa/nx-terraform and @pagopa/nx-docker, ships the Code Review workflow calling validate-v2.yaml, formats with oxfmt, includes the Trivy configuration, and authenticates to GitHub Packages. dx add environment registers tenant-qualified environments in nx.json, and dx doctor validates the Nx Terraform plugin instead of the legacy pre-commit configuration. validate-v2 now skips the version-plan warning when the release App secrets are not configured, so generated repositories pass the Code Review without manual setup. Both dx init and dx add environment run the Nx Terraform init target at the end of the generation, scoped to the projects they generated or updated, so the provider and module lock files are committed with them and pass the frozen-lockfile validation. The mise bootstrap trusts the freshly generated config before locking and pins pnpm through Corepack before writing the lockfile, so dx init no longer needs a manual mise trust or fails with "No version is set for shim: pnpm"; the generated settings mirror the DX repository, reading pnpm and python from their idiomatic version files and excluding copilot and github-cli from the minimum release age. dx init also probes GitHub Packages before the prompts, so a token without the read:packages scope fails immediately with the command to run instead of after the workspace has been scaffolded.
+
+
+### 🩹 Fixes
+
+- Prevent Runner App credentials from appearing in add environment JSON output while preserving environment metadata. ([#2368](https://github.com/pagopa/dx/pull/2368))
+- Scaffold Node.js 24 LTS in the repositories generated by `dx init`: the ([#2377](https://github.com/pagopa/dx/pull/2377))
+  generated `.node-version` now pins the latest release of the Node.js 24 line
+  (`Krypton`) instead of the Node.js 22 line (`Jod`).
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
+## 0.27.16 (2026-10-16)
+
+### 🩹 Fixes
+
+- SaveMoney noise reduction: missing tags no longer mark resources as unused (still reported as a governance note); removed the NIC "No public IP assigned", Public IP "Static IP not in use" and App Service "Premium tier with low resource utilization" rules; private endpoints now consider manual private link connections; storage transaction counts use Total aggregation per day; deallocated VMs no longer report a compute price; AZQR orphan findings fold into the matching SaveMoney finding instead of being reported twice; merged reasons are separated by a space; AZQR-only entries take their location from the AZQR inventory instead of repeating it in the reason; `json` output includes per-resource `estimatedMonthlySavings` (custom cost at risk or Advisor savings), also shown in a new `Savings` table column; multi-currency totals in the summary are joined with "+" to show they are cumulative. `thresholds.appService.premiumCpuPercent` is deprecated and ignored but still accepted. ([#2357](https://github.com/pagopa/dx/pull/2357))
+
+  Silence Azure SDK console warnings (credential-chain probes, `baseUri` deprecations) enabled by telemetry; set `AZURE_LOG_LEVEL` to restore them. `savemoney` debug logs are now shown only with `--verbose`, and console logs go to stderr so `--format json` output stays valid.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.6.9
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.27.15 (2026-10-15)
+
+### 🩹 Fixes
+
+- Fix Azure CLI setup during `dx add environment` by using a supported managed ([#2363](https://github.com/pagopa/dx/pull/2363))
+  Python runtime and Mise's dependency prerelease setting.
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.27.14 (2026-10-09)
+
+### 🩹 Fixes
+
+- Support personal GitHub owners in generated bootstrapper configurations ([#2266](https://github.com/pagopa/dx/pull/2266))
+- Honor the selected GitHub organization in bootstrapper configuration ([#2266](https://github.com/pagopa/dx/pull/2266))
+
+### ❤️ Thank You
+
+- Copilot @github-copilot
+- Marco Comi @kin0992
+
+## 0.27.13 (2026-10-08)
+
+### 🚀 Features
+
+- Configure generated Renovate Docker image updates ([#2313](https://github.com/pagopa/dx/pull/2313))
+
+### 🩹 Fixes
+
+- Set `neverConnectToCloud: true` and `@nx/js` `projectsAffectedByDependencyUpdates: "auto"` in the `nx.json` generated by `dx init`, so Nx does not prompt to connect the new repository to Nx Cloud and only marks projects whose resolved dependencies changed as affected by lockfile updates. ([#2318](https://github.com/pagopa/dx/pull/2318))
+- Update dependencies ([#2319](https://github.com/pagopa/dx/pull/2319))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+- Updated @pagopa/dx-savemoney to 0.6.8
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Danilo Spinelli @gunzip
+
+## 0.27.12 (2026-10-06)
+
+### 🚀 Features
+
+- Add mandatory owner and cost center tags to environment creation ([#2289](https://github.com/pagopa/dx/pull/2289))
+- Add Renovate configuration to generated monorepos ([#2294](https://github.com/pagopa/dx/pull/2294))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Christian Calabrese
+
+## 0.27.11 (2026-10-01)
+
+### 🚀 Features
+
+- Store the shared core Terraform state at the root of the `terraform-state` container (`core.tfstate`) instead of scoping it to the workspace domain, since the core is shared by every domain using the same prefix. Workspace-scoped states now use the `domain/scope.tfstate` layout, dropping the prefix already implied by the storage account name. The CLI always generates the canonical core key; legacy-key fallback is not part of the generated configuration. ([#2222](https://github.com/pagopa/dx/pull/2222))
+
+  Migration: existing workspaces whose core state lives under a legacy key (`<prefix>.core.<env>.tfstate` or `<prefix>/<domain>/core.tfstate`) require a one-time migration before running `add environment` again:
+
+  1. Move that blob to `core.tfstate` in the same `terraform-state` container. Because the storage account is already scoped by prefix and environment, this is a blob rename with no Terraform state rewrite.
+  2. Update the `key` in `infra/core/<env>/backend.tf` to `core.tfstate`. The core module is not regenerated when the environment is already initialized, so this file must be updated explicitly.
+  3. Update the `core_state.key` in `infra/bootstrapper/<env>/main.tf` to `core.tfstate`, or run `dx add environment` after moving the blob to regenerate the bootstrapper configuration with the canonical key.
+  4. Run `terraform init -reconfigure` in both `infra/core/<env>` and `infra/bootstrapper/<env>` before the next Terraform operation.
+
+  The CLI does not discover or preserve legacy keys. A workspace with an unmigrated core state will generate configuration that points to `core.tfstate` and fail when Terraform tries to read the missing state.
+
+
+### 🩹 Fixes
+
+- Update YAML, Next.js, and Axios dependencies ([#2288](https://github.com/pagopa/dx/pull/2288))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.27.10 (2026-09-24)
+
+### 🩹 Fixes
+
+- Fix Runner App secrets for new GitHub environments ([#2229](https://github.com/pagopa/dx/pull/2229))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.27.9 (2026-09-23)
+
+### 🩹 Fixes
+
+- Add cloud CLI tools during environment setup ([#2237](https://github.com/pagopa/dx/pull/2237))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.27.8 (2026-09-23)
+
+### 🩹 Fixes
+
+- Require mise for generated repository bootstrap, generate a mise lockfile, and track mise adoption ([#2218](https://github.com/pagopa/dx/pull/2218))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.27.7 (2026-09-22)
+
+### 🚀 Features
+
+- Federate managed identities and IAM roles with GitHub repositories that emit immutable OIDC subject claims (created or renamed after 2026-07-15). The DX CLI and the Azure and AWS Terraform modules now also trust the immutable subject embedding the numeric GitHub owner and repository IDs, keeping the name-based trust for older repositories.  ([#2219](https://github.com/pagopa/dx/pull/2219))
+
+  See https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/
+
+
+### 🩹 Fixes
+
+- Align Azure subscription authorization with the Technology-owned group contract by managing only `admin`, `developers`, and `externals` with `Contributor`, `Reader`, and `Reader` roles while preserving organizational groups. ([#2181](https://github.com/pagopa/dx/pull/2181))
+- Stop generating devcontainers during init ([#2217](https://github.com/pagopa/dx/pull/2217))
+- Reuse the bootstrapper release workflow and configure GitHub App telemetry login centrally ([#2223](https://github.com/pagopa/dx/pull/2223))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+- Updated @pagopa/dx-savemoney to 0.6.7
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
+## 0.27.6 (2026-09-15)
+
+### 🩹 Fixes
+
+- Authorize both bootstrap CI and CD identities as Azure Directory Readers. ([#2176](https://github.com/pagopa/dx/pull/2176))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
+## 0.27.5 (2026-09-11)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.6.6
+
+## 0.27.4 (2026-09-02)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.6.5
+
+## 0.27.3 (2026-09-01)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2080](https://github.com/pagopa/dx/pull/2080))
+- Upgrade TypeScript dependencies. ([#2080](https://github.com/pagopa/dx/pull/2080))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.3
+- Updated @pagopa/dx-savemoney to 0.6.4
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.27.2 (2026-08-26)
+
+### 🩹 Fixes
+
+- Improve dx savemoney telemetry with input-source and usage attributes ([#2014](https://github.com/pagopa/dx/pull/2014))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.6.3
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.27.1 (2026-08-06)
+
+### 🩹 Fixes
+
+- Fix Node.js `module.register()` deprecation warning printed on every CLI invocation by using the synchronous `module.registerHooks()` API when the running Node.js version supports it, falling back to the previous behavior otherwise. ([#2050](https://github.com/pagopa/dx/pull/2050), [#59929](https://github.com/pagopa/dx/issues/59929))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-savemoney to 0.6.2
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.27.0 (2026-08-04)
+
+### 🚀 Features
+
+- Support tenant-qualified environment names in add environment for multi-tenant scaffolding. ([#2002](https://github.com/pagopa/dx/pull/2002))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot App @Copilot
+
+## 0.26.4 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2015](https://github.com/pagopa/dx/pull/2015))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.2
+- Updated @pagopa/dx-savemoney to 0.6.1
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.26.2 (2026-07-16)
 
 ### 🩹 Fixes

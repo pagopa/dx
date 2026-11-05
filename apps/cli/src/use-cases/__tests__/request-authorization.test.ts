@@ -17,7 +17,10 @@ import { requestAuthorization } from "../request-authorization.js";
 
 const makeSampleInput = (): RequestAuthorizationInput =>
   requestAuthorizationInputSchema.parse({
-    bootstrapIdentityId: "test-bootstrap-identity-id",
+    bootstrapIdentityIds: {
+      cd: "test-bootstrap-identity-id",
+      ci: "test-bootstrap-ci-identity-id",
+    },
     envShort: "d",
     prefix: "test",
     repoName: "test-repo",
@@ -26,9 +29,28 @@ const makeSampleInput = (): RequestAuthorizationInput =>
   });
 
 describe("requestAuthorization", () => {
+  it("accepts both bootstrap CI and CD identities", () => {
+    const result = requestAuthorizationInputSchema.safeParse({
+      bootstrapIdentityIds: {
+        cd: "dxt0-d-itn-bootstrap-id-01",
+        ci: "dxt0-d-itn-bootstrap-ci-id-01",
+      },
+      envShort: "d",
+      prefix: "dxt0",
+      repoName: "test-repo",
+      repoOwner: "pagopa",
+      subscriptionName: "DEV-DEVEX",
+    });
+
+    expect(result.success).toBe(true);
+  });
+
   it("accepts resource prefixes containing numbers", () => {
     const result = requestAuthorizationInputSchema.safeParse({
-      bootstrapIdentityId: "dxt0-d-itn-bootstrap-id-01",
+      bootstrapIdentityIds: {
+        cd: "dxt0-d-itn-bootstrap-id-01",
+        ci: "dxt0-d-itn-bootstrap-ci-id-01",
+      },
       envShort: "d",
       prefix: "dxt0",
       repoName: "test-repo",

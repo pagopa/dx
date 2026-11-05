@@ -30,6 +30,7 @@ import {
 import {
   type GitHubAppCredentials,
   githubAppCredentialsSchema,
+  type GitHubService,
 } from "../../../../domain/github.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
 import { validatePrompt } from "../../helpers/validate-prompt.js";
@@ -46,7 +47,30 @@ const initSchema = z.object({
 
 type InitPayload = z.infer<typeof initSchema>;
 
-const tagsSchema = z.record(z.string(), z.string().min(1));
+export const costCenterValues = [
+  "TS000 - TECNOLOGIA & SERVIZI",
+  "TS100 - TECNOLOGIA",
+  "TS110 - SVILUPPO E ARCHITETTURA",
+  "TS120 - CLIENT E FRONTEND",
+  "TS200 - SICUREZZA",
+  "TS300 - PRODOTTI E SERVIZI",
+  "TS310 - PAGAMENTI & SERVIZI",
+  "TS320 - PIATTAFORMA NOTIFICHE DIGITALI",
+  "TS330 - PDND & INTEROPERABILITA'",
+  "TS720 - DEV EX"
+] as const;
+
+export const costCenterSchema = z.enum(costCenterValues);
+export const ownerSchema = z.string().trim().min(1, "Owner cannot be empty.");
+
+const tagsSchema = z
+  .object({
+    BusinessUnit: z.string().trim().min(1).optional(),
+    CostCenter: costCenterSchema,
+    ManagementTeam: z.string().trim().min(1).optional(),
+    Owner: ownerSchema,
+  })
+  .catchall(z.string().trim().min(1));
 
 const workspaceDomainSchema = z
   .string()
@@ -66,6 +90,7 @@ export const payloadSchema = z.object({
   env: environmentSchema,
   github: githubRepoSchema,
   init: initSchema.optional(),
+  runnerAppCredentials: githubAppCredentialsSchema.optional(),
   tags: tagsSchema,
   workspace: workspaceSchema,
 });
@@ -96,8 +121,10 @@ export const initialAnswersSchema = z.object({
     .optional(),
   tags: z
     .object({
-      BusinessUnit: z.string().trim().min(1).optional(),
-      ManagementTeam: z.string().trim().min(1).optional(),
+      BusinessUnit: z.string().trim().optional(),
+      CostCenter: costCenterSchema.optional(),
+      ManagementTeam: z.string().trim().optional(),
+      Owner: ownerSchema.optional(),
     })
     .optional(),
   workspace: z
@@ -125,8 +152,10 @@ const basePromptAnswersSchema = z.object({
     .optional(),
   tags: z
     .object({
-      BusinessUnit: z.string().trim().min(1).optional(),
-      ManagementTeam: z.string().trim().min(1).optional(),
+      BusinessUnit: z.string().trim().optional(),
+      CostCenter: costCenterSchema.optional(),
+      ManagementTeam: z.string().trim().optional(),
+      Owner: ownerSchema.optional(),
     })
     .optional(),
   workspace: z
@@ -140,12 +169,16 @@ export type PromptsDependencies = {
   cloudAccountRepository: CloudAccountRepository;
   cloudAccountService: CloudAccountService;
   github?: GitHubRepo;
+  gitHubService?: GitHubService;
   initialAnswers?: InitialAnswers;
+  nonInteractive?: boolean;
 };
 
 type BasePromptAnswers = z.infer<typeof basePromptAnswersSchema>;
 
-const DEFAULT_COST_CENTER = "TS000";
+const DEFAULT_COST_CENTER = costCenterValues[0];
+const GUIDANCE_URL =
+  "https://pagopa.atlassian.net/wiki/search?text=tagging%20strategy";
 
 const resolveCloudAccounts = (
   availableCloudAccounts: CloudAccount[],
@@ -169,20 +202,18 @@ const getBaseQuestions = (
   availableCloudAccounts: CloudAccount[],
   initialAnswers: InitialAnswers,
   selectedCloudAccounts: CloudAccount[] | undefined,
+  nonInteractive: boolean,
 ): DistinctQuestion[] => {
   const questions: DistinctQuestion[] = [];
 
   if (initialAnswers.env?.name === undefined) {
     questions.push({
-      choices: [
-        { name: "PROD", value: "prod" },
-        { name: "UAT", value: "uat" },
-        { name: "DEV", value: "dev" },
-      ],
       default: "prod",
-      message: "Environment name",
+      filter: (value: string) => value.trim().toLowerCase(),
+      message: "Environment name (dev, uat, prod, or tenant-env like cgn-prod)",
       name: "env.name",
-      type: "list",
+      type: "input",
+      validate: validatePrompt(environmentSchema.shape.name),
     });
   }
 
@@ -220,23 +251,39 @@ const getBaseQuestions = (
     });
   }
 
-  if (initialAnswers.tags?.BusinessUnit === undefined) {
+  if (!nonInteractive && initialAnswers.tags?.CostCenter === undefined) {
+    questions.push({
+      choices: [...costCenterValues],
+      default: DEFAULT_COST_CENTER,
+      message: `Cost center (Pagopa only; if unsure, check ${GUIDANCE_URL})`,
+      name: "tags.CostCenter",
+      type: "list",
+    });
+  }
+
+  if (initialAnswers.tags?.Owner === undefined) {
+    questions.push({
+      filter: (value: string) => value.trim(),
+      message: "Owner",
+      name: "tags.Owner",
+      type: "input",
+      validate: validatePrompt(ownerSchema),
+    });
+  }
+
+  if (!nonInteractive && initialAnswers.tags?.BusinessUnit === undefined) {
     questions.push({
       filter: (value) => value.trim(),
       message: "Business unit",
       name: "tags.BusinessUnit",
-      validate: (value) =>
-        value.length > 0 ? true : "Business Unit cannot be empty.",
     });
   }
 
-  if (initialAnswers.tags?.ManagementTeam === undefined) {
+  if (!nonInteractive && initialAnswers.tags?.ManagementTeam === undefined) {
     questions.push({
       filter: (value) => value.trim(),
       message: "Management team",
       name: "tags.ManagementTeam",
-      validate: (value) =>
-        value.length > 0 ? true : "Management Team cannot be empty.",
     });
   }
 
@@ -350,7 +397,7 @@ const getRunnerAppCredentialQuestions = (
 const mergeRunnerAppCredentials = (
   initialRunnerAppCredentials: Partial<GitHubAppCredentials>,
   promptedRunnerAppCredentials: Partial<GitHubAppCredentials> | undefined,
-): InitPayload["runnerAppCredentials"] => {
+): GitHubAppCredentials | undefined => {
   const runnerAppCredentials = {
     clientId:
       initialRunnerAppCredentials.clientId ??
@@ -375,6 +422,7 @@ const collectBaseAnswers = async (
   promptModule: typeof inquirer,
   availableCloudAccounts: CloudAccount[],
   initialAnswers: InitialAnswers,
+  nonInteractive: boolean,
 ): Promise<{
   answers: BasePromptAnswers;
   initialCloudAccounts: CloudAccount[] | undefined;
@@ -387,6 +435,7 @@ const collectBaseAnswers = async (
     availableCloudAccounts,
     initialAnswers,
     initialCloudAccounts,
+    nonInteractive,
   );
   const promptAnswersResult = basePromptAnswersSchema.safeParse(
     baseQuestions.length === 0 ? {} : await promptModule.prompt(baseQuestions),
@@ -396,6 +445,29 @@ const collectBaseAnswers = async (
   return {
     answers: promptAnswersResult.data,
     initialCloudAccounts,
+  };
+};
+
+const buildTags = (
+  initialAnswers: InitialAnswers,
+  answers: BasePromptAnswers,
+): Payload["tags"] => {
+  const businessUnit =
+    initialAnswers.tags?.BusinessUnit ?? answers.tags?.BusinessUnit;
+  const managementTeam =
+    initialAnswers.tags?.ManagementTeam ?? answers.tags?.ManagementTeam;
+  const owner = ownerSchema.parse(
+    initialAnswers.tags?.Owner ?? answers.tags?.Owner,
+  );
+
+  return {
+    ...(businessUnit && { BusinessUnit: businessUnit }),
+    CostCenter:
+      initialAnswers.tags?.CostCenter ??
+      answers.tags?.CostCenter ??
+      DEFAULT_COST_CENTER,
+    ...(managementTeam && { ManagementTeam: managementTeam }),
+    Owner: owner,
   };
 };
 
@@ -417,30 +489,55 @@ const buildPayload = ({
       prefix: initialAnswers.env?.prefix ?? answers.env?.prefix,
     },
     github,
-    tags: {
-      BusinessUnit:
-        initialAnswers.tags?.BusinessUnit ?? answers.tags?.BusinessUnit,
-      CostCenter: DEFAULT_COST_CENTER,
-      ManagementTeam:
-        initialAnswers.tags?.ManagementTeam ?? answers.tags?.ManagementTeam,
-    },
+    tags: buildTags(initialAnswers, answers),
     workspace: {
       domain: initialAnswers.workspace?.domain ?? answers.workspace?.domain,
     },
   });
+
+const withImmutableRepositoryIds = async (
+  github: GitHubRepo,
+  gitHubService?: GitHubService,
+): Promise<GitHubRepo> => {
+  if (!gitHubService) {
+    return github;
+  }
+
+  const repository = await gitHubService.getRepository(
+    github.owner,
+    github.repo,
+  );
+
+  return githubRepoSchema.parse({
+    ...github,
+    ownerId: repository.ownerId,
+    repoId: repository.id,
+  });
+};
 
 const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
   (deps) => async (promptModule) => {
     const logger = getLogger(["gen", "env"]);
     const github = deps.github ?? (await getGithubRepo());
     assert.ok(github, "This generator only works inside a GitHub repository.");
+    const repository = await withImmutableRepositoryIds(
+      github,
+      deps.gitHubService,
+    );
     const initialAnswers = parseInitialAnswers(deps.initialAnswers);
-    logger.debug("github repo {github}", { github });
+    if (deps.nonInteractive && initialAnswers.tags?.Owner === undefined) {
+      throw new Error(
+        "Owner is required in non-interactive mode. Provide --owner <owner>.",
+      );
+    }
+
+    logger.debug("github repo {github}", { github: repository });
     const availableCloudAccounts = await deps.cloudAccountRepository.list();
     const { answers, initialCloudAccounts } = await collectBaseAnswers(
       promptModule,
       availableCloudAccounts,
       initialAnswers,
+      deps.nonInteractive ?? false,
     );
     const selectedCloudAccounts = getSelectedCloudAccounts(
       answers,
@@ -451,7 +548,7 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
 
     const payload = buildPayload({
       answers,
-      github,
+      github: repository,
       initialAnswers,
       selectedCloudAccounts,
     });
@@ -463,7 +560,33 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
 
     logger.debug("initialization status {initStatus}", { initStatus });
 
+    const initialRunnerAppCredentials =
+      initialAnswers.init?.runnerAppCredentials ?? {};
+    const runnerAppCredentialQuestions = getRunnerAppCredentialQuestions(
+      initialRunnerAppCredentials,
+    );
+
+    if (deps.nonInteractive && runnerAppCredentialQuestions.length > 0) {
+      throw new Error(
+        "GitHub Runner App credentials are required in non-interactive mode. Provide --runner-app-id, --client-id, --installation-id, and --private-key-path.",
+      );
+    }
+
     if (initStatus.initialized) {
+      const initInput =
+        runnerAppCredentialQuestions.length === 0
+          ? {}
+          : await promptModule.prompt(runnerAppCredentialQuestions);
+      const runnerAppCredentials = mergeRunnerAppCredentials(
+        initialRunnerAppCredentials,
+        initInput.runnerAppCredentials,
+      );
+
+      assert.ok(
+        runnerAppCredentials,
+        "GitHub Runner App credentials are required to configure the GitHub environment.",
+      );
+      payload.runnerAppCredentials = runnerAppCredentials;
       return payload;
     }
 
@@ -515,13 +638,11 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       (issue) => issue.type === "CLOUD_ACCOUNT_NOT_INITIALIZED",
     );
 
-    const initialRunnerAppCredentials =
-      initialAnswers.init?.runnerAppCredentials ?? {};
-
-    if (cloudAccountsNotInitialized) {
-      questions.push(
-        ...getRunnerAppCredentialQuestions(initialRunnerAppCredentials),
-      );
+    if (
+      cloudAccountsNotInitialized ||
+      runnerAppCredentialQuestions.length > 0
+    ) {
+      questions.push(...runnerAppCredentialQuestions);
     }
 
     const initInput =
@@ -536,6 +657,11 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
       initInput.runnerAppCredentials,
     );
 
+    assert.ok(
+      runnerAppCredentials,
+      "GitHub Runner App credentials are required to configure the GitHub environment.",
+    );
+    payload.runnerAppCredentials = runnerAppCredentials;
     payload.init = payloadSchema.shape.init.parse({
       cloudAccountsToInitialize: getCloudAccountToInitialize(initStatus),
       runnerAppCredentials,

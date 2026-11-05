@@ -19,15 +19,39 @@ import {
   payloadSchema as reportPrCommentPayloadSchema,
 } from "./report-pr-comment.ts";
 import {
+  terraformApply,
+  type TerraformApplyPayload,
+  payloadSchema as terraformApplyPayloadSchema,
+} from "./terraform/apply.ts";
+import {
+  terraformInit,
+  type TerraformInitPayload,
+  payloadSchema as terraformInitPayloadSchema,
+} from "./terraform/init.ts";
+import {
   terraformPlan,
   type TerraformPlanPayload,
   payloadSchema as terraformPlanPayloadSchema,
 } from "./terraform/plan.ts";
 
+export const terraformInitTask: TaskDefinition<TerraformInitPayload> = {
+  // Keep initialization and lock enforcement in the shared task registry so
+  // every adapter invokes the same implementation.
+  name: "terraformInit",
+  payloadSchema: terraformInitPayloadSchema,
+  run: terraformInit,
+};
+
 export const terraformPlanTask: TaskDefinition<TerraformPlanPayload> = {
   name: "terraformPlan",
   payloadSchema: terraformPlanPayloadSchema,
   run: terraformPlan,
+};
+
+export const terraformApplyTask: TaskDefinition<TerraformApplyPayload> = {
+  name: "terraformApply",
+  payloadSchema: terraformApplyPayloadSchema,
+  run: terraformApply,
 };
 
 export const renderReportTask: TaskDefinition<RenderReportPayload> = {

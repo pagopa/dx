@@ -15,17 +15,66 @@ This module deploys an Azure API Management instance with optional configuration
 - **Network Security Group (NSG)**: Secure the API Management subnet with specific inbound rules.
 - **Management Lock**: Prevent accidental deletion of the API Management instance.
 - **Custom Domain Certificates**: Configure custom domains using certificates stored in Azure Key Vault.
-- **Metric Alerts**: Set up alerts for monitoring API Management metrics.
+- **Metric Alerts**: Create supported default alerts per API Management SKU, with explicit overrides available.
 
 ## Use Cases and Configurations
 
 | Use case         | Description                                     | SLA  | Scalability      | Autoscaling | Zones Configured | Metric Alerts |
 | ---------------- | ----------------------------------------------- | ---- | ---------------- | ----------- | ---------------- | ------------- |
-| `development`    | For development and testing purposes.           | None | Limited          | No          | No               | Disabled      |
-| `cost_optimized` | The default use case, for production workloads. | Yes  | Moderate         | No          | No               | Enabled       |
-| `high_load`      | Designed for large-scale production workloads.  | Yes  | High (Autoscale) | Yes         | `["1", "2"]`     | Enabled       |
+| `development`    | Development and testing.           | None | Limited          | No  | No           | Disabled by default |
+| `cost_optimized` | Production workloads.              | Yes  | Moderate         | No  | No           | StandardV2 alerts |
+| `high_load`      | High-load production workloads.    | Yes  | High (Autoscale) | Yes | `["1", "2"]` | Premium alerts |
 
 ## Monitoring
+
+### Default metric alerts
+
+The module creates five-minute alerts with the following defaults, selected by
+`use_case`/SKU:
+
+| Use case | SKU | Alerts | Thresholds |
+|----------|-----|--------|------------|
+| `cost_optimized` | `StandardV2_1` | `Requests` (total, successful, failed, unauthorized), `Duration`, `CpuPercent_Gateway`, `MemoryPercent_Gateway` | Requests total/success/5xx/unauthorized: 10000/9500/100/50; `Duration`: 500 ms; CPU/memory: 80% |
+| `high_load` | `Premium_2` | `Requests` (total, successful, failed, unauthorized), `Duration`, `Capacity` | Requests total/success/5xx/unauthorized: 20000/19000/200/100; `Duration`: 500 ms; `Capacity`: 80% |
+
+Request thresholds are absolute counts within each five-minute window. Set
+`metric_alert_thresholds` to adjust selected built-in thresholds, or
+`metric_alerts` to provide complete custom alert definitions.
+
+Success and server-side failure
+(`5xx`) are filtered with the `GatewayResponseCodeCategory` dimension of
+`Requests`. Unauthorized traffic is filtered with the `GatewayResponseCode`
+dimension and includes only `401` and `403`;
+The `development` use case has no default alerts, but an explicit non-empty
+`metric_alerts` map is honored for any use case.
+
+Set `metric_alerts = null` or omit the argument to use the defaults. Set
+`metric_alerts = {}` to disable all metric alerts. A non-empty custom map
+replaces the defaults, including for the `development` use case. Alerts are
+routed to an Azure Monitor Action Group when `action_group_id` is set.
+
+Use `metric_alert_thresholds` to tune or disable individual built-in alerts.
+Positive numeric values override the threshold, `null` disables that alert, and
+omitted entries preserve the default. For example:
+
+```hcl
+metric_alert_thresholds = {
+  failed_requests       = 500
+  unauthorized_requests = null
+  response_time         = 1000
+}
+```
+
+This map applies only to built-in alerts and cannot be combined with
+`metric_alerts`.
+
+The map accepts these alert names, depending on the selected `use_case`:
+`total_requests`, `successful_requests`, `failed_requests`,
+`unauthorized_requests`, `response_time`, `cpu_percent_gateway`,
+`memory_percent_gateway`, and `capacity`. Numeric thresholds use the metric's
+units and the built-in five-minute evaluation window. Use `metric_alerts` for
+custom criteria or alert windows. Choose thresholds from the APIM's observed
+traffic and latency rather than treating them as universal recommendations.
 
 Azure creates some resources automatically when the `azurerm_monitor_diagnostic_setting` is created.
 Those resources are necessary to see the logs within the `AzureDiagnostics` table in the Log Analytics workspace.  
@@ -39,21 +88,41 @@ The `cost_optimized` use case is designed to balance cost and performance for pr
 
 For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-api-management/tree/main/example/complete) folder in the module repository.
 
+## Migration from 4.x to 5.x
+
+The module now owns the APIM subnet, required public IP, networking mode,
+monitoring defaults, and production management lock.
+
+- Pass the full VNet resource ID as `virtual_network` instead of its name/resource-group object. Remove `subnet_id` and `subnet_pep_id`; the module creates an APIM /24 subnet and derives the standard `pep` subnet ID.
+- Remove `virtual_network_type_internal`, `enable_public_network_access`, and `public_ip_address_id`. Networking is selected by `use_case`.
+- Remove `private_dns_zone_ids`. Fixed APIM zone names and the private endpoint zone ID are derived from the VNet subscription and `private_dns_zone_resource_group_name`, which defaults to the VNet resource group.
+- Replace `monitoring` with `log_analytics_workspace_id`, required for production use cases. Metric-alert defaults and their overrides are unchanged.
+- Remove `notification_sender_email` and `lock_enable`; notifications use `publisher_email`, and locks follow the selected use case.
+- Remove `management_logger_application_insight_enabled`, `application_insights.enabled`, and `application_insights.connection_string`. Set `application_insights.id` to enable logging and resolve its connection string.
+- Remove `key_vault_id` and `certificate_names`. Use `key_vault_certificate_id` on each custom hostname; certificate versions are stripped internally. Replace the proxy hostname list with `{ use_resource_name_as_default = true }` if needed; the proxy hostname is managed from the APIM resource name.
+- Update the module version constraint to `~> 5.0`.
+
+Review the Terraform plan before migrating an existing deployment. Previously
+caller-managed subnets and public IPs are not automatically adopted; explicitly
+migrate ownership where appropriate to avoid subnet conflicts or APIM replacement.
+
 ## Troubleshooting
 
 ### ⚠️ Public Network Access Limitation ⚠️
 
-Currently, it is not possible to create a new Azure API Management instance with `enable_public_network_access = false`.  
-If you need to disable public network access, you must first create the APIM with `enable_public_network_access = true`.  
-After that, submit a new _Pull Request_ to update the variable to `false` and apply the changes.
+Azure may reject creation of a new API Management instance with public network
+access disabled. Public network access is now selected by `use_case`, not an
+`enable_public_network_access` override. The `cost_optimized` use case disables
+public network access; check this service limitation before creating a new
+instance or migrating an existing deployment.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.1 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
@@ -64,7 +133,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_api_management.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management) | resource |
 | [azurerm_api_management_diagnostic.applicationinsights](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management_diagnostic) | resource |
 | [azurerm_api_management_logger.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/api_management_logger) | resource |
@@ -87,14 +156,15 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_action_group_id"></a> [action\_group\_id](#input\_action\_group\_id) | The ID of the custom string properties Action Group to include with the post webhook operation. | `string` | `null` | no |
 | <a name="input_application_insights"></a> [application\_insights](#input\_application\_insights) | Application Insights integration. Set id to enable it; the module resolves the connection string from the resource ID. | <pre>object({<br/>    id                  = optional(string, null)<br/>    sampling_percentage = optional(number, 0)<br/>    verbosity           = optional(string, "error")<br/>  })</pre> | `{}` | no |
 | <a name="input_autoscale"></a> [autoscale](#input\_autoscale) | Configuration for autoscaling rules on capacity metrics. | <pre>object(<br/>    {<br/>      default_instances             = optional(number)<br/>      minimum_instances             = optional(number)<br/>      maximum_instances             = optional(number)<br/>      scale_out_capacity_percentage = optional(number)<br/>      scale_out_time_window         = optional(string)<br/>      scale_out_value               = optional(string)<br/>      scale_out_cooldown            = optional(string)<br/>      scale_in_capacity_percentage  = optional(number)<br/>      scale_in_time_window          = optional(string)<br/>      scale_in_value                = optional(string)<br/>      scale_in_cooldown             = optional(string)<br/>    }<br/>  )</pre> | `null` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_hostname_configuration"></a> [hostname\_configuration](#input\_hostname\_configuration) | Custom domain configurations. The proxy hostname is managed by the module; only whether the resource-name hostname is the default can be configured. Key Vault certificate IDs may include a version; the module strips it internally. | <pre>object({<br/>    proxy = optional(object({<br/>      use_resource_name_as_default = optional(bool, false)<br/>    }), {})<br/>    management = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>    portal = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>    developer_portal = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>    scm = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>  })</pre> | `{}` | no |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The Log Analytics workspace ID used for diagnostic logs and metrics. Required when the selected use\_case enables monitoring. | `string` | `null` | no |
-| <a name="input_metric_alerts"></a> [metric\_alerts](#input\_metric\_alerts) | Map of name = criteria objects | <pre>map(object({<br/>    description   = string<br/>    frequency     = string<br/>    window_size   = string<br/>    severity      = number<br/>    auto_mitigate = bool<br/><br/>    criteria = set(object(<br/>      {<br/>        aggregation = string<br/>        dimension = list(object(<br/>          {<br/>            name     = string<br/>            operator = string<br/>            values   = list(string)<br/>          }<br/>        ))<br/>        metric_name            = string<br/>        metric_namespace       = string<br/>        operator               = string<br/>        skip_metric_validation = bool<br/>        threshold              = number<br/>      }<br/>    ))<br/><br/>    dynamic_criteria = set(object(<br/>      {<br/>        aggregation              = string<br/>        alert_sensitivity        = string<br/>        dimension                = list(object({ name = string, operator = string, values = list(string) }))<br/>        evaluation_failure_count = number<br/>        evaluation_total_count   = number<br/>        ignore_data_before       = string<br/>        metric_name              = string<br/>        metric_namespace         = string<br/>        operator                 = string<br/>        skip_metric_validation   = bool<br/>      }<br/>    ))<br/>  }))</pre> | `{}` | no |
+| <a name="input_metric_alert_thresholds"></a> [metric\_alert\_thresholds](#input\_metric\_alert\_thresholds) | Optional overrides for built-in metric alerts. Set a positive threshold to override it or null to disable that alert; omitted alerts keep their defaults. | `map(number)` | `{}` | no |
+| <a name="input_metric_alerts"></a> [metric\_alerts](#input\_metric\_alerts) | Optional map of metric alert definitions. When null, the module creates supported defaults for the selected use\_case. | <pre>map(object({<br/>    description   = string<br/>    frequency     = string<br/>    window_size   = string<br/>    severity      = number<br/>    auto_mitigate = bool<br/><br/>    criteria = set(object(<br/>      {<br/>        aggregation = string<br/>        dimension = list(object(<br/>          {<br/>            name     = string<br/>            operator = string<br/>            values   = list(string)<br/>          }<br/>        ))<br/>        metric_name            = string<br/>        metric_namespace       = string<br/>        operator               = string<br/>        skip_metric_validation = bool<br/>        threshold              = number<br/>      }<br/>    ))<br/><br/>    dynamic_criteria = set(object(<br/>      {<br/>        aggregation              = string<br/>        alert_sensitivity        = string<br/>        dimension                = list(object({ name = string, operator = string, values = list(string) }))<br/>        evaluation_failure_count = number<br/>        evaluation_total_count   = number<br/>        ignore_data_before       = string<br/>        metric_name              = string<br/>        metric_namespace         = string<br/>        operator                 = string<br/>        skip_metric_validation   = bool<br/>      }<br/>    ))<br/>  }))</pre> | `null` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The resource group name of the private DNS zones. Defaults to the Virtual Network resource group. Zones are resolved in the current subscription. | `string` | `null` | no |
 | <a name="input_publisher_email"></a> [publisher\_email](#input\_publisher\_email) | The email address of the publisher or company. Also used as the notification sender email. | `string` | n/a | yes |
 | <a name="input_publisher_name"></a> [publisher\_name](#input\_publisher\_name) | The name of the publisher or company. | `string` | n/a | yes |
@@ -107,7 +177,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_gateway_hostname"></a> [gateway\_hostname](#output\_gateway\_hostname) | The hostname of the Azure API Management gateway. |
 | <a name="output_gateway_url"></a> [gateway\_url](#output\_gateway\_url) | The URL of the Azure API Management gateway. |
 | <a name="output_id"></a> [id](#output\_id) | The resource ID of the Azure API Management instance. |

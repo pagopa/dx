@@ -20,7 +20,7 @@ locals {
     CreatedBy   = "Terraform"
     Environment = "{{titleCase env.name}}"
     {{#each tags}}
-    {{@key}}    = "{{this}}"
+    {{@key}}    = {{{terraformString this}}}
     {{/each}}
   }
 }

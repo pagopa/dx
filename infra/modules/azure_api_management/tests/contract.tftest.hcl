@@ -30,12 +30,6 @@ variables {
 
 mock_provider "azurerm" {}
 mock_provider "dx" {}
-
-
-
-
-
-
 override_data {
   target = data.azurerm_application_insights.this
   values = {
@@ -256,4 +250,142 @@ run "azure_api_management_valid_hostname_certificate_contract" {
     condition     = azurerm_api_management.this.hostname_configuration[0].management[0].key_vault_certificate_id == "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
     error_message = "Contract must accept versioned Key Vault certificate IDs and normalize them internally."
   }
+}
+
+run "azure_api_management_rejects_unknown_metric_alert_thresholds" {
+  command = plan
+
+  variables {
+    metric_alert_thresholds = {
+      failed_request = 500
+    }
+  }
+
+  expect_failures = [var.metric_alert_thresholds]
+}
+
+run "azure_api_management_rejects_non_positive_metric_alert_thresholds" {
+  command = plan
+
+  variables {
+    metric_alert_thresholds = {
+      failed_requests = 0
+    }
+  }
+
+  expect_failures = [var.metric_alert_thresholds]
+}
+
+run "azure_api_management_rejects_threshold_overrides_for_unsupported_alerts" {
+  command = plan
+
+  variables {
+    use_case = "high_load"
+    metric_alert_thresholds = {
+      cpu_percent_gateway = 80
+    }
+  }
+
+  expect_failures = [var.metric_alert_thresholds]
+}
+
+run "azure_api_management_rejects_threshold_overrides_with_custom_alerts" {
+  command = plan
+
+  variables {
+    metric_alerts = {}
+    metric_alert_thresholds = {
+      failed_requests = 500
+    }
+  }
+
+  expect_failures = [var.metric_alert_thresholds]
+}
+
+run "azure_api_management_rejects_unknown_disabled_metric_alerts" {
+  command = plan
+
+  variables {
+    metric_alert_thresholds = {
+      failed_request = null
+    }
+  }
+
+  expect_failures = [var.metric_alert_thresholds]
+}
+
+run "azure_api_management_rejects_zero_autoscale_minimum" {
+  command = plan
+
+  variables {
+    autoscale = {
+      minimum_instances = 0
+    }
+  }
+
+  expect_failures = [var.autoscale]
+}
+
+run "azure_api_management_rejects_zero_autoscale_scale_in" {
+  command = plan
+
+  variables {
+    autoscale = {
+      scale_in_value = "0"
+    }
+  }
+
+  expect_failures = [var.autoscale]
+}
+
+run "azure_api_management_rejects_non_zonal_autoscale_maximum" {
+  command = plan
+
+  variables {
+    use_case = "high_load"
+    autoscale = {
+      maximum_instances = 7
+    }
+  }
+
+  expect_failures = [var.autoscale]
+}
+
+run "azure_api_management_rejects_non_zonal_autoscale_default" {
+  command = plan
+
+  variables {
+    use_case = "high_load"
+    autoscale = {
+      default_instances = 3
+    }
+  }
+
+  expect_failures = [var.autoscale]
+}
+
+run "azure_api_management_rejects_non_zonal_autoscale_scale_out" {
+  command = plan
+
+  variables {
+    use_case = "high_load"
+    autoscale = {
+      scale_out_value = "3"
+    }
+  }
+
+  expect_failures = [var.autoscale]
+}
+
+run "azure_api_management_rejects_non_zonal_autoscale_scale_in" {
+  command = plan
+
+  variables {
+    use_case = "high_load"
+    autoscale = {
+      scale_in_value = "3"
+    }
+  }
+
+  expect_failures = [var.autoscale]
 }

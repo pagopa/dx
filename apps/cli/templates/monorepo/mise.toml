@@ -1,0 +1,22 @@
+[tools]
+github-cli = { version = "latest" }
+terraform-docs = "0.24"
+tflint = "0.63"
+trivy = "0.74"
+
+[env]
+TFLINT_PLUGIN_DIR = "\{{config_root}}/.tflint.d/plugins"
+
+[settings]
+idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]
+minimum_release_age = "7d"
+minimum_release_age_excludes = ["copilot", "github-cli"]
+experimental = true
+lockfile = true
+
+[deps.tflint]
+sources = [".tflint.hcl"]
+outputs = [".tflint.d/plugins"]
+run = "tflint --init"
+
+[deps.pnpm]

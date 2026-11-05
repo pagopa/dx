@@ -1,3 +1,117 @@
+## 0.1.14 (2026-11-03)
+
+### 🚀 Features
+
+- Scope dashboard data to signed magic links ([#2466](https://github.com/pagopa/dx/pull/2466))
+
+  The portal no longer serves every repository to every visitor. A visitor's scope
+  comes from the magic link they open, and every dashboard endpoint filters its
+  data to that scope. The full portfolio is a scope of its own, carried by its own
+  link.
+
+  Repositories are grouped by static tags in the shared configuration, so the link
+  carries tags rather than a frozen repository list and keeps working when a
+  repository is added to a tag.
+
+  - Mint links with `pnpm --filter dx-metrics scope:link`.
+  - Dashboard responses are now `private, no-store`: the payload depends on the
+    caller's cookie, so no shared cache may store it.
+  - Deployments need `DX_METRICS_SCOPE_SECRET` before the portal serves any data:
+    without it, no link can be verified.
+
+  Breaking: `DxMetricsConfig.repositories` is now a list of objects with `name` and
+  `tags`, not a list of strings. Consumers that only need the names can use
+  `defaultImportFileConfig.repositories`.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.13 (2026-11-02)
+
+### 🩹 Fixes
+
+- Track additional PagoPA repositories in DX Metrics ([#2460](https://github.com/pagopa/dx/pull/2460))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.12 (2026-10-08)
+
+### 🩹 Fixes
+
+- Update dependencies ([#2319](https://github.com/pagopa/dx/pull/2319))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.11 (2026-09-24)
+
+### 🚀 Features
+
+- Make the importer incremental by default: persist a per-entity, per-repository cursor in sync_runs.cursor_at and resume from it, so newly added repositories are backfilled without re-downloading data already present. The cursor only advances after a complete window (recoverable failures are retried); in-progress workflow runs are reconciled by id and iac-pr stays on the floor window to keep reviewer sets complete. Add --repo to scope a run to one repository, skipping organization-wide entities. Requires applying the new sync_runs.cursor_at column with drizzle-kit push. ([#2269](https://github.com/pagopa/dx/pull/2269))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.10 (2026-09-24)
+
+### 🚀 Features
+
+- Expand the default DX Metrics repository set with io-app, Interop, IDPay, CSTAR, PN and PagoPA platform repositories ([#2263](https://github.com/pagopa/dx/pull/2263))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.9 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+
+## 0.1.8 (2026-09-16)
+
+### 🚀 Features
+
+- Rework DX Metrics for trustworthiness and readability: ([#2205](https://github.com/pagopa/dx/pull/2205))
+
+  - `dx-metrics`: deterministic insights (sample size, confidence, severity) on every dashboard, aggregated into a single Executive Summary landing page served by one server-side endpoint; a cross-repository Benchmark dashboard; human-only review timing and equal-window lead-time comparison; ranked bar charts with units, locale-aware dates, data freshness, and loading skeletons.
+  - `dx-metrics-import`: capture an append-only techradar adoption snapshot after each import run.
+  - `@pagopa/dx-metrics-core`: add the `tech_radar_snapshots` table and new indexes on pull requests, workflow runs, commits, and reviews. Apply with `drizzle-kit push`.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.7 (2026-09-01)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2080](https://github.com/pagopa/dx/pull/2080))
+- Upgrade TypeScript dependencies. ([#2080](https://github.com/pagopa/dx/pull/2080))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.3
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.1.6 (2026-07-28)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.2
+
 ## 0.1.4 (2026-07-02)
 
 ### 🩹 Fixes

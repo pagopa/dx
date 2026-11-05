@@ -1,3 +1,88 @@
+## 0.3.16 (2026-10-21)
+
+### 🩹 Fixes
+
+- nx-release now uses the shared setup-npm-registry action instead of writing the GitHub Packages credential to the npmrc inline. The publish step passes the workflow token to the action and no longer exports `NODE_AUTH_TOKEN` or `NPM_CONFIG_USERCONFIG` itself. ([#2374](https://github.com/pagopa/dx/pull/2374))
+- Pass the workflow token to `setup-npm-registry` through its new `token` input and drop the `NODE_AUTH_TOKEN` and `NPM_CONFIG_USERCONFIG` exports from the publish step. The action now prepares and exports the npmrc itself, so the publish step only runs the release. ([#2383](https://github.com/pagopa/dx/pull/2383))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.3.15 (2026-10-08)
+
+### 🩹 Fixes
+
+- Update dependencies ([#2319](https://github.com/pagopa/dx/pull/2319))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.3.14 (2026-10-06)
+
+### 🩹 Fixes
+
+- Allow Nx Release to publish packages to GitHub Packages. ([#2301](https://github.com/pagopa/dx/pull/2301))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.3.13 (2026-09-24)
+
+### 🩹 Fixes
+
+- Speed up release tag and GitHub Release sync by batching remote lookups ([#2261](https://github.com/pagopa/dx/pull/2261))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.3.12 (2026-09-22)
+
+### 🩹 Fixes
+
+- Route Docker image releases through inferred Nx publishers, including private ([#2225](https://github.com/pagopa/dx/pull/2225))
+  JavaScript projects that must not be published to npm.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.3.11 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+
+## 0.3.10 (2026-09-11)
+
+### 🩹 Fixes
+
+- Bump `js-yaml` from 4.3.1 to 4.3.2, picking up the fix for GHSA-2883-xcg3-v3hh (unbounded CPU usage when merging empty mappings). ([#2178](https://github.com/pagopa/dx/pull/2178))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Danilo Spinelli @gunzip
+
+## 0.3.9 (2026-09-01)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.3
+
+## 0.3.8 (2026-07-28)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.2
+
 ## 0.3.6 (2026-07-02)
 
 ### 🧱 Updated Dependencies

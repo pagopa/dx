@@ -29,9 +29,11 @@ The module supports different tiers to accommodate various workload requirements
 ## Authentication Methods
 
 ### GitHub App (Recommended)
-Use AWS CodeBuild's native GitHub App integration for enhanced security and simplified token management. 
+
+Use AWS CodeBuild's native GitHub App integration for enhanced security and simplified token management.
 
 **Important Notes:**
+
 - Even though the GitHub App connection can be created via Terraform using `aws_codestar_connections_connection`, it requires manual approval in the AWS Console
 - The connection needs to be configured only once per AWS account as it is account-wide
 - To complete the setup:
@@ -41,6 +43,7 @@ Use AWS CodeBuild's native GitHub App integration for enhanced security and simp
   4. The connection status should change from "Pending" to "Available"
 
 ### Personal Access Token
+
 For scenarios where GitHub App integration is not possible, you can use a Personal Access Token:
 
 ```hcl
@@ -160,8 +163,8 @@ Common issues and solutions:
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
 
 ## Modules
@@ -171,7 +174,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_codebuild_project.github_runner](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codebuild_project) | resource |
 | [aws_codebuild_source_credential.codeconnection](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codebuild_source_credential) | resource |
 | [aws_codebuild_source_credential.ssm](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/codebuild_source_credential) | resource |
@@ -193,7 +196,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_build_timeout"></a> [build\_timeout](#input\_build\_timeout) | The timeout for the build process in minutes | `number` | `480` | no |
 | <a name="input_codeconnection_arn"></a> [codeconnection\_arn](#input\_codeconnection\_arn) | The ARN of the CodeConnection connection. One of personal\_access\_token or codeconnection\_arn must be set. Please, make sure that one has already been installed in your repository (See how: https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-create-github.html). | `string` | `null` | no |
 | <a name="input_docker_image"></a> [docker\_image](#input\_docker\_image) | The docker image to be used in the self-hosted runner. If not set, the default image will be used. | `string` | `null` | no |
@@ -210,7 +213,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_iam_role"></a> [iam\_role](#output\_iam\_role) | n/a |
 | <a name="output_security_group"></a> [security\_group](#output\_security\_group) | n/a |
 <!-- END_TF_DOCS -->

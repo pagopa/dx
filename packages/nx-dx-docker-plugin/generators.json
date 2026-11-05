@@ -3,7 +3,7 @@
     "init": {
       "implementation": "./dist/generators/init/generator.js",
       "schema": "./src/generators/init/schema.json",
-      "description": "Registers the DX Docker plugin and its @nx/docker base plugin."
+      "description": "Registers the DX Docker plugin."
     }
   }
 }

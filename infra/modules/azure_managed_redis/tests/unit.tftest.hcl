@@ -1,7 +1,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "cache"
@@ -9,9 +9,9 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Owner          = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_managed_redis/tests"
     ManagementTeam = "Developer Experience"
@@ -21,7 +21,7 @@ variables {
 
   resource_group_name = "rg-test"
 
-  virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/vnet-test"
+  virtual_network_id                   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-network-rg-01/providers/Microsoft.Network/virtualNetworks/vnet-test"
   private_dns_zone_resource_group_name = null
 
   use_case          = "default"
@@ -44,7 +44,7 @@ mock_provider "azurerm" {
   }
   mock_data "azurerm_private_dns_zone" {
     defaults = {
-      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.redis.azure.net"
     }
   }
 }
@@ -53,7 +53,7 @@ run "managed_redis_default_use_case" {
   command = plan
 
   assert {
-    condition     = azurerm_managed_redis.this.name == "dx-d-itn-modules-cache-amr-01"
+    condition     = azurerm_managed_redis.this.name == "dx-u-itn-modules-cache-amr-01"
     error_message = "Managed Redis name must use the amr suffix"
   }
 
@@ -170,6 +170,54 @@ run "managed_redis_development_use_case" {
   }
 }
 
+run "managed_redis_ephemeral_use_case" {
+  command = plan
+
+  variables {
+    use_case = "ephemeral"
+  }
+
+  assert {
+    condition     = azurerm_managed_redis.this.sku_name == "Balanced_B3"
+    error_message = "Ephemeral use case must resolve to Balanced_B3"
+  }
+
+  assert {
+    condition     = azurerm_managed_redis.this.high_availability_enabled == true
+    error_message = "Ephemeral use case must enable high availability"
+  }
+
+  assert {
+    condition     = azurerm_managed_redis.this.public_network_access == "Disabled"
+    error_message = "Ephemeral use case must disable public network access"
+  }
+
+  assert {
+    condition     = local.use_case_features.persistence_mode == "disabled" && local.persistence_frequency == null
+    error_message = "Ephemeral use case must disable persistence"
+  }
+
+  assert {
+    condition     = length(azurerm_management_lock.this) == 1
+    error_message = "Ephemeral use case must create a management lock"
+  }
+
+  assert {
+    condition     = length(azurerm_private_endpoint.redis) == 1
+    error_message = "Ephemeral use case must create a private endpoint"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.this) == 1
+    error_message = "Ephemeral use case must enable diagnostic settings"
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 5
+    error_message = "Ephemeral use case must create the five default metric alerts"
+  }
+}
+
 run "managed_redis_sku_override" {
   command = plan
 
@@ -187,7 +235,7 @@ run "managed_redis_private_endpoint" {
   command = plan
 
   assert {
-    condition     = azurerm_private_endpoint.redis[0].name == "dx-d-itn-modules-cache-amr-pep-01"
+    condition     = azurerm_private_endpoint.redis[0].name == "dx-u-itn-modules-cache-amr-pep-01"
     error_message = "Private endpoint name must use the managed_redis_private_endpoint type (amr-pep suffix)"
   }
 

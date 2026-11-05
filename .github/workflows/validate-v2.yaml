@@ -2,14 +2,45 @@ name: Validate
 
 on:
   workflow_call:
+    secrets:
+      ARM_CLIENT_ID:
+        description: Azure client ID used by Terraform plans.
+        required: false
+      ARM_SUBSCRIPTION_ID:
+        description: Azure subscription planned by the environment jobs.
+        required: false
+      ARM_TENANT_ID:
+        description: Azure tenant used by cloud login.
+        required: false
+      AWS_REGION:
+        description: AWS region used by cloud login.
+        required: false
+      ECR_PUBLIC_ROLE_ARN:
+        description: Optional AWS OIDC role for authenticated pulls from ECR Public.
+        required: false
+      GH_APP_CLIENT_ID:
+        description: GitHub App client ID used by cloud login.
+        required: false
+      GH_APP_INSTALLATION_ID:
+        description: GitHub App installation ID used by cloud login.
+        required: false
+      GH_APP_KEY:
+        description: GitHub App private key used by cloud login.
+        required: false
+      ROLE_ARN:
+        description: AWS role assumed by Terraform plans.
+        required: false
 
 env:
   REFRESH_STATE_EVERY_SECONDS: 600 # 10 minutes
+  PNPM_CONFIG_STORE_DIR: ~/.local/share/pnpm/store
+  MISE_ENV: ""
+  TFLINT_PLUGIN_DIR: ${{ github.workspace }}/.tflint.d/plugins
 
 jobs:
   gate:
     name: Fork PR Gate
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
     steps:
@@ -27,75 +58,194 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
-  warn-missing-version-plans:
-    name: Warn Missing Version Plans
-    needs: gate
-    if: ${{ github.event_name == 'pull_request' && needs.gate.outputs.run == 'true' }}
-    runs-on: ubuntu-24.04
-    permissions:
-      actions: read
-      contents: read
-      pull-requests: write
-    steps:
-      - name: Generate GitHub App token
-        id: generate-token
-        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # 3.1.1
-        with:
-          client-id: ${{ secrets.GH_APP_RELEASE_CLIENT_ID }}
-          private-key: ${{ secrets.GH_APP_RELEASE_APP_KEY }}
-          permission-pull-requests: write
-
-      - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          fetch-depth: 0
-          filter: tree:0
-          token: ${{ steps.generate-token.outputs.token }}
-
-      - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
-
-      - name: Install dependencies
-        run: pnpm --filter . ci
-
-      - name: Warn missing version plan coverage
-        uses: pagopa/dx/actions/nx-release@main
-        with:
-          app-slug: ${{ steps.generate-token.outputs.app-slug }}
-          github-token: ${{ steps.generate-token.outputs.token }}
-
-  static-review:
-    name: Static Review
-    runs-on: ubuntu-24.04
+  workspace:
+    name: Workspace
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
+    runs-on: ubuntu-26.04
+    outputs:
+      affected-projects: ${{ steps.detect.outputs.affected-projects }}
+      environments: ${{ steps.detect.outputs.environments }}
     permissions:
       actions: read
       contents: read
-      pull-requests: read
+      packages: read
     steps:
       - name: Check out repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # `blob:none` keeps every commit and tree but skips the historical
+          # blobs, which dominate the clone. The base/head comparisons walk the
+          # trees, never the blobs, so nothing triggers a lazy fetch and the
+          # credentials can stay out of `.git/config` (unlike `tree:0`).
+          filter: blob:none
+          # Keep the run token out of .git/config: no step after the checkout
+          # needs persisted git credentials.
+          persist-credentials: false
 
       - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
-
-      - name: Setup Go
-        uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c # v6.4.0
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
-          go-version-file: "go.work"
+          install_args: "node pnpm"
+          minimum_release_age: 7d
 
-      - name: Setup Terraform
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+      - name: Setup Nx Workspace
+        uses: pagopa/dx/actions/setup-nx-workspace@main
+
+      - parallel:
+          - name: Nx Sync
+            run: pnpm nx sync:check
+
+          - name: Nx Format
+            run: pnpm nx format:check
+
+          # Avoid querying GitHub environments when the change does not affect any
+          # Nx project, and let downstream jobs short circuit cleanly.
+          - name: Assess affected projects and environments
+            id: detect
+            env:
+              GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            run: |
+              set -euo pipefail
+
+              affected_projects="$(pnpm nx show projects --affected --json)"
+              if ! jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
+                echo "affected-projects=false" >> "$GITHUB_OUTPUT"
+                echo "environments=[]" >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+
+              echo "affected-projects=true" >> "$GITHUB_OUTPUT"
+
+              # GitHub environments named `infra-<env>-ci` or
+              # `bootstrapper-<env>-ci` define which credentials and runner labels
+              # are used for Terraform plans. `<env>` may contain dashes
+              # (e.g. `ced-prod`), so only the fixed prefix and suffix are stripped.
+              candidate_environments="$(
+                gh api \
+                  --paginate \
+                  --slurp \
+                  "/repos/$GITHUB_REPOSITORY/environments?per_page=100" |
+                  jq --compact-output '
+                  [
+                    .[].environments[]
+                    | select(.name | test("^(infra|bootstrapper)-.+-ci$"))
+                    | {
+                        "github-environment": .name,
+                        "env-name": (.name | capture("^(infra|bootstrapper)-(?<env>.+)-ci$").env)
+                      }
+                  ]
+                '
+              )"
+
+              affected_environments=()
+              while IFS= read -r environment; do
+                env_name="$(jq --raw-output '."env-name"' <<< "$environment")"
+                github_environment="$(jq --raw-output '."github-environment"' <<< "$environment")"
+
+                # Bootstrapper environments plan only their bootstrapper project
+                # (plus `repository` in prod); infra environments plan the other
+                # Terraform apps tagged for the environment. The same exclusion is
+                # used here and by the plan job, so no job is started for nothing.
+                case "$github_environment" in
+                  bootstrapper-prod-ci) exclude="*,!bootstrapper-${env_name},!repository" ;;
+                  bootstrapper-*) exclude="*,!bootstrapper-${env_name}" ;;
+                  *) exclude="!tag:env:${env_name},bootstrapper-*,repository" ;;
+                esac
+
+                affected_projects="$(
+                  pnpm nx show projects \
+                    --affected \
+                    --type=app \
+                    --projects=tag:terraform \
+                    --exclude="$exclude" \
+                    --json
+                )"
+
+                if jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
+                  affected_environments+=("$(
+                    jq --compact-output --arg exclude "$exclude" '. + {exclude: $exclude}' <<< "$environment"
+                  )")
+                fi
+              done < <(jq --compact-output '.[]' <<< "$candidate_environments")
+
+              if [ "${#affected_environments[@]}" -eq 0 ]; then
+                environments='[]'
+              else
+                environments="$(
+                  printf '%s\n' "${affected_environments[@]}" |
+                    jq --slurp --compact-output '.'
+                )"
+              fi
+
+              printf 'environments=%s\n' "$environments" >> "$GITHUB_OUTPUT"
+
+  code-review:
+    name: No environment
+    runs-on: ubuntu-26.04
+    needs: [gate, workspace]
+    if: ${{ needs.gate.outputs.run == 'true' && needs.workspace.outputs.affected-projects == 'true' }}
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      packages: read
+      pull-requests: read
+    env:
+      ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          # `blob:none` keeps every commit and tree but skips the historical
+          # blobs, which dominate the clone. The base/head comparisons walk the
+          # trees, never the blobs, so nothing triggers a lazy fetch and the
+          # credentials can stay out of `.git/config` (unlike `tree:0`).
+          filter: blob:none
+          # Keep the run token out of .git/config: no step after the checkout
+          # needs persisted git credentials.
+          persist-credentials: false
+
+      - name: Setup repository tools
+        if: ${{ hashFiles('mise.toml') != '' }}
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          experimental: true
+          minimum_release_age: 7d
+
+      - name: Cache pnpm dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.PNPM_CONFIG_STORE_DIR }}
+          key: ${{ runner.os }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
+
+      - name: Cache TFLint plugins
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.TFLINT_PLUGIN_DIR }}
+          key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
+
+      - name: Setup Nx Workspace
+        uses: pagopa/dx/actions/setup-nx-workspace@main
+
+      - name: Install Node.js dependencies
+        shell: bash
+        env:
+          pnpm_config_//npm.pkg.github.com/:_authToken: ${{ github.token }}
+        run: |
+          pnpm ci
 
       - name: Install dependencies
-        run: pnpm ci
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: mise deps --skip pnpm
 
       - name: Cache Nx
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: |
             .nx/cache
@@ -106,66 +256,69 @@ jobs:
             ${{ runner.os }}-nx-cache-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref_name }}-
             ${{ runner.os }}-nx-cache-${{ github.workflow }}-
 
-      - name: Sets the base and head SHAs required for `nx affected` command
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-
-      - name: Run code quality checks on affected projects
-        run: pnpm validate
-
-  get-environments:
-    name: Get GitHub Environments for Infrastructure
-    needs: gate
-    if: ${{ needs.gate.outputs.run == 'true' }}
-    runs-on: ubuntu-24.04
-    outputs:
-      environments: ${{ steps.detect.outputs.environments }}
-    permissions:
-      contents: read
-    steps:
-      # GitHub environments named `infra-<env>-ci` or `bootstrapper-<env>-cd`
-      # define which credentials and runner labels are used for Terraform plans.
-      - name: Get GitHub Environments
-        id: detect
-        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+      - name: Assume ECR Public pull role
+        id: ecr-public-credentials
+        if: ${{ env.ECR_PUBLIC_ROLE_ARN != '' }}
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
         with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-          script: |
-            const environments = await github.paginate(
-              github.rest.repos.getAllEnvironments,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                per_page: 100,
-              },
-              (response) => response.data
-            );
-            const planEnvironmentPattern = /^(?:infra-.+-ci|bootstrapper-.+-ci)$/;
-            const matrix = environments
-              .filter(({ name }) => planEnvironmentPattern.test(name))
-              .filter(({ name }) => !name.includes("uat"))
-              .map(({ name }) => {
-                const [, envName] = name.split("-");
-                return {
-                  "github-environment": name,
-                  "env-name": envName,
-                };
-              });
-            core.setOutput("environments", JSON.stringify(matrix));
+          role-to-assume: ${{ env.ECR_PUBLIC_ROLE_ARN }}
+          # ECR Public is global, but AWS requires us-east-1 for registry authentication.
+          # This is the authentication region, not the deployment region.
+          # https://docs.aws.amazon.com/AmazonECR/latest/public/public-registry-auth.html
+          aws-region: us-east-1
+          output-credentials: true
+          output-env-credentials: false
+          mask-aws-account-id: true
 
-  infra-review:
-    name: Infrastructure Review (${{ matrix.target.github-environment }})
-    needs: get-environments
-    if: ${{ needs.get-environments.outputs.environments != '[]' }}
+      # Docker and Trivy's OCI client both read the Docker credential store.
+      - name: Log in to Amazon ECR Public
+        id: ecr-public-login
+        if: ${{ steps.ecr-public-credentials.outcome == 'success' }}
+        continue-on-error: true
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.ecr-public-credentials.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.ecr-public-credentials.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.ecr-public-credentials.outputs.aws-session-token }}
+          AWS_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-1
+        with:
+          registry-type: public
+          mask-password: "true"
+
+      # We exclude all Terraform Apps from quality checks
+      # because they require a dedicated environment to be initialized.
+      # Their static checks (lint, test) run in the
+      # "code-review-with-environment" job.
+      - name: Run code quality checks on affected projects
+        run: |
+          EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
+          pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci --outputStyle=static
+
+  code-review-with-environment:
+    name: ${{ matrix.target.github-environment }}
+    needs: workspace
+    if: ${{ needs.workspace.outputs.environments != '[]' }}
     runs-on: ["self-hosted", "${{ matrix.target.env-name }}"]
-    environment: ${{ matrix.target.github-environment }}
+    environment:
+      name: ${{ matrix.target.github-environment }}
+      deployment: false
+    # Serialize plans on the same environment so concurrent runs don't
+    # compete for the same Terraform state lock, without cancelling the
+    # in-flight plan.
+    concurrency:
+      group: ${{ github.workflow }}-${{ matrix.target.github-environment }}
+      cancel-in-progress: false
     strategy:
       fail-fast: false
       matrix:
-        target: ${{ fromJSON(needs.get-environments.outputs.environments) }}
+        target: ${{ fromJSON(needs.workspace.outputs.environments) }}
     permissions:
       actions: read
       contents: read
       id-token: write
+      packages: read
     env:
       ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -175,30 +328,57 @@ jobs:
       ARM_STORAGE_USE_AZUREAD: true
       ROLE_ARN: ${{ secrets.ROLE_ARN }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
-      GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
-      GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
-      GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+      ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
     steps:
       - name: Check out repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          filter: tree:0
+          # `blob:none` keeps every commit and tree but skips the historical
+          # blobs, which dominate the clone. The base/head comparisons walk the
+          # trees, never the blobs, so nothing triggers a lazy fetch and the
+          # credentials can stay out of `.git/config` (unlike `tree:0`).
+          filter: blob:none
+          # Keep the run token out of .git/config: no step after the checkout
+          # needs persisted git credentials.
+          persist-credentials: false
 
-      - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+      # Azure/AWS CLIs come from the repository mise.toml, not from the
+      # self-hosted runner image. Install them before Cloud Login so
+      # azure/login and aws-actions/configure-aws-credentials can find az/aws.
+      - name: Setup repository tools
+        if: ${{ hashFiles('mise.toml') != '' }}
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          # Enable experimental features to use "mise deps"
+          experimental: true
+          minimum_release_age: 7d
 
-      - name: Setup Node.js
-        uses: pagopa/dx/.github/actions/node-setup@main
+      # Mise deps for pnpm only performs a global "pnpm install".
+      # Here we want to install only the root workspace dependencies,
+      # so we handle it manually.
+      - name: Cache pnpm dependencies
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.PNPM_CONFIG_STORE_DIR }}
+          key: ${{ runner.os }}-pnpm-store-${{ github.workflow }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
 
-      - name: Setup Terraform
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+      - name: Cache TFLint plugins
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.TFLINT_PLUGIN_DIR }}
+          key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
+
+      - name: Setup Nx Workspace
+        uses: pagopa/dx/actions/setup-nx-workspace@main
 
       - name: Install dependencies
-        run: pnpm --filter . ci
-
-      - name: Sets the base and head SHAs required for `nx affected` command
-        uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          mise deps --skip pnpm
 
       - name: Generate Cache Key
         if: github.event_name == 'pull_request'
@@ -216,7 +396,7 @@ jobs:
       - name: Check for Cache
         if: github.event_name == 'pull_request'
         id: tfplan-pr-cache
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .tfplan-pr-cache/${{ matrix.target.github-environment }}/.pr_plan_marker
           key: ${{ steps.cache-key.outputs.cache-key }}
@@ -238,25 +418,71 @@ jobs:
             echo "$(date)" > "$MARKER_FILE"
           fi
 
+      # Log in only after tools and dependencies are installed, so their
+      # lifecycle scripts don't run with an active cloud session. The GitHub
+      # App secrets are scoped to this step for the same reason.
+      - name: Cloud Login
+        id: cloud-login
+        uses: pagopa/dx/actions/csp-login@main
+        with:
+          export-github-token: "false"
+        env:
+          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+          GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
+          GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+
+      # Keep the pull role and us-east-1 scoped to registry login, without
+      # replacing the AWS credentials or region used by Terraform plans.
+      - name: Assume ECR Public pull role
+        id: ecr-public-credentials
+        if: ${{ env.ECR_PUBLIC_ROLE_ARN != '' }}
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@d979d5b3a71173a29b74b5b88418bfda9437d885 # v6.1.1
+        with:
+          role-to-assume: ${{ env.ECR_PUBLIC_ROLE_ARN }}
+          # ECR Public is global, but AWS requires us-east-1 for registry authentication.
+          # This is the authentication region, not the deployment region.
+          # https://docs.aws.amazon.com/AmazonECR/latest/public/public-registry-auth.html
+          aws-region: us-east-1
+          output-credentials: true
+          output-env-credentials: false
+          mask-aws-account-id: true
+
+      - name: Log in to Amazon ECR Public
+        id: ecr-public-login
+        if: ${{ steps.ecr-public-credentials.outcome == 'success' }}
+        continue-on-error: true
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+        env:
+          AWS_ACCESS_KEY_ID: ${{ steps.ecr-public-credentials.outputs.aws-access-key-id }}
+          AWS_SECRET_ACCESS_KEY: ${{ steps.ecr-public-credentials.outputs.aws-secret-access-key }}
+          AWS_SESSION_TOKEN: ${{ steps.ecr-public-credentials.outputs.aws-session-token }}
+          AWS_REGION: us-east-1
+          AWS_DEFAULT_REGION: us-east-1
+        with:
+          registry-type: public
+          mask-password: "true"
+
+      - name: Run Terraform quality checks on affected environment projects
+        env:
+          EXCLUDE: ${{ matrix.target.exclude }}
+        run: pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" --outputStyle=static
+
+      # Only Terraform plans (including init and the GitHub provider) need the
+      # App token. Do not expose it to quality checks or artifact uploads.
       - name: Run Terraform plan on affected environment projects
         env:
-          ENV_NAME: ${{ matrix.target.env-name }}
-          GITHUB_ENVIRONMENT: ${{ matrix.target.github-environment }}
+          EXCLUDE: ${{ matrix.target.exclude }}
+          GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github-token }}
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}
         run: |
-          if [[ "$GITHUB_ENVIRONMENT" == "bootstrapper-prod-cd" ]]; then
-            pnpm nx affected -t tf-plan -c ci --outputStyle=stream-without-prefixes --refresh="$REFRESH" --exclude="*,!bootstrapper-${ENV_NAME},!repository"
-          elif [[ "$GITHUB_ENVIRONMENT" == bootstrapper-* ]]; then
-            pnpm nx affected -t tf-plan -c ci --outputStyle=stream-without-prefixes --refresh="$REFRESH" --exclude="*,!bootstrapper-${ENV_NAME}"
-          else
-            pnpm nx affected -t tf-plan -c ci --outputStyle=stream-without-prefixes --refresh="$REFRESH" --exclude="!tag:env:${ENV_NAME},bootstrapper-*,repository"
-          fi
+          pnpm nx affected -t plan -c ci --refresh="$REFRESH" --exclude="$EXCLUDE" --outputStyle=static
 
       - name: Upload Terraform plan report
         if: ${{ always() && hashFiles('.dx-tasks/**/*.json') != '' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: report-tf-plan-${{ matrix.target.github-environment }}
+          name: report-plan-${{ matrix.target.github-environment }}
           path: .dx-tasks
           if-no-files-found: ignore
           retention-days: 1
@@ -264,19 +490,22 @@ jobs:
 
   report:
     name: Report
-    needs: infra-review
+    needs: code-review-with-environment
     if: ${{ always() && github.event_name == 'pull_request' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       actions: read
       contents: read
       pull-requests: write
     steps:
       - name: Check out repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           filter: tree:0
+          # Keep the run token out of .git/config: no step after the checkout
+          # needs persisted git credentials.
+          persist-credentials: false
 
       - name: Download Terraform plan reports
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1

@@ -1,0 +1,57 @@
+name: "Deploy"
+description: "Deploy an application or incrementally shift traffic to a staging slot."
+
+inputs:
+  phase:
+    description: "Action phase to run: 'stage' or 'rollout'"
+    required: true
+  resource_type:
+    description: "Azure resource type (e.g., 'Microsoft.Web/sites' or 'Microsoft.App/containerApps')"
+    required: true
+  resource_name:
+    description: "Name of the deployment target"
+    required: true
+  image:
+    description: "Container image to stage; required when phase is 'stage'"
+    required: false
+  resource_group_name:
+    description: "Azure Resource Group name (required for Azure resources)"
+    required: false
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Check out canary-monitor script
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      with:
+        sparse-checkout: |
+          canary-monitor.sh
+        sparse-checkout-cone-mode: false
+
+    - name: Run Deployment Phase
+      shell: bash
+      env:
+        PHASE: ${{ inputs.phase }}
+        RESOURCE_TYPE: ${{ inputs.resource_type }}
+        RESOURCE_NAME: ${{ inputs.resource_name }}
+        IMAGE: ${{ inputs.image }}
+        RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+        GITHUB_ACTION_PATH: ${{ github.action_path }}
+      run: |
+        case "$PHASE" in
+          stage)
+            if [[ -z "$IMAGE" ]]; then
+              echo "::error::image is required when phase is 'stage'."
+              exit 1
+            fi
+            bash "$GITHUB_ACTION_PATH/stage.sh" "$RESOURCE_TYPE" "$RESOURCE_NAME" "$IMAGE" "$RESOURCE_GROUP_NAME"
+            ;;
+          rollout)
+            bash "$GITHUB_ACTION_PATH/rollout.sh" "$RESOURCE_TYPE" "$RESOURCE_NAME" "$RESOURCE_GROUP_NAME"
+            ;;
+          *)
+            echo "::error::Unsupported phase: $PHASE. Expected 'stage' or 'rollout'."
+            exit 1
+            ;;
+        esac

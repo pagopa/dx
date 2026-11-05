@@ -28,10 +28,6 @@
       "type": "string"
     }
   },
-  "required": [
-    "description",
-    "provider",
-    "version"
-  ],
+  "required": ["description", "provider", "version"],
   "additionalProperties": false
 }

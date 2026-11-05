@@ -1,69 +1,40 @@
 {
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "parallel": 10,
-  "namedInputs": {
-    "default": ["{projectRoot}/src/**/*.ts"]
-  },
   "targetDefaults": {
-    "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["{projectRoot}/src/**/*.ts"],
-      "outputs": ["{projectRoot}/dist/**", "{projectRoot}/bin/**"],
-      "cache": true
-    },
-    "format:check": {
-      "cache": true
-    },
-    "lint": {
-      "dependsOn": ["^build"],
-      "options": {
-        "fix": true
-      },
-      "configurations": {
-        "ci": {
-          "fix": false
+    "lint": [
+      {
+        "filter": {
+          "plugin": "@nx/eslint"
+        },
+        "dependsOn": ["^build"],
+        "options": {
+          "fix": true
+        },
+        "configurations": {
+          "ci": {
+            "fix": false
+          }
         }
       }
-    },
-    "test": {
-      "dependsOn": ["^build"],
-      "configurations": {
-        "ci": {
-          "coverage": true
+    ],
+    "test": [
+      {
+        "filter": {
+          "plugin": "@nx/vitest"
+        },
+        "dependsOn": ["^build"],
+        "configurations": {
+          "ci": {
+            "coverage": true
+          }
         }
       }
-    },
-    "tf-init": {
-      "inputs": ["{projectRoot}/**/*.tf"]
-    },
-    "test:unit": {
-      "dependsOn": ["tf-init"],
-      "inputs": ["{projectRoot}/**/*.tf", "{projectRoot}/**/unit.tftest.hcl"]
-    },
-    "test:contract": {
-      "dependsOn": ["tf-init"],
-      "inputs": [
-        "{projectRoot}/**/*.tf",
-        "{projectRoot}/**/contract.tftest.hcl"
-      ]
-    },
-    "test:integration": {
-      "dependsOn": ["tf-init"],
-      "inputs": [
-        "{projectRoot}/**/*.tf",
-        "{projectRoot}/**/integration.tftest.hcl"
-      ]
-    },
-    "test:e2e": {
-      "dependsOn": ["tf-init"],
-      "inputs": [
-        "{projectRoot}/**/*.tf",
-        "{projectRoot}/**/*.go",
-        "{projectRoot}/**/*.mod",
-        "{projectRoot}/**/Dockerfile"
-      ]
-    },
+    ],
     "version": {}
+  },
+  "sync": {
+    "globalGenerators": ["@pagopa/nx-dx:workflows"]
   },
   "release": {
     "versionPlans": true,
@@ -71,18 +42,14 @@
       "apps/*",
       "packages/*",
       "actions/*",
+      "containers/*",
+      "plugins/*",
       "infra/modules/*",
       "providers/*",
       "infra/scripts"
     ],
     "projectsRelationship": "independent",
     "version": {},
-    "docker": {
-      "registryUrl": "ghcr.io",
-      "versionSchemes": {
-        "production": "{versionActionsVersion}"
-      }
-    },
     "changelog": {
       "projectChangelogs": {
         "createRelease": false,
@@ -106,21 +73,10 @@
   },
   "plugins": [
     {
-      "plugin": "@nx/docker",
-      "options": {
-        "buildTarget": "docker:build",
-        "runTarget": "docker:run"
-      }
-    },
-    {
-      "plugin": "@pagopa/nx-dx-docker-plugin"
-    },
-    {
       "plugin": "@nx/vitest",
       "options": {
         "testTargetName": "test"
-      },
-      "include": ["apps/**", "packages/**"]
+      }
     },
     {
       "plugin": "@nx/eslint/plugin",
@@ -142,9 +98,12 @@
       }
     },
     {
-      "plugin": "@pagopa/nx-terraform-plugin",
+      "plugin": "@pagopa/nx-terraform",
       "include": ["infra/**"],
       "options": {
+        "initTarget": {
+          "platforms": ["linux_amd64"]
+        },
         "publish": {
           "mode": "github",
           "github": {
@@ -152,7 +111,38 @@
           }
         }
       }
+    },
+    {
+      "plugin": "@pagopa/nx-docker",
+      "options": {
+        "buildTarget": {
+          "name": "docker:build",
+          "args": ["--platform linux/amd64"],
+          "metadata": {
+            "tags": [
+              "type=raw,value=latest,enable={{is_default_branch}}",
+              "type=semver,pattern={{version}}",
+              "type=semver,pattern={{major}}.{{minor}}",
+              "type=semver,pattern={{major}},enable=${{ !startsWith(github.ref, 'refs/tags/v0.') }}",
+              "type=ref,event=branch",
+              "type=sha",
+              "${{ env.TAG_NAME }}"
+            ]
+          }
+        }
+      }
+    },
+    "@pagopa/nx-dx",
+    {
+      "plugin": "@pagopa/nx-agent-plugins",
+      "include": ["plugins/**"]
     }
   ],
-  "analytics": false
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  },
+  "analytics": false,
+  "neverConnectToCloud": true
 }

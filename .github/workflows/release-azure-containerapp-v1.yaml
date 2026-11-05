@@ -18,7 +18,7 @@ on:
         description: Docker image name, defaults to repository name
       docker_image_description:
         type: string
-        required: true
+        required: false
         description: A description to use as image label
       docker_image_authors:
         type: string
@@ -36,6 +36,10 @@ on:
         required: false
         default: linux/amd64
         description: Image runtime platform, supports multiple comma-separated values
+      docker_image_tag:
+        type: string
+        required: false
+        description: Released image version or Nx project release tag. Skips image build when set.
       container_app:
         type: string
         required: true
@@ -48,6 +52,11 @@ on:
         description: Environment where the image will be deployed
         type: string
         required: true
+      enable_auto_deploy:
+        description: Enable automatic deployment approval
+        type: boolean
+        required: false
+        default: true
 
 concurrency:
   group: ${{ github.workflow }}-cd
@@ -59,7 +68,8 @@ env:
 jobs:
   build:
     name: Build Docker Image
-    runs-on: ubuntu-latest
+    if: ${{ inputs.docker_image_tag == '' }}
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       id-token: write
@@ -67,7 +77,7 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         name: Checkout
 
       - name: Docker Build and Push
@@ -86,13 +96,19 @@ jobs:
           push_to_registry: true
 
   release:
-    name: Deploy To Container App
-    runs-on: ubuntu-latest
+    name: Deploy Container App Revision
+    runs-on: ubuntu-26.04
     needs: build
+    if: ${{ always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       contents: read
       id-token: write
+    outputs:
+      current_revision_name: ${{ steps.get_current_revision.outputs.current_revision_name }}
+      new_revision_name: ${{ steps.create_new_revision.outputs.new_revision_name }}
+      revision_mode: ${{ steps.get_revision_mode.outputs.revision_mode }}
+      skip_remaining_steps: ${{ steps.create_new_revision.outputs.skip_remaining_steps }}
     env:
       ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
@@ -103,20 +119,39 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        if: ${{ inputs.docker_image_tag == '' }}
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Get Short SHA of Latest Commit
         id: get_commit_sha
+        if: ${{ inputs.docker_image_tag == '' }}
         env:
           GIT_SHA: ${{ github.sha }}
         run: |
-          set -euo
+          set -euo pipefail
 
           sha=$(git rev-parse --short "$GIT_SHA")
 
           echo "::notice::Latest commit: $sha"
-
           echo "short_sha=$sha" >> $GITHUB_OUTPUT
+
+      - name: Resolve Deployment Image
+        id: image
+        env:
+          RELEASE_TAG: ${{ inputs.docker_image_tag }}
+          SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -n "$RELEASE_TAG" ]]; then
+            image_tag="${RELEASE_TAG##*@}"
+          else
+            image_tag="sha-$SHORT_SHA"
+          fi
+
+          image_ref="ghcr.io/$IMAGE_NAME:$image_tag"
+          echo "::notice::Deploying image: $image_ref"
+          echo "image_ref=$image_ref" >> $GITHUB_OUTPUT
 
       - name: Cloud Login
         uses: pagopa/dx/actions/csp-login@main
@@ -137,8 +172,7 @@ jobs:
             --output tsv)
 
           echo "::notice::Revision mode: $revision_mode"
-
-          echo "revision_mode=$revision_mode" >> $GITHUB_OUTPUT
+          echo "revision_mode=$revision_mode" >> "$GITHUB_OUTPUT"
 
       - name: Get Container App Current Revision
         id: get_current_revision
@@ -156,23 +190,15 @@ jobs:
         id: create_new_revision
         env:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
-          SHORT_SHA: ${{ steps.get_commit_sha.outputs.short_sha }}
-          REVISION_MODE: ${{ steps.get_revision_mode.outputs.revision_mode}}
+          IMAGE_REF: ${{ steps.image.outputs.image_ref }}
+          REVISION_MODE: ${{ steps.get_revision_mode.outputs.revision_mode }}
         run: |
           set -euo
 
-          # It is not stated in the documentation, but according to "az cli" validation:
-          # "A revision suffix must consist of lower case alphanumeric characters or '-',
-          # start with a letter or number, end with an alphanumeric character and cannot have '--'."
-
-          # Generate a random 4-char lowercase alphanumeric suffix
-          SUFFIX=$(openssl rand -base64 8 | tr -dc 'a-z0-9' | head -c 4)
-
           new_revision=$(az containerapp revision copy \
             --name "$CONTAINER_APP_NAME" \
-            --image "ghcr.io/$IMAGE_NAME:sha-$SHORT_SHA" \
+            --image "$IMAGE_REF" \
             --from-revision "$CURRENT_REVISION" \
-            --revision-suffix "$SUFFIX" \
             --query "properties.latestRevisionName" \
             --output tsv)
 
@@ -230,38 +256,19 @@ jobs:
             exit 1
           fi
 
-      - name: Get Container App Id
-        id: get_container_app_id
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
-          steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
-        run: |
-          set -euo
-
-          container_app_id=$(az containerapp show \
-            --name "$CONTAINER_APP_NAME" \
-            --query "id" \
-            --output tsv)
-
-          echo "ca_id=$container_app_id" >> $GITHUB_OUTPUT
-
-      - name: Check for New Revision Errors and Increment Traffic
-        uses: pagopa/dx/actions/incremental-rollout@main
-        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
-          steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
-        with:
-          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
-          resource_name: ${{ env.CONTAINER_APP_NAME }}
-          resource_type: "containerapp"
-
-      - name: Deactivate Old Revision
+      - name: Assign Staging Label
         if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
           steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
         env:
-          CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
+          NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
         run: |
-          az containerapp revision deactivate \
+          az containerapp revision label add \
             --name "$CONTAINER_APP_NAME" \
-            --revision "$CURRENT_REVISION_NAME"
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --revision "$NEW_REVISION_NAME" \
+            --label staging \
+            --yes \
+            --output none
 
       - name: Deactivate New Revision
         if:
@@ -270,6 +277,116 @@ jobs:
         env:
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
+        run: |
+          az containerapp ingress traffic set \
+            --name "$CONTAINER_APP_NAME" \
+            --revision-weight "$CURRENT_REVISION_NAME"=100 "$NEW_REVISION_NAME"=0 \
+            --output table
+
+          az containerapp revision deactivate \
+            --name "$CONTAINER_APP_NAME" \
+            --revision "$NEW_REVISION_NAME"
+
+  auto_approve_deploy:
+    name: Approve Deployment
+    runs-on: ubuntu-26.04
+    needs: build
+    # If auto approval fails, the deployment can be approved manually.
+    continue-on-error: true
+    if: ${{ !github.event.act && inputs.enable_auto_deploy && always() && (needs.build.result == 'success' || needs.build.result == 'skipped') }}
+
+    steps:
+      - name: Approve deployment
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN_DEPLOYMENT_APPROVAL }}
+          REQUIRED_ENVIRONMENT: ${{ inputs.environment }}-cd
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::GH_TOKEN_DEPLOYMENT_APPROVAL secret is not set."
+            exit 1
+          fi
+
+          deployments=$(gh api \
+            -H "Accept: application/vnd.github+json" \
+            /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments)
+
+          environment=$(echo "$deployments" | jq -r '.[].environment.name')
+
+          if [ "$environment" != "$REQUIRED_ENVIRONMENT" ]; then
+            echo "::error::Environment $REQUIRED_ENVIRONMENT not found."
+            echo "::warning::Check if the deployment was already approved by one of the reviewers."
+            exit 1
+          fi
+
+          current_user_can_approve=$(echo "$deployments" | jq -r '.[].current_user_can_approve')
+
+          if [ "$current_user_can_approve" != true ]; then
+            GITHUB_USER=$(gh api user | jq -r '.login')
+            echo "::error::$GITHUB_USER is not a reviewer"
+            echo "::warning::Auto Approval not available, the user is not a reviewer of the environment $REQUIRED_ENVIRONMENT."
+            exit 1
+          fi
+
+          env_id=$(echo "$deployments" | jq -r '.[].environment.id')
+
+          gh api \
+            --method POST \
+            -H "Accept: application/vnd.github+json" \
+            /repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/pending_deployments \
+            -F "environment_ids[]=$env_id" \
+            -f "state=approved" \
+            -f "comment=Approved automatically by the workflow."
+
+  swap:
+    name: Activate Container App Revision
+    runs-on: ubuntu-26.04
+    needs: release
+    if: ${{ !github.event.act && needs.release.result == 'success' && needs.release.outputs.revision_mode == 'Multiple' && needs.release.outputs.skip_remaining_steps == 'false' }}
+    environment: ${{ inputs.environment }}-cd
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+      CONTAINER_APP_NAME: ${{ inputs.container_app }}
+      CURRENT_REVISION_NAME: ${{ needs.release.outputs.current_revision_name }}
+      NEW_REVISION_NAME: ${{ needs.release.outputs.new_revision_name }}
+      RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+
+    steps:
+      - name: Cloud Login
+        uses: pagopa/dx/actions/csp-login@main
+
+      - name: Configure AZ CLI
+        run: |
+          az config set extension.use_dynamic_install=yes_without_prompt
+          az configure --defaults group="$RESOURCE_GROUP_NAME"
+
+      - name: Check for New Revision Errors and Increment Traffic
+        uses: pagopa/dx/actions/incremental-rollout@main
+        with:
+          resource_group_name: ${{ env.RESOURCE_GROUP_NAME }}
+          resource_name: ${{ env.CONTAINER_APP_NAME }}
+          resource_type: "containerapp"
+
+      - name: Remove Staging Label
+        run: |
+          az containerapp revision label remove \
+            --name "$CONTAINER_APP_NAME" \
+            --resource-group "$RESOURCE_GROUP_NAME" \
+            --label staging \
+            --output none
+
+      - name: Deactivate Old Revision
+        run: |
+          az containerapp revision deactivate \
+            --name "$CONTAINER_APP_NAME" \
+            --revision "$CURRENT_REVISION_NAME"
+
+      - name: Deactivate New Revision
+        if: ${{ failure() }}
         run: |
           az containerapp ingress traffic set \
             --name "$CONTAINER_APP_NAME" \

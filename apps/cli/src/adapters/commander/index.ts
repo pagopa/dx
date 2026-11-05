@@ -12,7 +12,6 @@ import {
 import { makeDoctorCommand } from "./commands/doctor.js";
 import { makeInfoCommand } from "./commands/info.js";
 import { makeInitCommand } from "./commands/init.js";
-import { makeSavemoneyCommand } from "./commands/savemoney.js";
 import { makeSpecCommand } from "./commands/spec.js";
 import { extractCliSpec } from "./spec.js";
 export type CliDependencies = CodemodCommandDependencies;
@@ -47,7 +46,6 @@ export const makeCli = (
   program.addCommand(makeDoctorCommand(deps, config, env));
   program.addCommand(makeCodemodCommand(cliDeps, env));
   program.addCommand(makeInitCommand(deps.requireGitHubAuth, env));
-  program.addCommand(makeSavemoneyCommand());
   program.addCommand(makeInfoCommand(deps, env));
   program.addCommand(makeAddCommand(deps.requireGitHubAuth, env));
 

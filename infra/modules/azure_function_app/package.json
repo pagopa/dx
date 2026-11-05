@@ -1,7 +1,0 @@
-{
-  "name": "azure_function_app",
-  "version": "6.0.0",
-  "private": true,
-  "provider": "azurerm",
-  "description": "Deploys an Azure Function App with storage, networking and RBAC configuration"
-}

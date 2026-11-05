@@ -1,15 +1,8 @@
 {
   "name": "incremental-rollout",
   "version": "0.2.4",
-  "type": "module",
   "private": true,
-  "devDependencies": {
-    "prettier": "catalog:"
-  },
-  "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
-  },
+  "type": "module",
   "nx": {
     "targets": {
       "shellcheck": {

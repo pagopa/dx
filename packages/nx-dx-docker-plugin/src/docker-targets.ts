@@ -1,5 +1,5 @@
 // Builds the `docker:build`/`docker:push` Nx targets: thin
-// `TargetConfiguration` wiring for the `@pagopa/nx-dx-docker-plugin:build`/
+// `TargetConfiguration` wiring for the `@pagopa/nx-docker:build`/
 // `:push` executors (see docker-run.ts for the actual logic). Both targets
 // share the exact same options — everything env-dependent (tags, commit
 // sha, build timestamp) is computed inside the executor at task-RUN time,
@@ -12,12 +12,11 @@
 // (see dx/actions/docker-build-push).
 //
 // This plugin owns the whole `docker:build`/`docker:push` targets (rather
-// than layering extra options on top of `@nx/docker`'s own inferred
+// rather than layering extra options on top of another plugin's inferred
 // targets) because Nx target-merging replaces an inferred target's
 // `options` wholesale, key-by-key, when a later-registered plugin also
-// contributes the same key — a plugin-ordering footgun this sidesteps by
-// keeping a single, fully self-contained source of truth. `@nx/docker` is
-// still registered in `nx.json` for the `docker:run` convenience target.
+// contributes the same key. Keeping the DX targets self-contained avoids
+// that ordering hazard.
 import type { TargetConfiguration } from "@nx/devkit";
 
 import type { DockerRunOptions } from "./docker-run.ts";
@@ -25,11 +24,11 @@ import type { DockerRunOptions } from "./docker-run.ts";
 export const buildDockerBuildTarget = (
   options: DockerRunOptions,
 ): TargetConfiguration => ({
-  executor: "@pagopa/nx-dx-docker-plugin:build",
+  executor: "@pagopa/nx-docker:build",
   metadata: {
     description:
       "Build this project's Docker image locally with full OCI labels, computed fresh on every run (RFC-DX-076 feature parity with docker/metadata-action)",
-    technologies: ["docker"],
+    technologies: ["container-image"],
   },
   options,
 });
@@ -39,11 +38,11 @@ export const buildDockerPushTarget = (
   buildTargetName: string,
 ): TargetConfiguration => ({
   dependsOn: [buildTargetName],
-  executor: "@pagopa/nx-dx-docker-plugin:push",
+  executor: "@pagopa/nx-docker:push",
   metadata: {
     description:
       "Build and push this project's Docker image with full OCI labels and index+manifest annotations; no-ops when there's nothing CI-computed to publish",
-    technologies: ["docker"],
+    technologies: ["container-image"],
   },
   options,
 });

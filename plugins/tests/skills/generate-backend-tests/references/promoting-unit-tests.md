@@ -18,13 +18,13 @@ Leave behind mock counts, helper/mapper internals, fake clients, and tiny branch
 
 ## Classification guide
 
-| Unit assertion | Integration move |
-| --- | --- |
-| client method called once | read back state or observe outbound stub request |
+| Unit assertion                                  | Integration move                                                |
+| ----------------------------------------------- | --------------------------------------------------------------- |
+| client method called once                       | read back state or observe outbound stub request                |
 | handler returns 200 when use-case mock resolves | call real host/handler slice; assert response plus side effects |
-| repository sends SQL/SDK input | use real dependency and read back rows/docs/blobs/messages |
-| malformed payload rejection | keep one or two caller-visible boundary cases |
-| pure domain enum/branch | usually stay unit-only |
+| repository sends SQL/SDK input                  | use real dependency and read back rows/docs/blobs/messages      |
+| malformed payload rejection                     | keep one or two caller-visible boundary cases                   |
+| pure domain enum/branch                         | usually stay unit-only                                          |
 
 ## Common migrations
 

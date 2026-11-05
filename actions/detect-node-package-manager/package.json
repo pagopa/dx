@@ -1,13 +1,13 @@
 {
   "name": "detect-node-package-manager",
   "version": "1.0.2",
-  "type": "module",
   "private": true,
-  "devDependencies": {
-    "prettier": "catalog:"
-  },
+  "type": "module",
   "scripts": {
     "format": "prettier --write .",
     "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "catalog:"
   }
 }

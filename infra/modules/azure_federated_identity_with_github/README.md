@@ -61,14 +61,35 @@ module "azure_federated_identity_with_github" {
 }
 ```
 
+## Immutable subject claims
+
+GitHub emits OIDC subject claims that embed the immutable numeric owner and
+repository IDs for repositories created or renamed after **2026-07-15**
+(`repo:OWNER@OWNER-ID/REPO@REPO-ID:environment:...`). Azure matches the subject
+as an exact string, so those repositories need a credential using the immutable
+format.
+
+Pass `owner_id` and `repo_id` (both together) to create an additional federated
+identity credential with the immutable subject. The name-based credential is
+kept for repositories that still use the previous format.
+
+```hcl
+repository = {
+  owner    = "pagopa"
+  name     = "dx"
+  owner_id = "57742367"
+  repo_id  = "1373623344"
+}
+```
+
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.0, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules
@@ -78,9 +99,11 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_federated_identity_credential.cd_github](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.cd_github_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.ci_github](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.ci_github_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_role_assignment.cd_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.cd_subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.ci_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
@@ -93,12 +116,12 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_continuos_delivery"></a> [continuos\_delivery](#input\_continuos\_delivery) | Continuos Delivery (CD) identity properties, such as repositories to federated with and RBAC roles at the subscription and resource group levels. | <pre>object({<br/>    enable = bool<br/>    roles = optional(object({<br/>      subscription    = set(string)<br/>      resource_groups = map(list(string))<br/>    }))<br/>  })</pre> | <pre>{<br/>  "enable": true,<br/>  "roles": {<br/>    "resource_groups": {<br/>      "terraform-state-rg": [<br/>        "Storage Blob Data Contributor"<br/>      ]<br/>    },<br/>    "subscription": [<br/>      "Contributor"<br/>    ]<br/>  }<br/>}</pre> | no |
 | <a name="input_continuos_integration"></a> [continuos\_integration](#input\_continuos\_integration) | Continuos Integration (CI) identity properties, such as repositories to federated with and RBAC roles at the subscription and resource group levels. | <pre>object({<br/>    enable = bool<br/>    roles = optional(object({<br/>      subscription    = set(string)<br/>      resource_groups = map(list(string))<br/>    }))<br/>  })</pre> | <pre>{<br/>  "enable": true,<br/>  "roles": {<br/>    "resource_groups": {<br/>      "terraform-state-rg": [<br/>        "Storage Blob Data Contributor"<br/>      ]<br/>    },<br/>    "subscription": [<br/>      "Reader",<br/>      "Reader and Data Access",<br/>      "PagoPA IaC Reader",<br/>      "DocumentDB Account Contributor",<br/>      "PagoPA API Management Service List Secrets"<br/>    ]<br/>  }<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment-specific values used to generate resource names and location short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_identity_type"></a> [identity\_type](#input\_identity\_type) | Specifies the scope of the identities to create. Supported values are 'infra', 'opex', and 'app'. | `string` | `"infra"` | no |
-| <a name="input_repository"></a> [repository](#input\_repository) | Details of the GitHub repository to federate with. 'owner' defaults to 'pagopa' if not specified. | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |
+| <a name="input_repository"></a> [repository](#input\_repository) | Details of the GitHub repository to federate with. 'owner' defaults to 'pagopa' if not specified. Set 'owner\_id' and 'repo\_id' to the immutable numeric GitHub IDs to also federate repositories that emit immutable subject claims (created or renamed after 2026-07-15). Both must be provided together. | <pre>object({<br/>    owner    = optional(string, "pagopa")<br/>    name     = string<br/>    owner_id = optional(string)<br/>    repo_id  = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where resources will be deployed. | `string` | n/a | yes |
 | <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The ID of the Azure subscription where resources will be deployed. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resources tags. | `map(any)` | n/a | yes |
@@ -106,7 +129,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_federated_cd_identity"></a> [federated\_cd\_identity](#output\_federated\_cd\_identity) | Data about the Continuos Delivery managed identity created |
 | <a name="output_federated_ci_identity"></a> [federated\_ci\_identity](#output\_federated\_ci\_identity) | Data about the Continuos Integration managed identity created |
 <!-- END_TF_DOCS -->

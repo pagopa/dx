@@ -1,3 +1,62 @@
+## 0.5.11 (2026-11-04)
+
+### 🩹 Fixes
+
+- Bump dependencies to address security advisories ([#2492](https://github.com/pagopa/dx/pull/2492))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.10 (2026-10-08)
+
+### 🩹 Fixes
+
+- Update dependencies ([#2319](https://github.com/pagopa/dx/pull/2319))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.9 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+
+## 0.5.8 (2026-09-01)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2080](https://github.com/pagopa/dx/pull/2080))
+- Upgrade TypeScript dependencies. ([#2080](https://github.com/pagopa/dx/pull/2080))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.3
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.5.7 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2015](https://github.com/pagopa/dx/pull/2015))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.2
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.5.5 (2026-07-02)
 
 ### 🩹 Fixes

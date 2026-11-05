@@ -14,8 +14,11 @@ vi.mock("@nx/devkit", async (importOriginal) => ({
   readJsonFile: vi.fn(),
 }));
 
+import type { DockerPluginOptions } from "../options.ts";
+
 import { getBuildLayoutOverrides } from "../docker-build-layout.ts";
 import { buildDockerPushTarget } from "../docker-targets.ts";
+import { createDockerReleaseNodes } from "../index.ts";
 
 describe("getBuildLayoutOverrides", () => {
   beforeEach(() => {
@@ -50,6 +53,26 @@ describe("getBuildLayoutOverrides", () => {
       platform: undefined,
     });
   });
+
+  it("reads Docker layout overrides from project metadata without package.json", () => {
+    fileSystemMocks.existsSync
+      .mockReturnValueOnce(false)
+      .mockReturnValueOnce(true);
+    vi.mocked(readJsonFile).mockReturnValue({
+      metadata: {
+        docker: {
+          contextPath: "containers/runner",
+          platform: "linux/amd64",
+        },
+      },
+    });
+
+    expect(getBuildLayoutOverrides("/workspace", "containers/runner")).toEqual({
+      contextPath: "containers/runner",
+      dockerfilePath: "containers/runner/Dockerfile",
+      platform: "linux/amd64",
+    });
+  });
 });
 
 describe("buildDockerPushTarget", () => {
@@ -69,5 +92,44 @@ describe("buildDockerPushTarget", () => {
     const target = buildDockerPushTarget(options, "docker:build");
 
     expect(target.options).toEqual(options);
+  });
+});
+
+describe("createDockerReleaseNodes", () => {
+  it("infers docker:run without the Nx Docker release technology", () => {
+    vi.mocked(readJsonFile).mockReturnValue({});
+
+    const options: DockerPluginOptions = {
+      buildTargetName: "docker:build",
+      defaultBranch: "main",
+      imageAuthors: "PagoPA",
+      imageNamePrefix: "pagopa/dx",
+      imageUrl: "https://github.com/pagopa/dx",
+      platform: "linux/amd64",
+      pushTargetName: "docker:push",
+      registry: "ghcr.io",
+    };
+
+    const nodes = createDockerReleaseNodes("apps/my-app", options, {
+      workspaceRoot: "/workspace",
+    });
+
+    expect(
+      nodes.projects["apps/my-app"].targets?.["docker:build"]?.metadata,
+    ).toMatchObject({ technologies: ["container-image"] });
+
+    expect(
+      nodes.projects["apps/my-app"].targets?.["docker:push"]?.metadata,
+    ).toMatchObject({ technologies: ["container-image"] });
+
+    expect(nodes.projects["apps/my-app"].targets?.["docker:run"]).toMatchObject(
+      {
+        command: "docker run {args} apps-my-app",
+        dependsOn: ["docker:build"],
+        metadata: {
+          technologies: ["container-image"],
+        },
+      },
+    );
   });
 });

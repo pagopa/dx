@@ -1,0 +1,9 @@
+{
+  "generators": {
+    "workflows": {
+      "factory": "./dist/generators/workflows/workflows.js",
+      "schema": "./dist/generators/workflows/schema.json",
+      "description": "Workflows geenerator"
+    }
+  }
+}

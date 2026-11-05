@@ -28,8 +28,8 @@ import { Payload, PLOP_MONOREPO_GENERATOR_NAME } from "../index.js";
  */
 const registerStubActions = (plop: NodePlopAPI) => {
   plop.setActionType("getNodeVersion", async (data) => {
-    data.nodeVersion = "22.14.0";
-    return "Fetched latest version: 22.14.0";
+    data.nodeVersion = "24.22.0";
+    return "Fetched latest version: 24.22.0";
   });
   plop.setActionType("fetchGithubRelease", async (data, ctx) => {
     const resultKey = (ctx as Record<string, unknown>).resultKey as string;
@@ -39,9 +39,59 @@ const registerStubActions = (plop: NodePlopAPI) => {
   plop.setActionType("setupPnpm", async () => "Monorepo bootstrapped");
 };
 
+const registerMiseToolchainConfigurationTest = (
+  getGeneratedRoot: () => string,
+): void => {
+  it("includes the mise toolchain configuration", async () => {
+    const generatedRoot = getGeneratedRoot();
+    const generatedFiles = await fs.readdir(generatedRoot);
+    expect(generatedFiles).toContain("mise.toml");
+
+    const miseConfig = await fs.readFile(
+      path.join(generatedRoot, "mise.toml"),
+      "utf-8",
+    );
+    expect(miseConfig).toContain('github-cli = { version = "latest" }');
+    expect(miseConfig).toContain('terraform-docs = "0.24"');
+    expect(miseConfig).toContain('tflint = "0.63"');
+    expect(miseConfig).toContain('trivy = "0.74"');
+    expect(miseConfig).toContain(
+      'idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]',
+    );
+    expect(miseConfig).toContain(
+      'TFLINT_PLUGIN_DIR = "{{config_root}}/.tflint.d/plugins"',
+    );
+    expect(miseConfig).toContain('run = "tflint --init"');
+    expect(miseConfig).toContain(
+      'minimum_release_age_excludes = ["copilot", "github-cli"]',
+    );
+    for (const removedTool of [
+      "acli",
+      "act",
+      "aws-cli",
+      "azure-cli",
+      "copilot",
+      "go",
+      "golangci-lint",
+      "jq",
+      "npm:nx",
+      "pre-commit",
+      "python",
+      "qdns",
+      "ripgrep",
+      "shellcheck",
+      "uv",
+    ]) {
+      expect(miseConfig).not.toMatch(new RegExp(`^${removedTool}\\s*=`, "m"));
+    }
+    expect(miseConfig).not.toContain("postinstall");
+  });
+};
+
 describe("monorepo generator — file generation", () => {
   let tmpDir: string;
   let originalCwd: string;
+  let plop: NodePlopAPI;
 
   const payload: Payload = {
     repoDescription: "A test repository for DX",
@@ -54,7 +104,7 @@ describe("monorepo generator — file generation", () => {
     tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "dx-cli-monorepo-test-"));
     process.chdir(tmpDir);
 
-    const plop = await nodePlop();
+    plop = await nodePlop();
     registerStubActions(plop);
     plop.setGenerator(PLOP_MONOREPO_GENERATOR_NAME, {
       actions: getActions(resolveTemplatesPath("monorepo")),
@@ -90,10 +140,38 @@ describe("monorepo generator — file generation", () => {
     expect(generatedFiles).toMatchSnapshot();
   });
 
+  it("uses the selected GitHub organization in repository provider configuration", async () => {
+    const customPayload: Payload = {
+      ...payload,
+      repoName: "my-custom-owner-repo",
+      repoOwner: "example-org",
+    };
+
+    const result = await plop
+      .getGenerator(PLOP_MONOREPO_GENERATOR_NAME)
+      .runActions(customPayload);
+    const realFailures = result.failures.filter(
+      (failure) => failure.error !== "Aborted due to previous action failure",
+    );
+    expect(realFailures).toEqual([]);
+
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, customPayload.repoName),
+      ["infra/repository/providers.tf"],
+    );
+
+    expect(generatedFiles["infra/repository/providers.tf"]).toContain(
+      'owner = "example-org"',
+    );
+    expect(generatedFiles["infra/repository/providers.tf"]).not.toContain(
+      'owner = "pagopa"',
+    );
+  });
+
   it("propagates action outputs into generated version files", async () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),
-      [".node-version", ".terraform-version", ".pre-commit-config.yaml"],
+      [".node-version", ".terraform-version"],
     );
 
     expect(generatedFiles).toMatchSnapshot();
@@ -107,6 +185,78 @@ describe("monorepo generator — file generation", () => {
 
     expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain("allowBuilds:");
   });
+
+  it("configures Renovate for DX actions and Docker images", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["renovate.json"],
+    );
+
+    expect(generatedFiles["renovate.json"]).toContain(
+      '"matchPackageNames": ["pagopa/dx"]',
+    );
+    expect(generatedFiles["renovate.json"]).toContain('"pinDigests": false');
+    expect(generatedFiles["renovate.json"]).toContain(
+      '"matchManagers": ["dockerfile"]',
+    );
+    expect(generatedFiles["renovate.json"]).toContain(
+      '"minimumReleaseAge": "7 days"',
+    );
+    expect(generatedFiles["renovate.json"]).toContain(
+      '"prCreation": "immediate"',
+    );
+  });
+
+  it("resolves the generated tests plugin from the DX marketplace", async () => {
+    const generatedSettings: unknown = JSON.parse(
+      await fs.readFile(
+        path.join(tmpDir, payload.repoName, ".github/copilot/settings.json"),
+        "utf-8",
+      ),
+    );
+    expect(generatedSettings).toStrictEqual({
+      enabledPlugins: {
+        "azure@pagopa-dx": true,
+        "project-management@pagopa-dx": true,
+        "standards@pagopa-dx": true,
+        "terraform@pagopa-dx": true,
+        "tests@pagopa-dx": true,
+        "typescript@pagopa-dx": true,
+      },
+      extraKnownMarketplaces: {
+        "pagopa-dx": {
+          source: { repo: "pagopa/dx", source: "github" },
+        },
+      },
+    });
+
+    const repositoryRoot = path.resolve(
+      resolveTemplatesPath("monorepo"),
+      "../../../..",
+    );
+    const marketplace: unknown = JSON.parse(
+      await fs.readFile(
+        path.join(repositoryRoot, ".github/plugin/marketplace.json"),
+        "utf-8",
+      ),
+    );
+    expect(marketplace).toMatchObject({
+      metadata: { pluginRoot: "plugins" },
+      plugins: expect.arrayContaining([{ name: "tests", source: "tests" }]),
+    });
+
+    const testsManifest: unknown = JSON.parse(
+      await fs.readFile(
+        path.join(repositoryRoot, "plugins/tests/plugin.json"),
+        "utf-8",
+      ),
+    );
+    expect(testsManifest).toMatchObject({ name: "tests" });
+  });
+
+  registerMiseToolchainConfigurationTest(() =>
+    path.join(tmpDir, payload.repoName),
+  );
 
   it("applies the repository-specific gitignore customization", async () => {
     const generatedFiles = await readGeneratedFiles(

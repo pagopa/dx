@@ -10,7 +10,7 @@ terraform {
 output "environment" {
   value = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"

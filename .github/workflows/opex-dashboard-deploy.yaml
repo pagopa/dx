@@ -17,7 +17,7 @@ concurrency:
 jobs:
   generate:
     name: Generate Dashboard Terraform
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
     outputs:
@@ -25,7 +25,7 @@ jobs:
       changed_directories: ${{ steps.generate-action.outputs.changed_directories }}
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
 
@@ -41,12 +41,12 @@ jobs:
       # The standard DX Node.js setup action cannot be used here
       # because it only runs on JavaScript projects with a configured package manager
       - name: Setup Node.js
-        uses: actions/setup-node@6044e13b5dc448c55e2357c09f80417699197238 # v6
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
 
       - name: Cache npm packages
-        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.npm
           key: ${{ runner.os }}-npm-opex-${{ env.OPEX_DASHBOARD_VERSION }}
@@ -74,8 +74,10 @@ jobs:
     name: Plan - ${{ matrix.dashboard.full_path }}
     needs: generate
     if: needs.generate.outputs.has_changes == 'true'
-    runs-on: "ubuntu-latest"
-    environment: opex-${{ matrix.dashboard.environment }}-ci
+    runs-on: "ubuntu-26.04"
+    environment:
+      name: opex-${{ matrix.dashboard.environment }}-ci
+      deployment: false
     permissions:
       id-token: write
       contents: read
@@ -91,7 +93,7 @@ jobs:
       TFPLAN_FILE: tfplan-${{ github.sha }}
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download generated Terraform files
         uses: pagopa/dx/.github/actions/download-artifact@main
@@ -164,7 +166,7 @@ jobs:
     needs: [generate, tf_plan]
     # Only apply on pushes to the default branch (i.e., merged PRs); skip for PRs, forks, or any other branch
     if: needs.generate.outputs.has_changes == 'true' && github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-    runs-on: "ubuntu-latest"
+    runs-on: "ubuntu-26.04"
     environment: opex-${{ matrix.dashboard.environment }}-cd
     permissions:
       id-token: write
@@ -181,7 +183,7 @@ jobs:
       TFPLAN_FILE: tfplan-${{ github.sha }}
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Generate artifact name
         id: artifact-name

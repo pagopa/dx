@@ -1,3 +1,285 @@
+## 0.22.23 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.22.22 (2026-11-03)
+
+### 🩹 Fixes
+
+- Retire the optional version-plan warning workflow ([#2458](https://github.com/pagopa/dx/pull/2458))
+
+  The optional `validate-v1` workflow for pull-request version-plan warnings was
+  removed because it was unused.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.22.21 (2026-10-28)
+
+### 🩹 Fixes
+
+- Document the `padef@pagopa-dx` plugin name after the AIEPDF and PAF renames. ([#2425](https://github.com/pagopa/dx/pull/2425))
+
+  ## Migration guide
+
+  The plugin was previously published as `aiepdf@pagopa-dx` and then as
+  `paf@pagopa-dx`. Replace the old entry in `enabledPlugins` with
+  `padef@pagopa-dx` to keep the plugin enabled.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.22.20 (2026-10-23)
+
+### 🩹 Fixes
+
+- Add SaveMoney user guide ([#2393](https://github.com/pagopa/dx/pull/2393))
+- Announce that DX tooling drops AzureRM v4 support on 31 December 2026 and document advisory warnings in Terraform plan/apply workflows. ([#2326](https://github.com/pagopa/dx/pull/2326))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 0.22.19 (2026-10-21)
+
+### 🩹 Fixes
+
+- Update the dx init documentation for the validate-v2 alignment: the generated Code Review workflow, GitHub Packages authentication, Trivy configuration and the Nx Terraform plugin check in dx doctor. The GitHub Packages prerequisite now documents the up-front check performed by dx init. ([#2347](https://github.com/pagopa/dx/pull/2347))
+- Update references to keep-alive page ([#2373](https://github.com/pagopa/dx/pull/2373))
+- Authenticate the reusable workflows to GitHub Packages before installing dependencies. `release-v2`, `release-terraform-v1`, `deploy-v1`, `release-azure-staticapp-v1` and `release-azure-staticassets-v1` now run `setup-npm-registry`, so consumers that reference DX packages through pnpm's `gh:` alias no longer fail with `ERR_PNPM_FETCH_401`. ([#2390](https://github.com/pagopa/dx/pull/2390))
+
+  Because a reusable workflow can only downgrade the permissions granted by its caller, the calling jobs must declare `packages: read` (`packages: write` for releases). The action README and the consumer docs now describe the requirement and explain that Yarn 2+ ignores the exported npmrc.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Danilo Spinelli @gunzip
+
+## 0.22.18 (2026-10-14)
+
+### 🩹 Fixes
+
+- Update the Docker Nx plugin installation documentation ([#2349](https://github.com/pagopa/dx/pull/2349))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.22.17 (2026-10-12)
+
+### 🚀 Features
+
+- Move Changeset to the Hold ring, add the DX Nx plugins for Docker and Terraform, and document mise for agent sandboxes on the technology radar. ([#2335](https://github.com/pagopa/dx/pull/2335))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.22.16 (2026-10-09)
+
+### 🩹 Fixes
+
+- Document stable staging URLs for healthy Multiple-mode Container App releases. ([#2281](https://github.com/pagopa/dx/pull/2281))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.22.15 (2026-10-08)
+
+### 🩹 Fixes
+
+- Update dependencies ([#2319](https://github.com/pagopa/dx/pull/2319))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.22.14 (2026-10-06)
+
+### 🩹 Fixes
+
+- Update Terraform apply documentation to reference @pagopa/nx-terraform. ([#2301](https://github.com/pagopa/dx/pull/2301))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.22.13 (2026-10-06)
+
+### 🩹 Fixes
+
+- Make the tests plugin available in the DX marketplace ([#2268](https://github.com/pagopa/dx/pull/2268))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.22.12 (2026-10-06)
+
+### 🩹 Fixes
+
+- Align infra_apply workflow to Nx orchestration ([#2232](https://github.com/pagopa/dx/pull/2232))
+- CSP tags documentation has been updated to the agreed tags ([#2282](https://github.com/pagopa/dx/pull/2282))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 0.22.11 (2026-10-01)
+
+### 🩹 Fixes
+
+- Simplify drift detection Slack notifications with environment labels and direct job links, without changing caller configuration. ([#2280](https://github.com/pagopa/dx/pull/2280))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.22.10 (2026-09-24)
+
+### 🩹 Fixes
+
+- Add section for Container App workflow auto approval ([#2201](https://github.com/pagopa/dx/pull/2201))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.22.9 (2026-09-23)
+
+### 🩹 Fixes
+
+- Document mise setup requirements ([#2218](https://github.com/pagopa/dx/pull/2218))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.22.8 (2026-09-22)
+
+### 🚀 Features
+
+- Add XState to the technology radar. ([#2193](https://github.com/pagopa/dx/pull/2193))
+- Add @pagopa/eslint-config to the technology radar in the Adopt ring. ([#2226](https://github.com/pagopa/dx/pull/2226))
+- Add Drizzle to the technology radar in the Trial ring. ([#2227](https://github.com/pagopa/dx/pull/2227))
+
+### 🩹 Fixes
+
+- Align DX plugins with Agent Plugins 1.0 ([#2207](https://github.com/pagopa/dx/pull/2207))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- LazyAfternoons @LazyAfternoons
+- Marco Comi @kin0992
+
+## 0.22.7 (2026-09-16)
+
+### 🚀 Features
+
+- Add Azure App Configuration to technology radar in the Assess ring. ([#2197](https://github.com/pagopa/dx/pull/2197))
+- Add mise to technology radar as a polyglot tool version manager in the Adopt ring. ([#2196](https://github.com/pagopa/dx/pull/2196))
+
+### 🩹 Fixes
+
+- Correct Azure Entra group naming in the setup and IAM documentation to use the Technology-owned singular `admin` name without domain-qualified suffixes. ([#2194](https://github.com/pagopa/dx/pull/2194))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Danilo Spinelli @gunzip
+- Marco Comi @kin0992
+
+## 0.22.6 (2026-09-15)
+
+### 🚀 Features
+
+- Add Expo to the Technology Radar ([#2187](https://github.com/pagopa/dx/pull/2187))
+
+### ❤️ Thank You
+
+- LazyAfternoons @LazyAfternoons
+
+## 0.22.5 (2026-09-11)
+
+### 🚀 Features
+
+- Replace Flipper with Reactotron on technology radar ([#2183](https://github.com/pagopa/dx/pull/2183))
+- Add Proxyman to technology radar ([#2184](https://github.com/pagopa/dx/pull/2184))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Danilo Spinelli
+- LazyAfternoons @LazyAfternoons
+
+## 0.22.4 (2026-09-10)
+
+### 🩹 Fixes
+
+- Fix the Oxlint and Oxfmt technology radar entry descriptions to reference the Trial ring. ([#2179](https://github.com/pagopa/dx/pull/2179))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.22.3 (2026-09-01)
+
+### 🚀 Features
+
+- Add oxfmt and oxlint to technology radar ([#2106](https://github.com/pagopa/dx/pull/2106))
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2080](https://github.com/pagopa/dx/pull/2080))
+- Fix link to tooling lifecycle ([#2107](https://github.com/pagopa/dx/pull/2107))
+- Mark Terraform 1.14.x as deprecated with EOL on September 30, 2026 ([#2108](https://github.com/pagopa/dx/pull/2108))
+- Upgrade TypeScript dependencies. ([#2080](https://github.com/pagopa/dx/pull/2080))
+- Drop support for Terraform versions older than 1.14.0. The minimum required Terraform version is now 1.15.0, and it is suggested to use 1.16.0 or later. ([#2086](https://github.com/pagopa/dx/pull/2086))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.3
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+- Marco Comi @kin0992
+
+## 0.22.2 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2015](https://github.com/pagopa/dx/pull/2015))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 6.2.2
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.22.0 (2026-07-09)
 
 ### 🚀 Features

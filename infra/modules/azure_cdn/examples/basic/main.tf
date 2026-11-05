@@ -19,13 +19,14 @@ data "azurerm_subnet" "pep" {
 
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.1"
+  version = "~> 4.0"
 
   environment = local.environment
 
-  resource_group_name = azurerm_resource_group.example.name
-  use_case            = "default"
-  subnet_pep_id       = data.azurerm_subnet.pep.id
+  resource_group_name                  = azurerm_resource_group.example.name
+  use_case                             = "default"
+  subnet_pep_id                        = data.azurerm_subnet.pep.id
+  private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
 
   force_public_network_access_enabled = true
 
@@ -59,7 +60,7 @@ data "azurerm_key_vault_certificate" "cert" {
 
 module "azure_cdn" {
   source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 0.4"
+  version = "~> 2.0"
 
   resource_group_name = azurerm_resource_group.example.name
 

@@ -13,7 +13,7 @@ The following diagram illustrates the architecture and relationships between the
 ## Features
 
 - **Use Case Profiles**: Simplifies deployment by providing pre-configured profiles (`default`, `audit`, `delegated_access`, `development`, `archive`) tailored for specific needs.
-- **Advanced Threat Protection**: Enables advanced threat protection for enhanced security only for public configurations.
+- **Defender for Storage**: Enables advanced threat protection for public configurations or when malware scanning is enabled, including malware scanning on upload and sensitive data discovery.
 - **Advanced Security**: Enforces the use of User Delegation SAS for secure shared access if `delegated_access`.
 - **Data Lifecycle Management**: Includes automated policies for tiering data from Hot to Cool/Archive and setting retention periods to optimize costs.
 - **Private Networking**: Configures private endpoints and DNS zones for secure access.
@@ -32,9 +32,35 @@ The following diagram illustrates the architecture and relationships between the
 | `delegated_access` | For sharing files externally, forcing secure access patterns.                       | Yes    | Yes                        | ZRS                     | Standard     |
 | `archive`          | For long-term, low-cost backup and data archiving.                                  | No     | No                         | LRS + secondary replica | Standard     |
 
+## Defender malware scanning and sensitive data discovery
+
+Malware scanning and sensitive data discovery can be enabled with a single
+boolean. It enables Defender for Storage even when the storage account uses
+private networking and makes the local setting override subscription defaults.
+The scan cap defaults to unlimited (`-1` GB/month), while scan result Event Grid
+notifications remain disabled.
+
+```hcl
+malware_scanning_enabled = true
+```
+
 ## Important Considerations for CDN Origin
 
 This storage account module should **not** be used as an origin for an Azure CDN if the variable `force_public_network_access_enabled` is set to `false` (as default). Azure CDN requires the origin to be publicly accessible. For CDN setups, please refer to the dedicated [Azure CDN module](https://registry.terraform.io/modules/pagopa-dx/azure-cdn/azurerm/latest).
+
+## Public Access with Private Endpoints
+
+By default, setting `force_public_network_access_enabled = true` results in no private endpoint being created, since `subnet_pep_id` is left unset in that case, and the two were previously treated as mutually exclusive: a publicly reachable storage account did not need a private path.
+
+Some scenarios require both: for example, using the storage account as an Azure Front Door origin (which needs a public endpoint) while still connecting privately from workloads inside the network. To support this, private endpoint creation is driven by the pair `subnet_pep_id` and `private_dns_zone_resource_group_name`, independently of `force_public_network_access_enabled`: setting both creates private endpoints for the subservices listed in `subservices_enabled`, in addition to the public endpoint.
+
+The two values must either both be set or both be unset. Existing public-only configurations that leave both unset create no private endpoint resources. When `force_public_network_access_enabled = false`, both values are required, except for the `delegated_access` use case where the module forces public access internally.
+
+```hcl
+force_public_network_access_enabled = true
+subnet_pep_id                       = azurerm_subnet.private_endpoints.id
+private_dns_zone_resource_group_name = azurerm_resource_group.network.name
+```
 
 ## Note about Replication
 
@@ -213,9 +239,9 @@ This variable was introduced as a temporary workaround to prevent storage accoun
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.81 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules
@@ -225,7 +251,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_key_vault_access_policy.keys](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_access_policy) | resource |
 | [azurerm_key_vault_key.key](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault_key) | resource |
 | [azurerm_monitor_diagnostic_setting.blob_service](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
@@ -259,7 +285,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_access_tier"></a> [access\_tier](#input\_access\_tier) | Access tier for the storage account. Options: 'Hot', 'Cool', 'Cold', 'Premium'. Defaults to 'Hot'. | `string` | `"Hot"` | no |
 | <a name="input_action_group_id"></a> [action\_group\_id](#input\_action\_group\_id) | ID of the Action Group for alerts. Required for tier 'l'. | `string` | `null` | no |
 | <a name="input_audit_retention_days"></a> [audit\_retention\_days](#input\_audit\_retention\_days) | Number of days to retain audit logs before automatic deletion. PagoPA standard is 365 days (12 months). Must be between 90 and 3650 days. Only applies to the 'audit' use case. Default is 365 days (1 year). | `number` | `365` | no |
@@ -270,15 +296,16 @@ No modules.
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Diagnostic settings for access logging (control and data plane). Mandatory for audit use case to track all access operations. | <pre>object({<br/>    enabled                    = bool<br/>    log_analytics_workspace_id = optional(string, null)<br/>    storage_account_id         = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_force_public_network_access_enabled"></a> [force\_public\_network\_access\_enabled](#input\_force\_public\_network\_access\_enabled) | Allows public network access. Defaults to 'false'. | `bool` | `false` | no |
+| <a name="input_malware_scanning_enabled"></a> [malware\_scanning\_enabled](#input\_malware\_scanning\_enabled) | Enables Defender malware scanning on blob upload and sensitive data discovery. Uses the standard unlimited scan cap. | `bool` | `false` | no |
 | <a name="input_network_rules"></a> [network\_rules](#input\_network\_rules) | Defines network rules for the storage account:<br/>- `default_action`: Default action when no rules match ('Deny' or 'Allow').<br/>- `bypass`: Services bypassing restrictions (valid values: 'Logging', 'Metrics', 'AzureServices').<br/>- `ip_rules`: List of IPv4 addresses or CIDR ranges.<br/>- `virtual_network_subnet_ids`: List of subnet resource IDs.<br/>Defaults to denying all traffic unless explicitly allowed. | <pre>object({<br/>    default_action             = string<br/>    bypass                     = list(string)<br/>    ip_rules                   = list(string)<br/>    virtual_network_subnet_ids = list(string)<br/>  })</pre> | <pre>{<br/>  "bypass": [],<br/>  "default_action": "Deny",<br/>  "ip_rules": [],<br/>  "virtual_network_subnet_ids": []<br/>}</pre> | no |
 | <a name="input_override_infrastructure_encryption"></a> [override\_infrastructure\_encryption](#input\_override\_infrastructure\_encryption) | When set to true, disables infrastructure encryption even if the use case configuration would enable it. Useful for audit use case to prevent storage account recreation when infrastructure encryption was enabled by default. | `bool` | `false` | no |
-| <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | Resource group for the private DNS zone. Defaults to the virtual network's resource group. | `string` | `null` | no |
+| <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | Resource group containing the private DNS zone. Must be set together with subnet\_pep\_id. | `string` | `null` | no |
 | <a name="input_queues"></a> [queues](#input\_queues) | Queues to be created. | `list(string)` | `[]` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where the storage account and related resources will be deployed. | `string` | n/a | yes |
 | <a name="input_secondary_location"></a> [secondary\_location](#input\_secondary\_location) | Secondary location for geo-redundant storage accounts. Used if `use_case` need a replication\_type like GRS or GZRS. | `string` | `null` | no |
 | <a name="input_static_website"></a> [static\_website](#input\_static\_website) | Configures static website hosting with index and error documents. | <pre>object({<br/>    enabled            = optional(bool, false)<br/>    index_document     = optional(string, null)<br/>    error_404_document = optional(string, null)<br/>  })</pre> | <pre>{<br/>  "enabled": false,<br/>  "error_404_document": null,<br/>  "index_document": null<br/>}</pre> | no |
-| <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet used for private endpoints. Required only if `force_public_network_access_enabled` is set to false. | `string` | `null` | no |
-| <a name="input_subservices_enabled"></a> [subservices\_enabled](#input\_subservices\_enabled) | Enables subservices (blob, file, queue, table). Creates Private Endpoints for enabled services. Defaults to 'blob' only. Used only if force\_public\_network\_access\_enabled is false. | <pre>object({<br/>    blob  = optional(bool, true)<br/>    file  = optional(bool, false)<br/>    queue = optional(bool, false)<br/>    table = optional(bool, false)<br/>  })</pre> | `{}` | no |
+| <a name="input_subnet_pep_id"></a> [subnet\_pep\_id](#input\_subnet\_pep\_id) | The ID of the subnet used for private endpoints. Together with `private_dns_zone_resource_group_name`, enables private endpoints for the subservices in `subservices_enabled`, independently of `force_public_network_access_enabled`. Required when `force_public_network_access_enabled` is false, except for `delegated_access` where public access is forced by the module. | `string` | `null` | no |
+| <a name="input_subservices_enabled"></a> [subservices\_enabled](#input\_subservices\_enabled) | Enables subservices (blob, file, queue, table). Controls creation of queue/table resources and their diagnostic settings regardless of network configuration, and additionally determines which enabled subservices get Private Endpoints when private endpoints are created (i.e. when subnet\_pep\_id is set). Defaults to 'blob' only. | <pre>object({<br/>    blob  = optional(bool, true)<br/>    file  = optional(bool, false)<br/>    queue = optional(bool, false)<br/>    table = optional(bool, false)<br/>  })</pre> | `{}` | no |
 | <a name="input_tables"></a> [tables](#input\_tables) | Tables to be created. | `list(string)` | `[]` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to all resources created by this module. | `map(any)` | n/a | yes |
 | <a name="input_use_case"></a> [use\_case](#input\_use\_case) | Storage account use case. Allowed values: 'default', 'audit', 'delegated\_access', 'development', 'archive'. | `string` | `"default"` | no |
@@ -286,7 +313,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Azure Storage Account. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Azure Storage Account. |
 | <a name="output_primary_blob_endpoint"></a> [primary\_blob\_endpoint](#output\_primary\_blob\_endpoint) | The primary blob endpoint of the Azure Storage Account. |

@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Curated plugins for the PagoPA organization, designed to enhance developer productivity and streamline workflows across various domains.",
-    "version": "0.2.0",
+    "version": "0.5.0",
     "pluginRoot": "plugins"
   },
   "plugins": [
@@ -31,8 +31,12 @@
       "source": "standards"
     },
     {
-      "name": "aiepdf",
-      "source": "aiepdf"
+      "name": "tests",
+      "source": "tests"
+    },
+    {
+      "name": "padef",
+      "source": "padef"
     }
   ]
 }

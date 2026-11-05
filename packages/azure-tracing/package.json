@@ -1,37 +1,42 @@
 {
   "name": "@pagopa/azure-tracing",
-  "version": "0.5.5",
-  "type": "module",
+  "version": "0.5.11",
   "description": "A package that contains some utilities to enable Azure tracing on Node.js applications.",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "packages/azure-tracing"
-  },
-  "nx": {
-    "targets": {
-      "integration": {
-        "executor": "nx:run-commands",
-        "cache": false,
-        "dependsOn": [
-          "^build"
-        ],
-        "options": {
-          "command": "pnpm run integration",
-          "cwd": "packages/azure-tracing"
-        }
-      }
-    }
-  },
   "keywords": [
     "azure",
     "azuremonitor",
     "opentelemetry"
   ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/azure-tracing"
+  },
   "files": [
     "dist"
   ],
+  "type": "module",
   "main": "./dist/functions/index.js",
+  "types": "./dist/functions/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "azure-functions": [
+        "dist/functions/hooks.d.ts"
+      ],
+      "azure-functions/v3": [
+        "dist/functions/v3/index.d.ts"
+      ],
+      "logger": [
+        "dist/opentelemetry/logger.d.ts"
+      ],
+      "azure-monitor": [
+        "dist/monitor/index.d.ts"
+      ],
+      "*": [
+        "dist/*"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/functions/index.d.ts",
@@ -59,25 +64,9 @@
       "require": "./dist/functions/v3/index.cjs"
     }
   },
-  "types": "./dist/functions/index.d.ts",
-  "typesVersions": {
-    "*": {
-      "azure-functions": [
-        "dist/functions/hooks.d.ts"
-      ],
-      "azure-functions/v3": [
-        "dist/functions/v3/index.d.ts"
-      ],
-      "logger": [
-        "dist/opentelemetry/logger.d.ts"
-      ],
-      "azure-monitor": [
-        "dist/monitor/index.d.ts"
-      ],
-      "*": [
-        "dist/*"
-      ]
-    }
+  "scripts": {
+    "build": "tsup",
+    "test:integration": "vitest run --config vitest.integration.config.js"
   },
   "dependencies": {
     "@azure/identity": "catalog:",
@@ -88,12 +77,12 @@
     "@opentelemetry/instrumentation": "catalog:opentelemetry",
     "@opentelemetry/instrumentation-undici": "catalog:opentelemetry",
     "@t3-oss/env-core": "^0.13.11",
-    "import-in-the-middle": "^3.2.0",
+    "import-in-the-middle": "^3.5.2",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@azure/cosmos": "^4.9.3",
-    "@azure/functions": "^4.16.1",
+    "@azure/cosmos": "^4.10.1",
+    "@azure/functions": "^4.16.5",
     "@azure/storage-blob": "catalog:azure",
     "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
@@ -101,14 +90,25 @@
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
     "redis": "^5.12.1",
-    "testcontainers": "^12.0.4",
+    "testcontainers": "^12.2.0",
     "tsup": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
-  "scripts": {
-    "build": "tsup",
-    "test:integration": "vitest run --config vitest.integration.config.js"
+  "nx": {
+    "targets": {
+      "integration": {
+        "executor": "nx:run-commands",
+        "cache": false,
+        "dependsOn": [
+          "^build"
+        ],
+        "options": {
+          "command": "pnpm run integration",
+          "cwd": "packages/azure-tracing"
+        }
+      }
+    }
   }
 }

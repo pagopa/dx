@@ -4,6 +4,10 @@ Composite GitHub Action that checks whether a TLS certificate stored in Azure Ke
 
 Both the check and the renewal are executed in a **single job**, keeping the caller workflow minimal.
 
+## Python runtime
+
+The renewal steps install Python **3.12.15** with `actions/setup-python` and use hash-locked dependencies. This Python patch version has prebuilt Linux x64 distributions for both Ubuntu 24.04 and Ubuntu 26.04.
+
 ## Inputs
 
 | Name                             | Required | Default   | Description                                                                                 |
@@ -30,7 +34,7 @@ Both the check and the renewal are executed in a **single job**, keeping the cal
 ```yaml
 jobs:
   renew-certificate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: my-environment
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0

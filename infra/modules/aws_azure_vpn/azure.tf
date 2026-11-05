@@ -26,7 +26,7 @@ resource "azurerm_virtual_network_gateway" "this" {
   type          = "Vpn"
   vpn_type      = "RouteBased"
   active_active = local.use_cases[var.use_case].vpn_connections_number > 1 ? true : false
-  enable_bgp    = true
+  bgp_enabled   = true
   sku           = "VpnGw2"
   generation    = "Generation2"
 
@@ -107,7 +107,7 @@ resource "azurerm_virtual_network_gateway_connection" "tunnel1" {
   virtual_network_gateway_id = var.azure.vpn.virtual_network_gateway_id == null ? azurerm_virtual_network_gateway.this[0].id : var.azure.vpn.virtual_network_gateway_id
   local_network_gateway_id   = azurerm_local_network_gateway.tunnel1[count.index].id
   shared_key                 = aws_vpn_connection.this[count.index].tunnel1_preshared_key
-  enable_bgp                 = true
+  bgp_enabled                = true
 
   tags = var.tags
 }
@@ -125,7 +125,7 @@ resource "azurerm_virtual_network_gateway_connection" "tunnel2" {
   virtual_network_gateway_id = var.azure.vpn.virtual_network_gateway_id == null ? azurerm_virtual_network_gateway.this[0].id : var.azure.vpn.virtual_network_gateway_id
   local_network_gateway_id   = azurerm_local_network_gateway.tunnel2[count.index].id
   shared_key                 = aws_vpn_connection.this[count.index].tunnel2_preshared_key
-  enable_bgp                 = true
+  bgp_enabled                = true
 
   tags = var.tags
 }

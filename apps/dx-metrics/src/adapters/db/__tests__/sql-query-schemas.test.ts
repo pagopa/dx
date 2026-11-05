@@ -2,7 +2,16 @@
 
 import { expect, it } from "vitest";
 
+import {
+  copilotAuthoredPrRowSchema,
+  copilotCardsSchema,
+  copilotCoauthorLeadTimeRowSchema,
+  copilotCoverageTrendRowSchema,
+  copilotPrSizeRowSchema,
+  copilotReviewCombinationSchema,
+} from "@/adapters/db/copilot/schemas";
 import { versionDriftSummaryRowSchema } from "@/adapters/db/dx-adoption/schemas";
+import { terraformModuleRowSchema } from "@/adapters/db/dx-team/schemas";
 import {
   dxMemberRowSchema,
   maxDateRowSchema,
@@ -13,7 +22,7 @@ import {
   reviewMetricValueRowSchema,
 } from "@/adapters/db/pull-requests-review/schemas";
 import {
-  prCommentsBySizeRowSchema,
+  prCommentsRowSchema,
   prMetricValueRowSchema,
   slowestPrRowSchema,
 } from "@/adapters/db/pull-requests/schemas";
@@ -35,7 +44,10 @@ import {
 } from "@/adapters/db/tracker/schemas";
 import {
   workflowDeploymentSchema,
+  workflowDurationTrendSchema,
+  workflowFailureTrendSchema,
   workflowSummarySchema,
+  workflowTriggerTypeSchema,
 } from "@/adapters/db/workflows/schemas";
 
 it("coerces shared scalar SQL values", () => {
@@ -246,7 +258,12 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
       workflowSummarySchema,
       {
         avgDurationMinutes: null,
+        failedDurationMinutes: null,
         firstPipelineDate: null,
+        previousAvgDurationMinutes: "12.5",
+        previousFailedDurationMinutes: null,
+        previousTotalDurationMinutes: "30.5",
+        previousTotalPipelines: "8",
         totalDurationMinutes: "34.5",
         totalPipelines: "9",
       },
@@ -254,10 +271,23 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
     ),
   ).toEqual({
     avgDurationMinutes: null,
+    failedDurationMinutes: null,
     firstPipelineDate: null,
+    previousAvgDurationMinutes: 12.5,
+    previousFailedDurationMinutes: null,
+    previousTotalDurationMinutes: 30.5,
+    previousTotalPipelines: 8,
     totalDurationMinutes: 34.5,
     totalPipelines: 9,
   });
+
+  expect(
+    parseSqlRows(
+      workflowTriggerTypeSchema,
+      [{ runCount: "8", triggerType: "Automatic" }],
+      "workflow trigger types",
+    ),
+  ).toEqual([{ runCount: 8, triggerType: "Automatic" }]);
 
   expect(
     parseSqlRow(prMetricValueRowSchema, { value: "12" }, "pr metric"),
@@ -265,11 +295,11 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
 
   expect(
     parseSqlRows(
-      prCommentsBySizeRowSchema,
-      [{ avgCommentsPerAddition: null, week: "2026-03-10" }],
-      "pr comments by size",
+      prCommentsRowSchema,
+      [{ avgComments: "3.5", week: "2026-03-10" }],
+      "pr comments",
     ),
-  ).toEqual([{ avgCommentsPerAddition: null, week: "2026-03-10" }]);
+  ).toEqual([{ avgComments: 3.5, week: "2026-03-10" }]);
 
   expect(
     parseSqlRows(
@@ -292,6 +322,208 @@ it("parses review, workflow, and pull-request dashboard rows", () => {
       mergedAt: "2026-03-07T12:00:00.000Z",
       number: 42,
       title: "Add rollout validation",
+    },
+  ]);
+});
+
+it("parses Copilot dashboard rows", () => {
+  expect(
+    parseSqlRow(
+      copilotCardsSchema,
+      {
+        avgLeadTimeHoursWith: "140.01",
+        avgLeadTimeHoursWithout: "71.87",
+        copilotAuthoredMergedPrs: "5",
+        copilotAuthoredPrs: "10",
+        copilotCoauthoredCommits: "146",
+        copilotReviewedPrs: "476",
+        coauthoredCommitShare: "0.105",
+        coverageShare: "0.3182",
+        mergedPrs: "1496",
+        previousCopilotAuthoredPrs: "0",
+        previousCopilotCoauthoredCommits: "3",
+        previousCopilotReviewedPrs: null,
+        previousCoverageShare: null,
+        previousLeadTimeHoursWith: "120.5",
+        totalTeamCommits: "1406",
+      },
+      "copilot cards",
+    ),
+  ).toEqual({
+    avgLeadTimeHoursWith: 140.01,
+    avgLeadTimeHoursWithout: 71.87,
+    copilotAuthoredMergedPrs: 5,
+    copilotAuthoredPrs: 10,
+    copilotCoauthoredCommits: 146,
+    copilotReviewedPrs: 476,
+    coauthoredCommitShare: 0.105,
+    coverageShare: 0.3182,
+    mergedPrs: 1496,
+    previousCopilotAuthoredPrs: 0,
+    previousCopilotCoauthoredCommits: 3,
+    previousCopilotReviewedPrs: null,
+    previousCoverageShare: null,
+    previousLeadTimeHoursWith: 120.5,
+    totalTeamCommits: 1406,
+  });
+
+  expect(
+    parseSqlRow(
+      copilotReviewCombinationSchema,
+      {
+        copilotAndHuman: "474",
+        copilotOnly: "3",
+        humanOnly: "1257",
+        noReview: "43",
+      },
+      "copilot reviewCombination",
+    ),
+  ).toEqual({
+    copilotAndHuman: 474,
+    copilotOnly: 3,
+    humanOnly: 1257,
+    noReview: 43,
+  });
+
+  expect(
+    parseSqlRow(
+      copilotPrSizeRowSchema,
+      {
+        bucket: "200-499",
+        copilotReviewedPrs: "85",
+        mergedPrs: "186",
+        reviewRate: "45.7",
+      },
+      "copilot prSizeBuckets",
+    ),
+  ).toEqual({
+    bucket: "200-499",
+    copilotReviewedPrs: 85,
+    mergedPrs: 186,
+    reviewRate: 45.7,
+  });
+
+  expect(
+    parseSqlRow(
+      copilotCoauthorLeadTimeRowSchema,
+      { avgLeadTimeDays: "2.25", coauthoredCommits: "2", week: "2026-09-07" },
+      "copilot coauthorLeadTimeTrend",
+    ),
+  ).toEqual({
+    avgLeadTimeDays: 2.25,
+    coauthoredCommits: 2,
+    week: "2026-09-07",
+  });
+
+  expect(
+    parseSqlRow(
+      copilotCoverageTrendRowSchema,
+      { cumulativeWith: "477", cumulativeWithout: "1391", week: "2026-09-14" },
+      "copilot coverageTrend",
+    ),
+  ).toEqual({
+    cumulativeWith: 477,
+    cumulativeWithout: 1391,
+    week: "2026-09-14",
+  });
+
+  expect(
+    parseSqlRow(
+      copilotAuthoredPrRowSchema,
+      {
+        createdAt: new Date("2025-09-23T11:01:18.000Z"),
+        leadTimeDays: "0.25",
+        mergedAt: new Date("2025-09-23T16:59:36.000Z"),
+        number: "906",
+        repository: "pagopa/dx",
+        title: "Remove dx catalog from pnpm-plugin-pagopa",
+      },
+      "copilot recentAuthoredPrs",
+    ),
+  ).toEqual({
+    createdAt: "2025-09-23T11:01:18.000Z",
+    leadTimeDays: 0.25,
+    mergedAt: "2025-09-23T16:59:36.000Z",
+    number: 906,
+    repository: "pagopa/dx",
+    title: "Remove dx catalog from pnpm-plugin-pagopa",
+  });
+});
+
+it("parses workflow trend rows", () => {
+  expect(
+    parseSqlRows(
+      workflowDurationTrendSchema,
+      [
+        {
+          averageDurationMinutes: "12.5",
+          bucket: "2026-10-26",
+          workflowName: "DX Deploy",
+        },
+      ],
+      "workflow duration trend",
+    ),
+  ).toEqual([
+    {
+      averageDurationMinutes: 12.5,
+      bucket: "2026-10-26",
+      workflowName: "DX Deploy",
+    },
+  ]);
+
+  expect(
+    parseSqlRows(
+      workflowFailureTrendSchema,
+      [
+        {
+          bucket: "2026-10-26",
+          failedRuns: "4",
+          workflowName: "Code Review",
+        },
+      ],
+      "workflow failure trend",
+    ),
+  ).toEqual([
+    { bucket: "2026-10-26", failedRuns: 4, workflowName: "Code Review" },
+  ]);
+});
+
+it("parses per-module Terraform usage rows", () => {
+  expect(
+    parseSqlRows(
+      terraformModuleRowSchema,
+      [
+        {
+          module: "pagopa-dx/azure-role-assignments/azurerm",
+          moduleType: "DX",
+          repositoryCount: "24",
+          sources: ["pagopa-dx/azure-role-assignments/azurerm"],
+          usageCount: "31",
+        },
+        {
+          module: "github.com/pagopa/terraform-azurerm-v3//api_management",
+          moduleType: "Non-DX",
+          repositoryCount: "3",
+          sources: ["github.com/pagopa/terraform-azurerm-v3//api_management"],
+          usageCount: "5",
+        },
+      ],
+      "dx-team terraformModules",
+    ),
+  ).toEqual([
+    {
+      module: "pagopa-dx/azure-role-assignments/azurerm",
+      moduleType: "DX",
+      repositoryCount: 24,
+      sources: ["pagopa-dx/azure-role-assignments/azurerm"],
+      usageCount: 31,
+    },
+    {
+      module: "github.com/pagopa/terraform-azurerm-v3//api_management",
+      moduleType: "Non-DX",
+      repositoryCount: 3,
+      sources: ["github.com/pagopa/terraform-azurerm-v3//api_management"],
+      usageCount: 5,
     },
   ]);
 });

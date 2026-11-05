@@ -33,6 +33,9 @@ export const TemplateContextSchema = z.object({
   response_time_threshold: z.number().optional(),
   time_window: z.number().optional(),
   timespan: z.string().optional(),
+  // Human-readable dashboard title, kept unsanitized for display purposes.
+  // Falls back to `name` when not provided.
+  title: z.string().optional(),
 });
 
 export type EndpointConfig = z.infer<typeof EndpointSchema>;

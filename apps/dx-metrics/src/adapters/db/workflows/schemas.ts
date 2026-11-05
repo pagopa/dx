@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 
-import { dashboardParamsSchema } from "../shared/schemas";
+import { dashboardParamsSchema, percentileRowSchema } from "../shared/schemas";
 import {
   nullableSqlNumberSchema,
   nullableSqlTimestampSchema,
@@ -43,9 +43,18 @@ export const workflowFailureSchema = z.object({
   workflowName: z.string().min(1),
 });
 
-export const workflowInfraDurationSchema = z.object({
-  durationMinutes: sqlNumberSchema,
-  runTimestamp: sqlTimestampSchema,
+/** One bucket of the top-2 slowest pipelines' average duration trend. */
+export const workflowDurationTrendSchema = z.object({
+  averageDurationMinutes: sqlNumberSchema,
+  bucket: sqlDateSchema,
+  workflowName: z.string().min(1),
+});
+
+/** One bucket of the top-2 most failing pipelines' failure trend. */
+export const workflowFailureTrendSchema = z.object({
+  bucket: sqlDateSchema,
+  failedRuns: sqlNumberSchema,
+  workflowName: z.string().min(1),
 });
 
 export const workflowRunCountSchema = z.object({
@@ -63,22 +72,49 @@ export const workflowSuccessRatioSchema = z.object({
 
 export const workflowSummarySchema = z.object({
   avgDurationMinutes: nullableSqlNumberSchema,
+  failedDurationMinutes: nullableSqlNumberSchema,
   firstPipelineDate: nullableSqlTimestampSchema,
+  /** Same card metrics over the immediately preceding, equally-sized window. */
+  previousAvgDurationMinutes: nullableSqlNumberSchema,
+  previousFailedDurationMinutes: nullableSqlNumberSchema,
+  previousTotalDurationMinutes: nullableSqlNumberSchema,
+  previousTotalPipelines: nullableSqlNumberSchema,
   totalDurationMinutes: nullableSqlNumberSchema,
   totalPipelines: sqlNumberSchema,
+});
+
+export const workflowSuccessRateStatsSchema = z.object({
+  current: nullableSqlNumberSchema,
+  previous: nullableSqlNumberSchema,
+});
+
+export const workflowTriggerTypeSchema = z.object({
+  runCount: sqlNumberSchema,
+  triggerType: z.string().min(1),
+});
+
+export const workflowTriggerBreakdownSchema = z.object({
+  automatic: sqlNumberSchema,
+  manual: sqlNumberSchema,
+  unknown: sqlNumberSchema,
+  workflowName: z.string().min(1),
 });
 
 export const workflowDashboardSchema = z.object({
   avgDuration: z.array(workflowAvgDurationSchema),
   cumulativeDuration: z.array(workflowCumulativeDurationSchema),
   deployments: z.array(workflowDeploymentSchema),
+  durationPercentiles: percentileRowSchema,
   dxVsNonDx: z.array(workflowDxVsNonDxSchema),
   failures: z.array(workflowFailureSchema),
-  infraApply: z.array(workflowInfraDurationSchema),
-  infraPlan: z.array(workflowInfraDurationSchema),
   runCount: z.array(workflowRunCountSchema),
   successRatio: z.array(workflowSuccessRatioSchema),
+  successRateStats: workflowSuccessRateStatsSchema,
   summary: workflowSummarySchema.optional(),
+  topFailureTrend: z.array(workflowFailureTrendSchema),
+  topSlowestDurationTrend: z.array(workflowDurationTrendSchema),
+  triggerBreakdown: z.array(workflowTriggerBreakdownSchema),
+  triggerTypes: z.array(workflowTriggerTypeSchema),
 });
 
 export type GetWorkflowDashboardInput = z.infer<
@@ -90,9 +126,11 @@ export type WorkflowCumulativeDuration = z.infer<
 >;
 export type WorkflowDashboardResult = z.infer<typeof workflowDashboardSchema>;
 export type WorkflowDeployment = z.infer<typeof workflowDeploymentSchema>;
+export type WorkflowDurationTrend = z.infer<typeof workflowDurationTrendSchema>;
 export type WorkflowDxVsNonDx = z.infer<typeof workflowDxVsNonDxSchema>;
 export type WorkflowFailure = z.infer<typeof workflowFailureSchema>;
-export type WorkflowInfraDuration = z.infer<typeof workflowInfraDurationSchema>;
+export type WorkflowFailureTrend = z.infer<typeof workflowFailureTrendSchema>;
 export type WorkflowRunCount = z.infer<typeof workflowRunCountSchema>;
 export type WorkflowSuccessRatio = z.infer<typeof workflowSuccessRatioSchema>;
 export type WorkflowSummary = z.infer<typeof workflowSummarySchema>;
+export type WorkflowTriggerType = z.infer<typeof workflowTriggerTypeSchema>;

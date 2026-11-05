@@ -1,4 +1,7 @@
-import { $ } from "execa";
+/**
+ * Terraform process adapters for automated commands and source validation.
+ */
+import { $, execa, ExecaError } from "execa";
 
 /**
  * A pre-configured instance of the `execa` library for running Terraform commands.
@@ -27,3 +30,20 @@ export const tf$ = $({
   },
   shell: true,
 });
+
+export const validateTerraformSource = async (
+  content: string,
+  sourcePath: string,
+): Promise<void> => {
+  try {
+    await execa({ input: content })("terraform", ["fmt", "-no-color", "-"]);
+  } catch (cause) {
+    if (!(cause instanceof ExecaError)) {
+      throw cause;
+    }
+    throw new Error(
+      `Cannot validate Terraform HCL in ${sourcePath}; no changes were written\n${cause.message}`,
+      { cause },
+    );
+  }
+};

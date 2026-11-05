@@ -91,7 +91,6 @@ resource "azurerm_subnet" "vpn_snet" {
   resource_group_name  = var.resource_group_name
   virtual_network_name = azurerm_virtual_network.vnet.name
   address_prefixes     = [dx_available_subnet_cidr.vpn_cidr[0].cidr_block]
-  service_endpoints    = []
 }
 
 resource "azurerm_subnet" "dns_forwarder_snet" {

@@ -16,7 +16,6 @@ const execFileAsync = promisify(execFile);
 
 /** Zod schemas for runtime validation */
 const NonEmptyStringSchema = z.string().min(1);
-const ProjectTagsSchema = z.array(z.string());
 const StringArraySchema = z.array(z.string());
 
 const TagEntrySchema = z.object({
@@ -27,7 +26,6 @@ const TagEntrySchema = z.object({
 
 const ProjectMetadataSchema = z.looseObject({
   root: NonEmptyStringSchema.optional(),
-  tags: ProjectTagsSchema.optional(),
 });
 
 export interface TagEntry {
@@ -66,14 +64,18 @@ export function extractTagEntriesFromPRBody(prBody: string): TagEntry[] {
   }
 }
 
-/** Returns all Nx project names in the workspace. */
-export async function getNxProjectNames(): Promise<string[]> {
+/** Returns Nx project names, optionally restricted to projects exposing a target. */
+export async function getNxProjectNames(
+  targetName?: string,
+): Promise<string[]> {
   try {
+    const targetArgs = targetName ? ["--withTarget", targetName] : [];
     const { stdout } = await execFileAsync("npx", [
       "nx",
       "show",
       "projects",
       "--json",
+      ...targetArgs,
     ]);
     // nx may print non-JSON text before the array (e.g. "[Maven Analyzer] ...").
     // Look for '["' (array of strings) or '[]' (empty array) to skip any prefix.
@@ -137,24 +139,6 @@ export async function getRepoInfo(): Promise<{ owner: string; repo: string }> {
 }
 
 /**
- * Checks if an Nx project has the "public" tag.
- * Supports both "public" and "<distribution>:public" formats (e.g. "npm:public", "maven:public").
- * Returns false if project metadata cannot be retrieved or tag is not present.
- */
-export async function isPublicProject(projectName: string): Promise<boolean> {
-  const metadata = await getNxProjectMetadata(projectName);
-  if (!metadata) return false;
-
-  const tags = metadata.tags;
-  if (!tags) return false;
-
-  return tags.some(
-    (tag) =>
-      tag === "public" || (typeof tag === "string" && tag.endsWith(":public")),
-  );
-}
-
-/**
  * Finds the longest project name that is a prefix of the tag, followed by a
  * non-word separator character (e.g. `@`, `/`, `-`).
  * Does NOT assume any specific separator - just checks that the character after
@@ -190,7 +174,7 @@ export function parseTagEntries(raw: unknown): TagEntry[] {
 /**
  * Retrieves Nx project metadata by name.
  * Returns parsed JSON object or null on failure.
- * Used by both isPublicProject and getNxProjectRoot to avoid duplicate nx calls.
+ * Used by getNxProjectRoot to resolve release tag paths.
  */
 async function getNxProjectMetadata(
   projectName: string,

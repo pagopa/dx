@@ -1,3 +1,104 @@
+## 0.2.20 (2026-11-04)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.11
+
+## 0.2.19 (2026-10-08)
+
+### 🩹 Fixes
+
+- Update dependencies ([#2319](https://github.com/pagopa/dx/pull/2319))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.10
+- Updated @pagopa/eslint-config to 7.0.1
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.2.18 (2026-10-01)
+
+### 🩹 Fixes
+
+- Update YAML, Next.js, and Axios dependencies ([#2288](https://github.com/pagopa/dx/pull/2288))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
+## 0.2.17 (2026-09-22)
+
+### 🩹 Fixes
+
+- Correct the MCP Docker image registry namespace. ([#2234](https://github.com/pagopa/dx/pull/2234))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.2.16 (2026-09-22)
+
+### 🩹 Fixes
+
+- Route Docker image releases through inferred Nx publishers, including private ([#2225](https://github.com/pagopa/dx/pull/2225))
+  JavaScript projects that must not be published to npm.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.2.15 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.9
+- Updated @pagopa/eslint-config to 7.0.0
+
+## 0.2.14 (2026-09-01)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2080](https://github.com/pagopa/dx/pull/2080))
+- Upgrade TypeScript dependencies. ([#2080](https://github.com/pagopa/dx/pull/2080))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.8
+- Updated @pagopa/eslint-config to 6.2.3
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.2.13 (2026-08-28)
+
+### 🩹 Fixes
+
+- Align the MCP server container image with the AMD64 Lambda architecture ([#2099](https://github.com/pagopa/dx/pull/2099))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot @Copilot
+
+## 0.2.12 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2015](https://github.com/pagopa/dx/pull/2015))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.7
+- Updated @pagopa/eslint-config to 6.2.2
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.2.10 (2026-07-02)
 
 ### 🩹 Fixes

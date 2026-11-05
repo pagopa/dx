@@ -2,6 +2,7 @@
  * Tests for confirmGitHubRepoCreation in the init command.
  */
 
+import chalk from "chalk";
 import { Command } from "commander";
 import { ExecaError } from "execa";
 import inquirer from "inquirer";
@@ -16,6 +17,11 @@ import type { GitHubService } from "../../../../domain/github.js";
 import type { Payload as MonorepoPayload } from "../../../plop/generators/monorepo/index.js";
 
 const mocks = vi.hoisted(() => {
+  type ExecaTemplate = (
+    strings: TemplateStringsArray,
+    ...values: readonly unknown[]
+  ) => Promise<{ stdout: string }>;
+
   const reportError = vi.fn();
   const reportResult = vi.fn();
   const trackStepMock = vi.fn();
@@ -29,8 +35,12 @@ const mocks = vi.hoisted(() => {
   };
 
   return {
+    assertGitHubPackagesAccess: vi.fn(),
     collectMonorepoPayload: vi.fn(),
     createCommandPresenter: vi.fn(() => presenter),
+    execa$: vi.fn<() => ExecaTemplate>(
+      () => () => Promise.resolve({ stdout: "" }),
+    ),
     getPlopInstance: vi.fn(),
     presenter,
     reportError,
@@ -53,12 +63,20 @@ vi.mock("inquirer");
 vi.mock("ora", () => ({
   oraPromise: <T>(promise: Promise<T>) => promise,
 }));
+vi.mock("execa", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("execa")>();
+
+  return { ...actual, $: mocks.execa$ };
+});
 vi.mock("../../../plop/index.js", () => ({
   collectMonorepoPayload: mocks.collectMonorepoPayload,
   getPlopInstance: mocks.getPlopInstance,
   runMonorepoActions: mocks.runMonorepoActions,
 }));
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
+vi.mock("../../../github/packages.js", () => ({
+  assertGitHubPackagesAccess: mocks.assertGitHubPackagesAccess,
+}));
 vi.mock("../../presenters/index.js", () => ({
   createCommandPresenter: mocks.createCommandPresenter,
   resolveOutputMode: mocks.resolveOutputMode,
@@ -317,11 +335,15 @@ describe("makeInitCommand", () => {
     await runInitCommand("json");
 
     expect(mocks.trackStepMock).toHaveBeenCalledWith(
+      "Checking GitHub Packages access...",
+      expect.any(Function),
+    );
+    expect(mocks.trackStepMock).toHaveBeenCalledWith(
       "Checking Terraform installation...",
       expect.any(Function),
     );
     expect(mocks.trackStepMock).toHaveBeenCalledWith(
-      "Checking Corepack installation...",
+      "Checking mise installation...",
       expect.any(Function),
     );
     expect(mocks.reportResult).toHaveBeenCalledWith(
@@ -329,6 +351,42 @@ describe("makeInitCommand", () => {
         gitHubRepoCreationSkipped: true,
         payload,
       }),
+    );
+  });
+
+  it("prints the getting-started documentation URL without trailing punctuation", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await runInitCommand("text");
+
+    expect(log).toHaveBeenCalledWith(
+      `3. Visit ${chalk.underline("https://dx.pagopa.it/docs/getting-started")} to deploy your first project\n`,
+    );
+  });
+
+  it("initializes the Terraform projects even when the publication is declined", async () => {
+    const commands: string[] = [];
+    mocks.execa$.mockImplementation(
+      () =>
+        (strings: TemplateStringsArray, ...values: readonly unknown[]) => {
+          commands.push(
+            strings.reduce(
+              (fullCommand, string, index) =>
+                `${fullCommand}${string}${values[index] ?? ""}`,
+              "",
+            ),
+          );
+          return Promise.resolve({ stdout: "" });
+        },
+    );
+
+    await runInitCommand("json");
+
+    expect(commands).toEqual([
+      "mise exec -- pnpm exec nx run-many -t init --projects=repository",
+    ]);
+    expect(mocks.reportResult).toHaveBeenCalledWith(
+      expect.objectContaining({ gitHubRepoCreationSkipped: true }),
     );
   });
 

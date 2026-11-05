@@ -1,15 +1,17 @@
 terraform {
+  required_version = ">= 1.17.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.111.0, < 5.0"
+      version = "~> 4.0"
     }
   }
 }
 
 module "azure_function_app" {
   source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 4.1"
+  version = "~> 7.0"
 
   environment         = var.environment
   use_case            = "default"

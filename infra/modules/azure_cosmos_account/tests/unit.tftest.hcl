@@ -1,7 +1,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -9,9 +9,9 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Owner          = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_cosmos_account/tests"
     ManagementTeam = "Developer Experience"
@@ -24,7 +24,7 @@ variables {
   // These will be provided by the mocked setup module call
   resource_group_name                  = "rg-test"
   subnet_pep_id                        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/snet-pep"
-  private_dns_zone_resource_group_name = "dx-d-itn-network-rg-01"
+  private_dns_zone_resource_group_name = "dx-u-itn-network-rg-01"
 
   primary_geo_location = {
     location       = "italynorth"
@@ -67,7 +67,7 @@ mock_provider "azurerm" {}
 override_data {
   target = data.azurerm_private_dns_zone.cosmos
   values = {
-    id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/dx-d-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.documents.azure.com"
+    id = "/subscriptions/12345678-1234-9876-4563-123456789012/resourceGroups/dx-u-itn-network-rg-01/providers/Microsoft.Network/privateDnsZones/privatelink.documents.azure.com"
   }
 }
 
@@ -87,6 +87,11 @@ run "cosmos_account_basics" {
   assert {
     condition     = azurerm_cosmosdb_account.this.automatic_failover_enabled == true
     error_message = "Cosmos DB automatic_failover_enabled must be true"
+  }
+
+  assert {
+    condition     = !azurerm_cosmosdb_account.this.local_authentication_enabled
+    error_message = "Cosmos DB must keep local authentication disabled when using local_authentication_enabled"
   }
 
   assert {

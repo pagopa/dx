@@ -58,12 +58,12 @@ concurrency:
 jobs:
   get-terraform-version:
     name: Get Terraform Version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       terraform_version: ${{ steps.get-version.outputs.terraform_version }}
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Get terraform version from .terraform-version file
         id: get-version
@@ -84,10 +84,11 @@ jobs:
     name: "Terraform Plan"
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
-    # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-24.04' }}
     needs: [get-terraform-version, tf-modules-check]
-    environment: ${{ inputs.environment }}-ci
+    environment:
+      name: ${{ inputs.environment }}-ci
+      deployment: false
     permissions:
       id-token: write
       contents: read
@@ -107,7 +108,7 @@ jobs:
         run: echo "name=terraform-bundle-$(echo "$DIR" | tr '/' '-')" >> "$GITHUB_OUTPUT"
 
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
@@ -156,7 +157,7 @@ jobs:
 
   tf_apply:
     name: "Terraform Apply"
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-24.04' }}
     needs: [get-terraform-version, tf_plan]
     environment: ${{ inputs.environment }}-cd
     permissions:
@@ -169,7 +170,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 

@@ -102,6 +102,12 @@ const sidebars: SidebarsConfig = {
       type: "category",
     },
     {
+      className: categoryClass("savemoney"),
+      items: ["savemoney/index"],
+      label: "SaveMoney",
+      type: "category",
+    },
+    {
       className: categoryClass("typescript"),
       items: [
         { id: "typescript/index", label: "Typescript in DX", type: "doc" },
@@ -258,6 +264,7 @@ const sidebars: SidebarsConfig = {
     {
       className: categoryClass("contributing"),
       items: [
+        "contributing/local-environment-setup",
         "contributing/contributing-to-dx-provider",
         "contributing/contributing-to-dx-terraform-modules",
         "contributing/documenting-dx-terraform-modules",

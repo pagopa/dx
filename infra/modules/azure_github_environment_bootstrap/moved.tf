@@ -77,3 +77,8 @@ moved {
   from = github_actions_environment_secret.opex_prod_ci
   to   = github_actions_environment_secret.opex_ci
 }
+
+moved {
+  from = module.github_runner_dx
+  to   = module.github_runner_dx[0]
+}

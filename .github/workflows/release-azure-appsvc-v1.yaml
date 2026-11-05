@@ -51,7 +51,7 @@ env:
 jobs:
   build:
     name: Build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     # Ensure only one build for the same workspace runs at a time within the same run
     concurrency:
@@ -88,7 +88,7 @@ jobs:
 
       - name: Check out repository
         if: ${{ steps.check-artifact.outputs.exists != 'true' }}
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Build Package
         if: ${{ steps.check-artifact.outputs.exists != 'true' }}
@@ -115,16 +115,18 @@ jobs:
 
       - name: Generate artifact attestation (build provenance)
         if: ${{ steps.check-artifact.outputs.exists != 'true' }}
-        uses: actions/attest-build-provenance@977bb373ede98d70efdf65b84cb5f73e068dcc2a # v3
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: ${{ steps.make-artifact.outputs.artifact-path }}
           show-summary: false
 
   validate:
     name: Validate Web App
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
     if: ${{ !github.event.act }}
-    environment: ${{ inputs.environment }}-ci
+    environment:
+      name: ${{ inputs.environment }}-ci
+      deployment: false
 
     permissions:
       id-token: write
@@ -172,7 +174,7 @@ jobs:
 
   deploy:
     name: ${{ format('Deploy to {0}', needs.validate.outputs.use_staging_slot == 'true' && 'staging' || 'production') }}
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
     needs: [validate, build]
     if: ${{ !github.event.act }}
     environment: ${{ inputs.environment }}-cd
@@ -226,7 +228,7 @@ jobs:
 
   auto_approve_staging_deploy:
     name: Approve Staging Deployment
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [validate]
     # If auto approve fails, the approval can be retried manually
     continue-on-error: true
@@ -277,7 +279,7 @@ jobs:
 
   swap_staging_production:
     name: Swap slots
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
     needs: [validate, deploy]
     if: ${{ !github.event.act && fromJson(needs.validate.outputs.use_staging_slot) }}
     environment: ${{ inputs.environment }}-cd

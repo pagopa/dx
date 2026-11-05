@@ -1,0 +1,113 @@
+{
+  "skill_name": "jira-magister",
+  "evals": [
+    {
+      "id": 0,
+      "name": "slice-dr-into-approved-epics",
+      "prompt": "Using the existing DR/SRS, linked PRD, and completed Use Cases, propose several cohesive Jira Epics that can each be completed in a few two-week sprints. Group related Use Cases by outcome, show the proposed boundaries and traceability, and ask me to approve the grouping before drafting Jira items. Do not call Jira yet.",
+      "expected_output": "A reviewable Epic proposal grouped by cohesive outcome and bounded to a few sprints, with source traceability and an explicit approval gate before Jira mutation.",
+      "expectations": [
+        "Proposes multiple Epic slices when one DR/SRS contains enough scope for more than one few-sprint outcome.",
+        "Groups Use Cases by cohesive outcome and keeps each Epic boundary explicit.",
+        "Shows traceability from each Epic to the parent DR/SRS, PRD/JTBD, and included UC-XX IDs.",
+        "Asks for explicit approval before drafting or mutating Jira items."
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "write-actor-stories-and-technical-tasks",
+      "prompt": "After the Epic grouping is approved, create the Jira backlog projection for UC-01 and UC-02. UC-01 has primary actor \"Cittadino pagatore\" and UC-02 has primary actor \"Operatore di assistenza\". Write actor-facing Stories using exactly \"As [Actor], I want to [action], so that [Gain]\". Keep each Story deliverable in one two-week sprint. Put repository setup and API contract wiring into technical Tasks, and link every item to its Epic and source UC/AC IDs.",
+      "expected_output": "A Jira-ready draft containing canonical actor-facing Stories, sprint-sized scope, technical Tasks for enabling work, and complete hierarchy/traceability.",
+      "expectations": [
+        "Uses the exact actor names supplied by the Use Cases.",
+        "Uses the canonical As/ I want/ so that Story structure.",
+        "Keeps Stories and Tasks scoped to one two-week sprint or flags work that must be split.",
+        "Represents repository setup and API contract wiring as Tasks rather than actor-facing Stories.",
+        "Routes concrete Tasks to the repository from the DR/SRS references.repository link.",
+        "Links each item to its Epic and one or more source UC-XX or AC-XX IDs."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "block-incomplete-readiness",
+      "prompt": "Generate Jira backlog items from a DR/SRS whose PRD has no confirmed owner or KPI, the Use Case has no binary acceptance checks, and RFC-07 is accepted but not propagated into the DR/SRS. Explain what is blocked and identify the gaps. Do not invent values and do not create Jira items.",
+      "expected_output": "The skill blocks backlog creation, reports each readiness gap and its impact, and does not infer requirements or call Jira.",
+      "expectations": [
+        "Blocks or pauses Jira creation because Definition of Ready evidence is incomplete.",
+        "Reports the missing PRD owner and KPI, missing binary acceptance checks, and unpropagated RFC decision.",
+        "Does not invent owners, KPI targets, acceptance criteria, or implementation behavior.",
+        "Does not create Jira items while material blockers remain unresolved."
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "synchronize-existing-backlog",
+      "prompt": "Synchronize the existing Jira projection after UC-02 gains a confirmed retry flow. Preserve the existing Epic, UC-02 link, and unchanged AC-UC-02-* identifiers. Add only the new retry acceptance traceability, avoid duplicate issues, show a proposed diff, and wait for explicit confirmation before updating Jira.",
+      "expected_output": "A non-destructive synchronization proposal that matches existing issues by stable source identifiers, preserves unchanged data, and requires confirmation before updating.",
+      "expectations": [
+        "Matches existing Jira items using stable source links or IDs and does not create duplicates.",
+        "Preserves the existing Epic, UC-02 identity, and unchanged acceptance-check IDs.",
+        "Adds only the new retry behavior and its new traceability.",
+        "Shows a human-readable proposed diff and asks for explicit confirmation before mutation."
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "require-project-context",
+      "prompt": "Create the Jira projection from a Use Case, but do not provide a Jira project key or enough information to identify the target board. Ask only for the missing Jira context and stop without inventing a project or creating issues.",
+      "expected_output": "The skill requests the missing Jira project context and stops without making Jira changes.",
+      "expectations": [
+        "Requests the Jira project key or unambiguous target board.",
+        "Does not guess a project, issue type mapping, or required custom field.",
+        "Does not create or update Jira items before the missing context is supplied."
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "project-open-questions-and-errors",
+      "prompt": "Project a ready DR/SRS and Use Case into Jira. The DR/SRS records open.item-007 with Blocking: yes (which CAdES verification library to use) and open.item-003 with Blocking: no. The repository is linked as references.repository = github.com/pagopa/ced-portal. UC-01 defines AGREEMENT_EXTENSION_INVALID and AGREEMENT_SIGNATURE_INVALID; UC-02 reuses AGREEMENT_SIGNATURE_INVALID for the same condition. Draft the backlog.",
+      "expected_output": "A backlog draft where open.item-007 becomes a spike Task that blocks the dependent Story or Task, open.item-003 is recorded as a non-blocking gap, the error-handling Task for AGREEMENT_SIGNATURE_INVALID is created once and linked to both Use Cases, and concrete Tasks target the linked repository.",
+      "expectations": [
+        "Turns open.item-007 (Blocking: yes) into an independent spike Task and makes the dependent item blocked by it.",
+        "Records open.item-003 (Blocking: no) as a gap with an owner and no blocking edge.",
+        "Creates one error-handling Task for AGREEMENT_SIGNATURE_INVALID, shared by UC-01 and UC-02, instead of duplicating it.",
+        "Routes concrete Tasks to github.com/pagopa/ced-portal from references.repository.",
+        "Adds no Task and no link for a non-blocking question, and does not invent the answer to a spike."
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "create-one-prepared-story",
+      "prompt": "Create a single Jira Story in project PAY for the actor \"Cittadino pagatore\": as that actor, they want to download the payment receipt, so that they can keep proof of payment. The acceptance check is that the receipt downloads as a PDF. Do not propose Epics or a full backlog. Ask for confirmation before creating anything. Source S1 is UC-04 - Download payment receipt (https://example.org/use-cases/download-receipt), with acceptance check AC-04. Intake annotation: \"The user confirmed PDF download; the agent retried the source-reading tool twice.\" Parent Epic: PAY-10 - Payment receipts. Labels: payments, receipts. This self-contained item has no additional required fields; show the complete proposed description for confirmation without calling Jira.",
+      "expected_output": "A single-item mode flow that normalizes one Story to the canonical contract, asks for any missing field, requests confirmation, and never proposes Epic slicing or a whole backlog.",
+      "expectations": [
+        "Uses single-item mode and does not propose Epic slices or a full backlog.",
+        "Writes the canonical As a [Actor], I want to [action], so that [Gain] summary with the exact actor name.",
+        "Keeps the Story scoped to one two-week sprint.",
+        "Asks for missing fields such as the parent Epic, labels, or source IDs instead of inventing them.",
+        "Requests explicit confirmation before creating the item.",
+        "Uses the meaningful UC-04 title/key and link in the proposed issue description, retains UC-04 and AC-04 in source traceability, and excludes chat-confirmation and tool-retry narration rather than citing S1 alone."
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "update-single-item-by-key",
+      "prompt": "Update the existing Jira Story PAY-42 to add the acceptance check that the receipt is also available from the payment history page. Preserve its actor, summary, parent, and existing acceptance checks. Show the proposed diff and wait for explicit confirmation before updating.",
+      "expected_output": "A single-item update that matches the issue by the supplied key, changes only the requested acceptance check, shows a field-level diff, and requires confirmation before mutation.",
+      "expectations": [
+        "Matches the existing item using the supplied Jira key rather than creating a duplicate.",
+        "Adds only the new acceptance check and preserves the actor, summary, parent, and existing acceptance IDs.",
+        "Shows a field-level proposed diff and waits for explicit confirmation before updating.",
+        "Re-fetches and verifies the updated item after mutation."
+      ],
+      "files": []
+    }
+  ]
+}

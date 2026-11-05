@@ -1,3 +1,46 @@
+## 2.0.2 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 2.0.1 (2026-09-08)
+
+### 🩹 Fixes
+
+- Change Tests environment to UAT ([#2123](https://github.com/pagopa/dx/pull/2123))
+
+### ❤️ Thank You
+
+- Krusty93
+- Mario Mupo @mamu0
+
+# 2.0.0 (2026-09-01)
+
+### ⚠️  Breaking Changes
+
+- Drop support for Terraform versions older than 1.14.0. The minimum required Terraform version is now 1.15.0, and it is suggested to use 1.16.0 or later. ([#2086](https://github.com/pagopa/dx/pull/2086))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 1.0.1 (2026-08-26)
+
+### 🩹 Fixes
+
+- Split Terraform unit and contract tests ([#2055](https://github.com/pagopa/dx/pull/2055))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 # 1.0.0 (2026-07-06)
 
 ### ⚠️  Breaking Changes

@@ -33,10 +33,17 @@ variable "resource_group_name" {
 
 variable "repository" {
   type = object({
-    owner = optional(string, "pagopa")
-    name  = string
+    owner    = optional(string, "pagopa")
+    name     = string
+    owner_id = optional(string)
+    repo_id  = optional(string)
   })
-  description = "Details of the GitHub repository to federate with. 'owner' defaults to 'pagopa' if not specified."
+  description = "Details of the GitHub repository to federate with. 'owner' defaults to 'pagopa' if not specified. Set 'owner_id' and 'repo_id' to the immutable numeric GitHub IDs to also federate repositories that emit immutable subject claims (created or renamed after 2026-07-15). Both must be provided together."
+
+  validation {
+    condition     = (var.repository.owner_id == null) == (var.repository.repo_id == null)
+    error_message = "'owner_id' and 'repo_id' must be provided together to federate repositories that use immutable subject claims."
+  }
 }
 
 variable "continuos_integration" {

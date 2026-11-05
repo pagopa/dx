@@ -1,0 +1,97 @@
+provider "azurerm" {
+  features {
+  }
+}
+
+run "setup_tests" {
+  module {
+    source = "./tests/setup"
+  }
+
+  variables {}
+}
+
+run "core_is_correct_plan" {
+  command = plan
+
+  variables {
+    environment = run.setup_tests.environment
+
+    tags = {
+      CostCenter     = "TS720 - DEV EX"
+      CreatedBy      = "Terraform"
+      Environment    = "Uat"
+      Owner          = "DevEx"
+      Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_core_infra/tests"
+      ManagementTeam = "Developer Experience"
+      Test           = "true"
+      TestName       = "Create UAT environment for test"
+    }
+
+    virtual_network_cidr = "10.50.0.0/16"
+
+    nat_enabled = true
+    vpn_enabled = true
+  }
+
+  # Checks some assertions
+  assert {
+    condition     = var.vpn_enabled == true
+    error_message = "VPN have to be enabled becouse cidr_subnet and dnsforwarder_cidr_subnet are set"
+  }
+
+  assert {
+    condition     = local.nat_enabled == true
+    error_message = "NAT Gateway have to be enabled becouse nat_enabled is set and test_enabled not"
+  }
+
+  assert {
+    condition     = module.network.vnet.name == "dx-u-itn-common-vnet-${run.setup_tests.environment.instance_number}"
+    error_message = "VNet name is not correct"
+  }
+
+  assert {
+    condition     = module.network.pep_snet.name == "dx-u-itn-pep-snet-${run.setup_tests.environment.instance_number}"
+    error_message = "Pep subnet name is not correct"
+  }
+
+  assert {
+    condition     = module.nat_gateway[0].nat_gateways[0].name == "dx-u-itn-ng-${run.setup_tests.environment.instance_number}"
+    error_message = "The NAT Gateway name configuration must be correct"
+  }
+
+  assert {
+    condition     = module.dns.private_dns_zones.vault.name == "privatelink.vaultcore.azure.net"
+    error_message = "The Private DNS Zones configuration must be correct"
+  }
+
+  assert {
+    condition     = try(azurerm_resource_group.test[0], "NotTestEnv") == "NotTestEnv"
+    error_message = "This Environment is not a Test Environment"
+  }
+
+  assert {
+    condition     = module.custom_roles.dx_app_ci_resource_group_reader == "${data.azurerm_subscription.current.display_name} DX App CI Resource Groups"
+    error_message = "The App CI merged custom role must include the subscription display name as prefix"
+  }
+
+  assert {
+    condition     = module.custom_roles.dx_infra_ci_subscription_reader == "${data.azurerm_subscription.current.display_name} DX Infra CI Subscription"
+    error_message = "The Infra CI merged custom role must include the subscription display name as prefix"
+  }
+
+  assert {
+    condition     = module.custom_roles.dx_infra_cd_subscription_admin == "${data.azurerm_subscription.current.display_name} DX Infra CD Subscription"
+    error_message = "The Infra CD merged custom role must include the subscription display name as prefix"
+  }
+
+  assert {
+    condition     = module.custom_roles.dx_function_host_storage == "${data.azurerm_subscription.current.display_name} DX Function Host Storage"
+    error_message = "The Function App host storage merged custom role must include the subscription display name as prefix"
+  }
+
+  assert {
+    condition     = module.custom_roles.dx_function_durable_storage == "${data.azurerm_subscription.current.display_name} DX Function Durable Storage"
+    error_message = "The Function App durable storage merged custom role must include the subscription display name as prefix"
+  }
+}

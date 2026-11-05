@@ -20,6 +20,7 @@ const createMockGitHubService = (): GitHubService => ({
 const createMockCloudAccountService = (
   overrides: Partial<CloudAccountService> = {},
 ): CloudAccountService => ({
+  configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
   getTerraformBackend: vi.fn().mockResolvedValue(undefined),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),
@@ -60,7 +61,10 @@ const createMockPayload = (overrides: Partial<Payload> = {}): Payload => ({
       cloudAccount: createMockCloudAccount(),
     },
   },
-  tags: {},
+  tags: {
+    CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+    Owner: "DX Platform",
+  },
   workspace: {
     domain: "test",
   },
@@ -112,7 +116,7 @@ describe("initCloudAccounts", () => {
         repo: "dx",
       },
       expect.any(Object),
-      {},
+      payload.tags,
     );
     expect(initializeMock).toHaveBeenCalledWith(
       cloudAccount2,
@@ -128,7 +132,7 @@ describe("initCloudAccounts", () => {
         repo: "dx",
       },
       expect.any(Object),
-      {},
+      payload.tags,
     );
   });
 
@@ -213,7 +217,7 @@ describe("initCloudAccounts", () => {
         repo: "dx",
       },
       expect.any(Object),
-      {},
+      payload.tags,
     );
   });
 });

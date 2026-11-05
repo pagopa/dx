@@ -1,3 +1,23 @@
+## 0.2.2 (2026-10-23)
+
+### 🚀 Features
+
+- Add output-only GitHub App tokens to csp-login and scope validation credentials to Terraform plans instead of all subsequent steps. Existing callers retain job-wide GITHUB_TOKEN exports by default. ([#2401](https://github.com/pagopa/dx/pull/2401))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.2.1 (2026-10-12)
+
+### 🩹 Fixes
+
+- Fix GitHub App login in csp-login. Bootstrapper Plan and Apply jobs now run in the bootstrapper-<env>-ci and bootstrapper-<env>-cd environments, which hold the GH_APP_* secrets, and pass them at job level. The action no longer writes an empty GITHUB_TOKEN when GitHub login is skipped. ([#2321](https://github.com/pagopa/dx/pull/2321))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.2.0 (2026-06-30)
 
 ### 🚀 Features

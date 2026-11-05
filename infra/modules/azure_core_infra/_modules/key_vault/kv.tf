@@ -1,5 +1,5 @@
-#tfsec:ignore:AVD-AZU-0013
-#tfsec:ignore:AVD-AZU-0016
+#trivy:ignore:AVD-AZU-0013
+#trivy:ignore:AVD-AZU-0016
 resource "azurerm_key_vault" "common" {
   name = provider::dx::resource_name(merge(
     var.naming_config,
@@ -20,7 +20,7 @@ resource "azurerm_key_vault" "common" {
 
   network_acls {
     bypass         = "AzureServices"
-    default_action = "Allow" #tfsec:ignore:AZU020
+    default_action = "Allow" #trivy:ignore:azure-keyvault-specify-network-acl
   }
 
   tags = var.tags

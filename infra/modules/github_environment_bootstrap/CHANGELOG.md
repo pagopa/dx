@@ -1,3 +1,44 @@
+## 3.0.3 (2026-11-04)
+
+### 🩹 Fixes
+
+- Limit environment reviewers to six distinct teams ([#2495](https://github.com/pagopa/dx/pull/2495))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 3.0.2 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 3.0.1 (2026-09-04)
+
+### 🩹 Fixes
+
+- Replace deprecated property about repository security setting ([#2113](https://github.com/pagopa/dx/pull/2113))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+# 3.0.0 (2026-09-01)
+
+### ⚠️  Breaking Changes
+
+- Drop support for Terraform versions older than 1.14.0. The minimum required Terraform version is now 1.15.0, and it is suggested to use 1.16.0 or later. ([#2086](https://github.com/pagopa/dx/pull/2086))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 2.0.1 (2026-07-09)
 
 ### 🩹 Fixes

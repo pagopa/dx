@@ -4,7 +4,7 @@
 
 module "core" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 2.3"
+  version = "~> 6.0"
 
   test_enabled = true
 
@@ -31,7 +31,7 @@ resource "azurerm_subnet" "apim" {
 
 module "apim" {
   source  = "pagopa-dx/azure-api-management/azurerm"
-  version = "~> 2.1"
+  version = "~> 4.0"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
@@ -59,7 +59,7 @@ module "apim" {
 ## Cosmos Account
 module "cosmos" {
   source  = "pagopa-dx/azure-cosmos-account/azurerm"
-  version = "~> 0.3"
+  version = "~> 2.0"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
@@ -95,13 +95,14 @@ resource "azurerm_cosmosdb_sql_database" "db" {
 
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.1"
+  version = "~> 4.0"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
 
-  subnet_pep_id                       = module.core.common_pep_snet.id
-  force_public_network_access_enabled = false
+  subnet_pep_id                        = module.core.common_pep_snet.id
+  private_dns_zone_resource_group_name = module.core.network_resource_group_name
+  force_public_network_access_enabled  = false
 
   use_case = "development"
 

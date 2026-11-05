@@ -1,7 +1,0 @@
-{
-  "name": "azure_federated_identity_with_github",
-  "version": "2.0.0",
-  "private": true,
-  "provider": "azurerm",
-  "description": "Sets up federated identity between Azure and GitHub for authentication"
-}

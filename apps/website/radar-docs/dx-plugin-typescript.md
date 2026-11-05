@@ -9,10 +9,10 @@ and expert agents for TypeScript and JavaScript development.
 
 ## Plugin resources
 
-- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/typescript/.plugin/plugin.json)
-- [MCP server configuration](https://github.com/pagopa/dx/blob/main/plugins/typescript/.mcp.json)
+- [Plugin manifest](https://github.com/pagopa/dx/blob/main/plugins/typescript/plugin.json)
+- [MCP server configuration](https://github.com/pagopa/dx/blob/main/plugins/typescript/mcp.json)
 
 ## Available agents
 
-- [TypeScript MCP Server Expert](https://github.com/pagopa/dx/blob/main/plugins/typescript/agents/typescript-mcp-expert.agent.md)
+- [TypeScript MCP Server Expert](https://github.com/pagopa/dx/blob/main/plugins/typescript/com.github.copilot/agents/typescript-mcp-expert.agent.md)
   — Expert agent for TypeScript MCP server development and integration

@@ -9,6 +9,13 @@ data "terraform_remote_state" "core_azurerm" {
     key                  = var.core_state.key
     subscription_id      = var.core_state.subscription_id
   }
+
+  lifecycle {
+    postcondition {
+      condition     = can(self.outputs.values)
+      error_message = local.missing_values_output_error_message
+    }
+  }
 }
 
 data "terraform_remote_state" "core_s3" {
@@ -20,6 +27,13 @@ data "terraform_remote_state" "core_s3" {
     key            = var.core_state.key
     region         = var.core_state.region
     dynamodb_table = var.core_state.dynamodb_table
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = can(self.outputs.values)
+      error_message = local.missing_values_output_error_message
+    }
   }
 }
 

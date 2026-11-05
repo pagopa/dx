@@ -1,8 +1,10 @@
 terraform {
+  required_version = ">= 1.17.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = ">= 3.111.0, < 5.0"
+      version = "~> 4.0"
     }
     dx = {
       source  = "pagopa-dx/azure"
@@ -56,7 +58,7 @@ data "azurerm_subnet" "pep" {
 output "environment" {
   value = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -67,10 +69,10 @@ output "environment" {
 output "tags" {
   value = {
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/modules/azure_service_bus_namespace/tests"
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     ManagementTeam = "Developer Experience"
   }
 }

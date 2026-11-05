@@ -4,7 +4,7 @@ inputs:
   default_version:
     description: "Default pre-commit-terraform version to use if the `.pre-commit-config.yaml` file is not found."
     required: false
-    default: "v1.96.2"
+    default: "v1.109.0"
 outputs:
   pre_commit_terraform_version:
     description: "The pre-commit-terraform version retrieved or the default."
@@ -52,12 +52,17 @@ runs:
           awk -F'"' '$0=$4'
         )"
 
-        # Query the GitHub Container Registry (GHCR) API for the manifest list digest
+        # Query the GitHub Container Registry (GHCR) API for the image digest.
         DIGEST=$(curl -D - \
          -H "Authorization: Bearer $TOKEN" \
-         -H "Accept: application/vnd.docker.distribution.manifest.list.v2+json" \
+         -H "Accept: application/vnd.oci.image.index.v1+json,application/vnd.docker.distribution.manifest.list.v2+json,application/vnd.oci.image.manifest.v1+json,application/vnd.docker.distribution.manifest.v2+json" \
          "https://ghcr.io/v2/${USER_IMAGE}/manifests/${PRE_COMMIT_VERSION}" 2>&1 \
          | grep -i Docker-Content-Digest | awk '{print $2}' | tr -d $'\r')
+
+        if [ -z "$DIGEST" ]; then
+          echo "Error: Could not retrieve the GHCR digest for ${USER_IMAGE}:${PRE_COMMIT_VERSION}" >&2
+          exit 1
+        fi
 
         DOCKER_IMAGE_TAG="${PRE_COMMIT_VERSION}@${DIGEST}"
 

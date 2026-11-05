@@ -1,0 +1,39 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_name:
+        description: Name of the Nx application project to deploy.
+        type: choice
+        required: true
+        options:
+          - "dx-metrics"
+      version:
+        description: Version of the project to deploy.
+        type: string
+        required: false
+        default: latest
+      environment:
+        description: GitHub environment named app-<env>-cd; <env> is also the self-hosted runner label.
+        type: string
+        required: false
+        default: app-prod-cd
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.project_name }}-${{ inputs.environment }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.project_name }}
+    uses: $/.github/workflows/deploy-v1.yaml
+    permissions:
+      contents: read
+      id-token: write
+      packages: read
+    secrets: inherit
+    with:
+      project_name: ${{ inputs.project_name }}
+      version: ${{ inputs.version }}
+      environment: ${{ inputs.environment }}

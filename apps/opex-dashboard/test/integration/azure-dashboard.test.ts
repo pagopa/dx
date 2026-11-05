@@ -218,7 +218,7 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       const output = builder.produce({});
 
       expect(output).toBeTruthy();
-      expect(output).toContain("Test Dashboard");
+      expect(output).toContain("Test_Dashboard");
       expect(output).toContain("Microsoft.Portal/dashboards");
       expect(output).toContain("West Europe");
     });
@@ -256,7 +256,7 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       const output = builder.produce(overrides);
 
       expect(output).toBeTruthy();
-      expect(output).toContain("Test Dashboard");
+      expect(output).toContain("Test_Dashboard");
       expect(output).toContain("example.com");
     });
 
@@ -287,7 +287,7 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
       const output = builder.produce(overrides);
 
       expect(output).toBeTruthy();
-      expect(output).toContain("Test Dashboard");
+      expect(output).toContain("Test_Dashboard");
       expect(output).toContain("example.com");
     });
 
@@ -313,7 +313,7 @@ describe("Azure Dashboard Integration Tests - Raw Builder", () => {
 
       const output = builder.produce({});
       expect(output).toBeTruthy();
-      expect(output).toContain("API Management Dashboard");
+      expect(output).toContain("API_Management_Dashboard");
     });
   });
 });

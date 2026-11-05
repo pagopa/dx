@@ -1,5 +1,5 @@
 locals {
-  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/package.json")).name, "unknown") })
+  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/project.json")).name, "unknown") })
   naming_config = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
@@ -7,11 +7,20 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  env_name = {
+  base_environment_name = {
     "d" = "dev"
     "u" = "uat"
     "p" = "prod"
   }[var.environment.env_short]
+  env_name          = var.github_environment_prefix_enabled ? "${var.environment.prefix}-${local.base_environment_name}" : local.base_environment_name
+  dx_runner_enabled = startswith(var.environment.prefix, "dx")
+
+  # GitHub emits immutable subject claims that embed the numeric owner and
+  # repository IDs for repositories created or renamed after 2026-07-15, while
+  # older repositories still emit name-based subjects. Credentials are created
+  # for both formats: they are additive, so each repository matches exactly one
+  # of them regardless of when it was created.
+  immutable_repository_slug = "${var.repository.owner}@${var.repository.owner_id != null ? tostring(var.repository.owner_id) : data.github_organization.owner[0].id}/${var.repository.name}@${data.github_repository.this.repo_id}"
 
   resource_group = {
     name = provider::dx::resource_name(merge(local.naming_config, {
@@ -49,7 +58,7 @@ locals {
       resource_type = "managed_identity"
     }))
 
-    # e.g. infra-${local.env_name}-cd
+    # The prefix affects GitHub environment names only, not cloud resource names.
     infra_environment_name      = "infra-${local.env_name}-%s"
     automation_environment_name = "automation-${local.env_name}-%s"
     app_environment_name        = "app-${local.env_name}-%s"
@@ -83,6 +92,13 @@ locals {
   }
 
   infra_ci = {
+    secrets = {
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_ci.client_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
+    }
+  }
+
+  automation_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_ci.client_id
       "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id

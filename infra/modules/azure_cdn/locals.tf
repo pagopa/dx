@@ -1,5 +1,5 @@
 locals {
-  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/package.json")).name, "unknown") })
+  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/project.json")).name, "unknown") })
   naming_config = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
@@ -55,6 +55,50 @@ locals {
   # Azure WAF allows at most 10 match values per match condition, so the country
   # list is split into chunks of 10, each rendered as a separate match_condition.
   waf_eu_geo_match_value_chunks = chunklist(local.waf_eu_geo_match_values, 10)
+
+  compression_content_types = [
+    "application/eot",
+    "application/font",
+    "application/font-sfnt",
+    "application/javascript",
+    "application/json",
+    "application/opentype",
+    "application/otf",
+    "application/pkcs7-mime",
+    "application/truetype",
+    "application/ttf",
+    "application/vnd.ms-fontobject",
+    "application/xhtml+xml",
+    "application/xml",
+    "application/xml+rss",
+    "application/x-font-opentype",
+    "application/x-font-truetype",
+    "application/x-font-ttf",
+    "application/x-httpd-cgi",
+    "application/x-javascript",
+    "application/x-mpegurl",
+    "application/x-opentype",
+    "application/x-otf",
+    "application/x-perl",
+    "application/x-ttf",
+    "font/eot",
+    "font/ttf",
+    "font/otf",
+    "font/opentype",
+    "image/svg+xml",
+    "text/css",
+    "text/csv",
+    "text/html",
+    "text/javascript",
+    "text/js",
+    "text/plain",
+    "text/richtext",
+    "text/tab-separated-values",
+    "text/xml",
+    "text/x-script",
+    "text/x-component",
+    "text/x-java-source",
+  ]
 
   # Construct Key Vault IDs from subscription ID and resource details
   key_vault_ids = {

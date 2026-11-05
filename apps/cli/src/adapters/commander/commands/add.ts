@@ -29,7 +29,7 @@ import {
 import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import {
   environmentSchema,
-  environmentShort,
+  getEnvironmentShort,
 } from "../../../domain/environment.js";
 import { type GitHubService } from "../../../domain/github.js";
 import {
@@ -37,9 +37,14 @@ import {
   isAzureLocation,
   locationShort,
 } from "../../azure/locations.js";
-import { workspaceSchema } from "../../plop/generators/environment/prompts.js";
+import {
+  costCenterSchema,
+  ownerSchema,
+  workspaceSchema,
+} from "../../plop/generators/environment/prompts.js";
 import {
   collectDeploymentEnvironmentPayload,
+  type DeploymentEnvironmentOutputPayload,
   getPlopInstance,
   runDeploymentEnvironmentActions,
 } from "../../plop/index.js";
@@ -93,6 +98,7 @@ const addEnvironmentCommandOptionsSchema = z
       .min(1, "Business unit cannot be empty")
       .optional(),
     clientId: z.string().trim().min(1, "Client id cannot be empty").optional(),
+    costCenter: costCenterSchema.optional(),
     domain: workspaceSchema.shape.domain.optional(),
     installationId: z
       .string()
@@ -106,6 +112,7 @@ const addEnvironmentCommandOptionsSchema = z
       .min(1, "Management team cannot be empty")
       .optional(),
     name: environmentSchema.shape.name.optional(),
+    owner: ownerSchema.optional(),
     prefix: environmentSchema.shape.prefix.optional(),
     privateKeyPath: z
       .string()
@@ -184,7 +191,9 @@ const buildBaseEnvironmentInitialAnswers = (
 
   const tags = {
     ...(options.businessUnit && { BusinessUnit: options.businessUnit }),
+    ...(options.costCenter && { CostCenter: options.costCenter }),
     ...(options.managementTeam && { ManagementTeam: options.managementTeam }),
+    ...(options.owner && { Owner: options.owner }),
   };
 
   return {
@@ -263,7 +272,7 @@ export const authorizeCloudAccounts =
 
     const logger = getLogger(["dx-cli", "add-environment"]);
     const { name, prefix } = envPayload.env;
-    const envShort = environmentShort[name];
+    const envShort = getEnvironmentShort(name);
 
     const requestAll = async (): Promise<AuthorizationResult[]> => {
       const results: AuthorizationResult[] = [];
@@ -279,7 +288,10 @@ export const authorizeCloudAccounts =
 
         const locShort = locationShort[account.defaultLocation];
         const input = requestAuthorizationInputSchema.safeParse({
-          bootstrapIdentityId: `${prefix}-${envShort}-${locShort}-bootstrap-id-01`,
+          bootstrapIdentityIds: {
+            cd: `${prefix}-${envShort}-${locShort}-bootstrap-id-01`,
+            ci: `${prefix}-${envShort}-${locShort}-bootstrap-ci-id-01`,
+          },
           envShort,
           prefix,
           repoName: envPayload.github.repo,
@@ -316,9 +328,39 @@ export const authorizeCloudAccounts =
     );
   };
 
+const toPublicEnvironmentPayload = ({
+  env,
+  github,
+  init,
+  tags,
+  terraform,
+  workspace,
+}: DeploymentEnvironmentOutputPayload) => ({
+  env,
+  github,
+  ...(init && {
+    init: {
+      cloudAccountsToInitialize: init.cloudAccountsToInitialize,
+      terraformBackend: init.terraformBackend,
+    },
+  }),
+  tags,
+  ...(terraform && {
+    terraform: {
+      backend: terraform.backend && {
+        resourceGroupName: terraform.backend.resourceGroupName,
+        storageAccountName: terraform.backend.storageAccountName,
+        subscriptionId: terraform.backend.subscriptionId,
+        type: terraform.backend.type,
+      },
+    },
+  }),
+  workspace,
+});
+
 type AddResult = {
   authorizationPrs: AuthorizationResult[];
-  payload: EnvironmentPayload;
+  payload: ReturnType<typeof toPublicEnvironmentPayload>;
 };
 
 const displaySummary = (result: AddResult) => {
@@ -337,7 +379,7 @@ const displaySummary = (result: AddResult) => {
     }
   }
   console.log(
-    `${step}. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
+    `${step}. Visit ${chalk.underline("https://dx.pagopa.it/docs/getting-started")} to deploy your first project\n`,
   );
 };
 
@@ -368,6 +410,7 @@ const addEnvironmentAction = (
   gitHubService: GitHubService,
   presenter: CommandPresenter,
   initialAnswers: DeploymentEnvironmentInitialAnswers = {},
+  nonInteractive = false,
 ): ResultAsync<AddResult, Error> =>
   runAddEnvironmentPreconditions(presenter)
     .andThen(() =>
@@ -387,6 +430,7 @@ const addEnvironmentAction = (
           gitHubService,
           undefined,
           initialAnswers,
+          nonInteractive,
         ),
         asError("Failed to run the deployment environment generator"),
       ),
@@ -403,7 +447,7 @@ const addEnvironmentAction = (
       authorizeCloudAccounts(authorizationService)(payload).map(
         (authorizationPrs) => ({
           authorizationPrs,
-          payload,
+          payload: toPublicEnvironmentPayload(payload),
         }),
       ),
     );
@@ -419,11 +463,10 @@ export const makeAddCommand = (
       new Command("environment")
         .description("Add a new deployment environment")
         .addOption(
-          new Option("--name <name>", "Environment name").choices([
-            "dev",
-            "uat",
-            "prod",
-          ]),
+          new Option(
+            "--name <name>",
+            "Environment name (dev, uat, prod, or tenant-qualified like cgn-prod)",
+          ),
         )
         .addOption(
           new Option(
@@ -442,12 +485,14 @@ export const makeAddCommand = (
         .addOption(
           new Option("--business-unit <business-unit>", "Business unit tag"),
         )
+        .addOption(new Option("--cost-center <cost-center>", "Cost center tag"))
         .addOption(
           new Option(
             "--management-team <management-team>",
             "Management team tag",
           ),
         )
+        .addOption(new Option("--owner <owner>", "Owner tag"))
         .addOption(
           new Option(
             "-y, --yes",
@@ -508,6 +553,7 @@ export const makeAddCommand = (
                       gitHubService,
                       presenter,
                       initialAnswers,
+                      env.CI,
                     ),
                 ),
               ),

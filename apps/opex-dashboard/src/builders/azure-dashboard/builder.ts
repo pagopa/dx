@@ -12,7 +12,7 @@ import type { TemplateContext } from "../../core/template/context.schema.js";
 
 import { DEFAULTS } from "../../core/config/defaults.js";
 import { FileError } from "../../core/errors/index.js";
-import { normalizeEndpointKeys } from "../../utils/index.js";
+import { normalizeEndpointKeys, sanitizeName } from "../../utils/index.js";
 import { AzDashboardRawBuilder } from "../azure-dashboard-raw/index.js";
 import { Builder } from "../base.js";
 import { generateTerraformAssets } from "./packager.js";
@@ -46,7 +46,8 @@ export class AzDashboardBuilder extends Builder<TemplateContext> {
       event_occurrences: options.eventOccurrences,
       hosts: [],
       location: options.location,
-      name: options.name.replace(/ /g, "_"), // Replace spaces with underscores for Terraform compatibility
+      // Sanitize to satisfy Azure resource naming (alphanumerics, hyphen, underscore)
+      name: sanitizeName(options.name),
       resource_group: options.resourceGroup ?? DEFAULTS.resource_group,
       resource_type: options.resourceType,
       time_window: options.evaluationTimeWindow,
@@ -110,6 +111,9 @@ export class AzDashboardBuilder extends Builder<TemplateContext> {
     const rawProps = this.rawBuilder.props();
     this.properties.hosts = rawProps.hosts;
     this.properties.endpoints = rawProps.endpoints;
+    // Propagate global query config (e.g. response_time_percentile) so that
+    // Terraform alarms use the same settings as the embedded dashboard.
+    this.properties.queries = rawProps.queries;
 
     return super.produce(normalizedValues);
   }

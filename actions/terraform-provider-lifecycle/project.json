@@ -1,0 +1,14 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "terraform-provider-lifecycle",
+  "projectType": "library",
+  "targets": {
+    "test": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bash test.sh",
+        "cwd": "{projectRoot}"
+      }
+    }
+  }
+}

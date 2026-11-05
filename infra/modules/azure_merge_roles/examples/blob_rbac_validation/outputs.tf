@@ -1,9 +1,9 @@
 output "storage_account_name" {
-  value = module.storage_account.name
+  value = azurerm_storage_account.e2e.name
 }
 
 output "storage_account_id" {
-  value = module.storage_account.id
+  value = azurerm_storage_account.e2e.id
 }
 
 output "resource_group_name" {

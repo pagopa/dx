@@ -16,6 +16,25 @@ import { mergePublishOptions, PublishOptionsError } from "./publish-options.ts";
 
 const logger = getPackageLogger(["project"]);
 
+export interface TerraformTestCapabilities {
+  contract: boolean;
+  e2e: boolean;
+  integration: boolean;
+  unit: boolean;
+}
+
+const noTerraformTestCapabilities: TerraformTestCapabilities = {
+  contract: false,
+  e2e: false,
+  integration: false,
+  unit: false,
+};
+
+const getTargetName = (opts: TerraformPluginOptions, targetSuffix: string) =>
+  opts.targetNamePrefix === ""
+    ? targetSuffix
+    : `${opts.targetNamePrefix}-${targetSuffix}`;
+
 // Derives a project name from the root path of a Terraform configuration directory
 // So that names are predictable (no Nx project discovery required) and consistent
 export const getProjectNameFromRoot = (root: string) =>
@@ -35,37 +54,30 @@ export const getProjectNameFromRoot = (root: string) =>
     )
     .join("-");
 
-// Modules contained in "modules" or "_modules" folder are reusable and should be
-// treated as libraries, while other Terraform configurations should be treated
-// as applications (assuming they are meant to be provisioned directly, rather than being
-// consumed by other configurations)
-const getProjectType = (root: string): ProjectType => {
+// Identifies roots that conventionally contain reusable Terraform modules.
+// Discovery additionally requires module.json before inferring these as projects.
+export const isTerraformLibraryRoot = (root: string): boolean => {
   const rootSegments = new Set(root.split(path.sep));
-  return rootSegments.has("modules") || rootSegments.has("_modules")
-    ? "library"
-    : "application";
+  return rootSegments.has("modules") || rootSegments.has("_modules");
 };
+
+const getProjectType = (root: string): ProjectType =>
+  isTerraformLibraryRoot(root) ? "library" : "application";
 
 const defaultEnvironments = ["prod", "uat", "dev"];
 
-const getEnvironmentTag = (
-  root: string,
+const getEnvironmentIndex = (
+  rootSegments: string[],
   additionalEnvironments: readonly string[],
-): string => {
-  const rootSegments = root.split(path.sep);
+): number => {
   const supportedEnvironments = new Set([
     ...defaultEnvironments,
     ...additionalEnvironments,
   ]);
-  const environment = rootSegments.find((segment) =>
+  return rootSegments.findIndex((segment) =>
     supportedEnvironments.has(segment),
   );
-
-  return `env:${environment ?? "prod"}`;
 };
-
-const getRootConfigPath = (root: string, configFileName: string) =>
-  path.relative(root, configFileName) || configFileName;
 
 const getPublishTarget = (
   opts: TerraformPluginOptions,
@@ -75,10 +87,10 @@ const getPublishTarget = (
   try {
     const publishOptions = mergePublishOptions(opts.publish, publishManifest);
     return [
-      opts.publishTargetName,
+      "nx-release-publish",
       {
         cache: false,
-        executor: "@pagopa/nx-terraform-plugin:publish",
+        executor: "@pagopa/nx-terraform:publish",
         options: {
           ...publishOptions,
           githubOwner: publishOptions.github.owner,
@@ -103,29 +115,106 @@ const getPublishTarget = (
   }
 };
 
-const getTargets = (
+const getTestTargets = (
   opts: TerraformPluginOptions,
-  root: string,
-  projectType: ProjectType,
-  hasRootTflintConfig: boolean,
-  publishManifest: ModulePublishManifest | undefined,
-): Record<string, TargetConfiguration> => {
-  const rootTflintConfigPath = getRootConfigPath(root, ".tflint.hcl");
-  const formatArgs = ["-list=true", "-recursive=true"];
+  cwd: string,
+  testCapabilities: TerraformTestCapabilities,
+): [string, TargetConfiguration][] => {
+  const targets: [string, TargetConfiguration][] = [];
+  const initTargetName = getTargetName(opts, "init");
 
-  const cwd = "{projectRoot}";
-  const inputs = ["default", "examples", "tests"];
-
-  // Shared targets for applications and libraries.
-  // To speed up the development loop, frequently used tasks like "validate"
-  // and "console" run independently of "init", while "test" depends on it.
-  const targets: [string, TargetConfiguration][] = [
-    [
-      opts.initTargetName,
+  if (testCapabilities.unit || testCapabilities.contract) {
+    targets.push([
+      getTargetName(opts, "test"),
       {
         cache: true,
+        command: `terraform test`,
+        dependsOn: [initTargetName],
+        inputs: [
+          "default",
+          "{projectRoot}/tests/unit.tftest.hcl",
+          "{projectRoot}/tests/contract.tftest.hcl",
+        ],
+        options: {
+          args: [
+            "-filter='tests/unit.tftest.hcl'",
+            "-filter='tests/contract.tftest.hcl'",
+          ],
+          cwd,
+        },
+      },
+    ]);
+  }
+  if (testCapabilities.integration) {
+    targets.push([
+      getTargetName(opts, "test-integration"),
+      {
+        cache: true,
+        command: `terraform test`,
+        dependsOn: [initTargetName],
+        inputs: [
+          "default",
+          "{projectRoot}/tests/integration.tftest.hcl",
+          "{projectRoot}/tests/setup/**/*.{tf,tfvars}",
+        ],
+        options: {
+          args: ["-filter='tests/integration.tftest.hcl'"],
+          cwd,
+        },
+      },
+    ]);
+  }
+  if (testCapabilities.e2e) {
+    targets.push([
+      getTargetName(opts, "e2e"),
+      {
+        cache: true,
+        command: `go test -v -timeout 1h ./tests`,
+        dependsOn: [initTargetName],
+        inputs: [
+          "default",
+          "{projectRoot}/tests/**/*",
+          "{projectRoot}/examples/**/*",
+        ],
+        options: { cwd },
+      },
+    ]);
+  }
+
+  return targets;
+};
+
+const getInitTarget = (
+  opts: TerraformPluginOptions,
+  projectType: ProjectType,
+  initTargetName: string,
+  cwd: string,
+): [string, TargetConfiguration] => [
+  initTargetName,
+  projectType === "application"
+    ? {
+        cache: false,
+        configurations: {
+          ci: {
+            frozenLockfile: true,
+          },
+        },
+        executor: "@pagopa/nx-terraform:init",
+        inputs: ["default"],
+        options: {
+          platforms: opts.initTarget.platforms,
+          projectRoot: "{projectRoot}",
+        },
+        outputs: [
+          "{projectRoot}/.terraform",
+          "{projectRoot}/.terraform.lock.hcl",
+          "{projectRoot}/tfmodules.lock.json",
+        ],
+      }
+    : {
+        cache: true,
         command: `terraform init`,
-        inputs,
+        inputs: ["default"],
         options: {
           cwd,
         },
@@ -134,9 +223,52 @@ const getTargets = (
           "{projectRoot}/.terraform.lock.hcl",
         ],
       },
+];
+
+const getTrivyTarget = (
+  workspaceRoot: string,
+  root: string,
+): TargetConfiguration => ({
+  cache: true,
+  command: "trivy config",
+  inputs: [
+    "{projectRoot}/**/*.{tf,tfvars}",
+    "{workspaceRoot}/trivy.yml",
+    "{workspaceRoot}/.trivyignore",
+    "{workspaceRoot}/.trivy/checks/terraform/**/*",
+  ],
+  options: {
+    args: [
+      // Trivy updates the checks bundle cache while scanning, so concurrent
+      // projects must not share the same cache directory.
+      "--cache-dir",
+      path.join(workspaceRoot, "trivy-cache", getProjectNameFromRoot(root)),
+      "--config",
+      path.resolve(workspaceRoot, "trivy.yml"),
+      root,
     ],
+    cwd: "{workspaceRoot}",
+  },
+});
+
+const getTargets = (
+  opts: TerraformPluginOptions,
+  workspaceRoot: string,
+  root: string,
+  projectType: ProjectType,
+  hasRootTflintConfig: boolean,
+  publishManifest: ModulePublishManifest | undefined,
+  testCapabilities: TerraformTestCapabilities,
+): Record<string, TargetConfiguration> => {
+  const formatArgs = ["-list=true", "-recursive=true"];
+
+  const cwd = "{projectRoot}";
+  const initTargetName = getTargetName(opts, "init");
+
+  const targets: [string, TargetConfiguration][] = [
+    getInitTarget(opts, projectType, initTargetName, cwd),
     [
-      opts.formatTargetName,
+      getTargetName(opts, "fmt"),
       {
         cache: true,
         command: `terraform fmt`,
@@ -145,53 +277,52 @@ const getTargets = (
             args: [...formatArgs, "-check=true"],
           },
         },
-        inputs,
+        inputs: ["default"],
         options: {
           args: [...formatArgs, "-write=true"],
           cwd,
         },
       },
     ],
-    [
-      opts.testTargetName,
-      {
-        cache: true,
-        command: `terraform test`,
-        dependsOn: [opts.initTargetName],
-        inputs: ["default", "tests"],
-        options: {
-          cwd,
-        },
-      },
-    ],
-    [
-      opts.validateTargetName,
-      {
-        cache: true,
-        command: `terraform validate`,
-        inputs,
-        options: {
-          cwd,
-        },
-      },
-    ],
   ];
+
+  targets.push(...getTestTargets(opts, cwd, testCapabilities));
+
+  targets.push([
+    getTargetName(opts, "validate"),
+    {
+      cache: true,
+      command: `terraform validate`,
+      dependsOn: [initTargetName],
+      inputs: ["default", "examples"],
+      options: {
+        cwd,
+      },
+    },
+  ]);
+
+  targets.push([
+    getTargetName(opts, "trivy"),
+    getTrivyTarget(workspaceRoot, root),
+  ]);
 
   if (hasRootTflintConfig) {
     targets.push([
-      opts.lintTargetName,
+      getTargetName(opts, "lint"),
       {
         cache: true,
         command: `tflint`,
-        inputs: [...inputs, "{workspaceRoot}/.tflint.hcl"],
+        inputs: [
+          "default",
+          "examples",
+          "{workspaceRoot}/.tflint.hcl",
+          { env: "TFLINT_PLUGIN_DIR" },
+        ],
         options: {
-          args: [
-            "--disable-rule=terraform_required_version",
-            "--disable-rule=terraform_required_providers",
-            "--config",
-            rootTflintConfigPath,
-          ],
           cwd,
+          env: {
+            TFLINT_CONFIG_FILE: path.resolve(workspaceRoot, ".tflint.hcl"),
+          },
         },
       },
     ]);
@@ -199,23 +330,22 @@ const getTargets = (
 
   if (projectType === "library") {
     targets.push([
-      opts.docsTargetName,
+      getTargetName(opts, "docs"),
       {
         cache: true,
-        command: `terraform-docs markdown table`,
+        command: `terraform-docs markdown table .`,
+        configurations: {
+          ci: {
+            "output-check": true,
+          },
+        },
         inputs: ["default", "{projectRoot}/README.md"],
         options: {
-          args: [
-            "--output-file",
-            "README.md",
-            "--output-mode",
-            "inject",
-            "--hide",
-            "providers",
-            "--lockfile=false",
-            ".",
-          ],
           cwd,
+          hide: "providers",
+          lockfile: false,
+          "output-file": "README.md",
+          "output-mode": "inject",
         },
         outputs: ["{projectRoot}/README.md"],
       },
@@ -231,7 +361,7 @@ const getTargets = (
 
   targets.push(
     [
-      opts.consoleTargetName,
+      getTargetName(opts, "console"),
       {
         cache: false,
         command: `terraform console`,
@@ -242,11 +372,11 @@ const getTargets = (
       },
     ],
     [
-      opts.outputTargetName,
+      getTargetName(opts, "output"),
       {
         cache: false,
         command: `terraform output`,
-        dependsOn: [opts.initTargetName],
+        dependsOn: [initTargetName],
         options: {
           cwd,
         },
@@ -257,7 +387,7 @@ const getTargets = (
   if (projectType === "application") {
     targets.push(
       [
-        opts.planTargetName,
+        getTargetName(opts, "plan"),
         {
           cache: false,
           configurations: {
@@ -267,8 +397,8 @@ const getTargets = (
               verbose: false,
             },
           },
-          dependsOn: [opts.initTargetName],
-          executor: "@pagopa/nx-terraform-plugin:plan",
+          dependsOn: [initTargetName],
+          executor: "@pagopa/nx-terraform:plan",
           options: {
             projectRoot: "{projectRoot}",
             refresh: true,
@@ -278,14 +408,13 @@ const getTargets = (
         },
       ],
       [
-        opts.applyTargetName,
+        getTargetName(opts, "apply"),
         {
           cache: false,
-          command: `terraform apply`,
-          dependsOn: [opts.initTargetName],
+          dependsOn: [initTargetName],
+          executor: "@pagopa/nx-terraform:apply",
           options: {
-            cwd,
-            tty: true,
+            projectRoot: "{projectRoot}",
           },
         },
       ],
@@ -297,23 +426,40 @@ const getTargets = (
 
 export const getProject = (
   opts: TerraformPluginOptions,
+  workspaceRoot: string,
   root: string,
   hasRootTflintConfig = false,
   publishManifest: ModulePublishManifest | undefined = undefined,
+  testCapabilities: TerraformTestCapabilities = noTerraformTestCapabilities,
 ): ProjectConfiguration => {
   const projectType = getProjectType(root);
+  const rootSegments = root.split(path.sep);
+  const environmentIndex = getEnvironmentIndex(
+    rootSegments,
+    opts.additionalEnvironments,
+  );
+  const sharedModulesRoot =
+    environmentIndex < 0
+      ? path.dirname(root)
+      : rootSegments.slice(0, environmentIndex).join(path.sep);
+  const sharedModulesInput = path
+    .join(sharedModulesRoot, "_modules", "**", "*")
+    .split(path.sep)
+    .join("/");
   const isPublishableLibrary =
     projectType === "library" && publishManifest !== undefined;
   const targets = getTargets(
     opts,
+    workspaceRoot,
     root,
     projectType,
     hasRootTflintConfig,
     publishManifest,
+    testCapabilities,
   );
   const environmentTag =
     projectType === "application"
-      ? getEnvironmentTag(root, opts.additionalEnvironments)
+      ? `env:${rootSegments[environmentIndex] ?? "prod"}`
       : undefined;
   const tags = ["terraform", ...(environmentTag ? [environmentTag] : [])];
   if (isPublishableLibrary) {
@@ -323,12 +469,13 @@ export const getProject = (
   const config: ProjectConfiguration = {
     name: getProjectNameFromRoot(root),
     namedInputs: {
-      default: ["{projectRoot}/*.{tf,tfvars}"],
-      examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
-      tests: [
-        "{projectRoot}/tests/**/*.{tf,tfvars}",
-        "{projectRoot}/tests/**/*.tftest.hcl",
+      default: [
+        "{projectRoot}/*.{tf,tfvars}",
+        ...(projectType === "application"
+          ? [`{workspaceRoot}/${sharedModulesInput}`]
+          : []),
       ],
+      examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
     },
     projectType,
     root,
@@ -345,7 +492,7 @@ export const getProject = (
       version: {
         currentVersionResolver: "disk",
         manifestRootsToUpdate: ["{projectRoot}"],
-        versionActions: "@pagopa/nx-terraform-plugin/release/version-actions",
+        versionActions: "@pagopa/nx-terraform/release/version-actions",
       },
     };
   }

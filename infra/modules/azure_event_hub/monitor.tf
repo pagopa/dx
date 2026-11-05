@@ -7,7 +7,7 @@ resource "azurerm_monitor_metric_alert" "event_hub_health_check" {
   scopes              = [azurerm_eventhub_namespace.this.id]
   frequency           = each.value.frequency
   window_size         = each.value.window_size
-  auto_mitigate       = false
+  auto_mitigate       = each.value.auto_mitigate
   enabled             = true
 
   dynamic "action" {

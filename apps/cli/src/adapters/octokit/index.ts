@@ -168,7 +168,12 @@ export class OctokitGitHubService implements GitHubService {
         owner,
         repo: name,
       });
-      return new Repository(data.name, data.owner.login);
+      return new Repository(
+        data.name,
+        data.owner.login,
+        data.id,
+        data.owner.id,
+      );
     } catch (error) {
       if (error instanceof RequestError && error.status === 404) {
         throw new RepositoryNotFoundError(owner, name);

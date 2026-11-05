@@ -11,6 +11,7 @@ terraform {
     storage_account_name = "dxditntfstatest01"
     container_name       = "terraform-state"
     key                  = "dx.policy.dev.italynorth.tfstate"
+    use_azuread_auth     = true
   }
 }
 

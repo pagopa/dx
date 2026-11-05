@@ -1,3 +1,220 @@
+## 0.5.28 (2026-11-03)
+
+### 🚀 Features
+
+- Scope dashboard data to signed magic links ([#2466](https://github.com/pagopa/dx/pull/2466))
+
+  The portal no longer serves every repository to every visitor. A visitor's scope
+  comes from the magic link they open, and every dashboard endpoint filters its
+  data to that scope. The full portfolio is a scope of its own, carried by its own
+  link.
+
+  Repositories are grouped by static tags in the shared configuration, so the link
+  carries tags rather than a frozen repository list and keeps working when a
+  repository is added to a tag.
+
+  - Mint links with `pnpm --filter dx-metrics scope:link`.
+  - Dashboard responses are now `private, no-store`: the payload depends on the
+    caller's cookie, so no shared cache may store it.
+  - Deployments need `DX_METRICS_SCOPE_SECRET` before the portal serves any data:
+    without it, no link can be verified.
+
+  Breaking: `DxMetricsConfig.repositories` is now a list of objects with `name` and
+  `tags`, not a list of strings. Consumers that only need the names can use
+  `defaultImportFileConfig.repositories`.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.14
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.27 (2026-11-02)
+
+### 🩹 Fixes
+
+- Move nx.release metadata to package.json ([#2461](https://github.com/pagopa/dx/pull/2461))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.5.26 (2026-11-02)
+
+### 🚀 Features
+
+- Add custom date ranges, per-pipeline trend charts and per-module Terraform usage to DX Metrics ([#2457](https://github.com/pagopa/dx/pull/2457))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.13
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.25 (2026-10-08)
+
+### 🩹 Fixes
+
+- Update dependencies ([#2319](https://github.com/pagopa/dx/pull/2319))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.12
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.24 (2026-10-01)
+
+### 🩹 Fixes
+
+- Update YAML, Next.js, and Axios dependencies ([#2288](https://github.com/pagopa/dx/pull/2288))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
+## 0.5.23 (2026-09-25)
+
+### 🚀 Features
+
+- Add a Copilot dashboard to the DX Metrics portal. It reports Copilot code review adoption and how it pairs with human review, the Copilot review rate by pull-request size, pull requests opened by the Copilot coding agent, and Copilot co-authored commits, with deterministic insights and a reusable dual-axis bar-and-line chart. ([#2272](https://github.com/pagopa/dx/pull/2272))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.22 (2026-09-24)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.11
+
+## 0.5.21 (2026-09-24)
+
+### 🚀 Features
+
+- Add multi-repository selection to the metrics dashboards ([#2262](https://github.com/pagopa/dx/pull/2262))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.10
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.20 (2026-09-23)
+
+### 🩹 Fixes
+
+- Fix the Workflows dashboard failing to load after the DX pipeline classification change ([#2258](https://github.com/pagopa/dx/pull/2258))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.19 (2026-09-23)
+
+### 🩹 Fixes
+
+- Fix the DX Team bus-factor insight to count only commits on non-DX repositories ([#2247](https://github.com/pagopa/dx/pull/2247))
+- Classify the DX repository's own workflows as DX pipelines in the Workflows dashboard ([#2252](https://github.com/pagopa/dx/pull/2252))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.18 (2026-09-23)
+
+### 🚀 Features
+
+- Add a dark/light theme toggle and light mode to the metrics dashboards ([#2245](https://github.com/pagopa/dx/pull/2245))
+
+### ❤️ Thank You
+
+- Copilot Autofix powered by AI @github-advanced-security[bot]
+- Danilo Spinelli @gunzip
+
+## 0.5.17 (2026-09-22)
+
+### 🩹 Fixes
+
+- Add preceding-window deltas to every summary card, a stale open-PR backlog reading with links to the pull requests, merge-ownership charts, and grouped sidebar navigation. ([#2230](https://github.com/pagopa/dx/pull/2230))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.9
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.16 (2026-09-16)
+
+### 🚀 Features
+
+- Rework DX Metrics for trustworthiness and readability: ([#2205](https://github.com/pagopa/dx/pull/2205))
+
+  - `dx-metrics`: deterministic insights (sample size, confidence, severity) on every dashboard, aggregated into a single Executive Summary landing page served by one server-side endpoint; a cross-repository Benchmark dashboard; human-only review timing and equal-window lead-time comparison; ranked bar charts with units, locale-aware dates, data freshness, and loading skeletons.
+  - `dx-metrics-import`: capture an append-only techradar adoption snapshot after each import run.
+  - `@pagopa/dx-metrics-core`: add the `tech_radar_snapshots` table and new indexes on pull requests, workflow runs, commits, and reviews. Apply with `drizzle-kit push`.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.8
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.15 (2026-09-09)
+
+### 🩹 Fixes
+
+- Update `next` from 16.3.2 to 16.3.4 (`^16.3.3`) to pick up the security fixes ([#2177](https://github.com/pagopa/dx/pull/2177))
+  released in 16.3.3 (GHSA-p293-qw3h-jr36, GHSA-2xp9-vwfh-vxw4), together with the
+  patched transitive deps it brings (`sharp` 0.35.4, `nanoid` 3.3.18, `js-yaml`
+  3.15.2).
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.14 (2026-09-01)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2080](https://github.com/pagopa/dx/pull/2080))
+- Upgrade TypeScript dependencies. ([#2080](https://github.com/pagopa/dx/pull/2080))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.7
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.5.13 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2015](https://github.com/pagopa/dx/pull/2015))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.6
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
 ## 0.5.11 (2026-07-02)
 
 ### 🩹 Fixes

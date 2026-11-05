@@ -18,14 +18,17 @@ import type { CloudAccountService } from "../../../../../domain/cloud-account.js
 import type { GitHubService } from "../../../../../domain/github.js";
 import type { TerraformBackend } from "../../../../../domain/remote-backend.js";
 
+import setConfigureGitHubEnvironmentsAction from "../../../actions/configure-github-environments.js";
 import setGetTerraformBackend from "../../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../../actions/init-cloud-accounts.js";
 import setProvisionTerraformBackendAction from "../../../actions/provision-terraform-backend.js";
+import setSyncNxAdditionalEnvironments from "../../../actions/sync-nx-additional-environments.js";
 import setSyncRepositoryEnvironmentsAction from "../../../actions/sync-repository-environments.js";
 import setEnvShortHelper from "../../../helpers/env-short.js";
 import setEqHelper from "../../../helpers/eq.js";
 import setResourcePrefixHelper from "../../../helpers/resource-prefix.js";
 import setTerraformStateKeyHelper from "../../../helpers/terraform-state-key.js";
+import setTerraformStringHelper from "../../../helpers/terraform-string.js";
 import { resolveTemplatesPath } from "../../../templates-path.js";
 import {
   cleanupTempDir,
@@ -34,14 +37,13 @@ import {
 import getActions from "../actions.js";
 import { Payload, PLOP_ENVIRONMENT_GENERATOR_NAME } from "../index.js";
 
-vi.mock("../../../../terraform/fmt.js", () => ({
-  formatTerraformCode: vi.fn((content: string) => content),
-}));
+const terraformValidator = vi.hoisted(() => vi.fn(async () => undefined));
+
 vi.mock("../../../../execa/terraform.js", () => {
   const terraformCommand = vi.fn(async () => undefined);
   const tf$ = vi.fn(() => terraformCommand);
 
-  return { tf$ };
+  return { tf$, validateTerraformSource: terraformValidator };
 });
 
 /**
@@ -53,14 +55,38 @@ const registerEnvironmentSetup = (
   mockCloudAccountService: CloudAccountService,
   mockGitHubService: GitHubService,
 ) => {
+  plop.setActionType(
+    "setupCloudTools",
+    async () => "Cloud CLI tools configured",
+  );
+  // The formatting pass shells out to the repository Nx tasks: it is covered
+  // by its own test, and stubbed here to keep the generated files untouched.
+  plop.setActionType(
+    "formatGeneratedCode",
+    async () => "Generated files formatted",
+  );
+  // The Terraform initialization shells out to the repository Nx tasks too:
+  // it is covered by its own test, and stubbed here to keep the generation
+  // offline.
+  plop.setActionType(
+    "initTerraformProjects",
+    async () => "Generated Terraform projects initialized",
+  );
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
   setTerraformStateKeyHelper(plop);
+  setTerraformStringHelper(plop);
 
   setGetTerraformBackend(plop, mockCloudAccountService);
   setProvisionTerraformBackendAction(plop, mockCloudAccountService);
   setInitCloudAccountsAction(plop, mockCloudAccountService, mockGitHubService);
+  setConfigureGitHubEnvironmentsAction(
+    plop,
+    mockCloudAccountService,
+    mockGitHubService,
+  );
+  setSyncNxAdditionalEnvironments(plop);
   setSyncRepositoryEnvironmentsAction(plop);
 };
 
@@ -75,6 +101,7 @@ const createMockCloudAccountService = (
   backend: TerraformBackend,
   isInitialized: boolean,
 ): CloudAccountService => ({
+  configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
   getTerraformBackend: vi.fn().mockResolvedValue(backend),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),
@@ -95,11 +122,13 @@ const runEnvironmentGenerator = async ({
   mockCloudAccountService,
   mockGitHubService,
   payload,
+  prepareRepository,
   tmpDirPrefix,
 }: {
   mockCloudAccountService: CloudAccountService;
   mockGitHubService: GitHubService;
   payload: Payload;
+  prepareRepository?: (tmpDir: string) => Promise<void>;
   tmpDirPrefix: string;
 }): Promise<{
   originalCwd: string;
@@ -129,6 +158,8 @@ const runEnvironmentGenerator = async ({
     ].join("\n"),
   );
 
+  await prepareRepository?.(tmpDir);
+
   const plop = await nodePlop();
   registerEnvironmentSetup(plop, mockCloudAccountService, mockGitHubService);
 
@@ -152,36 +183,42 @@ const runEnvironmentGenerator = async ({
   return { originalCwd, tmpDir };
 };
 
+const payload: Payload = {
+  env: {
+    cloudAccounts: [
+      {
+        csp: "azure",
+        defaultLocation: "italynorth",
+        displayName: "DEV-DX",
+        id: "sub-dev-123",
+      },
+    ],
+    name: "dev",
+    prefix: "dx",
+  },
+  github: {
+    owner: "pagopa",
+    repo: "my-project",
+  },
+  runnerAppCredentials: {
+    clientId: "test-app-client-id",
+    id: "test-app-id",
+    installationId: "test-installation-id",
+    key: "test-private-key",
+  },
+  tags: {
+    CostCenter: "TS330 - PDND & INTEROPERABILITA'",
+    Owner: "DX Platform",
+  },
+  workspace: {
+    domain: "payments",
+  },
+};
+
 describe("environment generator — file generation (no init)", () => {
   let tmpDir: string;
   let originalCwd: string;
 
-  const payload: Payload = {
-    env: {
-      cloudAccounts: [
-        {
-          csp: "azure",
-          defaultLocation: "italynorth",
-          displayName: "DEV-DX",
-          id: "sub-dev-123",
-        },
-      ],
-      name: "dev",
-      prefix: "dx",
-    },
-    github: {
-      owner: "pagopa",
-      repo: "my-project",
-    },
-    tags: {
-      BusinessUnit: "Platform",
-      CostCenter: "TS000",
-      ManagementTeam: "Engineering",
-    },
-    workspace: {
-      domain: "payments",
-    },
-  };
   const mockCloudAccountService = createMockCloudAccountService(
     mockTerraformBackend,
     true,
@@ -213,6 +250,89 @@ describe("environment generator — file generation (no init)", () => {
     ]);
 
     expect(generatedFiles).toMatchSnapshot();
+    const generatedContent = Object.values(generatedFiles).join("\n");
+    expect(generatedContent).not.toContain("test-private-key");
+    expect(generatedContent).not.toContain("github_environment_prefix_enabled");
+  });
+
+  it("uses the selected GitHub organization in generated bootstrapper files", async () => {
+    const customPayload: Payload = {
+      ...payload,
+      github: {
+        ...payload.github,
+        owner: "example-org",
+      },
+    };
+    const generatedEnvironment = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload: customPayload,
+      tmpDirPrefix: "dx-cli-env-custom-owner-test-",
+    });
+
+    try {
+      const generatedFiles = await readGeneratedFiles(
+        generatedEnvironment.tmpDir,
+        [
+          `infra/bootstrapper/${customPayload.env.name}/providers.tf`,
+          `infra/bootstrapper/${customPayload.env.name}/main.tf`,
+        ],
+      );
+      const providersFile =
+        generatedFiles[
+          `infra/bootstrapper/${customPayload.env.name}/providers.tf`
+        ];
+      const mainFile =
+        generatedFiles[`infra/bootstrapper/${customPayload.env.name}/main.tf`];
+
+      expect(providersFile).toContain('owner = "example-org"');
+      expect(mainFile).toContain('owner    = "example-org"');
+      expect(mainFile).toContain(
+        "https://github.com/example-org/my-project/blob/main/infra/bootstrapper/dev",
+      );
+      expect(mainFile).not.toContain('owner    = "pagopa"');
+    } finally {
+      process.chdir(generatedEnvironment.originalCwd);
+      await cleanupTempDir(generatedEnvironment.tmpDir);
+    }
+  });
+
+  it("passes the selected GitHub owner ID into generated bootstrapper Terraform", async () => {
+    const userPayload: Payload = {
+      ...payload,
+      github: {
+        ...payload.github,
+        owner: "example-user",
+        ownerId: 54321,
+      },
+    };
+    const generatedEnvironment = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload: userPayload,
+      tmpDirPrefix: "dx-cli-env-user-owner-test-",
+    });
+
+    try {
+      const generatedFiles = await readGeneratedFiles(
+        generatedEnvironment.tmpDir,
+        [`infra/bootstrapper/${userPayload.env.name}/main.tf`],
+      );
+      const mainFile =
+        generatedFiles[`infra/bootstrapper/${userPayload.env.name}/main.tf`];
+
+      expect(mainFile).toContain('owner    = "example-user"');
+      expect(mainFile).toContain("owner_id = 54321");
+    } finally {
+      process.chdir(generatedEnvironment.originalCwd);
+      await cleanupTempDir(generatedEnvironment.tmpDir);
+    }
   });
 
   it("skips init-only side effects and core files when init is absent", async () => {
@@ -226,6 +346,77 @@ describe("environment generator — file generation (no init)", () => {
       mockCloudAccountService.provisionTerraformBackend,
     ).not.toHaveBeenCalled();
     await expect(fs.stat(corePath)).rejects.toThrow();
+  });
+});
+
+describe("environment generator — tenant-qualified bootstrap configuration", () => {
+  it("enables prefixing and keeps tenant runner labels in both Azure branches", async () => {
+    const tenantPayload: Payload = {
+      ...payload,
+      env: {
+        ...payload.env,
+        cloudAccounts: [
+          ...payload.env.cloudAccounts,
+          {
+            csp: "azure",
+            defaultLocation: "westeurope",
+            displayName: "PROD-IO",
+            id: "sub-prod-123",
+          },
+        ],
+        name: "ced-prod",
+        prefix: "ced",
+      },
+    };
+    const generatedEnvironment = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload: tenantPayload,
+      tmpDirPrefix: "dx-cli-env-tenant-test-",
+    });
+
+    try {
+      const generatedFiles = await readGeneratedFiles(
+        generatedEnvironment.tmpDir,
+        [`infra/bootstrapper/${tenantPayload.env.name}/main.tf`],
+      );
+      const bootstrapperFile =
+        generatedFiles[`infra/bootstrapper/${tenantPayload.env.name}/main.tf`];
+
+      expect(bootstrapperFile).not.toContain('name = "ced-prod"');
+      expect([
+        ...bootstrapperFile.matchAll(/labels = \[\s*"ced-prod"\s*\]/g),
+      ]).toHaveLength(2);
+      expect([
+        ...bootstrapperFile.matchAll(
+          /github_environment_prefix_enabled = true/g,
+        ),
+      ]).toHaveLength(2);
+      expect([
+        ...bootstrapperFile.matchAll(/version = "~> 7\.1"/g),
+      ]).toHaveLength(2);
+    } finally {
+      process.chdir(generatedEnvironment.originalCwd);
+      await cleanupTempDir(generatedEnvironment.tmpDir);
+    }
+  });
+
+  it("rejects tenant names that do not match the selected prefix before actions run", () => {
+    const mismatchPayload: Payload = {
+      ...payload,
+      env: {
+        ...payload.env,
+        name: "cgn-prod",
+      },
+    };
+    const actions = getActions(resolveTemplatesPath("environment"));
+
+    expect(() => actions(mismatchPayload)).toThrow(
+      'Environment "cgn-prod" must be "dx-prod" to match prefix "dx".',
+    );
   });
 });
 
@@ -264,8 +455,9 @@ describe("environment generator — file generation (with init)", () => {
     },
     tags: {
       BusinessUnit: "Platform",
-      CostCenter: "TS000",
+      CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
       ManagementTeam: "Engineering",
+      Owner: "DX Platform",
     },
     workspace: {
       domain: "payments",
@@ -316,5 +508,81 @@ describe("environment generator — file generation (with init)", () => {
     ]);
 
     expect(generatedFiles).toMatchSnapshot();
+  });
+});
+
+describe("environment generator — tenant-qualified environment", () => {
+  let tmpDir: string;
+  let originalCwd: string;
+
+  const payload: Payload = {
+    env: {
+      cloudAccounts: [
+        {
+          csp: "azure",
+          defaultLocation: "italynorth",
+          displayName: "PROD-CED",
+          id: "sub-ced-123",
+        },
+      ],
+      name: "ced-prod",
+      prefix: "ced",
+    },
+    github: {
+      owner: "pagopa",
+      repo: "my-project",
+    },
+    runnerAppCredentials: {
+      clientId: "test-app-client-id",
+      id: "test-app-id",
+      installationId: "test-installation-id",
+      key: "test-private-key",
+    },
+    tags: {
+      CostCenter: "TS330 - PDND & INTEROPERABILITA'",
+      Owner: "DX Platform",
+    },
+    workspace: {
+      domain: "bonus",
+    },
+  };
+
+  beforeAll(async () => {
+    ({ originalCwd, tmpDir } = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload,
+      prepareRepository: async (repositoryRoot) => {
+        await fs.copyFile(
+          path.join(resolveTemplatesPath("monorepo"), "nx.json"),
+          path.join(repositoryRoot, "nx.json"),
+        );
+      },
+      tmpDirPrefix: "dx-cli-env-tenant-test-",
+    }));
+  });
+
+  afterAll(async () => {
+    process.chdir(originalCwd);
+    await cleanupTempDir(tmpDir);
+  });
+
+  it("registers the environment in the Nx Terraform plugin additional environments", async () => {
+    const nxJson = JSON.parse(
+      await fs.readFile(path.join(tmpDir, "nx.json"), "utf8"),
+    ) as {
+      plugins: {
+        options?: { additionalEnvironments?: string[] };
+        plugin: string;
+      }[];
+    };
+
+    expect(
+      nxJson.plugins.find((entry) => entry.plugin === "@pagopa/nx-terraform")
+        ?.options?.additionalEnvironments,
+    ).toEqual(["ced-prod"]);
   });
 });

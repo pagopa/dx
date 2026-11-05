@@ -64,7 +64,7 @@ resource "azurerm_storage_container" "replica" {
 resource "azurerm_storage_container_immutability_policy" "replica" {
   for_each = local.tier_features.secondary_replication && local.immutability_policy_enabled ? { for c in var.containers : c.name => c if c.immutability_policy != null } : {}
 
-  storage_container_resource_manager_id = azurerm_storage_container.replica[each.key].resource_manager_id
+  storage_container_resource_manager_id = azurerm_storage_container.replica[each.key].id
   immutability_period_in_days           = each.value.immutability_policy.period_in_days
   locked                                = each.value.immutability_policy.locked
 

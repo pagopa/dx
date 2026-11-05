@@ -28,7 +28,7 @@ data "azurerm_log_analytics_workspace" "common" {
 
 module "azure_apim" {
   source  = "pagopa-dx/azure-api-management/azurerm"
-  version = "~> 3.1"
+  version = "~> 5.0"
 
   environment                = local.environment
   resource_group_name        = azurerm_resource_group.example.name

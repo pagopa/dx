@@ -13,7 +13,11 @@ Bootstrap a new project following DevEx conventions.
 **Always provisions**:
 
 - The monorepository, both locally and remotely on GitHub.com, with dotfiles and
-  a devcontainer configuration.
+  a locked mise toolchain configuration.
+
+Before generating anything, the command checks that Terraform and mise are
+installed and that the GitHub token can read the DX packages from GitHub
+Packages (see [Installation](./requirements.md)).
 
 ### Prompt Reference
 
@@ -68,6 +72,10 @@ Scaffold new components in your project following DevEx guidelines.
 
 Add a new cloud environment following DevEx conventions.
 
+The command requires `mise`. During setup it adds the AWS and Azure CLIs (and
+the `uv` runtime required by the Azure CLI backend) to the repository's
+`mise.toml`, then refreshes `mise.lock`.
+
 **Always provisions**:
 
 - GitHub environments corresponding to the specified cloud environments
@@ -100,25 +108,130 @@ prompt expects and where to find the required values.
 
 | Prompt                               | What to enter                                                                                                                                          |
 | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Environment name**                 | Select `PROD`, `UAT`, or `DEV`.                                                                                                                        |
+| **Environment name**                 | Enter `prod`, `uat`, `dev`, or a tenant-qualified name ending with one of them (for example `ced-prod` or `cgn-dev`).                                  |
 | **Cloud provider(s)**                | Select `Microsoft Azure` (currently the only supported provider).                                                                                      |
 | **Account(s)**                       | Select one or more Azure subscriptions belonging to your product. Contact your Engineering Leader if you are unsure which subscriptions to pick.       |
 | **Prefix**                           | A short identifier (2–4 characters) used in Azure resource names. It should match the prefix already in use for your product (e.g., `dx`, `io`, `pn`). |
 | **Domain**                           | An optional sub-grouping for the project (e.g., `payments`). Leave empty if not needed.                                                                |
-| **Cost center**                      | Select the cost center for your team.                                                                                                                  |
-| **Business unit**                    | The business unit or team that owns this project (free text).                                                                                          |
-| **Management team**                  | The team responsible for managing the environment (free text, e.g., `devex`).                                                                          |
+| **Cost center**                      | Select your team’s cost center. Defaults to `TS000 - TECNOLOGIA & SERVIZI`; `--cost-center` accepts only the listed choices.                           |
+| **Owner**                            | The team or person responsible for the environment (required; free text). Use `--owner` when running non-interactively.                                |
+| **Business unit**                    | The business unit or team that owns this project (free text, optional; press Enter to skip).                                                           |
+| **Management team**                  | The team responsible for managing the environment (free text, optional; press Enter to skip).                                                          |
 | **Default location for \<account\>** | The primary Azure region for the selected account (e.g., `Italy North`). Asked once per selected account.                                              |
 
-**Initialization** _(conditional — only asked when the environment is new)_
+Valid cost centers are `TS000 - TECNOLOGIA & SERVIZI`, `TS100 - TECNOLOGIA`,
+`TS110 - SVILUPPO E ARCHITETTURA`, `TS120 - CLIENT E FRONTEND`,
+`TS200 - SICUREZZA`, `TS300 - PRODOTTI E SERVIZI`,
+`TS310 - PAGAMENTI & SERVIZI`, `TS320 - PIATTAFORMA NOTIFICHE DIGITALI`, and
+`TS330 - PDND & INTEROPERABILITA'`, `TS720 - DEV EX`.
+
+#### Multi-tenant environments
+
+Use a tenant-qualified environment name when the same monorepo needs separate
+deployment environments for different tenants or product scopes.
+
+```bash
+npx @pagopa/dx-cli add environment \
+  --name ced-prod \
+  --prefix ced \
+  --account <subscription-id> \
+  --location <subscription-id>=italynorth \
+  --domain bonus \
+  --owner devex \
+  --business-unit devex \
+  --management-team devex
+```
+
+The `--name` and `--prefix` values have different purposes:
+
+| Option     | Purpose                                                                                                                                | Example    |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
+| `--name`   | GitHub environment and infrastructure folder name. It can be `dev`, `uat`, `prod`, or a tenant-qualified name ending with one of them. | `ced-prod` |
+| `--prefix` | Short 2–4 character prefix used in Azure resource names.                                                                               | `ced`      |
+
+The lifecycle suffix determines the Azure environment short code used by the
+generated resources: `*-dev` maps to `d`, `*-uat` maps to `u`, and `*-prod` maps
+to `p`. For example, `--name ced-prod --prefix ced` creates files under
+`infra/bootstrapper/ced-prod` and `infra/core/ced-prod`, while Azure resource
+names use the `ced-p-...` prefix convention.
+
+Run `add environment` once for each tenant/environment pair you need, changing
+both `--name` and `--prefix` when the tenant changes.
+
+**Repository Terraform configuration**
+
+The command updates `infra/repository/main.tf` in the generated
+`module "github_repository"` by adding the environment to its
+`repository.environments` list. When the list is absent, `prod` is implicit;
+adding another environment also makes `prod` explicit. The command preserves
+other HCL settings and requires a single repository module with a literal
+repository object and a list of unique, literal environment names.
+
+Existing lists are normalized only when an environment needs to be added.
+Lists containing comments are left unchanged when the requested environment and
+`prod` already exist. Otherwise, the command refuses to edit them: move the
+comments outside the list or add both names manually before retrying. Comments
+outside the list are preserved.
+
+If customized HCL is rejected, restore the generated module/object layout,
+replace dynamic `environments` expressions with a literal list, remove duplicate
+names, and run `terraform fmt infra/repository/main.tf`. Formatting alone does not
+remove comments or convert dynamic expressions.
+
+Unsupported target shapes are rejected before writing. Changed candidates must
+also pass `terraform fmt -` before replacing `main.tf` or running `terraform init`
+and `terraform apply`. Terraform diagnostics are included in validation errors,
+but its formatted output is not written over unrelated source.
+
+Updates require a regular UTF-8 `main.tf` file, preserve its permissions, and use
+atomic replacement. Run commands sequentially and do not edit the file during
+synchronization: concurrent writers in the same working copy are not supported.
+After a valid edit, a later `terraform init` or `terraform apply` failure does not
+roll back the edited file or any remote changes.
+
+**Initialization and Runner App credentials**
+
+The initialization confirmation and Terraform backend selection are conditional
+on the environment state. Runner App credentials are required whenever a new
+GitHub environment is configured, including when the Azure bootstrap resources
+already exist. The CLI stores them as GitHub environment secrets used by the
+bootstrapper workflow; they are not written to generated Terraform or workflow
+files.
+
+The CLI omits Runner App credentials from its JSON success result. This also
+applies when `CI=1` selects JSON output automatically.
 
 | Prompt                                             | What to enter                                                                                                        |
 | -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
 | **Initialize it now?**                             | Confirm `Yes` to provision the baseline cloud infrastructure (VPN, network, monitoring, Terraform backend).          |
 | **Cloud Account for the remote Terraform backend** | Shown only when multiple accounts are selected. Pick the account that will host the Terraform state Storage Account. |
 | **GitHub Runner App ID**                           | The `App ID` retrieved in the [Prepare the GitHub App](../monorepository-setup.mdx#setting-up-a-github-app) section. |
+| **GitHub Runner App Client ID**                    | The `Client ID` retrieved in the same section.                                                                       |
 | **GitHub Runner App Installation ID**              | The `Installation ID` retrieved in the same section.                                                                 |
 | **GitHub Runner App Private Key**                  | An editor will open — paste the full content of the `.pem` private key file, then save and close the editor.         |
+
+For non-interactive execution, provide all four Runner App values explicitly:
+
+```bash
+CI=1 npx @pagopa/dx-cli add environment \
+  --name prod \
+  --account <subscription-id> \
+  --location <subscription-id>=italynorth \
+  --prefix dx \
+  --domain payments \
+  --owner devex \
+  --cost-center "TS330 - PDND & INTEROPERABILITA'" \
+  --business-unit devex \
+  --management-team devex \
+  --runner-app-id <runner-app-id> \
+  --client-id <client-id> \
+  --installation-id <installation-id> \
+  --private-key-path <path-to-private-key.pem> \
+  -y
+```
+
+If any Runner App value is missing in `CI=1` mode, the command stops with an
+explicit error before configuring the GitHub environment.
 
 #### Example Usage
 
@@ -128,7 +241,7 @@ npx @pagopa/dx-cli add environment
 ✔ Terraform is installed!
 ✔ You are logged in to Azure (andrea.grillo@pagopa.it)
 
-? Environment name PROD
+? Environment name prod
 ? Cloud provider(s) Microsoft Azure
 ? Account(s) (Press <space> to select, <a> to toggle all, <i> to invert selection, and <enter> to proceed)
  ◯ DEV-ENGINEERING
@@ -149,8 +262,8 @@ Pull Request to merge the initial project structure.
 
 Validate your repository against DevEx guidelines. Typical checks include:
 
-- Presence and correctness of pre-commit configuration.
-- `turbo.json` configuration sanity.
+- Configuration of the `@pagopa/nx-terraform` plugin in `nx.json`.
+- `nx.json` presence and the minimum Nx version in `devDependencies`.
 - Required monorepo scripts in `package.json`.
 - Workspace declaration and structure.
 
@@ -165,9 +278,9 @@ Exit code: `0` if all checks pass, `1` if one or more checks fail.
 Example output:
 
 ```text
-✔ pre-commit configuration ok
-✔ turbo configuration ok
-✖ monorepo scripts missing: build, test
+✔ Nx Terraform Plugin ok
+✔ Nx Configuration ok
+✖ Monorepo Scripts missing: build, test
 ```
 
 ## `codemod` – Repository Migrations
@@ -211,307 +324,6 @@ Arguments:
   afterward.
 
 :::
-
-## `savemoney` – Cost Optimization
-
-The SaveMoney tool helps identify underutilized and unused cloud resources that
-may be costing your organization money.
-
-Scans your cloud subscriptions using provider APIs and metrics to scientifically
-detect:
-
-- **Inactive Resources** - VMs, storage, and services with minimal usage
-- **Orphaned Resources** - Unattached disks, unused IPs, and dangling network
-  interfaces
-- **Oversized Resources** - Services running on unnecessarily expensive tiers
-- **Misconfigured Resources** - Resources in wrong regions or missing management
-  tags
-
-All analysis is performed in **read-only mode** - the tool never modifies, tags,
-or deletes resources.
-
-### Supported Cloud Providers
-
-- ✅ Azure: Full support for Azure resource analysis with intelligent detection
-  algorithms based on Azure Monitor metrics and resource states.
-
-### Quick Start
-
-```bash
-# Interactive mode (prompts for configuration)
-npx @pagopa/dx-cli savemoney
-
-# Using configuration file
-npx @pagopa/dx-cli savemoney --config config.yaml
-
-# With verbose output and JSON format
-npx @pagopa/dx-cli savemoney --config config.yaml --format json --verbose
-```
-
-### Analysis Flow
-
-The tool follows a systematic approach to analyze resources:
-
-<details>
-<summary>See the Diagram</summary>
-
-```mermaid
-flowchart TB
-    Start([Start]) --> LoadConfig[Load Configuration<br/>&<br/>Authenticate with CSP]
-    LoadConfig --> ForEachSub{For Each<br/>Subscription}
-
-    ForEachSub --> ListRes[List All Resources]
-    ListRes --> Analyze[Analyze Resource]
-    Analyze --> CheckState[Check State, Metrics, Tags, Location]
-    CheckState --> Risk[Calculate Cost Risk]
-
-    Risk --> MoreRes{More<br/>Resources?}
-    MoreRes -->|Yes| Analyze
-
-    MoreRes -->|No| MoreSubs{More<br/>Subscriptions?}
-    MoreSubs -->|Yes| ForEachSub
-
-    MoreSubs -->|No| Report[Generate Report]
-    Report --> End([End])
-
-    style Start fill:#107c10,color:#fff
-    style End fill:#107c10,color:#fff
-    style Analyze fill:#ffa500,color:#fff
-    style Risk fill:#d13438,color:#fff
-    style Report fill:#5c2d91,color:#fff
-```
-
-</details>
-
-### Configuration
-
-#### Authentication
-
-The tool supports multiple authentication methods:
-
-- **Azure CLI** - `az login` (recommended for local development)
-- **Managed Identity** - Automatic in Azure environments
-
-#### Configuration Options
-
-| Parameter           | Type       | Req. | CLI Flag               | Description                                                |
-| :------------------ | :--------- | :--: | :--------------------- | :--------------------------------------------------------- |
-| `subscriptionIds`   | `string[]` | Yes  | -                      | Azure subscription IDs to scan                             |
-| `preferredLocation` | `string`   |  No  | `--location`,<br/>`-l` | Preferred Azure region<br/>(default: `italynorth`)         |
-| `timespanDays`      | `number`   |  No  | `--days`,<br/>`-d`     | Days to look back for metrics analysis<br/>(default: `30`) |
-
-**CLI-only options:**
-
-- `--config`, `-c` - Path to YAML config file
-- `--format`, `-f` - Output format, possible values: `table` (_default_),
-  `json`, `detailed-json`, `lint`
-- `--source`, `-s` - Restrict findings to a specific source: `advisor`,
-  `custom`, or `all` (default: `all`)
-- `--azqr-report` - Path to an [AZQR](https://github.com/Azure/azqr)
-  `scan --json` report to merge as additional findings (overrides
-  `azure.azqrReportPath`)
-- `--tags`, `-t` - Filter resources by Azure tags (e.g. `env=prod team=dx`)
-- `--verbose`, `-v` - Enable detailed logging
-
-#### Configuration Example
-
-Create a `config.yaml` file:
-
-```yaml
-azure:
-  subscriptionIds:
-    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-    - yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
-  preferredLocation: italynorth
-  timespanDays: 30
-  azqrReportPath: ./azqr_action_plan.json # optional — merge an AZQR scan report
-  thresholds: # optional — omit to use built-in defaults
-    vm:
-      cpuPercent: 5
-    storage:
-      transactionsPerDay: 50
-```
-
-Alternatively, use the environment variable:
-
-```bash
-export ARM_SUBSCRIPTION_ID="sub-1,sub-2,sub-3"
-```
-
-:::tip
-
-If `subscriptionIds` is not provided via config file or environment variable,
-the tool will prompt for it interactively. Authentication is handled
-automatically by `DefaultAzureCredential` (e.g. via `az login` or managed
-identity).
-
-:::
-
-### Analyzed Azure Resources
-
-The tool analyzes the following Azure resource types for potential cost
-optimization:
-
-| Resource Type       | Risk | What It Detects                                                   |
-| :------------------ | :--: | :---------------------------------------------------------------- |
-| Virtual Machines    |  🔴  | VMs that are deallocated or severely underutilized                |
-| App Service Plans   |  🔴  | Empty or underutilized plans (especially Premium)                 |
-| Managed Disks       |  🟡  | Unattached disks incurring storage costs                          |
-| Public IP Addresses |  🟡  | Unused static IPs that continue billing                           |
-| Network Interfaces  |  🟡  | NICs not attached to VMs or Private Endpoints                     |
-| Private Endpoints   |  🟡  | Misconfigured or unused Private Endpoints                         |
-| Storage Accounts    |  🟡  | Storage accounts with minimal activity                            |
-| Container Apps      |  🟡  | Not running, zero replicas, low resource usage                    |
-| Static Web Apps     |  🟢  | No traffic or very low usage patterns                             |
-| Azure Advisor       |  ⚪  | Reserved Instance and Savings Plan opportunities                  |
-| AZQR report         |  ⚪  | Billable orphans and free cleanup candidates from `--azqr-report` |
-
-**Risk Levels:** 🔴 High · 🟡 Medium · 🟢 Low · ⚪ Varies
-
-All resources are additionally evaluated for:
-
-- **Missing Tags** - Resources without tags may be unmanaged or orphaned
-- **Location Mismatch** - Resources outside preferred region may have compliance
-  or cost implications
-- **Azure Advisor** - cost recommendations (Reserved Instances, Savings Plans,
-  right-sizing) fetched directly from Azure Advisor, with estimated monthly
-  savings where available.
-
-### Tag Filtering
-
-Use `--tags` to restrict the analysis to resources that match **all** specified
-Azure tags (AND logic):
-
-```bash
-npx @pagopa/dx-cli savemoney --config config.yaml --tags env=prod team=dx
-```
-
-Only resources that have every listed tag with the exact expected value will be
-analyzed. This is useful to scope a scan to a specific environment or team
-without editing the config file.
-
-### Custom Thresholds
-
-Analysis thresholds (e.g. minimum CPU%, minimum transactions/day) can be
-overridden by adding a `thresholds` section inside the `azure` block of your
-config YAML. Only the fields you want to change are required — all others keep
-their built-in defaults.
-
-```yaml
-azure:
-  subscriptionIds:
-    - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-  thresholds:
-    vm:
-      cpuPercent: 5
-    appService:
-      cpuPercent: 10
-      memoryPercent: 20
-    storage:
-      transactionsPerDay: 50
-```
-
-### Output Formats
-
-Available formats:
-
-- **`table`** (default) - Human-readable console table for quick inspection
-- **`json`** - Structured JSON array for integration with other tools
-- **`detailed-json`** - Complete output with full Azure resource metadata for AI
-  analysis
-- **`lint`** - Linter-style output grouped by resource ID, with risk icons and a
-  summary line
-
-<details>
-<summary>Example JSON Output</summary>
-
-```json
-[
-  {
-    "costRisk": "medium",
-    "location": "westeurope",
-    "name": "ex12345",
-    "reason": "Very low transaction count (0). Resource not in preferred location (italynorth).",
-    "resourceGroup": "dx-d-weu-test-rg-01",
-    "subscriptionId": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-    "suspectedUnused": true,
-    "type": "Microsoft.Storage/storageAccounts"
-  }
-]
-```
-
-</details>
-
-### Usage Examples
-
-```bash
-# Interactive mode
-npx @pagopa/dx-cli savemoney
-
-# With config file
-npx @pagopa/dx-cli savemoney --config config.yaml
-
-# Custom timespan and format
-npx @pagopa/dx-cli savemoney --config config.yaml --days 60 --format json
-
-# Linter-style output
-npx @pagopa/dx-cli savemoney --config config.yaml --format lint
-
-# Filter to a specific environment
-npx @pagopa/dx-cli savemoney --config config.yaml --tags env=prod
-
-# Merge an AZQR report (run `azqr scan --mask=false --json` first)
-npx @pagopa/dx-cli savemoney --config config.yaml --azqr-report azqr_action_plan.json
-
-# Verbose output for debugging
-npx @pagopa/dx-cli savemoney --config config.yaml --verbose
-```
-
-### ✅ Best Practices
-
-- **Run Regularly** - Schedule weekly or monthly analysis to catch cost drift
-  early
-- **Start with Table Format** - Use for quick visual inspection before deeper
-  analysis
-- **Review Before Action** - Always validate findings before deleting resources
-- **Use Verbose Mode** - When investigating unexpected results or debugging
-- **Check Metrics Timespan** - Longer timespans (60-90 days) provide more
-  accurate usage patterns
-- **Combine with Tags** - Tag resources properly to avoid false positives
-- **Document Decisions** - Keep records of why resources are kept or removed
-
-### ⚠️ Limitations
-
-- **Read-Only Analysis** - Does not modify, tag, or delete resources
-- **Metrics Availability** - Some resources may have limited historical metrics
-- **Cost Estimates** - Estimated monthly savings are available for Azure Advisor
-  findings; custom analyzer findings show risk level only (cost estimates for
-  those are planned for a future release)
-- **Context Required** - Some flagged resources may be intentionally idle (e.g.,
-  test environments)
-
-<details>
-<summary><strong>Troubleshooting</strong></summary>
-
-- **Authentication Errors**
-
-  ```bash
-  az login                        # Ensure Azure CLI is logged in
-  az account list --output table  # Verify subscription access
-  ```
-
-- **No Resources Found**
-  - Verify subscription IDs in configuration
-  - Check Azure RBAC permissions (Reader role minimum required)
-  - Ensure resources exist in the subscriptions
-- **Metrics Not Available** Some resources may not have historical metrics if
-  recently created, metrics collection is disabled, or insufficient permissions.
-- **False Positives** Resources flagged as unused may be intentionally idle (DR,
-  staging) or scheduled workloads. Use tags to mark resources as "keep".
-
-</details>
-
----
 
 ## Feedback
 

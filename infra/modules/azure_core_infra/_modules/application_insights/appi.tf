@@ -7,7 +7,7 @@ resource "azurerm_application_insights" "appi" {
   }))
   location             = var.location
   resource_group_name  = var.resource_group_name
-  disable_ip_masking   = !var.mask_ip_address
+  ip_masking_enabled   = var.mask_ip_address
   application_type     = "other"
   daily_data_cap_in_gb = var.daily_data_cap_in_gb
 
@@ -16,8 +16,8 @@ resource "azurerm_application_insights" "appi" {
   tags = var.tags
 }
 
-#tfsec:ignore:AZU023
-#tfsec:ignore:AVD-AZU-0017
+#trivy:ignore:AZU-0017
+#trivy:ignore:AVD-AZU-0017
 resource "azurerm_key_vault_secret" "appinsights_instrumentation_key" {
   name         = "appinsights-instrumentation-key"
   value        = azurerm_application_insights.appi.instrumentation_key

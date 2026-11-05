@@ -1,3 +1,64 @@
+## 0.1.14 (2026-11-02)
+
+### 🩹 Fixes
+
+- Pin the hosted provider release runner to Ubuntu 26.04. Keep the Go version selected from go.mod and CGO disabled; no provider interface changes. ([#2417](https://github.com/pagopa/dx/pull/2417))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.1.13 (2026-10-29)
+
+### 🩹 Fixes
+
+- Update GitHub Actions versions ([#2429](https://github.com/pagopa/dx/pull/2429))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.1.12 (2026-09-09)
+
+### 🩹 Fixes
+
+- Bump google.golang.org/grpc from v1.83.1 to v1.83.2 in both Terraform providers. ([#2173](https://github.com/pagopa/dx/pull/2173))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.11 (2026-09-08)
+
+### 🩹 Fixes
+
+- Bump google.golang.org/grpc from v1.83.0 to v1.83.1 in both Terraform providers. ([#2156](https://github.com/pagopa/dx/pull/2156))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.10 (2026-08-27)
+
+### 🩹 Fixes
+
+- Upgrade Go module dependencies. ([#2081](https://github.com/pagopa/dx/pull/2081))
+
+### ❤️ Thank You
+
+- Copilot @Copilot
+- Marco Comi @kin0992
+
+## 0.1.9 (2026-07-28)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2013](https://github.com/pagopa/dx/pull/2013), [#8203](https://github.com/pagopa/dx/issues/8203))
+
+### ❤️ Thank You
+
+- Marco Comi
+
 ## 0.1.8 (2026-07-09)
 
 ### 🩹 Fixes

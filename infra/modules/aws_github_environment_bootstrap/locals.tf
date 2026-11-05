@@ -3,8 +3,8 @@ locals {
     var.tags,
     {
       ModuleSource  = "DX",
-      ModuleVersion = try(jsondecode(file("${path.module}/package.json")).version, "unknown"),
-      ModuleName    = try(jsondecode(file("${path.module}/package.json")).name, "unknown")
+      ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"),
+      ModuleName    = try(jsondecode(file("${path.module}/project.json")).name, "unknown")
     }
   )
 
@@ -23,9 +23,17 @@ locals {
     "p" = "prod"
   }
 
-  env_name = local.envs[var.environment.env_short]
+  base_environment_name = local.envs[var.environment.env_short]
+  env_name              = var.github_environment_prefix_enabled ? "${var.environment.prefix}-${local.base_environment_name}" : local.base_environment_name
 
-  repo_secrets = {}
+  # GitHub emits immutable subject claims that embed the numeric owner and
+  # repository IDs for repositories created or renamed after 2026-07-15, while
+  # older repositories still emit name-based subjects. Both are trusted.
+  immutable_repository_slug = "${var.repository.owner}@${data.github_organization.owner.id}/${var.repository.name}@${data.github_repository.this.repo_id}"
+
+  repo_secrets = {
+    ECR_PUBLIC_ROLE_ARN = aws_iam_role.ecr_public_login.arn
+  }
 
   infra_ci = {
     secrets = {

@@ -1,0 +1,10 @@
+[settings]
+minimum_release_age = "7d"
+idiomatic_version_file_enable_tools = ["node", "pnpm", "python", "terraform"]
+
+[deps.tflint]
+sources = [".tflint.hcl"]
+outputs = [".tflint.d/plugins"]
+run = "tflint --init"
+
+[deps.pnpm]

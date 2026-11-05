@@ -50,7 +50,11 @@ Minimal `Secrets/host.json` shape:
 
 ```json
 {
-  "masterKey": { "name": "master", "value": "<known-test-key>", "encrypted": false },
+  "masterKey": {
+    "name": "master",
+    "value": "<known-test-key>",
+    "encrypted": false
+  },
   "functionKeys": []
 }
 ```

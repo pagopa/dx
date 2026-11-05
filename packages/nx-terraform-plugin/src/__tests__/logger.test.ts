@@ -31,7 +31,7 @@ describe("logger", () => {
     expect(logtapeMocks.configure).toHaveBeenCalledWith({
       loggers: [
         {
-          category: ["nx-terraform-plugin"],
+          category: ["nx-terraform"],
           lowestLevel: "info",
           sinks: ["console"],
         },
@@ -58,7 +58,7 @@ describe("logger", () => {
     getPackageLogger(["publish"]);
 
     expect(logtapeMocks.getLogger).toHaveBeenCalledWith([
-      "nx-terraform-plugin",
+      "nx-terraform",
       "publish",
     ]);
   });

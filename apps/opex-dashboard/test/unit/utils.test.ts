@@ -4,7 +4,11 @@
 
 import { describe, expect, it } from "vitest";
 
-import { normalizeEndpointKeys, parseEndpointKey } from "@/utils/index.js";
+import {
+  normalizeEndpointKeys,
+  parseEndpointKey,
+  sanitizeName,
+} from "@/utils/index.js";
 import { overrideWith } from "@/utils/merge.js";
 
 describe("overrideWith", () => {
@@ -165,6 +169,28 @@ describe("normalizeEndpointKeys", () => {
     expect(result).toEqual({
       "/users": { availability_threshold: 97, method: "PUT" },
     });
+  });
+});
+
+describe("sanitizeName", () => {
+  it("should keep valid alphanumeric, hyphen and underscore names unchanged", () => {
+    expect(sanitizeName("PROD-IO_App_Availability")).toBe(
+      "PROD-IO_App_Availability",
+    );
+  });
+
+  it("should replace slashes, dots and special characters with underscores", () => {
+    expect(sanitizeName("PROD-IO/IO_App.Availability")).toBe(
+      "PROD-IO_IO_App_Availability",
+    );
+  });
+
+  it("should replace spaces with underscores", () => {
+    expect(sanitizeName("My API Dashboard")).toBe("My_API_Dashboard");
+  });
+
+  it("should collapse consecutive invalid characters", () => {
+    expect(sanitizeName("io::pagopa.it")).toBe("io_pagopa_it");
   });
 });
 

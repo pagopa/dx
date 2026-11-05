@@ -11,7 +11,7 @@ This Terraform module provisions an Azure CDN Front Door profile with endpoints,
 - **Origin Configuration**: Supports health probes and priority-based routing.
 - **Custom Domains**: Associates custom domains with the CDN endpoint, including DNS record creation.
 - **Diagnostic Settings**: Configurable diagnostic settings for monitoring and logging.
-- **Routing Rules**: Allows custom routing rules via the `azurerm_cdn_frontdoor_rule` resource to link to the rule set provided by the module.
+- **Routing Rules**: Enables response compression for Azure Front Door's default compressible MIME types and allows custom routing rules via the `azurerm_cdn_frontdoor_rule` resource to link to the rule set provided by the module.
 
 > **Note:** The module includes support for managed identity authentication to storage origins with automatic RBAC assignment. This feature is currently in preview and disabled by validation. It will be enabled once the feature becomes generally available. See [Azure documentation](https://learn.microsoft.com/en-us/azure/frontdoor/origin-authentication-with-managed-identities) for more information.
 
@@ -57,6 +57,19 @@ resource "azurerm_cdn_frontdoor_rule" "example" {
 ### Origins Configuration
 
 The `origins` variable accepts a map of origin configurations. Each origin must have a `host_name` and optionally a `priority` for routing preference.
+
+By default, `preserve_host_header` is `false`: Front Door sets the origin `Host` header to `host_name`, preserving the existing behavior. Set `preserve_host_header = true` on an origin to forward the incoming request's `Host` header instead:
+
+```hcl
+origins = {
+  cloudfront = {
+    host_name            = "distribution.cloudfront.net"
+    preserve_host_header = true
+  }
+}
+```
+
+This setting is independent for each origin and does not change the hostname Front Door connects to. Ensure the origin accepts the incoming hostname; for CloudFront, configure the corresponding alternate domain name and certificate. Azure Storage and App Service origins typically require the default behavior unless configured to accept the incoming hostname.
 
 #### Supported Origin Types
 
@@ -132,9 +145,9 @@ Complete examples of how to use this module can be found in the [examples/basic]
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.15 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.15, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules
@@ -144,7 +157,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_cdn_frontdoor_custom_domain.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_custom_domain) | resource |
 | [azurerm_cdn_frontdoor_custom_domain_association.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_custom_domain_association) | resource |
 | [azurerm_cdn_frontdoor_endpoint.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cdn_frontdoor_endpoint) | resource |
@@ -169,13 +182,13 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_custom_domains"></a> [custom\_domains](#input\_custom\_domains) | Map of custom domain configurations to associate with the CDN endpoint.<br/>If dns parameter is set, DNS records are created.<br/>If the custom domain is at the apex of the specified DNS zone, a custom certificate must be used.<br/>To generate one in PagoPA context, please refer to the Confluence documentation. | <pre>list(object({<br/>    host_name = string<br/>    dns = optional(object({<br/>      zone_name                = string<br/>      zone_resource_group_name = string<br/>    }), { zone_name = null, zone_resource_group_name = null })<br/><br/>    custom_certificate = optional(object({<br/>      key_vault_certificate_versionless_id = string<br/>      key_vault_name                       = string<br/>      key_vault_resource_group_name        = string<br/>      key_vault_has_rbac_support           = optional(bool, true)<br/>    }), { key_vault_certificate_versionless_id = null, key_vault_name = null, key_vault_resource_group_name = null, key_vault_has_rbac_support = null })<br/>  }))</pre> | `[]` | no |
 | <a name="input_diagnostic_settings"></a> [diagnostic\_settings](#input\_diagnostic\_settings) | Define if diagnostic settings should be enabled.<br/>If enabled, specifies the ID of a Log Analytics Workspace where Diagnostics Data should be sent and<br/>optionally the ID of the Storage Account where logs should be sent. | <pre>object({<br/>    enabled                                   = bool<br/>    log_analytics_workspace_id                = optional(string)<br/>    diagnostic_setting_destination_storage_id = optional(string)<br/>  })</pre> | <pre>{<br/>  "diagnostic_setting_destination_storage_id": null,<br/>  "enabled": false,<br/>  "log_analytics_workspace_id": null<br/>}</pre> | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Environment configuration object for resource naming | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_existing_cdn_frontdoor_profile_id"></a> [existing\_cdn\_frontdoor\_profile\_id](#input\_existing\_cdn\_frontdoor\_profile\_id) | Existing CDN FrontDoor Profile ID. If provided, the module will not create a new profile. | `string` | `null` | no |
 | <a name="input_origin_health_probe"></a> [origin\_health\_probe](#input\_origin\_health\_probe) | Health probe configuration of the CDN origin group | <pre>object({<br/>    path         = optional(string, "/")<br/>    request_type = optional(string, "HEAD")<br/>  })</pre> | `{}` | no |
-| <a name="input_origins"></a> [origins](#input\_origins) | Map of origin configurations. Key is the origin identifier. Priority determines routing preference (lower values = higher priority). If use\_managed\_identity is true, the Front Door identity will be granted 'Storage Blob Data Reader' role on the storage\_account\_id if provided. | <pre>map(object({<br/>    host_name            = string<br/>    priority             = optional(number, 1)<br/>    storage_account_id   = optional(string, null)<br/>    use_managed_identity = optional(bool, false)<br/>  }))</pre> | n/a | yes |
+| <a name="input_origins"></a> [origins](#input\_origins) | Map of origin configurations. Key is the origin identifier. If preserve\_host\_header is true, Front Door forwards the incoming request Host header; if false (default), the origin Host header is set to host\_name. Priority determines routing preference (lower values = higher priority). If use\_managed\_identity is true, the Front Door identity will be granted 'Storage Blob Data Reader' role on the storage\_account\_id if provided. | <pre>map(object({<br/>    host_name            = string<br/>    preserve_host_header = optional(bool, false)<br/>    priority             = optional(number, 1)<br/>    storage_account_id   = optional(string, null)<br/>    use_managed_identity = optional(bool, false)<br/>  }))</pre> | n/a | yes |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name where the CDN profile will be created | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Resource tags | `map(any)` | n/a | yes |
 | <a name="input_waf_enabled"></a> [waf\_enabled](#input\_waf\_enabled) | Whether to enable the WAF policy and associate it with the endpoint. | `bool` | `false` | no |
@@ -184,7 +197,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_diagnostic_settings"></a> [diagnostic\_settings](#output\_diagnostic\_settings) | Details of the diagnostic settings configured for the CDN FrontDoor Profile. |
 | <a name="output_endpoint_hostname"></a> [endpoint\_hostname](#output\_endpoint\_hostname) | The hostname of the CDN FrontDoor Endpoint |
 | <a name="output_endpoint_id"></a> [endpoint\_id](#output\_endpoint\_id) | The ID of the CDN FrontDoor Endpoint |

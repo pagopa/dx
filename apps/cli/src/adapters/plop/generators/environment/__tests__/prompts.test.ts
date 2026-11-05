@@ -10,8 +10,10 @@ import type {
 import type { EnvironmentInitStatus } from "../../../../../domain/environment.js";
 
 import prompts, {
+  costCenterValues,
   formatInitializationDetails,
   type InitialAnswers,
+  type PromptsDependencies,
   workspaceSchema,
 } from "../prompts.js";
 
@@ -142,6 +144,7 @@ describe("prompts with prefilled answers", () => {
     };
 
     const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue({
         resourceGroupName: "rg-test",
         storageAccountName: "sttest",
@@ -168,8 +171,9 @@ describe("prompts with prefilled answers", () => {
         },
         tags: {
           BusinessUnit: "Platform",
-          CostCenter: "TS000",
+          CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
           ManagementTeam: "Engineering",
+          Owner: "DX Platform",
         },
         workspace: {
           domain: "payments",
@@ -187,9 +191,19 @@ describe("prompts with prefilled answers", () => {
           name: "dev",
           prefix: "dx",
         },
+        init: {
+          runnerAppCredentials: {
+            clientId: "app-client-id",
+            id: "app-id",
+            installationId: "installation-id",
+            key: "private-key",
+          },
+        },
         tags: {
           BusinessUnit: "Platform",
+          CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
           ManagementTeam: "Engineering",
+          Owner: "DX Platform",
         },
         workspace: {
           domain: "payments",
@@ -219,10 +233,17 @@ describe("prompts with prefilled answers", () => {
           owner: "pagopa",
           repo: "dx",
         },
+        runnerAppCredentials: {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
+        },
         tags: {
           BusinessUnit: "Platform",
-          CostCenter: "TS000",
+          CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
           ManagementTeam: "Engineering",
+          Owner: "DX Platform",
         },
         workspace: {
           domain: "payments",
@@ -234,8 +255,309 @@ describe("prompts with prefilled answers", () => {
   });
 });
 
+describe("required tag prompts", () => {
+  it("prompts for validated required tags and omits skipped optional tags", async () => {
+    const cloudAccount: CloudAccount = {
+      csp: "azure",
+      defaultLocation: "italynorth",
+      displayName: "DEV-FooBar",
+      id: "sub-123",
+    };
+    const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getTerraformBackend: vi.fn().mockResolvedValue({
+        resourceGroupName: "rg-test",
+        storageAccountName: "sttest",
+        subscriptionId: cloudAccount.id,
+        type: "azurerm",
+      }),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(true),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+    };
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+    promptSpy.mockResolvedValueOnce({
+      tags: {
+        BusinessUnit: " ",
+        CostCenter: costCenterValues[8],
+        ManagementTeam: "  ",
+        Owner: "  DX Platform  ",
+      },
+    });
+
+    try {
+      const result = await prompts({
+        cloudAccountRepository: {
+          list: vi.fn().mockResolvedValue([cloudAccount]),
+        },
+        cloudAccountService,
+        github: { owner: "pagopa", repo: "dx" },
+        initialAnswers: {
+          env: {
+            cloudAccountIds: [cloudAccount.id],
+            locations: { [cloudAccount.id]: "italynorth" },
+            name: "dev",
+            prefix: "dx",
+          },
+          init: {
+            runnerAppCredentials: {
+              clientId: "app-client-id",
+              id: "app-id",
+              installationId: "installation-id",
+              key: "private-key",
+            },
+          },
+          workspace: { domain: "payments" },
+        },
+      })(inquirer);
+
+      expect(promptSpy).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            choices: [...costCenterValues],
+            default: costCenterValues[0],
+            message:
+              "Cost center (Pagopa only; if unsure, check https://pagopa.atlassian.net/wiki/search?text=tagging%20strategy)",
+            name: "tags.CostCenter",
+            type: "list",
+          }),
+          expect.objectContaining({
+            message: "Owner",
+            name: "tags.Owner",
+            type: "input",
+          }),
+          expect.objectContaining({
+            name: "tags.BusinessUnit",
+          }),
+          expect.objectContaining({
+            name: "tags.ManagementTeam",
+          }),
+        ]),
+      );
+      expect(result.tags).toEqual({
+        CostCenter: costCenterValues[8],
+        Owner: "DX Platform",
+      });
+    } finally {
+      promptSpy.mockRestore();
+    }
+  });
+});
+
+describe("non-interactive tag defaults", () => {
+  it("uses the default cost center in non-interactive mode and requires an owner", async () => {
+    const cloudAccount: CloudAccount = {
+      csp: "azure",
+      defaultLocation: "italynorth",
+      displayName: "DEV-FooBar",
+      id: "sub-123",
+    };
+    const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getTerraformBackend: vi.fn().mockResolvedValue({
+        resourceGroupName: "rg-test",
+        storageAccountName: "sttest",
+        subscriptionId: cloudAccount.id,
+        type: "azurerm",
+      }),
+      hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+      initialize: vi.fn().mockResolvedValue(undefined),
+      isInitialized: vi.fn().mockResolvedValue(true),
+      provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+    };
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+    const dependencies: PromptsDependencies = {
+      cloudAccountRepository: {
+        list: vi.fn().mockResolvedValue([cloudAccount]),
+      },
+      cloudAccountService,
+      github: { owner: "pagopa", repo: "dx" },
+      initialAnswers: {
+        env: {
+          cloudAccountIds: [cloudAccount.id],
+          locations: { [cloudAccount.id]: "italynorth" },
+          name: "dev",
+          prefix: "dx",
+        },
+        init: {
+          runnerAppCredentials: {
+            clientId: "app-client-id",
+            id: "app-id",
+            installationId: "installation-id",
+            key: "private-key",
+          },
+        },
+        tags: { Owner: "DX Platform" },
+        workspace: { domain: "payments" },
+      },
+      nonInteractive: true,
+    };
+
+    try {
+      const result = await prompts(dependencies)(inquirer);
+
+      expect(promptSpy).not.toHaveBeenCalled();
+      expect(result.tags).toEqual({
+        CostCenter: costCenterValues[0],
+        Owner: "DX Platform",
+      });
+      await expect(
+        prompts({
+          ...dependencies,
+          initialAnswers: {
+            ...dependencies.initialAnswers,
+            tags: undefined,
+          },
+        })(inquirer),
+      ).rejects.toThrow(
+        "Owner is required in non-interactive mode. Provide --owner <owner>.",
+      );
+      expect(promptSpy).not.toHaveBeenCalled();
+    } finally {
+      promptSpy.mockRestore();
+    }
+  });
+});
+
 // eslint-disable-next-line max-lines-per-function
 describe("prompts", () => {
+  it("prompts for Runner App credentials when the environment is already initialized", async () => {
+    const cloudAccount: CloudAccount = {
+      csp: "azure",
+      defaultLocation: "italynorth",
+      displayName: "DEV-FooBar",
+      id: "sub-123",
+    };
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+
+    promptSpy.mockResolvedValueOnce({
+      runnerAppCredentials: {
+        clientId: "app-client-id",
+        installationId: "installation-id",
+        key: "private-key",
+      },
+    });
+
+    try {
+      const result = await prompts({
+        cloudAccountRepository: {
+          list: vi.fn().mockResolvedValue([cloudAccount]),
+        },
+        cloudAccountService: {
+          configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+          getTerraformBackend: vi.fn().mockResolvedValue({
+            resourceGroupName: "rg-test",
+            storageAccountName: "sttest",
+            subscriptionId: cloudAccount.id,
+            type: "azurerm",
+          }),
+          hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+          initialize: vi.fn().mockResolvedValue(undefined),
+          isInitialized: vi.fn().mockResolvedValue(true),
+          provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+        },
+        github: {
+          owner: "pagopa",
+          repo: "dx",
+        },
+        initialAnswers: {
+          env: {
+            cloudAccountIds: [cloudAccount.id],
+            locations: { [cloudAccount.id]: "italynorth" },
+            name: "dev",
+            prefix: "dx",
+          },
+          init: {
+            runnerAppCredentials: {
+              id: "prefilled-app-id",
+            },
+          },
+          tags: {
+            BusinessUnit: "Platform",
+            CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+            ManagementTeam: "Engineering",
+            Owner: "DX Platform",
+          },
+          workspace: {
+            domain: "payments",
+          },
+        },
+      })(inquirer);
+
+      expect(promptSpy).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: "runnerAppCredentials.clientId",
+          }),
+        ]),
+      );
+      expect(promptSpy.mock.calls[0]?.[0]).not.toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            name: "runnerAppCredentials.id",
+          }),
+        ]),
+      );
+      expect(result.runnerAppCredentials).toEqual({
+        clientId: "app-client-id",
+        id: "prefilled-app-id",
+        installationId: "installation-id",
+        key: "private-key",
+      });
+    } finally {
+      promptSpy.mockRestore();
+    }
+  });
+
+  it("fails in non-interactive mode when Runner App credentials are missing", async () => {
+    const cloudAccount: CloudAccount = {
+      csp: "azure",
+      defaultLocation: "italynorth",
+      displayName: "DEV-FooBar",
+      id: "sub-123",
+    };
+    const dependencies = {
+      cloudAccountRepository: {
+        list: vi.fn().mockResolvedValue([cloudAccount]),
+      },
+      cloudAccountService: {
+        configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+        getTerraformBackend: vi.fn().mockResolvedValue(undefined),
+        hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+        initialize: vi.fn().mockResolvedValue(undefined),
+        isInitialized: vi.fn().mockResolvedValue(true),
+        provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      },
+      github: {
+        owner: "pagopa",
+        repo: "dx",
+      },
+      initialAnswers: {
+        env: {
+          cloudAccountIds: [cloudAccount.id],
+          locations: { [cloudAccount.id]: "italynorth" },
+          name: "dev",
+          prefix: "dx",
+        },
+        tags: {
+          BusinessUnit: "Platform",
+          CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+          ManagementTeam: "Engineering",
+          Owner: "DX Platform",
+        },
+        workspace: {
+          domain: "payments",
+        },
+      },
+      nonInteractive: true,
+    } as PromptsDependencies;
+
+    await expect(prompts(dependencies)(inquirer)).rejects.toThrow(
+      "GitHub Runner App credentials are required in non-interactive mode",
+    );
+  });
+
   it("does not prompt again when only a single-account backend must be initialized", async () => {
     const cloudAccount: CloudAccount = {
       csp: "azure",
@@ -249,6 +571,7 @@ describe("prompts", () => {
     };
 
     const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),
@@ -270,8 +593,9 @@ describe("prompts", () => {
         },
         tags: {
           BusinessUnit: "Platform",
-          CostCenter: "TS000",
+          CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
           ManagementTeam: "Engineering",
+          Owner: "DX Platform",
         },
         workspace: {
           domain: "payments",
@@ -283,7 +607,14 @@ describe("prompts", () => {
       .mockResolvedValueOnce({
         init: true,
       })
-      .mockResolvedValueOnce({});
+      .mockResolvedValueOnce({
+        runnerAppCredentials: {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
+        },
+      });
 
     try {
       const result = await prompts({
@@ -295,7 +626,7 @@ describe("prompts", () => {
         },
       })(inquirer);
 
-      expect(promptSpy).toHaveBeenCalledTimes(3);
+      expect(promptSpy).toHaveBeenCalledTimes(4);
       expect(result.init?.terraformBackend).toEqual({
         cloudAccount,
       });
@@ -318,6 +649,7 @@ describe("prompts", () => {
     };
 
     const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),
@@ -339,8 +671,9 @@ describe("prompts", () => {
         },
         tags: {
           BusinessUnit: "Platform",
-          CostCenter: "TS000",
+          CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
           ManagementTeam: "Engineering",
+          Owner: "DX Platform",
         },
         workspace: {
           domain: "payments",
@@ -415,6 +748,7 @@ describe("prompts", () => {
     };
 
     const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(false),
       initialize: vi.fn().mockResolvedValue(undefined),
@@ -436,8 +770,9 @@ describe("prompts", () => {
         },
         tags: {
           BusinessUnit: "Platform",
-          CostCenter: "TS000",
+          CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
           ManagementTeam: "Engineering",
+          Owner: "DX Platform",
         },
         workspace: {
           domain: "payments",
@@ -489,6 +824,7 @@ describe("prompts with prefilled initialization answers", () => {
     };
 
     const cloudAccountService: CloudAccountService = {
+      configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),
@@ -537,7 +873,9 @@ describe("prompts with prefilled initialization answers", () => {
         },
         tags: {
           BusinessUnit: "Platform",
+          CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
           ManagementTeam: "Engineering",
+          Owner: "DX Platform",
         },
         workspace: {
           domain: "payments",

@@ -1,35 +1,39 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.26.2",
-  "type": "module",
+  "version": "0.27.28",
   "description": "A CLI useful to manage DX tools.",
+  "keywords": [
+    "CLI",
+    "DX"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/cli"
   },
-  "keywords": [
-    "DX",
-    "CLI"
-  ],
+  "bin": {
+    "dx": "./bin/index.js"
+  },
   "files": [
     "bin",
     "dist",
     "templates"
   ],
-  "bin": {
-    "dx": "./bin/index.js"
+  "type": "module",
+  "scripts": {
+    "plop": "plop"
   },
   "dependencies": {
     "@azure/arm-authorization": "^9.0.0",
     "@azure/arm-keyvault": "^4.0.0",
     "@azure/arm-msi": "^2.2.0",
     "@azure/arm-resourcegraph": "^4.2.1",
-    "@azure/arm-resources": "^7.0.0",
-    "@azure/arm-resources-subscriptions": "^2.1.0",
+    "@azure/arm-resources": "catalog:azure",
+    "@azure/arm-resources-subscriptions": "^2.1.1",
     "@azure/arm-storage": "^19.1.0",
     "@azure/identity": "catalog:",
     "@azure/keyvault-secrets": "^4.11.2",
+    "@azure/logger": "catalog:azure",
     "@azure/monitor-opentelemetry": "catalog:opentelemetry",
     "@azure/storage-blob": "catalog:azure",
     "@logtape/logtape": "catalog:",
@@ -40,14 +44,15 @@
     "@opentelemetry/instrumentation": "catalog:opentelemetry",
     "@opentelemetry/instrumentation-undici": "catalog:opentelemetry",
     "@opentelemetry/sdk-logs": "catalog:opentelemetry",
-    "@pagopa/dx-savemoney": "workspace:^",
+    "@tree-sitter-grammars/tree-sitter-hcl": "^1.2.0",
     "chalk": "^5.6.2",
     "commander": "catalog:",
-    "core-js": "^3.49.0",
+    "core-js": "^3.50.0",
     "execa": "catalog:",
-    "glob": "^11.1.0",
-    "import-in-the-middle": "^3.2.0",
+    "glob": "^14.0.0",
+    "import-in-the-middle": "^3.5.2",
     "inquirer": "^9.3.8",
+    "jsonc-parser": "^3.3.1",
     "libsodium-wrappers": "^0.8.4",
     "neverthrow": "catalog:",
     "node-plop": "^0.32.3",
@@ -55,7 +60,8 @@
     "ora": "^9.4.1",
     "replace-in-file": "^8.4.0",
     "semver": "catalog:",
-    "yaml": "^2.9.0",
+    "web-tree-sitter": "^0.27.0",
+    "yaml": "^2.9.1",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -67,18 +73,14 @@
     "@types/semver": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
-    "fast-check": "^4.8.0",
-    "memfs": "^4.57.8",
+    "fast-check": "^4.10.2",
+    "memfs": "^4.68.0",
+    "oxfmt": "^0.71.0",
     "plop": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "vitest-mock-extended": "catalog:"
-  },
-  "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
-    "plop": "plop"
   },
   "engines": {
     "node": ">=22.0.0"

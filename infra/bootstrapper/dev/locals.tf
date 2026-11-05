@@ -20,11 +20,9 @@ locals {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
-    CreatedBy      = "Terraform"
-    BusinessUnit   = "DeveloperExperience"
-    Environment    = "Dev"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/bootstrapper/dev"
-    ManagementTeam = "Developer Experience"
+    CostCenter  = "TS720 - DEV EX"
+    Owner       = "DevEx"
+    Environment = "Dev"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/bootstrapper/dev"
   }
 }

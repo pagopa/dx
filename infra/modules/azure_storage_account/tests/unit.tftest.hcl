@@ -6,7 +6,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "sa"
@@ -14,9 +14,9 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Owner          = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_storage_account/tests"
     ManagementTeam = "Developer Experience"
@@ -63,7 +63,41 @@ run "storage_account_security_defaults" {
   }
 }
 
-# ── 2. Default use case ─────────────────────────────────────────────────────
+# ── 2. Malware scanning ──────────────────────────────────────────────────────
+run "storage_account_defender_malware_scanning" {
+  command = plan
+
+  variables {
+    malware_scanning_enabled = true
+  }
+
+  assert {
+    condition     = length(azurerm_security_center_storage_defender.this) == 1
+    error_message = "Defender for Storage must be created when malware scanning is enabled"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].malware_scanning_on_upload_enabled
+    error_message = "malware scanning on upload must be enabled"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].malware_scanning_on_upload_cap_gb_per_month == -1
+    error_message = "malware scanning cap must use the unlimited standard"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].sensitive_data_discovery_enabled
+    error_message = "sensitive data discovery must be enabled"
+  }
+
+  assert {
+    condition     = azurerm_security_center_storage_defender.this[0].override_subscription_settings_enabled
+    error_message = "subscription settings must be overridden when malware scanning is enabled"
+  }
+}
+
+# ── 3. Default use case ─────────────────────────────────────────────────────
 run "storage_account_default_use_case" {
   command = plan
 
@@ -252,8 +286,9 @@ run "storage_account_private_network" {
   command = plan
 
   variables {
-    force_public_network_access_enabled = false
-    subnet_pep_id                       = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
+    force_public_network_access_enabled  = false
+    subnet_pep_id                        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
+    private_dns_zone_resource_group_name = "rg-network"
   }
 
   override_data {
@@ -272,6 +307,59 @@ run "storage_account_private_network" {
   assert {
     condition     = local.peps.create_subservices.blob == true
     error_message = "peps.create_subservices.blob must be true for private mode with default subservices"
+  }
+}
+
+# ── 8b. Public network with opt-in private endpoints ───────────────────────
+run "storage_account_public_network_with_subnet_pep_id" {
+  command = plan
+
+  variables {
+    force_public_network_access_enabled  = true
+    subnet_pep_id                        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
+    private_dns_zone_resource_group_name = "rg-network"
+  }
+
+  override_data {
+    target = data.azurerm_private_dns_zone.storage_account["blob"]
+    values = {
+      id   = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net"
+      name = "privatelink.blob.core.windows.net"
+    }
+  }
+
+  assert {
+    condition     = azurerm_storage_account.this.public_network_access_enabled == true
+    error_message = "public_network_access_enabled must remain true when force_public=true, even with private endpoint inputs set"
+  }
+
+  assert {
+    condition     = local.peps.create_subservices.blob == true
+    error_message = "peps.create_subservices.blob must be true when both private endpoint inputs are set, even if public network is forced"
+  }
+
+  assert {
+    condition     = azurerm_private_endpoint.this["blob"].subnet_id == "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
+    error_message = "A blob private endpoint must actually be planned when both private endpoint inputs are set, even if public network is forced"
+  }
+}
+
+# ── 8c. Public network without opt-in keeps prior no-PEP behavior ──────────
+run "storage_account_public_network_default_still_skips_private_endpoint" {
+  command = plan
+
+  variables {
+    force_public_network_access_enabled = true
+  }
+
+  assert {
+    condition     = local.peps.create_subservices.blob == false
+    error_message = "peps.create_subservices.blob must remain false by default when public network is forced and subnet_pep_id is unset (backward compatibility)"
+  }
+
+  assert {
+    condition     = length(azurerm_private_endpoint.this) == 0
+    error_message = "No private endpoints must be created by default when public network is forced and subnet_pep_id is unset (backward compatibility)"
   }
 }
 
@@ -325,6 +413,14 @@ run "storage_account_blob_retention" {
 run "storage_account_containers_subresources" {
   command = plan
 
+  override_resource {
+    target          = azurerm_storage_account.this
+    override_during = plan
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/dxuitnmodulessa01"
+    }
+  }
+
   variables {
     subservices_enabled = {
       blob  = true
@@ -353,11 +449,29 @@ run "storage_account_containers_subresources" {
     condition     = length(azurerm_storage_queue.this) == 2
     error_message = "2 queues must be created"
   }
+
+  assert {
+    condition     = alltrue([for table in azurerm_storage_table.this : table.storage_account_id == azurerm_storage_account.this.id])
+    error_message = "Tables must target the existing storage account by ARM ID"
+  }
+
+  assert {
+    condition     = alltrue([for queue in azurerm_storage_queue.this : queue.storage_account_id == azurerm_storage_account.this.id])
+    error_message = "Queues must target the existing storage account by ARM ID"
+  }
 }
 
 # ── 12. Container-level immutability policy ─────────────────────────────────
 run "storage_account_container_immutability" {
   command = plan
+
+  override_resource {
+    target          = azurerm_storage_container.this["container-with-policy"]
+    override_during = plan
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/dxuitnmodulessa01/blobServices/default/containers/container-with-policy"
+    }
+  }
 
   variables {
     blob_features = {
@@ -384,6 +498,11 @@ run "storage_account_container_immutability" {
   assert {
     condition     = length(azurerm_storage_container_immutability_policy.this) == 1
     error_message = "container_immutability_policy must be created only for containers with a policy defined"
+  }
+
+  assert {
+    condition     = azurerm_storage_container_immutability_policy.this["container-with-policy"].storage_container_resource_manager_id == azurerm_storage_container.this["container-with-policy"].id
+    error_message = "Container immutability policies must keep targeting the same ARM resource"
   }
 }
 
@@ -415,6 +534,14 @@ run "storage_account_no_alerts_development" {
 run "storage_account_cmk_system_identity" {
   command = plan
 
+  override_resource {
+    target          = azurerm_key_vault_key.key["kv"]
+    override_during = plan
+    values = {
+      versionless_id = "https://kv-common.vault.azure.net/keys/storage-cmk"
+    }
+  }
+
   variables {
     customer_managed_key = {
       enabled      = true
@@ -426,6 +553,43 @@ run "storage_account_cmk_system_identity" {
   assert {
     condition     = azurerm_storage_account.this.identity[0].type == "SystemAssigned"
     error_message = "identity type must be SystemAssigned when no user_assigned_identity_id is provided"
+  }
+
+  assert {
+    condition     = azurerm_storage_account_customer_managed_key.kv["kv"].key_vault_key_id == "https://kv-common.vault.azure.net/keys/storage-cmk"
+    error_message = "Generated CMKs must use a versionless key URL to preserve automatic key rotation"
+  }
+}
+
+run "storage_account_existing_cmk_rotation" {
+  command = plan
+
+  variables {
+    customer_managed_key = {
+      enabled      = true
+      type         = "kv"
+      key_vault_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-common/providers/Microsoft.KeyVault/vaults/kv-common"
+      key_name     = "existing-cmk"
+    }
+  }
+
+  override_data {
+    target          = data.azurerm_key_vault.this["kv"]
+    override_during = plan
+    values = {
+      vault_uri                  = "https://kv-common.vault.azure.net/"
+      rbac_authorization_enabled = false
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_key_vault_key.key) == 0
+    error_message = "Supplying an existing CMK must not create a new key"
+  }
+
+  assert {
+    condition     = azurerm_storage_account_customer_managed_key.kv["kv"].key_vault_key_id == "https://kv-common.vault.azure.net/keys/existing-cmk"
+    error_message = "Existing CMKs must keep using the supplied vault and key without pinning a version"
   }
 }
 

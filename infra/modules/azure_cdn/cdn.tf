@@ -50,7 +50,7 @@ resource "azurerm_cdn_frontdoor_origin" "this" {
   host_name                      = each.value.host_name
   http_port                      = 80
   https_port                     = 443
-  origin_host_header             = each.value.host_name
+  origin_host_header             = each.value.preserve_host_header ? null : each.value.host_name
   priority                       = each.value.priority
   weight                         = 1000
   certificate_name_check_enabled = true
@@ -79,6 +79,8 @@ resource "azurerm_cdn_frontdoor_route" "this" {
 
   cache {
     query_string_caching_behavior = "IgnoreQueryString"
+    compression_enabled           = true
+    content_types_to_compress     = local.compression_content_types
   }
 }
 

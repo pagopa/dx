@@ -3,23 +3,58 @@ import { describe, expect, it } from "vitest";
 import { parseOptions } from "../options.ts";
 
 describe("parseOptions", () => {
-  it("returns default target names when options are undefined", () => {
+  it("returns default options when options are undefined", () => {
     expect(parseOptions(undefined)).toEqual({
       additionalEnvironments: [],
-      applyTargetName: "tf-apply",
-      consoleTargetName: "tf-console",
-      docsTargetName: "terraform-docs",
-      formatTargetName: "tf-fmt",
-      initTargetName: "tf-init",
-      lintTargetName: "tflint",
-      outputTargetName: "tf-output",
-      planTargetName: "tf-plan",
+      initTarget: {
+        platforms: [],
+      },
       publish: {
         mode: "github",
       },
-      publishTargetName: "nx-release-publish",
-      testTargetName: "tf-test",
-      validateTargetName: "tf-validate",
+      targetNamePrefix: "",
+    });
+  });
+
+  it("accepts a target-name prefix", () => {
+    expect(parseOptions({ targetNamePrefix: "tf" }).targetNamePrefix).toBe(
+      "tf",
+    );
+  });
+
+  it("accepts provider lock platforms", () => {
+    expect(
+      parseOptions({
+        initTarget: {
+          platforms: ["linux_amd64"],
+        },
+      }).initTarget.platforms,
+    ).toEqual(["linux_amd64"]);
+  });
+
+  it("defaults nested init target options", () => {
+    expect(parseOptions({ initTarget: {} }).initTarget).toEqual({
+      platforms: [],
+    });
+  });
+
+  it("ignores legacy target-name options", () => {
+    const options = {
+      initTargetName: "legacy-init",
+      prefix: "legacy-",
+      publishTargetName: "legacy-publish",
+      targetNamePrefix: "tf",
+    };
+
+    expect(parseOptions(options)).toEqual({
+      additionalEnvironments: [],
+      initTarget: {
+        platforms: [],
+      },
+      publish: {
+        mode: "github",
+      },
+      targetNamePrefix: "tf",
     });
   });
 
@@ -77,22 +112,5 @@ describe("parseOptions", () => {
         },
       }),
     ).toThrow("publish.github.owner");
-  });
-
-  it("rejects duplicate target names", () => {
-    expect(() =>
-      parseOptions({
-        applyTargetName: "tf-plan",
-        consoleTargetName: "tf-console",
-        docsTargetName: "terraform-docs",
-        formatTargetName: "tf-fmt",
-        initTargetName: "tf-init",
-        lintTargetName: "tflint",
-        outputTargetName: "tf-output",
-        planTargetName: "tf-plan",
-        testTargetName: "tf-test",
-        validateTargetName: "tf-validate",
-      }),
-    ).toThrow('Target name "tf-plan" is duplicated');
   });
 });

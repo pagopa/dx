@@ -1,7 +1,7 @@
 resource "azurerm_resource_group" "e2e_appcs" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
+  name = provider::dx::resource_name(merge(local.environment, {
     domain        = "e2e"
-    name          = "appcs",
+    app_name      = "appcs",
     resource_type = "resource_group"
   }))
   location = local.environment.location
@@ -11,7 +11,7 @@ resource "azurerm_resource_group" "e2e_appcs" {
 
 resource "azurerm_container_group" "public_app" {
   name = provider::dx::resource_name(
-    merge(local.naming_config, { name = "appcs-public", resource_type = "container_instance" })
+    merge(local.environment, { app_name = "appcs-public", resource_type = "container_instance" })
   )
   location            = local.environment.location
   resource_group_name = azurerm_resource_group.e2e_appcs.name
@@ -46,8 +46,8 @@ resource "dx_available_subnet_cidr" "private_app" {
 }
 
 resource "azurerm_subnet" "private_app" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "appcs-na-private"
+  name = provider::dx::resource_name(merge(local.environment, {
+    app_name      = "appcs-na-private"
     resource_type = "container_instance_subnet"
   }))
   resource_group_name  = local.e2e_virtual_network.resource_group_name
@@ -68,7 +68,7 @@ resource "azurerm_subnet" "private_app" {
 
 resource "azurerm_container_group" "private_app" {
   name = provider::dx::resource_name(
-    merge(local.naming_config, { name = "appcs-private", resource_type = "container_instance" })
+    merge(local.environment, { app_name = "appcs-private", resource_type = "container_instance" })
   )
   location            = local.environment.location
   resource_group_name = azurerm_resource_group.e2e_appcs.name

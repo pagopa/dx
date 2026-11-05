@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.14.0"
+  required_version = ">= 1.16.0"
 
   required_providers {
     aws = {
@@ -9,7 +9,7 @@ terraform {
 
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 4.62, < 6.0.0"
     }
 
     azuredx = {
@@ -19,7 +19,7 @@ terraform {
 
     awsdx = {
       source  = "pagopa-dx/aws"
-      version = "~> 0.0"
+      version = "~> 0.1"
     }
   }
 }

@@ -30,12 +30,6 @@ variables {
 
 mock_provider "azurerm" {}
 mock_provider "dx" {}
-
-
-
-
-
-
 override_data {
   target = data.azurerm_application_insights.this
   values = {
@@ -86,6 +80,10 @@ override_resource {
 run "azure_api_management_cost_optimized_defaults" {
   command = plan
 
+  variables {
+    action_group_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Insights/actionGroups/ag-test"
+  }
+
   assert {
     condition     = azurerm_api_management.this.sku_name == "StandardV2_1"
     error_message = "cost_optimized must use StandardV2_1."
@@ -129,6 +127,60 @@ run "azure_api_management_cost_optimized_defaults" {
   assert {
     condition     = length(azurerm_management_lock.this) == 1
     error_message = "cost_optimized must enable the management lock."
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 7
+    error_message = "StandardV2 APIM must create supported request, duration, CPU, and memory alerts."
+  }
+
+  assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].metric_name == "Requests" &&
+      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].dimension[0].name == "GatewayResponseCodeCategory" &&
+      contains(azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].dimension[0].values, "2xx")
+    )
+    error_message = "Successful requests must use Requests with response-code dimensions."
+  }
+
+  assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].dimension[0].name == "GatewayResponseCodeCategory" &&
+      length(azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].dimension[0].values) == 1 &&
+      contains(azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].dimension[0].values, "5xx")
+    )
+    error_message = "Failed request alerts must include only server-side failures."
+  }
+
+  assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].name == "GatewayResponseCode" &&
+      length(azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].values) == 2 &&
+      contains(azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].values, "401") &&
+      contains(azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].dimension[0].values, "403")
+    )
+    error_message = "Unauthorized request alerts must include only 401 and 403 response codes."
+  }
+
+  assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["cpu_percent_gateway"].criteria[0].metric_name == "CpuPercent_Gateway" &&
+      azurerm_monitor_metric_alert.this["memory_percent_gateway"].criteria[0].metric_name == "MemoryPercent_Gateway" &&
+      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 10000 &&
+      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].threshold == 9500 &&
+      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].threshold == 100 &&
+      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].threshold == 50 &&
+      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 500
+    )
+    error_message = "StandardV2 alerts must preserve the supported metrics and baseline thresholds."
+  }
+
+  assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["total_requests"].enabled &&
+      one(azurerm_monitor_metric_alert.this["total_requests"].action).action_group_id == var.action_group_id
+    )
+    error_message = "Default alerts must remain enabled and route to the configured Action Group."
   }
 }
 
@@ -202,6 +254,25 @@ run "azure_api_management_high_load_public_ip_and_autoscale" {
     condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].default == 2 && azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].maximum == 10
     error_message = "high_load autoscale defaults must be zone-aware."
   }
+
+  assert {
+    condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].minimum == 2 && azurerm_monitor_autoscale_setting.this[0].profile[0].rule[0].scale_action[0].value == 2 && azurerm_monitor_autoscale_setting.this[0].profile[0].rule[1].scale_action[0].value == 2
+    error_message = "high_load autoscale minimum and increments must follow the two availability zones."
+  }
+
+  assert {
+    condition = (
+      length(azurerm_monitor_metric_alert.this) == 6 &&
+      azurerm_monitor_metric_alert.this["capacity"].criteria[0].metric_name == "Capacity" &&
+      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 20000 &&
+      azurerm_monitor_metric_alert.this["successful_requests"].criteria[0].threshold == 19000 &&
+      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].threshold == 200 &&
+      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].threshold == 100 &&
+      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 500 &&
+      azurerm_monitor_metric_alert.this["capacity"].criteria[0].threshold == 80
+    )
+    error_message = "Premium APIM must preserve its supported default alerts and two-unit thresholds."
+  }
 }
 
 run "azure_api_management_development_defaults" {
@@ -236,6 +307,11 @@ run "azure_api_management_development_defaults" {
     condition     = length(azurerm_public_ip.apim) == 0
     error_message = "development must not create a public IP."
   }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 0
+    error_message = "development must not create default metric alerts."
+  }
 }
 
 run "azure_api_management_hostname_certificate_normalization" {
@@ -252,6 +328,18 @@ run "azure_api_management_hostname_certificate_normalization" {
           key_vault_certificate_id = "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1/1234567890"
         }
       ]
+      portal = [{
+        host_name                = "portal.example.com"
+        key_vault_certificate_id = "https://kv-test.vault.azure.net/secrets/cert-portal"
+      }]
+      developer_portal = [{
+        host_name                = "developer.example.com"
+        key_vault_certificate_id = "https://kv-test.vault.azure.net/secrets/cert-developer"
+      }]
+      scm = [{
+        host_name                = "scm.example.com"
+        key_vault_certificate_id = "https://kv-test.vault.azure.net/secrets/cert-scm"
+      }]
     }
   }
 
@@ -268,6 +356,11 @@ run "azure_api_management_hostname_certificate_normalization" {
   assert {
     condition     = azurerm_api_management.this.hostname_configuration[0].management[0].key_vault_certificate_id == "https://dx-d-itn-common-kv-01.vault.azure.net/secrets/cert1"
     error_message = "Versioned Key Vault certificate IDs must be normalized internally."
+  }
+
+  assert {
+    condition     = length(azurerm_api_management.this.hostname_configuration[0].portal) == 1 && length(azurerm_api_management.this.hostname_configuration[0].developer_portal) == 1 && length(azurerm_api_management.this.hostname_configuration[0].scm) == 1
+    error_message = "All supported custom-domain endpoint types must remain configurable."
   }
 }
 
@@ -295,5 +388,138 @@ run "azure_api_management_application_insights_by_id" {
   assert {
     condition     = azurerm_api_management_diagnostic.applicationinsights[0].sampling_percentage == 50 && azurerm_api_management_diagnostic.applicationinsights[0].verbosity == "information"
     error_message = "Application Insights diagnostic settings must use the configured sampling and verbosity."
+  }
+}
+
+run "azure_api_management_high_load_autoscale_overrides" {
+  command = plan
+
+  variables {
+    use_case = "high_load"
+    autoscale = {
+      minimum_instances = 2
+      default_instances = 4
+      maximum_instances = 8
+      scale_out_value   = "2"
+      scale_in_value    = "2"
+    }
+  }
+
+  assert {
+    condition     = azurerm_monitor_autoscale_setting.this[0].profile[0].capacity[0].default == 4
+    error_message = "high_load must retain the configured autoscale capacity."
+  }
+}
+
+run "azure_api_management_overrides_selected_default_alert_thresholds" {
+  command = plan
+
+  variables {
+    metric_alert_thresholds = {
+      failed_requests       = 500
+      unauthorized_requests = 250
+      response_time         = 1000
+    }
+  }
+
+  assert {
+    condition = (
+      azurerm_monitor_metric_alert.this["failed_requests"].criteria[0].threshold == 500 &&
+      azurerm_monitor_metric_alert.this["unauthorized_requests"].criteria[0].threshold == 250 &&
+      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 1000 &&
+      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 10000
+    )
+    error_message = "Threshold overrides must update only the selected built-in alerts."
+  }
+}
+
+run "azure_api_management_disables_selected_default_alerts" {
+  command = plan
+
+  variables {
+    metric_alert_thresholds = {
+      failed_requests     = null
+      cpu_percent_gateway = null
+      response_time       = 1000
+    }
+  }
+
+  assert {
+    condition = (
+      length(azurerm_monitor_metric_alert.this) == 5 &&
+      !contains(keys(azurerm_monitor_metric_alert.this), "failed_requests") &&
+      !contains(keys(azurerm_monitor_metric_alert.this), "cpu_percent_gateway") &&
+      azurerm_monitor_metric_alert.this["response_time"].criteria[0].threshold == 1000 &&
+      azurerm_monitor_metric_alert.this["total_requests"].criteria[0].threshold == 10000
+    )
+    error_message = "Null thresholds must disable only the selected alerts."
+  }
+}
+
+run "azure_api_management_accepts_null_thresholds_for_other_sku_alerts" {
+  command = plan
+
+  variables {
+    use_case = "high_load"
+    metric_alert_thresholds = {
+      total_requests         = null
+      successful_requests    = null
+      failed_requests        = null
+      unauthorized_requests  = null
+      response_time          = null
+      cpu_percent_gateway    = null
+      memory_percent_gateway = null
+      capacity               = null
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 0
+    error_message = "Null overrides must be accepted even for alerts unavailable to the selected SKU."
+  }
+}
+
+run "azure_api_management_explicitly_disables_default_alerts" {
+  command = plan
+
+  variables {
+    metric_alerts = {}
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 0
+    error_message = "An explicit empty metric_alerts map must disable default alerts."
+  }
+}
+
+run "azure_api_management_development_honors_explicit_alerts" {
+  command = plan
+
+  variables {
+    use_case = "development"
+    metric_alerts = {
+      custom_requests = {
+        description      = "Custom development request alert."
+        frequency        = "PT5M"
+        window_size      = "PT5M"
+        severity         = 2
+        auto_mitigate    = false
+        dynamic_criteria = []
+        criteria = [{
+          aggregation            = "Total"
+          dimension              = []
+          metric_name            = "Requests"
+          metric_namespace       = "Microsoft.ApiManagement/service"
+          operator               = "GreaterThan"
+          skip_metric_validation = false
+          threshold              = 10
+        }]
+      }
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_metric_alert.this) == 1 && azurerm_monitor_metric_alert.this["custom_requests"].criteria[0].metric_name == "Requests"
+    error_message = "Explicit metric alerts must be honored for development."
   }
 }

@@ -10,10 +10,10 @@ The following diagram illustrates the architecture and relationships between the
 
 ## Features
 
-- Two `use_case` presets that drive SKU, HA, persistence, diagnostics, alerts, lock, and public/private networking. Use `sku_name_override` to scale beyond the default SKU (e.g. ComputeOptimized for high-throughput workloads).
+- Three `use_case` presets that drive SKU, HA, persistence, diagnostics, alerts, lock, and public/private networking. Use `sku_name_override` to select a supported Balanced SKU.
 - Microsoft Entra authentication only. Access keys are permanently disabled on the default database.
 - System-assigned managed identity, provisioned automatically.
-- Private endpoint on the `redisEnterprise` subresource with DNS integration via `privatelink.redis.azure.net` (for the `default` use case).
+- Private endpoint on the `redisEnterprise` subresource with DNS integration via `privatelink.redis.azure.net` for non-development use cases.
 - Diagnostic settings streaming `AllMetrics` to a Log Analytics workspace.
 - Five built-in metric alerts (memory warn/critical, server load warn/critical, evicted keys) with MS-backed default thresholds, plus an opt-in `connected_clients` alert.
 - Management lock (`CanNotDelete`) on all non-development instances.
@@ -21,30 +21,41 @@ The following diagram illustrates the architecture and relationships between the
 
 ## Use cases
 
-| Use case      | SKU             | HA       | Public network | Persistence | Diagnostics | Alerts   | Lock     |
-| ------------- | --------------- | -------- | -------------- | ----------- | ----------- | -------- | -------- |
-| `default`     | `Balanced_B3`   | Enabled  | Disabled       | RDB `1h`    | Enabled     | Enabled  | Enabled  |
-| `development` | `Balanced_B0`   | Disabled | Enabled        | Disabled    | Disabled    | Disabled | Disabled |
+| Use case      | SKU           | HA       | Public network | Persistence | Diagnostics | Alerts   | Lock     |
+| ------------- | ------------- | -------- | -------------- | ----------- | ----------- | -------- | -------- |
+| `default`     | `Balanced_B3` | Enabled  | Disabled       | RDB `1h`    | Enabled     | Enabled  | Enabled  |
+| `ephemeral`   | `Balanced_B3` | Enabled  | Disabled       | Disabled    | Enabled     | Enabled  | Enabled  |
+| `development` | `Balanced_B0` | Disabled | Enabled        | Disabled    | Disabled    | Disabled | Disabled |
+
+Use `ephemeral` for disposable data that still needs production availability.
+It preserves the production security and operations baseline: high
+availability, private networking, Entra-only authentication, diagnostics,
+alerts, and a management lock. Unlike `default`, it does not restore data
+after a catastrophic cache failure because persistence is disabled.
 
 ### Scaling
 
-Both presets default to `Balanced` SKUs. To scale up — for example to a ComputeOptimized SKU for high-throughput workloads — set `sku_name_override` while keeping `use_case = "default"`:
+All use cases default to `Balanced` SKUs. To scale up, set `sku_name_override` to a supported Balanced SKU while keeping `use_case = "default"`:
 
 ```hcl
 use_case          = "default"
-sku_name_override = "ComputeOptimized_X3"
+sku_name_override = "Balanced_B10"
 ```
 
-`sku_name_override` accepts any `Balanced_*` or `ComputeOptimized_*` SKU. `Balanced_B0` is restricted to `use_case = "development"` because it does not support HA or data persistence.
+`sku_name_override` accepts `Balanced_B0`, `Balanced_B1`, `Balanced_B3`,
+`Balanced_B5`, `Balanced_B10`, `Balanced_B20`, `Balanced_B50`,
+`Balanced_B100`, `Balanced_B150`, and `Balanced_B250`. `Balanced_B0` is
+restricted to `use_case = "development"` because it does not support HA or
+data persistence.
 
 ## Alerts
 
-When `use_case` is `default`, five Azure Monitor metric alerts are provisioned on the AMR resource. The `development` use case disables them entirely — percentage-based metrics are noisy on 2-vCPU SKUs (see the MS [small-SKU guidance](https://learn.microsoft.com/azure/redis/best-practices-server-load#recommendations-for-smaller-skus)).
+When `use_case` is `default` or `ephemeral`, five Azure Monitor metric alerts are provisioned on the AMR resource. The `development` use case disables them entirely — percentage-based metrics are noisy on 2-vCPU SKUs (see the MS [small-SKU guidance](https://learn.microsoft.com/azure/redis/best-practices-server-load#recommendations-for-smaller-skus)).
 
 ### Default alert matrix
 
 | Alert                      | Metric                 | Agg     | Window / Freq | Threshold | Sev |
-|----------------------------|------------------------|---------|---------------|-----------|-----|
+| -------------------------- | ---------------------- | ------- | ------------- | --------- | --- |
 | Used memory — warn         | `usedmemorypercentage` | Maximum | PT15M / PT5M  | `> 75`    | 2   |
 | Used memory — critical     | `usedmemorypercentage` | Maximum | PT5M / PT1M   | `> 90`    | 1   |
 | Server load — warn         | `serverLoad`           | Maximum | PT15M / PT5M  | `> 80`    | 2   |
@@ -56,9 +67,9 @@ The connected-clients alert is created only when `alerts.thresholds.connected_cl
 
 ### Why these thresholds
 
-- **`usedmemorypercentage` at 75 (warn) / 90 (critical).** Microsoft recommends scaling up when used memory is consistently over 75% ([memory-management best practices](https://learn.microsoft.com/azure/redis/best-practices-memory-management#monitor-memory-usage), [development best practices](https://learn.microsoft.com/azure/redis/best-practices-development#monitor-memory-usage-cpu-usage-metrics-client-connections-and-network-bandwidth)). 75% gives operators time to scale before the eviction policy starts removing keys. The 90% critical tier (short window, paging severity) catches the imminent OOM/failover scenario documented in [troubleshoot-server#high-memory-usage](https://learn.microsoft.com/azure/redis/troubleshoot-server#high-memory-usage). The module monitors the *percentage* metric so thresholds do not need re-tuning after a SKU change.
+- **`usedmemorypercentage` at 75 (warn) / 90 (critical).** Microsoft recommends scaling up when used memory is consistently over 75% ([memory-management best practices](https://learn.microsoft.com/azure/redis/best-practices-memory-management#monitor-memory-usage), [development best practices](https://learn.microsoft.com/azure/redis/best-practices-development#monitor-memory-usage-cpu-usage-metrics-client-connections-and-network-bandwidth)). 75% gives operators time to scale before the eviction policy starts removing keys. The 90% critical tier (short window, paging severity) catches the imminent OOM/failover scenario documented in [troubleshoot-server#high-memory-usage](https://learn.microsoft.com/azure/redis/troubleshoot-server#high-memory-usage). The module monitors the _percentage_ metric so thresholds do not need re-tuning after a SKU change.
 
-- **`serverLoad` at 80 (warn) / 90 (critical).** Directly from [best-practices-server-load](https://learn.microsoft.com/azure/redis/best-practices-server-load#monitor-server-load-and-cpu): *"keep server load under 80% to avoid negative performance effects. Sustained server load over 80% can lead to unplanned failovers."* The 90% critical tier is treated as near-saturation — scale out or shard.
+- **`serverLoad` at 80 (warn) / 90 (critical).** Directly from [best-practices-server-load](https://learn.microsoft.com/azure/redis/best-practices-server-load#monitor-server-load-and-cpu): _"keep server load under 80% to avoid negative performance effects. Sustained server load over 80% can lead to unplanned failovers."_ The 90% critical tier is treated as near-saturation — scale out or shard.
 
 - **`evictedkeys > 0` (sev 2).** Any non-zero eviction count means the cache is shedding keys under memory pressure, and with the default `volatile-lru` policy the application may be silently losing data ([troubleshoot-data-loss#key-eviction](https://learn.microsoft.com/azure/redis/troubleshoot-data-loss#partial-loss-of-keys)). This is a binary signal, not a percentage — zero is the healthy baseline.
 
@@ -112,12 +123,20 @@ module "managed_redis" {
 ## Key defaults
 
 - **Authentication:** Entra-only. Data-plane access policy assignments are the consumer's responsibility; use the `id` and `principal_id` outputs to wire them externally.
+- **Managed identities:** the module assigns an identity to the Redis resource, but it does not authenticate client workloads. Grant each client managed identity a Redis data-plane access policy assignment before it can connect with Entra authentication.
 - **Networking:** private by default. `development` provisions a public-only instance to simplify local iterations.
 - **Database (fully opinionated, not configurable):** `client_protocol = Encrypted` (TLS), `clustering_policy = OSSCluster`, `eviction_policy = VolatileLRU`. No Redis modules are installed.
 - **PEP subnet:** the module synthesizes the private-endpoint subnet ID from `var.virtual_network_id` and the DX naming convention (`snet-<prefix>-<env>-pep-<loc>-01`); the subnet must exist in the provided VNet.
 - **DNS zone:** the `privatelink.redis.azure.net` private DNS zone is resolved from the virtual network's resource group (extracted from `virtual_network_id` using `parse_resource_id`) unless `private_dns_zone_resource_group_name` is set.
-- **Persistence:** RDB with a `1h` frequency. AOF is not supported by this module.
+- **Persistence:** the `default` use case uses RDB with a `1h` frequency; `ephemeral` and `development` disable persistence. AOF is not supported by this module.
 - **Endpoint:** consumers connect via the `endpoint` output (`hostname:port`); the default database listens on port `10000`.
+
+## Capacity and lifecycle considerations
+
+- **Network performance:** Azure Managed Redis has no independent `network_performance` setting. Available bandwidth is determined by the selected SKU and cluster policy. Monitor `Cache Read` and `Cache Write`; if bandwidth, CPU, or client connections approach the SKU limits, scale to a larger supported SKU.
+- **Scaling:** changing `sku_name_override` updates the Azure resource in place. Azure permits all scale-ups, but only compatible scale-downs where current memory fits the target SKU. With HA disabled, a scale operation makes the cache unavailable and loses its data; clients must use the DNS endpoint because an underlying IP address can change.
+- **HA and persistence:** persistence requires HA, but HA does not require persistence. The `ephemeral` use case retains HA and its SLA eligibility while disabling data restoration. Azure can enable HA on an existing cache, but cannot disable it later.
+- **Redis modules:** Redis modules remain unsupported by this module. Azure requires them to be selected at cache creation and changing them later requires recreating the cache; their compatibility also varies by SKU and clustering policy.
 
 ## Unsupported on purpose
 
@@ -136,8 +155,7 @@ These features are intentionally left out of v0.x to keep the surface small. The
 ## Testing
 
 ```bash
-pnpm nx run azure_managed_redis:test:unit
-pnpm nx run azure_managed_redis:test:contract
+nx run azure_managed_redis:test
 ```
 
 Integration and end-to-end test layers are tracked as follow-ups under [CES-1909](https://pagopa.atlassian.net/browse/CES-1909).
@@ -151,9 +169,9 @@ Integration and end-to-end test layers are tracked as follow-ups under [CES-1909
 ## Requirements
 
 | Name | Version |
-|------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.14.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.23 |
+| ---- | ------- |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.23, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules
@@ -163,7 +181,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [azurerm_managed_redis.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/managed_redis) | resource |
 | [azurerm_management_lock.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
 | [azurerm_monitor_diagnostic_setting.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_diagnostic_setting) | resource |
@@ -174,21 +192,21 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_alerts"></a> [alerts](#input\_alerts) | Metric alert configuration. Alerts are enabled by default for the 'default' use case with sensible thresholds. | <pre>object({<br/>    action_group_id = optional(string, null)<br/>    thresholds = optional(object({<br/>      used_memory_percentage          = optional(number, 75)<br/>      used_memory_percentage_critical = optional(number, 90)<br/>      server_load                     = optional(number, 80)<br/>      server_load_critical            = optional(number, 90)<br/>      evicted_keys                    = optional(number, 0)<br/>      connected_clients               = optional(number, null)<br/>    }), {})<br/>  })</pre> | `{}` | no |
+| ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_alerts"></a> [alerts](#input\_alerts) | Metric alert configuration. Alerts are enabled by default for the 'default' and 'ephemeral' use cases with sensible thresholds. | <pre>object({<br/>    action_group_id = optional(string, null)<br/>    thresholds = optional(object({<br/>      used_memory_percentage          = optional(number, 75)<br/>      used_memory_percentage_critical = optional(number, 90)<br/>      server_load                     = optional(number, 80)<br/>      server_load_critical            = optional(number, 90)<br/>      evicted_keys                    = optional(number, 0)<br/>      connected_clients               = optional(number, null)<br/>    }), {})<br/>  })</pre> | `{}` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and derive short location names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
-| <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to send diagnostics to. Required when use\_case is 'default'. | `string` | `null` | no |
+| <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The ID of the Log Analytics workspace to send diagnostics to. Required unless use\_case is 'development'. | `string` | `null` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The resource group name containing the 'privatelink.redis.azure.net' private DNS zone. Defaults to the virtual network resource group. | `string` | `null` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group where resources will be deployed. | `string` | n/a | yes |
-| <a name="input_sku_name_override"></a> [sku\_name\_override](#input\_sku\_name\_override) | Optional explicit SKU name override. Only Balanced\_* SKUs (B0-B250) are supported. Balanced\_B0 is restricted to the 'development' use\_case because it does not support HA or data persistence. | `string` | `null` | no |
+| <a name="input_sku_name_override"></a> [sku\_name\_override](#input\_sku\_name\_override) | Optional explicit SKU name override. Only Balanced\_* SKUs (B0-B250) are supported. Balanced\_B0 is restricted to the 'development' use case because it does not support HA or data persistence. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(any)` | n/a | yes |
-| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | DX preset for Azure Managed Redis. Allowed values are 'default' and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access. To scale beyond the default SKU (e.g. ComputeOptimized for high-throughput workloads), set sku\_name\_override. | `string` | `"default"` | no |
-| <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id) | The resource ID of the virtual network hosting the private endpoint. Required when use\_case is 'default'; used to locate the 'privatelink.redis.azure.net' DNS zone. | `string` | `null` | no |
+| <a name="input_use_case"></a> [use\_case](#input\_use\_case) | DX preset for Azure Managed Redis. Allowed values are 'default', 'ephemeral', and 'development'. Drives SKU, high availability, persistence, diagnostics, alerts, lock, and public network access. | `string` | `"default"` | no |
+| <a name="input_virtual_network_id"></a> [virtual\_network\_id](#input\_virtual\_network\_id) | The resource ID of the virtual network hosting the private endpoint. Required unless use\_case is 'development'; used to locate the 'privatelink.redis.azure.net' DNS zone. | `string` | `null` | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_endpoint"></a> [endpoint](#output\_endpoint) | The full endpoint (hostname:port) of the Azure Managed Redis instance. |
 | <a name="output_id"></a> [id](#output\_id) | The ID of the Azure Managed Redis instance. |
 | <a name="output_name"></a> [name](#output\_name) | The name of the Azure Managed Redis instance. |

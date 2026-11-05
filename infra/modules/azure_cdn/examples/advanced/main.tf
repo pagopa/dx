@@ -19,13 +19,22 @@ data "azurerm_subnet" "pep" {
 # Create a storage account with static website enabled
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.1"
+  version = "~> 4.0"
 
   environment = local.environment
 
   resource_group_name = azurerm_resource_group.example.name
   use_case            = "default"
-  subnet_pep_id       = data.azurerm_subnet.pep.id
+  # Setting subnet_pep_id also creates a private endpoint for the enabled
+  # subservices below, in addition to the public endpoint used by the CDN
+  # origin, so the storage account is reachable both publicly (via Front
+  # Door/CDN) and privately from workloads inside the network.
+  subnet_pep_id = data.azurerm_subnet.pep.id
+  private_dns_zone_resource_group_name = provider::dx::resource_name(merge(local.environment, {
+    app_name      = "network",
+    domain        = ""
+    resource_type = "resource_group"
+  }))
 
   force_public_network_access_enabled = true # Public network access enabled for CDN origin reachability
 
@@ -44,7 +53,7 @@ module "storage_account" {
 # Example 1: Create a CDN profile with WAF enabled
 module "azure_cdn_with_waf" {
   source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 0.5"
+  version = "~> 2.0"
 
   resource_group_name = azurerm_resource_group.example.name
 
@@ -71,16 +80,17 @@ module "azure_cdn_with_waf" {
 
 module "storage_account_secondary" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 2.1"
+  version = "~> 4.0"
 
   environment = merge(local.environment, {
     app_name        = "media"
     instance_number = "01"
   })
 
-  resource_group_name = azurerm_resource_group.example.name
-  use_case            = "default"
-  subnet_pep_id       = data.azurerm_subnet.pep.id
+  resource_group_name                  = azurerm_resource_group.example.name
+  use_case                             = "default"
+  subnet_pep_id                        = data.azurerm_subnet.pep.id
+  private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
 
   force_public_network_access_enabled = true
 
@@ -98,7 +108,7 @@ module "storage_account_secondary" {
 
 module "azure_cdn_reuse_profile" {
   source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 0.5"
+  version = "~> 2.0"
 
   resource_group_name = azurerm_resource_group.example.name
 

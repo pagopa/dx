@@ -4,9 +4,9 @@ resource "random_integer" "instance_number" {
 }
 
 resource "azurerm_resource_group" "e2e_appcs" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
+  name = provider::dx::resource_name(merge(local.environment, {
     domain        = "e2e"
-    name          = "appcs",
+    app_name      = "appcs",
     resource_type = "resource_group"
   }))
   location = local.environment.location
@@ -16,7 +16,7 @@ resource "azurerm_resource_group" "e2e_appcs" {
 
 #trivy:ignore:AVD-AZU-0016
 resource "azurerm_key_vault" "kv" {
-  name                          = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault", instance_number = random_integer.instance_number.result }))
+  name                          = provider::dx::resource_name(merge(local.environment, { resource_type = "key_vault", instance_number = random_integer.instance_number.result }))
   location                      = azurerm_resource_group.e2e_appcs.location
   resource_group_name           = azurerm_resource_group.e2e_appcs.name
   tenant_id                     = data.azurerm_client_config.current.tenant_id
@@ -47,13 +47,13 @@ resource "azurerm_key_vault_secret" "test_secret" {
 }
 
 resource "azurerm_private_endpoint" "kv" {
-  name                = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault_private_endpoint", instance_number = random_integer.instance_number.result }))
+  name                = provider::dx::resource_name(merge(local.environment, { resource_type = "key_vault_private_endpoint", instance_number = random_integer.instance_number.result }))
   location            = azurerm_resource_group.e2e_appcs.location
   resource_group_name = azurerm_resource_group.e2e_appcs.name
   subnet_id           = data.azurerm_subnet.pep.id
 
   private_service_connection {
-    name                           = provider::dx::resource_name(merge(local.naming_config, { resource_type = "key_vault_private_endpoint", instance_number = random_integer.instance_number.result }))
+    name                           = provider::dx::resource_name(merge(local.environment, { resource_type = "key_vault_private_endpoint", instance_number = random_integer.instance_number.result }))
     private_connection_resource_id = azurerm_key_vault.kv.id
     is_manual_connection           = false
     subresource_names              = ["vault"]
@@ -73,8 +73,8 @@ resource "dx_available_subnet_cidr" "private_app" {
 }
 
 resource "azurerm_subnet" "private_app" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "appcs-kv-private"
+  name = provider::dx::resource_name(merge(local.environment, {
+    app_name      = "appcs-kv-private"
     resource_type = "container_instance_subnet"
   }))
   resource_group_name  = local.e2e_virtual_network.resource_group_name
@@ -95,7 +95,7 @@ resource "azurerm_subnet" "private_app" {
 
 resource "azurerm_container_group" "private_app" {
   name = provider::dx::resource_name(
-    merge(local.naming_config, { name = "appcs-private", resource_type = "container_instance" })
+    merge(local.environment, { app_name = "appcs-private", resource_type = "container_instance" })
   )
   location            = local.environment.location
   resource_group_name = azurerm_resource_group.e2e_appcs.name

@@ -4,3 +4,4 @@
 
 export * as apiManagement from "./api-management.js";
 export * as appGateway from "./app-gateway.js";
+export { responseTimeFieldName } from "./percentile-field.js";

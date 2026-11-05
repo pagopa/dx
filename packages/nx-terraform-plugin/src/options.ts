@@ -2,11 +2,6 @@ import { z } from "zod/v4";
 
 import { pluginPublishOptionsSchema } from "./publish-options.ts";
 
-const targetNameSchema = z.string().regex(/^[a-zA-Z][a-zA-Z0-9-]{2,}$/, {
-  message:
-    "Target names must be at least 3 characters, not start with a number, and contain only letters, numbers, or dashes",
-});
-
 const environmentNameSchema = z.string().regex(/^[a-z0-9][a-z0-9_-]*$/, {
   message:
     "Environment names must start with a lowercase letter or number and contain only lowercase letters, numbers, underscores, or dashes",
@@ -19,46 +14,36 @@ export const publishOptionsSchema = z.object({
 
 export type PublishOptions = z.infer<typeof publishOptionsSchema>;
 
+const initTargetOptionsSchema = z.object({
+  platforms: z.array(z.string()).default([]),
+});
+
 const terraformPluginOptionsSchema = z.object({
   additionalEnvironments: z.array(environmentNameSchema),
-  applyTargetName: targetNameSchema,
-  consoleTargetName: targetNameSchema,
-  docsTargetName: targetNameSchema,
-  formatTargetName: targetNameSchema,
-  initTargetName: targetNameSchema,
-  lintTargetName: targetNameSchema,
-  outputTargetName: targetNameSchema,
-  planTargetName: targetNameSchema,
+  initTarget: initTargetOptionsSchema.default({ platforms: [] }),
   publish: publishOptionsSchema,
-  publishTargetName: targetNameSchema,
-  testTargetName: targetNameSchema,
-  validateTargetName: targetNameSchema,
+  targetNamePrefix: z.string(),
 });
 
 export type TerraformPluginOptions = z.infer<
   typeof terraformPluginOptionsSchema
 >;
 
+type TerraformPluginOptionsInput = z.input<typeof terraformPluginOptionsSchema>;
+
 const defaultOptions: TerraformPluginOptions = {
   additionalEnvironments: [],
-  applyTargetName: "tf-apply",
-  consoleTargetName: "tf-console",
-  docsTargetName: "terraform-docs",
-  formatTargetName: "tf-fmt",
-  initTargetName: "tf-init",
-  lintTargetName: "tflint",
-  outputTargetName: "tf-output",
-  planTargetName: "tf-plan",
+  initTarget: {
+    platforms: [],
+  },
   publish: {
     mode: "github",
   },
-  publishTargetName: "nx-release-publish",
-  testTargetName: "tf-test",
-  validateTargetName: "tf-validate",
+  targetNamePrefix: "",
 };
 
 export const parseOptions = (
-  options: Partial<TerraformPluginOptions> | undefined,
+  options: Partial<TerraformPluginOptionsInput> | undefined,
 ): TerraformPluginOptions => {
   const parseResult = terraformPluginOptionsSchema
     .partial()
@@ -75,6 +60,10 @@ export const parseOptions = (
   const opts = {
     ...defaultOptions,
     ...parseResult.data,
+    initTarget: {
+      ...defaultOptions.initTarget,
+      ...parseResult.data.initTarget,
+    },
     publish: {
       ...defaultOptions.publish,
       ...parseResult.data.publish,
@@ -88,19 +77,5 @@ export const parseOptions = (
         : {}),
     },
   };
-  // Check uniqueness of target names
-  const seen = new Map<string, string>();
-  const targetNames = Object.entries(opts).filter(
-    (entry): entry is [string, string] => entry[0].endsWith("TargetName"),
-  );
-  for (const [key, value] of targetNames) {
-    const existing = seen.get(value);
-    if (existing) {
-      throw new Error(
-        `Invalid Terraform plugin options: Target name "${value}" is duplicated for keys "${existing}" and "${key}"`,
-      );
-    }
-    seen.set(value, key);
-  }
   return opts;
 };

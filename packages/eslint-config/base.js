@@ -1,19 +1,19 @@
 import eslint from "@eslint/js";
+import eslintConfigPrettier from "eslint-config-prettier/flat";
 import perfectionist from "eslint-plugin-perfectionist";
-import prettier from "eslint-plugin-prettier/recommended";
 import tseslint from "typescript-eslint";
 
 export const TEST_FILES = [
-  "**/tests/**/*.{js,ts}",
-  "**/__tests__/**/*.{js,ts}",
-  "**/*.{test,spec}.{js,ts}",
+  "**/tests/**/*.{js,ts,tsx}",
+  "**/__tests__/**/*.{js,ts,tsx}",
+  "**/*.{test,spec}.{js,ts,tsx}",
 ];
 
 export default [
   eslint.configs.recommended,
   ...tseslint.configs.strict,
   ...tseslint.configs.stylistic,
-  prettier,
+  eslintConfigPrettier,
   perfectionist.configs["recommended-natural"],
   {
     rules: {

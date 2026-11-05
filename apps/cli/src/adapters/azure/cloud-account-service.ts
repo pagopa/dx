@@ -23,8 +23,8 @@ import {
 } from "../../domain/cloud-account.js";
 import {
   type EnvironmentId,
-  environmentShort,
   EnvironmentShortValue,
+  getEnvironmentShort,
 } from "../../domain/environment.js";
 import { type GitHubRepo } from "../../domain/github-repo.js";
 import {
@@ -100,6 +100,9 @@ type BootstrapperIdentityParameters = {
   tags: Record<string, string>;
 };
 
+type BootstrapperResourceGroupName =
+  `${string}-${EnvironmentShortValue}-${LocationShortValue}-common-rg-${string}`;
+
 const keyVaultDnsErrorSchema = z.object({
   code: z.enum(["EAI_AGAIN", "ENOTFOUND"]),
 });
@@ -133,12 +136,74 @@ export class AzureCloudAccountService implements CloudAccountService {
     this.#credential = credential;
   }
 
+  async configureGitHubEnvironment(
+    cloudAccount: CloudAccount,
+    { name, prefix }: EnvironmentId,
+    github: GitHubRepo,
+    gitHubService: GitHubService,
+    runnerAppCredentials: GitHubAppCredentials,
+  ): Promise<void> {
+    assert.equal(cloudAccount.csp, "azure", "Cloud account must be Azure");
+    assert.ok(
+      isAzureLocation(cloudAccount.defaultLocation),
+      "The default location of the cloud account is not a valid Azure location",
+    );
+
+    const short = {
+      env: getEnvironmentShort(name),
+      location: locationShort[cloudAccount.defaultLocation],
+    };
+    const resourceGroupName: BootstrapperResourceGroupName = `${prefix}-${short.env}-${short.location}-common-rg-01`;
+    const cdIdentityName: BootstrapperIdentityName = `${prefix}-${short.env}-${short.location}-bootstrap-id-01`;
+    const ciIdentityName: BootstrapperIdentityName = `${prefix}-${short.env}-${short.location}-bootstrap-ci-id-01`;
+    const msiClient = new ManagedServiceIdentityClient(
+      this.#credential,
+      cloudAccount.id,
+    );
+
+    const [cdIdentity, ciIdentity] = await Promise.all([
+      this.#getBootstrapperIdentity({
+        cloudAccountId: cloudAccount.id,
+        identityName: cdIdentityName,
+        msiClient,
+        resourceGroupName,
+      }),
+      this.#getBootstrapperIdentity({
+        cloudAccountId: cloudAccount.id,
+        identityName: ciIdentityName,
+        msiClient,
+        resourceGroupName,
+      }),
+    ]);
+
+    const subscriptionClient = new SubscriptionClient(this.#credential);
+    const subscription = await subscriptionClient.subscriptions.get(
+      cloudAccount.id,
+    );
+    assert.ok(subscription.tenantId, "Subscription tenant ID is undefined");
+
+    await this.#configureBootstrapperGitHubEnvironments({
+      cdIdentityClientId: cdIdentity.clientId,
+      cdIdentityName: cdIdentity.name,
+      ciIdentityClientId: ciIdentity.clientId,
+      ciIdentityName: ciIdentity.name,
+      cloudAccountId: cloudAccount.id,
+      github,
+      gitHubService,
+      msiClient,
+      name,
+      resourceGroupName,
+      runnerAppCredentials,
+      tenantId: subscription.tenantId,
+    });
+  }
+
   async getTerraformBackend(
     cloudAccountId: CloudAccount["id"],
     { name, prefix }: EnvironmentId,
   ): Promise<TerraformBackend | undefined> {
     const allLocations = Object.values(locationShort).join("|");
-    const shortEnv = environmentShort[name];
+    const shortEnv = getEnvironmentShort(name);
     // Check if a storage account with the expected name exists
     // $prefix + environment short + location + "tfstatest" + suffix (e.g., "dxpitntfstatest01")
     // it can return multiple results (e.g. for different location or instance number)
@@ -272,11 +337,11 @@ export class AzureCloudAccountService implements CloudAccountService {
     );
 
     const short = {
-      env: environmentShort[name],
+      env: getEnvironmentShort(name),
       location: locationShort[cloudAccount.defaultLocation],
     };
 
-    const resourceGroupName = `${prefix}-${short.env}-${short.location}-common-rg-01`;
+    const resourceGroupName: BootstrapperResourceGroupName = `${prefix}-${short.env}-${short.location}-common-rg-01`;
 
     const parameters = {
       location: cloudAccount.defaultLocation,
@@ -401,7 +466,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     { name, prefix }: EnvironmentId,
   ): Promise<boolean> {
     const allLocations = Object.values(locationShort).join("|");
-    const shortEnv = environmentShort[name];
+    const shortEnv = getEnvironmentShort(name);
 
     const identityResourceName = `${prefix}-${shortEnv}-(${allLocations})-bootstrap-id-(0[1-9]|[1-9]\\d)`;
     const identityQuery = `resources
@@ -462,7 +527,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     );
 
     const short = {
-      env: environmentShort[name],
+      env: getEnvironmentShort(name),
       location: locationShort[cloudAccount.defaultLocation],
     };
 
@@ -570,7 +635,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     scope,
   }: {
     authorizationManagementClient: AuthorizationManagementClient;
-    cloudAccountId: string;
+    cloudAccountId: CloudAccount["id"];
     identity: BootstrapperIdentity;
     roleDefinitionIds: readonly string[];
     scope: string;
@@ -622,12 +687,12 @@ export class AzureCloudAccountService implements CloudAccountService {
     cdIdentityName: string;
     ciIdentityClientId: string;
     ciIdentityName: string;
-    cloudAccountId: string;
+    cloudAccountId: CloudAccount["id"];
     github: GitHubRepo;
     gitHubService: GitHubService;
     msiClient: ManagedServiceIdentityClient;
     name: EnvironmentId["name"];
-    resourceGroupName: string;
+    resourceGroupName: BootstrapperResourceGroupName;
     runnerAppCredentials: GitHubAppCredentials;
     tenantId: string;
   }): Promise<void> {
@@ -668,6 +733,31 @@ export class AzureCloudAccountService implements CloudAccountService {
       ),
     );
 
+    if (github.ownerId !== undefined && github.repoId !== undefined) {
+      // GitHub emits immutable subject claims embedding the numeric owner and
+      // repository IDs for repositories created or renamed after 2026-07-15.
+      // Azure matches the subject as an exact string, so an extra credential
+      // with the immutable format is created next to the name-based one, which
+      // keeps working for older repositories.
+      await Promise.all(
+        environmentIdentities.map(({ environmentName, identityName }) =>
+          msiClient.federatedIdentityCredentials.createOrUpdate(
+            resourceGroupName,
+            identityName,
+            `${this.#createFederatedCredentialName({
+              github,
+              githubEnvironmentName: environmentName,
+            })}-immutable`,
+            {
+              audiences: ["api://AzureADTokenExchange"],
+              issuer: "https://token.actions.githubusercontent.com",
+              subject: `repo:${github.owner}@${github.ownerId}/${github.repo}@${github.repoId}:environment:${environmentName}`,
+            },
+          ),
+        ),
+      );
+    }
+
     logger.debug(
       "Configured bootstrapper federated identity credentials in subscription {subscriptionId}",
       { subscriptionId: cloudAccountId },
@@ -696,11 +786,11 @@ export class AzureCloudAccountService implements CloudAccountService {
     parameters,
     resourceGroupName,
   }: {
-    cloudAccountId: string;
+    cloudAccountId: CloudAccount["id"];
     identityName: BootstrapperIdentityName;
     msiClient: ManagedServiceIdentityClient;
     parameters: BootstrapperIdentityParameters;
-    resourceGroupName: string;
+    resourceGroupName: BootstrapperResourceGroupName;
   }): Promise<BootstrapperIdentity> {
     const logger = getLogger(["gen", "env"]);
     const identity = await msiClient.userAssignedIdentities.createOrUpdate(
@@ -740,7 +830,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     cloudAccount: CloudAccount;
     name: EnvironmentId["name"];
     prefix: string;
-    resourceGroupName: string;
+    resourceGroupName: BootstrapperResourceGroupName;
     shortEnv: string;
     shortLocation: string;
     tags: Record<string, string>;
@@ -825,6 +915,36 @@ export class AzureCloudAccountService implements CloudAccountService {
     roleDefinitionId: string,
   ): string {
     return `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${roleDefinitionId}`;
+  }
+
+  async #getBootstrapperIdentity({
+    cloudAccountId,
+    identityName,
+    msiClient,
+    resourceGroupName,
+  }: {
+    cloudAccountId: CloudAccount["id"];
+    identityName: BootstrapperIdentityName;
+    msiClient: ManagedServiceIdentityClient;
+    resourceGroupName: BootstrapperResourceGroupName;
+  }): Promise<Pick<BootstrapperIdentity, "clientId" | "name">> {
+    const logger = getLogger(["gen", "env"]);
+    const identity = await msiClient.userAssignedIdentities.get(
+      resourceGroupName,
+      identityName,
+    );
+
+    assert.ok(identity.clientId, "Managed identity client ID is undefined");
+
+    logger.debug(
+      "Read identity {identityName} in subscription {subscriptionId}",
+      { identityName, subscriptionId: cloudAccountId },
+    );
+
+    return {
+      clientId: identity.clientId,
+      name: identityName,
+    };
   }
 
   async #getCurrentPrincipalIds(): Promise<Set<string>> {
@@ -923,7 +1043,6 @@ export class AzureCloudAccountService implements CloudAccountService {
     ];
     const releaseSecrets = runnerAppCredentials
       ? [
-          { secretName: "GH_APP_ID", secretValue: runnerAppCredentials.id },
           {
             secretName: "GH_APP_CLIENT_ID",
             secretValue: runnerAppCredentials.clientId,

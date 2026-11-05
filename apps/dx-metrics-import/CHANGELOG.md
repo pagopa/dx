@@ -1,3 +1,120 @@
+## 0.1.19 (2026-11-03)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.14
+
+## 0.1.18 (2026-11-02)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.13
+
+## 0.1.17 (2026-10-08)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.12
+- Updated @pagopa/eslint-config to 7.0.1
+
+## 0.1.16 (2026-10-01)
+
+### 🩹 Fixes
+
+- Fix the js-yaml v5 ESM import ([#2288](https://github.com/pagopa/dx/pull/2288))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
+## 0.1.15 (2026-09-24)
+
+### 🚀 Features
+
+- Make the importer incremental by default: persist a per-entity, per-repository cursor in sync_runs.cursor_at and resume from it, so newly added repositories are backfilled without re-downloading data already present. The cursor only advances after a complete window (recoverable failures are retried); in-progress workflow runs are reconciled by id and iac-pr stays on the floor window to keep reviewer sets complete. Add --repo to scope a run to one repository, skipping organization-wide entities. Requires applying the new sync_runs.cursor_at column with drizzle-kit push. ([#2269](https://github.com/pagopa/dx/pull/2269))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.11
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.14 (2026-09-24)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.10
+
+## 0.1.13 (2026-09-23)
+
+### 🩹 Fixes
+
+- Require mise for generated repository bootstrap, generate a mise lockfile, and track mise adoption ([#2218](https://github.com/pagopa/dx/pull/2218))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.1.12 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.9
+- Updated @pagopa/eslint-config to 7.0.0
+
+## 0.1.11 (2026-09-16)
+
+### 🚀 Features
+
+- Rework DX Metrics for trustworthiness and readability: ([#2205](https://github.com/pagopa/dx/pull/2205))
+
+  - `dx-metrics`: deterministic insights (sample size, confidence, severity) on every dashboard, aggregated into a single Executive Summary landing page served by one server-side endpoint; a cross-repository Benchmark dashboard; human-only review timing and equal-window lead-time comparison; ranked bar charts with units, locale-aware dates, data freshness, and loading skeletons.
+  - `dx-metrics-import`: capture an append-only techradar adoption snapshot after each import run.
+  - `@pagopa/dx-metrics-core`: add the `tech_radar_snapshots` table and new indexes on pull requests, workflow runs, commits, and reviews. Apply with `drizzle-kit push`.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.8
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.1.10 (2026-09-11)
+
+### 🩹 Fixes
+
+- Bump `js-yaml` from 4.3.1 to 4.3.2, picking up the fix for GHSA-2883-xcg3-v3hh (unbounded CPU usage when merging empty mappings). ([#2178](https://github.com/pagopa/dx/pull/2178))
+
+### ❤️ Thank You
+
+- Copilot App @Copilot
+- Danilo Spinelli @gunzip
+
+## 0.1.9 (2026-09-01)
+
+### 🩹 Fixes
+
+- Upgrade dependencies ([#2080](https://github.com/pagopa/dx/pull/2080))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.7
+- Updated @pagopa/eslint-config to 6.2.3
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+
+## 0.1.8 (2026-07-28)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-metrics-core to 0.1.6
+- Updated @pagopa/eslint-config to 6.2.2
+
 ## 0.1.6 (2026-07-02)
 
 ### 🩹 Fixes

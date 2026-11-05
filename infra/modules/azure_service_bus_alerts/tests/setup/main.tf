@@ -1,4 +1,6 @@
 terraform {
+  required_version = ">= 1.17.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -13,9 +15,9 @@ terraform {
 
 locals {
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     ManagementTeam = "Developer Experience"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_service_bus_alerts/tests"
@@ -25,7 +27,7 @@ locals {
 
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "test"
@@ -49,7 +51,7 @@ data "azurerm_resource_group" "rg" {
 }
 
 resource "azurerm_servicebus_namespace" "this" {
-  name                = "dx-d-itn-modules-test-sbns-01"
+  name                = "dx-u-itn-modules-test-sbns-01"
   resource_group_name = data.azurerm_resource_group.rg.name
   location            = data.azurerm_resource_group.rg.location
   sku                 = "Standard"
@@ -58,7 +60,7 @@ resource "azurerm_servicebus_namespace" "this" {
 }
 
 resource "azurerm_monitor_action_group" "dx" {
-  name                = "dx-d-itn-modules-test-ag-01"
+  name                = "dx-u-itn-modules-test-ag-01"
   resource_group_name = data.azurerm_resource_group.rg.name
   short_name          = "dx-alert"
 

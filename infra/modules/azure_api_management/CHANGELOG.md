@@ -1,3 +1,120 @@
+## 4.2.4 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 4.2.3 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 4.2.2 (2026-10-13)
+
+### 🩹 Fixes
+
+- Update internal examples and AzureRM constraints ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 4.2.1 (2026-10-06)
+
+### 🩹 Fixes
+
+- Accept null overrides for built-in APIM alerts across SKUs ([#2305](https://github.com/pagopa/dx/pull/2305))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 4.2.0 (2026-10-06)
+
+### 🚀 Features
+
+- Allow APIM consumers to override built-in metric alert thresholds individually or disable selected alerts by setting their threshold to null, without replacing the complete alert configuration. ([#2299](https://github.com/pagopa/dx/pull/2299))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 4.1.0 (2026-09-23)
+
+### 🚀 Features
+
+- Add SKU-aware default API Management metric alerts ([#2130](https://github.com/pagopa/dx/pull/2130))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Mario Mupo @mamu0
+
+## 4.0.3 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
+## 4.0.2 (2026-09-08)
+
+### 🩹 Fixes
+
+- Update internal dependencies ([#2120](https://github.com/pagopa/dx/pull/2120))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 4.0.1 (2026-09-08)
+
+### 🩹 Fixes
+
+- Change Tests environment to UAT ([#2123](https://github.com/pagopa/dx/pull/2123))
+
+### ❤️ Thank You
+
+- Krusty93
+- Mario Mupo @mamu0
+
+# 4.0.0 (2026-09-01)
+
+### ⚠️  Breaking Changes
+
+- Drop support for Terraform versions older than 1.14.0. The minimum required Terraform version is now 1.15.0, and it is suggested to use 1.16.0 or later. ([#2086](https://github.com/pagopa/dx/pull/2086))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 3.0.1 (2026-08-26)
+
+### 🩹 Fixes
+
+- Read module tags from module manifests ([#2053](https://github.com/pagopa/dx/pull/2053))
+- Split Terraform unit and contract tests ([#2055](https://github.com/pagopa/dx/pull/2055))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Christian Calabrese
+- Copilot App @Copilot
+
 ## 3.1.0 (2026-07-07)
 
 ### 🚀 Features

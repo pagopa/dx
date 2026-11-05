@@ -16,6 +16,7 @@
  * in the process lifecycle.
  */
 
+import { getLogLevel, setLogLevel } from "@azure/logger";
 import { useAzureMonitor } from "@azure/monitor-opentelemetry";
 import { metrics, trace } from "@opentelemetry/api";
 import { registerInstrumentations } from "@opentelemetry/instrumentation";
@@ -23,15 +24,33 @@ import { UndiciInstrumentation } from "@opentelemetry/instrumentation-undici";
 // import-in-the-middle and module must be the first imports so that
 // createAddHookMessageChannel / register run as early as possible.
 import { createAddHookMessageChannel } from "import-in-the-middle";
+import {
+  register as registerSyncHooks,
+  supportsSyncHooks,
+} from "import-in-the-middle/register-hooks.mjs";
 import { register } from "module";
 import os from "node:os";
 
-const { registerOptions, waitForAllMessagesAcknowledged } =
-  createAddHookMessageChannel();
-
 // Register the ESM module hook so that subsequent dynamic imports are
 // intercepted by OpenTelemetry's module instrumentation.
-register("import-in-the-middle/hook.mjs", import.meta.url, registerOptions);
+//
+// Prefer the synchronous, non-deprecated `module.registerHooks()` path
+// (import-in-the-middle's register-hooks.mjs) when the running Node.js
+// correctly supports it. Otherwise fall back to the deprecated but broadly
+// compatible `module.register()` + message channel approach, since apps/cli's
+// declared `engines.node` (>=22.0.0) spans patch versions that predate the
+// Node fix `supportsSyncHooks()` checks for (nodejs/node#59929).
+let waitForAllMessagesAcknowledged: () => Promise<void> = () =>
+  Promise.resolve();
+
+if (supportsSyncHooks()) {
+  registerSyncHooks();
+} else {
+  const { registerOptions, waitForAllMessagesAcknowledged: wait } =
+    createAddHookMessageChannel();
+  register("import-in-the-middle/hook.mjs", import.meta.url, registerOptions);
+  waitForAllMessagesAcknowledged = wait;
+}
 
 // Set service name before useAzureMonitor() initialises the Resource so
 // that Azure Monitor picks it up as the cloud_RoleName.
@@ -71,6 +90,8 @@ export const enableAzureMonitor = (): void => {
   }
   azureMonitorEnabled = true;
 
+  // Already validated from AZURE_LOG_LEVEL by @azure/logger (unset if invalid).
+  const azureLogLevel = getLogLevel();
   useAzureMonitor({
     azureMonitorExporterOptions: {
       connectionString:
@@ -79,6 +100,9 @@ export const enableAzureMonitor = (): void => {
     },
     enableLiveMetrics: true,
   });
+  // useAzureMonitor() enables Azure SDK logging at "warning", which leaks
+  // credential-chain probes and SDK deprecation notices to the console.
+  setLogLevel(azureLogLevel);
 
   // Registered after useAzureMonitor() so the instrumentation binds to the
   // real tracer/meter providers it installs (rather than the no-op defaults).
@@ -89,7 +113,8 @@ export const enableAzureMonitor = (): void => {
   });
 };
 
-// Block module evaluation until the hook is fully acknowledged.
-// This ensures that when bin/index.js proceeds to import the CLI entry
-// module, all transitive imports go through the registered hook.
+// Block module evaluation until the hook is fully acknowledged (a no-op on
+// the synchronous path, which needs no acknowledgement). This ensures that
+// when bin/index.js proceeds to import the CLI entry module, all transitive
+// imports go through the registered hook.
 await waitForAllMessagesAcknowledged();

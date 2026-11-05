@@ -1,0 +1,7 @@
+{
+  "$schema": "http://json-schema.org/schema",
+  "title": "Workflows generator",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

@@ -5,7 +5,7 @@
 variables {
   environment = {
     prefix          = "dx"
-    env_short       = "d"
+    env_short       = "u"
     location        = "italynorth"
     domain          = "modules"
     app_name        = "sa"
@@ -13,9 +13,9 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     Owner          = "DevEx"
     Source         = "https://github.com/pagopa/dx/infra/modules/azure_storage_account/tests"
     ManagementTeam = "Developer Experience"
@@ -53,8 +53,30 @@ run "missing_subnet_pep_for_private_storage" {
   command = plan
 
   variables {
-    force_public_network_access_enabled = false
-    subnet_pep_id                       = null
+    force_public_network_access_enabled  = false
+    subnet_pep_id                        = null
+    private_dns_zone_resource_group_name = null
+  }
+
+  expect_failures = [var.subnet_pep_id]
+}
+
+# ── 2b. Private endpoint inputs must be configured together ─────────────────
+run "missing_private_dns_zone_resource_group" {
+  command = plan
+
+  variables {
+    subnet_pep_id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-common/subnets/snet-pep"
+  }
+
+  expect_failures = [var.subnet_pep_id]
+}
+
+run "missing_subnet_pep_id" {
+  command = plan
+
+  variables {
+    private_dns_zone_resource_group_name = "rg-network"
   }
 
   expect_failures = [var.subnet_pep_id]
