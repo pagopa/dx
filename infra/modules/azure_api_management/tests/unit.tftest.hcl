@@ -217,29 +217,29 @@ run "azure_api_management_subnet_created_from_dx_cidr" {
   }
 }
 
+run "azure_api_management_private_dns_resource_group_override" {
+  command = plan
+
+  variables {
+    virtual_network                      = "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-test"
+    private_dns_zone_resource_group_name = "rg-dns"
+  }
+
+  assert {
+    condition = (
+      azurerm_private_dns_a_record.apim_azure_api_net.private_dns_zone_id == "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/azure-api.net" &&
+      azurerm_private_dns_a_record.apim_management_azure_api_net.private_dns_zone_id == "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/management.azure-api.net" &&
+      azurerm_private_dns_a_record.apim_scm_azure_api_net.private_dns_zone_id == "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/scm.azure-api.net"
+    )
+    error_message = "DNS IDs must follow the VNet subscription and overridden DNS resource group."
+  }
+}
+
 run "azure_api_management_high_load_public_ip_and_autoscale" {
   command = plan
 
   variables {
     use_case = "high_load"
-  }
-
-  run "azure_api_management_private_dns_resource_group_override" {
-    command = plan
-
-    variables {
-      virtual_network                      = "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-test"
-      private_dns_zone_resource_group_name = "rg-dns"
-    }
-
-    assert {
-      condition = (
-        azurerm_private_dns_a_record.apim_azure_api_net.private_dns_zone_id == "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/azure-api.net" &&
-        azurerm_private_dns_a_record.apim_management_azure_api_net.private_dns_zone_id == "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/management.azure-api.net" &&
-        azurerm_private_dns_a_record.apim_scm_azure_api_net.private_dns_zone_id == "/subscriptions/11111111-1111-1111-1111-111111111111/resourceGroups/rg-dns/providers/Microsoft.Network/privateDnsZones/scm.azure-api.net"
-      )
-      error_message = "DNS IDs must follow the VNet subscription and overridden DNS resource group."
-    }
   }
 
   assert {
