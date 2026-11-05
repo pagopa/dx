@@ -89,6 +89,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                                                                          | Impact / blocker                                                                           | Owner            | Resolution / link                                                           |
+| ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ | ---------------- | --------------------------------------------------------------------------- |
 | `uc-open-01` | Decision | Use the designated primary support channel only; when it is unavailable, report the failure without claiming delivery or automatically routing to a fallback. | The agreed unavailable-channel behavior needs implementation and support-process evidence. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; parent `open.item-006`. |

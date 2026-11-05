@@ -90,6 +90,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                                                                                                             | Impact / blocker                                                                                                              | Owner            | Resolution / link                                                                                                                                  |
+| ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `uc-open-01` | Decision | Do not prescribe delivery, ordering or recovery guarantees for service-integration patterns. Retain the documented retry and failure-handling options as capabilities, not universal guarantees. | Common retry safety still applies when retries are used; documented options do not establish guaranteed delivery or ordering. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; [messaging guidance](../../apps/website/docs/azure/integrating-services/using-service-bus.md). |

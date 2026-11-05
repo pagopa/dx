@@ -92,6 +92,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                                                            | Impact / blocker                                                                                                   | Owner            | Resolution / link                                                                                                                         |
+| ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | `uc-open-01` | Decision | When no relevant verifiable source is available, report its absence and do not provide a factual answer; distinguish it from a service failure. | Current implementation can return an empty answer or source list, so the agreed behavior still needs verification. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; [question handler](../../apps/mcpserver/src/handlers/ask.ts); parent `open.item-005`. |

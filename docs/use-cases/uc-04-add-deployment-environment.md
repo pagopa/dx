@@ -111,6 +111,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                                                                                                            | Impact / blocker                                                                                                 | Owner            | Resolution / link                                                                                                                                                            |
+| ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `uc-open-01` | Decision | Report `not_required`, `pending`, `approved`, `failed` or `unverifiable` per account; a configured environment remains `partial` until every required authorization is approved or unnecessary. | The current warnings and returned links do not establish the agreed per-account result or approval verification. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; [authorization flow](../../apps/cli/src/adapters/commander/commands/add.ts); parent `open.item-005` and `open.item-007`. |

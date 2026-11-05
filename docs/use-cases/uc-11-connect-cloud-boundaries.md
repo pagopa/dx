@@ -89,6 +89,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                               | Impact / blocker                                                                                                        | Owner            | Resolution / link                                                                                                                                   |
+| ------------ | -------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `uc-open-01` | Decision | Detect overlapping network ranges before connection-related changes; report the conflict and make no such changes. | The examined implementation does not show a dedicated overlap check; the agreed behavior needs implementation evidence. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; [configuration inputs](../../infra/modules/aws_azure_vpn/variables.tf); parent `open.item-005`. |

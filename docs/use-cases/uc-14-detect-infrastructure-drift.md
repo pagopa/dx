@@ -94,6 +94,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                                                                  | Impact / blocker                                                                                                                    | Owner            | Resolution / link                                                                                                                                |
+| ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `uc-open-01` | Decision | An incomplete inspection produces `partial` or `failed`, never no-drift, and alerts the responsible owner; notification-delivery failure is explicit. | The current workflow continues after inspection errors; compliance with the agreed signaling and alert behavior remains unverified. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; [drift workflow](../../.github/workflows/infra_drift_detection.yml); parent `open.item-007`. |

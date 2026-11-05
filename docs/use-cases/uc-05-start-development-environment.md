@@ -82,6 +82,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                                                                                                         | Impact / blocker                                                  | Owner            | Resolution / link                                                           |
+| ------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------- |
 | `uc-open-01` | Decision | A failed setup reports the failed step, known or uncertain effects and `partial` or `failed`, without declaring the environment ready; retry and rollback follow the agreed safety policies. | The agreed behavior and its implementation remain to be verified. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; parent `open.item-007`. |

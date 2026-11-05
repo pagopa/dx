@@ -98,6 +98,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                                                                               | Impact / blocker                                                                                                                | Owner            | Resolution / link                                                                                                                                        |
+| ------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------- | ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `uc-open-01` | Decision | Specify permitted actions and scope per resource type and role intent; equivalent implementations preserve those actions rather than provider-specific role names. | Similar role labels do not imply identical permissions across services; the concrete per-resource mapping still needs evidence. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; [access abstractions](../../infra/modules/azure_role_assignments/README.md); parent `open.item-005`. |

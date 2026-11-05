@@ -91,6 +91,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                                                                                                                       | Impact / blocker                                                        | Owner            | Resolution / link                                                           |
+| ------------ | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- | ---------------- | --------------------------------------------------------------------------- |
 | `uc-open-01` | Decision | Report unavailable guidance and do not claim an assessment or approval. New choices wait for restored guidance or authorized confirmation; documented existing choices may continue with the gap explicit. | The agreed unavailable-guidance behavior needs implementation evidence. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; parent `open.item-005`. |

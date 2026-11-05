@@ -94,6 +94,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                                                                                                                                                               | Impact / blocker                                                                       | Owner            | Resolution / link                                                                               |
+| ------------ | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------- |
 | `uc-open-01` | Decision | Compare runs only when cases, criteria and execution conditions are equivalent except for the declared variable; report differences without presenting incomparable deltas as valid. Incomplete runs use the agreed `partial` / `failed` outcomes. | Current comparability checks and incomplete-run behavior need implementation evidence. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; parent `open.item-005` and `open.item-007`. |

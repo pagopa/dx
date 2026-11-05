@@ -90,6 +90,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                                                                        | Impact / blocker                                                                                                                            | Owner            | Resolution / link                                                                                                                                                                     |
+| ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `uc-open-01` | Decision | Remote publication is optional; the local workspace remains available when publication is declined, without assuming that external prerequisites disappear. | The published usage guide now reflects the agreed contract and distinguishes a publication attempt from guaranteed review-request creation. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; [usage guide](../../apps/website/docs/dx-cli/usage.md), [implementation](../../apps/cli/src/adapters/commander/commands/init.ts). |

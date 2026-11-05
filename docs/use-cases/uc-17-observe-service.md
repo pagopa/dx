@@ -91,6 +91,6 @@ parent_dr: ../design-review.md
 
 ## Open questions and propagation
 
-| ID | Type | Item | Impact / blocker | Owner | Resolution / link |
-| --- | --- | --- | --- | --- | --- |
+| ID           | Type     | Item                                                                                                                                                  | Impact / blocker                                                   | Owner            | Resolution / link                                                           |
+| ------------ | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------ | ---------------- | --------------------------------------------------------------------------- |
 | `uc-open-01` | Decision | Invalid required inputs block publication and produce an explicit error. Missing signals are shown as unknown or unavailable, not as healthy or zero. | The agreed behavior needs implementation and conformance evidence. | DX Product Owner | Confirmed by the requesting stakeholder 2026-11-04; parent `open.item-005`. |
