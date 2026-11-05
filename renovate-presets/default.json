@@ -1,6 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "description": "Group major updates for PagoPA DX Terraform modules.",
+  "description": "Shared Renovate rules maintained by PagoPA DX.",
   "packageRules": [
     {
       "matchManagers": ["terraform"],

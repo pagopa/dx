@@ -2,4 +2,4 @@
 '@pagopa/dx-cli': minor
 ---
 
-Use the shared PagoPA DX Terraform modules Renovate preset in generated repositories
+Use the shared PagoPA DX Renovate preset in generated repositories

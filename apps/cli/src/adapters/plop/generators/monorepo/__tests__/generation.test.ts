@@ -193,7 +193,7 @@ describe("monorepo generator — file generation", () => {
     );
 
     expect(generatedFiles["renovate.json"]).toContain(
-      "github>pagopa/dx//renovate-presets/pagopa-dx-terraform-modules",
+      "github>pagopa/dx//renovate-presets/default",
     );
     expect(generatedFiles["renovate.json"]).toContain(
       '"matchPackageNames": ["pagopa/dx"]',
