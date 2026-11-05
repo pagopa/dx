@@ -32,7 +32,7 @@ locals {
     Environment    = "Uat"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/modules/azure_service_bus_namespace/examples/complete"
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     ManagementTeam = "Developer Experience"
   }
 }

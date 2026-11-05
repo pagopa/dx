@@ -14,24 +14,24 @@
       "source": "https://registry.terraform.io/modules/pagopa-dx/aws-core-values-exporter/aws/2.0.1"
     },
     "azure.bootstrap": {
-      "hash": "a2b6be16f9e56f636f844ae249b67d0c7b424d79589a2037518f49f0e10bdb06",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/6.2.3"
+      "hash": "7f37877f5bda66357195d00df63529261634a1a321a9256c602700d07ff668f6",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-github-environment-bootstrap/azurerm/7.1.1"
     },
     "azure.bootstrap.github_runner": {
       "hash": "888a86b1c459264fa284aa584dc0454fef97a9b9bf7cee7fbc2e2ca8b2f8500e",
       "source": "https://registry.terraform.io/modules/pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm/3.0.4"
     },
     "azure.core_values": {
-      "hash": "1d5b6f9e6cf0a6b87bee4bc49c37b5d9345a7c954a059be8d5af924dbddade8f",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/2.0.3"
+      "hash": "76f853db68cdac39f66fa579c86ceb61e3512abc6182ae1470ffaf796de34c15",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/2.0.0"
     },
     "azure.roles_cd": {
-      "hash": "8778f11a8a33006e81dd98a61da10ceb17775d4360c60845cb994bed37cb19e5",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/4.0.6"
+      "hash": "1cc63195740ccf7963682106e66c22dc18d538895ba73cb36428d013cb16fe91",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/4.0.0"
     },
     "azure.roles_ci": {
-      "hash": "8778f11a8a33006e81dd98a61da10ceb17775d4360c60845cb994bed37cb19e5",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/4.0.6"
+      "hash": "1cc63195740ccf7963682106e66c22dc18d538895ba73cb36428d013cb16fe91",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/4.0.0"
     },
     "azure.bootstrap.github_runner_dx": {
       "hash": "888a86b1c459264fa284aa584dc0454fef97a9b9bf7cee7fbc2e2ca8b2f8500e",

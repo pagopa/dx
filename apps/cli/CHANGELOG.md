@@ -1,3 +1,33 @@
+## 0.27.28 (2026-11-04)
+
+### 🩹 Fixes
+
+- Bump dependencies to address security advisories ([#2492](https://github.com/pagopa/dx/pull/2492))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.27.27 (2026-11-03)
+
+### 🩹 Fixes
+
+- Fix the getting-started documentation URL in init and add environment summaries. ([#2482](https://github.com/pagopa/dx/pull/2482))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.27.26 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.27.25 (2026-11-03)
 
 ### 🩹 Fixes

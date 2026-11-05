@@ -379,7 +379,7 @@ const displaySummary = (result: AddResult) => {
     }
   }
   console.log(
-    `${step}. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
+    `${step}. Visit ${chalk.underline("https://dx.pagopa.it/docs/getting-started")} to deploy your first project\n`,
   );
 };
 

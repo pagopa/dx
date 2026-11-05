@@ -1,3 +1,13 @@
+## 7.1.2 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 7.1.1 (2026-11-02)
 
 ### 🩹 Fixes

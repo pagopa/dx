@@ -25,7 +25,7 @@ locals {
   }
 
   tags = {
-    CostCenter  = "TS000 - TECNOLOGIA & SERVIZI"
+    CostCenter  = "TS720 - DEV EX"
     Owner       = "DevEx"
     Environment = "Prod"
     Source      = "https://github.com/pagopa/dx/blob/main/infra/core/prod"

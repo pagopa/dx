@@ -1,3 +1,13 @@
+## 0.1.2 (2026-11-04)
+
+### 🩹 Fixes
+
+- Use explicit PR base and current head for affected runs ([#2481](https://github.com/pagopa/dx/pull/2481))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.1.1 (2026-10-29)
 
 ### 🩹 Fixes
