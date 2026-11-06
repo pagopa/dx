@@ -73,6 +73,28 @@ run "azure_app_service_default_plan" {
   }
 }
 
+run "azure_app_service_service_endpoints" {
+  command = plan
+
+  variables {
+    subnet_service_endpoints = {
+      cosmos  = true
+      storage = true
+      web     = true
+    }
+  }
+
+  assert {
+    condition = (
+      length(azurerm_subnet.this[0].service_endpoint) == 3
+      && contains([for endpoint in azurerm_subnet.this[0].service_endpoint : endpoint.service], "Microsoft.AzureCosmosDB")
+      && contains([for endpoint in azurerm_subnet.this[0].service_endpoint : endpoint.service], "Microsoft.Storage")
+      && contains([for endpoint in azurerm_subnet.this[0].service_endpoint : endpoint.service], "Microsoft.Web")
+    )
+    error_message = "Enabled service endpoints must be configured using AzureRM v5 service_endpoint blocks."
+  }
+}
+
 run "azure_app_service_existing_subnet" {
   command = plan
 

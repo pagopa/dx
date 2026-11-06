@@ -1,3 +1,19 @@
+# 6.0.0 (2026-11-05)
+
+### ⚠️  Breaking Changes
+
+- Support AzureRM v5 and Terraform 1.16 as a breaking major release. ([#2472](https://github.com/pagopa/dx/pull/2472))
+
+  ## Migration guide
+
+  - Use AzureRM provider `~> 5.0` and Terraform `>= 1.16.0` in the calling root module.
+  - Back up the existing Terraform state, update the provider constraint, and run `terraform init -upgrade`.
+  - Review `terraform plan` and confirm existing App Service, slot, subnet, and private endpoint resources are updated in place before applying. Do not apply if Terraform proposes replacement.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 5.1.0 (2026-10-22)
 
 ### 🚀 Features

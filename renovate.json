@@ -1,7 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended",
+    "github>pagopa/dx//renovate-presets/default"
+  ],
   "timezone": "Europe/Rome",
+  "dockerfile": {
+    "ignorePaths": [
+      "**/node_modules/**",
+      "**/bower_components/**",
+      "**/vendor/**"
+    ]
+  },
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
@@ -16,6 +26,7 @@
     },
     {
       "matchManagers": ["dockerfile"],
+      "enabled": true,
       "groupName": "Docker images",
       "minimumReleaseAge": "7 days",
       "minimumReleaseAgeBehaviour": "timestamp-optional",
@@ -34,13 +45,6 @@
       "matchDatasources": ["github-releases"],
       "groupName": "Terraform CLI",
       "schedule": ["* 0-8 * * 1"]
-    },
-    {
-      "matchManagers": ["terraform"],
-      "matchDatasources": ["terraform-module"],
-      "matchPackageNames": ["/^pagopa-dx\\//"],
-      "matchUpdateTypes": ["major"],
-      "groupName": "PagoPA DX Terraform modules versions"
     }
   ]
 }

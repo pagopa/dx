@@ -1,3 +1,13 @@
+## 0.5.29 (2026-11-06)
+
+### 🩹 Fixes
+
+- Update Docker base images to Node.js 24 ([#2504](https://github.com/pagopa/dx/pull/2504))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.28 (2026-11-03)
 
 ### 🚀 Features
