@@ -5,6 +5,13 @@
     "github>pagopa/dx//renovate-presets/default"
   ],
   "timezone": "Europe/Rome",
+  "dockerfile": {
+    "ignorePaths": [
+      "**/node_modules/**",
+      "**/bower_components/**",
+      "**/vendor/**"
+    ]
+  },
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
@@ -19,6 +26,7 @@
     },
     {
       "matchManagers": ["dockerfile"],
+      "enabled": true,
       "groupName": "Docker images",
       "minimumReleaseAge": "7 days",
       "minimumReleaseAgeBehaviour": "timestamp-optional",
