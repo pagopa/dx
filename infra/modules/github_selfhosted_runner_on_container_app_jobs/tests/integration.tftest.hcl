@@ -132,8 +132,8 @@ run "apply_github_app_auth" {
   }
 
   assert {
-    condition     = length(azurerm_container_app_job.github_runner.secret) == 3
-    error_message = "GitHub App auth must reference exactly 3 Key Vault secrets"
+    condition     = length(azurerm_container_app_job.github_runner.secret) == 4
+    error_message = "GitHub App auth must reference exactly 4 Key Vault secrets"
   }
 
   assert {
