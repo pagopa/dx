@@ -12,8 +12,10 @@ const createMockGitHubService = (): GitHubService => ({
   createBranch: vi.fn(),
   createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
   createPullRequest: vi.fn(),
+  getAccount: vi.fn(),
   getFileContent: vi.fn(),
   getRepository: vi.fn(),
+  getTeam: vi.fn(),
   updateFile: vi.fn(),
 });
 

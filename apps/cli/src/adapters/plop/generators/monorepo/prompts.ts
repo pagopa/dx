@@ -6,14 +6,23 @@
 import { type PlopGeneratorConfig } from "node-plop";
 import { z } from "zod/v4";
 
+import {
+  codeOwnerSchema,
+  codeOwnershipSchema,
+} from "../../../../domain/code-ownership.js";
 import { validatePrompt } from "../../helpers/validate-prompt.js";
 
 export const DEFAULT_REPO_OWNER = "pagopa";
 
-export const payloadSchema = z.object({
+export const basePayloadSchema = z.object({
+  codeOwners: z.array(codeOwnerSchema).optional(),
   repoDescription: z.string().optional(),
   repoName: z.string().trim().min(1, "Repository name cannot be empty"),
-  repoOwner: z.string().trim().default(DEFAULT_REPO_OWNER),
+  repoOwner: z.string().trim().min(1).default(DEFAULT_REPO_OWNER),
+});
+
+export const payloadSchema = basePayloadSchema.extend({
+  ownership: codeOwnershipSchema,
 });
 
 export type Payload = z.infer<typeof payloadSchema>;

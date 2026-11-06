@@ -11,6 +11,7 @@ import type { CommandPresenter } from "../../../domain/command-presenter.js";
 import type { CliEnv } from "../env.js";
 import type { GlobalOptions } from "../global-options.js";
 
+import { codeOwnerSchema } from "../../../domain/code-ownership.js";
 import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import {
   GitHubService,
@@ -46,16 +47,19 @@ type InitResult = {
   repository?: Repository;
 };
 
-type SummaryInput = GitHubRepoCreationSkippedResult | InitResult;
+type SummaryInput = (GitHubRepoCreationSkippedResult | InitResult) & {
+  ownership: ReturnType<typeof getOwnershipGuidance>;
+};
 
 const isGitHubRepoCreationSkipped = (
   input: SummaryInput,
-): input is GitHubRepoCreationSkippedResult =>
+): input is GitHubRepoCreationSkippedResult & SummaryInput =>
   "gitHubRepoCreationSkipped" in input;
 
 type InitActionContext = {
   gitHubService: GitHubService;
   initialAnswers?: InitInitialAnswers;
+  nonInteractive?: boolean;
   presenter: CommandPresenter;
 };
 
@@ -71,6 +75,43 @@ type LocalWorkspace = {
 type RepositoryPullRequest = {
   pr?: PullRequest;
   repository: Repository;
+};
+
+export const getOwnershipGuidance = (payload: MonorepoPayload) => {
+  const { namespaceType, owners, reviewerTeams } = payload.ownership;
+  const additionalOwners = owners.filter(
+    (owner) => owner.toLowerCase() !== `@${payload.repoOwner}`.toLowerCase(),
+  );
+  const requiresAuthorization =
+    namespaceType === "Organization" || additionalOwners.length > 0;
+  const repository = `${payload.repoOwner}/${payload.repoName}`;
+  const authorizationRepository =
+    namespaceType === "Organization" &&
+    payload.repoOwner.toLowerCase() === "pagopa"
+      ? "https://github.com/pagopa/eng-github-authorization"
+      : undefined;
+  const instructions = requiresAuthorization
+    ? [
+        authorizationRepository
+          ? `Open a PR in ${authorizationRepository} to register ${repository}, grant ${owners.join(", ")} repository Write access (or higher), and associate the repository with the product GitHub App. Use exactly the same teams as CODEOWNERS and repository.reviewers_teams: ${reviewerTeams.join(", ") || "(no teams selected)"}.`
+          : namespaceType === "Organization"
+            ? `Use ${payload.repoOwner}'s authorization process to grant ${owners.join(", ")} Write access (or higher) to ${repository}. Keep team grants aligned with CODEOWNERS and repository.reviewers_teams: ${reviewerTeams.join(", ") || "(no teams selected)"}.`
+            : `Grant ${additionalOwners.join(", ")} Write access (or higher) to ${repository} and have them accept collaborator invitations.`,
+        "Repository access has not been validated or granted by DX CLI. CODEOWNERS and deployment reviewer settings do not grant access.",
+      ]
+    : [];
+  return {
+    authorizationRepository,
+    instructions: [
+      ...instructions,
+      "Code-owner review requests become effective once access is granted and CODEOWNERS is merged into the pull request's base branch.",
+    ],
+    owners,
+    permissionStatus: requiresAuthorization
+      ? "manual-authorization-required"
+      : "personal-owner",
+    reviewerTeams,
+  };
 };
 
 const trackStep = <T, E>(
@@ -266,6 +307,7 @@ export const runAddEnvironmentPreconditions = (presenter: CommandPresenter) =>
 const DEFAULT_GITHUB_PUBLISH_CONFIRMATION = true;
 
 export const initCommandOptionsSchema = z.object({
+  codeOwners: z.array(codeOwnerSchema).min(1).optional(),
   description: z.string().optional(),
   name: z.string().trim().min(1, "Repository name cannot be empty").optional(),
   owner: z.string().trim().min(1, "GitHub owner cannot be empty").optional(),
@@ -289,6 +331,7 @@ export const parseInitCommandOptions = (input: unknown): InitCommandOptions => {
 };
 
 export const getMonorepoInitialAnswers = ({
+  codeOwners,
   description,
   name,
   owner,
@@ -296,6 +339,9 @@ export const getMonorepoInitialAnswers = ({
 }: InitCommandOptions): InitInitialAnswers => {
   const initialAnswers: InitInitialAnswers = {};
 
+  if (codeOwners !== undefined) {
+    initialAnswers.codeOwners = codeOwners;
+  }
   if (description) {
     initialAnswers.repoDescription = description;
   }
@@ -533,7 +579,9 @@ const handleGeneratorError = (err: unknown) => {
   if (err instanceof Error) {
     logger.error(err.message);
   }
-  return new Error("Failed to run the generator", { cause: err });
+  return new Error(`Failed to run the generator: ${toErrorMessage(err)}`, {
+    cause: err,
+  });
 };
 
 /**
@@ -580,6 +628,7 @@ export const confirmGitHubRepoCreation = (
 const runInitAction = ({
   gitHubService,
   initialAnswers = {},
+  nonInteractive = false,
   presenter,
 }: InitActionContext): ResultAsync<SummaryInput, Error> => {
   const { publishToGitHub, ...monorepoInitialAnswers } = initialAnswers;
@@ -594,7 +643,9 @@ const runInitAction = ({
       // The prompt phase must run outside trackStep: in text mode trackStep
       // renders a spinner that occupies the TTY and hides the prompts.
       ResultAsync.fromPromise(
-        collectMonorepoPayload(plop, gitHubService, monorepoInitialAnswers),
+        collectMonorepoPayload(plop, gitHubService, monorepoInitialAnswers, {
+          nonInteractive,
+        }),
         handleGeneratorError,
       ),
     )
@@ -623,17 +674,23 @@ const runInitAction = ({
       ).map(() => payload),
     )
     .andThen((payload) =>
-      confirmGitHubRepoCreation(payload, publishToGitHub).andThen<
-        SummaryInput,
-        Error
-      >((confirmed) =>
-        confirmed
-          ? handleNewGitHubRepositoryWithPresenter({
-              gitHubService,
-              presenter,
-            })(payload)
-          : okAsync({ gitHubRepoCreationSkipped: true, payload }),
-      ),
+      confirmGitHubRepoCreation(
+        payload,
+        publishToGitHub ?? (nonInteractive ? false : undefined),
+      )
+        .andThen<GitHubRepoCreationSkippedResult | InitResult, Error>(
+          (confirmed) =>
+            confirmed
+              ? handleNewGitHubRepositoryWithPresenter({
+                  gitHubService,
+                  presenter,
+                })(payload)
+              : okAsync({ gitHubRepoCreationSkipped: true, payload }),
+        )
+        .map((result) => ({
+          ...result,
+          ownership: getOwnershipGuidance(payload),
+        })),
     );
 };
 
@@ -644,6 +701,10 @@ const reportSummary =
       presenter.reportResult(result);
     } else {
       displaySummary(result);
+      console.log(chalk.bold("Code ownership and access:"));
+      for (const instruction of result.ownership.instructions) {
+        console.log(`- ${instruction}`);
+      }
     }
   };
 
@@ -660,6 +721,18 @@ export const makeInitCommand = (
         "--owner <owner>",
         "GitHub organization or user that will own the repository",
       ),
+    )
+    .addOption(
+      Object.assign(
+        new Option(
+          "--code-owner <@user|@org/team>",
+          "Code owner (repeatable); required for organizations, personal repository owner is included automatically",
+        ),
+        { attributeName: () => "codeOwners" },
+      ).argParser((value: string, previous: string[] = []) => [
+        ...previous,
+        value,
+      ]),
     )
     .addOption(
       new Option("--description <description>", "Repository description"),
@@ -689,6 +762,7 @@ export const makeInitCommand = (
               runInitAction({
                 gitHubService: auth.gitHubService,
                 initialAnswers: getMonorepoInitialAnswers(initOptions),
+                nonInteractive: env.CI || !process.stdin.isTTY,
                 presenter,
               }),
             ),

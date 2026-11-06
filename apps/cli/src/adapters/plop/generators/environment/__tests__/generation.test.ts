@@ -113,8 +113,10 @@ const createMockGitHubService = (): GitHubService => ({
   createBranch: vi.fn().mockResolvedValue(undefined),
   createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
   createPullRequest: vi.fn().mockResolvedValue(undefined),
+  getAccount: vi.fn(),
   getFileContent: vi.fn().mockResolvedValue(undefined),
   getRepository: vi.fn().mockResolvedValue(undefined),
+  getTeam: vi.fn(),
   updateFile: vi.fn().mockResolvedValue(undefined),
 });
 
@@ -214,6 +216,49 @@ const payload: Payload = {
     domain: "payments",
   },
 };
+
+describe("environment generator ownership preservation", () => {
+  it("preserves existing CODEOWNERS and deployment reviewer teams", async () => {
+    const codeOwners = "* @pagopa/product-team @alice\n";
+    const generated = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload: structuredClone(payload),
+      prepareRepository: async (directory) => {
+        await fs.writeFile(path.join(directory, "CODEOWNERS"), codeOwners);
+        const main = path.join(directory, "infra", "repository", "main.tf");
+        const content = await fs.readFile(main, "utf8");
+        await fs.writeFile(
+          main,
+          content.replace(
+            "reviewers_teams        = []",
+            'reviewers_teams        = ["product-team"]',
+          ),
+        );
+      },
+      tmpDirPrefix: "dx-cli-env-ownership-test-",
+    });
+    try {
+      const files = await readGeneratedFiles(generated.tmpDir, [
+        "CODEOWNERS",
+        "infra/repository/main.tf",
+      ]);
+      expect(files["CODEOWNERS"]).toBe(codeOwners);
+      expect(files["infra/repository/main.tf"]).toContain(
+        'reviewers_teams        = ["product-team"]',
+      );
+      expect(files["infra/repository/main.tf"]).toContain(
+        'environments           = ["dev", "prod"]',
+      );
+    } finally {
+      process.chdir(generated.originalCwd);
+      await cleanupTempDir(generated.tmpDir);
+    }
+  });
+});
 
 describe("environment generator — file generation (no init)", () => {
   let tmpDir: string;
