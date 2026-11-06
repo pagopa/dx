@@ -1,3 +1,13 @@
+## 0.27.29 (2026-11-06)
+
+### 🚀 Features
+
+- Use the shared PagoPA DX Renovate preset in generated repositories ([#2498](https://github.com/pagopa/dx/pull/2498))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
 ## 0.27.28 (2026-11-04)
 
 ### 🩹 Fixes
