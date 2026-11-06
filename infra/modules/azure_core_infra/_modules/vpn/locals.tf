@@ -9,7 +9,7 @@ locals {
 
   aws = {
     bgp_asn = 65000
-    # First level key is the VPN connection index, second level key is the tunnel index
+    # First level key is the VPN connection index, second level key is the tunnel index
     inside_cidrs = {
       0 = {
         0 = "169.254.21.0/30"
