@@ -27,8 +27,7 @@ resource "azurerm_public_ip" "apim" {
 
 resource "azurerm_private_dns_a_record" "apim_azure_api_net" {
   name                = azurerm_api_management.this.name
-  zone_name           = "azure-api.net"
-  resource_group_name = local.private_dns_zone_resource_group_name
+  private_dns_zone_id = local.private_dns_zone_ids.azure_api_net
   ttl                 = 3600
   records             = local.use_case_features.private_endpoint ? [azurerm_private_endpoint.apim_pep[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0]] : azurerm_api_management.this.private_ip_addresses
 
@@ -37,8 +36,7 @@ resource "azurerm_private_dns_a_record" "apim_azure_api_net" {
 
 resource "azurerm_private_dns_a_record" "apim_management_azure_api_net" {
   name                = azurerm_api_management.this.name
-  zone_name           = "management.azure-api.net"
-  resource_group_name = local.private_dns_zone_resource_group_name
+  private_dns_zone_id = local.private_dns_zone_ids.management_azure_api_net
   ttl                 = 3600
   records             = local.use_case_features.private_endpoint ? [azurerm_private_endpoint.apim_pep[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0]] : azurerm_api_management.this.private_ip_addresses
 
@@ -47,8 +45,7 @@ resource "azurerm_private_dns_a_record" "apim_management_azure_api_net" {
 
 resource "azurerm_private_dns_a_record" "apim_scm_azure_api_net" {
   name                = azurerm_api_management.this.name
-  zone_name           = "scm.azure-api.net"
-  resource_group_name = local.private_dns_zone_resource_group_name
+  private_dns_zone_id = local.private_dns_zone_ids.scm_azure_api_net
   ttl                 = 3600
   records             = local.use_case_features.private_endpoint ? [azurerm_private_endpoint.apim_pep[0].private_dns_zone_configs[0].record_sets[0].ip_addresses[0]] : azurerm_api_management.this.private_ip_addresses
 

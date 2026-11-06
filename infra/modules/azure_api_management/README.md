@@ -102,6 +102,22 @@ monitoring defaults, and production management lock.
 - Remove `key_vault_id` and `certificate_names`. Use `key_vault_certificate_id` on each custom hostname; certificate versions are stripped internally. Replace the proxy hostname list with `{ use_resource_name_as_default = true }` if needed; the proxy hostname is managed from the APIM resource name.
 - Update the module version constraint to `~> 5.0`.
 
+Require Terraform `>= 1.16.0` and AzureRM `~> 5.0` in the caller, upgrade other
+modules in the same root to compatible provider constraints, and run
+`terraform init -upgrade`. AzureRM v5 no longer registers Resource Providers by
+default; ensure the required providers are registered or configure registration
+explicitly in the caller's provider.
+
+The private DNS A records use `private_dns_zone_id`, computed from the VNet
+subscription, DNS resource group, and fixed zone name. AzureRM v5 derives the
+zone ID from each existing record ID during refresh, so this schema change
+alone does not require imports or state moves. Review a refreshed plan; do not
+apply a plan that replaces APIM or an existing subnet.
+
+The committed example references the intended registry module `~> 5.0`, which
+cannot initialize until that major is published. Pre-publication checks use a
+temporary local module source override, restored before commit.
+
 Review the Terraform plan before migrating an existing deployment. Previously
 caller-managed subnets and public IPs are not automatically adopted; explicitly
 migrate ownership where appropriate to avoid subnet conflicts or APIM replacement.
@@ -122,8 +138,8 @@ instance or migrating an existing deployment.
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.1 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 5.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
 ## Modules

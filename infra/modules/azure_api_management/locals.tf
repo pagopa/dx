@@ -61,6 +61,13 @@ locals {
   virtual_network_resource_group_name  = local.virtual_network.resource_group_name
   private_dns_zone_resource_group_name = coalesce(var.private_dns_zone_resource_group_name, local.virtual_network_resource_group_name)
   private_dns_zone_id                  = provider::azurerm::normalise_resource_id("/subscriptions/${local.virtual_network.subscription_id}/resourceGroups/${local.private_dns_zone_resource_group_name}/providers/Microsoft.Network/privateDnsZones/privatelink.azure-api.net")
+  private_dns_zone_ids = {
+    for key, zone_name in {
+      azure_api_net            = "azure-api.net"
+      management_azure_api_net = "management.azure-api.net"
+      scm_azure_api_net        = "scm.azure-api.net"
+    } : key => provider::azurerm::normalise_resource_id("/subscriptions/${local.virtual_network.subscription_id}/resourceGroups/${local.private_dns_zone_resource_group_name}/providers/Microsoft.Network/privateDnsZones/${zone_name}")
+  }
 
   metric_namespace = "Microsoft.ApiManagement/service"
 
