@@ -119,6 +119,169 @@ override_data {
   }
 }
 
+override_data {
+  target = data.azurerm_role_definition.dx_infra_ci_subscription_state_safe
+  values = {
+    id = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/00000000-0000-0000-0000-000000000108"
+  }
+}
+
+override_data {
+  target = data.azurerm_role_definition.dx_infra_cd_subscription_no_rbac_admin
+  values = {
+    id = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/00000000-0000-0000-0000-000000000109"
+  }
+}
+
+run "azure_github_environment_bootstrap_legacy_state_access" {
+  command = plan
+
+  assert {
+    condition = alltrue([
+      azurerm_role_assignment.infra_ci_tf_st_blob_contributor.scope == local.tf_storage_account.id,
+      azurerm_role_assignment.infra_cd_st_tf_blob_contributor.scope == local.tf_storage_account.id,
+      azurerm_role_assignment.app_cd_tf_rg_blob_contributor.scope == local.tf_storage_account.id,
+      azurerm_role_assignment.opex_ci_tf_rg_blob_contributor.scope == local.tf_storage_account.id,
+      azurerm_role_assignment.opex_cd_tf_rg_blob_contributor.scope == local.tf_storage_account.id,
+      azurerm_role_assignment.opex_ci_subscription_data_access[0].role_definition_name == "Reader and Data Access",
+      azurerm_role_assignment.opex_cd_tf_rg_blob_data_access[0].role_definition_name == "Reader and Data Access",
+      azurerm_role_assignment.infra_ci_subscription_reader.role_definition_id == data.azurerm_role_definition.dx_infra_ci_subscription.id,
+      azurerm_role_assignment.infra_cd_subscription_rbac_admin.role_definition_id == data.azurerm_role_definition.dx_infra_cd_subscription.id,
+    ]) && length(azurerm_role_assignment.app_ci_tf_state_blob_contributor) == 0 && length(azurerm_role_assignment.terraform_state_upstream_reader) == 0
+    error_message = "Legacy mode must preserve account-scoped state access and existing role bundles without container-only assignments"
+  }
+
+  assert {
+    condition = alltrue([
+      azurerm_role_assignment.infra_ci_tf_st_blob_contributor.description == "Allow ${var.repository.name} Infra CI identity to apply changes to the Terraform state file Storage Account scope",
+      azurerm_role_assignment.infra_cd_st_tf_blob_contributor.description == "Allow ${var.repository.name} Infra CD identity to apply changes to the Terraform state file Storage Account scope",
+      azurerm_role_assignment.app_cd_tf_rg_blob_contributor.description == "Allow ${var.repository.name} App CD identity to apply changes to the Terraform state file Storage Account scope",
+      azurerm_role_assignment.opex_ci_tf_rg_blob_contributor.description == "Allow ${var.repository.name} Opex CI identity to apply changes to the Terraform state file Storage Account scope",
+      azurerm_role_assignment.opex_cd_tf_rg_blob_contributor.description == "Allow ${var.repository.name} Opex CD identity to apply changes to the Terraform state file Storage Account scope",
+      azurerm_role_assignment.infra_cd_subscription_rbac_admin.description == "Allow ${var.repository.name} Infra CD identity to manage the DX subscription admin bundle",
+    ])
+    error_message = "Legacy assignment descriptions must remain unchanged to avoid replacement"
+  }
+}
+
+run "azure_github_environment_bootstrap_container_state_access" {
+  command = plan
+
+  variables {
+    terraform_state_container_access = {
+      upstream = {
+        "dx-tf-state" = {
+          identities    = ["infra_ci", "app_ci"]
+          principal_ids = ["00000000-0000-0000-0000-000000000099"]
+        }
+      }
+    }
+  }
+
+  override_resource {
+    target          = azurerm_user_assigned_identity.infra_ci
+    override_during = plan
+    values = {
+      id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-test-rg-02/providers/Microsoft.ManagedIdentity/userAssignedIdentities/infra-ci"
+      principal_id = "00000000-0000-0000-0000-000000000010"
+    }
+  }
+
+  override_resource {
+    target          = azurerm_user_assigned_identity.app_ci
+    override_during = plan
+    values = {
+      id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/dx-u-itn-test-rg-02/providers/Microsoft.ManagedIdentity/userAssignedIdentities/app-ci"
+      principal_id = "00000000-0000-0000-0000-000000000011"
+    }
+  }
+
+  assert {
+    condition = alltrue([
+      for assignment in [
+        azurerm_role_assignment.infra_ci_tf_st_blob_contributor,
+        azurerm_role_assignment.infra_cd_st_tf_blob_contributor,
+        azurerm_role_assignment.app_ci_tf_state_blob_contributor[0],
+        azurerm_role_assignment.app_cd_tf_rg_blob_contributor,
+        azurerm_role_assignment.opex_ci_tf_rg_blob_contributor,
+        azurerm_role_assignment.opex_cd_tf_rg_blob_contributor,
+      ] : lower(assignment.scope) == lower("${local.tf_storage_account.id}/blobServices/default/containers/test-tf-state") && assignment.role_definition_name == "Storage Blob Data Contributor"
+    ])
+    error_message = "All state identities must receive Blob Contributor on the default <domain>-tf-state container"
+  }
+
+  assert {
+    condition = length(azurerm_role_assignment.terraform_state_upstream_reader) == 3 && alltrue([
+      azurerm_role_assignment.terraform_state_upstream_reader[jsonencode(["dx-tf-state", "identity", "infra_ci"])].principal_id == "00000000-0000-0000-0000-000000000010",
+      azurerm_role_assignment.terraform_state_upstream_reader[jsonencode(["dx-tf-state", "identity", "app_ci"])].principal_id == "00000000-0000-0000-0000-000000000011",
+      azurerm_role_assignment.terraform_state_upstream_reader[jsonencode(["dx-tf-state", "principal", "00000000-0000-0000-0000-000000000099"])].principal_id == "00000000-0000-0000-0000-000000000099",
+      azurerm_role_assignment.terraform_state_upstream_reader[jsonencode(["dx-tf-state", "identity", "infra_ci"])].scope == "${local.tf_storage_account.id}/blobServices/default/containers/dx-tf-state",
+      azurerm_role_assignment.terraform_state_upstream_reader[jsonencode(["dx-tf-state", "identity", "infra_ci"])].role_definition_name == "Storage Blob Data Reader",
+    ])
+    error_message = "Only selected recipients should receive Reader on the declared core container"
+  }
+
+  assert {
+    condition = alltrue([
+      length(azurerm_role_assignment.opex_ci_subscription_data_access) == 0,
+      length(azurerm_role_assignment.opex_cd_tf_rg_blob_data_access) == 0,
+      azurerm_role_assignment.infra_ci_subscription_reader.role_definition_id == data.azurerm_role_definition.dx_infra_ci_subscription_state_safe[0].id,
+      local.custom_role_definition_names.dx_infra_ci_subscription_state_safe == "PagoPA Uat DX Infra CI Subscription (No Storage Key Access)",
+      azurerm_role_assignment.infra_cd_subscription_rbac_admin.role_definition_id == data.azurerm_role_definition.dx_infra_cd_subscription_no_rbac_admin[0].id,
+      local.custom_role_definition_names.dx_infra_cd_subscription_no_rbac_admin == "PagoPA Uat DX Infra CD Subscription (No RBAC Admin)",
+    ])
+    error_message = "Container mode must use the agreed Infra subscription roles and remove broad Opex data access"
+  }
+}
+
+run "azure_github_environment_bootstrap_container_state_access_own_container_only" {
+  command = plan
+
+  variables {
+    terraform_state_container_access = {}
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.infra_ci_tf_st_blob_contributor.scope == "${local.tf_storage_account.id}/blobServices/default/containers/test-tf-state" && length(azurerm_role_assignment.terraform_state_upstream_reader) == 0
+    error_message = "Opting in without upstreams must grant own-container access only"
+  }
+}
+
+run "azure_github_environment_bootstrap_upstream_arm_id_override" {
+  command = plan
+
+  variables {
+    terraform_state_container_access = {
+      upstream = {
+        "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/legacy-state/providers/Microsoft.Storage/storageAccounts/legacytf/blobServices/default/containers/old-tf-state" = {
+          identities    = ["infra_ci"]
+          principal_ids = ["00000000-0000-0000-0000-000000000099"]
+        }
+      }
+    }
+  }
+
+  assert {
+    condition     = azurerm_role_assignment.terraform_state_upstream_reader[jsonencode(["/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/legacy-state/providers/Microsoft.Storage/storageAccounts/legacytf/blobServices/default/containers/old-tf-state", "identity", "infra_ci"])].scope == "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/legacy-state/providers/Microsoft.Storage/storageAccounts/legacytf/blobServices/default/containers/old-tf-state"
+    error_message = "A full upstream container ID must be preserved for legacy or cross-account state"
+  }
+}
+
+run "azure_github_environment_bootstrap_core_container_override" {
+  command = plan
+
+  variables {
+    terraform_state_container_access = {
+      container_name = "dx-tf-state"
+    }
+  }
+
+  assert {
+    condition     = lower(azurerm_role_assignment.infra_ci_tf_st_blob_contributor.scope) == lower("${local.tf_storage_account.id}/blobServices/default/containers/dx-tf-state")
+    error_message = "Core may explicitly use <prefix>-tf-state as its managed state container"
+  }
+}
+
 run "azure_github_environment_bootstrap_app_identities" {
   command = plan
 
