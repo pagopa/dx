@@ -2,7 +2,7 @@
 sidebar_position: 5
 ---
 
-# Setting Up Dev Containers
+# Setting Up Dev Containers
 
 ## What are Dev Containers?
 

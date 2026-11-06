@@ -345,7 +345,7 @@
      - Navigate to the Storage Account associated with the Function App
      - Select the `Networking` tab
      - Under `Public Access`, select `Manage`
-       - For `Public network access` option select `Enable`
+       - For `Public network access` option select `Enable`
        - For `Public network access scope` option select `Enable from selected networks` and add the Function App's subnet
      - (Optional) Tick the option `Add your client IPv4 address ('<ip>')`
      - Click `Save` to apply the changes
