@@ -12,6 +12,7 @@ import { GitHubRepo } from "../../domain/github-repo.js";
 import { GitHubService, RepositoryNotFoundError } from "../../domain/github.js";
 import { AzureSubscriptionRepository } from "../azure/cloud-account-repository.js";
 import { AzureCloudAccountService } from "../azure/cloud-account-service.js";
+import { AzureRepositoryStateStorage } from "../azure/repository-state-storage.js";
 import createDeploymentEnvironmentGenerator, {
   InitialAnswers as DeploymentEnvironmentInitialAnswers,
   Payload as EnvironmentPayload,
@@ -24,6 +25,8 @@ import createMonorepoGenerator, {
   PLOP_MONOREPO_GENERATOR_NAME,
 } from "../plop/generators/monorepo/index.js";
 import setConfigureGitHubEnvironmentsAction from "./actions/configure-github-environments.js";
+import { setPrepareRepositoryStateAction } from "./actions/prepare-repository-state.js";
+import { collectRepositoryStateDestination } from "./generators/environment/repository-state.js";
 import { resolveTemplatesPath } from "./templates-path.js";
 
 export const setMonorepoGenerator = (
@@ -157,7 +160,7 @@ export const collectDeploymentEnvironmentPayload = async (
   initialAnswers: DeploymentEnvironmentInitialAnswers = {},
   nonInteractive = false,
 ): Promise<{ generator: PlopGenerator; payload: EnvironmentPayload }> => {
-  setDeploymentEnvironmentGenerator(
+  const cloudAccountService = setDeploymentEnvironmentGenerator(
     plop,
     gitHubService,
     github,
@@ -167,6 +170,12 @@ export const collectDeploymentEnvironmentPayload = async (
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
   const answers = await generator.runPrompts();
   const payload = environmentPayloadSchema.parse(answers);
+  payload.repositoryState = await collectRepositoryStateDestination(
+    payload,
+    cloudAccountService,
+    nonInteractive,
+    initialAnswers.init?.confirm === true,
+  );
   return { generator, payload };
 };
 
@@ -215,6 +224,10 @@ export const setDeploymentEnvironmentGenerator = (
     cloudAccountService,
     gitHubService,
   );
+  setPrepareRepositoryStateAction(
+    plop,
+    new AzureRepositoryStateStorage(credential),
+  );
 
   createDeploymentEnvironmentGenerator(
     plop,
@@ -226,4 +239,5 @@ export const setDeploymentEnvironmentGenerator = (
     initialAnswers,
     nonInteractive,
   );
+  return cloudAccountService;
 };

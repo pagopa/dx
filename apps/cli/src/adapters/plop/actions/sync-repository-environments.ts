@@ -110,6 +110,11 @@ const replaceRepositoryConfig = async (
 export const syncRepositoryEnvironments = async (
   payload: Payload,
 ): Promise<void> => {
+  if (payload.repositoryState?.status !== "remote-verified") {
+    throw new Error(
+      "Repository state has not been verified remotely; refusing to apply GitHub environments.",
+    );
+  }
   const repositoryPath = path.join(process.cwd(), "infra", "repository");
   const repositoryMainPath = path.join(repositoryPath, "main.tf");
 
@@ -126,7 +131,10 @@ export const syncRepositoryEnvironments = async (
     await replaceRepositoryConfig(repositoryMainPath, updatedRepositoryConfig);
   }
 
-  const repositoryTerraform = tf$({ cwd: repositoryPath });
+  const repositoryTerraform = tf$({
+    cwd: repositoryPath,
+    env: { TF_DATA_DIR: path.join(repositoryPath, ".terraform") },
+  });
   await repositoryTerraform`terraform init`;
   await repositoryTerraform`terraform apply -auto-approve`;
 };

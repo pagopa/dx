@@ -168,6 +168,53 @@ Workspace created successfully!
 > The command will fail early if required tools are missing.
 > If you choose not to publish immediately, the CLI prints the manual Terraform and git steps required to finish the setup later.
 
+##### Repository Terraform state
+
+Publishing with `dx init` initially creates **temporary local state** at
+`infra/repository/terraform.tfstate`. Do not delete it, commit it, or run
+repository Terraform apply from another device while it is local. If publishing
+is skipped, the same responsibility starts when you manually apply
+`infra/repository`.
+
+The first `dx add environment` asks you to confirm the permanent repository-state
+destination. It uses that environment's existing or newly provisioned Azure
+backend, container `terraform-state`, and key
+`<prefix>/<domain>/repository.tfstate`. `--yes` confirms both initialization and
+repository-state placement when running non-interactively.
+
+Before changing GitHub environments, the CLI migrates state, verifies the remote
+repository identity and copied resources, and checks that Terraform reads the
+same backend. Only then does it delete local state and backups. The success
+summary reports **Repository state: remote and verified** and the destination,
+without printing state contents. Commit the `infra/repository` changes,
+including the backend in `providers.tf` and environment configuration in
+`main.tf`, so other operators share the same destination and desired state.
+Later environment additions retain this backend, even when their cloud
+subscription or tenant differs. Existing core/bootstrapper state keys are
+unchanged.
+
+If the first environment is added on another machine without local state, the
+CLI generates `infra/repository/repository-state-imports.tf` to recover existing
+GitHub resources. It includes repository settings, branches and protection,
+environments, deployment policies and permissions. The workflow-permissions
+`null_resource` is not importable; its idempotent provisioner reasserts the
+configured permissions. Recovery refuses plans that destroy or replace resources.
+Generated import blocks are removed only after recovery and remote-state
+verification succeed; interrupted recovery resumes these imports before any
+environment changes.
+
+On failure, GitHub environment apply is blocked. Keep the local state,
+`terraform.tfstate.dx-backup`, backend configuration and any generated imports.
+Retry from the repository root with the same `dx add environment` arguments.
+An occupied, unconfigured destination is never adopted automatically; a state
+identity or lineage conflict requires operator investigation, not `--force-copy`.
+Concurrent CLI migrations use an expiring Azure Blob lease. Do not perform a
+manual state migration concurrently.
+Automatic repository-state handling supports the default Terraform workspace
+and literal Azure backend configurations.
+It uses the repository's `.terraform` directory for backend metadata so migration
+and subsequent applies use the same verified backend cache.
+
 #### `spec`
 
 Print the full CLI specification as JSON.
