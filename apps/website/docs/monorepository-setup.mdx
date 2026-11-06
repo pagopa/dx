@@ -173,15 +173,18 @@ Once the GitHub App exists, only **App Administrators** can access its settings.
 Navigate to:
 [https://github.com/organizations/pagopa/settings/apps](https://github.com/organizations/pagopa/settings/apps)
 
-Retrieve the following three values:
+Retrieve the following values:
 
 | Value                 | Where to find it                                                                                                                   |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | **App ID**            | App settings page → **About** section → **App ID**                                                                                 |
+| **Client ID**         | App settings page → **About** section → **Client ID**                                                                              |
 | **Installation ID**   | App settings page → **Install App** → click on the installation → the numeric ID is in the URL (e.g. `.../installations/12345678`) |
 | **Private key (PEM)** | App settings page → **Private keys** section → **Generate a private key** → download the `.pem` file                               |
 
-Keep these three values at hand: `@pagopa/dx-cli` will prompt you for them.
+Keep these values at hand for the initial environment setup. For an existing
+environment, `@pagopa/dx-cli` reuses credentials available in its common Key
+Vault.
 
 ## Run `@pagopa/dx-cli` {#run-@pagopa/dx--cli}
 
@@ -219,8 +222,8 @@ order before merging the generated Pull Request.
 
 The generated repository includes the DX Code Review workflow
 (`.github/workflows/validate.yaml`): every Pull Request is formatted, scanned
-with Trivy and planned for the affected environments, and the plan is
-published as a comment on the Pull Request.
+with Trivy and planned for the affected environments, and the plan is published
+as a comment on the Pull Request.
 
 ### Step 1 — Migrate `infra/repository` Terraform state to remote storage
 
