@@ -105,6 +105,30 @@ run "azure_function_app_default_configuration" {
     condition     = length(azurerm_storage_account.durable_function) == 0 && length(azurerm_subnet.this) == 1
     error_message = "The default configuration must not create durable storage and must create the integration subnet."
   }
+
+  assert {
+    condition     = length(azurerm_subnet.this[0].service_endpoint) == 0
+    error_message = "The subnet must not have service endpoints unless they are enabled."
+  }
+}
+
+run "azure_function_app_configures_subnet_service_endpoints" {
+  command = plan
+
+  variables {
+    subnet_service_endpoints = {
+      cosmos  = true
+      storage = true
+      web     = true
+    }
+  }
+
+  assert {
+    condition = toset([
+      for endpoint in azurerm_subnet.this[0].service_endpoint : endpoint.service
+    ]) == toset(["Microsoft.AzureCosmosDB", "Microsoft.Storage", "Microsoft.Web"])
+    error_message = "Enabled service endpoints must be configured using AzureRM v5 service_endpoint blocks."
+  }
 }
 
 run "azure_function_app_external_subnet" {
