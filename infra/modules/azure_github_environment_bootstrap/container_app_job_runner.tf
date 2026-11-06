@@ -1,6 +1,6 @@
 module "github_runner" {
   source  = "pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm"
-  version = "~> 3.0"
+  version = "~> 4.0"
 
   environment = {
     prefix          = var.environment.prefix
@@ -45,7 +45,7 @@ module "github_runner" {
 module "github_runner_dx" {
   count   = local.dx_runner_enabled ? 1 : 0
   source  = "pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm"
-  version = "~> 3.0"
+  version = "~> 4.0"
 
   environment = {
     prefix          = var.environment.prefix

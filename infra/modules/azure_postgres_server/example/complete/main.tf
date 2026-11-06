@@ -36,6 +36,7 @@ resource "azurerm_key_vault" "example" {
   sku_name            = "standard"
 
   tenant_id                  = data.azurerm_client_config.current.tenant_id
+  rbac_authorization_enabled = false
   purge_protection_enabled   = false
   soft_delete_retention_days = 7
 
@@ -66,7 +67,7 @@ resource "azurerm_key_vault_secret" "postgres_username" {
 
 module "azure_postgres" {
   source  = "pagopa-dx/azure-postgres-server/azurerm"
-  version = "~> 5.0"
+  version = "~> 6.0"
 
   environment                          = local.environment
   resource_group_name                  = azurerm_resource_group.example.name

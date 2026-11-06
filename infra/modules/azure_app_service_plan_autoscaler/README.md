@@ -16,6 +16,11 @@ This Terraform module provisions an Azure App Service Plan Autoscaler with confi
 A complete example of how to use this module can be found in the [examples/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-app-service-plan-autoscaler/tree/main/examples/complete) directory.
 For an example of how to use this module with multiple services in a shared plan, see the [examples/shared](https://github.com/pagopa-dx/terraform-azurerm-azure-app-service-plan-autoscaler/tree/main/examples/shared) directory.
 
+Examples and test setup use v5-compatible exposed App Service and Function App
+modules to demonstrate scaling, not private networking. They are intended for
+fresh deployments; review their public access and changed fixture resources
+before reusing existing example state.
+
 ![Terraform Module Downloads](https://img.shields.io/terraform/module/dm/pagopa-dx/azure-app-service-plan-autoscaler/azurerm?logo=terraform&label=downloads&cacheSeconds=5000&link=https%3A%2F%2Fregistry.terraform.io%2Fmodules%2Fpagopa-dx%2Fazure-app-service-plan-autoscaler%2Fazurerm%2Flatest)
 
 <!-- markdownlint-disable -->
@@ -25,7 +30,7 @@ For an example of how to use this module with multiple services in a shared plan
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.0, < 6.0.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 5.0 |
 
 ## Modules
 
