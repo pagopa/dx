@@ -26,6 +26,28 @@ run "uses_current_provider_subscription_when_inputs_are_omitted" {
     condition     = output.dx_app_ci_resource_group_reader == "DX Current DX App CI Resource Groups"
     error_message = "The generated role names must use the current provider subscription display name as prefix when no explicit inputs are provided."
   }
+
+  assert {
+    condition = jsonencode([
+      module.dx_infra_ci_subscription_reader.custom_role_name,
+      module.dx_infra_cd_subscription_admin.custom_role_name,
+      ]) == jsonencode([
+      "DX Current DX Infra CI Subscription",
+      "DX Current DX Infra CD Subscription",
+    ])
+    error_message = "Legacy Infra subscription role names must remain unchanged."
+  }
+
+  assert {
+    condition = jsonencode([
+      module.dx_infra_ci_subscription_reader_no_storage_keys.custom_role_name,
+      module.dx_infra_cd_subscription_no_rbac_admin.custom_role_name,
+      ]) == jsonencode([
+      "DX Current DX Infra CI Subscription (No Storage Key Access)",
+      "DX Current DX Infra CD Subscription (No RBAC Admin)",
+    ])
+    error_message = "The new Infra subscription role names must match the bootstrap lookup contract."
+  }
 }
 
 run "uses_provided_subscription_id_and_discovers_name_when_name_is_omitted" {
