@@ -13,7 +13,7 @@ This Terraform module provisions the core infrastructure required for the initia
 - **Private DNS Zones**: Configures private DNS zones for all resource types.
 - **Log Analytics Workspace**: Creates a Log Analytics Workspace for monitoring and diagnostics.
 - **GitHub Runner**: Provisions a GitHub Runner for CI/CD workflows.
-- **Merged Custom Roles**: Creates subscription-scoped merged custom roles for DX CI/CD identities and Function App storage access.
+- **Merged Custom Roles**: Creates subscription-scoped merged custom roles for DX CI/CD identities and Function App storage access, including opt-in state-safe Infra CI/CD roles.
 
 ## Custom Role Naming
 
@@ -25,7 +25,11 @@ Example role names:
 
 - `<subscription display name> DX App CI Resource Groups`
 - `<subscription display name> DX Infra CD Subscription`
+- `<subscription display name> DX Infra CI Subscription (No Storage Key Access)`
+- `<subscription display name> DX Infra CD Subscription (No RBAC Admin)`
 - `<subscription display name> DX Function Host Storage`
+
+The two additional Infra roles are intended for the bootstrap's opt-in per-container mode; the legacy subscription roles remain unchanged. The CI role omits `Reader and Data Access`, and the CD role omits subscription RBAC administration.
 
 ## Usage Example
 
