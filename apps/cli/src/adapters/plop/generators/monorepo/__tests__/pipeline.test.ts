@@ -37,6 +37,7 @@ const payload: Payload = {
   repoDescription: "A test repository for DX",
   repoName: "my-test-repo",
   repoOwner: "pagopa",
+  repoTopics: [],
 };
 
 describe("monorepo generator — DX validation pipeline", () => {

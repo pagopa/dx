@@ -96,6 +96,7 @@ const makePayload = (
   repoDescription: "A test repo",
   repoName: "test-repo",
   repoOwner: "pagopa",
+  repoTopics: [],
   ...overrides,
 });
 
@@ -111,13 +112,15 @@ const silentOutput = {
 const runInitCommand = async (
   output: "json" | "text" = "json",
   gitHubService: GitHubService = mockDeep<GitHubService>(),
+  args: string[] = [],
+  ci = false,
 ) => {
   const requireGitHubAuth: GitHubAuthFactory = () =>
     okAsync({
       authorizationService: mockDeep<AuthorizationService>(),
       gitHubService,
     });
-  const initCommand = makeInitCommand(requireGitHubAuth, { CI: false });
+  const initCommand = makeInitCommand(requireGitHubAuth, { CI: ci });
   initCommand.exitOverride().configureOutput(silentOutput);
 
   const program = new Command();
@@ -126,7 +129,7 @@ const runInitCommand = async (
     .option("--output <mode>", "Output mode", output)
     .addCommand(initCommand);
 
-  await program.parseAsync(["node", "dx", "--output", output, "init"]);
+  await program.parseAsync(["node", "dx", "--output", output, "init", ...args]);
 };
 
 const makeExecaError = ({
@@ -207,6 +210,22 @@ describe("confirmGitHubRepoCreation", () => {
 });
 
 describe("parseInitCommandOptions", () => {
+  it("parses comma-separated topics and trims whitespace", () => {
+    expect(
+      parseInitCommandOptions({ topics: "typescript, pagopa-dx" }).topics,
+    ).toEqual(["typescript", "pagopa-dx"]);
+  });
+
+  it("accepts explicitly empty topics", () => {
+    expect(parseInitCommandOptions({ topics: "" }).topics).toEqual([]);
+  });
+
+  it("rejects invalid topics", () => {
+    expect(() => parseInitCommandOptions({ topics: 'bad"topic' })).toThrow(
+      /topics/,
+    );
+  });
+
   it("returns the provided init flags", () => {
     expect(
       parseInitCommandOptions({
@@ -233,6 +252,16 @@ describe("parseInitCommandOptions", () => {
 });
 
 describe("getMonorepoInitialAnswers", () => {
+  it("preserves supplied topics including an explicitly empty array", () => {
+    expect(getMonorepoInitialAnswers({ topics: ["pagopa"] })).toEqual({
+      repoTopics: ["pagopa"],
+    });
+    expect(getMonorepoInitialAnswers({ topics: [] })).toEqual({
+      repoTopics: [],
+    });
+    expect(getMonorepoInitialAnswers({})).not.toHaveProperty("repoTopics");
+  });
+
   it("maps init CLI options to the monorepo payload keys", () => {
     expect(
       getMonorepoInitialAnswers({
@@ -292,6 +321,7 @@ describe("mapGitRemoteAddError", () => {
 
 describe("makeInitCommand", () => {
   const payload = makePayload();
+  const originalIsTTY = Object.getOwnPropertyDescriptor(process.stdin, "isTTY");
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -305,8 +335,51 @@ describe("makeInitCommand", () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
+    if (originalIsTTY) {
+      Object.defineProperty(process.stdin, "isTTY", originalIsTTY);
+    } else {
+      Reflect.deleteProperty(process.stdin, "isTTY");
+    }
     process.exitCode = undefined;
   });
+
+  it.each([
+    { ci: false, topics: undefined, tty: true },
+    { ci: true, topics: [], tty: true },
+    { ci: false, topics: [], tty: false },
+  ])(
+    "prefills topics appropriately for CI=$ci and TTY=$tty",
+    async ({ ci, topics, tty }) => {
+      Object.defineProperty(process.stdin, "isTTY", {
+        configurable: true,
+        value: tty,
+      });
+
+      await runInitCommand("json", undefined, [], ci);
+
+      expect(mocks.collectMonorepoPayload).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        topics === undefined ? {} : { repoTopics: topics },
+      );
+    },
+  );
+
+  it.each([
+    { input: "typescript, pagopa-dx", topics: ["typescript", "pagopa-dx"] },
+    { input: "", topics: [] },
+  ])(
+    "passes --topics '$input' to the generator in automation",
+    async ({ input, topics }) => {
+      await runInitCommand("json", undefined, ["--topics", input], true);
+
+      expect(mocks.collectMonorepoPayload).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        { repoTopics: topics },
+      );
+    },
+  );
 
   it("registers flags for every init input", () => {
     const requireGitHubAuth: GitHubAuthFactory = () =>
@@ -326,6 +399,7 @@ describe("makeInitCommand", () => {
         "--name <name>",
         "--owner <owner>",
         "--description <description>",
+        "--topics <topics>",
         "--publish",
       ]),
     );

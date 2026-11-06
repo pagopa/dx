@@ -25,6 +25,10 @@ import {
 } from "../../plop/actions/init-terraform-projects.js";
 import { Payload as MonorepoPayload } from "../../plop/generators/monorepo/index.js";
 import {
+  repoTopicsSchema,
+  splitTopics,
+} from "../../plop/generators/monorepo/prompts.js";
+import {
   collectMonorepoPayload,
   getPlopInstance,
   runMonorepoActions,
@@ -270,6 +274,7 @@ export const initCommandOptionsSchema = z.object({
   name: z.string().trim().min(1, "Repository name cannot be empty").optional(),
   owner: z.string().trim().min(1, "GitHub owner cannot be empty").optional(),
   publish: z.boolean().optional(),
+  topics: z.string().transform(splitTopics).pipe(repoTopicsSchema).optional(),
 });
 
 export type InitCommandOptions = z.infer<typeof initCommandOptionsSchema>;
@@ -293,6 +298,7 @@ export const getMonorepoInitialAnswers = ({
   name,
   owner,
   publish,
+  topics,
 }: InitCommandOptions): InitInitialAnswers => {
   const initialAnswers: InitInitialAnswers = {};
 
@@ -310,6 +316,10 @@ export const getMonorepoInitialAnswers = ({
 
   if (typeof publish === "boolean") {
     initialAnswers.publishToGitHub = publish;
+  }
+
+  if (topics !== undefined) {
+    initialAnswers.repoTopics = topics;
   }
 
   return initialAnswers;
@@ -665,6 +675,9 @@ export const makeInitCommand = (
       new Option("--description <description>", "Repository description"),
     )
     .addOption(
+      new Option("--topics <topics>", "Comma-separated repository topics"),
+    )
+    .addOption(
       new Option(
         "--publish",
         "Publish the scaffolded repository to GitHub without prompting",
@@ -688,7 +701,12 @@ export const makeInitCommand = (
             .andThen((auth) =>
               runInitAction({
                 gitHubService: auth.gitHubService,
-                initialAnswers: getMonorepoInitialAnswers(initOptions),
+                initialAnswers: getMonorepoInitialAnswers({
+                  ...initOptions,
+                  topics:
+                    initOptions.topics ??
+                    (env.CI || !process.stdin.isTTY ? [] : undefined),
+                }),
                 presenter,
               }),
             ),

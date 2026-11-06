@@ -48,6 +48,7 @@ const makePayload = (
   repoDescription: "A test repo",
   repoName: "test-repo",
   repoOwner: "pagopa",
+  repoTopics: [],
   ...overrides,
 });
 

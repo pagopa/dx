@@ -29,6 +29,7 @@ expects and where to find the required values.
 | **Name**                | The GitHub repository name. Use lowercase letters and hyphens (e.g., `eng-myteam-myproject`). |
 | **GitHub Organization** | The GitHub organization that will own the repository. Defaults to `pagopa`.                   |
 | **Description**         | A short description of the project (optional).                                                |
+| **Repository topics**   | Optional comma-separated topics (e.g., `typescript,pagopa`). Press Enter to leave empty.       |
 
 ### Example Usage
 
@@ -40,6 +41,7 @@ npx @pagopa/dx-cli init
 ? Name test-project
 ? GitHub Organization pagopa-dx
 ? Description a custom description
+? Repository topics (comma-separated, optional) typescript,pagopa
 ✔ Workspace files created successfully!
 
 ✔ GitHub repository created successfully!
