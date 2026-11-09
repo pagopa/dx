@@ -6,7 +6,9 @@ import test from "node:test";
 
 import { checkIssueFields } from "./check-issue-fields.js";
 
-const script = fileURLToPath(new URL("./check-issue-fields.js", import.meta.url));
+const script = fileURLToPath(
+  new URL("./check-issue-fields.js", import.meta.url),
+);
 
 function issue(statusName, categoryKey, type, links = []) {
   return {
@@ -34,9 +36,18 @@ test("accepts each eligible type in the new status category", () => {
 });
 
 test("uses the category key rather than status name or category label", () => {
-  assert.equal(checkIssueFields(issue("In Progress", "new", "Task")).verdict, "Ready");
-  assert.equal(checkIssueFields(issue("Backlog", "indeterminate", "Task")).verdict, "Not ready");
-  assert.equal(checkIssueFields(issue("Backlog", "New", "Task")).verdict, "Not ready");
+  assert.equal(
+    checkIssueFields(issue("In Progress", "new", "Task")).verdict,
+    "Ready",
+  );
+  assert.equal(
+    checkIssueFields(issue("Backlog", "indeterminate", "Task")).verdict,
+    "Not ready",
+  );
+  assert.equal(
+    checkIssueFields(issue("Backlog", "New", "Task")).verdict,
+    "Not ready",
+  );
 });
 
 test("reports both failing fields", () => {
@@ -70,16 +81,19 @@ test("distinguishes missing fields from failures", () => {
     issueType: { result: "pass", value: "Task" },
     blockers: { result: "pass", pending: [], unverifiable: [] },
   });
-  assert.deepEqual(checkIssueFields(issue("In Progress", "indeterminate", null)), {
-    verdict: "Not ready",
-    status: {
-      result: "fail",
-      value: "In Progress",
-      hint: "The issue must be in a status for work to do.",
+  assert.deepEqual(
+    checkIssueFields(issue("In Progress", "indeterminate", null)),
+    {
+      verdict: "Not ready",
+      status: {
+        result: "fail",
+        value: "In Progress",
+        hint: "The issue must be in a status for work to do.",
+      },
+      issueType: { result: "unverifiable", value: null },
+      blockers: { result: "pass", pending: [], unverifiable: [] },
     },
-    issueType: { result: "unverifiable", value: null },
-    blockers: { result: "pass", pending: [], unverifiable: [] },
-  });
+  );
 });
 
 function link(key, categoryKey, statusName = "In Progress", type = "Blocks") {
@@ -87,7 +101,9 @@ function link(key, categoryKey, statusName = "In Progress", type = "Blocks") {
     type: { name: type },
     inwardIssue: {
       key,
-      fields: { status: { name: statusName, statusCategory: { key: categoryKey } } },
+      fields: {
+        status: { name: statusName, statusCategory: { key: categoryKey } },
+      },
     },
   };
 }
@@ -98,12 +114,18 @@ test("accepts completed blockers and ignores outgoing and unrelated links", () =
     link("TEST-2", "new", "Open", "Relates"),
     { type: { name: "Blocks" }, outwardIssue: { key: "TEST-3" } },
   ];
-  assert.deepEqual(checkIssueFields(issue("Open", "new", "Task", links)).blockers, {
-    result: "pass",
-    pending: [],
-    unverifiable: [],
-  });
-  assert.equal(checkIssueFields(issue("Open", "new", "Task", links)).verdict, "Ready");
+  assert.deepEqual(
+    checkIssueFields(issue("Open", "new", "Task", links)).blockers,
+    {
+      result: "pass",
+      pending: [],
+      unverifiable: [],
+    },
+  );
+  assert.equal(
+    checkIssueFields(issue("Open", "new", "Task", links)).verdict,
+    "Ready",
+  );
 });
 
 test("reports every unfinished blocker, including category none", () => {
@@ -182,11 +204,14 @@ test("reads a Jira response from stdin and prints JSON", () => {
   const output = JSON.parse(result.stdout);
   assert.equal(output.verdict, "Ready");
   assert.equal(output.status.value, "Open");
-  assert.equal(output.status.hint, "The issue must be in a status for work to do.");
+  assert.equal(
+    output.status.hint,
+    "The issue must be in a status for work to do.",
+  );
 });
 
 test("rejects malformed or non-object JSON", () => {
-  for (const input of ["{", "null", "[]", "\"issue\""]) {
+  for (const input of ["{", "null", "[]", '"issue"']) {
     const result = spawnSync(process.execPath, [script], {
       input,
       encoding: "utf8",

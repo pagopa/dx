@@ -46,14 +46,14 @@ Definition of Ready used by Jira Magister.
 
 An issue is **Ready** if and only if all applicable criteria are verified:
 
-| Criterion | Required evidence |
-| --------- | ----------------- |
-| Exists | Jira returned the target issue. |
-| Status category | `fields.status.statusCategory.key` equals `new`. |
-| Type | `fields.issuetype.name` equals `Story`, `Task`, or `Bug`. |
-| Blockers | No inward issue link of type `Blocks` has a blocking issue whose status category key differs from `done`. |
-| Output | The issue description has an `Output` section. Check presence only, not its contents. |
-| Checks | For a `Story`, the description has a `Checks` section containing a nonempty list of binary checks. Every item has an ID and a brief description; no particular ID or description format is required. |
+| Criterion       | Required evidence                                                                                                                                                                                    |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Exists          | Jira returned the target issue.                                                                                                                                                                      |
+| Status category | `fields.status.statusCategory.key` equals `new`.                                                                                                                                                     |
+| Type            | `fields.issuetype.name` equals `Story`, `Task`, or `Bug`.                                                                                                                                            |
+| Blockers        | No inward issue link of type `Blocks` has a blocking issue whose status category key differs from `done`.                                                                                            |
+| Output          | The issue description has an `Output` section. Check presence only, not its contents.                                                                                                                |
+| Checks          | For a `Story`, the description has a `Checks` section containing a nonempty list of binary checks. Every item has an ID and a brief description; no particular ID or description format is required. |
 
 Assess the description as content, not with the script. Recognize section
 headings and lists in Jira's structured description or rendered text; a

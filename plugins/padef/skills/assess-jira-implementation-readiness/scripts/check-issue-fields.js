@@ -4,7 +4,8 @@ import { fileURLToPath } from "node:url";
 
 export const ALLOWED_STATUS_CATEGORIES = Object.freeze(["new"]);
 export const ALLOWED_ISSUE_TYPES = Object.freeze(["Story", "Task", "Bug"]);
-export const STATUS_CATEGORY_HINT = "The issue must be in a status for work to do.";
+export const STATUS_CATEGORY_HINT =
+  "The issue must be in a status for work to do.";
 export const COMPLETED_STATUS_CATEGORY = "done";
 
 function checkField(value, allowedValues) {
@@ -74,7 +75,11 @@ function checkBlockers(links) {
   }
 
   return {
-    result: pending.length ? "fail" : unverifiable.length ? "unverifiable" : "pass",
+    result: pending.length
+      ? "fail"
+      : unverifiable.length
+        ? "unverifiable"
+        : "pass",
     pending,
     unverifiable,
   };
@@ -89,7 +94,10 @@ export function checkIssueFields(issue) {
   const statusName = issue?.fields?.status?.name;
   const status = {
     result: statusCategory.result,
-    value: typeof statusName === "string" && statusName.length > 0 ? statusName : null,
+    value:
+      typeof statusName === "string" && statusName.length > 0
+        ? statusName
+        : null,
     hint: STATUS_CATEGORY_HINT,
   };
   const issueType = checkField(
@@ -144,6 +152,9 @@ async function main() {
   console.log(JSON.stringify(checkIssueFields(issue)));
 }
 
-if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+if (
+  process.argv[1] &&
+  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
+) {
   await main();
 }
