@@ -4,7 +4,7 @@
 
 module "core" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 6.0"
+  version = "~> 7.0"
 
   test_enabled = true
 
@@ -59,7 +59,7 @@ module "apim" {
 ## Cosmos Account
 module "cosmos" {
   source  = "pagopa-dx/azure-cosmos-account/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
@@ -95,7 +95,7 @@ resource "azurerm_cosmosdb_sql_database" "db" {
 
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name

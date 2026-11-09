@@ -1,6 +1,6 @@
 module "azure_core_values" {
   source  = "pagopa-dx/azure-core-values-exporter/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   core_state = local.core_state
 }
@@ -15,7 +15,7 @@ resource "dx_available_subnet_cidr" "container_app" {
 
 module "container_app_infra" {
   source  = "pagopa-dx/azure-container-app-environment/azurerm"
-  version = "~> 1.2"
+  version = "~> 5.0"
 
   environment         = merge(local.azure_naming_config, { env_short = local.azure_naming_config.environment, app_name = "common" })
   resource_group_name = module.azure_core_values.common_resource_group_name
