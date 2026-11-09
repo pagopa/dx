@@ -1,0 +1,112 @@
+{
+  "skill_name": "assess-jira-issue-readiness",
+  "evals": [
+    {
+      "id": 0,
+      "name": "accept-all-eligible-types",
+      "prompt": "Assess implementation readiness for TEST-1, TEST-2, and TEST-3 on the only accessible Jira site. The mocked live read tool returns each issue with status.statusCategory.key = new, issuelinks = [], and issuetype.name = Story, Task, and Bug respectively. Their descriptions are empty and they have no estimates or assignees.",
+      "expected_output": "All three issues are Ready based on existence, status category key, eligible type, and no blockers.",
+      "expectations": [
+        "Retrieves current metadata for every target issue.",
+        "Reports Ready for each of Story, Task, and Bug in the new status category.",
+        "Adds no requirements-quality, assignment, or estimation gate.",
+        "Performs only read operations and does not implement the issues."
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "report-all-failed-criteria",
+      "prompt": "Assess TEST-4 on the only accessible Jira site. The mocked live read returns an existing issue with status.name = Backlog, status.statusCategory.key = indeterminate, issuetype.name = Epic, and issuelinks = [].",
+      "expected_output": "Not ready, with the actual status name, a work-to-do hint, and the type failure.",
+      "expectations": [
+        "Reports Not ready.",
+        "Reports Backlog as the actual status, explains that work must be to do, and reports Epic as a failed type.",
+        "Uses the category key for the verdict rather than treating Backlog as eligible by name.",
+        "Preserves Jira state without changing the status or issue type."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "use-status-category-key",
+      "prompt": "Assess TEST-5 on the only accessible Jira site. The mocked live read returns an existing Story with status.name = Open, status.statusCategory.name = To Do, status.statusCategory.key = new, and issuelinks = [].",
+      "expected_output": "Ready because the status category key is new regardless of status name or category label.",
+      "expectations": [
+        "Uses the exact status category key rather than status name or category label.",
+        "Reports Ready and the actual status Open for this existing Story."
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "confirmed-nonexistence",
+      "prompt": "Assess TEST-6 on the only accessible Jira site. The mocked read response explicitly confirms that the issue does not exist and that this is not a permission failure.",
+      "expected_output": "Not ready because existence fails; status and type are unavailable.",
+      "expectations": [
+        "Reports confirmed nonexistence as Not ready.",
+        "Marks status and type unavailable without inventing values."
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "ambiguous-retrieval-failure",
+      "prompt": "Assess TEST-7 on the only accessible Jira site. The mocked live read returns: Issue does not exist or you do not have permission to see it.",
+      "expected_output": "Unable to assess, preserving the ambiguous existence or permission error.",
+      "expectations": [
+        "Reports Unable to assess rather than Ready or confirmed nonexistence.",
+        "States the retrieval error and marks existence unverifiable.",
+        "Makes no Jira changes."
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "missing-evidence",
+      "prompt": "Assess TEST-8 on the only accessible Jira site. The mocked live read returns the issue with status.name = Open, status.statusCategory.key = new, and issuelinks = [] but omits issuetype.",
+      "expected_output": "Unable to assess because the issue type cannot be verified.",
+      "expectations": [
+        "Reports verified existence and the actual status Open.",
+        "Reports the missing issue type explicitly without inferring it.",
+        "Withholds a Ready verdict."
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "missing-category-key",
+      "prompt": "Assess TEST-9 on the only accessible Jira site. The mocked live read returns an existing Task with status.name = Backlog and issuelinks = [] but no status category key.",
+      "expected_output": "Unable to assess because the status category key is unavailable.",
+      "expectations": [
+        "Reports the category key as unverifiable without inferring it from the status name.",
+        "Withholds a Ready verdict."
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "pending-blockers",
+      "prompt": "Assess TEST-10, a Task in Backlog with category key new. Its inward Blocks links point to TEST-11 in progress with category indeterminate, TEST-12 complete with category done, and TEST-13 with category none. An outward Blocks link points to TEST-14 in progress.",
+      "expected_output": "Not ready because TEST-11 and TEST-13 are unfinished inward blockers; the completed and outward links do not block readiness.",
+      "expectations": [
+        "Reports both TEST-11 and TEST-13 as pending blockers.",
+        "Does not count TEST-12 or the outward link as pending blockers.",
+        "Treats only the done category as completed."
+      ],
+      "files": []
+    },
+    {
+      "id": 8,
+      "name": "unverifiable-blockers",
+      "prompt": "Assess a Task in Backlog with category key new. Its inward Blocks link identifies TEST-15, but the linked status category is omitted and fetching TEST-15 fails with a permission error.",
+      "expected_output": "Unable to assess; the blocker status could not be verified.",
+      "expectations": [
+        "Attempts to fetch the missing linked-issue status.",
+        "Reports TEST-15 as an unverifiable blocker and explains the permission failure.",
+        "Does not treat missing status as completed or pending."
+      ],
+      "files": []
+    }
+  ]
+}
