@@ -48,6 +48,7 @@ function checkBlockers(links) {
     const hasInward = Object.hasOwn(link, "inwardIssue");
     const hasOutward = Object.hasOwn(link, "outwardIssue");
     const linkedIssue = hasInward ? inward : link.outwardIssue;
+    // Exactly one direction is required to tell whether this issue is blocked.
     if (
       hasInward === hasOutward ||
       !linkedIssue ||
@@ -59,6 +60,7 @@ function checkBlockers(links) {
       unverifiable.push(blocker);
       continue;
     }
+    // Outward links describe issues this issue blocks, not its own blockers.
     if (hasOutward || name !== "Blocks") {
       continue;
     }
@@ -66,6 +68,7 @@ function checkBlockers(links) {
     if (typeof category !== "string" || !category) {
       unverifiable.push(blocker);
     } else if (category !== COMPLETED_STATUS_CATEGORY) {
+      // "none" is also unfinished; only "done" clears a blocker.
       pending.push(blocker);
     }
   }
@@ -78,6 +81,7 @@ function checkBlockers(links) {
 }
 
 export function checkIssueFields(issue) {
+  // Jira status names are for display; category keys determine readiness.
   const statusCategory = checkField(
     issue?.fields?.status?.statusCategory?.key,
     ALLOWED_STATUS_CATEGORIES,
@@ -95,6 +99,8 @@ export function checkIssueFields(issue) {
   const blockers = checkBlockers(issue?.fields?.issuelinks);
   const results = [status.result, issueType.result, blockers.result];
 
+  // A known failure takes precedence over missing evidence in other checks.
+  // This verdict covers metadata only; the skill separately assesses the description.
   return {
     verdict: results.includes("fail")
       ? "Not ready"
@@ -134,6 +140,7 @@ async function main() {
     return;
   }
 
+  // Exit successfully for any evaluated verdict; only invalid input is an error.
   console.log(JSON.stringify(checkIssueFields(issue)));
 }
 
