@@ -1,6 +1,6 @@
 module "azure" {
   source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 6.0"
+  version = "~> 7.0"
 
   environment = local.azure_environment
 
