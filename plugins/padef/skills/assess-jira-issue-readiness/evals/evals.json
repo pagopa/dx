@@ -4,12 +4,13 @@
     {
       "id": 0,
       "name": "accept-all-eligible-types",
-      "prompt": "Assess implementation readiness for TEST-1, TEST-2, and TEST-3 on the only accessible Jira site. The mocked live read tool returns each issue with status.statusCategory.key = new, issuelinks = [], and issuetype.name = Story, Task, and Bug respectively. Their descriptions are empty and they have no estimates or assignees.",
-      "expected_output": "All three issues are Ready based on existence, status category key, eligible type, and no blockers.",
+      "prompt": "Assess implementation readiness for TEST-1, TEST-2, and TEST-3 on the only accessible Jira site. The mocked live read tool returns each issue with status.statusCategory.key = new, issuelinks = [], and issuetype.name = Story, Task, and Bug respectively. Each description has an Output section. The Story also has a Checks section with a list containing 'C1: The request returns 200'. None has estimates or assignees.",
+      "expected_output": "All three issues are Ready: their metadata, blockers, and applicable description sections pass.",
       "expectations": [
         "Retrieves current metadata for every target issue.",
         "Reports Ready for each of Story, Task, and Bug in the new status category.",
-        "Adds no requirements-quality, assignment, or estimation gate.",
+        "Checks the Story's binary check list without requiring one for the Task or Bug.",
+        "Adds no assignment or estimation gate.",
         "Performs only read operations and does not implement the issues."
       ],
       "files": []
@@ -17,7 +18,7 @@
     {
       "id": 1,
       "name": "report-all-failed-criteria",
-      "prompt": "Assess TEST-4 on the only accessible Jira site. The mocked live read returns an existing issue with status.name = Backlog, status.statusCategory.key = indeterminate, issuetype.name = Epic, and issuelinks = [].",
+      "prompt": "Assess TEST-4 on the only accessible Jira site. The mocked live read returns an existing issue with status.name = Backlog, status.statusCategory.key = indeterminate, issuetype.name = Epic, issuelinks = [], and a description with an Output section.",
       "expected_output": "Not ready, with the actual status name, a work-to-do hint, and the type failure.",
       "expectations": [
         "Reports Not ready.",
@@ -30,7 +31,7 @@
     {
       "id": 2,
       "name": "use-status-category-key",
-      "prompt": "Assess TEST-5 on the only accessible Jira site. The mocked live read returns an existing Story with status.name = Open, status.statusCategory.name = To Do, status.statusCategory.key = new, and issuelinks = [].",
+      "prompt": "Assess TEST-5 on the only accessible Jira site. The mocked live read returns an existing Story with status.name = Open, status.statusCategory.name = To Do, status.statusCategory.key = new, issuelinks = [], and a description with an Output section and a Checks section containing the list item 'AC1: The request succeeds'.",
       "expected_output": "Ready because the status category key is new regardless of status name or category label.",
       "expectations": [
         "Uses the exact status category key rather than status name or category label.",
@@ -64,7 +65,7 @@
     {
       "id": 5,
       "name": "missing-evidence",
-      "prompt": "Assess TEST-8 on the only accessible Jira site. The mocked live read returns the issue with status.name = Open, status.statusCategory.key = new, and issuelinks = [] but omits issuetype.",
+      "prompt": "Assess TEST-8 on the only accessible Jira site. The mocked live read returns the issue with status.name = Open, status.statusCategory.key = new, issuelinks = [], and a description with an Output section but omits issuetype.",
       "expected_output": "Unable to assess because the issue type cannot be verified.",
       "expectations": [
         "Reports verified existence and the actual status Open.",
@@ -76,7 +77,7 @@
     {
       "id": 6,
       "name": "missing-category-key",
-      "prompt": "Assess TEST-9 on the only accessible Jira site. The mocked live read returns an existing Task with status.name = Backlog and issuelinks = [] but no status category key.",
+      "prompt": "Assess TEST-9 on the only accessible Jira site. The mocked live read returns an existing Task with status.name = Backlog, issuelinks = [], and a description with an Output section, but no status category key.",
       "expected_output": "Unable to assess because the status category key is unavailable.",
       "expectations": [
         "Reports the category key as unverifiable without inferring it from the status name.",
@@ -87,7 +88,7 @@
     {
       "id": 7,
       "name": "pending-blockers",
-      "prompt": "Assess TEST-10, a Task in Backlog with category key new. Its inward Blocks links point to TEST-11 in progress with category indeterminate, TEST-12 complete with category done, and TEST-13 with category none. An outward Blocks link points to TEST-14 in progress.",
+      "prompt": "Assess TEST-10, a Task in Backlog with category key new and a description with an Output section. Its inward Blocks links point to TEST-11 in progress with category indeterminate, TEST-12 complete with category done, and TEST-13 with category none. An outward Blocks link points to TEST-14 in progress.",
       "expected_output": "Not ready because TEST-11 and TEST-13 are unfinished inward blockers; the completed and outward links do not block readiness.",
       "expectations": [
         "Reports both TEST-11 and TEST-13 as pending blockers.",
@@ -99,12 +100,82 @@
     {
       "id": 8,
       "name": "unverifiable-blockers",
-      "prompt": "Assess a Task in Backlog with category key new. Its inward Blocks link identifies TEST-15, but the linked status category is omitted and fetching TEST-15 fails with a permission error.",
+      "prompt": "Assess a Task in Backlog with category key new and a description with an Output section. Its inward Blocks link identifies TEST-15, but the linked status category is omitted and fetching TEST-15 fails with a permission error.",
       "expected_output": "Unable to assess; the blocker status could not be verified.",
       "expectations": [
         "Attempts to fetch the missing linked-issue status.",
         "Reports TEST-15 as an unverifiable blocker and explains the permission failure.",
         "Does not treat missing status as completed or pending."
+      ],
+      "files": []
+    },
+    {
+      "id": 9,
+      "name": "output-presence-only",
+      "prompt": "Assess two Tasks with status category new and no links. TEST-16 has a description with an empty Output heading. TEST-17 says 'the output is a report' in an ordinary paragraph but has no Output section.",
+      "expected_output": "TEST-16 is Ready because the Output section exists; TEST-17 is Not ready because a mention is not a section.",
+      "expectations": [
+        "Checks only the presence of the Output section, not whether it has content.",
+        "Distinguishes an actual section from a paragraph mentioning output.",
+        "Does not require Checks for either Task."
+      ],
+      "files": []
+    },
+    {
+      "id": 10,
+      "name": "story-checks-format",
+      "prompt": "Assess three Stories with status category new, no links and an Output section. TEST-18 has a Checks section with a bulleted list: 'alpha: The file is created' and '7 - The user can download it'. TEST-19 has a Checks section containing only the paragraph 'The file must be created'. TEST-20 has an empty Checks list.",
+      "expected_output": "TEST-18 is Ready; TEST-19 and TEST-20 are Not ready because Checks must be a nonempty list.",
+      "expectations": [
+        "Accepts different ID formats with brief binary descriptions.",
+        "Rejects a paragraph and an empty list as Checks.",
+        "Reports the failed Checks criterion for each affected Story."
+      ],
+      "files": []
+    },
+    {
+      "id": 11,
+      "name": "invalid-check-items",
+      "prompt": "Assess a Story with status category new, no links, an Output section, and a Checks list: 'A: The user can log in', 'The user can log out', 'B:', and 'C: Improve performance'.",
+      "expected_output": "Not ready because list items lack an ID, a description, or a binary outcome.",
+      "expectations": [
+        "Examines every list item and identifies each invalid item and its reason.",
+        "Accepts the item with an ID and binary description.",
+        "Does not invent a required ID pattern."
+      ],
+      "files": []
+    },
+    {
+      "id": 12,
+      "name": "unavailable-description",
+      "prompt": "Assess two existing Stories with status category new and no links. For TEST-21 the read response omits description; for TEST-22 it explicitly returns an empty description.",
+      "expected_output": "Unable to assess TEST-21 because description evidence is unavailable; TEST-22 is Not ready because both required sections are absent.",
+      "expectations": [
+        "Distinguishes an omitted description from an explicitly empty one.",
+        "Reports both missing sections for the empty Story description.",
+        "Does not infer the contents of the omitted description."
+      ],
+      "files": []
+    },
+    {
+      "id": 13,
+      "name": "combine-metadata-and-content",
+      "prompt": "Assess a Story whose status category is indeterminate, whose issue links are empty, and whose description has no Output section and a Checks section containing only a paragraph.",
+      "expected_output": "Not ready, reporting the failed status, missing Output, and invalid Checks.",
+      "expectations": [
+        "Evaluates the description even when metadata fails.",
+        "Reports every failed criterion rather than stopping at the script verdict."
+      ],
+      "files": []
+    },
+    {
+      "id": 14,
+      "name": "story-missing-checks",
+      "prompt": "Assess an existing Story with status category new, no links and a description containing an Output section but no Checks section.",
+      "expected_output": "Not ready because the Story is missing its Checks section.",
+      "expectations": [
+        "Reports the missing Checks section even though the deterministic metadata gate passes.",
+        "Does not require anything beyond the presence of the Output section."
       ],
       "files": []
     }
