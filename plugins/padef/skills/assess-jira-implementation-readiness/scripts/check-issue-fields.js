@@ -1,4 +1,4 @@
-// Evaluates the Jira metadata gate for the assess-jira-issue-readiness skill.
+// Evaluates the Jira metadata gate for the assess-jira-implementation-readiness skill.
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 

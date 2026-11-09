@@ -1,5 +1,5 @@
 ---
-name: assess-jira-issue-readiness
+name: assess-jira-implementation-readiness
 description: Assess implementation readiness of an existing Jira issue. Use when asked whether a Jira issue is ready to be implemented; check its metadata, blockers, and required description sections.
 argument-hint: "[Jira issue key or URL]"
 ---
