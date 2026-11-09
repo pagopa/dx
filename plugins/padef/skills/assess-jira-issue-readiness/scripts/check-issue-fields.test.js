@@ -155,6 +155,18 @@ test("reports pending and unverifiable blockers together", () => {
   assert.equal(output.blockers.unverifiable[0].key, "TEST-2");
 });
 
+test("treats ambiguous or malformed link directions and missing types as unverifiable", () => {
+  const links = [
+    { ...link("TEST-1", "done", "Done"), outwardIssue: { key: "TEST-2" } },
+    { type: { name: "Blocks" }, outwardIssue: "TEST-3" },
+    { outwardIssue: { key: "TEST-4" } },
+    { type: { name: "Relates" } },
+  ];
+  const result = checkIssueFields(issue("Open", "new", "Task", links));
+  assert.equal(result.verdict, "Unable to assess");
+  assert.equal(result.blockers.unverifiable.length, links.length);
+});
+
 test("does not infer or require a missing status name", () => {
   const result = checkIssueFields(issue(undefined, "new", "Task"));
   assert.equal(result.verdict, "Ready");

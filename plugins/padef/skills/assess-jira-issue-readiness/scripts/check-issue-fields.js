@@ -35,14 +35,8 @@ function checkBlockers(links) {
       unverifiable.push({ key: null, status: null });
       continue;
     }
-    if (!link.inwardIssue && link.outwardIssue) {
-      continue;
-    }
     const inward = link.inwardIssue;
     const name = link.type?.name;
-    if (typeof name === "string" && name.length > 0 && name !== "Blocks") {
-      continue;
-    }
     const blocker = {
       key: typeof inward?.key === "string" && inward.key ? inward.key : null,
       status:
@@ -51,8 +45,25 @@ function checkBlockers(links) {
           ? inward.fields.status.name
           : null,
     };
+    const hasInward = Object.hasOwn(link, "inwardIssue");
+    const hasOutward = Object.hasOwn(link, "outwardIssue");
+    const linkedIssue = hasInward ? inward : link.outwardIssue;
+    if (
+      hasInward === hasOutward ||
+      !linkedIssue ||
+      typeof linkedIssue !== "object" ||
+      Array.isArray(linkedIssue) ||
+      typeof name !== "string" ||
+      !name
+    ) {
+      unverifiable.push(blocker);
+      continue;
+    }
+    if (hasOutward || name !== "Blocks") {
+      continue;
+    }
     const category = inward?.fields?.status?.statusCategory?.key;
-    if (name !== "Blocks" || !inward || typeof category !== "string" || !category) {
+    if (typeof category !== "string" || !category) {
       unverifiable.push(blocker);
     } else if (category !== COMPLETED_STATUS_CATEGORY) {
       pending.push(blocker);

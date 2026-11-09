@@ -178,6 +178,18 @@
         "Does not require anything beyond the presence of the Output section."
       ],
       "files": []
+    },
+    {
+      "id": 15,
+      "name": "null-description-and-response-envelope",
+      "prompt": "Assess an existing Story whose Jira read returns a data envelope containing the issue with status category new, no links and fields.description = null.",
+      "expected_output": "Not ready because the explicitly empty description lacks both Output and Checks.",
+      "expectations": [
+        "Passes the issue inside the response envelope to the metadata script.",
+        "Treats the returned null description as empty rather than missing evidence.",
+        "Reports the missing Output and Checks sections."
+      ],
+      "files": []
     }
   ]
 }
