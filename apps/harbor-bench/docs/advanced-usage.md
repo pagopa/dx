@@ -91,7 +91,7 @@ Requirements and caveats:
   at environment start. `convert` verifies the CLI is on `PATH`.
 
 - **Native arm64 only**: the CLI runs Linux VMs without x86 emulation; base
-  images must publish arm64 variants (`ubuntu:24.04` does). The generated
+  images must publish arm64 variants (`ubuntu:26.04` does). The generated
   Dockerfile's `ARG TARGETARCH=amd64` is declared but unused — leave it alone,
   or the literal value will be wrong on Apple silicon.
 - **Resources**: each trial is its own lightweight VM; `--n-concurrent N` means

@@ -4,7 +4,7 @@
 # injected skills, workspace, or agent logs. Harbor transfers to it only the
 # task-level `artifacts = [...]` entries (re-materialized at their original
 # paths) plus /logs/artifacts/; /logs/verifier/ is bind-mounted for the reward.
-FROM ubuntu:24.04
+FROM {{BASE_IMAGE}}
 
 ARG TARGETARCH=amd64
 
