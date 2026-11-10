@@ -93,6 +93,8 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
     assert toml["artifacts"] == list(task_shape.HARBOR_ARTIFACTS)
     # verifier image Dockerfile built from tests/
     assert (task_root / "tests" / "Dockerfile").is_file()
+    for dockerfile in ("environment/Dockerfile", "tests/Dockerfile"):
+        assert "FROM ubuntu:26.04\n" in (task_root / dockerfile).read_text()
 
     quality = tomllib.loads((task_root / "tests" / "quality.toml").read_text())
     assert quality["judge"]["judge"] == "openai/gpt-6-luna"
