@@ -92,8 +92,7 @@ Requirements and caveats:
 
 - **Native arm64 only**: the CLI runs Linux VMs without x86 emulation; base
   images must publish arm64 variants (`ubuntu:26.04` does). The generated
-  Dockerfile's `ARG TARGETARCH=amd64` is declared but unused — leave it alone,
-  or the literal value will be wrong on Apple silicon.
+  Dockerfile selects the Node.js binary using the image's architecture.
 - **Resources**: each trial is its own lightweight VM; `--n-concurrent N` means
   N VMs, and `cpus`/`memory_mb` map directly to VM resources.
 - **Network**: `network_mode: public` (the generated default) is ignored by the
@@ -362,6 +361,9 @@ Rules, enforced at plan time (before anything is written):
 
 #### Overriding the environment Dockerfile
 
+The generated Ubuntu environment includes Node.js 24, npm and npx, available
+to both the agent and `prepare.sh`.
+
 ```toml
 # harbor/<generated-task-dir>/task.toml  (per-task only)
 [environment]
@@ -386,8 +388,8 @@ harbor/environment/prepare.sh   (added; the GENERATED Dockerfile also runs it,
 ```
 
 Because replacement is wholesale, a full `environment/Dockerfile` override
-means reproducing the Copilot CLI install, `COPY . /workspace/` and the git
-baseline — or keep the generated file and just add a `prepare.sh`.
+means reproducing the Node.js and Copilot CLI installs, `COPY . /workspace/`
+and the git baseline — or keep the generated file and just add a `prepare.sh`.
 
 ##### Deterministic git baseline
 

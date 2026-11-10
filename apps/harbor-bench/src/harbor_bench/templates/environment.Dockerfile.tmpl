@@ -2,11 +2,25 @@
 # for glibc; musl/Alpine fails).
 FROM {{BASE_IMAGE}}
 
-ARG TARGETARCH=amd64
-
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    git bash curl ca-certificates unzip \
+    git bash curl ca-certificates unzip xz-utils libstdc++6 \
     && rm -rf /var/lib/apt/lists/*
+
+# Checksums are from the signed SHASUMS256.txt.asc for Node.js v24.22.2.
+RUN set -eu; \
+    case "$(dpkg --print-architecture)" in \
+      amd64) arch=x64; checksum=48cc0e21e048790e54c0cf5749c2725005313d652651c40b7a21feb9697aaf75 ;; \
+      arm64) arch=arm64; checksum=eb187837a2230d4047161ac0be008584e16b46f726e9c9490ee35dc6b17d9ba8 ;; \
+      *) echo "Unsupported Node.js architecture" >&2; exit 1 ;; \
+    esac; \
+    archive="node-v24.22.2-linux-${arch}.tar.xz"; \
+    curl -fsSLo "/tmp/${archive}" "https://nodejs.org/dist/v24.22.2/${archive}"; \
+    echo "${checksum}  /tmp/${archive}" | sha256sum -c -; \
+    tar -xJf "/tmp/${archive}" -C /usr/local --strip-components=1 --no-same-owner; \
+    rm "/tmp/${archive}"; \
+    node --version \
+    && npm --version \
+    && npx --version
 
 # Bake the Copilot CLI into the image (root HOME=/root, so it lands in
 # /root/.local/bin). CopilotCliMod skips its per-trial
