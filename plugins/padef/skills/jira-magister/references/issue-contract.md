@@ -18,7 +18,7 @@ authoritative. Use meaningful source titles/keys in prose and link labels, not
 opaque source codes alone. Attribute decisions to evidenced owners rather than
 an inferred team; describe the work, not the agent's conversation or procedure.
 Use [issue-template.md](./issue-template.md) for the `## Source` document list,
-its primary-source rule, one-hop selection, nested stable IDs, canonical
+its source-selection guidance, one-hop selection, nested stable IDs, canonical
 locators, and `## AC Coverage`. This replaces the free-text `Source:` line;
 do not add a separate `Source documents` inventory. Apply it to every issue
 type above, while retaining that type's other required content.

@@ -52,15 +52,17 @@ match:
 
 1. explicitly supplied Jira key;
 2. stored Jira URL or confirmed source-to-item mapping;
-3. primary-source locator plus cited stable IDs in `Source` and AC Coverage
-   within the target project;
+3. source-document locators plus document-scoped IDs in `Source` and AC
+   Coverage within the target project; confirm that the candidate's scope
+   matches the item;
 4. no match: propose creation;
 5. multiple matches: stop and ask the user to choose.
 
 Compare page IDs/canonical file locators and document-scoped IDs, not bare
 `AC-01` across UCs or the shared DR alone. Several legitimate slices may share
-one UC: use confirmed scope/coverage or a supplied correlation key to
-disambiguate; never merge slices just because their document matches.
+the same source documents or UC: use confirmed scope/coverage or a supplied
+correlation key to disambiguate; never merge slices just because their
+references overlap.
 For legacy Source lines, require an unambiguous mapping rather than silently
 rewriting or duplicating the issue. Spike matching includes `open.item-XX`.
 Error Tasks are shared by semantic error identifier within the projection;
@@ -84,8 +86,8 @@ Re-fetch every created or updated item and verify:
 - parent-child hierarchy and issue types;
 - every confirmed dependency link, including direction and link type;
 - the parsed `Source` and AC Coverage lists match
-  [issue-template.md](./issue-template.md): primary first, key order, one
-  document entry per locator, IDs under their owning documents, complete
+  [issue-template.md](./issue-template.md): fixed key order, one document
+  entry per locator, IDs under their owning documents, complete
   one-hop document set, and AC IDs linked to the owning UC;
 - canonical locators, no bare file paths or pinned Confluence versions,
   and missing locators or unverified anchors reported honestly;

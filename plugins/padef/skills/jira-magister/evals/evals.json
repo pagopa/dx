@@ -119,10 +119,10 @@
       "id": 8,
       "name": "source-template-shape",
       "prompt": "Read backlog-context.md offline. Prepare one Story for UC-01 AC-01 under PAY-11 and one Task implementing DR-01 NFR-01 under PAY-11. The Story cites JTBD-01, contracts.item-001, RFC-08 and ADR-01; the NFR Task cites NFR-01 only. All other required content is provided in the fixture; no decomposition is requested. Show complete descriptions, Source blocks, AC Coverage where applicable and proposed native remote links. Use the source policy, not a second document inventory. Save proposal.md and ask for confirmation; no live calls.",
-      "expected_output": "A uc-primary Story and dr-primary NFR Task with document-scoped IDs, canonical page URLs, intended ID anchors, complete one-hop source selection and AC-only coverage.",
+      "expected_output": "A Story citing its UC and a DR-sourced NFR Task with document-scoped IDs, canonical page URLs, intended ID anchors, complete one-hop source selection and AC-only coverage.",
       "expectations": [
         "Uses literal Source headings with lowercase document-key bullets, no source tables, no Source trailer and no separate Source documents list.",
-        "The Story's document order is uc, dr, prd, contract, figma, blueprint, adr, rfc; the Task's primary is dr.",
+        "The Story's document order is prd, dr, uc, contract, figma, blueprint, adr, rfc; the NFR Task cites NFR-01 under dr.",
         "Uses page-ID URLs without pinned revisions, nests JTBD/contract/ADR/RFC/NFR IDs under their owners and uses exact #ID Confluence fragments.",
         "AC Coverage links AC-01 to UC-01 page 101, contains no copied AC prose, and does not place AC-01 under Source.",
         "The NFR-only Task does not acquire unrelated UC, PRD, contract, Figma or Blueprint documents."
@@ -133,9 +133,9 @@
       "id": 9,
       "name": "complete-source-documents",
       "prompt": "Read backlog-context.md offline. Prepare two self-contained items under PAY-11, not a whole backlog: a contract-only Task citing DR-01 contracts.item-001 to wire the Receipt API (done when the supplied contract validates against its implementation), and a Story for UC-01 AC-01 citing JTBD-01 and contracts.item-001. Show each complete source inventory and AC Coverage where applicable in proposal.md. Do not retrieve URLs or mutate Jira; ask for confirmation.",
-      "expected_output": "The contract-only Task includes exactly dr and contract, while the Story includes uc, dr, prd, contract and applicable design/blueprint documents, without recursive sources.",
+      "expected_output": "The contract-only Task includes exactly dr and contract, while the Story includes prd, dr, uc, contract and applicable design/blueprint documents, without recursive sources.",
       "expectations": [
-        "The contract-only Task Source has exactly DR-01 and the API contract, with dr primary and contracts.item-001 nested under dr.",
+        "The contract-only Task Source has exactly DR-01 and the API contract, with contracts.item-001 nested under dr.",
         "The Story Source includes UC-01, DR-01, PRD-01 owning JTBD-01, the contract artifact, Figma node and Blueprint.",
         "Neither item includes transitive pages 998/999 or uncited RFC/ADR/CR/incident/intake documents.",
         "Does not list the bare application repository as a source document or invent extra coverage."
@@ -159,10 +159,10 @@
       "id": 11,
       "name": "bug-and-subtask-sources",
       "prompt": "Read backlog-context.md offline. Draft three independent prepared items in PAY: Bug A under PAY-11, invalid signature incorrectly stores a receipt (expected no write), citing UC-01 AGREEMENT_SIGNATURE_INVALID and DR-01; Bug B under PAY-10, receipt download fails with 503 during INC-12 (expected 200), incident-only with no UC or DR; and a Sub-task of PAY-50 to add the invalid-signature no-write test, copying exactly the Parent Source block in the fixture. Each check is that its described expected result holds in a regression test; all fit one sprint. Show complete descriptions in proposal.md and ask for confirmation without mutating Jira.",
-      "expected_output": "UC-backed and incident-backed Bugs choose their actual primary sources, and the Sub-task preserves its parent's entire explicit Source block.",
+      "expected_output": "UC-backed and incident-backed Bugs cite the applicable UC or incident, and the Sub-task preserves its parent's entire explicit Source block.",
       "expectations": [
-        "Bug A starts Source with uc page 101, nests AGREEMENT_SIGNATURE_INVALID and includes dr page 102.",
-        "Bug B has incident primary with https://example.org/incidents/12 and does not invent a UC or DR.",
+        "Bug A includes dr page 102 and uc page 101 in key order, with AGREEMENT_SIGNATURE_INVALID nested under uc.",
+        "Bug B cites https://example.org/incidents/12 and does not invent a UC or DR.",
         "The Sub-task copies the fixture parent Source block verbatim, not just a parent Jira link or a newly selected document subset.",
         "Uses list-based Source sections with no separate source inventory, does not invent AC coverage, and requests confirmation before mutation."
       ],
@@ -172,9 +172,9 @@
       "id": 12,
       "name": "embedded-use-case-source",
       "prompt": "Prepare one self-contained Story in PAY under PAY-10, without Jira calls: actor Partner Entity, action upload an agreement, gain join without a manual ticket, one-sprint scope. Source is UC-02, a section INSIDE DR-04 - Agreement delivery, not a separate child page: https://example.atlassian.net/wiki/spaces/PAY/pages/240/Agreement-delivery#UC-02. That same DR owns NFR-04 (no PII in logs); cite it. AC-07 is valid upload returns a document ID. The page publishes anchors UC-02, NFR-04 and AC-07; no other documents are required. Show the complete description with the current source template in proposal.md and ask for confirmation. Do not invent a separate UC page or duplicate the shared page in the document inventory.",
-      "expected_output": "A single uc-primary document bullet for the shared DR page, with the embedded UC and NFR section references, plus AC Coverage pointing to that same page.",
+      "expected_output": "A single uc-keyed document bullet for the shared DR page, with the embedded UC and NFR section references, plus AC Coverage pointing to that same page.",
       "expectations": [
-        "Source has one uc-primary document bullet identifying both DR-04 and UC-02, not duplicate uc/dr bullets for page 240 or an invented child page.",
+        "Source has one uc-keyed document bullet identifying both DR-04 and UC-02, not duplicate uc/dr bullets for page 240 or an invented child page.",
         "Nested UC-02 and NFR-04 links target page 240 with their supplied exact ID fragments.",
         "AC Coverage links AC-07 to page 240#AC-07 without copying its prose or inventing a qualified ID.",
         "Keeps source headings and lists in the description and asks for confirmation without live mutation."
