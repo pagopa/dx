@@ -49,8 +49,6 @@ jobs:
       id-token: write
       pull-requests: read
     uses: $/.github/workflows/_cleanup-static-web-app-previews.yaml
-    with:
-      dry_run: ${{ github.event_name == 'workflow_dispatch' }}
     secrets: inherit
 
   feed_docs_knowledge_base:
