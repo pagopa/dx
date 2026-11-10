@@ -1,7 +1,6 @@
 name: Deploy DX Website to Azure
 
 on:
-  workflow_dispatch:
   push:
     # GitHub Actions does not evaluate path filters for tag pushes.
     # Scope production deploys with the project-specific release tag prefix.
@@ -18,12 +17,11 @@ permissions: {}
 
 concurrency:
   # One production release and one latest run per PR for this website.
-  group: dx-website-orchestrator-${{ github.event_name == 'workflow_dispatch' && format('cleanup-test-{0}', github.ref) || github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'production' }}
+  group: dx-website-orchestrator-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.number) || 'production' }}
   cancel-in-progress: true
 
 jobs:
   deploy_to_static_web_app:
-    if: github.event_name != 'workflow_dispatch'
     permissions:
       contents: read
       id-token: write
@@ -41,7 +39,7 @@ jobs:
       environment: "automation-prod"
 
   cleanup_closed_preview_environments:
-    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/docs@') && needs.deploy_to_static_web_app.result == 'success')) }}
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/docs@')
     name: Cleanup Closed Website Previews
     needs: deploy_to_static_web_app
     permissions:
