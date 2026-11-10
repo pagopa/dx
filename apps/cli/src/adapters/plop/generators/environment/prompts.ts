@@ -76,7 +76,7 @@ const workspaceDomainSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .min(1, "Domain is required")
+  .min(3, "Domain must have at least 3 characters")
   .max(54, "Domain must have at most 54 characters")
   .regex(
     /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
@@ -245,7 +245,7 @@ const getBaseQuestions = (
   if (initialAnswers.workspace?.domain === undefined) {
     questions.push({
       filter: (value: string) => value.trim().toLowerCase(),
-      message: "Domain (1-54 characters)",
+      message: "Domain (3-54 characters)",
       name: "workspace.domain",
       type: "input",
       validate: validatePrompt(workspaceSchema.shape.domain),
