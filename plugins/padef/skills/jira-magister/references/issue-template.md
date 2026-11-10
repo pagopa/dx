@@ -14,14 +14,67 @@ top-level document bullets are the complete **source document inventory**.
   - [AGREEMENT_EXTENSION_INVALID](https://example.atlassian.net/wiki/spaces/DEMO/pages/101#AGREEMENT_EXTENSION_INVALID)
 - contract: [Upload API](https://github.com/example/adhesion/blob/main/api/openapi.yaml)
 
-## {{issue_specific_content}}
+## Output
+
+The upload endpoint validates the extension before attempting signature processing.
+
+## Checks
+
+- An endpoint test verifies that a disallowed extension never invokes the signature processor.
+
+## Scope
+
+- In scope: extension validation and its endpoint test.
+- Out of scope: signature verification and agreement persistence.
 
 ## AC Coverage
 
 - [AC-01](https://example.atlassian.net/wiki/spaces/DEMO/pages/101#AC-01)
 ```
 
-The example URLs and IDs are illustrative, not documents to retrieve.
+The example URLs and IDs are illustrative, not documents to retrieve. Use the
+execution contract below alongside the issue-type content requirements in
+[issue-contract.md](./issue-contract.md).
+
+## Execution contract
+
+For new Stories, Tasks, Bugs and Sub-tasks, default to `Source`, optional
+`Slice Scope ID`, `Output`, `Checks`, `Scope`, optional `AC Coverage`, in that
+order. These headings are a readable default, not a universal Jira schema.
+Respect an explicitly supplied approved project mapping if the same information
+is explicit, nonempty and verifiable. Do not reformat an existing description
+outside the confirmed diff.
+
+- **Output:** the observable result of this item, distinct from its source
+  locator or an instruction to "implement the UC".
+- **Checks:** binary checks of this item's deliverable. Propose them from the
+  approved work, not new requirements. Reference evidence when supplied;
+  never invent commands, test IDs, result links or a successful execution.
+  For an integration slice, name the supplied implementation boundary and
+  the collaborator interaction or response mapping being checked. For example,
+  verify that an authorization result controls a downstream call and that its
+  result maps to the response, rather than restating "the actor can download".
+  Merely adding "integration" to an end-to-end AC does not make it slice-local.
+- **Scope:** explicit authorized work and evidenced non-goals. Do not infer
+  exclusions or use "TBD" to make a missing boundary appear complete.
+- **Slice Scope ID:** optional correlation, included only when supplied or
+  already present. Preserve its spelling; do not generate one or demand it.
+- **AC Coverage:** optional links to canonical AC IDs only. Canonical AC prose
+  stays in the UC, not a copied Acceptance Criteria section or renamed Checks.
+  Checks verify the slice, not all end-to-end AC behavior just because an AC ID
+  is referenced. Missing optional coverage is not a readiness blocker.
+
+If required Output, Checks or Scope cannot be established from approved input,
+show the gap, ask a focused question and block persistence. This applies even
+in prepared-item mode. A locator or AC ID alone does not supply these values.
+A Sub-task copies its parent's Source verbatim but gets its own Output,
+Checks and Scope. A spike's Output is a recorded decision, its check is the
+decision evidence, not an invented answer to the open question.
+
+Epics are non-dispatchable: use only the DR document in Source and a concise
+outcome body. Keep UC grouping, JTBD, KPI, guardrail, risk, exclusions and
+readiness evidence in the human review proposal and owning DR, not in the Epic
+body. Do not force Output/Checks/Scope sections or AC Coverage onto Epics.
 
 ## Document keys and primary source
 
@@ -73,8 +126,7 @@ the fixed key order above:
 - Error-handling Task: `uc`; include every UC that defines the shared error.
 - Bug: the relevant `uc`, otherwise the supplied `incident`.
 - Sub-task: copy the parent's entire `Source` block verbatim.
-- Epic: include the `dr` and applicable `prd`/`uc` documents; order them as
-  `prd`, `dr`, `uc`.
+- Epic: `dr` only; keep grouping evidence outside its persisted body.
 - CR or pending-spec work: `cr` or `intake`, when that is the actual source.
 
 Single-item mode accepts a self-contained source without requiring an
@@ -96,8 +148,8 @@ an embedded UC). Put acceptance-check IDs in
 `## AC Coverage`, not among the nested Source IDs. Link each AC to its owning
 UC, including when several UCs use the same local `AC-01`. Coverage contains
 IDs only, not copied AC prose. Omit the section when no AC is covered; do not
-invent coverage. This does not change the existing Story acceptance-check body
-requirements.
+invent coverage. Do not copy canonical acceptance-check prose elsewhere in the
+issue body either.
 
 ## Select documents: one hop, no recursive collection
 
@@ -109,6 +161,7 @@ documents. Keep those delivery relationships in dependency links instead.
 
 1. Include the associated DR/SRS. In backlog mode a missing DR is a readiness
    gap; self-contained incident/intake/single-item work need not have one.
+   For an Epic, stop here: its Source contains only the DR.
 2. Include every document owning a cited ID: selected UCs, PRD for JTBD, and
    ADR/RFC/CR only when explicitly cited.
 3. Include the concrete artifact linked by each cited `contracts.item-*`,
@@ -191,5 +244,5 @@ Incident-backed Bug:
 ```
 
 Sub-task: copy its parent's Source unchanged; a parent Jira link alone does not
-replace those documents. Epic: start with `dr`, add its cited `uc` and `prd`
-documents in catalog order, and nest JTBD IDs under `prd`.
+replace those documents. Epic: use only `dr`; the review proposal, not its
+persisted body, retains the included UC/JTBD grouping.

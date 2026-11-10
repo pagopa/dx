@@ -67,7 +67,10 @@ request is ambiguous.
 6. Use [issue-template.md](./references/issue-template.md) for every item's
    `## Source` document list and `## AC Coverage`. Keep the primary source
    first, nest IDs under their owning documents, and select documents with its
-   one-hop rule. The document list is authoritative; native Jira remote links
+   one-hop rule (Epics carry only the DR). Every dispatchable item also needs
+   explicit Output, slice-local binary Checks and Scope/non-goals; canonical
+   AC prose stays in the UC. Preserve an optional supplied Slice Scope ID.
+   The document list is authoritative; native Jira remote links
    mirror its Confluence and Figma entries without duplicates.
 7. Treat open questions as projection input. A question flagged `Blocking: yes`
    becomes an independent spike Task that the dependent Story or Task
@@ -104,16 +107,21 @@ Report missing locators instead of using bare basenames or inventing links.
 ### 2. Propose Epic slices
 
 Propose more than one Epic when the DR/SRS contains separate cohesive outcomes.
-Each Epic must:
+Each Epic proposal must:
 
 - represent one outcome or independently valuable capability;
 - be completable in a few two-week sprints, not an entire broad initiative;
 - list its included `UC-XX` entries, JTBD, KPI outcome, and at least one
   qualitative guardrail;
+- link the DR, PRD and included UCs in the review context so grouping evidence
+  stays traceable even though the persisted Epic Source is DR-only;
 - state exclusions, dependencies, readiness gaps, and likely delivery risk.
 
 Show the proposed grouping and ask for explicit approval before drafting the
 final Stories and Tasks. Do not create or update Jira during this phase.
+Keep this grouping evidence in the review proposal. The persisted Epic is
+non-dispatchable: outcome-oriented summary, DR-only Source and concise outcome
+body, not copied UC, KPI, design or readiness detail from the DR.
 
 ### 3. Draft Stories and Tasks
 
@@ -125,8 +133,10 @@ structure:
 
 Every Story must be independently deliverable within one two-week sprint. Split
 Stories that combine multiple outcomes, actors, or independently testable flows.
-Use the Use Case's binary acceptance checks as the Story's acceptance criteria;
-preserve their IDs and do not invent missing checks.
+Describe an observable Output, binary Checks of that slice's deliverable, and
+explicit Scope/non-goals. Keep canonical acceptance checks in the UC; reference
+only their IDs in AC Coverage. Do not copy or relabel canonical AC prose as
+slice Checks, or claim a partial slice proves the whole UC.
 
 Create a technical Task for smaller enabling work such as repository setup,
 API/AsyncAPI/Data Contract wiring, migrations, instrumentation, test fixtures,
@@ -134,6 +144,8 @@ security controls, deployment, or readiness actions. Route concrete Tasks to the
 repository named by `references.repository`. A Task may support a Story or Epic
 but must not masquerade as actor value. A task that cannot fit one sprint must be
 split or flagged.
+Use the same Output/Checks/Scope contract for Tasks, Bugs and Sub-tasks;
+a Sub-task inherits Source, not its parent's deliverable or check list.
 Select sources independently for each Task: enabling or contract-only work
 does not inherit the sources of every Story it supports.
 
@@ -174,15 +186,22 @@ Show a complete human-readable draft before any Jira mutation:
   project;
 - complete `Source` blocks, primary documents, nested IDs, and AC Coverage;
 - missing locators and whether Confluence ID anchors are known to exist;
-- acceptance checks, KPI target, qualitative guardrail, and readiness gaps;
+- explicit Output, binary Checks, Scope/non-goals, optional supplied Slice Scope
+  ID, and IDs-only coverage for dispatchable items; KPI, guardrail and readiness
+  evidence in the grouping proposal;
 - spike Tasks derived from blocking open questions, with their `open.item-XX`
   source and the dependents they block;
 - the semantic error identifiers and the Stories they affect;
 - the repository target and any Task that cannot be routed;
 - proposed creates, updates, splits, and unchanged items.
 
+Run the [draft validation](#draft-validation) before saving or presenting it.
+
 Ask for explicit confirmation. A request to “prepare”, “draft”, or “show” the
 backlog is not confirmation to create or update Jira.
+Close review-only proposals with an explicit status: not persisted;
+confirmation, persistence and post-mutation verification pending. Include this
+status in a saved proposal as well as the conversational handoff.
 
 ### 5. Create or synchronize after confirmation
 
@@ -204,19 +223,34 @@ verification step failed.
 Use this mode when the user supplies the item content directly instead of a body
 of requirements.
 
-1. **Normalize the item.** Identify its issue type (Epic, Story, Task, Bug, or Sub-task),
-   project, and parent. Shape it to the portable contract in
+1. **Normalize the item.** First extract the supplied issue fields: type
+   (Epic, Story, Task, Bug, or Sub-task), summary, project, parent and execution
+   information. Separately extract document titles and locators into Source;
+   they are evidence labels, not alternative issue summaries. Keep an explicit
+   Task/Bug/Sub-task summary unchanged, including in an incomplete draft.
+   Shape the item to the portable contract in
    [issue-contract.md](./references/issue-contract.md): the canonical
    `As a [Actor], I want to [action], so that [Gain]` summary for a Story,
-   one-sprint scope, binary acceptance checks, and the `Source`/`AC Coverage`
+   for dispatchable items, one-sprint scope, explicit Output, binary slice Checks, Scope/non-goals,
+   optional supplied Slice Scope ID, and the `Source`/`AC Coverage`
    lists from [issue-template.md](./references/issue-template.md).
    Ask one focused question at a time for any missing
-   field; never infer the actor, gain, acceptance checks, parent, project, or
-   source ID.
+   field; never infer the actor, gain, product behavior, parent, project, or
+   source ID. Propose local checks only from approved work; if Output, Checks
+   or Scope cannot be established, ask and block persistence. Preserve complete
+   approved project mappings instead of forcing the default headings.
+   For an Epic, use the minimal non-dispatchable body instead.
+   If evidence conflicts with a supplied
+   missing-locator statement, report the candidate and conflict as a gap;
+   do not promote the candidate into the authoritative Source before clarification.
 2. **Review the item.** Show the complete item — type, summary, description,
-   project, parent, links, labels, source IDs, and acceptance checks — and ask
+   project, parent, links, labels, sources and execution contract — and ask
    for explicit confirmation. A request to "prepare", "draft", or "show" is not
    confirmation.
+   Run [draft validation](#draft-validation) on this item only, including when
+   required information is missing.
+   State post-mutation verification is pending even for a small diff or blocked
+   proposal; no mutation means no persistence verification has occurred.
 3. **Persist.** After confirmation, create or update the one item following
    [persistence.md](./references/persistence.md), and attach its source remote
    links.
@@ -227,6 +261,33 @@ of requirements.
 The Definition of Ready gate is reduced in this mode: validate that the item is
 well formed and that no value is invented. Do not require a parent DR/SRS unless
 the supplied source or a link needs one.
+
+## Draft validation
+
+Compare the completed draft with the supplied input before saving or presenting
+it. Missing execution information blocks persistence, not this comparison:
+
+- Match each Task/Bug/Sub-task summary, project, parent and supplied execution
+  field to the input. Preserve an explicit work summary verbatim; source titles
+  label Source documents and do not replace issue summaries.
+- For a Story, check the literal `As a [Actor], I want to [action], so that [Gain]`
+  structure and the exact actor name separately.
+- Compare every source locator with its evidence: hostname, page ID,
+  repository/branch and Figma node. Apply only the template's canonicalization,
+  never reconstruct a URL from memory. Check each nested ID's rendering against
+  its parent locator: Confluence section link or repository-file code text.
+- Check that Output, Checks and Scope describe the same local deliverable.
+  Keep missing required fields visible as gaps and canonical AC prose in the UC.
+
+Correct discrepancies before requesting confirmation. Apply the same checks to
+saved proposals; a conversational disclaimer does not repair the saved draft.
+When required information is missing, name it in the saved status and state that
+persistence is blocked until it is supplied. "Not persisted" or "pending" alone
+describes what has happened, not the condition preventing the next operation.
+End both the saved proposal and conversational handoff with the next question:
+ask for the missing required information when blocked; otherwise explicitly ask
+the user to confirm the proposed operation and items. A pending-confirmation
+status is not itself a confirmation request.
 
 ## Clarification rules
 
@@ -255,5 +316,7 @@ results, and any failed verification. In single-item mode, return the created or
 updated item, its key and URL, its `Source` and AC Coverage blocks, and any failed step;
 no backlog mapping is produced. Do not publish Confluence or edit source
 documents outside this skill's ownership.
+Include the dispatchable item's Output, Checks, Scope and supplied correlation
+ID in the handoff so the execution boundary remains visible.
 For a review-only draft, state that it is not persisted and that confirmation,
 persistence, and post-mutation verification are still pending.

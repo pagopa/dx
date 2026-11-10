@@ -11,7 +11,7 @@
         "Groups Use Cases by cohesive outcome and keeps each Epic boundary explicit.",
         "Shows traceability from each Epic to the parent DR/SRS, PRD/JTBD, and included UC-XX IDs.",
         "Asks for explicit approval before drafting or mutating Jira items.",
-        "Each proposed Epic has a Source list with dr first, included uc documents, and prd with its cited JTBD IDs; no separate Source documents list."
+        "Each proposed persisted Epic body has only dr in its Source and a concise outcome; UC/JTBD grouping, KPI, guardrail and readiness evidence remain in the review proposal, not copied into that body."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
@@ -27,7 +27,8 @@
         "Represents repository setup and API contract wiring as Tasks rather than actor-facing Stories.",
         "Routes concrete Tasks to the repository from the DR/SRS references.repository link.",
         "Links each item to its Epic and relevant source IDs; contract-only Tasks cite their DR contract IDs rather than inventing UC coverage.",
-        "Story Source lists start with uc and put AC IDs linked to the owning UC in AC Coverage, without duplicating them among Source children."
+        "Story Source lists start with uc and put AC IDs linked to the owning UC in AC Coverage, without duplicating them among Source children.",
+        "Dispatchable draft descriptions expose nonempty Output, binary slice-local Checks and Scope/non-goals; canonical AC prose is not copied into the body or relabeled as Checks, and no optional correlation ID is invented."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
@@ -82,14 +83,15 @@
         "Creates one error-handling Task for AGREEMENT_SIGNATURE_INVALID, shared by UC-01 and UC-02, instead of duplicating it.",
         "Routes concrete Tasks to https://github.com/example/receipts from references.repository.",
         "Adds no Task and no link for a non-blocking question, and does not invent the answer to a spike.",
-        "The spike Source starts with dr and nests open.item-007; the shared error Task nests AGREEMENT_SIGNATURE_INVALID under both owning UC documents."
+        "The spike Source starts with dr and nests open.item-007; the shared error Task nests AGREEMENT_SIGNATURE_INVALID under both owning UC documents.",
+        "Dispatchable draft descriptions expose nonempty Output, binary slice-local Checks and Scope/non-goals; canonical AC prose is not copied into the body or relabeled as Checks, and no optional correlation ID is invented."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
     {
       "id": 6,
       "name": "create-one-prepared-story",
-      "prompt": "Create a single Jira Story in project PAY for the actor \"Cittadino pagatore\": as that actor, they want to download the payment receipt, so that they can keep proof of payment. The acceptance check is that the receipt downloads as a PDF. Do not propose Epics or a full backlog. Ask for confirmation before creating anything. Source S1 is UC-04 - Download payment receipt (https://example.org/use-cases/download-receipt), with acceptance check AC-04. Intake annotation: \"The user confirmed PDF download; the agent retried the source-reading tool twice.\" Parent Epic: PAY-10 - Payment receipts. Labels: payments, receipts. This self-contained item has no additional required fields; show the complete proposed description for confirmation without calling Jira.",
+      "prompt": "Create a single Jira Story in project PAY for the actor \"Cittadino pagatore\": as that actor, they want to download the payment receipt, so that they can keep proof of payment. The acceptance check is that the receipt downloads as a PDF. Do not propose Epics or a full backlog. Ask for confirmation before creating anything. Source S1 is UC-04 - Download payment receipt (https://example.org/use-cases/download-receipt), with acceptance check AC-04. Intake annotation: \"The user confirmed PDF download; the agent retried the source-reading tool twice.\" Parent Epic: PAY-10 - Payment receipts. Labels: payments, receipts. This self-contained item has no additional required fields; show the complete proposed description for confirmation without calling Jira. Output: the receipt download handler returns the PDF response. Local check: a handler test verifies its response Content-Type is application/pdf. Scope: only download-handler integration and its test; exclude payment history and deployment. Use one sprint.",
       "expected_output": "A single-item mode flow that normalizes one Story to the canonical contract, asks for any missing field, requests confirmation, and never proposes Epic slicing or a whole backlog.",
       "expectations": [
         "Uses single-item mode and does not propose Epic slices or a full backlog.",
@@ -98,7 +100,8 @@
         "Asks for missing fields such as the parent Epic, labels, or source IDs instead of inventing them.",
         "Requests explicit confirmation before creating the item.",
         "Uses the meaningful UC-04 title/key and link in the proposed issue description, retains UC-04 and AC-04 in source traceability, and excludes chat-confirmation and tool-retry narration rather than citing S1 alone.",
-        "Uses a Source list and AC Coverage linked to the supplied UC URL, without inventing a DR or an unverified anchor on example.org."
+        "Uses a uc-primary Source list and AC Coverage linked to the supplied UC URL, without inventing a DR or an unverified anchor on example.org.",
+        "Dispatchable draft descriptions expose nonempty Output, binary slice-local Checks and Scope/non-goals; canonical AC prose is not copied into the body or relabeled as Checks, and no optional correlation ID is invented."
       ],
       "files": []
     },
@@ -125,7 +128,8 @@
         "The Story's document order is uc, dr, prd, contract, figma, blueprint, adr, rfc; the Task's primary is dr.",
         "Uses page-ID URLs without pinned revisions, nests JTBD/contract/ADR/RFC/NFR IDs under their owners and uses exact #ID Confluence fragments.",
         "AC Coverage links AC-01 to UC-01 page 101, contains no copied AC prose, and does not place AC-01 under Source.",
-        "The NFR-only Task does not acquire unrelated UC, PRD, contract, Figma or Blueprint documents."
+        "The NFR-only Task does not acquire unrelated UC, PRD, contract, Figma or Blueprint documents.",
+        "Dispatchable draft descriptions expose nonempty Output, binary slice-local Checks and Scope/non-goals; canonical AC prose is not copied into the body or relabeled as Checks, and no optional correlation ID is invented."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
@@ -138,48 +142,140 @@
         "The contract-only Task Source has exactly DR-01 and the API contract, with dr primary and contracts.item-001 nested under dr.",
         "The Story Source includes UC-01, DR-01, PRD-01 owning JTBD-01, the contract artifact, Figma node and Blueprint.",
         "Neither item includes transitive pages 998/999 or uncited RFC/ADR/CR/incident/intake documents.",
-        "Does not list the bare application repository as a source document or invent extra coverage."
+        "Does not list the bare application repository as a source document or invent extra coverage.",
+        "Dispatchable draft descriptions expose nonempty Output, binary slice-local Checks and Scope/non-goals; canonical AC prose is not copied into the body or relabeled as Checks, and no optional correlation ID is invented."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
     {
       "id": 10,
       "name": "repo-file-and-missing-locators",
-      "prompt": "Prepare a single Task, no live calls or Jira mutation: PAY project, parent PAY-10, summary Wire upload API, one-sprint outcome API conforms to the contract, check implementation contract test passes. Its DR is demo/outcome/design-review.md in pagopa/dx on default branch main, citing contracts.item-001 and NFR-04. That cited contract's artifact locator is missing. The application repository has not been chosen. Show the complete draft and Source block in proposal.md, explicitly mark missing source/routing information, and ask for the missing locator rather than inventing it.",
+      "prompt": "Prepare a single Task, no live calls or Jira mutation: PAY project, parent PAY-10, summary Wire upload API, one-sprint outcome API conforms to the contract, check implementation contract test passes. Its DR is demo/outcome/design-review.md in pagopa/dx on default branch main, citing contracts.item-001 and NFR-04. That cited contract's artifact locator is missing. The application repository has not been chosen. Show the complete draft and Source block in proposal.md, explicitly mark missing source/routing information, and ask for the missing locator rather than inventing it. Scope: contract wiring and its implementation contract test only; exclude feature changes and deployment.",
       "expected_output": "A repository-qualified DR source without fabricated anchors, a visibly missing contract locator, and an honest unresolved routing gap that prevents persistence.",
       "expectations": [
         "Links dr to https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md, without a fragment.",
         "Renders contracts.item-001 and NFR-04 as code-text children, not fabricated repo-file anchors.",
         "Includes a contract locator-missing entry or equivalent explicit gap and asks for the missing locator before persistence.",
-        "Does not treat pagopa/dx (the document repository) as the missing application repository and makes no live mutations."
+        "Does not treat pagopa/dx (the document repository) as the missing application repository and makes no live mutations.",
+        "Dispatchable draft descriptions expose nonempty Output, binary slice-local Checks and Scope/non-goals; canonical AC prose is not copied into the body or relabeled as Checks, and no optional correlation ID is invented."
       ],
       "files": []
     },
     {
       "id": 11,
       "name": "bug-and-subtask-sources",
-      "prompt": "Read backlog-context.md offline. Draft three independent prepared items in PAY: Bug A under PAY-11, invalid signature incorrectly stores a receipt (expected no write), citing UC-01 AGREEMENT_SIGNATURE_INVALID and DR-01; Bug B under PAY-10, receipt download fails with 503 during INC-12 (expected 200), incident-only with no UC or DR; and a Sub-task of PAY-50 to add the invalid-signature no-write test, copying exactly the Parent Source block in the fixture. Each check is that its described expected result holds in a regression test; all fit one sprint. Show complete descriptions in proposal.md and ask for confirmation without mutating Jira.",
+      "prompt": "Read backlog-context.md offline. Draft three independent prepared items in PAY: Bug A under PAY-11, invalid signature incorrectly stores a receipt (expected no write), citing UC-01 AGREEMENT_SIGNATURE_INVALID and DR-01; Bug B under PAY-10, receipt download fails with 503 during INC-12 (expected 200), incident-only with no UC or DR; and a Sub-task of PAY-50 to add the invalid-signature no-write test, copying exactly the Parent Source block in the fixture. Each check is that its described expected result holds in a regression test; all fit one sprint. Show complete descriptions in proposal.md and ask for confirmation without mutating Jira. Approved Scope for each Bug is only the described regression fix/test, excluding new features; the Sub-task is the no-write test only, excluding handler changes.",
       "expected_output": "UC-backed and incident-backed Bugs choose their actual primary sources, and the Sub-task preserves its parent's entire explicit Source block.",
       "expectations": [
         "Bug A starts Source with uc page 101, nests AGREEMENT_SIGNATURE_INVALID and includes dr page 102.",
         "Bug B has incident primary with https://example.org/incidents/12 and does not invent a UC or DR.",
         "The Sub-task copies the fixture parent Source block verbatim, not just a parent Jira link or a newly selected document subset.",
-        "Uses list-based Source sections with no separate source inventory, does not invent AC coverage, and requests confirmation before mutation."
+        "Uses list-based Source sections with no separate source inventory, does not invent AC coverage, and requests confirmation before mutation.",
+        "Dispatchable draft descriptions expose nonempty Output, binary slice-local Checks and Scope/non-goals; canonical AC prose is not copied into the body or relabeled as Checks, and no optional correlation ID is invented."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
     {
       "id": 12,
       "name": "embedded-use-case-source",
-      "prompt": "Prepare one self-contained Story in PAY under PAY-10, without Jira calls: actor Partner Entity, action upload an agreement, gain join without a manual ticket, one-sprint scope. Source is UC-02, a section INSIDE DR-04 - Agreement delivery, not a separate child page: https://example.atlassian.net/wiki/spaces/PAY/pages/240/Agreement-delivery#UC-02. That same DR owns NFR-04 (no PII in logs); cite it. AC-07 is valid upload returns a document ID. The page publishes anchors UC-02, NFR-04 and AC-07; no other documents are required. Show the complete description with the current source template in proposal.md and ask for confirmation. Do not invent a separate UC page or duplicate the shared page in the document inventory.",
+      "prompt": "Prepare one self-contained Story in PAY under PAY-10, without Jira calls: actor Partner Entity, action upload an agreement, gain join without a manual ticket, one-sprint scope. Source is UC-02, a section INSIDE DR-04 - Agreement delivery, not a separate child page: https://example.atlassian.net/wiki/spaces/PAY/pages/240/Agreement-delivery#UC-02. That same DR owns NFR-04 (no PII in logs); cite it. AC-07 is valid upload returns a document ID. The page publishes anchors UC-02, NFR-04 and AC-07; no other documents are required. Show the complete description with the current source template in proposal.md and ask for confirmation. Do not invent a separate UC page or duplicate the shared page in the document inventory. Output: upload handler integration returns the document ID. Slice check: handler test verifies the storage collaborator's returned ID is included in the response. Scope: this integration and its test only; exclude authentication changes, back-office review and deployment.",
       "expected_output": "A single uc-primary document bullet for the shared DR page, with the embedded UC and NFR section references, plus AC Coverage pointing to that same page.",
       "expectations": [
         "Source has one uc-primary document bullet identifying both DR-04 and UC-02, not duplicate uc/dr bullets for page 240 or an invented child page.",
         "Nested UC-02 and NFR-04 links target page 240 with their supplied exact ID fragments.",
         "AC Coverage links AC-07 to page 240#AC-07 without copying its prose or inventing a qualified ID.",
-        "Keeps source headings and lists in the description and asks for confirmation without live mutation."
+        "Keeps source headings and lists in the description and asks for confirmation without live mutation.",
+        "Dispatchable draft descriptions expose nonempty Output, binary slice-local Checks and Scope/non-goals; canonical AC prose is not copied into the body or relabeled as Checks, and no optional correlation ID is invented."
       ],
       "files": []
+    },
+    {
+      "id": 13,
+      "name": "partial-uc-execution-contract",
+      "prompt": "Read backlog-context.md offline. Prepare one Story in PAY under PAY-11 for Cittadino pagatore: download their receipt to retain proof. This sprint implements only the download handler's response adapter, not authorization or PDF generation. Output: adapter emits application/pdf with the PDF bytes returned by the existing collaborator. Check: adapter unit test asserts header and unchanged bytes. Scope is the adapter and its unit test; exclude authorization, PDF generation and deployment. UC-01 AC-01 is informative coverage only, not a claim of full AC verification. Supplied Slice Scope ID: receipt-response-adapter. Save complete proposal.md without live calls and ask for confirmation.",
+      "expected_output": "A partial-UC Story with its own execution contract, exact optional correlation and IDs-only coverage.",
+      "expectations": [
+        "Preserves receipt-response-adapter exactly in Slice Scope ID.",
+        "Output, binary Checks and Scope describe only the response adapter and unit test, with the supplied exclusions.",
+        "AC Coverage links AC-01 to UC-01 without copied canonical prose or claiming the whole UC is verified.",
+        "Source remains T3 uc-primary with only applicable one-hop documents; no live mutation and confirmation requested."
+      ],
+      "files": ["evals/fixtures/backlog-context.md"]
+    },
+    {
+      "id": 14,
+      "name": "missing-output-blocks-persistence",
+      "prompt": "Prepare a single PAY Task under PAY-11 from source https://example.org/intake/adapter titled Receipt adapter. Summary: Wire receipt adapter. One sprint. Check: a unit test verifies returned PDF bytes are unchanged. Scope: receipt response adapter and its test only; exclude authorization changes and deployment. The Output information is deliberately absent and cannot be established from the intake. Do not fill it from assumptions. Show the gap in proposal.md, ask one focused clarification, and make no Jira calls.",
+      "expected_output": "A blocked proposal that asks for missing Output without manufacturing it.",
+      "expectations": [
+        "Identifies missing Output and asks for that information rather than inventing it or presenting a placeholder as valid.",
+        "Explicitly blocks persistence until the required execution information is supplied.",
+        "Preserves supplied source, parent and execution information; no invented optional Slice Scope ID and no Jira mutation."
+      ],
+      "files": []
+    },
+    {
+      "id": 15,
+      "name": "missing-checks-blocks-persistence",
+      "prompt": "Prepare a single PAY Task under PAY-11 from source https://example.org/intake/adapter titled Receipt adapter. Summary: Wire receipt adapter. One sprint. Output: a receipt response adapter returning PDF bytes. Scope: receipt response adapter and its test only; exclude authorization changes and deployment. The Checks information is deliberately absent and cannot be established from the intake. Do not fill it from assumptions. Show the gap in proposal.md, ask one focused clarification, and make no Jira calls.",
+      "expected_output": "A blocked proposal that asks for missing Checks without manufacturing it.",
+      "expectations": [
+        "Identifies missing Checks and asks for that information rather than inventing it or presenting a placeholder as valid.",
+        "Explicitly blocks persistence until the required execution information is supplied.",
+        "Preserves supplied source, parent and execution information; no invented optional Slice Scope ID and no Jira mutation."
+      ],
+      "files": []
+    },
+    {
+      "id": 16,
+      "name": "missing-scope-blocks-persistence",
+      "prompt": "Prepare a single PAY Task under PAY-11 from source https://example.org/intake/adapter titled Receipt adapter. Summary: Wire receipt adapter. One sprint. Output: a receipt response adapter returning PDF bytes. Check: a unit test verifies returned PDF bytes are unchanged. The Scope information is deliberately absent and cannot be established from the intake. Do not fill it from assumptions. Show the gap in proposal.md, ask one focused clarification, and make no Jira calls.",
+      "expected_output": "A blocked proposal that asks for missing Scope without manufacturing it.",
+      "expectations": [
+        "Identifies missing Scope and asks for that information rather than inventing it or presenting a placeholder as valid.",
+        "Explicitly blocks persistence until the required execution information is supplied.",
+        "Preserves supplied source, parent and execution information; no invented optional Slice Scope ID and no Jira mutation."
+      ],
+      "files": []
+    },
+    {
+      "id": 17,
+      "name": "minimal-epic-body",
+      "prompt": "Read backlog-context.md offline. The Epic grouping is approved. Prepare one PAY Epic for self-service receipt download. Show the exact proposed persisted description separately from review context. Include UC-01, JTBD-01, KPI, guardrail, boundaries and risks in the review proposal, but apply the Epic body policy. No Jira calls; save proposal.md and ask for confirmation.",
+      "expected_output": "A DR-only Source and concise outcome Epic, with grouping detail retained outside its body.",
+      "expectations": [
+        "Persisted Epic description has only DR-01 page 102 in its Source and a concise outcome body.",
+        "No Output/Checks/Scope/AC Coverage or copied KPI, UC, PRD, Figma or readiness inventory is forced into the Epic body.",
+        "Review context retains the requested UC/JTBD, KPI, guardrail, boundaries and risks separately.",
+        "Requests confirmation without mutation."
+      ],
+      "files": ["evals/fixtures/backlog-context.md"]
+    },
+    {
+      "id": 18,
+      "name": "preserve-approved-project-mapping",
+      "prompt": "Work offline. Existing PAY-70 Task under PAY-11 has an approved static project mapping: Origin = Source, Result = Output, Validation = Checks, Boundaries = Scope. Existing description:\n## Origin\n- intake: [Receipt adapter](https://example.org/intake/adapter)\n## Result\nReceipt adapter returns PDF bytes.\n## Validation\n- Unit test verifies unchanged PDF bytes.\n## Boundaries\nAdapter and unit test only; exclude authentication and deployment.\n## Manual note\nCoordinate with support.\nExisting Slice Scope ID field is receipt-adapter; preserve it. Existing unrelated remote link https://example.org/runbook must remain. Add only the approved local check that the adapter response Content-Type is application/pdf. Show the complete proposed description and field-level diff in proposal.md; do not reformat headings or add new sections; wait for confirmation, no live calls.",
+      "expected_output": "A surgical check addition respecting the complete project mapping and manual context.",
+      "expectations": [
+        "Matches PAY-70 and adds only the new local Content-Type check under Validation.",
+        "Preserves Origin, Result, Validation, Boundaries and Manual note rather than forcing default headings.",
+        "Preserves receipt-adapter and the unrelated runbook remote link without generating a new ID.",
+        "Requires confirmation, does not mutate, and states post-mutation verification remains pending."
+      ],
+      "files": []
+    },
+    {
+      "id": 19,
+      "name": "subtask-local-contract",
+      "prompt": "Read backlog-context.md offline. Prepare one Sub-task of PAY-50 in PAY. Copy the fixture Parent Source verbatim. Output: a handler regression test covers invalid-signature no-write behavior. Check: the test fails against a handler that invokes the writer on that error path. Scope: that test only, excluding handler implementation, policy changes and deployment. The parent delivers the whole upload flow; do not inherit that output or full-flow checks. No Slice Scope ID supplied. Save proposal.md, ask for confirmation, no live calls.",
+      "expected_output": "A Sub-task inheriting only Source, with its own test deliverable and no manufactured correlation.",
+      "expectations": [
+        "Copies the entire Parent Source block verbatim.",
+        "Output, Checks and Scope describe only the regression test and its supplied failure sensitivity, not the parent feature.",
+        "Does not invent a Slice Scope ID or canonical AC coverage.",
+        "Requires confirmation and makes no live mutation."
+      ],
+      "files": ["evals/fixtures/backlog-context.md"]
     }
   ]
 }

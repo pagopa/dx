@@ -37,6 +37,8 @@ links before adding one; match Confluence pages by page ID, not a title slug
 or an ID fragment. Preserve distinct Figma node targets. Do not duplicate links
 on synchronization. The description's Source list stays authoritative; remote
 links mirror it, not a second independently selected inventory.
+Do not delete unrelated existing remote links when narrowing a confirmed Epic
+body or updating sources unless their removal is explicitly confirmed.
 
 ## Confirmation protocol
 
@@ -76,6 +78,10 @@ or unrelated description content unless the user confirmed those changes.
 Preserve existing Jira content not owned by this projection. Add a new
 traceability ID only when the source introduces new meaning. Reformat a legacy
 description only when that change is explicitly included in the confirmed diff.
+Preserve complete approved project mappings instead of forcing default headings.
+Preserve supplied Slice Scope IDs; do not manufacture correlation identifiers.
+Identify missing Output, Checks or Scope and block persistence; do not use
+placeholders or silently expand the update to repair unrelated legacy gaps.
 
 ## Verification
 
@@ -89,7 +95,11 @@ Re-fetch every created or updated item and verify:
   one-hop document set, and AC IDs linked to the owning UC;
 - canonical locators, no bare file paths or pinned Confluence versions,
   and missing locators or unverified anchors reported honestly;
-- Story acceptance checks and Task/Story classification;
+- explicit nonempty Output, binary slice-local Checks and Scope/non-goals for
+  every dispatchable item, in the default sections or approved project mapping;
+- canonical AC IDs linked without copied AC prose, supplied correlation IDs
+  unchanged and optional sections omitted when inapplicable;
+- minimal Epic outcome body and DR-only Source; Task/Story classification;
 - no duplicate was created, and no two error-handling Tasks share one semantic
   error identifier;
 - every spike's `blocks` link exists in the correct direction;
