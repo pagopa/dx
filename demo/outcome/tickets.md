@@ -33,10 +33,10 @@ full blob URLs with no fabricated fragments; nested IDs remain code text.
 
 ## Source
 
-- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
-- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
 - prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
   - `JTBD-01` - Join CED without manual tickets
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
 
 ## Description
 
@@ -52,10 +52,10 @@ size-limit decisions are unresolved. Approve this grouping before final items.
 
 ## Source
 
-- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
-- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
 - prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
   - `JTBD-01` - Join CED without manual tickets
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
 
 ## Description
 
@@ -70,12 +70,12 @@ Approve this grouping before final items.
 
 ## Source
 
-- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
-  - `PRACTICE_STATE_INVALID`
-- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
-  - `contracts.item-001` - Upload and status API
 - prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
   - `JTBD-01` - Join CED without manual tickets
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `contracts.item-001` - Upload and status API
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
+  - `PRACTICE_STATE_INVALID`
 - contract: [Upload and status OpenAPI](https://github.com/pagopa/dx/blob/main/demo/outcome/openapi.yaml)
 
 ## Description
@@ -104,13 +104,13 @@ Approve this grouping before final items.
 
 ## Source
 
+- prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
+  - `JTBD-01` - Join CED without manual tickets
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `contracts.item-001` - Upload and status API
 - uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
   - `AGREEMENT_EXTENSION_INVALID`
   - `AGREEMENT_SIGNATURE_INVALID`
-- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
-  - `contracts.item-001` - Upload and status API
-- prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
-  - `JTBD-01` - Join CED without manual tickets
 - contract: [Upload and status OpenAPI](https://github.com/pagopa/dx/blob/main/demo/outcome/openapi.yaml)
 
 ## Description
@@ -284,10 +284,10 @@ Parent EPIC-01; one-sprint typed size rejection against the confirmed limit
 
 ## Source
 
-- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
-  - `references.repository` - Missing application repository
 - prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
   - `RF-03` - Greenfield repository and contract
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `references.repository` - Missing application repository
 
 ## Description
 
