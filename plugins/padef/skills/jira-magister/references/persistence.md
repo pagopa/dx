@@ -8,9 +8,7 @@ backlog or to one item.
 
 ## Integration selection
 
-Use the authenticated Atlassian MCP integration when available. If it is not
-available, use the repository's `jira-cli` skill and follow its authentication
-and command guidance; never silently switch tools.
+Use the authenticated Atlassian MCP integration.
 
 ## Target project discovery
 

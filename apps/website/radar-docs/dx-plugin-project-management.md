@@ -14,12 +14,12 @@ for working with JIRA, GitHub, and adhering to organizational conventions.
 
 ## Available skills
 
-- [create-jira-issue](https://github.com/pagopa/dx/blob/main/plugins/project-management/skills/create-jira-issue/SKILL.md)
-  — Create JIRA issues from Copilot
-- [jira-cli](https://github.com/pagopa/dx/blob/main/plugins/project-management/skills/jira-cli/SKILL.md)
-  — Interact with JIRA via CLI
 - [github-conventions](https://github.com/pagopa/dx/blob/main/plugins/project-management/skills/github-conventions/SKILL.md)
   — Follow GitHub commit and PR conventions
+
+Jira workflows are provided by the
+[jira-magister](https://github.com/pagopa/dx/blob/main/plugins/padef/skills/jira-magister/SKILL.md)
+skill of the `padef` plugin, which the `backlog-refinement` agent requires.
 
 ## Available agents
 

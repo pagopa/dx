@@ -122,9 +122,7 @@ collaboration conventions.
 
 | Name                 | Description                                                                                                                                                   |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `create-jira-issue`  | Quickly captures a bug, feature, or improvement as a Jira issue without interrupting the development flow.                                                    |
 | `github-conventions` | Provides guidelines for pull request titles/descriptions, commit messages, and branch naming to ensure consistency and readability in the repository history. |
-| `jira-cli`           | A concise reference for using the Atlassian CLI (`acli`) to search, edit, and create Jira work items across projects or boards.                               |
 
 **Agents**
 
