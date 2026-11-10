@@ -153,6 +153,7 @@ export default function getActions(
     actions.push(
       { type: "configureExistingTerraformRootBackends" },
       { type: "syncNxAdditionalEnvironments" },
+      { type: "prepareRepositoryState" },
       { type: "syncRepositoryEnvironments" },
       {
         type: "configureGitHubEnvironments",

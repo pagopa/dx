@@ -100,6 +100,7 @@ describe("actions", () => {
         : ["getTerraformBackend"]),
       "configureExistingTerraformRootBackends",
       "syncNxAdditionalEnvironments",
+      "prepareRepositoryState",
       "syncRepositoryEnvironments",
       "configureGitHubEnvironments",
       "addMany",
