@@ -453,7 +453,7 @@ agentskills.io rubric from `evals.json` (see the `quality-header.toml`
 template). `tests/test.sh` runs the mechanical checks (F1 skill load + invoke
 proof, evaluated by `tests/skill_use.py` over the ATIF trajectory) and, when a
 judge token is available, invokes
-`uvx --from harbor-rewardkit==0.2.0 rewardkit /tests` to produce
+`uvx --with 'litellm[mcp]' --from harbor-rewardkit==0.2.0 rewardkit /tests` to produce
 `reward.json` → `reward.txt`. Env is injected via `[verifier].env`
 (`OPENAI_API_BASE=https://api.githubcopilot.com`,
 `OPENAI_API_KEY=${COPILOT_GITHUB_TOKEN}`,
