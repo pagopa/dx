@@ -1,0 +1,44 @@
+name: Cleanup Closed DX Website Previews
+
+on:
+  workflow_call:
+    inputs:
+      dry_run:
+        description: List closed pull request previews without deleting them.
+        type: boolean
+        required: false
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: dx-website-preview-cleanup
+  cancel-in-progress: false
+
+jobs:
+  cleanup_closed_previews:
+    name: Cleanup Closed Preview Environments
+    runs-on: ubuntu-26.04
+    environment: automation-prod-cd
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Cloud Login
+        uses: $/actions/csp-login
+        env:
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+
+      - name: Remove environments for closed pull requests
+        run: bash .github/scripts/cleanup-closed-swa-previews.sh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          STATIC_WEB_APP_NAME: dx-p-itn-website-stapp-01
+          RESOURCE_GROUP_NAME: dx-p-itn-common-rg-01
+          DRY_RUN: ${{ inputs.dry_run }}
