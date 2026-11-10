@@ -85,7 +85,7 @@ Re-fetch every created or updated item and verify:
 
 - parent-child hierarchy and issue types;
 - every confirmed dependency link, including direction and link type;
-- for items with a `Source` section, the parsed `Source` and AC Coverage lists match
+- the parsed `Source` and AC Coverage lists match
   [issue-template.md](./issue-template.md): fixed key order, one document
   entry per locator, IDs under their owning documents, complete
   one-hop document set, and AC IDs linked to the owning UC;

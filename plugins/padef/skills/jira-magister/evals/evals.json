@@ -159,13 +159,13 @@
     {
       "id": 11,
       "name": "bug-and-subtask-sources",
-      "prompt": "Read backlog-context.md offline. Draft three independent prepared items in PAY: Bug A under PAY-11, invalid signature incorrectly stores a receipt (expected no write), citing UC-01 AGREEMENT_SIGNATURE_INVALID and DR-01; Bug B under PAY-10, receipt download fails with 503 during INC-12 (expected 200), incident-only with no UC or DR; and a Sub-task of PAY-50 to validate the Receipt API implementation against DR-01 contracts.item-001, with the supplied contract artifact. Each check is that its described expected result holds in a regression test; all fit one sprint. Show complete descriptions in proposal.md and ask for confirmation without mutating Jira.",
-      "expected_output": "UC-backed and incident-backed Bugs cite the applicable UC or incident; the Sub-task has no Source section and refers to its parent for source context.",
+      "prompt": "Read backlog-context.md offline. Draft three independent prepared items in PAY: Bug A under PAY-11, invalid signature incorrectly stores a receipt (expected no write), citing UC-01 AGREEMENT_SIGNATURE_INVALID and DR-01; Bug B under PAY-10, receipt download fails with 503 during INC-12 (expected 200), incident-only with no UC or DR; and a Sub-task of PAY-50 to add the invalid-signature no-write test, copying exactly the Parent Source block in the fixture. Each check is that its described expected result holds in a regression test; all fit one sprint. Show complete descriptions in proposal.md and ask for confirmation without mutating Jira.",
+      "expected_output": "UC-backed and incident-backed Bugs cite the applicable UC or incident, and the Sub-task preserves its parent's entire explicit Source block.",
       "expectations": [
         "Bug A includes dr page 102 and uc page 101 in key order, with AGREEMENT_SIGNATURE_INVALID nested under uc.",
         "Bug B cites https://example.org/incidents/12 and does not invent a UC or DR.",
-        "The Sub-task retains PAY-50 as its parent, refers to PAY-50 for the full source context, and has no Source section or copied parent source links.",
-        "The Bugs use list-based Source sections with no separate source inventory; no item invents AC coverage, and the draft requests confirmation before mutation."
+        "The Sub-task copies the fixture parent Source block verbatim, not just a parent Jira link or a newly selected document subset.",
+        "Uses list-based Source sections with no separate source inventory, does not invent AC coverage, and requests confirmation before mutation."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },

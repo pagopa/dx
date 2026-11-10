@@ -23,7 +23,7 @@ top-level document bullets are the complete **source document inventory**.
 
 The example URLs and IDs are illustrative, not documents to retrieve.
 
-## Document keys and primary source
+## Document keys and source selection
 
 Write each document once as `- key: [meaningful title](locator)`. Use lowercase
 keys in this fixed order for every item:
@@ -40,9 +40,9 @@ keys in this fixed order for every item:
 - `incident`: incident supplying a Bug without a relevant UC.
 - `intake`: self-contained intake or pending-spec source.
 
-The fixed order does not change based on which document is primary. Identifies the document most directly authorizing or owning the work;
-it does not mean that document goes first. Keep multiple documents with the
-same key in their source order. Do not invent documents to fill the catalog.
+Use the fixed key order above for every item, regardless of issue type or source
+relationships. Keep multiple documents with the same key in their source
+order. Do not invent documents to fill the catalog.
 
 Keys describe a document's role in this item, not a requirement for separate
 pages. If the selected UC is a section of the DR, list the shared page once
@@ -64,18 +64,19 @@ owning section cannot be distinguished by the supplied anchors, report that
 locator ambiguity and ask for the published target rather than inventing a
 qualified ID or fragment.
 
-Choose the primary source by the work, not the Jira issue type alone. This
-determines which document is primary, not its position in the list; always use
-the fixed key order above:
+Select source documents based on the work and cited content, using issue type
+as guidance rather than the sole criterion:
 
-- Story or Task realizing a UC: `uc`.
-- Task from DR/NFR/contract/readiness work, including a spike: `dr`.
-- Error-handling Task: `uc`; include every UC that defines the shared error.
-- Bug: the relevant `uc`, otherwise the supplied `incident`.
-- Sub-task: copy the parent's entire `Source` block verbatim.
-- Epic: include the `dr` and applicable `prd`/`uc` documents; order them as
-  `prd`, `dr`, `uc`.
-- CR or pending-spec work: `cr` or `intake`, when that is the actual source.
+- For a Story or Task implementing UC behavior, include the owning `uc`.
+- For a Task from DR/NFR/contract/readiness work, including a spike, include
+  the owning `dr` and other directly required documents.
+- For an error-handling Task, include every `uc` that defines the shared error.
+- For a Bug, include the relevant `uc`, or the supplied `incident` when no
+  relevant UC applies.
+- For a Sub-task, copy the parent's entire `Source` block verbatim.
+- For an Epic, include the `dr` and applicable `prd`/`uc` documents.
+- For CR or pending-spec work, include `cr` or `intake` when it is the actual
+  source.
 
 Single-item mode accepts a self-contained source without requiring an
 unrelated DR. If a necessary source or locator is missing, ask for it; in a
