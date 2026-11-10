@@ -1,0 +1,197 @@
+# Jira source template
+
+Use this T3 structure in each proposed or confirmed issue description. The
+top-level document bullets are the complete **source document inventory**;
+do not maintain a second `Source documents` section or a `Source:` trailer.
+Keep the primary source first so readers can identify the canonical source
+without losing the supporting documents.
+
+```markdown
+## Source
+
+- uc: [UC-01 - Upload signed agreement](https://example.atlassian.net/wiki/spaces/DEMO/pages/101)
+  - [AGREEMENT_EXTENSION_INVALID](https://example.atlassian.net/wiki/spaces/DEMO/pages/101#AGREEMENT_EXTENSION_INVALID)
+- dr: [Design Review - Adhesion](https://example.atlassian.net/wiki/spaces/DEMO/pages/102)
+  - [contracts.item-001 - Upload API](https://example.atlassian.net/wiki/spaces/DEMO/pages/102#contracts.item-001)
+- prd: [PRD - Adhesion](https://example.atlassian.net/wiki/spaces/DEMO/pages/103)
+  - [JTBD-01 - Join without a manual ticket](https://example.atlassian.net/wiki/spaces/DEMO/pages/103#JTBD-01)
+- contract: [Upload API](https://github.com/example/adhesion/blob/main/api/openapi.yaml)
+
+## AC Coverage
+
+- [AC-01](https://example.atlassian.net/wiki/spaces/DEMO/pages/101#AC-01)
+```
+
+The example URLs and IDs are illustrative, not documents to retrieve. Keep
+other required issue content after `Source` and before `AC Coverage`, following
+the RFC-05 skeleton order. This reference governs source traceability; it does
+not replace the issue-type content requirements in
+[issue-contract.md](./issue-contract.md).
+
+## Document keys and primary source
+
+Write each document once as `- key: [meaningful title](locator)`. Use lowercase
+keys in this order, except that the primary document always comes first:
+
+- `uc`: Use Case owning the behavior, errors, or acceptance checks.
+- `dr`: operational DR/SRS owning solution, contract, NFR, or question IDs.
+- `prd`: PRD owning JTBD or other product requirements.
+- `contract`: concrete API, event, or data contract artifact.
+- `figma`: applicable design, preferably a node-specific URL.
+- `blueprint`: applicable Service Blueprint.
+- `adr`: explicitly cited architecture decision.
+- `rfc`: explicitly cited RFC, not an unpropagated substitute for the DR.
+- `cr`: Change Request supplying the work.
+- `incident`: incident supplying a Bug without a relevant UC.
+- `intake`: self-contained intake or pending-spec source.
+
+Multiple documents can have the same key. Keep their source order within the
+key, with the primary document first. Do not invent documents to fill the
+catalog.
+
+Keys describe a document's role in this item, not a requirement for separate
+pages. If the selected UC is a section of the DR, list the shared page once
+as `uc` (the primary role), label it with both DR and UC, and nest the UC
+section ID and other cited DR IDs under it. Do not add a duplicate `dr`
+bullet for the same page ID:
+
+```markdown
+## Source
+
+- uc: [DR-04 - UC-02: Upload agreement](https://example.atlassian.net/wiki/spaces/DEMO/pages/104)
+  - [UC-02](https://example.atlassian.net/wiki/spaces/DEMO/pages/104#UC-02)
+  - [NFR-04](https://example.atlassian.net/wiki/spaces/DEMO/pages/104#NFR-04)
+```
+
+Use the supplied section ID or verified anchor; do not assign a UC ID to a
+paragraph that has none. If several embedded UCs reuse a local AC ID and the
+owning section cannot be distinguished by the supplied anchors, report that
+locator ambiguity and ask for the published target rather than inventing a
+qualified ID or fragment.
+
+Choose the primary source by the work, not the Jira issue type alone:
+
+- Story or Task realizing a UC: `uc`.
+- Task from DR/NFR/contract/readiness work, including a spike: `dr`.
+- Error-handling Task: `uc`; include every UC that defines the shared error.
+- Bug: the relevant `uc`, otherwise the supplied `incident`.
+- Sub-task: copy the parent's entire `Source` block verbatim.
+- Epic: `dr`, followed by the documents owning its cited JTBD and included UCs.
+- CR or pending-spec work: `cr` or `intake`, when that is the actual source.
+
+Single-item mode accepts a self-contained source without requiring an
+unrelated DR. If a necessary source or locator is missing, ask for it; in a
+review draft show `key: title - locator missing (gap)`. Do not invent a URL or
+present an unresolved item as ready to persist.
+
+## IDs and acceptance coverage
+
+Nest each cited stable ID under its owning document. Start its label with the
+exact ID, optionally followed by a short title. Examples include `JTBD-*`,
+`NFR-*`, `solution.components.item-*`, `solution.decision.item-*`,
+`contracts.item-*`, `open.item-*`, `uc-open-*`, semantic error IDs, and
+ADR/RFC/CR IDs. Preserve the source's actual spelling; these examples do not
+define or migrate an ID naming convention.
+
+The UC identity is in its document label (and a nested section reference for
+an embedded UC). Put acceptance-check IDs in
+`## AC Coverage`, not among the nested Source IDs. Link each AC to its owning
+UC, including when several UCs use the same local `AC-01`. Coverage contains
+IDs only, not copied AC prose. Omit the section when no AC is covered; do not
+invent coverage. This does not change the existing Story acceptance-check body
+requirements.
+
+## Select documents: one hop, no recursive collection
+
+Derive this set separately for each item from the work it actually implements.
+The UCs selected for the whole backlog, or the Stories that a Task unblocks,
+are not automatically that Task's sources. In particular, contract-only wiring
+uses the DR contract ID and artifact, not the consuming UCs or their AC/design
+documents. Keep those delivery relationships in dependency links instead.
+
+1. Include the associated DR/SRS. In backlog mode a missing DR is a readiness
+   gap; self-contained incident/intake/single-item work need not have one.
+2. Include every document owning a cited ID: selected UCs, PRD for JTBD, and
+   ADR/RFC/CR only when explicitly cited.
+3. Include the concrete artifact linked by each cited `contracts.item-*`,
+   and the selected UCs' applicable, non-`N/A` Figma and Blueprint documents.
+4. Stop there. Do not traverse arbitrary references, related PRD artifacts,
+   links inside contracts, or reverse references. A contract-only Task gets
+   `dr` plus `contract`, not every UC using that contract.
+5. The application repository is a routing target, not a source document.
+   A specific repository file can be a source document.
+
+## Locators and fragments
+
+- Confluence: use the canonical page-ID URL
+  `https://<site>/wiki/spaces/<KEY>/pages/<pageId>`. A supplied title slug is
+  tolerated; page ID is identity. Do not pin a revision.
+- Confluence ID references: append `#<exact-source-ID>`. These are intended
+  stable-ID anchors, **not verified navigation** unless the page publishes
+  the matching anchor. Without it, the link may open only the page; report
+  that limitation rather than claiming the section was reached. Do not
+  fabricate heading-derived fragments or add anchors to source pages here.
+- Repository file: use the supplied full GitHub blob URL on the known default
+  branch. Resolve relative paths against the known document repository, which
+  may differ from the application repository. Ask for unknown repository or
+  branch context. Do not emit a bare basename, local filesystem path, or
+  invented fragment. Render nested IDs as code text, e.g.
+  ``- `contracts.item-001` - Upload API``.
+- Other documents: keep the supplied canonical locator and verified anchors;
+  do not invent fragments. Preserve Figma node targeting.
+- For a repo-file AC, use `[AC-01](full-blob-URL)` without a fragment. The UC
+  document identifies the owner even when the file has no navigable anchor.
+- Use lists, not tables, for Source and AC Coverage.
+
+Choose the nested-ID rendering from the **parent document's locator** first.
+The `#<ID>` rule is for Confluence, not GitHub blob URLs. An unverified-anchor
+warning does not make an invented repository fragment acceptable.
+
+Repository-file source with a missing contract artifact:
+
+```markdown
+## Source
+
+- dr: [Design Review - Adhesion](https://github.com/example/adhesion/blob/main/docs/design.md)
+  - `contracts.item-001` - Upload API
+  - `NFR-01` - Confidentiality
+- contract: Upload API - locator missing (artifact URL not supplied)
+```
+
+Ask for that missing artifact URL before persistence; do not turn the DR file
+into the contract locator.
+
+## Other issue examples
+
+These are source excerpts, not complete issues. Supply the remaining
+issue-type content separately.
+
+Contract-only Task:
+
+```markdown
+## Source
+
+- dr: [DR - Adhesion](https://example.atlassian.net/wiki/spaces/DEMO/pages/102)
+  - [contracts.item-001 - Upload API](https://example.atlassian.net/wiki/spaces/DEMO/pages/102#contracts.item-001)
+- contract: [Upload API](https://github.com/example/adhesion/blob/main/api/openapi.yaml)
+```
+
+Spike: use the same `dr` bullet with an `open.item-007` child naming the
+decision; include only its directly required source documents. State the owner,
+decision outcome, and blocked items in the issue body.
+
+Error Task or UC-backed Bug: use the Story example's `uc` bullet and semantic
+error child, with the associated `dr`. Add other affected UC documents for a
+shared error, without creating another error Task.
+
+Incident-backed Bug:
+
+```markdown
+## Source
+
+- incident: [INC-12 - Upload outage](https://example.org/incidents/12)
+```
+
+Sub-task: copy its parent's Source unchanged; a parent Jira link alone does not
+replace those documents. Epic: start with `dr`, add its cited `uc` and `prd`
+documents in catalog order, and nest JTBD IDs under `prd`.
