@@ -19,15 +19,12 @@ environments="$(az staticwebapp environment list \
   --resource-group "$RESOURCE_GROUP_NAME" \
   --output json)"
 
-echo "Preview inventory diagnostics:"
-jq '[.[] | {name, buildId, pullRequestTitle, properties: (.properties | {buildId, pullRequestTitle})}]' <<<"$environments"
-
 # Only consider PR previews with numeric build IDs, which correspond to PR numbers.
 # Production and named environments are excluded; Azure IDs may be strings or numbers.
 preview_ids="$(jq -r '
-    (if type == "array" then .[] else .value[] end)
-    | select(.properties.pullRequestTitle != null)
-    | .properties.buildId
+    .[]
+    | select(.pullRequestTitle != null)
+    | .buildId
     | select(type == "string" or type == "number")
     | tostring
     | select(test("^[1-9][0-9]*$"))
