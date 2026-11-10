@@ -203,15 +203,11 @@ verification step failed.
 Use this mode when the user supplies the item content directly instead of a body
 of requirements.
 
-1. **Normalize the item.** Identify its issue type (Epic, Story, Task, Bug, or Sub-task),
-   project, and parent. Shape it to the portable contract in
-   [issue-contract.md](./references/issue-contract.md): the canonical
-   `As a [Actor], I want to [action], so that [Gain]` summary for a Story,
-   one-sprint scope, binary acceptance checks, and the `Source`/`AC Coverage`
-   lists from [issue-template.md](./references/issue-template.md).
-   Ask one focused question at a time for any missing
-   field; never infer the actor, gain, acceptance checks, parent, project, or
-   source ID.
+1. **Normalize the item.** Identify its issue type (Epic, Story, Task, Bug, or
+   Sub-task), project, and parent. Shape it according to
+   [issue-contract.md](./references/issue-contract.md). Ask one focused
+   question at a time for missing information; never infer the actor, gain,
+   acceptance checks, parent, project, or source ID.
 2. **Review the item.** Show the complete item — type, summary, description,
    project, parent, links, labels, source IDs, and acceptance checks — and ask
    for explicit confirmation. A request to "prepare", "draft", or "show" is not
