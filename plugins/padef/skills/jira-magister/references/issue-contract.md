@@ -5,25 +5,27 @@
 Project-specific Jira fields vary. Map these portable fields to the schema
 discovered in [persistence.md](./persistence.md):
 
-| Issue    | Required content                                                                                                                                                                                                               |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Epic     | outcome-oriented summary; PRD and DR sources, plus applicable UCs; concise outcome body. Grouping, KPI, guardrail, risk and readiness remain in the review proposal and DR                                                     |
-| Story    | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; UC Source; optional IDs-only AC Coverage                                                                         |
-| Task     | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID, `open.item-XX` for a spike, or the semantic error identifier for error handling; dependency and verification evidence |
-| Bug      | observed defect and expected behavior; relevant UC or incident source; reproduction and verification evidence                                                                                                                  |
-| Sub-task | tightly coupled parent work; parent relationship and reference to the parent for source context                                                                                                                                |
+| Issue | Required content |
+| --- | --- |
+| Epic | Outcome-oriented summary and concise outcome body; keep detailed grouping, KPI, guardrail, risk and readiness evidence in the review proposal and DR |
+| Story | Exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic |
+| Task | Concrete enabling outcome; one-sprint scope; parent Epic or Story; dependency and verification evidence |
+| Bug | Observed defect and expected behavior; relevant UC or incident source; reproduction and verification evidence |
+| Sub-task | Tightly coupled work with a parent relationship |
 
 Descriptions may summarize source behavior, but the DR/SRS and Use Case remain
 authoritative. Use meaningful source titles/keys in prose and link labels, not
 opaque source codes alone. Attribute decisions to evidenced owners rather than
 an inferred team; describe the work, not the agent's conversation or procedure.
-Use [issue-template.md](./issue-template.md) for the `## Source` document list,
-its source-selection guidance, one-hop selection, nested stable IDs, canonical
-locators, `## AC Coverage`, and execution-field format. Apply its execution
-contract to every dispatchable Story, Task, Bug and Sub-task: require Output,
-binary slice-local Checks and Scope/non-goals, and block persistence if any are
-missing.
-Optional supplied Slice Scope IDs are preserved, never generated.
+Use [issue-template.md](./issue-template.md) for the execution contract,
+source selection, and source/acceptance-coverage formatting. Apply it to every
+issue type above, while retaining that type's other required content.
+
+## Stable identifiers
+
+Preserve supplied JTBD, UC, AC, RFC, CR, DR/SRS `open.item-XX`, Use Case
+`uc-open-XX`, and semantic error (`UPPER_SNAKE_CASE`) identifiers. Never renumber
+or reuse an identifier for a different meaning.
 
 ## Sizing and decomposition
 
@@ -64,13 +66,11 @@ Creation-time mechanics live in [persistence.md](./persistence.md).
   that cannot proceed `are blocked by` it. A non-blocking question stays a gap
   with its owner and creates no Task and no link.
 - A spike's summary names the decision to take; its description carries the
-  owner, the source `open.item-XX`, and the outcome that unblocks dependents.
-  Put the question under its owning DR document in the Source list.
+  owner and the outcome that unblocks dependents.
 - Use Case errors are defined on the child pages with semantic identifiers and
   no owner. The same identifier can appear in several Use Cases: create one
-  error-handling Task per identifier, record the identifier in its traceability,
-  and link the affected Stories. Never merge two different conditions.
-  Put the error ID under each affected UC document in the Source list.
+  error-handling Task per identifier and link the affected Stories. Never merge
+  two different conditions.
 - Route concrete Tasks to the repository in the DR/SRS `references.repository`.
   If the link is missing, record the gap and flag the unroutable Tasks instead
   of inventing a repository or a branch.
@@ -86,12 +86,22 @@ Block creation when any material item is missing or contradictory:
   accessibility, tracking, support, or rollout evidence;
 - accepted RFC propagation into the DR/SRS.
 
+For each selected Use Case, require status `ready` on its child page and read
+its `solution.components.*` and `contracts.*` references, domain entities, and
+typed errors. Consume ready children without requiring the document review gate.
+
 Unresolved open questions are not Definition of Ready blockers by themselves:
 they are projected as spikes or recorded gaps. The blockers above are missing
 source evidence, not open decisions.
 
-Report each blocker with its source, impact, and required resolution. Do not
-replace it with a guessed Jira value.
+Report each blocker with its source, impact, owner if known, and required
+resolution. Do not replace it with a guessed Jira value.
+
+## Single-item readiness
+
+The full Definition of Ready gate does not apply to a prepared single item.
+Validate that it is well formed and that no value is invented; ask for missing
+content rather than filling it in.
 
 ## Persistence mechanics
 

@@ -2,9 +2,8 @@
 
 Turn a confirmed Jira item or backlog projection into
 Jira state. The content contract is in
-[issue-contract.md](./issue-contract.md); the planning, decomposition, and
-readiness rules are in [SKILL.md](../SKILL.md). Apply this reference to a whole
-backlog or to one item.
+[issue-contract.md](./issue-contract.md); backlog planning and workflow are in
+[SKILL.md](../SKILL.md). Apply this reference to a whole backlog or to one item.
 
 ## Integration selection
 
@@ -20,23 +19,21 @@ when a required field or issue-link type is missing rather than guessing.
 
 ## Creation order and hierarchy
 
-Create parents before children. Use the Epic parent relationship for Epic
-membership, and use a Sub-task for tightly coupled work that does not need
-independent prioritization. Create spike Tasks before the items they block.
+Create parent issues before children and prerequisite issues before dependents,
+following the hierarchy and dependency rules in
+[issue-contract.md](./issue-contract.md).
 
 ## Dependency and remote links
 
 Create a confirmed dependency link only after both linked issues exist. Use the
-project's supported link type for `blocks` and preserve its direction: blocking
-issue -> blocked issue. Create each spike's `blocks` link toward the dependent
-Story or Task.
+project's supported link type and the direction specified by the contract.
 
 Each confirmed item with a `## Source` must have one native remote link per
 Confluence or Figma document in that section, titled with the document title.
 Check existing links before adding one; match Confluence pages by page ID,
-not a title slug or an ID fragment. Preserve distinct Figma node targets. Do not duplicate links
-on synchronization. The description's Source list stays authoritative; remote
-links mirror it, not a second independently selected inventory.
+not a title slug or an ID fragment. Preserve distinct Figma node targets. Do
+not duplicate links on synchronization. Remote links mirror the description's
+authoritative Source list, not a second independently selected inventory.
 Do not delete unrelated existing remote links unless their removal is
 explicitly confirmed.
 
@@ -91,20 +88,11 @@ Re-fetch every created or updated item and verify:
 
 - parent-child hierarchy and issue types;
 - every confirmed dependency link, including direction and link type;
-- the parsed `Source` and AC Coverage lists match
-  [issue-template.md](./issue-template.md): fixed key order, one document
-  entry per locator, IDs under their owning documents, complete
-  one-hop document set, and AC IDs linked to the owning UC;
-- canonical locators, no bare file paths or pinned Confluence versions,
-  and missing locators or unverified anchors reported honestly;
-- explicit nonempty Output, binary slice-local Checks and Scope/non-goals for
-  every dispatchable item, in the default sections or approved project mapping;
-- canonical AC IDs linked without copied AC prose, supplied correlation IDs
-  unchanged and optional sections omitted when inapplicable;
-- concise Epic outcome body; Task/Story classification;
-- no duplicate was created, and no two error-handling Tasks share one semantic
-  error identifier;
-- every spike's `blocks` link exists in the correct direction;
+- issue content conforms to [issue-contract.md](./issue-contract.md), and
+  execution details and source traceability conform to
+  [issue-template.md](./issue-template.md);
+- no duplicate issue was created, and error-task handling conforms to the
+  contract;
 - the returned Jira keys and URLs are usable;
 - every Confluence or Figma Source document has exactly one remote link on
   the intended item, with the correct title and locator.
