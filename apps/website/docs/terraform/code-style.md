@@ -651,10 +651,10 @@ terraform {
   }
 
   backend "azurerm" {
-    resource_group_name  = "<tfstate-rg>"
-    storage_account_name = "<tfstate-storage>"
-    container_name       = "terraform-state"
-    key                  = "<project>.<layer>.<env>.tfstate"
+    resource_group_name  = "<state-resource-group>"
+    storage_account_name = "<state-storage-account>"
+    container_name       = "<domain>-tf-state"
+    key                  = "<layer>.tfstate"
     use_azuread_auth     = true
   }
 }
@@ -667,11 +667,15 @@ provider "azurerm" {
 provider "dx" {}
 ```
 
-:::tip State key naming convention
+:::tip State backend naming
 
-Use the format `<project>.<layer>.<env>.tfstate` for the backend key:
+Use one container per domain, named `<domain>-tf-state`; the shared core container is always `<prefix>-tf-state`, preserving the existing 2-4 character prefix. The domain is an input, not a default: use the configured or requested domain, or ask the user. It must be 3-54 lowercase alphanumeric or hyphen characters, start and end with an alphanumeric character, and contain no `--`, so the 9-character suffix fits Azure's 63-character container-name limit. For example, `payments-tf-state` is illustrative only.
 
-- `io.resources.prod.tfstate`
-- `cgn.bootstrapper.dev.tfstate`
+Use `<layer>.tfstate` for a root directly under its layer, or `<layer>/<relative-root-path>.tfstate` for nested roots. In `infra/resources`, this covers direct roots and tenant roots under `<layer>/<lifecycle>/<domain>`, including nested subprojects; lifecycle and domain are part of the path, not extra key components. Preserve nested subproject components; `_modules` and `modules` directories are not application roots. This naming convention does not imply that scaffolding or discovery tools support every layout.
+
+- `infra/resources/ced-prod` uses `resources.tfstate`.
+- `infra/resources/prod/ced` uses `resources/ced.tfstate`.
+
+The container groups state by domain, not by layer. Roots for the same domain in an account share the container and its RBAC boundary. A `terraform_remote_state` consumer can read the complete state snapshot, so declare only intended consumers and inspect other effective grants before claiming access is restricted to them.
 
 :::

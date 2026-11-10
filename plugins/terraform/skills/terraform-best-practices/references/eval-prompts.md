@@ -124,3 +124,30 @@ Expected behavior:
 - uses the repository resource group instead, or asks which workload resource group to use when none is inferable
 - explains the boundary: `common` is reserved for subscription-level core resources such as the VNet, Key Vault, Log Analytics, Application Insights, and NAT gateways
 - keeps the rest of the resource configuration complete and DX-conventional
+
+## Prompt 10 - New State Backend Layout
+
+```
+In a disposable Terraform fixture using a Bootstrap module version that exposes `terraform_state_container_access`, configure new backends for `infra/resources/prod/ced` (domain `ced`), `infra/resources/prod/cgn` (domain `cgn`), and `infra/resources/ced-prod` (domain `ced`). The prefix is `dx`. Show the core container name too. The first root reads an existing core state; use its actual backend coordinates and put its existing container name or exact ARM container ID in the upstream map key. Do not migrate or create that core container/state. Leave a separate legacy-backed root unchanged. Show each new app container and key.
+```
+
+Expected behavior:
+
+- reads the code-style doc and returns `ced-tf-state` / `resources/ced.tfstate` for `prod/ced`, `cgn-tf-state` / `resources/cgn.tfstate` for `prod/cgn`, and `ced-tf-state` / `resources.tfstate` for `ced-prod`; names core `dx-tf-state`
+- preserves nested subproject paths in keys; treats `_modules` and `modules` as non-root directories
+- uses `terraform_state_container_access` with existing container name or full ARM container ID as the upstream map key and `identities` / `principal_ids` in its value
+- preserves core coordinates and state (including a legacy `terraform-state` container), and requires Reader for the first bootstrap planning identity before plan; a grant applied by that plan cannot satisfy the prerequisite
+- requires the Bootstrap module input and core rollout to be available; does not assume scaffolding or discovery support for every layout
+
+## Prompt 11 - Explicit State Backend Migration
+
+```
+In a disposable fixture, migrate the existing infra/resources/prod/ced backend to the new convention. Inspect the backend coordinates and find all consumers first. Include the required preparation and verification, but do not access a cloud account or change unrelated upstream state.
+```
+
+Expected behavior:
+
+- bases migration on actual coordinates and consumers; prepares access, suspends writes, and backs up state
+- migrates with `terraform init -migrate-state` when applicable and updates dependent consumers in order
+- verifies state, access, and plans before removing old grants; preserves unrelated upstream coordinates
+- treats state splitting separately and performs no cloud apply

@@ -6,7 +6,7 @@
 - [ ] DX provider configured for resource naming (`pagopa-dx/azure` or `pagopa-dx/aws`)
 - [ ] `provider::dx::resource_name()` used for all resource names
 - [ ] **For every new subnet, use `dx_available_subnet_cidr` resource** to automatically allocate non-overlapping CIDR blocks
-  - Required by DX standards, see `~/.dx/apps/website/docs/terraform/code-style.md`
+  - Required by DX standards; verify against `apps/website/docs/terraform/code-style.md` under the selected knowledge-base root from Setup
   - Never manually calculate or hardcode new subnet CIDRs
 - [ ] Module versions specified using `~>` operator with major and minor versions only (e.g., `~> 1.5`)
   - Ensures compatibility while allowing patch updates
@@ -14,7 +14,7 @@
 
 ## Project Structure
 
-- [ ] Target directory derived from DX documentation (`~/.dx/apps/website/docs/terraform/infra-folder-structure.md`) based on what the user is trying to do — only ask the user if the documentation does not clarify it
+- [ ] Target directory derived from `apps/website/docs/terraform/infra-folder-structure.md` under the selected knowledge-base root from Setup — only ask if the documentation does not clarify it
 - [ ] Workload resources are placed in the repository resource group, not in the shared `common` resource group
 - [ ] When 2+ related resources are created for a single service, they are wrapped in a local module under `_modules/<service>/`
   - [ ] The local module is instantiated from the env folder via `locals.tf` — no `variables.tf` in root env folders
@@ -24,6 +24,8 @@
 
 - [ ] `environment` variable follows standard structure
 - [ ] All resources include required tags
+- [ ] New state backends follow the documented container and key convention; existing remote backends change only for an explicitly requested migration
+- [ ] State-container resource group is separate from workload, additional, Opex, and private-networking resource groups
 
 ## Security
 
@@ -31,6 +33,7 @@
 - [ ] No sensitive values hardcoded in Terraform code
 - [ ] For any sensitive value or secret managed through Azure Key Vault, the **`azure-keyvault-secret` skill** has been followed
 - [ ] For App Service, Function App, or Container Apps secret references, the **`azure-keyvault-reference` skill** has been followed or its baseline rules were applied
+- [ ] State access follows [Implementation Workflow](./implementation-workflow.md): opt-in grants, complete upstream snapshots, effective permissions, and rollout prerequisites are checked
 
 ## Technology Radar
 
