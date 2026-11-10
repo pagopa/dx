@@ -98,7 +98,7 @@
         "Asks for missing fields such as the parent Epic, labels, or source IDs instead of inventing them.",
         "Requests explicit confirmation before creating the item.",
         "Uses the meaningful UC-04 title/key and link in the proposed issue description, retains UC-04 and AC-04 in source traceability, and excludes chat-confirmation and tool-retry narration rather than citing S1 alone.",
-        "Uses a uc-primary Source list and AC Coverage linked to the supplied UC URL, without inventing a DR or an unverified anchor on example.org."
+        "Uses a Source list and AC Coverage linked to the supplied UC URL, without inventing a DR or an unverified anchor on example.org."
       ],
       "files": []
     },
