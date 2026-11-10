@@ -27,9 +27,15 @@ export type CloudAccountService = {
     runnerAppCredentials: GitHubAppCredentials,
   ): Promise<void>;
 
+  ensureTerraformBackendAccess(
+    backend: TerraformBackend,
+    additionalBackends?: readonly TerraformBackend[],
+  ): Promise<void>;
+
   getTerraformBackend(
     cloudAccountId: CloudAccount["id"],
     environment: EnvironmentId,
+    domain: string,
   ): Promise<TerraformBackend | undefined>;
 
   hasUserPermissionToInitialize(
@@ -53,8 +59,14 @@ export type CloudAccountService = {
   provisionTerraformBackend(
     cloudAccount: CloudAccount,
     environment: EnvironmentId,
+    domain: string,
     tags?: Record<string, string>,
   ): Promise<TerraformBackend>;
+
+  verifyTerraformBackendReadAccess(
+    backend: TerraformBackend,
+    key: string,
+  ): Promise<void>;
 };
 
 export const cloudRegionSchema = z.object({

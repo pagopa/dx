@@ -1,6 +1,5 @@
 import { type ActionConfig } from "node-plop";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { z } from "zod";
 
 import { CloudAccount } from "../../../../../domain/cloud-account.js";
 import getActions from "../actions.js";
@@ -13,13 +12,6 @@ const loggerMocks = vi.hoisted(() => ({
 vi.mock("@logtape/logtape", () => ({
   getLogger: vi.fn(() => loggerMocks),
 }));
-
-const terraformBackendActionSchema = z.object({
-  data: z.object({
-    terraformBackendKey: z.string(),
-  }),
-  type: z.literal("addMany"),
-});
 
 export const getPayload = (includeInit = false): Payload => {
   const cloudAccount: CloudAccount = {
@@ -96,25 +88,26 @@ describe("actions", () => {
     },
   ])("correct order of actions", ({ payload }) => {
     const actionsOrder = [
-      "getTerraformBackend",
+      "validateTerraformBackendRoots",
+      "setupCloudTools",
+      ...(payload.init
+        ? [
+            "initCloudAccounts",
+            payload.init.terraformBackend
+              ? "provisionTerraformBackend"
+              : "getTerraformBackend",
+          ]
+        : ["getTerraformBackend"]),
+      "configureExistingTerraformRootBackends",
       "syncNxAdditionalEnvironments",
       "syncRepositoryEnvironments",
       "configureGitHubEnvironments",
       "addMany",
       "addMany",
       "addMany",
+      "addMany",
+      "addMany",
     ];
-
-    if (payload.init) {
-      actionsOrder.unshift(
-        "setupCloudTools",
-        "initCloudAccounts",
-        "provisionTerraformBackend",
-      );
-      actionsOrder.push("addMany", "addMany");
-    } else {
-      actionsOrder.unshift("setupCloudTools");
-    }
 
     // The formatting pass always runs last, once every file is on disk.
     actionsOrder.push("formatGeneratedCode");
@@ -134,32 +127,4 @@ describe("actions", () => {
 
     expect(actionTypes).toEqual(actionsOrder);
   });
-
-  test.each([
-    {
-      expectedKeys: ["mytest/bootstrapper.tfstate", "core.tfstate"],
-      payload: getPayload(true),
-    },
-    {
-      expectedKeys: ["mytest/bootstrapper.tfstate"],
-      payload: getPayload(false),
-    },
-  ])(
-    "uses prefix/domain/scope state keys in shared backend actions",
-    ({ expectedKeys, payload }) => {
-      const actions = getActions("/templates/path")(payload);
-
-      const terraformBackendKeys = actions
-        .filter(
-          (
-            action,
-          ): action is ActionConfig & {
-            data: { terraformBackendKey: string };
-          } => terraformBackendActionSchema.safeParse(action).success,
-        )
-        .map((action) => action.data.terraformBackendKey);
-
-      expect(terraformBackendKeys).toEqual(expectedKeys);
-    },
-  );
 });

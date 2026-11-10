@@ -11,14 +11,20 @@
  * Existing literal lists are normalized only when an addition is needed.
  * Commented lists needing additions must be updated manually instead.
  */
-import { fileURLToPath } from "node:url";
-import { Language, type Node, Parser } from "web-tree-sitter";
+import { type Node } from "web-tree-sitter";
 import { z } from "zod/v4";
 
 import {
   type Environment,
   environmentSchema,
 } from "../../domain/environment.js";
+import {
+  blockLabels,
+  inspectHcl,
+  nodeOfType,
+  onlyChildOfType,
+  stringLiteralNode,
+} from "./hcl-parser.js";
 
 const REPOSITORY_MAIN = "infra/repository/main.tf";
 const KNOWN_ENVIRONMENTS = ["dev", "uat", "prod"] as const;
@@ -30,66 +36,6 @@ type RepositoryTarget = {
   tuple?: Node;
 };
 
-let languagePromise: Promise<Language> | undefined;
-
-const loadLanguage = async (): Promise<Language> => {
-  let pendingLanguage: Promise<Language> | undefined;
-  try {
-    pendingLanguage = languagePromise ??= Parser.init().then(() =>
-      Language.load(
-        fileURLToPath(
-          import.meta
-            .resolve("@tree-sitter-grammars/tree-sitter-hcl/tree-sitter-hcl.wasm"),
-        ),
-      ),
-    );
-    return await pendingLanguage;
-  } catch (error) {
-    if (pendingLanguage !== undefined && languagePromise === pendingLanguage) {
-      // Do not clear a newer retry started after this load failed.
-      languagePromise = undefined;
-    }
-    throw error;
-  }
-};
-
-const createParser = async (): Promise<Parser> => {
-  try {
-    const language = await loadLanguage();
-    const parser = new Parser();
-    parser.setLanguage(language);
-    return parser;
-  } catch (cause) {
-    throw new Error(`Cannot load the HCL parser for ${REPOSITORY_MAIN}`, {
-      cause,
-    });
-  }
-};
-
-const inspectHcl = <T>(
-  parser: Parser,
-  content: string,
-  inspect: (root: Node) => T,
-): T => {
-  const tree = parser.parse(content);
-  if (!tree) {
-    throw new Error(`Cannot parse HCL in ${REPOSITORY_MAIN}`);
-  }
-
-  try {
-    const root = tree.rootNode;
-    if (root.hasError) {
-      const error = root.descendantsOfType("ERROR")[0] ?? root;
-      throw new Error(
-        `Invalid HCL syntax in ${REPOSITORY_MAIN} at line ${error.startPosition.row + 1}, column ${error.startPosition.column + 1}`,
-      );
-    }
-    return inspect(root);
-  } finally {
-    tree.delete();
-  }
-};
-
 const onlyNode = (nodes: Node[], description: string): Node => {
   const node = nodes[0];
   if (nodes.length === 0 || !node) {
@@ -99,43 +45,6 @@ const onlyNode = (nodes: Node[], description: string): Node => {
     throw new Error(`Multiple ${description} found in ${REPOSITORY_MAIN}`);
   }
   return node;
-};
-
-const nodeOfType = (node: Node, type: string): Node | undefined =>
-  node.namedChildren.find((child) => child.type === type);
-
-const blockLabels = (block: Node): Node[] =>
-  block.namedChildren
-    .filter(
-      (child) => child.type === "identifier" || child.type === "string_lit",
-    )
-    .slice(1);
-
-const onlyChildOfType = (node: Node, type: string): Node | undefined => {
-  const children = node.namedChildren.filter(
-    (child) => child.type !== "comment",
-  );
-  if (children.length !== 1) {
-    return undefined;
-  }
-  return children[0]?.type === type ? children[0] : undefined;
-};
-
-const stringLiteralNode = (expression: Node): Node | undefined => {
-  const literal = onlyChildOfType(expression, "literal_value");
-  const string = literal && onlyChildOfType(literal, "string_lit");
-  if (
-    !string ||
-    string.namedChildren.some(
-      (child) =>
-        child.type !== "quoted_template_start" &&
-        child.type !== "template_literal" &&
-        child.type !== "quoted_template_end",
-    )
-  ) {
-    return undefined;
-  }
-  return string;
 };
 
 const parseStringLiteral = (string: Node, description: string): string => {
@@ -361,44 +270,35 @@ export const updateRepositoryEnvironmentsHcl = async (
     });
   }
 
-  const parser = await createParser();
-  try {
-    const updated = inspectHcl(parser, content, (root) => {
-      const target = findRepositoryTarget(root);
-      if (!target.tuple) {
-        return parsedName.data === "prod"
-          ? content
-          : insertEnvironmentsAttribute(
-              content,
-              target.object,
-              new Set([parsedName.data, "prod"]),
-            );
-      }
-
-      const environments = new Set([
-        ...target.entries,
-        parsedName.data,
-        "prod",
-      ]);
-      if (environments.size === target.entries.length) {
-        return content;
-      }
-      if (target.tuple.descendantsOfType("comment").length > 0) {
-        throw new Error(
-          `Cannot update environments containing comments in ${REPOSITORY_MAIN}. Move comments outside the list or update it manually before retrying.`,
-        );
-      }
-      return (
-        content.slice(0, target.tuple.startIndex) +
-        renderEnvironmentList(environments) +
-        content.slice(target.tuple.endIndex)
-      );
-    });
-    if (updated !== content) {
-      inspectHcl(parser, updated, findRepositoryTarget);
+  const updated = await inspectHcl(content, REPOSITORY_MAIN, (root) => {
+    const target = findRepositoryTarget(root);
+    if (!target.tuple) {
+      return parsedName.data === "prod"
+        ? content
+        : insertEnvironmentsAttribute(
+            content,
+            target.object,
+            new Set([parsedName.data, "prod"]),
+          );
     }
-    return updated;
-  } finally {
-    parser.delete();
+
+    const environments = new Set([...target.entries, parsedName.data, "prod"]);
+    if (environments.size === target.entries.length) {
+      return content;
+    }
+    if (target.tuple.descendantsOfType("comment").length > 0) {
+      throw new Error(
+        `Cannot update environments containing comments in ${REPOSITORY_MAIN}. Move comments outside the list or update it manually before retrying.`,
+      );
+    }
+    return (
+      content.slice(0, target.tuple.startIndex) +
+      renderEnvironmentList(environments) +
+      content.slice(target.tuple.endIndex)
+    );
+  });
+  if (updated !== content) {
+    await inspectHcl(updated, REPOSITORY_MAIN, findRepositoryTarget);
   }
+  return updated;
 };

@@ -6,6 +6,7 @@ import {
 } from "../../../../domain/cloud-account.js";
 import { GitHubRepo } from "../../../../domain/github-repo.js";
 import { type GitHubService } from "../../../../domain/github.js";
+import setConfigureExistingTerraformRootBackendsAction from "../../actions/configure-existing-terraform-root-backends.js";
 import { setFormatGeneratedCodeAction } from "../../actions/format-generated-code.js";
 import setGetTerraformBackend from "../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../actions/init-cloud-accounts.js";
@@ -17,7 +18,7 @@ import setSyncRepositoryEnvironmentsAction from "../../actions/sync-repository-e
 import setEnvShortHelper from "../../helpers/env-short.js";
 import setEqHelper from "../../helpers/eq.js";
 import setResourcePrefixHelper from "../../helpers/resource-prefix.js";
-import setTerraformStateKeyHelper from "../../helpers/terraform-state-key.js";
+import setTerraformStateContainerReaderKeyHelper from "../../helpers/terraform-state-container-reader-key.js";
 import setTerraformStringHelper from "../../helpers/terraform-string.js";
 import getActions from "./actions.js";
 import getPrompts, {
@@ -42,10 +43,11 @@ export default function (
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
-  setTerraformStateKeyHelper(plop);
   setTerraformStringHelper(plop);
+  setTerraformStateContainerReaderKeyHelper(plop);
 
   setGetTerraformBackend(plop, cloudAccountService);
+  setConfigureExistingTerraformRootBackendsAction(plop);
   setProvisionTerraformBackendAction(plop, cloudAccountService);
   setSetupCloudToolsAction(plop);
   setInitCloudAccountsAction(plop, cloudAccountService, gitHubService);

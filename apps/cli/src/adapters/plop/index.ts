@@ -173,6 +173,8 @@ export const collectDeploymentEnvironmentPayload = async (
 export type DeploymentEnvironmentOutputPayload = EnvironmentPayload & {
   terraform?: {
     backend?: TerraformBackend;
+    backendKey?: string;
+    coreBackend?: TerraformBackend & { key: string };
   };
 };
 

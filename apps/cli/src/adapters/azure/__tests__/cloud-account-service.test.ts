@@ -23,6 +23,40 @@ const { mockRoleAssignmentsCreate, mockRoleAssignmentsListForScope } =
   }));
 
 const {
+  mockBlobContainerCreate,
+  mockBlobContainerGet,
+  mockBlobContainerGetProperties,
+  mockStorageAccountCreate,
+  mockStorageAccountGetProperties,
+} = vi.hoisted(() => ({
+  mockBlobContainerCreate: vi.fn().mockResolvedValue({}),
+  mockBlobContainerGet: vi.fn().mockResolvedValue({}),
+  mockBlobContainerGetProperties: vi.fn().mockResolvedValue({}),
+  mockStorageAccountCreate: vi.fn().mockResolvedValue({
+    name: "dxditntfstatest01",
+  }),
+  mockStorageAccountGetProperties: vi.fn().mockResolvedValue({
+    primaryEndpoints: {
+      blob: "https://dxditntfstatest01.blob.core.windows.net/",
+    },
+  }),
+}));
+
+const {
+  mockBlobAcquireLease,
+  mockBlobDelete,
+  mockBlobGetProperties,
+  mockBlobReleaseLease,
+  mockBlobUploadData,
+} = vi.hoisted(() => ({
+  mockBlobAcquireLease: vi.fn().mockResolvedValue({}),
+  mockBlobDelete: vi.fn().mockResolvedValue({ succeeded: true }),
+  mockBlobGetProperties: vi.fn().mockResolvedValue({}),
+  mockBlobReleaseLease: vi.fn().mockResolvedValue({}),
+  mockBlobUploadData: vi.fn().mockResolvedValue({}),
+}));
+
+const {
   mockCreateFederatedIdentityCredential,
   mockCreateIdentity,
   mockCreateKeyVault,
@@ -53,6 +87,12 @@ const { mockLookup } = vi.hoisted(() => ({
 const { mockSleep } = vi.hoisted(() => ({
   mockSleep: vi.fn().mockResolvedValue(undefined),
 }));
+
+const roleAssignments = (assignments: object[]) => ({
+  [Symbol.asyncIterator]: async function* () {
+    yield* assignments;
+  },
+});
 
 vi.mock("@azure/arm-authorization", () => ({
   AuthorizationManagementClient: class {
@@ -109,11 +149,52 @@ vi.mock("@azure/arm-resources", () => ({
   },
 }));
 
+vi.mock("@azure/arm-storage", () => ({
+  StorageManagementClient: class {
+    blobContainers = {
+      create: mockBlobContainerCreate,
+      get: mockBlobContainerGet,
+    };
+
+    storageAccounts = {
+      beginCreateAndWait: mockStorageAccountCreate,
+      getProperties: mockStorageAccountGetProperties,
+    };
+  },
+}));
+
 vi.mock("@azure/arm-resources-subscriptions", () => ({
   SubscriptionClient: class {
     subscriptions = {
       get: mockGetSubscription,
     };
+  },
+}));
+
+vi.mock("@azure/storage-blob", () => ({
+  BlobServiceClient: class {
+    getContainerClient = vi.fn(() => ({
+      getBlockBlobClient: vi.fn(() => ({
+        deleteIfExists: mockBlobDelete,
+        getBlobLeaseClient: vi.fn(() => ({
+          acquireLease: mockBlobAcquireLease,
+          releaseLease: mockBlobReleaseLease,
+        })),
+        getProperties: mockBlobGetProperties,
+        uploadData: mockBlobUploadData,
+      })),
+      getProperties: mockBlobContainerGetProperties,
+    }));
+  },
+}));
+
+vi.mock("@microsoft/microsoft-graph-client", () => ({
+  Client: {
+    init: vi.fn(() => ({
+      api: (path: string) => ({
+        get: async () => (path === "/me" ? { id: "user-1" } : { value: [] }),
+      }),
+    })),
   },
 }));
 
@@ -165,6 +246,32 @@ beforeEach(() => {
   mockProviderRegister.mockClear();
   mockRoleAssignmentsCreate.mockClear();
   mockRoleAssignmentsListForScope.mockReset();
+  mockBlobContainerCreate.mockReset();
+  mockBlobContainerCreate.mockResolvedValue({});
+  mockBlobContainerGet.mockReset();
+  mockBlobContainerGet.mockRejectedValue(
+    Object.assign(new Error("Not found"), { statusCode: 404 }),
+  );
+  mockBlobContainerGetProperties.mockReset();
+  mockBlobContainerGetProperties.mockResolvedValue({});
+  mockStorageAccountCreate.mockReset();
+  mockStorageAccountCreate.mockResolvedValue({ name: "dxditntfstatest01" });
+  mockStorageAccountGetProperties.mockReset();
+  mockStorageAccountGetProperties.mockResolvedValue({
+    primaryEndpoints: {
+      blob: "https://dxditntfstatest01.blob.core.windows.net/",
+    },
+  });
+  mockBlobAcquireLease.mockReset();
+  mockBlobAcquireLease.mockResolvedValue({});
+  mockBlobDelete.mockReset();
+  mockBlobDelete.mockResolvedValue({ succeeded: true });
+  mockBlobGetProperties.mockReset();
+  mockBlobGetProperties.mockResolvedValue({});
+  mockBlobReleaseLease.mockReset();
+  mockBlobReleaseLease.mockResolvedValue({});
+  mockBlobUploadData.mockReset();
+  mockBlobUploadData.mockResolvedValue({});
   mockSetSecret.mockClear();
   mockLookup.mockReset();
   mockLookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }]);
@@ -264,90 +371,343 @@ const expectBootstrapperEnvironmentSecrets = (
 };
 
 describe("getTerraformBackend", () => {
-  test("returns undefined when no matching storage account is found", async ({
-    cloudAccountService,
-  }) => {
-    queryResources.mockResolvedValueOnce({
+  const accounts = {
+    dev: {
+      location: "italynorth",
+      name: "dxditntfstatest01",
+      resourceGroup: "dx-d-itn-tfstate-rg-01",
+      subscriptionId: "sub-1",
+      type: "microsoft.storage/storageaccounts",
+    },
+    latest: {
+      location: "italynorth",
+      name: "dxditntfstatest02",
+      resourceGroup: "dx-d-itn-tfstate-rg-01",
+      subscriptionId: "sub-1",
+      type: "microsoft.storage/storageaccounts",
+    },
+    otherRegion: {
+      location: "westeurope",
+      name: "dxdweutfstatest01",
+      resourceGroup: "dx-d-weu-tfstate-rg-01",
+      subscriptionId: "sub-1",
+      type: "microsoft.storage/storageaccounts",
+    },
+  };
+
+  test.each([
+    {
       data: [],
-      totalRecords: 0,
-    });
-    const result = await cloudAccountService.getTerraformBackend("sub-1", {
-      name: "dev",
-      prefix: "dx",
-    });
-    expect(result).toBeUndefined();
-  });
-
-  test("return the only matching storage account", async ({
-    cloudAccountService,
-  }) => {
-    queryResources.mockResolvedValueOnce({
-      data: [
-        {
-          location: "italynorth",
-          name: "dxditntfstatest01",
-          resourceGroup: "dx-d-itn-tfstate-rg-01",
-          subscriptionId: "sub-1",
-          type: "microsoft.storage/storageaccounts",
-        },
-      ],
-      totalRecords: 1,
-    });
-    const result = await cloudAccountService.getTerraformBackend("sub-1", {
-      name: "dev",
-      prefix: "dx",
-    });
-
-    expect(result).toEqual(
-      expect.objectContaining({
+      expected: undefined,
+      label: "returns undefined when no account matches",
+    },
+    {
+      data: [accounts.dev],
+      expected: expect.objectContaining({
         resourceGroupName: "dx-d-itn-tfstate-rg-01",
         storageAccountName: "dxditntfstatest01",
         type: "azurerm",
       }),
-    );
-  });
-
-  test("returns the best matching storage account among multiple", async ({
-    cloudAccountService,
-  }) => {
-    queryResources.mockResolvedValueOnce({
-      data: [
-        {
-          location: "italynorth",
-          name: "dxditntfstatest01",
-          resourceGroup: "dx-d-itn-tfstate-rg-01",
-          subscriptionId: "sub-1",
-          type: "microsoft.storage/storageaccounts",
-        },
-        {
-          location: "italynorth",
-          name: "dxditntfstatest02",
-          resourceGroup: "dx-d-itn-tfstate-rg-01",
-          subscriptionId: "sub-1",
-          type: "microsoft.storage/storageaccounts",
-        },
-        {
-          location: "westeurope",
-          name: "dxdweutfstatest01",
-          resourceGroup: "dx-d-weu-tfstate-rg-01",
-          subscriptionId: "sub-1",
-          type: "microsoft.storage/storageaccounts",
-        },
-      ],
-      totalRecords: 3,
-    });
-    const result = await cloudAccountService.getTerraformBackend("sub-1", {
-      name: "dev",
-      prefix: "dx",
-    });
-
-    expect(result).toEqual(
-      expect.objectContaining({
+      label: "returns the only matching account",
+    },
+    {
+      data: [accounts.dev, accounts.latest, accounts.otherRegion],
+      expected: expect.objectContaining({
         resourceGroupName: "dx-d-itn-tfstate-rg-01",
         storageAccountName: "dxditntfstatest02",
         type: "azurerm",
       }),
+      label: "selects the latest matching account in the expected region",
+    },
+  ])("$label", async ({ data, expected }) => {
+    queryResources.mockResolvedValueOnce({
+      data,
+      totalRecords: data.length,
+    });
+
+    await expect(
+      new AzureCloudAccountService(
+        new DefaultAzureCredential(),
+      ).getTerraformBackend("sub-1", { name: "dev", prefix: "dx" }, "payments"),
+    ).resolves.toEqual(expected);
+  });
+});
+
+describe("hasUserPermissionToInitialize", () => {
+  test("does not require subscription-scoped Blob Data Contributor", async ({
+    cloudAccountService,
+  }) => {
+    mockRoleAssignmentsListForScope.mockImplementation(() =>
+      roleAssignments([
+        {
+          principalId: "user-1",
+          roleDefinitionId:
+            "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
+        },
+        {
+          principalId: "user-1",
+          roleDefinitionId:
+            "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/b86a8fe4-44ce-4948-aee5-eccb2c155cd7",
+        },
+      ]),
     );
+
+    await expect(
+      cloudAccountService.hasUserPermissionToInitialize("sub-1"),
+    ).resolves.toBe(true);
+  });
+});
+
+describe("provisionTerraformBackend", () => {
+  const account = {
+    csp: "azure" as const,
+    defaultLocation: "italynorth",
+    displayName: "DEV-DX",
+    id: "sub-1",
+  };
+  const environment = { name: "dev" as const, prefix: "dx" };
+
+  test("reuses a discovered storage account without modifying it", async ({
+    cloudAccountService,
+  }) => {
+    queryResources.mockResolvedValue({
+      data: [
+        {
+          location: "italynorth",
+          name: "dxditntfstatest02",
+          resourceGroup: "dx-d-itn-tfstate-rg-01",
+        },
+      ],
+      totalRecords: 1,
+    });
+
+    const result = await cloudAccountService.provisionTerraformBackend(
+      account,
+      environment,
+      "payments",
+    );
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        containerName: "payments-tf-state",
+        resourceGroupName: "dx-d-itn-tfstate-rg-01",
+        storageAccountName: "dxditntfstatest02",
+      }),
+    );
+    expect(mockCreateResourceGroup).not.toHaveBeenCalled();
+    expect(mockStorageAccountCreate).not.toHaveBeenCalled();
+  });
+
+  test("keeps a partially provisioned resource group when account creation fails", async ({
+    cloudAccountService,
+  }) => {
+    mockStorageAccountCreate.mockRejectedValue(
+      new Error("Provisioning failed"),
+    );
+
+    await expect(
+      cloudAccountService.provisionTerraformBackend(
+        account,
+        environment,
+        "payments",
+      ),
+    ).rejects.toThrow("Provisioning failed");
+
+    expect(mockCreateResourceGroup).toHaveBeenCalledWith(
+      "dx-d-itn-tfstate-rg-01",
+      expect.objectContaining({ location: "italynorth" }),
+    );
+    expect(mockDeleteResourceGroup).not.toHaveBeenCalled();
+  });
+});
+
+describe("ensureTerraformBackendAccess", () => {
+  const backend = {
+    containerName: "payments-tf-state",
+    resourceGroupName: "dx-d-itn-tfstate-rg-01",
+    storageAccountName: "dxditntfstatest01",
+    subscriptionId: "sub-1",
+    type: "azurerm" as const,
+  };
+
+  test("creates containers through ARM and grants the user at each container scope", async ({
+    cloudAccountService,
+  }) => {
+    mockRoleAssignmentsListForScope.mockImplementation(() =>
+      roleAssignments([]),
+    );
+
+    await cloudAccountService.ensureTerraformBackendAccess(backend, [
+      { ...backend, containerName: "dx-tf-state" },
+    ]);
+
+    expect(mockBlobContainerCreate).toHaveBeenCalledTimes(2);
+    expect(mockBlobContainerCreate).toHaveBeenCalledWith(
+      backend.resourceGroupName,
+      backend.storageAccountName,
+      "payments-tf-state",
+      { publicAccess: "None" },
+    );
+    expect(mockBlobContainerCreate).toHaveBeenCalledWith(
+      backend.resourceGroupName,
+      backend.storageAccountName,
+      "dx-tf-state",
+      { publicAccess: "None" },
+    );
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledTimes(2);
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
+      expect.stringMatching(/\/containers\/payments-tf-state$/u),
+      expect.any(String),
+      expect.objectContaining({
+        principalId: "user-1",
+        principalType: "User",
+        roleDefinitionId:
+          "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+      }),
+    );
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
+      expect.stringMatching(/\/containers\/dx-tf-state$/u),
+      expect.any(String),
+      expect.objectContaining({ principalId: "user-1" }),
+    );
+    expect(mockBlobUploadData).toHaveBeenCalledTimes(2);
+    expect(mockBlobAcquireLease).toHaveBeenCalledTimes(2);
+    expect(mockBlobReleaseLease).toHaveBeenCalledTimes(2);
+    expect(mockBlobDelete).toHaveBeenCalledTimes(2);
+    expect(mockSleep).not.toHaveBeenCalled();
+  });
+
+  test("reuses existing containers and grants with non-deterministic names", async ({
+    cloudAccountService,
+  }) => {
+    mockBlobContainerGet.mockResolvedValue({});
+    mockRoleAssignmentsListForScope.mockImplementation(() =>
+      roleAssignments([
+        {
+          principalId: "user-1",
+          roleDefinitionId:
+            "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+        },
+      ]),
+    );
+
+    await cloudAccountService.ensureTerraformBackendAccess(backend, [
+      { ...backend, containerName: "dx-tf-state" },
+    ]);
+
+    expect(mockBlobContainerCreate).not.toHaveBeenCalled();
+    expect(mockRoleAssignmentsCreate).not.toHaveBeenCalled();
+    expect(mockBlobUploadData).toHaveBeenCalledTimes(2);
+  });
+
+  test("waits for role propagation and reports a 403 after the bounded retry", async ({
+    cloudAccountService,
+  }) => {
+    mockRoleAssignmentsListForScope.mockImplementation(() =>
+      roleAssignments([]),
+    );
+    mockBlobUploadData.mockRejectedValue(
+      Object.assign(new Error("Forbidden"), { statusCode: 403 }),
+    );
+
+    await expect(
+      cloudAccountService.ensureTerraformBackendAccess(backend),
+    ).rejects.toThrow(
+      'The current user cannot write and lock state in "payments-tf-state" after waiting for Azure role assignment propagation.',
+    );
+
+    expect(mockBlobUploadData).toHaveBeenCalledTimes(6);
+    expect(mockSleep).toHaveBeenCalledTimes(5);
+    expect(mockBlobAcquireLease).not.toHaveBeenCalled();
+  });
+
+  test("retries a lease 403 without creating another probe blob", async ({
+    cloudAccountService,
+  }) => {
+    mockRoleAssignmentsListForScope.mockImplementation(() =>
+      roleAssignments([]),
+    );
+    mockBlobAcquireLease
+      .mockRejectedValueOnce(
+        Object.assign(new Error("Forbidden"), { statusCode: 403 }),
+      )
+      .mockResolvedValueOnce({});
+
+    await expect(
+      cloudAccountService.ensureTerraformBackendAccess(backend),
+    ).resolves.toBeUndefined();
+
+    expect(mockBlobUploadData).toHaveBeenCalledTimes(1);
+    expect(mockBlobAcquireLease).toHaveBeenCalledTimes(2);
+    expect(mockSleep).toHaveBeenCalledTimes(1);
+    expect(mockBlobDelete).toHaveBeenCalledTimes(1);
+  });
+
+  test("surfaces container provisioning authorization failures without fallback", async ({
+    cloudAccountService,
+  }) => {
+    mockBlobContainerCreate.mockRejectedValue(
+      Object.assign(new Error("Forbidden"), { statusCode: 403 }),
+    );
+
+    await expect(
+      cloudAccountService.ensureTerraformBackendAccess(backend),
+    ).rejects.toThrow(
+      'Failed to create Terraform state container "payments-tf-state".',
+    );
+
+    expect(mockBlobUploadData).not.toHaveBeenCalled();
+  });
+});
+
+describe("verifyTerraformBackendReadAccess", () => {
+  const backend = {
+    containerName: "terraform-state",
+    resourceGroupName: "legacy-rg",
+    storageAccountName: "legacyaccount",
+    subscriptionId: "sub-1",
+    type: "azurerm" as const,
+  };
+
+  test("checks the existing state container and tolerates a not-yet-created state snapshot", async ({
+    cloudAccountService,
+  }) => {
+    mockBlobGetProperties.mockRejectedValue(
+      Object.assign(new Error("Not found"), { statusCode: 404 }),
+    );
+
+    await expect(
+      cloudAccountService.verifyTerraformBackendReadAccess(
+        backend,
+        "dx.core.uat.tfstate",
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(mockBlobContainerGetProperties).toHaveBeenCalledTimes(1);
+    expect(mockBlobGetProperties).toHaveBeenCalledTimes(1);
+    expect(mockBlobUploadData).not.toHaveBeenCalled();
+    expect(mockBlobAcquireLease).not.toHaveBeenCalled();
+    expect(mockBlobDelete).not.toHaveBeenCalled();
+  });
+
+  test("reports the exact upstream scope when read access is denied", async ({
+    cloudAccountService,
+  }) => {
+    mockBlobContainerGetProperties.mockRejectedValue(
+      Object.assign(new Error("Forbidden"), { statusCode: 403 }),
+    );
+
+    await expect(
+      cloudAccountService.verifyTerraformBackendReadAccess(
+        backend,
+        "dx.core.uat.tfstate",
+      ),
+    ).rejects.toThrow(
+      'The current Azure identity cannot read Terraform state container "terraform-state" at "/subscriptions/sub-1/resourceGroups/legacy-rg/providers/Microsoft.Storage/storageAccounts/legacyaccount/blobServices/default/containers/terraform-state". Verify Storage Blob Data Reader access before the first plan.',
+    );
+
+    expect(mockBlobGetProperties).not.toHaveBeenCalled();
+    expect(mockBlobUploadData).not.toHaveBeenCalled();
   });
 });
 

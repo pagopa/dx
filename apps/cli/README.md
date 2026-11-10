@@ -168,6 +168,58 @@ Workspace created successfully!
 > The command will fail early if required tools are missing.
 > If you choose not to publish immediately, the CLI prints the manual Terraform and git steps required to finish the setup later.
 
+#### `add environment`
+
+Add a Terraform environment to an existing workspace:
+
+```bash
+dx add environment
+```
+
+The workspace domain must be 1–54 lowercase letters, numbers, and single
+hyphen-separated segments. New backends use `<domain>-tf-state` for the
+workspace and `<prefix>-tf-state` for core; keys are `<layer>.tfstate` for a
+direct root and `<layer>/<relative-root-path>.tfstate` for nested roots.
+
+The CLI discovers roots marked by `main.tf` under
+`infra/<layer>/<environment>` and `infra/<layer>/<lifecycle>/<domain>`, including
+nested roots. Outside its generated `bootstrapper` and `core` layers, it adds a
+missing `backend.tf` using the resolved backend and path-derived key. Existing
+literal Azure backends and their files/keys are preserved byte-for-byte; the
+CLI does not create a second root when an existing bootstrapper/core backend is
+in a different supported layout. Nested core state used only as upstream is
+preserved.
+
+Before cloud or GitHub writes, local validation rejects dynamic or multiple
+backends, duplicate explicit state locations, missing-backend roots with local
+state or `.terraform` metadata, and `backend.tf` files without a backend block.
+Bootstrapper/core state is protected even when `main.tf` is missing. Once backend
+coordinates are resolved, derived locations are also checked against each other
+and bootstrapper/core before writing backend files. Shared
+`_modules`, `modules`, and `.terraform` directories are not discovered as roots.
+Existing remote state is never migrated; reruns refresh generated access
+configuration but preserve backend files and coordinates, including an entire
+`main.tf` or `providers.tf` when it contains the backend.
+If cloud setup completed before an interrupted run, rerunning also generates a
+missing core root without repeating cloud initialization; an existing core root
+is preserved on this path.
+
+Azure setup requires permission to discover the storage account, create
+containers through ARM, and assign the current user `Storage Blob Data
+Contributor` at each managed container; subscription `Owner` alone does not
+grant blob access. Before Terraform initialization, the CLI verifies write and
+lease access. For core-state consumers, generated bootstrap configuration grants
+Reader only to the actual `infra_ci` and `infra_cd` workflow identities; it
+omits redundant grants for the same container and uses the exact ARM ID across
+storage accounts. The first plan's operator still needs Reader prepared
+manually.
+
+That generated input requires a compatible bootstrap release. The template provisionally pins `~> 7.2`, expected from the bootstrap change
+tracked by #2509 and coordinated with #2508. This version is not yet published
+or verified; before merging or releasing the CLI, confirm the Registry version
+and update the pin if needed. Registry-based Terraform validation and planning
+remain gated until then.
+
 #### `spec`
 
 Print the full CLI specification as JSON.

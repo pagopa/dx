@@ -348,10 +348,20 @@ const toPublicEnvironmentPayload = ({
   ...(terraform && {
     terraform: {
       backend: terraform.backend && {
+        containerName: terraform.backend.containerName,
         resourceGroupName: terraform.backend.resourceGroupName,
         storageAccountName: terraform.backend.storageAccountName,
         subscriptionId: terraform.backend.subscriptionId,
         type: terraform.backend.type,
+      },
+      backendKey: terraform.backendKey,
+      coreBackend: terraform.coreBackend && {
+        containerName: terraform.coreBackend.containerName,
+        key: terraform.coreBackend.key,
+        resourceGroupName: terraform.coreBackend.resourceGroupName,
+        storageAccountName: terraform.coreBackend.storageAccountName,
+        subscriptionId: terraform.coreBackend.subscriptionId,
+        type: terraform.coreBackend.type,
       },
     },
   }),
