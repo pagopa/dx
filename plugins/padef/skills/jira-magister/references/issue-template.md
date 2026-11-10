@@ -1,39 +1,41 @@
 # Jira source template
 
-Use this structure in each proposed or confirmed issue description.
-The top-level document bullets are the complete **source document
-inventory**.
+Use this T3 structure in each proposed or confirmed issue description. The
+top-level document bullets are the complete **source document inventory**;
+do not maintain a second `Source documents` section or a `Source:` trailer.
+Keep the primary source first so readers can identify the canonical source
+without losing the supporting documents.
 
 ```markdown
-<!-- Do NOT include Source for Sub-tasks; refer to the parent issue instead -->
-
 ## Source
 
-- prd: [PRD - Adhesion](https://example.atlassian.net/wiki/spaces/DEMO/pages/103)
-  - [JTBD-01 - Join without a manual ticket](https://example.atlassian.net/wiki/spaces/DEMO/pages/103#JTBD-01)
-- dr: [Design Review - Adhesion](https://example.atlassian.net/wiki/spaces/DEMO/pages/102)
-  - [contracts.item-001 - Upload API](https://example.atlassian.net/wiki/spaces/DEMO/pages/102#contracts.item-001)
 - uc: [UC-01 - Upload signed agreement](https://example.atlassian.net/wiki/spaces/DEMO/pages/101)
   - [AGREEMENT_EXTENSION_INVALID](https://example.atlassian.net/wiki/spaces/DEMO/pages/101#AGREEMENT_EXTENSION_INVALID)
+- dr: [Design Review - Adhesion](https://example.atlassian.net/wiki/spaces/DEMO/pages/102)
+  - [contracts.item-001 - Upload API](https://example.atlassian.net/wiki/spaces/DEMO/pages/102#contracts.item-001)
+- prd: [PRD - Adhesion](https://example.atlassian.net/wiki/spaces/DEMO/pages/103)
+  - [JTBD-01 - Join without a manual ticket](https://example.atlassian.net/wiki/spaces/DEMO/pages/103#JTBD-01)
 - contract: [Upload API](https://github.com/example/adhesion/blob/main/api/openapi.yaml)
-
-## {{issue_specific_content}}
 
 ## AC Coverage
 
 - [AC-01](https://example.atlassian.net/wiki/spaces/DEMO/pages/101#AC-01)
 ```
 
-The example URLs and IDs are illustrative, not documents to retrieve.
+The example URLs and IDs are illustrative, not documents to retrieve. Keep
+other required issue content after `Source` and before `AC Coverage`, following
+the RFC-05 skeleton order. This reference governs source traceability; it does
+not replace the issue-type content requirements in
+[issue-contract.md](./issue-contract.md).
 
-## Document keys and source selection
+## Document keys and primary source
 
-Write each document once as `- key: [meaningful title](locator)`. In items
-with a `Source` section, use lowercase keys in this fixed order:
+Write each document once as `- key: [meaningful title](locator)`. Use lowercase
+keys in this order, except that the primary document always comes first:
 
-- `prd`: PRD owning JTBD or other product requirements.
-- `dr`: operational DR/SRS owning solution, contract, NFR, or question IDs.
 - `uc`: Use Case owning the behavior, errors, or acceptance checks.
+- `dr`: operational DR/SRS owning solution, contract, NFR, or question IDs.
+- `prd`: PRD owning JTBD or other product requirements.
 - `contract`: concrete API, event, or data contract artifact.
 - `figma`: applicable design, preferably a node-specific URL.
 - `blueprint`: applicable Service Blueprint.
@@ -43,15 +45,15 @@ with a `Source` section, use lowercase keys in this fixed order:
 - `incident`: incident supplying a Bug without a relevant UC.
 - `intake`: self-contained intake or pending-spec source.
 
-Use the fixed key order above regardless of issue type or source relationships.
-Keep multiple documents with the same key in their source order. Do not invent
-documents to fill the catalog.
+Multiple documents can have the same key. Keep their source order within the
+key, with the primary document first. Do not invent documents to fill the
+catalog.
 
 Keys describe a document's role in this item, not a requirement for separate
 pages. If the selected UC is a section of the DR, list the shared page once
-as `uc`, label it with both DR and UC, and nest the UC section ID and other
-cited DR IDs under it. Keep it in the fixed key order, and do not add a
-duplicate `dr` bullet for the same page ID:
+as `uc` (the primary role), label it with both DR and UC, and nest the UC
+section ID and other cited DR IDs under it. Do not add a duplicate `dr`
+bullet for the same page ID:
 
 ```markdown
 ## Source
@@ -67,20 +69,15 @@ owning section cannot be distinguished by the supplied anchors, report that
 locator ambiguity and ask for the published target rather than inventing a
 qualified ID or fragment.
 
-Select source documents based on the work and cited content, using issue type
-as guidance rather than the sole criterion:
+Choose the primary source by the work, not the Jira issue type alone:
 
-- For a Story or Task implementing UC behavior, include the owning `uc`.
-- For a Task from DR/NFR/contract/readiness work, including a spike, include
-  the owning `dr` and other directly required documents.
-- For an error-handling Task, include every `uc` that defines the shared error.
-- For a Bug, include the relevant `uc`, or the supplied `incident` when no
-  relevant UC applies.
-- For a Sub-task, omit the `Source` section and refer to its parent for the
-  full source context. Require an identified parent; ask when it is missing.
-- For an Epic, include the `dr` and applicable `prd`/`uc` documents.
-- For CR or pending-spec work, include `cr` or `intake` when it is the actual
-  source.
+- Story or Task realizing a UC: `uc`.
+- Task from DR/NFR/contract/readiness work, including a spike: `dr`.
+- Error-handling Task: `uc`; include every UC that defines the shared error.
+- Bug: the relevant `uc`, otherwise the supplied `incident`.
+- Sub-task: copy the parent's entire `Source` block verbatim.
+- Epic: `dr`, followed by the documents owning its cited JTBD and included UCs.
+- CR or pending-spec work: `cr` or `intake`, when that is the actual source.
 
 Single-item mode accepts a self-contained source without requiring an
 unrelated DR. If a necessary source or locator is missing, ask for it; in a
@@ -96,11 +93,6 @@ exact ID, optionally followed by a short title. Examples include `JTBD-*`,
 ADR/RFC/CR IDs. Preserve the source's actual spelling; these examples do not
 define or migrate an ID naming convention.
 
-For a Story or Task that implements or verifies an identified NFR, cite that
-NFR under its owning document, even when a Use Case acceptance check also
-expresses the requirement. Do not add NFRs merely because they appear elsewhere
-in the DR/SRS.
-
 The UC identity is in its document label (and a nested section reference for
 an embedded UC). Put acceptance-check IDs in
 `## AC Coverage`, not among the nested Source IDs. Link each AC to its owning
@@ -111,8 +103,7 @@ requirements.
 
 ## Select documents: one hop, no recursive collection
 
-For items other than Sub-tasks, derive this set separately for each item from
-the work it actually implements.
+Derive this set separately for each item from the work it actually implements.
 The UCs selected for the whole backlog, or the Stories that a Task unblocks,
 are not automatically that Task's sources. In particular, contract-only wiring
 uses the DR contract ID and artifact, not the consuming UCs or their AC/design
@@ -201,6 +192,6 @@ Incident-backed Bug:
 - incident: [INC-12 - Upload outage](https://example.org/incidents/12)
 ```
 
-Sub-task: identify the parent and refer to it for source context; omit `Source`.
-Epic: include `dr` and its cited `uc` and `prd` documents in catalog order,
-and nest JTBD IDs under `prd`.
+Sub-task: copy its parent's Source unchanged; a parent Jira link alone does not
+replace those documents. Epic: start with `dr`, add its cited `uc` and `prd`
+documents in catalog order, and nest JTBD IDs under `prd`.
