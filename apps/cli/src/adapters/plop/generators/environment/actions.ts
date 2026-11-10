@@ -113,6 +113,9 @@ export default function getActions(
         type: "syncNxAdditionalEnvironments",
       },
       {
+        type: "prepareRepositoryState",
+      },
+      {
         type: "syncRepositoryEnvironments",
       },
       // Bootstrap Azure resources can pre-exist, but OIDC credentials and

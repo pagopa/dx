@@ -32,6 +32,7 @@ import {
   githubAppCredentialsSchema,
   type GitHubService,
 } from "../../../../domain/github.js";
+import { terraformBackendSchema } from "../../../../domain/remote-backend.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
 import { validatePrompt } from "../../helpers/validate-prompt.js";
 
@@ -57,7 +58,7 @@ export const costCenterValues = [
   "TS310 - PAGAMENTI & SERVIZI",
   "TS320 - PIATTAFORMA NOTIFICHE DIGITALI",
   "TS330 - PDND & INTEROPERABILITA'",
-  "TS720 - DEV EX"
+  "TS720 - DEV EX",
 ] as const;
 
 export const costCenterSchema = z.enum(costCenterValues);
@@ -92,6 +93,9 @@ export const payloadSchema = z.object({
   init: initSchema.optional(),
   runnerAppCredentials: githubAppCredentialsSchema.optional(),
   tags: tagsSchema,
+  terraform: z
+    .object({ backend: terraformBackendSchema.optional() })
+    .optional(),
   workspace: workspaceSchema,
 });
 
@@ -725,6 +729,7 @@ export const formatInitializationDetails = (
       [
         chalk.bold.cyan(`  Terraform remote backend:`),
         `    • Azure resource group and Storage Account for the Terraform state`,
+        `    • The Terraform state of infra/repository is moved from this device to the remote backend`,
       ].join("\n"),
     );
   }

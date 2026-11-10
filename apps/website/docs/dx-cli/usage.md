@@ -101,6 +101,18 @@ command.
 
 :::
 
+:::note[Repository Terraform state]
+
+`dx init` leaves the Terraform state of `infra/repository` on your machine. Do
+not delete it or apply it from another device until you run `add environment`:
+the first run moves that state to the shared Azure backend
+(`<domain>/repository.tfstate`), verifies it with a clean `terraform plan`, and
+then removes the local copy. If it fails, fix the reported problem and re-run
+the same command. When no local state exists (for example on a new device), the
+GitHub repository objects are imported into the backend instead.
+
+:::
+
 #### Prompt Reference
 
 The `add environment` command is interactive. The tables below explain what each
