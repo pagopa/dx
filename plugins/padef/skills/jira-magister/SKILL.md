@@ -65,9 +65,8 @@ request is ambiguous.
    creation and report the gap, impact, owner if known, and required resolution.
    Do not infer a value to make an item appear ready.
 6. Use [issue-template.md](./references/issue-template.md) for every item's
-   `## Source` document list and `## AC Coverage`. Keep the primary source
-   first, nest IDs under their owning documents, and select documents with its
-   one-hop rule. The document list is authoritative; native Jira remote links
+   `## Source` document list and `## AC Coverage`, including source ordering and
+   selection. The document list is authoritative; native Jira remote links
    mirror its Confluence and Figma entries without duplicates.
 7. Treat open questions as projection input. A question flagged `Blocking: yes`
    becomes an independent spike Task that the dependent Story or Task
