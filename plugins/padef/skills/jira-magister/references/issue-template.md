@@ -1,9 +1,11 @@
 # Jira source template
 
-Use this structure in each proposed or confirmed issue description. The
-top-level document bullets are the complete **source document inventory**.
+Use this structure in each proposed or confirmed issue description.
+The top-level document bullets are the complete **source document
+inventory**.
 
 ```markdown
+<!-- Do NOT include Source for Sub-tasks; refer to the parent issue instead -->
 ## Source
 
 - prd: [PRD - Adhesion](https://example.atlassian.net/wiki/spaces/DEMO/pages/103)
@@ -25,8 +27,8 @@ The example URLs and IDs are illustrative, not documents to retrieve.
 
 ## Document keys and source selection
 
-Write each document once as `- key: [meaningful title](locator)`. Use lowercase
-keys in this fixed order for every item:
+Write each document once as `- key: [meaningful title](locator)`. In items
+with a `Source` section, use lowercase keys in this fixed order:
 
 - `prd`: PRD owning JTBD or other product requirements.
 - `dr`: operational DR/SRS owning solution, contract, NFR, or question IDs.
@@ -40,9 +42,9 @@ keys in this fixed order for every item:
 - `incident`: incident supplying a Bug without a relevant UC.
 - `intake`: self-contained intake or pending-spec source.
 
-Use the fixed key order above for every item, regardless of issue type or source
-relationships. Keep multiple documents with the same key in their source
-order. Do not invent documents to fill the catalog.
+Use the fixed key order above regardless of issue type or source relationships.
+Keep multiple documents with the same key in their source order. Do not invent
+documents to fill the catalog.
 
 Keys describe a document's role in this item, not a requirement for separate
 pages. If the selected UC is a section of the DR, list the shared page once
@@ -73,7 +75,8 @@ as guidance rather than the sole criterion:
 - For an error-handling Task, include every `uc` that defines the shared error.
 - For a Bug, include the relevant `uc`, or the supplied `incident` when no
   relevant UC applies.
-- For a Sub-task, copy the parent's entire `Source` block verbatim.
+- For a Sub-task, omit the `Source` section and refer to its parent for the
+  full source context. Require an identified parent; ask when it is missing.
 - For an Epic, include the `dr` and applicable `prd`/`uc` documents.
 - For CR or pending-spec work, include `cr` or `intake` when it is the actual
   source.
@@ -102,7 +105,8 @@ requirements.
 
 ## Select documents: one hop, no recursive collection
 
-Derive this set separately for each item from the work it actually implements.
+For items other than Sub-tasks, derive this set separately for each item from
+the work it actually implements.
 The UCs selected for the whole backlog, or the Stories that a Task unblocks,
 are not automatically that Task's sources. In particular, contract-only wiring
 uses the DR contract ID and artifact, not the consuming UCs or their AC/design
@@ -191,6 +195,6 @@ Incident-backed Bug:
 - incident: [INC-12 - Upload outage](https://example.org/incidents/12)
 ```
 
-Sub-task: copy its parent's Source unchanged; a parent Jira link alone does not
-replace those documents. Epic: start with `dr`, add its cited `uc` and `prd`
-documents in catalog order, and nest JTBD IDs under `prd`.
+Sub-task: identify the parent and refer to it for source context; omit `Source`.
+Epic: include `dr` and its cited `uc` and `prd` documents in catalog order,
+and nest JTBD IDs under `prd`.

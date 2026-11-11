@@ -74,6 +74,8 @@ Confluence pages publish anchors matching each cited stable ID.
 ## Existing Jira records
 
 - PAY-10: Epic for assisted recovery, parent of PAY-20.
+- PAY-11: proposed Epic for self-service receipt download, used as the
+  approved parent in prompts that say the Epic grouping is approved.
 - PAY-20: Story realizing UC-02. Existing actor/summary:
   "As a Operatore di assistenza, I want to recover a payment receipt, so that
   I can help the customer retain proof of payment."
@@ -97,10 +99,15 @@ Confluence pages publish anchors matching each cited stable ID.
 
 ## Parent Source for the Sub-task test
 
-Copy this block without changes:
+PAY-50 is a receipt-download Story. Its source context is:
 
 ## Source
 
-- uc: [UC-01 - Download receipt](https://example.atlassian.net/wiki/spaces/PAY/pages/101)
-  - [AGREEMENT_SIGNATURE_INVALID](https://example.atlassian.net/wiki/spaces/PAY/pages/101#AGREEMENT_SIGNATURE_INVALID)
+- prd: [PRD-01 - Receipts](https://example.atlassian.net/wiki/spaces/PAY/pages/103)
+  - [JTBD-01](https://example.atlassian.net/wiki/spaces/PAY/pages/103#JTBD-01)
 - dr: [DR-01 - Receipt delivery](https://example.atlassian.net/wiki/spaces/PAY/pages/102)
+  - [contracts.item-001](https://example.atlassian.net/wiki/spaces/PAY/pages/102#contracts.item-001)
+- uc: [UC-01 - Download receipt](https://example.atlassian.net/wiki/spaces/PAY/pages/101)
+- contract: [Receipt API](https://github.com/example/receipts/blob/main/api/openapi.yaml)
+- figma: [Receipt design](https://www.figma.com/design/abcdefghijklmnopqrstuv/Receipts?node-id=1-2)
+- blueprint: [Receipt blueprint](https://example.atlassian.net/wiki/spaces/PAY/pages/104)

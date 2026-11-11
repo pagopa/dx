@@ -11,7 +11,7 @@
         "Groups Use Cases by cohesive outcome and keeps each Epic boundary explicit.",
         "Shows traceability from each Epic to the parent DR/SRS, PRD/JTBD, and included UC-XX IDs.",
         "Asks for explicit approval before drafting or mutating Jira items.",
-        "Each proposed Epic has a Source list with dr first, included uc documents, and prd with its cited JTBD IDs; no separate Source documents list."
+        "Each proposed Epic has a Source list with prd with its cited JTBD IDs, dr, included uc documents; no separate Source documents list."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
@@ -27,7 +27,7 @@
         "Represents repository setup and API contract wiring as Tasks rather than actor-facing Stories.",
         "Routes concrete Tasks to the repository from the DR/SRS references.repository link.",
         "Links each item to its Epic and relevant source IDs; contract-only Tasks cite their DR contract IDs rather than inventing UC coverage.",
-        "Story Source lists start with uc and put AC IDs linked to the owning UC in AC Coverage, without duplicating them among Source children."
+        "Story Source lists follow the fixed document-key order and put AC IDs linked to the owning UC in AC Coverage, without duplicating them among Source children."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
@@ -95,7 +95,7 @@
         "Uses single-item mode and does not propose Epic slices or a full backlog.",
         "Writes the canonical As a [Actor], I want to [action], so that [Gain] summary with the exact actor name.",
         "Keeps the Story scoped to one two-week sprint.",
-        "Asks for missing fields such as the parent Epic, labels, or source IDs instead of inventing them.",
+        "Preserves the supplied parent Epic, labels, and source IDs without inventing missing values.",
         "Requests explicit confirmation before creating the item.",
         "Uses the meaningful UC-04 title/key and link in the proposed issue description, retains UC-04 and AC-04 in source traceability, and excludes chat-confirmation and tool-retry narration rather than citing S1 alone.",
         "Uses a Source list and AC Coverage linked to the supplied UC URL, without inventing a DR or an unverified anchor on example.org."
@@ -158,13 +158,13 @@
     {
       "id": 11,
       "name": "bug-and-subtask-sources",
-      "prompt": "Read backlog-context.md offline. Draft three independent prepared items in PAY: Bug A under PAY-11, invalid signature incorrectly stores a receipt (expected no write), citing UC-01 AGREEMENT_SIGNATURE_INVALID and DR-01; Bug B under PAY-10, receipt download fails with 503 during INC-12 (expected 200), incident-only with no UC or DR; and a Sub-task of PAY-50 to add the invalid-signature no-write test, copying exactly the Parent Source block in the fixture. Each check is that its described expected result holds in a regression test; all fit one sprint. Show complete descriptions in proposal.md and ask for confirmation without mutating Jira.",
-      "expected_output": "UC-backed and incident-backed Bugs cite the applicable UC or incident, and the Sub-task preserves its parent's entire explicit Source block.",
+      "prompt": "Read backlog-context.md offline. Draft three independent prepared items in PAY: Bug A under PAY-11, invalid signature incorrectly stores a receipt (expected no write), citing UC-01 AGREEMENT_SIGNATURE_INVALID and DR-01; Bug B under PAY-10, receipt download fails with 503 during INC-12 (expected 200), incident-only with no UC or DR; and a Sub-task of PAY-50 to validate the Receipt API implementation against DR-01 contracts.item-001, with the supplied contract artifact. Each check is that its described expected result holds in a regression test; all fit one sprint. Show complete descriptions in proposal.md and ask for confirmation without mutating Jira.",
+      "expected_output": "UC-backed and incident-backed Bugs cite the applicable UC or incident; the Sub-task has no Source section and refers to its parent for source context.",
       "expectations": [
         "Bug A includes dr page 102 and uc page 101 in key order, with AGREEMENT_SIGNATURE_INVALID nested under uc.",
         "Bug B cites https://example.org/incidents/12 and does not invent a UC or DR.",
-        "The Sub-task copies the fixture parent Source block verbatim, not just a parent Jira link or a newly selected document subset.",
-        "Uses list-based Source sections with no separate source inventory, does not invent AC coverage, and requests confirmation before mutation."
+        "The Sub-task retains PAY-50 as its parent, refers to PAY-50 for the full source context, and has no Source section or copied parent source links.",
+        "The Bugs use list-based Source sections with no separate source inventory; no item invents AC coverage, and the draft requests confirmation before mutation."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
@@ -178,6 +178,18 @@
         "Nested UC-02 and NFR-04 links target page 240 with their supplied exact ID fragments.",
         "AC Coverage links AC-07 to page 240#AC-07 without copying its prose or inventing a qualified ID.",
         "Keeps source headings and lists in the description and asks for confirmation without live mutation."
+      ],
+      "files": []
+    },
+    {
+      "id": 13,
+      "name": "subtask-requires-parent",
+      "prompt": "Prepare a single Sub-task in project PAY to validate the Receipt API contract against its implementation. It fits one sprint and the verification is a passing contract test. No parent issue was supplied. Work offline; do not call Jira or invent a parent. Ask for the missing information before producing a ready-to-persist item.",
+      "expected_output": "A request for the missing parent issue, with no invented parent or Source section and no Jira mutation.",
+      "expectations": [
+        "Asks for the parent issue rather than inventing a Jira key or substituting a source document.",
+        "Does not add a Source section to the Sub-task; explains that source context is obtained from its parent when identified.",
+        "Does not create or update Jira or claim the item is ready to persist."
       ],
       "files": []
     }

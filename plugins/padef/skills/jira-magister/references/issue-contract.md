@@ -11,7 +11,7 @@ discovered in [persistence.md](./persistence.md):
 | Story    | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; source `UC-XX` and `AC-*`; binary acceptance checks; user-facing links and gaps                                  |
 | Task     | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID, `open.item-XX` for a spike, or the semantic error identifier for error handling; dependency and verification evidence |
 | Bug      | observed defect and expected behavior; relevant UC or incident source; reproduction and verification evidence                                                                                                                  |
-| Sub-task | tightly coupled parent work; copy the parent's Source block; explicit scope and verification evidence                                                                                                                          |
+| Sub-task | tightly coupled parent work; parent relationship and reference to the parent for source context; explicit scope and verification evidence; no `Source` section                                                                 |
 
 Descriptions may summarize source behavior, but the DR/SRS and Use Case remain
 authoritative. Use meaningful source titles/keys in prose and link labels, not
@@ -21,7 +21,8 @@ Use [issue-template.md](./issue-template.md) for the `## Source` document list,
 its source-selection guidance, one-hop selection, nested stable IDs, canonical
 locators, and `## AC Coverage`. This replaces the free-text `Source:` line;
 do not add a separate `Source documents` inventory. Apply it to every issue
-type above, while retaining that type's other required content.
+type above, including the Sub-task exception, while retaining that type's
+other required content.
 
 ## Sizing and decomposition
 

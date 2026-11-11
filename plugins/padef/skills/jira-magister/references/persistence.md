@@ -31,10 +31,10 @@ project's supported link type for `blocks` and preserve its direction: blocking
 issue -> blocked issue. Create each spike's `blocks` link toward the dependent
 Story or Task.
 
-Each confirmed item must have one native remote link per Confluence or Figma
-document in its `## Source`, titled with the document title. Check existing
-links before adding one; match Confluence pages by page ID, not a title slug
-or an ID fragment. Preserve distinct Figma node targets. Do not duplicate links
+Each confirmed item with a `## Source` must have one native remote link per
+Confluence or Figma document in that section, titled with the document title.
+Check existing links before adding one; match Confluence pages by page ID,
+not a title slug or an ID fragment. Preserve distinct Figma node targets. Do not duplicate links
 on synchronization. The description's Source list stays authoritative; remote
 links mirror it, not a second independently selected inventory.
 
@@ -85,7 +85,7 @@ Re-fetch every created or updated item and verify:
 
 - parent-child hierarchy and issue types;
 - every confirmed dependency link, including direction and link type;
-- the parsed `Source` and AC Coverage lists match
+- for items with a `Source` section, the parsed `Source` and AC Coverage lists match
   [issue-template.md](./issue-template.md): fixed key order, one document
   entry per locator, IDs under their owning documents, complete
   one-hop document set, and AC IDs linked to the owning UC;
