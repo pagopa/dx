@@ -49,6 +49,11 @@ on:
         description: Environment where the artifact will be deployed.
         type: string
         required: true
+      cleanup_closed_previews:
+        description: After production deployment, delete closed PR previews belonging to the calling repository. Requires Azure builds read/delete permissions.
+        type: boolean
+        required: false
+        default: false
       use_private_agent:
         description: Use a private agent to deploy the built artifact.
         type: boolean
@@ -185,6 +190,13 @@ jobs:
           action: "upload"
           app_location: "./${{ env.OUTPUT_DIR }}"
           skip_app_build: true
+
+      - name: Cleanup Closed Preview Environments
+        if: inputs.cleanup_closed_previews && github.event_name != 'pull_request' && steps.deploy.outcome == 'success'
+        uses: pagopa/dx/actions/cleanup-static-web-app-previews@main
+        with:
+          static_web_app_name: ${{ inputs.static_web_app_name }}
+          resource_group_name: ${{ inputs.resource_group_name }}
 
       - name: Preview Comments Cleanup
         if: github.event_name == 'pull_request' && github.event.action != 'closed' && steps.deploy.outcome == 'success'

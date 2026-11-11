@@ -1,0 +1,11 @@
+{
+  "name": "cleanup-static-web-app-previews",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Remove Azure Static Web App previews for closed pull requests",
+  "type": "module",
+  "scripts": {
+    "test": "bash test.sh"
+  },
+  "devDependencies": {}
+}
