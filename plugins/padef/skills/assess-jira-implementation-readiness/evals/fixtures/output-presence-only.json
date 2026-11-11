@@ -1,0 +1,20 @@
+{
+  "TEST-16": {
+    "key": "TEST-16",
+    "fields": {
+      "status": { "name": "Open", "statusCategory": { "key": "new" } },
+      "issuetype": { "name": "Task" },
+      "issuelinks": [],
+      "description": "## Output"
+    }
+  },
+  "TEST-17": {
+    "key": "TEST-17",
+    "fields": {
+      "status": { "name": "Open", "statusCategory": { "key": "new" } },
+      "issuetype": { "name": "Task" },
+      "issuelinks": [],
+      "description": "The output is a report."
+    }
+  }
+}

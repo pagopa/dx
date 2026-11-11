@@ -1,0 +1,22 @@
+{
+  "TEST-23": {
+    "key": "TEST-23",
+    "fields": {
+      "status": { "name": "Backlog", "statusCategory": { "key": "new" } },
+      "issuetype": { "name": "Task" },
+      "issuelinks": [
+        {
+          "type": { "name": "Blocks" },
+          "inwardIssue": {
+            "key": "TEST-15",
+            "fields": { "status": { "name": "Unknown" } }
+          }
+        }
+      ],
+      "description": "## Output\nA result."
+    }
+  },
+  "TEST-15": {
+    "error": { "message": "Permission denied while retrieving TEST-15." }
+  }
+}

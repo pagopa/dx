@@ -1,0 +1,45 @@
+{
+  "TEST-18": {
+    "key": "TEST-18",
+    "fields": {
+      "status": { "name": "Open", "statusCategory": { "key": "new" } },
+      "issuetype": { "name": "Story" },
+      "issuelinks": [],
+      "description": "## Output\nA file.\n## Checks\n- alpha: The file is created\n- 7 - The user can download it"
+    }
+  },
+  "TEST-19": {
+    "key": "TEST-19",
+    "fields": {
+      "status": { "name": "Open", "statusCategory": { "key": "new" } },
+      "issuetype": { "name": "Story" },
+      "issuelinks": [],
+      "description": "## Output\nA file.\n## Checks\nThe file must be created."
+    }
+  },
+  "TEST-20": {
+    "key": "TEST-20",
+    "fields": {
+      "status": { "name": "Open", "statusCategory": { "key": "new" } },
+      "issuetype": { "name": "Story" },
+      "issuelinks": [],
+      "description": {
+        "type": "doc",
+        "version": 1,
+        "content": [
+          {
+            "type": "heading",
+            "attrs": { "level": 2 },
+            "content": [{ "type": "text", "text": "Output" }]
+          },
+          {
+            "type": "heading",
+            "attrs": { "level": 2 },
+            "content": [{ "type": "text", "text": "Checks" }]
+          },
+          { "type": "bulletList", "content": [] }
+        ]
+      }
+    }
+  }
+}

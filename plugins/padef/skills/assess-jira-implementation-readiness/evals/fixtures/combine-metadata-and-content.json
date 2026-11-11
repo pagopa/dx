@@ -1,0 +1,14 @@
+{
+  "TEST-25": {
+    "key": "TEST-25",
+    "fields": {
+      "status": {
+        "name": "In Progress",
+        "statusCategory": { "key": "indeterminate" }
+      },
+      "issuetype": { "name": "Story" },
+      "issuelinks": [],
+      "description": "## Checks\nThe file must be created."
+    }
+  }
+}

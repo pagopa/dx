@@ -1,0 +1,10 @@
+{
+  "TEST-8": {
+    "key": "TEST-8",
+    "fields": {
+      "status": { "name": "Open", "statusCategory": { "key": "new" } },
+      "issuelinks": [],
+      "description": "## Output\nA result."
+    }
+  }
+}
