@@ -113,10 +113,23 @@ otherwise install two copies of the same provider with only one of them becoming
 the global tracer/metrics provider.
 
 The `overrides` block in `pnpm-workspace.yaml` collapses the family onto a single
-version and additionally forces `@opentelemetry/instrumentation-redis` onto that
-line. That instrumentation is the first release with Redis v6 support; it declares
-`@opentelemetry/instrumentation@^0.301.0` but only consumes APIs that the `0.221`
-line already exports, so it runs safely next to the Azure Monitor distro.
+version. Keep in mind that those overrides apply to this workspace only: they are
+not published, so they cannot change what a consumer installs. Anything the
+consumers need must come from the dependency ranges declared in `package.json`.
+
+Redis v6 support is one of those cases, and the distro already provides it.
+`@azure/monitor-opentelemetry@1.21.0` pulls
+`@opentelemetry/instrumentation-redis@^0.69.0`, the first line declaring
+`redis@^6.0.0`, and it releases the wrapper for both v5 and v6 clients. Do not pin
+that instrumentation past the distro line: `0.73.0` requires
+`@opentelemetry/instrumentation@^0.301.0` and `@opentelemetry/api@^1.10.0`, which
+inject a second `@opentelemetry/instrumentation` registry and make package
+managers nest a second `@opentelemetry/api` copy inside this package for every
+consumer.
+
+For the same reason `@opentelemetry/api` is declared with the distro range
+(`^1.9.1`) instead of a stricter one, so that consumer installs keep a single
+copy.
 
 Two versions of the same instrumentation must be avoided rather than tolerated:
 `InstrumentationBase._wrap` unwraps any existing wrapper before applying its own,
@@ -157,3 +170,14 @@ converge on the right version without an override.
    green. The suites cover both regressions this alignment fixes: Live Metrics
    exports through the QuickPulse endpoint, and request telemetry exported for a
    Fastify server with a non-empty URL.
+5. Check the published artifact, not just the workspace. The workspace overrides
+   are not part of the tarball, so pack the package and install it in a scratch
+   consumer with `npm` (Redis v5 and v6 each) and assert that a Redis command
+   produces a `redis-*` span and that `@opentelemetry/api` resolves to a single
+   copy:
+
+   ```bash
+   pnpm pack --pack-destination /tmp
+   # In a throwaway directory: npm i /tmp/pagopa-azure-tracing-<version>.tgz redis@6
+   # Then trace one command and compare the span names with the redis@5 run.
+   ```

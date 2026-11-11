@@ -40,12 +40,16 @@ overrides:
   "@opentelemetry/sdk-trace-base": 2.10.0
   "@opentelemetry/sdk-trace-node": 2.10.0
   "@opentelemetry/sdk-trace-web": 2.10.0
-  # `@opentelemetry/instrumentation-redis@0.73` (needed for Redis v6) declares
-  # `@opentelemetry/instrumentation@^0.301.0`, but every API it consumes is also
-  # exported by the version bundled with the Azure Monitor distro. Forcing the
-  # 3.x/0.301 line would bootstrap a second instrumentation registry instead.
+  # Both this package and the distro accept the 0.221 instrumentation line, so
+  # the pin only collapses the copies that the caret ranges of
+  # @azure/monitor-opentelemetry-exporter and
+  # @azure/opentelemetry-instrumentation-azure-sdk would introduce.
+  # Do not pin `@opentelemetry/instrumentation-redis` past the distro's own
+  # range (`^0.69.0`): newer lines require `@opentelemetry/instrumentation@^0.301`
+  # and `@opentelemetry/api@^1.10`, which bootstrap a second registry here and,
+  # for consumers, nest a second `@opentelemetry/api` copy. Redis v6 tracing is
+  # already included since `instrumentation-redis@0.69.0`.
   "@opentelemetry/instrumentation": ^0.221.0
-  "@opentelemetry/instrumentation-redis": 0.73.0
   "docusaurus-plugin-llms>minimatch": 11.0.1
   "mysql2": 3.24.5
   "@docusaurus/core>tinypool": 2.2.0
@@ -114,7 +118,7 @@ catalogs:
     "@azure/monitor-opentelemetry": 1.21.0
     "@azure/monitor-opentelemetry-exporter": 1.0.0-beta.47
     "@logtape/otel": 1.3.8
-    "@opentelemetry/api": ^1.10.0
+    "@opentelemetry/api": ^1.9.1
     "@opentelemetry/api-logs": ^0.221.0
     "@opentelemetry/instrumentation": ^0.221.0
     "@opentelemetry/instrumentation-undici": ^0.31.0
