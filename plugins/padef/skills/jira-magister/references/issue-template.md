@@ -6,6 +6,7 @@ inventory**.
 
 ```markdown
 <!-- Do NOT include Source for Sub-tasks; refer to the parent issue instead -->
+
 ## Source
 
 - prd: [PRD - Adhesion](https://example.atlassian.net/wiki/spaces/DEMO/pages/103)
