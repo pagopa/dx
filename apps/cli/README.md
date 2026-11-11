@@ -176,7 +176,7 @@ Add a Terraform environment to an existing workspace:
 dx add environment
 ```
 
-The workspace domain must be 3–54 lowercase letters, numbers, and single
+The workspace domain must be 3–15 lowercase letters, numbers, and single
 hyphen-separated segments. New backends use `<domain>-tf-state` for the
 workspace and `<prefix>-tf-state` for core; keys are `<layer>.tfstate` for a
 direct root and `<layer>/<relative-root-path>.tfstate` for nested roots.

@@ -17,7 +17,7 @@ const stateContainerDomainSchema = z
   .trim()
   .toLowerCase()
   .min(1)
-  .max(54)
+  .max(15)
   .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/);
 
 export const terraformStateContainerName = (domain: string): string =>

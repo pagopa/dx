@@ -51,15 +51,15 @@ describe("workspaceSchema — domain transforms", () => {
     expect(result.success).toBe(false);
   });
 
-  it.each(["", " ", "a", "ab", "a".repeat(55), "-api", "api-", "api--core"])(
+  it.each(["", " ", "a", "ab", "a".repeat(16), "-api", "api-", "api--core"])(
     "rejects domains outside workspace naming rules: %s",
     (domain) => {
       expect(workspaceSchema.safeParse({ domain }).success).toBe(false);
     },
   );
 
-  it.each(["api", "a".repeat(54)])(
-    "accepts domains from 3 to 54 characters: %s",
+  it.each(["api", "a".repeat(15)])(
+    "accepts domains from 3 to 15 characters: %s",
     (domain) => {
       expect(workspaceSchema.safeParse({ domain }).success).toBe(true);
     },
