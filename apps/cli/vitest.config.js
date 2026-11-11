@@ -8,6 +8,9 @@ export default defineConfig({
         inline: ["replace-in-file"],
       },
     },
+    // CI runs this suite next to Docker builds and other Nx tasks on shared
+    // runners, where filesystem-heavy tests can stall past the 5s default.
+    testTimeout: 30_000,
     watch: false,
   },
 });
