@@ -145,127 +145,27 @@ The managed identity (or other principal) must have the **Monitoring Metrics Pub
 
 ## Testing
 
-- `pnpm nx test @pagopa/azure-tracing` runs the default unit test suite.
-- `pnpm nx run @pagopa/azure-tracing:integration` runs the opt-in integration suite.
-
-Unit tests live next to the source they cover. Integration suites are split by
-the entrypoint they exercise:
-
-| Directory                        | Entrypoint                                                                           |
-| -------------------------------- | ------------------------------------------------------------------------------------ |
-| `src/__tests__/`                 | Standalone applications (Container Apps, App Services) importing `initAzureMonitor`. |
-| `src/azure/functions/__tests__/` | Azure Functions, instrumented through the `NODE_OPTIONS` preload.                    |
-
-Both trees share the collector and scenario harness in `src/__tests__/`, and the
-`runDependencyScenario` helper takes the preload module path as its last
-argument (`standalonePreloadModulePath` for standalone suites,
-`functionsPreloadModulePath` by default).
-
-> [!IMPORTANT]
-> Pre-condition for the integration suite: Docker must be installed and running locally so Testcontainers can start the required services.
-> The suite already uses the committed PEM fixtures in `src/__tests__/fixtures/`, so no extra certificate-generation step is required.
-
-## Dependency Constraints
-
-### `import-in-the-middle` version must match `@azure/monitor-opentelemetry`
-
-> [!WARNING]
-> Do **not** upgrade `import-in-the-middle` independently of `@azure/monitor-opentelemetry`. Doing so will silently break HTTP tracing (including CosmosDB calls) in ESM environments.
-
-#### Why this constraint exists
-
-The ESM instrumentation in this package works by registering a module loader hook via [`import-in-the-middle`](https://github.com/DataDog/import-in-the-middle) (iitm):
-
-```ts
-// packages/azure-tracing/src/azure/functions/index.mts
-const { registerOptions } = createAddHookMessageChannel(); // uses iitm@X
-register("import-in-the-middle/hook.mjs", ...);           // registers iitm@X as the active loader
-```
-
-`@azure/monitor-opentelemetry` internally creates an `HttpInstrumentation` instance that patches `node:https` (the transport layer used by CosmosDB, among others). This instrumentation registers its hooks using **its own** resolved version of iitm (transitively via `@opentelemetry/instrumentation`).
-
-Each major version of `import-in-the-middle` maintains **completely isolated internal state** — hook registries are not shared across versions. If the loader is registered with `iitm@X` but `HttpInstrumentation` pushes its hooks into `iitm@Y`'s registry, the loader never sees them. The result: `node:https` is never patched, and all HTTP dependency spans (including CosmosDB) are silently dropped.
-
-The table below shows what was validated empirically against Application Insights:
-
-| `import-in-the-middle` direct dep | `@azure/monitor-opentelemetry` | Loader iitm | HttpInstrumentation iitm |
-| --------------------------------- | ------------------------------ | ----------- | ------------------------ |
-| `^1.15.0`                         | `1.13.1`                       | `1.15.0`    | `1.15.0` ✅              |
-| `^3.0.0`                          | `1.13.1`                       | `3.0.0`     | `1.15.0` ❌              |
-| `^1.15.0`                         | `1.16.0`                       | `1.15.0`    | `2.0.6` ❌               |
-| `^1.15.0`                         | `1.18.1`                       | `1.15.0`    | `3.0.0` ❌               |
-| `^2.0.0`                          | `1.16.0`                       | `2.0.6`     | `2.0.6` ✅               |
-| **`^3.0.0`**                      | **`1.18.1`**                   | **`3.0.0`** | **`3.0.0`** ✅           |
-
-#### How to determine the correct version
-
-When upgrading `@azure/monitor-opentelemetry`, check which version of `@opentelemetry/instrumentation` it depends on, then look up the `import-in-the-middle` range that instrumentation version requires:
+Unit tests live next to the source they cover. The integration suite starts real
+services with [Testcontainers](https://node.testcontainers.org/), so a container
+runtime must be available.
 
 ```bash
-# Check what instrumentation version monitor-otel uses
-npm view @azure/monitor-opentelemetry@<version> dependencies | grep '@opentelemetry/instrumentation'
-
-# Check what iitm range that instrumentation version requires
-npm view @opentelemetry/instrumentation@<version> dependencies | grep 'import-in-the-middle'
-```
-
-Set `import-in-the-middle` in `package.json` to the same major range as the result.
-
-### `@opentelemetry/*` versions must stay on the `@azure/monitor-opentelemetry` release train
-
-> [!WARNING]
-> Do **not** bump a single `@opentelemetry/*` package past the line bundled by `@azure/monitor-opentelemetry`. The resulting duplicate registries degrade tracing without any error.
-
-#### Why this constraint exists
-
-`@azure/monitor-opentelemetry` ships a fixed set of OpenTelemetry packages, and the `0.221`-line releases pin `@opentelemetry/core`, `@opentelemetry/resources` and the `sdk-*` packages to an exact SDK version.
-Other dependencies (for example `@azure/monitor-opentelemetry-exporter`) accept a wider range, so pnpm would otherwise install two copies of the same provider and only one of them would be the global tracer/metrics provider.
-
-The `overrides` block in `pnpm-workspace.yaml` collapses the whole family onto a single version, and additionally forces `@opentelemetry/instrumentation-redis` onto that line.
-That instrumentation is the first release with Redis v6 support; it declares `@opentelemetry/instrumentation@^0.301.0` but only consumes APIs that the `0.221` line already exports, so it is safe to install next to the Azure Monitor distro.
-
-Only the artifacts that are actually split need a pin: `core`, `resources`, `sdk-metrics`, `sdk-trace-base`, `sdk-trace-node` and `sdk-trace-web`.
-`context-async-hooks`, `exporter-zipkin`, `propagator-b3`, `propagator-jaeger`, `sdk-trace` and `@opentelemetry/api` are pinned exactly by `sdk-trace-node@2.10.0` (or are only required through caret ranges that already resolve to `1.10.0`), so they converge on the right version without an override.
-
-When upgrading `@azure/monitor-opentelemetry`, update the catalog entry and the `@opentelemetry/*` overrides together, then verify that a single version is resolved:
-
-```bash
-pnpm why @opentelemetry/instrumentation-redis
-pnpm why @opentelemetry/core
-
-# Every @opentelemetry/* package must resolve to a single version.
-# The command prints nothing when the lockfile is aligned.
-rg -o "'@opentelemetry/[a-z-]+@[0-9][0-9a-z.-]*'" --no-filename pnpm-lock.yaml |
-  sort -u | cut -d@ -f2 | sort | uniq -d
-```
-
-> [!NOTE]
-> Do not use `pnpm dedupe --check` for this check: it reports unrelated duplicated
-> packages (`vite`, `vitest`, `memfs`, …) and running `pnpm dedupe` would rewrite
-> the whole lockfile.
-
-The integration suites cover both regressions this alignment fixes: Live Metrics exports through the QuickPulse endpoint, and request telemetry exported for a Fastify server with a non-empty URL.
-
-## Running Integration Tests Locally
-
-Integration tests use [Testcontainers](https://node.testcontainers.org/) and require a working container runtime.
-
-```bash
+pnpm nx test @pagopa/azure-tracing
 pnpm nx run @pagopa/azure-tracing:integration
 ```
 
-> [!NOTE]
-> Inside the devcontainer, tests work out of the box since Docker is available at the standard socket path.
+## Dependency Constraints
 
-### Rancher Desktop
-
-If you use Rancher Desktop on macOS outside a Linux devcontainer, you need to export two environment variables so that Testcontainers can locate the Docker socket and correctly mount it inside helper containers:
+> [!WARNING]
+> Keep `import-in-the-middle` at the same major version this package resolves
+> (currently `3.x`). The ESM loader registered by this package and the hooks
+> pushed by `@azure/monitor-opentelemetry` must share the same iitm registry,
+> otherwise HTTP dependency spans (including CosmosDB) are silently dropped.
 
 ```bash
-export DOCKER_HOST="unix://$HOME/.rd/docker.sock"
-export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+pnpm why import-in-the-middle
 ```
 
-`DOCKER_HOST` tells Testcontainers where the socket is on the host. `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE` tells it which path to bind-mount inside containers (the path inside the Rancher Desktop VM).
-
-Add these to your shell profile (`~/.zshrc` or `~/.bashrc`) to avoid setting them every time.
+The remaining constraints — the OpenTelemetry release train this package is
+pinned to, its rationale, the validated version matrices and the upgrade
+procedures — are maintainer concerns. They live in [AGENTS.md](./AGENTS.md).

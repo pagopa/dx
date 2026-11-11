@@ -34,6 +34,7 @@ Guidelines and architectural context for DevEx initiative development.
 - [DX Documentation site](https://dx.pagopa.it/docs/)
 - [Local Instructions](.github/instructions/): TypeScript, Terraform, PR, and Commit guidelines.
 - [GitHub Conventions skill](.github/skills/github-conventions/SKILL.md): Rules for commit messages, PR titles/descriptions, and branch naming — use this skill whenever committing or opening a pull request.
+- **Package agent notes**: packages with internal procedures keep them in an `AGENTS.md` next to their code (e.g. [packages/azure-tracing/AGENTS.md](packages/azure-tracing/AGENTS.md)). Read it before changing that package; keep it out of the consumer-facing `README.md`.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
