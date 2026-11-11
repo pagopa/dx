@@ -4,30 +4,33 @@
     {
       "id": 0,
       "name": "slice-dr-into-approved-epics",
-      "prompt": "Using the existing DR/SRS, linked PRD, and completed Use Cases, propose several cohesive Jira Epics that can each be completed in a few two-week sprints. Group related Use Cases by outcome, show the proposed boundaries and traceability, and ask me to approve the grouping before drafting Jira items. Do not call Jira yet.",
+      "prompt": "Read backlog-context.md as offline evidence. Using its DR/SRS, linked PRD, and completed Use Cases, propose several cohesive Jira Epics that can each be completed in a few two-week sprints. Group related Use Cases by outcome, show the proposed boundaries and Source blocks, and ask me to approve the grouping before drafting Jira items. Save proposal.md; do not call Jira.",
       "expected_output": "A reviewable Epic proposal grouped by cohesive outcome and bounded to a few sprints, with source traceability and an explicit approval gate before Jira mutation.",
       "expectations": [
         "Proposes multiple Epic slices when one DR/SRS contains enough scope for more than one few-sprint outcome.",
         "Groups Use Cases by cohesive outcome and keeps each Epic boundary explicit.",
         "Shows traceability from each Epic to the parent DR/SRS, PRD/JTBD, and included UC-XX IDs.",
-        "Asks for explicit approval before drafting or mutating Jira items."
+        "Asks for explicit approval before drafting or mutating Jira items.",
+        "Each proposed Epic has a Source list with prd with its cited JTBD IDs, dr, included uc documents; no separate Source documents list."
       ],
-      "files": []
+      "files": ["evals/fixtures/backlog-context.md"]
     },
     {
       "id": 1,
       "name": "write-actor-stories-and-technical-tasks",
-      "prompt": "After the Epic grouping is approved, create the Jira backlog projection for UC-01 and UC-02. UC-01 has primary actor \"Cittadino pagatore\" and UC-02 has primary actor \"Operatore di assistenza\". Write actor-facing Stories using exactly \"As [Actor], I want to [action], so that [Gain]\". Keep each Story deliverable in one two-week sprint. Put repository setup and API contract wiring into technical Tasks, and link every item to its Epic and source UC/AC IDs.",
+      "prompt": "Read backlog-context.md as offline evidence. The Epic grouping is approved: PAY-11 (proposed self-service download) and PAY-10 (existing assisted recovery). Draft the Jira backlog projection for UC-01 and UC-02, without mutation. UC-01 has primary actor \"Cittadino pagatore\" and UC-02 has primary actor \"Operatore di assistenza\". Write actor-facing Stories using the canonical As a [Actor], I want to [action], so that [Gain] structure. Keep each Story deliverable in one two-week sprint. Put repository setup and API contract wiring into technical Tasks, and link every item to its Epic and relevant source documents/IDs. Save proposal.md and ask for confirmation.",
       "expected_output": "A Jira-ready draft containing canonical actor-facing Stories, sprint-sized scope, technical Tasks for enabling work, and complete hierarchy/traceability.",
       "expectations": [
         "Uses the exact actor names supplied by the Use Cases.",
         "Uses the canonical As/ I want/ so that Story structure.",
         "Keeps Stories and Tasks scoped to one two-week sprint or flags work that must be split.",
         "Represents repository setup and API contract wiring as Tasks rather than actor-facing Stories.",
-        "Routes concrete Tasks to the repository from the DR/SRS references.repository link.",
-        "Links each item to its Epic and one or more source UC-XX or AC-XX IDs."
+        "Each concrete implementation Task, including both semantic error-handling Tasks, explicitly identifies the repository from the DR/SRS references.repository link.",
+        "Links each item to its Epic and relevant source IDs; contract-only Tasks cite their DR contract IDs rather than inventing UC coverage.",
+        "The UC-01 Story cites NFR-01 under DR-01 because its AC-02 verifies the same no-cross-user-exposure requirement; unrelated NFRs are not added.",
+        "Story Source lists follow the fixed document-key order and put AC IDs linked to the owning UC in AC Coverage, without duplicating them among Source children."
       ],
-      "files": []
+      "files": ["evals/fixtures/backlog-context.md"]
     },
     {
       "id": 2,
@@ -45,15 +48,17 @@
     {
       "id": 3,
       "name": "synchronize-existing-backlog",
-      "prompt": "Synchronize the existing Jira projection after UC-02 gains a confirmed retry flow. Preserve the existing Epic, UC-02 link, and unchanged AC-UC-02-* identifiers. Add only the new retry acceptance traceability, avoid duplicate issues, show a proposed diff, and wait for explicit confirmation before updating Jira.",
+      "prompt": "Read backlog-context.md as offline evidence, including existing PAY-20 and the distinct PAY-21 slice. Synchronize PAY-20 after UC-02 gains its confirmed retry flow. Include conversion of PAY-20's source description to the current template in the proposed diff. Preserve the existing Epic, UC-02 link, unchanged AC-UC-02-* identifiers and unrelated manual content. Add only the new retry behavior/traceability and the confirmed source-format change. Show the complete proposed Source, AC Coverage and native remote-link set, identifying only missing remote links. Avoid duplicate issues and duplicate remote links. Save proposal.md and wait for explicit confirmation without mutating Jira.",
       "expected_output": "A non-destructive synchronization proposal that matches existing issues by stable source identifiers, preserves unchanged data, and requires confirmation before updating.",
       "expectations": [
         "Matches existing Jira items using stable source links or IDs and does not create duplicates.",
         "Preserves the existing Epic, UC-02 identity, and unchanged acceptance-check IDs.",
         "Adds only the new retry behavior and its new traceability.",
-        "Shows a human-readable proposed diff and asks for explicit confirmation before mutation."
+        "Shows a human-readable proposed diff and asks for explicit confirmation before mutation.",
+        "Does not merge PAY-21 into PAY-20 just because they share UC-02; preserves unrelated manual content.",
+        "Keeps the existing page-105 native remote link despite its old title slug, proposes missing DR/PRD links once each, and keeps Source authoritative."
       ],
-      "files": []
+      "files": ["evals/fixtures/backlog-context.md"]
     },
     {
       "id": 4,
@@ -70,16 +75,17 @@
     {
       "id": 5,
       "name": "project-open-questions-and-errors",
-      "prompt": "Project a ready DR/SRS and Use Case into Jira. The DR/SRS records open.item-007 with Blocking: yes (which CAdES verification library to use) and open.item-003 with Blocking: no. The repository is linked as references.repository = github.com/pagopa/ced-portal. UC-01 defines AGREEMENT_EXTENSION_INVALID and AGREEMENT_SIGNATURE_INVALID; UC-02 reuses AGREEMENT_SIGNATURE_INVALID for the same condition. Draft the backlog.",
+      "prompt": "Read backlog-context.md as offline evidence. The two outcome Epic slices are approved. Project the ready DR/SRS and Use Cases into a draft without Jira mutations. The DR/SRS records open.item-007 with Blocking: yes (which CAdES verification library to use) and open.item-003 with Blocking: no. Use its references.repository. UC-01 defines AGREEMENT_EXTENSION_INVALID and AGREEMENT_SIGNATURE_INVALID; UC-02 reuses AGREEMENT_SIGNATURE_INVALID for the same condition. Show the spike, affected Stories, shared error Task, Source blocks and dependency directions in proposal.md; ask for confirmation.",
       "expected_output": "A backlog draft where open.item-007 becomes a spike Task that blocks the dependent Story or Task, open.item-003 is recorded as a non-blocking gap, the error-handling Task for AGREEMENT_SIGNATURE_INVALID is created once and linked to both Use Cases, and concrete Tasks target the linked repository.",
       "expectations": [
         "Turns open.item-007 (Blocking: yes) into an independent spike Task and makes the dependent item blocked by it.",
         "Records open.item-003 (Blocking: no) as a gap with an owner and no blocking edge.",
         "Creates one error-handling Task for AGREEMENT_SIGNATURE_INVALID, shared by UC-01 and UC-02, instead of duplicating it.",
-        "Routes concrete Tasks to github.com/pagopa/ced-portal from references.repository.",
-        "Adds no Task and no link for a non-blocking question, and does not invent the answer to a spike."
+        "Routes concrete Tasks to https://github.com/example/receipts from references.repository.",
+        "Adds no Task and no link for a non-blocking question, and does not invent the answer to a spike.",
+        "The spike Source starts with dr and nests open.item-007; the shared error Task nests AGREEMENT_SIGNATURE_INVALID under both owning UC documents."
       ],
-      "files": []
+      "files": ["evals/fixtures/backlog-context.md"]
     },
     {
       "id": 6,
@@ -90,22 +96,101 @@
         "Uses single-item mode and does not propose Epic slices or a full backlog.",
         "Writes the canonical As a [Actor], I want to [action], so that [Gain] summary with the exact actor name.",
         "Keeps the Story scoped to one two-week sprint.",
-        "Asks for missing fields such as the parent Epic, labels, or source IDs instead of inventing them.",
+        "Preserves the supplied parent Epic, labels, and source IDs without inventing missing values.",
         "Requests explicit confirmation before creating the item.",
-        "Uses the meaningful UC-04 title/key and link in the proposed issue description, retains UC-04 and AC-04 in source traceability, and excludes chat-confirmation and tool-retry narration rather than citing S1 alone."
+        "Uses the meaningful UC-04 title/key and link in the proposed issue description, retains UC-04 and AC-04 in source traceability, and excludes chat-confirmation and tool-retry narration rather than citing S1 alone.",
+        "Uses a Source list and AC Coverage linked to the supplied UC URL, without inventing a DR or an unverified anchor on example.org."
       ],
       "files": []
     },
     {
       "id": 7,
       "name": "update-single-item-by-key",
-      "prompt": "Update the existing Jira Story PAY-42 to add the acceptance check that the receipt is also available from the payment history page. Preserve its actor, summary, parent, and existing acceptance checks. Show the proposed diff and wait for explicit confirmation before updating.",
+      "prompt": "Read backlog-context.md as offline existing Jira state. Prepare an update to Story PAY-42 to add the acceptance check that the receipt is also available from the payment history page. Preserve its actor, summary, parent, existing acceptance checks and current source formatting. Show the proposed diff and wait for explicit confirmation without mutating Jira. Save proposal.md.",
       "expected_output": "A single-item update that matches the issue by the supplied key, changes only the requested acceptance check, shows a field-level diff, and requires confirmation before mutation.",
       "expectations": [
         "Matches the existing item using the supplied Jira key rather than creating a duplicate.",
         "Adds only the new acceptance check and preserves the actor, summary, parent, and existing acceptance IDs.",
         "Shows a field-level proposed diff and waits for explicit confirmation before updating.",
-        "Re-fetches and verifies the updated item after mutation."
+        "Does not claim a mutation or verification occurred before confirmation; identifies post-mutation verification as still required."
+      ],
+      "files": ["evals/fixtures/backlog-context.md"]
+    },
+    {
+      "id": 8,
+      "name": "source-template-shape",
+      "prompt": "Read backlog-context.md offline. Prepare one Story for UC-01 AC-01 under PAY-11 and one Task implementing DR-01 NFR-01 under PAY-11. The Story cites JTBD-01, contracts.item-001, RFC-08 and ADR-01; the NFR Task cites NFR-01 only. All other required content is provided in the fixture; no decomposition is requested. Show complete descriptions, Source blocks, AC Coverage where applicable and proposed native remote links. Use the source policy, not a second document inventory. Save proposal.md and ask for confirmation; no live calls.",
+      "expected_output": "A Story citing its UC and a DR-sourced NFR Task with document-scoped IDs, canonical page URLs, intended ID anchors, complete one-hop source selection and AC-only coverage.",
+      "expectations": [
+        "Uses literal Source headings with lowercase document-key bullets, no source tables, no Source trailer and no separate Source documents list.",
+        "The Story's document order is prd, dr, uc, contract, figma, blueprint, adr, rfc; the NFR Task cites NFR-01 under dr.",
+        "Uses page-ID URLs without pinned revisions, nests JTBD/contract/ADR/RFC/NFR IDs under their owners and uses exact #ID Confluence fragments.",
+        "AC Coverage links AC-01 to UC-01 page 101, contains no copied AC prose, and does not place AC-01 under Source.",
+        "The NFR-only Task does not acquire unrelated UC, PRD, contract, Figma or Blueprint documents."
+      ],
+      "files": ["evals/fixtures/backlog-context.md"]
+    },
+    {
+      "id": 9,
+      "name": "complete-source-documents",
+      "prompt": "Read backlog-context.md offline. Prepare two self-contained items under PAY-11, not a whole backlog: a contract-only Task citing DR-01 contracts.item-001 to wire the Receipt API (done when the supplied contract validates against its implementation), and a Story for UC-01 AC-01 citing JTBD-01 and contracts.item-001. Show each complete source inventory and AC Coverage where applicable in proposal.md. Do not retrieve URLs or mutate Jira; ask for confirmation.",
+      "expected_output": "The contract-only Task includes exactly dr and contract, while the Story includes prd, dr, uc, contract and applicable design/blueprint documents, without recursive sources.",
+      "expectations": [
+        "The contract-only Task Source has exactly DR-01 and the API contract, with contracts.item-001 nested under dr.",
+        "The Story Source includes UC-01, DR-01, PRD-01 owning JTBD-01, the contract artifact, Figma node and Blueprint.",
+        "Neither item includes transitive pages 998/999 or uncited RFC/ADR/CR/incident/intake documents.",
+        "Does not list the bare application repository as a source document or invent extra coverage."
+      ],
+      "files": ["evals/fixtures/backlog-context.md"]
+    },
+    {
+      "id": 10,
+      "name": "repo-file-and-missing-locators",
+      "prompt": "Read missing-contract-context.md as the complete offline source evidence. Prepare a single Task in PAY under PAY-10: Wire upload API, one-sprint outcome API conforms to the contract, check implementation contract test passes. Cite contracts.item-001 and NFR-04 from the supplied DR. Show the complete draft and Source block in proposal.md, identify missing source and routing information, and ask for the contract locator. Do not retrieve URLs, inspect other repositories, or mutate Jira.",
+      "expected_output": "A repository-qualified DR source without fabricated anchors, a visibly missing contract locator, and an honest unresolved routing gap that prevents persistence.",
+      "expectations": [
+        "Links dr to https://github.com/example/adhesion-design/blob/main/docs/design-review.md, without a fragment.",
+        "Renders contracts.item-001 and NFR-04 as code-text children, not fabricated repo-file anchors.",
+        "Includes a contract locator-missing entry or equivalent explicit gap and asks for the missing locator before persistence.",
+        "Does not treat example/adhesion-design (the document repository) as the missing application repository and makes no live calls or mutations."
+      ],
+      "files": ["evals/fixtures/missing-contract-context.md"]
+    },
+    {
+      "id": 11,
+      "name": "bug-and-subtask-sources",
+      "prompt": "Read backlog-context.md offline. Draft three independent prepared items in PAY: Bug A under PAY-11, invalid signature incorrectly stores a receipt (expected no write), citing UC-01 AGREEMENT_SIGNATURE_INVALID and DR-01; Bug B under PAY-10, receipt download fails with 503 during INC-12 (expected 200), incident-only with no UC or DR; and a Sub-task of PAY-50 to validate the Receipt API implementation against DR-01 contracts.item-001, with the supplied contract artifact. Each check is that its described expected result holds in a regression test; all fit one sprint. Show complete descriptions in proposal.md and ask for confirmation without mutating Jira.",
+      "expected_output": "UC-backed and incident-backed Bugs cite the applicable UC or incident; the Sub-task has no Source section and refers to its parent for source context.",
+      "expectations": [
+        "Bug A includes dr page 102 and uc page 101 in key order, with AGREEMENT_SIGNATURE_INVALID nested under uc.",
+        "Bug B cites https://example.org/incidents/12 and does not invent a UC or DR.",
+        "The Sub-task retains PAY-50 as its parent, refers to PAY-50 for the full source context, and has no Source section or copied parent source links.",
+        "The Bugs use list-based Source sections with no separate source inventory; no item invents AC coverage, and the draft requests confirmation before mutation."
+      ],
+      "files": ["evals/fixtures/backlog-context.md"]
+    },
+    {
+      "id": 12,
+      "name": "embedded-use-case-source",
+      "prompt": "Prepare one self-contained Story in PAY under PAY-10, without Jira calls: actor Partner Entity, action upload an agreement, gain join without a manual ticket, one-sprint scope. Source is UC-02, a section INSIDE DR-04 - Agreement delivery, not a separate child page: https://example.atlassian.net/wiki/spaces/PAY/pages/240/Agreement-delivery#UC-02. That same DR owns NFR-04 (no PII in logs); cite it. AC-07 is valid upload returns a document ID. The page publishes anchors UC-02, NFR-04 and AC-07; no other documents are required. Show the complete description with the current source template in proposal.md and ask for confirmation. Do not invent a separate UC page or duplicate the shared page in the document inventory.",
+      "expected_output": "A single uc-keyed document bullet for the shared DR page, with the embedded UC and NFR section references, plus AC Coverage pointing to that same page.",
+      "expectations": [
+        "Source has one uc-keyed document bullet identifying both DR-04 and UC-02, not duplicate uc/dr bullets for page 240 or an invented child page.",
+        "Nested UC-02 and NFR-04 links target page 240 with their supplied exact ID fragments.",
+        "AC Coverage links AC-07 to page 240#AC-07 without copying its prose or inventing a qualified ID.",
+        "Keeps source headings and lists in the description and asks for confirmation without live mutation."
+      ],
+      "files": []
+    },
+    {
+      "id": 13,
+      "name": "subtask-requires-parent",
+      "prompt": "Prepare a single Sub-task in project PAY to validate the Receipt API contract against its implementation. It fits one sprint and the verification is a passing contract test. No parent issue was supplied. Work offline; do not call Jira or invent a parent. Ask for the missing information before producing a ready-to-persist item.",
+      "expected_output": "A request for the missing parent issue, with no invented parent or Source section and no Jira mutation.",
+      "expectations": [
+        "Asks for the parent issue rather than inventing a Jira key or substituting a source document.",
+        "Does not add a Source section to the Sub-task; explains that source context is obtained from its parent when identified.",
+        "Does not create or update Jira or claim the item is ready to persist."
       ],
       "files": []
     }

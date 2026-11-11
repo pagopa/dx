@@ -5,30 +5,24 @@
 Project-specific Jira fields vary. Map these portable fields to the schema
 discovered in [persistence.md](./persistence.md):
 
-| Issue | Required content                                                                                                                                                                                                               |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Epic  | outcome-oriented summary; scope and exclusions; linked PRD and DR/SRS; included `JTBD-XX` and `UC-XX`; KPI target and qualitative guardrail; dependencies, readiness, and lifecycle note                                       |
-| Story | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; source `UC-XX` and `AC-*`; binary acceptance checks; user-facing links and gaps                                  |
-| Task  | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID, `open.item-XX` for a spike, or the semantic error identifier for error handling; dependency and verification evidence |
+| Issue    | Required content                                                                                                                                                                                                               |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Epic     | outcome-oriented summary; scope and exclusions; linked PRD and DR/SRS; included `JTBD-XX` and `UC-XX`; KPI target and qualitative guardrail; dependencies, readiness, and lifecycle note                                       |
+| Story    | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; source `UC-XX` and `AC-*`; binary acceptance checks; user-facing links and gaps                                  |
+| Task     | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID, `open.item-XX` for a spike, or the semantic error identifier for error handling; dependency and verification evidence |
+| Bug      | observed defect and expected behavior; relevant UC or incident source; reproduction and verification evidence                                                                                                                  |
+| Sub-task | tightly coupled parent work; parent relationship and reference to the parent for source context; explicit scope and verification evidence; no `Source` section                                                                 |
 
 Descriptions may summarize source behavior, but the DR/SRS and Use Case remain
 authoritative. Use meaningful source titles/keys in prose and link labels, not
 opaque source codes alone. Attribute decisions to evidenced owners rather than
 an inferred team; describe the work, not the agent's conversation or procedure.
-Always include links to the source documents and stable IDs in a
-machine-readable line, for example:
-
-```text
-Source: DR-01 | JTBD-02 | UC-03 | AC-UC-03-01
-```
-
-For a spike Task or an error-handling Task, carry the decision or the error
-identifier too:
-
-```text
-Source: DR-01 | open.item-007 | blocks UC-03
-Source: DR-01 | UC-01 | AGREEMENT_EXTENSION_INVALID
-```
+Use [issue-template.md](./issue-template.md) for the `## Source` document list,
+its source-selection guidance, one-hop selection, nested stable IDs, canonical
+locators, and `## AC Coverage`. This replaces the free-text `Source:` line;
+do not add a separate `Source documents` inventory. Apply it to every issue
+type above, including the Sub-task exception, while retaining that type's
+other required content.
 
 ## Sizing and decomposition
 
@@ -70,10 +64,12 @@ Creation-time mechanics live in [persistence.md](./persistence.md).
   with its owner and creates no Task and no link.
 - A spike's summary names the decision to take; its description carries the
   owner, the source `open.item-XX`, and the outcome that unblocks dependents.
+  Put the question under its owning DR document in the Source list.
 - Use Case errors are defined on the child pages with semantic identifiers and
   no owner. The same identifier can appear in several Use Cases: create one
   error-handling Task per identifier, record the identifier in its traceability,
   and link the affected Stories. Never merge two different conditions.
+  Put the error ID under each affected UC document in the Source list.
 - Route concrete Tasks to the repository in the DR/SRS `references.repository`.
   If the link is missing, record the gap and flag the unroutable Tasks instead
   of inventing a repository or a branch.

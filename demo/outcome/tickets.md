@@ -1,230 +1,493 @@
-# CED Adhesion pilot — proposed Jira backlog projection
+# CED Adhesion pilot - proposed Jira backlog projection
 
-> **Status: draft, not persisted.** This document is the `jira-magister`
-> **backlog-mode** projection of the Design Review
-> [`design-review.md`](./design-review.md), its linked PRD
-> [`demo/prd.md`](../prd.md), and the Use Case child
-> [`use-cases/uc-01-upload-signed-agreement.md`](./use-cases/uc-01-upload-signed-agreement.md).
-> **No Jira issue was created, updated, or linked.** The request was to derive
-> the backlog items without creating them in Jira.
->
-> Before any mutation this projection needs (a) explicit human confirmation and
-> (b) a Jira project key / board, which was not supplied. Per `jira-magister`
-> rules, a project key is required and must not be guessed.
+> **Framework test artifact; draft, not persisted.** No Jira issue was
+> created, updated, or linked. Confirmation, persistence and post-mutation
+> verification remain pending. The demo files model the framework's current
+> behavior, not a production initiative.
 
-## 1. Source of truth and entry mode
+## Context and readiness
 
-| Item                 | Value                                                                                       |
-| -------------------- | ------------------------------------------------------------------------------------------- |
-| Entry mode           | Backlog mode (full projection from a source of truth)                                       |
-| DR/SRS               | `design-review.md`, `metadata.status: draft`, `metadata.canonical-outcome-id: CED-ADHESION` |
-| PRD                  | `demo/prd.md` (sponsor Disability Department, owner Product IO)                             |
-| Use Case             | `UC-01` — Upload signed agreement (step 1), child status `ready` (proposed, see §3)         |
-| JTBD                 | `JTBD-01`                                                                                   |
-| KPI                  | > 80% of demo uploads completed without tickets (PRD BG-01)                                 |
-| Guardrail            | CAdES-only is hypothesized; PII must never appear in logs                                   |
-| Repository           | **Missing** (`references.repository` = N/A — greenfield, `open.item-005`)                   |
-| Jira project / board | **Not supplied** — required before any mutation                                             |
+- Entry mode: backlog projection from the DR, PRD and UC-01.
+- Jira project, board and labels: not supplied. Issue identifiers below are
+  draft-local references, not Jira keys; issue types and links require
+  confirmation against the target project's schema.
+- Proposed operation: create the draft items below after grouping and readiness
+  are confirmed and existing issues have been matched; no Jira matching has
+  been performed.
+- Outcome: more than 80% of demo uploads complete without manual tickets.
+- Guardrail: no PII in logs; CAdES-only remains a hypothesis.
+- DR status stays `draft`. The UC-01 `ready` promotion is proposed, not
+  human-confirmed. Its AC-01, AC-02 and AC-03 are preserved below.
+- Missing application repository (`open.item-005`): every concrete Task remains
+  **unroutable**. `pagopa/dx` below hosts the test documents; it is not the
+  application's repository.
+- Figma and Blueprint locators are missing (Product, `open.item-012`); do not
+  invent them. Classification and privacy (`open.item-007`, Product with
+  Legal/DPO), accessibility (Product / Design) and support readiness
+  (`open.item-009`, Engineering) remain gaps before launch.
+- Non-blocking questions stay gaps with their recorded owners: actor role
+  (`open.item-003`, Product), tracking (`open.item-008`, Product), support
+  readiness (`open.item-009`, Engineering), Practice bootstrap
+  (`open.item-011`, Product), and design/blueprint
+  (`open.item-012`, Product). They create no question-derived spike or edge.
+- The Epic grouping, task scope and proposed dependencies require human
+  approval. UC-01's `uc-open-01` leaves the duplicate-upload decision
+  unresolved; the `409` behavior and AC-03 are proposals, not an accepted
+  decision.
 
-The DR/SRS remains the operational source of truth. Accepted decisions are not
-propagated through a separate RFC here: no RFC exists for this initiative.
+Each issue below has its own body sections. The top-level bullets in its
+`Source` are its document inventory, not a second list. Repository sources use
+full blob URLs with no fabricated fragments; nested IDs remain code text.
 
-## 2. Definition of Ready assessment
+# EPIC-01 - CED Adhesion pilot: signed agreement upload
 
-| DoR check                                     | Result                                                                                  | Consequence for this projection          |
-| --------------------------------------------- | --------------------------------------------------------------------------------------- | ---------------------------------------- |
-| PRD owner, outcome, JTBD, KPI, guardrail      | Present                                                                                 | Pass                                     |
-| Complete required DR sections                 | `Always` sections present; gaps carry owners                                            | Pass with declared gaps                  |
-| Stable Use Case ID + binary acceptance checks | `UC-01`, `AC-01`..`AC-03` on `Must`                                                     | Pass                                     |
-| Priority / lifecycle context                  | `priority: Must`, child status `ready` (proposed)                                       | Pass, pending human confirmation         |
-| Design / blueprint links                      | No Figma or Service Blueprint link (`references.figma`, `references.service-blueprint`) | Gap recorded (non-blocking for drafting) |
-| API / event / data contracts                  | `openapi.yaml` linked; data + audit contracts are gaps                                  | Pass with declared gaps                  |
-| Privacy / security / accessibility / support  | All recorded as gaps with owners (`open.item-007`, NFR-04/08, `open.item-009`)          | Production-launch blockers only          |
-| RFC propagation                               | N/A — no RFC                                                                            | Pass                                     |
+## Source
 
-**Result:** the projection can be drafted, but it carries blockers and gaps that
-must stay visible. The following items are **not** Definition-of-Ready blockers
-by themselves (they become spikes or recorded gaps), and no missing value is
-invented to make an item appear ready.
+- prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
+  - `JTBD-01` - Join CED without manual tickets
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
 
-## 3. Readiness promotions pending human confirmation
+## Description
 
-| Item                   | Proposed state | Evidence                                                                                                                                                                      | Confirmed by             |
-| ---------------------- | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------ |
-| `UC-01` child          | `ready`        | Trigger, main flow, `AC-01`..`AC-03` on `Must`, priority, components `solution.components.item-001/003/004/005`, contract `contracts.item-001`, domain entities, typed errors | **Pending human review** |
-| `metadata.status` (DR) | stays `draft`  | Document review gate not passed (sponsor, classification, repository gaps)                                                                                                    | Not proposed             |
+Actor-visible upload capability, bounded to a few two-week sprints. Includes
+STORY-01/02, TASK-01..06 and TASK-ERR-*. Excludes Practice creation,
+back-office review, notifications and production launch. KPI: more than 80%
+of demo uploads without tickets; PII never in logs.
 
-The backlog below consumes `UC-01` as a `ready` child **on the assumption the
-reviewer confirms it**. The document review gate is not required for handoff.
+High delivery risk: template, signature format, authentication, repository and
+size-limit decisions are unresolved. Approve this grouping before final items.
 
-## 4. Proposed Epic slices (approval required before drafting final items)
+# EPIC-02 - CED Adhesion pilot: foundational decisions, trust and operations
 
-Two cohesive outcomes are proposed. Approve, merge, or re-cut them before final
-Stories and Tasks are frozen.
+## Source
 
-| Epic      | Proposed summary                                            | Included UC / JTBD   | KPI outcome / guardrail                               | Exclusions                                                              | Dependencies / readiness gaps                                                                                                                                | Delivery risk                     |
-| --------- | ----------------------------------------------------------- | -------------------- | ----------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------- |
-| `EPIC-01` | CED Adhesion pilot — signed agreement upload                | `UC-01`, `JTBD-01`   | > 80% demo uploads without tickets; PII never in logs | Practice creation, back-office review, notifications, production launch | Agreement template (`open.item-001`), signature format (`open.item-002`), auth (`open.item-004`), repository (`open.item-005`), size limit (`open.item-010`) | High — several blocking decisions |
-| `EPIC-02` | CED Adhesion pilot — foundational decisions, trust, and ops | Enabling for `UC-01` | Pilot can be operated safely and reproducibly         | Product feature scope beyond enabling work                              | Repository (`open.item-005`), data classification (`open.item-007`), runbook (`open.item-009`)                                                               | Medium — mostly enabling work     |
+- prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
+  - `JTBD-01` - Join CED without manual tickets
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
 
-`EPIC-01` is the actor-visible capability. `EPIC-02` is the enabling,
-decision-making, and operational slice. Neither is meant to span the whole
-initiative.
+## Description
 
-## 5. Proposed Stories (actor-facing, one two-week sprint each)
+Enabling outcome: operate the pilot safely and reproducibly. Includes
+TASK-07..11 and the independent decision spikes below. Bounded to a few
+two-week sprints; excludes product features beyond enabling work.
+KPI/guardrail: support the demo upload outcome without PII in logs.
+Medium delivery risk, with repository, classification and runbook gaps.
+Approve this grouping before final items.
 
-### `STORY-01` — Upload a valid signed agreement
+# STORY-01 - As a Partner Entity, I want to upload a signed agreement, so that I can join CED without opening a manual ticket
 
-- **Epic**: `EPIC-01`
-- **Summary**: As a Partner Entity, I want to upload a signed agreement, so that I can join CED without opening a manual ticket.
-- **Source**: `Source: DR design-review.md | JTBD-01 | UC-01 | AC-01`
-- **Acceptance checks** (from UC-01, IDs preserved):
-  - `AC-01` — Given a Practice in `REQUEST` and a valid signed agreement within the pilot size limit, when the Partner Entity submits the upload, then the Practice becomes `PENDING` and the response returns a `documentId` and `status = PENDING`.
-  - `AC-03` — Given a Practice that already has a valid `signingStep = 1` Document, when the Partner Entity submits another step-1 upload, then the API returns `409` with `PRACTICE_STATE_INVALID` and the existing document is not overwritten. (Alternate flow `A1`.)
-- **Fits one sprint**: Yes
-- **Readiness gaps**: blocked by `SPIKE-TEMPLATE`, `SPIKE-AUTH`, `SPIKE-REPO`, `SPIKE-SIZE`; no repository to route to.
+## Source
 
-### `STORY-02` — Get a clear error when the upload is invalid
+- prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
+  - `JTBD-01` - Join CED without manual tickets
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `contracts.item-001` - Upload and status API
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
+  - `PRACTICE_STATE_INVALID`
+  - `uc-open-01` - Duplicate-upload behavior
+- contract: [Upload and status OpenAPI](https://github.com/pagopa/dx/blob/main/demo/outcome/openapi.yaml)
 
-- **Epic**: `EPIC-01`
-- **Summary**: As a Partner Entity, I want to be told clearly why my upload was rejected, so that I can correct the file and retry.
-- **Source**: `Source: DR design-review.md | JTBD-01 | UC-01 | AC-02`
-- **Acceptance checks** (from UC-01, IDs preserved):
-  - `AC-02` — Given a Practice in `REQUEST` and a file that fails extension or signature validation, when the Partner Entity submits the upload, then the API returns the corresponding typed error (`AGREEMENT_EXTENSION_INVALID` or `AGREEMENT_SIGNATURE_INVALID`) and the Practice state and stored documents are unchanged.
-- **Fits one sprint**: Yes
-- **Readiness gaps**: blocked by `SPIKE-FORMAT`, `SPIKE-LIB`, `SPIKE-REPO`, `SPIKE-SIZE`; error identifiers must be honoured exactly.
+## Description
 
-## 6. Proposed technical Tasks (enabling work, one sprint each)
+- Parent: EPIC-01.
+- Summary: As a Partner Entity, I want to upload a signed agreement, so that I
+  can join CED without opening a manual ticket.
+- Fits one sprint. Blocked by SPIKE-TEMPLATE, SPIKE-AUTH, SPIKE-REPO and
+  SPIKE-SIZE; no application repository to route to.
+- Acceptance checks copied from UC-01, IDs preserved:
+  - `AC-01`: Given a Practice in `REQUEST` and a valid signed agreement within
+    the pilot size limit, when the Partner Entity submits the upload, then the
+    Practice becomes `PENDING` and the response returns a `documentId` and
+    `status = PENDING`.
+  - `AC-03`: Given a Practice that already has a valid `signingStep = 1`
+    Document, when the Partner Entity submits another step-1 upload, then the
+    API returns `409` with `PRACTICE_STATE_INVALID` and the existing document
+    is not overwritten. The alternate-flow behavior remains proposed in the UC.
 
-### Under `EPIC-01`
+## AC Coverage
 
-| Task             | Summary                                                                                          | Source / traceability                                  | Blocked by                     |
-| ---------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------ | ------------------------------ |
-| `TASK-01`        | Implement the Practice state transition `REQUEST` → `PENDING` with the step-1 invariant          | `UC-01` flow 5; `solution.components.item-003`         | `SPIKE-TEMPLATE`               |
-| `TASK-02`        | Persist confidential agreement blobs in Azure Storage Account with encryption in transit/at rest | `UC-01` flow 4; `solution.components.item-004`; NFR-04 | `SPIKE-CLASSIFICATION`         |
-| `TASK-03`        | Author the OpenAPI v3 contract for upload and status and wire it to the implementation           | `contracts.item-001`; [`openapi.yaml`](./openapi.yaml) | `SPIKE-AUTH`, `SPIKE-TEMPLATE` |
-| `TASK-04`        | Implement the upload endpoint (`uploadSignedAgreement`) against the contract                     | `UC-01` main flow; `solution.components.item-001`      | `TASK-03`                      |
-| `TASK-05`        | Implement the status read endpoint (`getPractice`) used by the UI confirmation                   | `UC-01` flow 7; `contracts.item-001`                   | `TASK-03`                      |
-| `TASK-06`        | Instrument the upload flow with logs, metrics, and traces (no PII)                               | NFR-04, NFR-07; `solution.components.item-005`         | `SPIKE-REPO`                   |
-| `TASK-ERR-EXT`   | Handle `AGREEMENT_EXTENSION_INVALID` with no blob written and no state change                    | `UC-01` E1; semantic error identifier                  | `SPIKE-FORMAT`                 |
-| `TASK-ERR-SIG`   | Handle `AGREEMENT_SIGNATURE_INVALID` with no blob written and no state change                    | `UC-01` E2; semantic error identifier                  | `SPIKE-FORMAT`, `SPIKE-LIB`    |
-| `TASK-ERR-STATE` | Handle `PRACTICE_STATE_INVALID` (not in `REQUEST`, or duplicate step 1) with `409`               | `UC-01` E3, A1; semantic error identifier              | `SPIKE-TEMPLATE`               |
-| `TASK-ERR-SIZE`  | Handle `AGREEMENT_FILE_TOO_LARGE` against the confirmed pilot limit                              | `UC-01` E4; semantic error identifier                  | `SPIKE-SIZE`                   |
+- [AC-01](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
+- [AC-03](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
 
-Error handling is defined **once per semantic identifier**, not once per Use
-Case. `UC-01` is currently the only Use Case, so each identifier maps to exactly
-one Task; `TASK-ERR-SIG` and `TASK-ERR-STATE` are the ones most likely to be
-shared if later Use Cases reuse the same conditions.
+# STORY-02 - As a Partner Entity, I want to be told clearly why my upload was rejected, so that I can correct the file and retry
 
-### Under `EPIC-02`
+## Source
 
-| Task      | Summary                                                                                               | Source / traceability                                               | Blocked by   |
-| --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------ |
-| `TASK-07` | Bootstrap the greenfield repository and TypeScript project skeleton                                   | PRD RF-03; DR `references.repository`                               | `SPIKE-REPO` |
-| `TASK-08` | Provision the Azure baseline (Container Apps, PostgreSQL Flexible Server, Storage Account, Key Vault) | `solution.deployment.item-001`; `tech.profile.item-003/006/007/008` | `SPIKE-REPO` |
-| `TASK-09` | Establish the security baseline: Managed Identity, Key Vault, and private endpoints                   | NFR-04; `solution.deployment.item-004`                              | `TASK-08`    |
-| `TASK-10` | Deploy the observability baseline (Application Insights + @pagopa/azure-tracing)                      | NFR-07; `tech.profile.item-009`                                     | `TASK-08`    |
-| `TASK-11` | Author the pilot runbook and support readiness path                                                   | `open.item-009` (non-blocking gap)                                  | —            |
+- prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
+  - `JTBD-01` - Join CED without manual tickets
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `contracts.item-001` - Upload and status API
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
+  - `AGREEMENT_EXTENSION_INVALID`
+  - `AGREEMENT_SIGNATURE_INVALID`
+- contract: [Upload and status OpenAPI](https://github.com/pagopa/dx/blob/main/demo/outcome/openapi.yaml)
 
-## 7. Proposed spike Tasks from blocking open questions
+## Description
 
-Each `Blocking: yes` question in the DR becomes an independent spike whose
-deliverable is a decision. The dependent items `are blocked by` the spike.
-Non-blocking questions create no spike and no edge (see §9).
+- Parent: EPIC-01.
+- Summary: As a Partner Entity, I want to be told clearly why my upload was
+  rejected, so that I can correct the file and retry.
+- Fits one sprint. Blocked by SPIKE-FORMAT, SPIKE-LIB, SPIKE-REPO and
+  SPIKE-SIZE; error identifiers must be honored exactly.
+- Acceptance check from UC-01:
+  - `AC-02`: Given a Practice in `REQUEST` and a file that fails extension or
+    signature validation, when the Partner Entity submits the upload, then
+    the API returns the corresponding typed error (`AGREEMENT_EXTENSION_INVALID`
+    or `AGREEMENT_SIGNATURE_INVALID`) and the Practice state and stored
+    documents are unchanged.
 
-| Spike                  | Decision to take                                                                    | Source          | Owner                    | Blocks (dependent items)                              |
-| ---------------------- | ----------------------------------------------------------------------------------- | --------------- | ------------------------ | ----------------------------------------------------- |
-| `SPIKE-TEMPLATE`       | Which agreement template and version governs the upload?                            | `open.item-001` | Product with BO          | `STORY-01`, `TASK-01`, `TASK-03`, `TASK-04`           |
-| `SPIKE-FORMAT`         | Which signature formats are allowed (CAdES only or others)?                         | `open.item-002` | Product with Legal       | `STORY-02`, `TASK-ERR-SIG`, `TASK-04`                 |
-| `SPIKE-AUTH`           | Is entity authentication required in the pilot, and how?                            | `open.item-004` | Product with Engineering | `STORY-01`, `TASK-03`, `TASK-04`                      |
-| `SPIKE-REPO`           | Where is the greenfield repository hosted and how is it bootstrapped?               | `open.item-005` | Engineering              | `TASK-07`, `TASK-08`, and every unroutable Task in §8 |
-| `SPIKE-LIB`            | Which CAdES verification library or service is used?                                | `open.item-006` | Engineering              | `TASK-ERR-SIG`                                        |
-| `SPIKE-CLASSIFICATION` | What are the classification, retention, and deletion rules for agreement documents? | `open.item-007` | Product with Legal/DPO   | `TASK-02`, production launch                          |
-| `SPIKE-SIZE`           | What is the maximum upload size for the pilot?                                      | `open.item-010` | Product with Engineering | `TASK-ERR-SIZE`, `TASK-03`                            |
+## AC Coverage
 
-## 8. Repository routing
+- [AC-02](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
 
-`references.repository` is **N/A — no repository exists** (greenfield,
-`open.item-005`). Per `jira-magister`, concrete Tasks are **not** routed to a
-guessed repository. Until `SPIKE-REPO` resolves, every concrete Task
-(`TASK-01`..`TASK-11`) is flagged **unroutable**. No owner, branch, or repository
-was invented.
+# TASK-01 - Implement the Practice REQUEST to PENDING transition
 
-## 9. Non-blocking gaps (recorded, no spike, no blocking edge)
+## Source
 
-| Gap             | Item                                                         | Owner       | Effect                                                   |
-| --------------- | ------------------------------------------------------------ | ----------- | -------------------------------------------------------- |
-| `open.item-003` | Exact actor role: representative or delegate                 | Product     | Affects Story wording and authorization; no edge         |
-| `open.item-008` | Tracking / analytics event taxonomy not defined              | Product     | No pilot analytics; recorded on `UC-01` tracking section |
-| `open.item-009` | Support readiness and runbook do not exist                   | Engineering | Tracked as `TASK-11`; no blocking edge                   |
-| `open.item-011` | Practice is assumed to exist in `REQUEST` before upload      | Product     | Scopes `UC-01`; no edge                                  |
-| `open.item-012` | No Figma frame or Service Blueprint link for the upload flow | Product     | No design evidence for UX/accessibility; no edge         |
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `solution.components.item-003` - Practice registry
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
 
-## 10. Dependency link list (blocking -> blocked -> link type)
+## Description
 
-```text
-SPIKE-TEMPLATE -> STORY-01          -> blocks
-SPIKE-TEMPLATE -> TASK-01           -> blocks
-SPIKE-TEMPLATE -> TASK-03           -> blocks
-SPIKE-TEMPLATE -> TASK-04           -> blocks
-SPIKE-FORMAT   -> STORY-02          -> blocks
-SPIKE-FORMAT   -> TASK-ERR-SIG      -> blocks
-SPIKE-FORMAT   -> TASK-04           -> blocks
-SPIKE-AUTH     -> STORY-01          -> blocks
-SPIKE-AUTH     -> TASK-03           -> blocks
-SPIKE-AUTH     -> TASK-04           -> blocks
-SPIKE-REPO     -> TASK-07           -> blocks
-SPIKE-REPO     -> TASK-08           -> blocks
-SPIKE-LIB      -> TASK-ERR-SIG      -> blocks
-SPIKE-CLASSIFICATION -> TASK-02     -> blocks
-SPIKE-SIZE     -> TASK-ERR-SIZE     -> blocks
-SPIKE-SIZE     -> TASK-03           -> blocks
-TASK-03        -> TASK-04           -> blocks
-TASK-03        -> TASK-05           -> blocks
-TASK-08        -> TASK-09           -> blocks
-TASK-08        -> TASK-10           -> blocks
-```
+Parent EPIC-01; one-sprint enabling work for UC-01 main-flow step 5 and the
+step-1 invariant. Blocked by SPIKE-TEMPLATE. Unroutable until SPIKE-REPO resolves.
+Verification: exercise the proposed `REQUEST` to `PENDING` transition and
+duplicate step-1 behavior against the confirmed decision.
 
-Epic membership uses the Epic parent relationship, **not** `blocks`. Sub-tasks
-were not proposed; no implementation step is tightly coupled enough to need one
-at this granularity.
+# TASK-02 - Persist confidential agreement blobs
 
-## 11. Proposed Epic/Story/Task hierarchy
+## Source
 
-```text
-EPIC-01  CED Adhesion pilot — signed agreement upload
-├── STORY-01  Upload a valid signed agreement            (AC-01, AC-03)
-├── STORY-02  Get a clear error when the upload is invalid (AC-02)
-├── TASK-01   Practice state transition REQUEST -> PENDING
-├── TASK-02   Confidential agreement blob storage
-├── TASK-03   OpenAPI v3 contract authoring + wiring
-├── TASK-04   Upload endpoint (uploadSignedAgreement)
-├── TASK-05   Status endpoint (getPractice)
-├── TASK-06   Upload telemetry (no PII)
-├── TASK-ERR-EXT   AGREEMENT_EXTENSION_INVALID
-├── TASK-ERR-SIG   AGREEMENT_SIGNATURE_INVALID
-├── TASK-ERR-STATE PRACTICE_STATE_INVALID
-└── TASK-ERR-SIZE  AGREEMENT_FILE_TOO_LARGE
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `solution.components.item-004` - Agreement storage
+  - `NFR-04` - Security
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
 
-EPIC-02  CED Adhesion pilot — foundational decisions, trust, and ops
-├── TASK-07   Repository bootstrap
-├── TASK-08   Azure baseline provisioning
-├── TASK-09   Security baseline (Managed Identity, Key Vault, private endpoints)
-├── TASK-10   Observability baseline
-├── TASK-11   Runbook and support readiness
-├── SPIKE-TEMPLATE        (blocks STORY-01, TASK-01/03/04)
-├── SPIKE-FORMAT          (blocks STORY-02, TASK-ERR-SIG, TASK-04)
-├── SPIKE-AUTH            (blocks STORY-01, TASK-03/04)
-├── SPIKE-REPO            (blocks TASK-07/08 and all routing)
-├── SPIKE-LIB             (blocks TASK-ERR-SIG)
-├── SPIKE-CLASSIFICATION  (blocks TASK-02, production launch)
-└── SPIKE-SIZE            (blocks TASK-ERR-SIZE, TASK-03)
-```
+## Description
 
-## 12. Proposed operations and confirmation
+Parent EPIC-01; one-sprint enabling work for UC-01 step 4, encrypted in transit
+and at rest. Blocked by SPIKE-CLASSIFICATION. Unroutable until SPIKE-REPO resolves.
+Verification: confirm confidential blob persistence and transport/at-rest
+encryption; the security review remains pending.
 
-- **Operation**: create `EPIC-01`, `EPIC-02`; create Stories `STORY-01`..`STORY-02`; create Tasks `TASK-01`..`TASK-11` and `TASK-ERR-*`; create spikes `SPIKE-*`; create the `blocks` links in §10.
-- **Item count**: 2 Epics, 2 Stories, 11 Tasks, 4 error-handling Tasks, 7 spikes, 20 dependency links.
-- **Project key / board**: **not supplied** — cannot be inferred.
-- **Unresolved gaps**: repository routing (`open.item-005`), data classification (`open.item-007`), plus the non-blocking gaps in §9.
-- **Confirmation**: this is a _draft_. A request to "prepare", "draft", or "show" is not confirmation. No Jira mutation was performed. On explicit confirmation, and once a project key is provided, follow `jira-magister` persistence: match existing issues by stable IDs before creating, create parents before children, create spikes before blocked items, add `blocks` links only after both ends exist, then re-fetch and verify every item and link.
+# TASK-03 - Author and wire the upload/status OpenAPI contract
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `contracts.item-001` - Upload and status API
+- contract: [Upload and status OpenAPI](https://github.com/pagopa/dx/blob/main/demo/outcome/openapi.yaml)
+
+## Description
+
+Parent EPIC-01; one-sprint contract-only work. No reverse lookup of UCs is
+needed. Blocked by SPIKE-AUTH, SPIKE-TEMPLATE and SPIKE-SIZE.
+Unroutable until SPIKE-REPO resolves.
+Verification: lint the OpenAPI contract and test it against the implemented API.
+
+# TASK-04 - Implement uploadSignedAgreement
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `solution.components.item-001` - Agreement processing
+  - `contracts.item-001` - Upload and status API
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
+- contract: [Upload and status OpenAPI](https://github.com/pagopa/dx/blob/main/demo/outcome/openapi.yaml)
+
+## Description
+
+Parent EPIC-01; one-sprint upload endpoint against the contract. Blocked by
+TASK-03, SPIKE-TEMPLATE, SPIKE-FORMAT and SPIKE-AUTH.
+Unroutable until SPIKE-REPO resolves.
+Verification: exercise the upload endpoint against the contract and the
+confirmed validation decisions.
+
+# TASK-05 - Implement getPractice
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `contracts.item-001` - Upload and status API
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
+- contract: [Upload and status OpenAPI](https://github.com/pagopa/dx/blob/main/demo/outcome/openapi.yaml)
+
+## Description
+
+Parent EPIC-01; one-sprint status endpoint for UC-01 step 7 confirmation.
+Blocked by TASK-03. Unroutable until SPIKE-REPO resolves.
+Verification: test the status response against the contract for the proposed
+`PENDING` practice.
+
+# TASK-06 - Instrument the upload flow without PII
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `NFR-04` - Security
+  - `NFR-07` - Observability
+  - `solution.components.item-005` - Telemetry
+
+## Description
+
+Parent EPIC-01; one-sprint logs, metrics and traces work. Blocked by SPIKE-REPO
+and unroutable until it resolves.
+Verification: inspect emitted telemetry and scan logs for PII.
+
+# TASK-ERR-EXT - Handle AGREEMENT_EXTENSION_INVALID
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `contracts.item-001` - Upload and status API
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
+  - `AGREEMENT_EXTENSION_INVALID`
+- contract: [Upload and status OpenAPI](https://github.com/pagopa/dx/blob/main/demo/outcome/openapi.yaml)
+
+## Description
+
+Parent EPIC-01; one-sprint enabling work for STORY-02: no blob written and no
+state change on a disallowed extension (E1). Blocked by SPIKE-FORMAT.
+Unroutable until SPIKE-REPO resolves.
+Verification: a negative test checks the typed error and unchanged practice
+and stored documents.
+
+# TASK-ERR-SIG - Handle AGREEMENT_SIGNATURE_INVALID
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `contracts.item-001` - Upload and status API
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
+  - `AGREEMENT_SIGNATURE_INVALID`
+- contract: [Upload and status OpenAPI](https://github.com/pagopa/dx/blob/main/demo/outcome/openapi.yaml)
+
+## Description
+
+Parent EPIC-01; one-sprint enabling work for STORY-02: no blob written and no
+state change on invalid signature/digest (E2). Blocked by SPIKE-FORMAT and
+SPIKE-LIB. Unroutable until SPIKE-REPO resolves.
+Keep one Task for this semantic error if future UCs reuse it.
+Verification: negative signature and digest tests check the typed error and
+unchanged practice and stored documents.
+
+# TASK-ERR-STATE - Handle PRACTICE_STATE_INVALID
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `contracts.item-001` - Upload and status API
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
+  - `PRACTICE_STATE_INVALID`
+  - `uc-open-01` - Duplicate-upload behavior
+- contract: [Upload and status OpenAPI](https://github.com/pagopa/dx/blob/main/demo/outcome/openapi.yaml)
+
+## Description
+
+Parent EPIC-01; one-sprint enabling work for STORY-01: return 409 without a
+write when not in REQUEST; duplicate step-1 handling remains proposed pending
+`uc-open-01` (E3/A1). Blocked by SPIKE-TEMPLATE. Unroutable until SPIKE-REPO
+resolves. Verification: test invalid-state behavior and the duplicate behavior
+once confirmed.
+
+# TASK-ERR-SIZE - Handle AGREEMENT_FILE_TOO_LARGE
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `contracts.item-001` - Upload and status API
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
+  - `AGREEMENT_FILE_TOO_LARGE`
+- contract: [Upload and status OpenAPI](https://github.com/pagopa/dx/blob/main/demo/outcome/openapi.yaml)
+
+## Description
+
+Parent EPIC-01; one-sprint typed size rejection against the confirmed limit
+(E4). Blocked by SPIKE-SIZE. Unroutable until SPIKE-REPO resolves.
+Verification: test an upload exceeding the confirmed limit and check the typed
+error, unchanged practice and absence of a new blob.
+
+# TASK-07 - Bootstrap the greenfield repository
+
+## Source
+
+- prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
+  - `RF-03` - Greenfield repository and contract
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `references.repository` - Missing application repository
+
+## Description
+
+Parent EPIC-02; one-sprint TypeScript project skeleton.
+Blocked by SPIKE-REPO and unroutable until it resolves.
+Verification: confirm the skeleton exists in the agreed application repository.
+
+# TASK-08 - Provision the Azure baseline
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `solution.deployment.item-001` - Non-production environment
+  - `tech.profile.item-003` - Container runtime
+  - `tech.profile.item-006` - Agreement storage
+  - `tech.profile.item-007` - Practice persistence
+  - `tech.profile.item-008` - Secrets
+
+## Description
+
+Parent EPIC-02; one-sprint proposed Container Apps, PostgreSQL, Storage Account
+and Key Vault baseline. Blocked by SPIKE-REPO and unroutable until it resolves.
+Verification: inspect the proposed non-production resources and record deployment
+evidence after the repository and deployment configuration are agreed.
+
+# TASK-09 - Establish the security baseline
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `NFR-04` - Security
+  - `solution.deployment.item-004` - Internal trust boundary
+
+## Description
+
+Parent EPIC-02; one-sprint Managed Identity, Key Vault and private-endpoint
+work. Blocked by TASK-08. Unroutable until SPIKE-REPO resolves.
+Verification: inspect identity, secrets and the proposed private connectivity;
+the security review remains pending.
+
+# TASK-10 - Deploy the observability baseline
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `NFR-07` - Observability
+  - `tech.profile.item-009` - Application Insights and azure-tracing
+
+## Description
+
+Parent EPIC-02; one-sprint telemetry baseline. Blocked by TASK-08.
+Unroutable until SPIKE-REPO resolves.
+Verification: confirm logs, metrics, traces and the proposed 5xx alert reach
+Application Insights.
+
+# TASK-11 - Author the pilot runbook and support readiness path
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `validation.operations` - Operational readiness
+  - `open.item-009` - Missing runbook, non-blocking for drafting
+
+## Description
+
+Parent EPIC-02; existing one-sprint operational-readiness Task, not a
+question-derived spike. No blocking edge is added for open.item-009.
+Unroutable until SPIKE-REPO resolves.
+Verification: review the runbook and validate the alert; support readiness
+remains a gap until confirmed by Engineering.
+
+# SPIKE-TEMPLATE - Decide the agreement template and version
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `open.item-001` - Agreement template
+
+## Description
+
+Parent EPIC-02; one-sprint decision owned by Product with BO.
+Outcome: confirmed template/version. Blocks STORY-01 and TASK-01/03/04.
+No decision has been invented.
+
+# SPIKE-FORMAT - Decide the allowed signature formats
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `open.item-002` - Allowed signature formats
+
+## Description
+
+Parent EPIC-02; one-sprint decision owned by Product with Legal.
+Outcome: confirmed CAdES-only or other allowed formats.
+Blocks STORY-02, TASK-ERR-EXT, TASK-ERR-SIG and TASK-04.
+
+# SPIKE-AUTH - Decide pilot entity authentication
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `open.item-004` - Pilot authentication
+
+## Description
+
+Parent EPIC-02; one-sprint decision owned by Product with Engineering.
+Outcome: confirmed authentication requirement and approach.
+Blocks STORY-01 and TASK-03/04.
+
+# SPIKE-REPO - Decide the application repository and bootstrap
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `open.item-005` - Application repository
+
+## Description
+
+Parent EPIC-02; one-sprint decision owned by Engineering.
+Outcome: confirmed application repository for routing.
+Blocks STORY-01/02 and routing of all concrete Tasks; the document-hosting
+repository above does not resolve this gap.
+
+# SPIKE-LIB - Select a CAdES verification library or service
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `open.item-006` - Signature verification capability
+
+## Description
+
+Parent EPIC-02; one-sprint decision owned by Engineering.
+Outcome: confirmed library or service. Blocks STORY-02 and TASK-ERR-SIG.
+
+# SPIKE-CLASSIFICATION - Decide agreement data handling
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `open.item-007` - Classification, retention and deletion
+
+## Description
+
+Parent EPIC-02; one-sprint decision owned by Product with Legal/DPO.
+Outcome: confirmed data-handling rules. Blocks TASK-02 and production launch.
+
+# SPIKE-SIZE - Decide the pilot upload limit
+
+## Source
+
+- dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+  - `open.item-010` - Maximum upload size
+
+## Description
+
+Parent EPIC-02; one-sprint decision owned by Product with Engineering.
+Outcome: confirmed size limit. Blocks STORY-01/02, TASK-ERR-SIZE and TASK-03.
+
+# Confirmation and persistence
+
+- Proposed creation: 2 Epics, 2 Stories, 11 enabling Tasks, 4 error Tasks and
+  7 spikes. None has been persisted.
+- Preserve the parent hierarchy above; Epic membership is not a `blocks` link.
+  No Sub-tasks are proposed at this granularity.
+- Preserve each explicit dependency direction above (blocker -> dependent).
+  TASK-03 additionally blocks TASK-04/05; TASK-08 blocks TASK-09/10.
+- Before mutation: confirm grouping, descriptions, source blocks, dependencies,
+  project/board and readiness gaps. Match existing issues before creation.
+- These are repository-file sources, so no Confluence/Figma native remote link
+  can be proposed until any missing Figma locator is supplied. Re-fetch and
+  verify any persisted projection; report failures.
