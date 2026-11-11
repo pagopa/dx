@@ -98,82 +98,85 @@ npm view @opentelemetry/instrumentation@<version> dependencies | grep 'import-in
 
 Set `import-in-the-middle` in `package.json` to the same major range as the result.
 
-### `@opentelemetry/*` must stay on the distro release train
+### `@opentelemetry/*` ranges belong to the consumer install
 
 > [!WARNING]
-> Do **not** bump a single `@opentelemetry/*` package past the line bundled by
-> `@azure/monitor-opentelemetry`. The resulting duplicate registries degrade
-> tracing without raising any error.
+> Do **not** add a `@opentelemetry/*` override to fix something a consumer
+> reports. The `overrides` block in `pnpm-workspace.yaml` applies to this
+> workspace only: it is not published and cannot change what a consumer
+> installs. Anything consumers need must come from the ranges declared in
+> `package.json`.
 
-`@azure/monitor-opentelemetry` ships a fixed set of OpenTelemetry packages, and the
-`0.221`-line releases pin `@opentelemetry/core`, `@opentelemetry/resources` and the
-`sdk-*` packages to an exact SDK version. Other dependencies (for example
-`@azure/monitor-opentelemetry-exporter`) accept wider ranges, so pnpm would
-otherwise install two copies of the same provider with only one of them becoming
-the global tracer/metrics provider.
+`@azure/monitor-opentelemetry` bundles a family of `@opentelemetry/*` packages
+with mixed ranges: `sdk-node@0.221.0` requires the 2.10.0 SDK artifacts exactly,
+while the distro itself and `@azure/monitor-opentelemetry-exporter` accept
+`^2.10.0` and resolve 2.12.0. A consumer install therefore loads more than one
+copy of `core`, `resources` and the `sdk-*` artifacts, and that is expected:
+context propagation, sampling and exporters all meet on `@opentelemetry/api`,
+which is the only global registry involved.
 
-The `overrides` block in `pnpm-workspace.yaml` collapses the family onto a single
-version. Keep in mind that those overrides apply to this workspace only: they are
-not published, so they cannot change what a consumer installs. Anything the
-consumers need must come from the dependency ranges declared in `package.json`.
+Measured on this workspace with every `@opentelemetry/*` override removed: the
+integration suite stays green (Live Metrics QuickPulse handshake, Redis spans,
+Fastify request URL, custom events), and only the size of the package set grows.
+So do not add a pin again unless a regression is reproduced, and reproduce it
+through the published tarball (step 5 of the upgrade checklist) rather than
+through the workspace.
 
-Redis v6 support is one of those cases, and the distro already provides it.
+`@opentelemetry/api` is the one exception, and the workspace pins it to `1.9.1`.
+The 0.221 and 2.10.0 families peer-bound the API to `<1.10.0` in `core`,
+`sdk-logs`, `sdk-metrics`, `sdk-trace-base`, `sdk-trace-node`, `sdk-trace-web`
+and the propagators, so letting the `^1.9.1` catalog range resolve `1.10.0` leaves
+every one of those copies with an unmet peer: pnpm only warns, but installs that
+enable strict peer validation fail. `1.9.1` is also the version the distro
+registers as the global API at runtime, so the pin keeps a single registry.
+
+Redis v6 support is a consumer-side concern the distro already solves.
 `@azure/monitor-opentelemetry@1.21.0` pulls
 `@opentelemetry/instrumentation-redis@^0.69.0`, the first line declaring
-`redis@^6.0.0`, and it releases the wrapper for both v5 and v6 clients. Do not pin
-that instrumentation past the distro line: `0.73.0` requires
+`redis@^6.0.0`, and it wraps both v5 and v6 clients. Do not pin that
+instrumentation past the distro line: `0.73.0` requires
 `@opentelemetry/instrumentation@^0.301.0` and `@opentelemetry/api@^1.10.0`, which
 inject a second `@opentelemetry/instrumentation` registry and make package
 managers nest a second `@opentelemetry/api` copy inside this package for every
 consumer.
 
-For the same reason `@opentelemetry/api` is declared with the distro range
-(`^1.9.1`) instead of a stricter one, so that consumer installs keep a single
-copy. Inside the workspace it is additionally pinned to `1.9.1`: the `0.221` and
-`2.10.0` families peer-bound the API to `<1.10.0`, so letting the caret range
-resolve `1.10.0` leaves every SDK package with an unmet peer and breaks installs
-that enable strict peer validation. `1.9.1` is also the version the distro
-registers as the global API at runtime.
+Two versions of the _same_ instrumentation remain a hazard to avoid rather than
+tolerate: `InstrumentationBase._wrap` unwraps any existing wrapper before
+applying its own, and `isWrapped` is detected through plain
+`__original`/`__unwrap`/`__wrapped` properties that are shared across copies. Two
+copies therefore steal each other's patch (last writer wins, decided by module
+load order) instead of being merged, and a `disable()` from the losing copy can
+remove the surviving patch entirely.
 
-Two versions of the same instrumentation must be avoided rather than tolerated:
-`InstrumentationBase._wrap` unwraps any existing wrapper before applying its own,
-and `isWrapped` is detected through plain `__original`/`__unwrap`/`__wrapped`
-properties that are shared across copies. Two copies therefore steal each other's
-patch (last writer wins, decided by module load order) instead of being merged,
-and a `disable()` from the losing copy can remove the surviving patch entirely.
+Verify the result with `pnpm peers check` (no `@opentelemetry/*` complaint should
+appear; the remaining ones are the unrelated `react`/`react-dom` peers of
+`@microsoft/docusaurus-plugin-application-insights`) and with:
 
-Only the artifacts that actually split need a pin: `core`, `resources`,
-`sdk-metrics`, `sdk-trace-base`, `sdk-trace-node` and `sdk-trace-web`.
-`context-async-hooks`, `exporter-zipkin`, `propagator-b3`, `propagator-jaeger`
-and `sdk-trace` are required exactly by `sdk-trace-node@2.10.0` (or resolve
-naturally through caret ranges), so they converge on the right version without an
-override. `@opentelemetry/api` is the exception: it needs a pin for its peer
-contract, not for deduplication.
-
-Verify the result with `pnpm peers check`; the only remaining complaints should be
-the unrelated `react`/`react-dom` peers of
-`@microsoft/docusaurus-plugin-application-insights`.
+```bash
+# Prints exactly one line: @opentelemetry/api@1.9.1
+rg -o "'@opentelemetry/api@[0-9][0-9a-z.-]*'" --no-filename pnpm-lock.yaml | sort -u
+```
 
 ## Upgrading `@azure/monitor-opentelemetry`
 
-1. Bump the catalog entry in `pnpm-workspace.yaml` and realign the `@logtape/otel>`
-   overrides and the `@opentelemetry/*` pins to the same line.
+1. Bump the catalog entry in `pnpm-workspace.yaml` and check whether
+   `@opentelemetry/api` still satisfies the new SDK peer ranges. Do not add any
+   other `@opentelemetry/*` override: the workspace keeps a single pin, the API
+   one.
 2. Re-check the `import-in-the-middle` constraint above.
-3. Verify that every `@opentelemetry/*` package resolves to a single version:
+3. Verify the API resolves to a single version and that the Redis
+   instrumentation comes from the distro:
 
    ```bash
+   # Prints exactly one line.
+   rg -o "'@opentelemetry/api@[0-9][0-9a-z.-]*'" --no-filename pnpm-lock.yaml | sort -u
    pnpm why @opentelemetry/instrumentation-redis
-   pnpm why @opentelemetry/core
-
-   # Prints nothing when the lockfile is aligned.
-   rg -o "'@opentelemetry/[a-z-]+@[0-9][0-9a-z.-]*'" --no-filename pnpm-lock.yaml |
-     sort -u | cut -d@ -f2 | sort | uniq -d
    ```
 
    > [!NOTE]
-   > Do not use `pnpm dedupe --check` for this check: it reports unrelated
-   > duplicated packages (`vite`, `vitest`, `memfs`, …) and running
-   > `pnpm dedupe` would rewrite the whole lockfile.
+   > Do not use `pnpm dedupe --check` here: it reports unrelated duplicated
+   > packages (`vite`, `vitest`, `memfs`, …) and running `pnpm dedupe` would
+   > rewrite the whole lockfile.
 
 4. Confirm `pnpm install --frozen-lockfile` is clean and `pnpm peers check` reports
    no `@opentelemetry/*` peer complaint, then run the integration suite. The suites
