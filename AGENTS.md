@@ -35,6 +35,20 @@ Guidelines and architectural context for DevEx initiative development.
 - [Local Instructions](.github/instructions/): TypeScript, Terraform, PR, and Commit guidelines.
 - [GitHub Conventions skill](.github/skills/github-conventions/SKILL.md): Rules for commit messages, PR titles/descriptions, and branch naming — use this skill whenever committing or opening a pull request.
 
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live in Jira, project `CES`, accessed through the Atlassian MCP server. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) applied as Jira labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Multi-context: `GLOSSARY-MAP.md` at the root points to per-context `GLOSSARY.md` files. See `docs/agents/domain.md`.
+
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->
 
