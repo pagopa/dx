@@ -12,19 +12,14 @@ inputs:
     description: Token with pull-requests read permission on the calling repository.
     required: false
     default: ${{ github.token }}
-  dry_run:
-    description: List closed pull request previews without deleting them.
-    required: false
-    default: "false"
 
 runs:
   using: composite
   steps:
-    - name: Remove environments for closed pull requests
+    - name: Remove stale preview environments
       shell: bash
       run: bash "$GITHUB_ACTION_PATH/cleanup.sh"
       env:
         GH_TOKEN: ${{ inputs.github_token }}
         STATIC_WEB_APP_NAME: ${{ inputs.static_web_app_name }}
         RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
-        DRY_RUN: ${{ inputs.dry_run }}

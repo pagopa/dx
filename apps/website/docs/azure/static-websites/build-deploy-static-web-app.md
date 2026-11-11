@@ -130,7 +130,7 @@ registry refuses the token.
 
 ## Optional stale preview cleanup
 
-Set `cleanup_closed_previews: true` (default: `false`) to delete closed or merged
+Set `cleanup_stale_previews: true` (default: `false`) to delete closed or merged
 PR previews after a successful production deployment. Open PR previews, production,
 and named environments are preserved; cleanup errors fail the job.
 
@@ -138,7 +138,7 @@ All PR previews must belong to the calling repository. The deployment identity
 needs `Microsoft.Web/staticSites/read`, `Microsoft.Web/staticSites/builds/read`,
 and `Microsoft.Web/staticSites/builds/delete`; the list-secrets role alone is
 insufficient. See the [cleanup action](https://github.com/pagopa/dx/tree/main/actions/cleanup-static-web-app-previews)
-for standalone usage and dry runs.
+for standalone usage.
 
 ## Additional Notes
 

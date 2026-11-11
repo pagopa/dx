@@ -37,7 +37,7 @@ jobs:
       static_web_app_name: "dx-p-itn-website-stapp-01"
       resource_group_name: "dx-p-itn-common-rg-01"
       environment: "automation-prod"
-      cleanup_closed_previews: true
+      cleanup_stale_previews: true
 
   feed_docs_knowledge_base:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/docs@')

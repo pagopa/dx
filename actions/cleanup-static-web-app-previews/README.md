@@ -26,8 +26,6 @@ After logging in to Azure:
   with:
     static_web_app_name: my-static-web-app
     resource_group_name: my-resource-group
-    dry_run: "true"
 ```
 
-`dry_run` defaults to `"false"`; set it to `"true"` to inspect candidates without
-deleting them. `github_token` defaults to `${{ github.token }}`.
+`github_token` defaults to `${{ github.token }}`.
