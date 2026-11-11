@@ -210,6 +210,30 @@ test("reads a Jira response from stdin and prints JSON", () => {
   );
 });
 
+test("preserves UTF-8 characters split across stdin chunks", () => {
+  const input = Buffer.from(JSON.stringify(issue("Prêt", "new", "Task")));
+  const runner = `
+    import { Readable } from "node:stream";
+    import { pathToFileURL } from "node:url";
+    const input = Buffer.from(process.argv[2], "base64");
+    const boundary = input.indexOf(Buffer.from("ê")) + 1;
+    const stdin = Readable.from((async function* () {
+      yield input.subarray(0, boundary);
+      await new Promise((resolve) => setImmediate(resolve));
+      yield input.subarray(boundary);
+    })());
+    Object.defineProperty(process, "stdin", { value: stdin });
+    await import(pathToFileURL(process.argv[1]).href);
+  `;
+  const result = spawnSync(
+    process.execPath,
+    ["--input-type=module", "-e", runner, script, input.toString("base64")],
+    { encoding: "utf8" },
+  );
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(JSON.parse(result.stdout).status.value, "Prêt");
+});
+
 test("rejects malformed or non-object JSON", () => {
   for (const input of ["{", "null", "[]", '"issue"']) {
     const result = spawnSync(process.execPath, [script], {
