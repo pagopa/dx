@@ -16,11 +16,13 @@ const createMockCloudAccountService = (
   overrides: Partial<CloudAccountService> = {},
 ): CloudAccountService => ({
   configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+  ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
   getTerraformBackend: vi.fn().mockResolvedValue(undefined),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),
   isInitialized: vi.fn().mockResolvedValue(true),
   provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+  verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
   ...overrides,
 });
 
@@ -46,6 +48,7 @@ const createMockEnvironment = (
 const createMockTerraformBackend = (
   overrides: Partial<TerraformBackend> = {},
 ): TerraformBackend => ({
+  containerName: "test-tf-state",
   resourceGroupName: "dx-d-itn-tf-rg",
   storageAccountName: "dxditntfst",
   subscriptionId: "00000000-0000-0000-0000-000000000000",
@@ -62,7 +65,11 @@ describe("getInitializationStatus", () => {
     });
     const environment = createMockEnvironment();
 
-    const result = await getInitializationStatus(mockService, environment);
+    const result = await getInitializationStatus(
+      mockService,
+      environment,
+      "test",
+    );
 
     expect(result).toEqual({ initialized: true });
   });
@@ -78,7 +85,11 @@ describe("getInitializationStatus", () => {
       cloudAccounts: [cloudAccount],
     });
 
-    const result = await getInitializationStatus(mockService, environment);
+    const result = await getInitializationStatus(
+      mockService,
+      environment,
+      "test",
+    );
 
     expect(result).toEqual({
       initialized: false,
@@ -98,7 +109,11 @@ describe("getInitializationStatus", () => {
     });
     const environment = createMockEnvironment();
 
-    const result = await getInitializationStatus(mockService, environment);
+    const result = await getInitializationStatus(
+      mockService,
+      environment,
+      "test",
+    );
 
     expect(result).toEqual({
       initialized: false,
@@ -120,7 +135,11 @@ describe("getInitializationStatus", () => {
       cloudAccounts: [cloudAccount],
     });
 
-    const result = await getInitializationStatus(mockService, environment);
+    const result = await getInitializationStatus(
+      mockService,
+      environment,
+      "test",
+    );
 
     expect(result).toEqual({
       initialized: false,
@@ -151,7 +170,7 @@ describe("getInitializationStatus", () => {
       prefix: "io",
     });
 
-    await getInitializationStatus(mockService, environment);
+    await getInitializationStatus(mockService, environment, "test");
 
     expect(isInitializedMock).toHaveBeenCalledTimes(2);
     expect(isInitializedMock).toHaveBeenCalledWith(
@@ -182,7 +201,11 @@ describe("getInitializationStatus", () => {
       cloudAccounts: [cloudAccount1, cloudAccount2],
     });
 
-    const result = await getInitializationStatus(mockService, environment);
+    const result = await getInitializationStatus(
+      mockService,
+      environment,
+      "test",
+    );
 
     expect(result).toEqual({
       initialized: false,
@@ -208,7 +231,7 @@ describe("getTerraformBackend", () => {
     });
     const environment = createMockEnvironment();
 
-    const result = await getTerraformBackend(mockService, environment);
+    const result = await getTerraformBackend(mockService, environment, "test");
 
     expect(result).toEqual(mockBackend);
   });
@@ -219,7 +242,7 @@ describe("getTerraformBackend", () => {
     });
     const environment = createMockEnvironment();
 
-    const result = await getTerraformBackend(mockService, environment);
+    const result = await getTerraformBackend(mockService, environment, "test");
 
     expect(result).toBeUndefined();
   });
@@ -235,7 +258,7 @@ describe("getTerraformBackend", () => {
       prefix: "io",
     });
 
-    await getTerraformBackend(mockService, environment);
+    await getTerraformBackend(mockService, environment, "test");
 
     expect(getTerraformBackendMock).toHaveBeenCalledWith(
       "my-account",
@@ -243,6 +266,7 @@ describe("getTerraformBackend", () => {
         name: "uat",
         prefix: "io",
       }),
+      "test",
     );
   });
 
@@ -261,7 +285,7 @@ describe("getTerraformBackend", () => {
       ],
     });
 
-    const result = await getTerraformBackend(mockService, environment);
+    const result = await getTerraformBackend(mockService, environment, "test");
 
     expect(result).toEqual(mockBackend);
     // Should only call for the first account due to early return
@@ -274,7 +298,7 @@ describe("getTerraformBackend", () => {
       cloudAccounts: [],
     });
 
-    const result = await getTerraformBackend(mockService, environment);
+    const result = await getTerraformBackend(mockService, environment, "test");
 
     expect(result).toBeUndefined();
   });

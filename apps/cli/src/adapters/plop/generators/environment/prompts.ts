@@ -57,7 +57,7 @@ export const costCenterValues = [
   "TS310 - PAGAMENTI & SERVIZI",
   "TS320 - PIATTAFORMA NOTIFICHE DIGITALI",
   "TS330 - PDND & INTEROPERABILITA'",
-  "TS720 - DEV EX"
+  "TS720 - DEV EX",
 ] as const;
 
 export const costCenterSchema = z.enum(costCenterValues);
@@ -76,10 +76,11 @@ const workspaceDomainSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .min(1, "Domain is required")
+  .min(3, "Domain must have at least 3 characters")
+  .max(54, "Domain must have at most 54 characters")
   .regex(
-    /^[a-z0-9-]+$/,
-    "Domain may contain only lowercase letters, numbers, and hyphens",
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    "Domain must use lowercase letters, numbers, and single hyphens, and start and end with a letter or number",
   );
 
 export const workspaceSchema = z.object({
@@ -244,7 +245,7 @@ const getBaseQuestions = (
   if (initialAnswers.workspace?.domain === undefined) {
     questions.push({
       filter: (value: string) => value.trim().toLowerCase(),
-      message: "Domain",
+      message: "Domain (3-54 characters)",
       name: "workspace.domain",
       type: "input",
       validate: validatePrompt(workspaceSchema.shape.domain),
@@ -556,6 +557,7 @@ const prompts: (deps: PromptsDependencies) => DynamicPromptsFunction =
     const initStatus = await getInitializationStatus(
       deps.cloudAccountService,
       payload.env,
+      payload.workspace.domain,
     );
 
     logger.debug("initialization status {initStatus}", { initStatus });
@@ -725,6 +727,7 @@ export const formatInitializationDetails = (
       [
         chalk.bold.cyan(`  Terraform remote backend:`),
         `    • Azure resource group and Storage Account for the Terraform state`,
+        `    • Domain and core state containers with user access on each container`,
       ].join("\n"),
     );
   }

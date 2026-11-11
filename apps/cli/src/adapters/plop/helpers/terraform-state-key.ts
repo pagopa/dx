@@ -1,73 +1,48 @@
 /**
  * Terraform state key helper.
  *
- * The state storage account is already scoped by prefix and environment, so
- * keys never repeat the prefix:
- *
- * - workspace-scoped entries follow the domain/scope.tfstate convention;
- * - shared scopes (such as the core) live at the root of the container, because
- *   they are shared across workspace domains.
+ * The container identifies the domain, while the key identifies the layer and
+ * root path.
  */
-import { type NodePlopAPI } from "node-plop";
 import { z } from "zod";
 
-import { CORE_STATE_SCOPE } from "../../../domain/environment.js";
-import { payloadSchema } from "../generators/environment/prompts.js";
-
-const terraformStateContextSchema = payloadSchema.pick({
-  workspace: true,
-});
-
-const sharedStateScopes = new Set<string>([CORE_STATE_SCOPE]);
-
-const terraformStateNameSchema = z
+const stateSegmentSchema = z
   .string()
   .regex(
-    /^[a-z0-9-]+$/,
-    "Terraform state name may contain only lowercase letters, numbers, and hyphens",
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    "Terraform state names must use lowercase letters, numbers, and single hyphens",
+  );
+const rootPathSchema = z
+  .string()
+  .refine(
+    (rootPath) =>
+      !rootPath.startsWith("/") &&
+      !/^[a-z]:/i.test(rootPath) &&
+      !rootPath.includes("\\") &&
+      rootPath
+        .split("/")
+        .every(
+          (segment) =>
+            segment.length > 0 &&
+            segment !== "." &&
+            segment !== ".." &&
+            !segment.includes("\0"),
+        ),
+    "Terraform state paths must be relative paths with unambiguous directory separators",
   );
 
-type TerraformStateContext = z.infer<typeof terraformStateContextSchema>;
-
-export const terraformStateKey = (
-  context: TerraformStateContext,
-  name: string,
-): string => {
-  const parsedName = terraformStateNameSchema.safeParse(name);
-
-  if (!parsedName.success) {
+export const terraformStateKey = (layer: string, rootPath?: string): string => {
+  const parsed = z
+    .object({
+      layer: stateSegmentSchema,
+      rootPath: rootPathSchema.optional(),
+    })
+    .safeParse({ layer, rootPath });
+  if (!parsed.success) {
     throw new Error(
-      parsedName.error.issues[0]?.message ?? "Invalid Terraform state name",
-      {
-        cause: parsedName.error,
-      },
+      parsed.error.issues[0]?.message ?? "Invalid Terraform state path",
+      { cause: parsed.error },
     );
   }
-
-  // Shared scopes are not bound to a workspace domain: the state storage
-  // account is already scoped by prefix and environment, and several domains
-  // may share the same core.
-  if (sharedStateScopes.has(parsedName.data)) {
-    return `${parsedName.data}.tfstate`;
-  }
-
-  return `${context.workspace.domain}/${parsedName.data}.tfstate`;
-};
-
-export default (plop: NodePlopAPI) => {
-  plop.setHelper("terraformStateKey", (input, name: string) => {
-    const context = terraformStateContextSchema.safeParse(input);
-
-    if (!context.success) {
-      throw new Error(
-        context.error.issues[0]?.message ??
-          "Invalid Terraform state helper input",
-        {
-          cause: context.error,
-        },
-      );
-    }
-
-    return terraformStateKey(context.data, name);
-  });
+  return rootPath ? `${layer}/${rootPath}.tfstate` : `${layer}.tfstate`;
 };

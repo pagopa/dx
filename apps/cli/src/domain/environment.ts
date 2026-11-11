@@ -7,14 +7,6 @@ import {
 } from "./cloud-account.js";
 import { TerraformBackend } from "./remote-backend.js";
 
-/**
- * Name of the shared core Terraform state scope.
- *
- * The core is shared by every workspace domain using the same prefix, so its
- * state does not belong to a single domain.
- */
-export const CORE_STATE_SCOPE = "core";
-
 export const baseEnvironmentNames = ["dev", "prod", "uat"] as const;
 
 export const environmentShort = {
@@ -103,6 +95,7 @@ type MissingRemoteBackendIssue = {
 export async function getInitializationStatus(
   cloudAccountService: CloudAccountService,
   environment: Environment,
+  domain: string,
 ): Promise<EnvironmentInitStatus> {
   const issues: EnvironmentInitIssue[] = [];
   for (const cloudAccount of environment.cloudAccounts) {
@@ -120,6 +113,7 @@ export async function getInitializationStatus(
   const terraformBackend = await getTerraformBackend(
     cloudAccountService,
     environment,
+    domain,
   );
   if (!terraformBackend) {
     issues.push({
@@ -140,11 +134,13 @@ export async function getInitializationStatus(
 export async function getTerraformBackend(
   cloudAccountService: CloudAccountService,
   environment: Environment,
+  domain: string,
 ): Promise<TerraformBackend | undefined> {
   for (const cloudAccount of environment.cloudAccounts) {
     const backend = await cloudAccountService.getTerraformBackend(
       cloudAccount.id,
       environment,
+      domain,
     );
     if (backend) {
       return backend;

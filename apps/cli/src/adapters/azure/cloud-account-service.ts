@@ -12,7 +12,7 @@ import { BlobServiceClient } from "@azure/storage-blob";
 import { getLogger } from "@logtape/logtape";
 import { Client } from "@microsoft/microsoft-graph-client";
 import * as assert from "node:assert/strict";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { lookup } from "node:dns/promises";
 import { setTimeout as sleep } from "node:timers/promises";
 import { z } from "zod/v4";
@@ -34,6 +34,7 @@ import {
 import {
   type TerraformBackend,
   terraformBackendSchema,
+  terraformStateContainerName,
 } from "../../domain/remote-backend.js";
 import {
   isAzureLocation,
@@ -78,6 +79,17 @@ const bootstrapIdentityRoleDefinitionIds = [
   builtInRoleDefinitionIds.contributor,
   builtInRoleDefinitionIds.storageBlobDataContributor,
 ] as const;
+
+const stateContainerRoleDefinitionId =
+  builtInRoleDefinitionIds.storageBlobDataContributor;
+const stateAccessMaxAttempts = 6;
+const stateAccessRetryDelayMs = 5_000;
+
+const isStatusCode = (error: unknown, statusCode: number): boolean =>
+  typeof error === "object" &&
+  error !== null &&
+  "statusCode" in error &&
+  error.statusCode === statusCode;
 
 const bootstrapCiIdentityRoleDefinitionIds = [
   // Plan needs read access for refresh and blob access for Terraform backend locks/state.
@@ -198,9 +210,53 @@ export class AzureCloudAccountService implements CloudAccountService {
     });
   }
 
+  async ensureTerraformBackendAccess(
+    backend: TerraformBackend,
+    additionalBackends: readonly TerraformBackend[] = [],
+  ): Promise<void> {
+    const { principalIds, userId } = await this.#getCurrentPrincipalIds();
+    const backends = new Map(
+      [backend, ...additionalBackends].map((candidate) => [
+        this.#getStateContainerScope(candidate),
+        candidate,
+      ]),
+    );
+
+    for (const candidate of backends.values()) {
+      const storageManagementClient = new StorageManagementClient(
+        this.#credential,
+        candidate.subscriptionId,
+      );
+      const storageAccount =
+        await storageManagementClient.storageAccounts.getProperties(
+          candidate.resourceGroupName,
+          candidate.storageAccountName,
+        );
+      const blobEndpoint = storageAccount.primaryEndpoints?.blob;
+      assert.ok(blobEndpoint, "Storage account blob endpoint is undefined");
+      const authorizationManagementClient = new AuthorizationManagementClient(
+        this.#credential,
+        candidate.subscriptionId,
+      );
+
+      await this.#ensureStateContainer(storageManagementClient, candidate);
+      await this.#ensureStateContainerContributor({
+        authorizationManagementClient,
+        backend: candidate,
+        principalIds,
+        userId,
+      });
+      await this.#verifyStateContainerAccess(
+        blobEndpoint,
+        candidate.containerName,
+      );
+    }
+  }
+
   async getTerraformBackend(
     cloudAccountId: CloudAccount["id"],
     { name, prefix }: EnvironmentId,
+    domain: string,
   ): Promise<TerraformBackend | undefined> {
     const allLocations = Object.values(locationShort).join("|");
     const shortEnv = getEnvironmentShort(name);
@@ -234,6 +290,7 @@ export class AzureCloudAccountService implements CloudAccountService {
       });
     }
     return terraformBackendSchema.parse({
+      containerName: terraformStateContainerName(domain),
       resourceGroupName: storageAccounts[0].resourceGroup,
       storageAccountName: storageAccounts[0].name,
       subscriptionId: cloudAccountId,
@@ -246,7 +303,8 @@ export class AzureCloudAccountService implements CloudAccountService {
   ): Promise<boolean> {
     try {
       // All principal IDs to check (user + all groups)
-      const allPrincipalIds = await this.#getCurrentPrincipalIds();
+      const { principalIds: allPrincipalIds } =
+        await this.#getCurrentPrincipalIds();
 
       // Get role assignments for the subscription
       const authClient = new AuthorizationManagementClient(
@@ -256,7 +314,6 @@ export class AzureCloudAccountService implements CloudAccountService {
 
       const requiredRoles = [
         builtInRoleDefinitionIds.owner, // Owner
-        builtInRoleDefinitionIds.storageBlobDataContributor, // Storage Blob Data Contributor
         builtInRoleDefinitionIds.keyVaultSecretsOfficer, // Key Vault Secrets Officer
       ];
 
@@ -325,7 +382,6 @@ export class AzureCloudAccountService implements CloudAccountService {
       isAzureLocation(cloudAccount.defaultLocation),
       "The default location of the cloud account is not a valid Azure location",
     );
-
     const logger = getLogger(["gen", "env"]);
 
     // Register required resource providers before creating any resources
@@ -449,14 +505,6 @@ export class AzureCloudAccountService implements CloudAccountService {
         runnerAppCredentials,
       });
     } catch (cause) {
-      // Cleanup resource group if initialization fails
-      await resourceManagementClient.resourceGroups.beginDeleteAndWait(
-        resourceGroupName,
-      );
-      logger.debug(
-        "Deleted resource group {resourceGroupName} in subscription {subscriptionId} due to initialization failure",
-        { resourceGroupName, subscriptionId: cloudAccount.id },
-      );
       throw new Error("Failed to initialize cloud account", { cause });
     }
   }
@@ -511,6 +559,7 @@ export class AzureCloudAccountService implements CloudAccountService {
   async provisionTerraformBackend(
     cloudAccount: CloudAccount,
     { name, prefix }: EnvironmentId,
+    domain: string,
     tags: Record<string, string> = {},
   ): Promise<TerraformBackend> {
     assert.equal(cloudAccount.csp, "azure", "Cloud account must be Azure");
@@ -521,16 +570,28 @@ export class AzureCloudAccountService implements CloudAccountService {
 
     const logger = getLogger(["gen", "env"]);
 
-    const resourceManagementClient = new ResourceManagementClient(
-      this.#credential,
-      cloudAccount.id,
-    );
-
     const short = {
       env: getEnvironmentShort(name),
       location: locationShort[cloudAccount.defaultLocation],
     };
 
+    const existingBackend = await this.getTerraformBackend(
+      cloudAccount.id,
+      { name, prefix },
+      domain,
+    );
+    if (existingBackend) {
+      return existingBackend;
+    }
+
+    const resourceManagementClient = new ResourceManagementClient(
+      this.#credential,
+      cloudAccount.id,
+    );
+    const storageManagementClient = new StorageManagementClient(
+      this.#credential,
+      cloudAccount.id,
+    );
     const parameters = {
       location: cloudAccount.defaultLocation,
       tags: {
@@ -538,28 +599,18 @@ export class AzureCloudAccountService implements CloudAccountService {
         ...tags,
       },
     };
-
     const resourceGroupName = `${prefix}-${short.env}-${short.location}-tfstate-rg-01`;
+    const storageAccountName = `${prefix}${short.env}${short.location}tfstatest01`;
 
     await resourceManagementClient.resourceGroups.createOrUpdate(
       resourceGroupName,
       parameters,
     );
 
-    logger.debug(
-      "Created resource group {resourceGroupName} in subscription {subscriptionId}",
-      { resourceGroupName, subscriptionId: cloudAccount.id },
-    );
-
-    const storageManagementClient = new StorageManagementClient(
-      this.#credential,
-      cloudAccount.id,
-    );
-
     const storageAccount =
       await storageManagementClient.storageAccounts.beginCreateAndWait(
         resourceGroupName,
-        `${prefix}${short.env}${short.location}tfstatest01`,
+        storageAccountName,
         {
           kind: "StorageV2",
           sku: {
@@ -570,47 +621,65 @@ export class AzureCloudAccountService implements CloudAccountService {
         },
       );
 
-    assert.ok(
-      storageAccount.primaryEndpoints?.blob,
-      "Storage account blob endpoint is undefined",
-    );
-
     assert.ok(storageAccount.name, "Storage account name is undefined");
 
     logger.debug(
-      "Created storage account {storageAccountName} in subscription {subscriptionId}",
+      "Provisioned Terraform state storage account {storageAccountName} in subscription {subscriptionId}",
       {
         storageAccountName: storageAccount.name,
         subscriptionId: cloudAccount.id,
       },
     );
-    const blobServiceClient = new BlobServiceClient(
-      storageAccount.primaryEndpoints?.blob,
-      this.#credential,
-    );
-
-    const containerClient =
-      blobServiceClient.getContainerClient("terraform-state");
-
-    try {
-      await containerClient.create();
-    } catch (e) {
-      // Cleanup resource group if blob container creation fails
-      // resource group deletion also deletes all contained resources
-      await resourceManagementClient.resourceGroups.beginDeleteAndWait(
-        resourceGroupName,
-      );
-      throw new Error(`Error during the creation of the blob container`, {
-        cause: e,
-      });
-    }
 
     return terraformBackendSchema.parse({
+      containerName: terraformStateContainerName(domain),
       resourceGroupName,
       storageAccountName: storageAccount.name,
       subscriptionId: cloudAccount.id,
       type: "azurerm",
     });
+  }
+
+  async verifyTerraformBackendReadAccess(
+    backend: TerraformBackend,
+    key: string,
+  ): Promise<void> {
+    const storageManagementClient = new StorageManagementClient(
+      this.#credential,
+      backend.subscriptionId,
+    );
+    const storageAccount =
+      await storageManagementClient.storageAccounts.getProperties(
+        backend.resourceGroupName,
+        backend.storageAccountName,
+      );
+    const blobEndpoint = storageAccount.primaryEndpoints?.blob;
+    assert.ok(blobEndpoint, "Storage account blob endpoint is undefined");
+
+    const scope = this.#getStateContainerScope(backend);
+    const containerClient = new BlobServiceClient(
+      blobEndpoint,
+      this.#credential,
+    ).getContainerClient(backend.containerName);
+    try {
+      await containerClient.getProperties();
+    } catch (cause) {
+      throw new Error(
+        `The current Azure identity cannot read Terraform state container "${backend.containerName}" at "${scope}". Verify Storage Blob Data Reader access before the first plan.`,
+        { cause },
+      );
+    }
+
+    try {
+      await containerClient.getBlockBlobClient(key).getProperties();
+    } catch (cause) {
+      if (!isStatusCode(cause, 404)) {
+        throw new Error(
+          `The current Azure identity could not verify access to Terraform state key "${key}" in "${scope}". Verify Storage Blob Data Reader access before the first plan.`,
+          { cause },
+        );
+      }
+    }
   }
 
   async #areProvidersRegistered(subscriptionId: string): Promise<boolean> {
@@ -917,6 +986,109 @@ export class AzureCloudAccountService implements CloudAccountService {
     return `/subscriptions/${subscriptionId}/providers/Microsoft.Authorization/roleDefinitions/${roleDefinitionId}`;
   }
 
+  async #ensureStateContainer(
+    storageManagementClient: StorageManagementClient,
+    backend: TerraformBackend,
+  ): Promise<void> {
+    const { containerName, resourceGroupName, storageAccountName } = backend;
+    try {
+      await storageManagementClient.blobContainers.get(
+        resourceGroupName,
+        storageAccountName,
+        containerName,
+      );
+      return;
+    } catch (cause) {
+      if (!isStatusCode(cause, 404)) {
+        throw cause;
+      }
+    }
+
+    try {
+      await storageManagementClient.blobContainers.create(
+        resourceGroupName,
+        storageAccountName,
+        containerName,
+        { publicAccess: "None" },
+      );
+    } catch (cause) {
+      if (!isStatusCode(cause, 409)) {
+        throw new Error(
+          `Failed to create Terraform state container "${containerName}".`,
+          { cause },
+        );
+      }
+
+      await storageManagementClient.blobContainers.get(
+        resourceGroupName,
+        storageAccountName,
+        containerName,
+      );
+    }
+  }
+
+  async #ensureStateContainerContributor({
+    authorizationManagementClient,
+    backend,
+    principalIds,
+    userId,
+  }: {
+    authorizationManagementClient: AuthorizationManagementClient;
+    backend: TerraformBackend;
+    principalIds: Set<string>;
+    userId: string;
+  }): Promise<void> {
+    const scope = this.#getStateContainerScope(backend);
+    const hasContributor = async (): Promise<boolean> => {
+      for await (const assignment of authorizationManagementClient.roleAssignments.listForScope(
+        scope,
+      )) {
+        const roleDefinitionId = assignment.roleDefinitionId
+          ?.split("/")
+          .at(-1)
+          ?.toLowerCase();
+        if (
+          assignment.principalId &&
+          principalIds.has(assignment.principalId) &&
+          roleDefinitionId === stateContainerRoleDefinitionId
+        ) {
+          return true;
+        }
+      }
+      return false;
+    };
+
+    if (await hasContributor()) {
+      return;
+    }
+
+    try {
+      await authorizationManagementClient.roleAssignments.create(
+        scope,
+        this.#createRoleAssignmentName(
+          scope,
+          userId,
+          stateContainerRoleDefinitionId,
+        ),
+        {
+          principalId: userId,
+          principalType: "User",
+          roleDefinitionId: this.#createRoleDefinitionResourceId(
+            backend.subscriptionId,
+            stateContainerRoleDefinitionId,
+          ),
+        },
+      );
+    } catch (cause) {
+      if (!isStatusCode(cause, 409) || !(await hasContributor())) {
+        throw new Error(
+          `Failed to assign Storage Blob Data Contributor on "${backend.containerName}" to the current user.`,
+          { cause },
+        );
+      }
+    }
+  }
+
   async #getBootstrapperIdentity({
     cloudAccountId,
     identityName,
@@ -947,7 +1119,10 @@ export class AzureCloudAccountService implements CloudAccountService {
     };
   }
 
-  async #getCurrentPrincipalIds(): Promise<Set<string>> {
+  async #getCurrentPrincipalIds(): Promise<{
+    principalIds: Set<string>;
+    userId: string;
+  }> {
     // Create Graph client with custom auth provider that fetches fresh tokens
     const graphClient = Client.init({
       authProvider: async (done) => {
@@ -988,8 +1163,14 @@ export class AzureCloudAccountService implements CloudAccountService {
     }
 
     // All principal IDs to check (user + all groups)
-    const allPrincipalIds = new Set([userObjectId, ...groupIds]);
-    return allPrincipalIds;
+    return {
+      principalIds: new Set([userObjectId, ...groupIds]),
+      userId: userObjectId,
+    };
+  }
+
+  #getStateContainerScope(backend: TerraformBackend): string {
+    return `/subscriptions/${backend.subscriptionId}/resourceGroups/${backend.resourceGroupName}/providers/Microsoft.Storage/storageAccounts/${backend.storageAccountName}/blobServices/default/containers/${backend.containerName}`;
   }
 
   async #registerProviders(subscriptionId: string): Promise<void> {
@@ -1112,6 +1293,90 @@ export class AzureCloudAccountService implements CloudAccountService {
     logger.debug(
       "Created secrets in key vault {keyVaultName} in subscription {subscriptionId}",
       { keyVaultName, subscriptionId: cloudAccountId },
+    );
+  }
+
+  async #verifyStateContainerAccess(
+    blobEndpoint: string,
+    containerName: string,
+  ): Promise<void> {
+    const containerClient = new BlobServiceClient(
+      blobEndpoint,
+      this.#credential,
+    ).getContainerClient(containerName);
+    const blobClient = containerClient.getBlockBlobClient(
+      `.dx-state-access-check-${randomUUID()}`,
+    );
+    const leaseClient = blobClient.getBlobLeaseClient();
+    let blobCreated = false;
+    let leaseAcquired = false;
+
+    const cleanup = async (cause: unknown): Promise<void> => {
+      const errors: unknown[] = [];
+      if (leaseAcquired) {
+        try {
+          await leaseClient.releaseLease();
+          leaseAcquired = false;
+        } catch (cause) {
+          errors.push(cause);
+        }
+      }
+      if (blobCreated) {
+        try {
+          await blobClient.deleteIfExists();
+          blobCreated = false;
+        } catch (cause) {
+          errors.push(cause);
+        }
+      }
+      if (errors.length > 0) {
+        throw new AggregateError(
+          [cause, ...errors],
+          `Terraform state access probe cleanup failed for "${containerName}".`,
+          { cause },
+        );
+      }
+    };
+
+    let lastForbiddenError: unknown;
+
+    for (let attempt = 0; attempt < stateAccessMaxAttempts; attempt += 1) {
+      try {
+        if (!blobCreated) {
+          await blobClient.uploadData(new Uint8Array());
+          blobCreated = true;
+        }
+        await leaseClient.acquireLease(15);
+        leaseAcquired = true;
+        await leaseClient.releaseLease();
+        leaseAcquired = false;
+        await blobClient.deleteIfExists();
+        blobCreated = false;
+        return;
+      } catch (cause) {
+        if (!isStatusCode(cause, 403)) {
+          await cleanup(cause);
+          throw new Error(
+            `Failed to verify Terraform state access for container "${containerName}".`,
+            { cause },
+          );
+        }
+
+        lastForbiddenError = cause;
+        if (leaseAcquired) {
+          await cleanup(cause);
+        }
+        if (attempt < stateAccessMaxAttempts - 1) {
+          await sleep(stateAccessRetryDelayMs);
+        }
+      }
+    }
+
+    await cleanup(lastForbiddenError);
+
+    throw new Error(
+      `The current user cannot write and lock state in "${containerName}" after waiting for Azure role assignment propagation. Verify the container-level Storage Blob Data Contributor grant and retry.`,
+      { cause: lastForbiddenError },
     );
   }
 

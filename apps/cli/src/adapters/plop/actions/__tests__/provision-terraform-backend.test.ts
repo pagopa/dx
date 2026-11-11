@@ -12,11 +12,15 @@ const createMockCloudAccountService = (
   overrides: Partial<CloudAccountService> = {},
 ): CloudAccountService => ({
   configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+  ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
   getTerraformBackend: vi.fn().mockResolvedValue(undefined),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),
   isInitialized: vi.fn().mockResolvedValue(true),
-  provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+  provisionTerraformBackend: vi
+    .fn()
+    .mockResolvedValue(createMockTerraformBackend()),
+  verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
   ...overrides,
 });
 
@@ -33,6 +37,7 @@ const createMockCloudAccount = (
 const createMockTerraformBackend = (
   overrides: Partial<TerraformBackend> = {},
 ): TerraformBackend => ({
+  containerName: "test-tf-state",
   resourceGroupName: "dx-d-itn-tf-rg",
   storageAccountName: "dxditntfst",
   subscriptionId: "00000000-0000-0000-0000-000000000000",
@@ -73,30 +78,16 @@ const createMockPayload = (overrides: Partial<Payload> = {}): Payload => ({
 });
 
 describe("provisionTerraformBackend", () => {
-  it("should provision terraform backend and return it", async () => {
+  it("provisions the selected account and returns its backend configuration", async () => {
+    const cloudAccount = createMockCloudAccount({ id: "my-subscription" });
     const mockBackend = createMockTerraformBackend();
     const provisionMock = vi.fn().mockResolvedValue(mockBackend);
     const mockService = createMockCloudAccountService({
       provisionTerraformBackend: provisionMock,
     });
-    const payload = createMockPayload();
-
-    const result = await provisionTerraformBackend(payload, mockService);
-
-    expect(result).toEqual(mockBackend);
-  });
-
-  it("should call provisionTerraformBackend with correct parameters", async () => {
-    const cloudAccount = createMockCloudAccount({ id: "my-subscription" });
-    const provisionMock = vi
-      .fn()
-      .mockResolvedValue(createMockTerraformBackend());
-    const mockService = createMockCloudAccountService({
-      provisionTerraformBackend: provisionMock,
-    });
     const payload = createMockPayload({
       env: {
-        cloudAccounts: [cloudAccount],
+        cloudAccounts: [createMockCloudAccount({ id: "env-account" })],
         name: "prod",
         prefix: "io",
       },
@@ -108,18 +99,34 @@ describe("provisionTerraformBackend", () => {
           installationId: "test-installation-id",
           key: "test-private-key",
         },
-        terraformBackend: {
-          cloudAccount,
-        },
+        terraformBackend: { cloudAccount },
       },
     });
 
-    await provisionTerraformBackend(payload, mockService);
+    const result = await provisionTerraformBackend(payload, mockService);
 
+    expect(result).toEqual({
+      backend: mockBackend,
+      backendConfigFiles: {
+        bootstrapper: undefined,
+        core: undefined,
+      },
+      backendKey: "bootstrapper.tfstate",
+      coreBackend: {
+        ...mockBackend,
+        containerName: "io-tf-state",
+        key: "core.tfstate",
+      },
+    });
     expect(provisionMock).toHaveBeenCalledWith(
       cloudAccount,
       expect.objectContaining({ name: "prod", prefix: "io" }),
+      "test",
       payload.tags,
+    );
+    expect(mockService.ensureTerraformBackendAccess).toHaveBeenCalledWith(
+      mockBackend,
+      [{ ...mockBackend, containerName: "io-tf-state" }],
     );
   });
 
@@ -133,46 +140,6 @@ describe("provisionTerraformBackend", () => {
       provisionTerraformBackend(payload, mockService),
     ).rejects.toThrow(
       "This action requires initialization data in the payload",
-    );
-  });
-
-  it("should use the terraformBackend cloudAccount from init", async () => {
-    const envCloudAccount = createMockCloudAccount({ id: "env-account" });
-    const backendCloudAccount = createMockCloudAccount({
-      id: "backend-account",
-    });
-    const provisionMock = vi
-      .fn()
-      .mockResolvedValue(createMockTerraformBackend());
-    const mockService = createMockCloudAccountService({
-      provisionTerraformBackend: provisionMock,
-    });
-    const payload = createMockPayload({
-      env: {
-        cloudAccounts: [envCloudAccount],
-        name: "uat",
-        prefix: "dx",
-      },
-      init: {
-        cloudAccountsToInitialize: [],
-        runnerAppCredentials: {
-          clientId: "test-app-client-id",
-          id: "test-app-id",
-          installationId: "test-installation-id",
-          key: "test-private-key",
-        },
-        terraformBackend: {
-          cloudAccount: backendCloudAccount,
-        },
-      },
-    });
-
-    await provisionTerraformBackend(payload, mockService);
-
-    expect(provisionMock).toHaveBeenCalledWith(
-      backendCloudAccount,
-      expect.objectContaining({ name: "uat", prefix: "dx" }),
-      payload.tags,
     );
   });
 });

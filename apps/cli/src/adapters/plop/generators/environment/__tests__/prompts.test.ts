@@ -50,6 +50,20 @@ describe("workspaceSchema — domain transforms", () => {
 
     expect(result.success).toBe(false);
   });
+
+  it.each(["", " ", "a", "ab", "a".repeat(55), "-api", "api-", "api--core"])(
+    "rejects domains outside workspace naming rules: %s",
+    (domain) => {
+      expect(workspaceSchema.safeParse({ domain }).success).toBe(false);
+    },
+  );
+
+  it.each(["api", "a".repeat(54)])(
+    "accepts domains from 3 to 54 characters: %s",
+    (domain) => {
+      expect(workspaceSchema.safeParse({ domain }).success).toBe(true);
+    },
+  );
 });
 
 describe("formatInitializationDetails", () => {
@@ -145,7 +159,9 @@ describe("prompts with prefilled answers", () => {
 
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue({
+        containerName: "test-tf-state",
         resourceGroupName: "rg-test",
         storageAccountName: "sttest",
         subscriptionId: cloudAccount.id,
@@ -155,6 +171,7 @@ describe("prompts with prefilled answers", () => {
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(true),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
     };
 
     const promptSpy = vi.spyOn(inquirer, "prompt");
@@ -265,7 +282,9 @@ describe("required tag prompts", () => {
     };
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue({
+        containerName: "test-tf-state",
         resourceGroupName: "rg-test",
         storageAccountName: "sttest",
         subscriptionId: cloudAccount.id,
@@ -275,6 +294,7 @@ describe("required tag prompts", () => {
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(true),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
     };
     const promptSpy = vi.spyOn(inquirer, "prompt");
     promptSpy.mockResolvedValueOnce({
@@ -355,7 +375,9 @@ describe("non-interactive tag defaults", () => {
     };
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue({
+        containerName: "test-tf-state",
         resourceGroupName: "rg-test",
         storageAccountName: "sttest",
         subscriptionId: cloudAccount.id,
@@ -365,6 +387,7 @@ describe("non-interactive tag defaults", () => {
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(true),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
     };
     const promptSpy = vi.spyOn(inquirer, "prompt");
     const dependencies: PromptsDependencies = {
@@ -446,7 +469,9 @@ describe("prompts", () => {
         },
         cloudAccountService: {
           configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+          ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
           getTerraformBackend: vi.fn().mockResolvedValue({
+            containerName: "test-tf-state",
             resourceGroupName: "rg-test",
             storageAccountName: "sttest",
             subscriptionId: cloudAccount.id,
@@ -456,6 +481,9 @@ describe("prompts", () => {
           initialize: vi.fn().mockResolvedValue(undefined),
           isInitialized: vi.fn().mockResolvedValue(true),
           provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+          verifyTerraformBackendReadAccess: vi
+            .fn()
+            .mockResolvedValue(undefined),
         },
         github: {
           owner: "pagopa",
@@ -523,11 +551,13 @@ describe("prompts", () => {
       },
       cloudAccountService: {
         configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+        ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
         getTerraformBackend: vi.fn().mockResolvedValue(undefined),
         hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
         initialize: vi.fn().mockResolvedValue(undefined),
         isInitialized: vi.fn().mockResolvedValue(true),
         provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+        verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
       },
       github: {
         owner: "pagopa",
@@ -572,11 +602,13 @@ describe("prompts", () => {
 
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(true),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
     };
 
     const promptSpy = vi.spyOn(inquirer, "prompt");
@@ -650,11 +682,13 @@ describe("prompts", () => {
 
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(false),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
     };
 
     const promptSpy = vi.spyOn(inquirer, "prompt");
@@ -749,11 +783,13 @@ describe("prompts", () => {
 
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(false),
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(false),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
     };
 
     const promptSpy = vi.spyOn(inquirer, "prompt");
@@ -825,11 +861,13 @@ describe("prompts with prefilled initialization answers", () => {
 
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(false),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
     };
 
     const promptSpy = vi.spyOn(inquirer, "prompt");

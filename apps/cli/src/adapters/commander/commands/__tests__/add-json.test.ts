@@ -84,6 +84,7 @@ const initialization = {
 };
 
 const terraformBackend: TerraformBackend = {
+  containerName: "payments-tf-state",
   resourceGroupName: "dx-d-itn-tfstate-rg-01",
   storageAccountName: "dxditntfst01",
   subscriptionId: cloudAccount.id,
@@ -224,6 +225,13 @@ describe("add environment command json output", () => {
               ...terraformBackend,
               accessKey: "terraform-backend-private-value",
             },
+            backendKey: "bootstrapper.tfstate",
+            coreBackend: {
+              ...terraformBackend,
+              accessKey: "core-backend-private-value",
+              containerName: "dx-tf-state",
+              key: "core.tfstate",
+            },
             privateValue: "terraform-private-value",
           },
         };
@@ -258,7 +266,15 @@ describe("add environment command json output", () => {
               authorizationPrs,
               payload: {
                 ...expectedPayload,
-                terraform: { backend: terraformBackend },
+                terraform: {
+                  backend: terraformBackend,
+                  backendKey: "bootstrapper.tfstate",
+                  coreBackend: {
+                    ...terraformBackend,
+                    containerName: "dx-tf-state",
+                    key: "core.tfstate",
+                  },
+                },
               },
             },
             ok: true,
@@ -269,6 +285,9 @@ describe("add environment command json output", () => {
         expect(output).not.toContain(runnerAppCredentials.key);
         expect(output).not.toContain(initializationCredentials.key);
         expect(output).not.toContain(actionResult.terraform.backend.accessKey);
+        expect(output).not.toContain(
+          actionResult.terraform.coreBackend.accessKey,
+        );
         expect(output).not.toContain(actionResult.terraform.privateValue);
         expect(mocks.runDeploymentEnvironmentActions).toHaveBeenCalledWith(
           expect.anything(),

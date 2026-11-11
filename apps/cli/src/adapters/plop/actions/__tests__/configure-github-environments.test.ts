@@ -51,11 +51,13 @@ const createMockCloudAccountService = (
   configureGitHubEnvironment: CloudAccountService["configureGitHubEnvironment"],
 ): CloudAccountService => ({
   configureGitHubEnvironment,
+  ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
   getTerraformBackend: vi.fn().mockResolvedValue(undefined),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),
   isInitialized: vi.fn().mockResolvedValue(true),
   provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+  verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
 });
 
 describe("configureGitHubEnvironments", () => {

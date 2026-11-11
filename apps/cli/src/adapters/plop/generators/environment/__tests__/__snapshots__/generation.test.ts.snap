@@ -29,8 +29,8 @@ terraform {
   backend "azurerm" {
     resource_group_name  = "dx-d-itn-tf-rg"
     storage_account_name = "dxditntfst"
-    container_name       = "terraform-state"
-    key                  = "payments/bootstrapper.tfstate"
+    container_name       = "payments-tf-state"
+    key                  = "bootstrapper.tfstate"
     subscription_id      = "00000000-0000-0000-0000-000000000000"
     use_azuread_auth     = true
   }
@@ -76,20 +76,28 @@ module "azure-DEV-DX_core_values" {
     resource_group_name  = "dx-d-itn-tf-rg"
     storage_account_name = "dxditntfst"
     subscription_id      = "00000000-0000-0000-0000-000000000000"
-    container_name       = "terraform-state"
+    container_name       = "dx-tf-state"
     key                  = "core.tfstate"
   }
 }
 
 module "azure-DEV-DX_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 7.1"
+  version = "~> 7.2"
 
   providers = {
     azurerm = azurerm.DEV-DX
   }
 
   environment = merge(local.environment, local.azure_accounts.DEV-DX)
+  terraform_state_container_access = {
+    container_name = "payments-tf-state"
+    upstream = {
+      "dx-tf-state" = {
+        identities = ["infra_ci", "infra_cd"]
+      }
+    }
+  }
 
   entraid_groups = {
     admins_object_id    = data.azuread_group.admins.object_id
@@ -194,20 +202,28 @@ module "azure-DEV-DX_core_values" {
     resource_group_name  = "dx-d-itn-tf-rg"
     storage_account_name = "dxditntfst"
     subscription_id      = "00000000-0000-0000-0000-000000000000"
-    container_name       = "terraform-state"
+    container_name       = "dx-tf-state"
     key                  = "core.tfstate"
   }
 }
 
 module "azure-DEV-DX_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 7.1"
+  version = "~> 7.2"
 
   providers = {
     azurerm = azurerm.DEV-DX
   }
 
   environment = merge(local.environment, local.azure_accounts.DEV-DX)
+  terraform_state_container_access = {
+    container_name = "payments-tf-state"
+    upstream = {
+      "dx-tf-state" = {
+        identities = ["infra_ci", "infra_cd"]
+      }
+    }
+  }
 
   entraid_groups = {
     admins_object_id    = data.azuread_group.admins.object_id
@@ -274,7 +290,7 @@ terraform {
   backend "azurerm" {
     resource_group_name  = "dx-d-itn-tf-rg"
     storage_account_name = "dxditntfst"
-    container_name       = "terraform-state"
+    container_name       = "dx-tf-state"
     key                  = "core.tfstate"
     subscription_id      = "00000000-0000-0000-0000-000000000000"
     use_azuread_auth     = true
