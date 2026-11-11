@@ -1,11 +1,12 @@
 // Tests for workspaceSchema transforms (lowercase and trim on domain).
 import inquirer from "inquirer";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type {
   CloudAccount,
   CloudAccountRepository,
   CloudAccountService,
+  RunnerAppCredentialsLookup,
 } from "../../../../../domain/cloud-account.js";
 import type { EnvironmentInitStatus } from "../../../../../domain/environment.js";
 
@@ -16,6 +17,342 @@ import prompts, {
   type PromptsDependencies,
   workspaceSchema,
 } from "../prompts.js";
+
+const account: CloudAccount = {
+  csp: "azure",
+  defaultLocation: "italynorth",
+  displayName: "DEV-Test",
+  id: "sub-123",
+};
+const credentials = {
+  clientId: "client-id",
+  id: "app-id",
+  installationId: "installation-id",
+  key: "private-key",
+};
+const initialAnswers: InitialAnswers = {
+  env: {
+    cloudAccountIds: [account.id],
+    locations: { [account.id]: "italynorth" },
+    name: "dev",
+    prefix: "dx",
+  },
+  tags: {
+    BusinessUnit: "DX",
+    CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+    ManagementTeam: "DX",
+    Owner: "DX",
+  },
+  workspace: { domain: "playground" },
+};
+const createDependencies = (lookup: RunnerAppCredentialsLookup) => {
+  const cloudAccountService = {
+    configureGitHubEnvironment: vi.fn(),
+    getRunnerAppCredentials: vi.fn().mockResolvedValue(lookup),
+    getTerraformBackend: vi.fn().mockResolvedValue({
+      resourceGroupName: "rg",
+      storageAccountName: "storage",
+      subscriptionId: account.id,
+      type: "azurerm",
+    }),
+    hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
+    initialize: vi.fn(),
+    isInitialized: vi.fn().mockResolvedValue(true),
+    provisionTerraformBackend: vi.fn(),
+    storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
+  };
+  return {
+    cloudAccountRepository: { list: vi.fn().mockResolvedValue([account]) },
+    cloudAccountService,
+    github: { owner: "pagopa", repo: "dx-playground" },
+    initialAnswers,
+  };
+};
+
+describe("reusing Runner App credentials", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it.each([false, true])(
+    "automatically reuses the vault credentials with nonInteractive=%s",
+    async (nonInteractive) => {
+      const deps = createDependencies({ credentials, missingClientId: false });
+      const promptSpy = vi.spyOn(inquirer, "prompt");
+
+      const result = await prompts({ ...deps, nonInteractive })(inquirer);
+
+      expect(result.runnerAppCredentials).toEqual(credentials);
+      expect(promptSpy).not.toHaveBeenCalled();
+      expect(
+        deps.cloudAccountService.getRunnerAppCredentials,
+      ).toHaveBeenCalledWith(
+        account,
+        expect.objectContaining({ name: "dev", prefix: "dx" }),
+      );
+      expect(
+        deps.cloudAccountService.storeRunnerAppClientId,
+      ).not.toHaveBeenCalled();
+    },
+  );
+
+  it("asks only for a legacy vault's missing client ID and saves it", async () => {
+    const deps = createDependencies({
+      credentials: {
+        id: credentials.id,
+        installationId: credentials.installationId,
+        key: credentials.key,
+      },
+      missingClientId: true,
+    });
+    const promptSpy = vi.spyOn(inquirer, "prompt").mockResolvedValue({
+      runnerAppCredentials: { clientId: credentials.clientId },
+    });
+
+    const result = await prompts(deps)(inquirer);
+
+    expect(result.runnerAppCredentials).toEqual(credentials);
+    expect(promptSpy).toHaveBeenCalledExactlyOnceWith([
+      expect.objectContaining({ name: "runnerAppCredentials.clientId" }),
+    ]);
+    expect(JSON.stringify(promptSpy.mock.calls)).not.toContain(credentials.key);
+    expect(
+      deps.cloudAccountService.storeRunnerAppClientId,
+    ).toHaveBeenCalledWith(
+      account,
+      expect.objectContaining({ name: "dev", prefix: "dx" }),
+      credentials.clientId,
+    );
+  });
+
+  it("uses an explicitly supplied client ID for a legacy vault in CI", async () => {
+    const deps = createDependencies({
+      credentials: {
+        id: credentials.id,
+        installationId: credentials.installationId,
+        key: credentials.key,
+      },
+      missingClientId: true,
+    });
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+
+    const result = await prompts({
+      ...deps,
+      initialAnswers: {
+        ...initialAnswers,
+        init: { runnerAppCredentials: { clientId: credentials.clientId } },
+      },
+      nonInteractive: true,
+    })(inquirer);
+
+    expect(result.runnerAppCredentials).toEqual(credentials);
+    expect(promptSpy).not.toHaveBeenCalled();
+    expect(
+      deps.cloudAccountService.storeRunnerAppClientId,
+    ).toHaveBeenCalledExactlyOnceWith(
+      account,
+      expect.objectContaining({ name: "dev", prefix: "dx" }),
+      credentials.clientId,
+    );
+  });
+
+  it("reports the missing client ID in CI rather than prompting", async () => {
+    const deps = createDependencies({
+      credentials: {
+        id: credentials.id,
+        installationId: credentials.installationId,
+        key: credentials.key,
+      },
+      missingClientId: true,
+    });
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+
+    await expect(
+      prompts({ ...deps, nonInteractive: true })(inquirer),
+    ).rejects.toThrow("Provide: --client-id.");
+    expect(promptSpy).not.toHaveBeenCalled();
+    expect(
+      deps.cloudAccountService.storeRunnerAppClientId,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("uses explicit credentials without looking in the vault", async () => {
+    const deps = createDependencies({
+      credentials: {},
+      missingClientId: false,
+    });
+
+    const result = await prompts({
+      ...deps,
+      initialAnswers: {
+        ...initialAnswers,
+        init: { runnerAppCredentials: credentials },
+      },
+      nonInteractive: true,
+    })(inquirer);
+
+    expect(result.runnerAppCredentials).toEqual(credentials);
+    expect(
+      deps.cloudAccountService.getRunnerAppCredentials,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("prompts for unavailable credentials without asking to confirm reuse", async () => {
+    const deps = createDependencies({
+      credentials: {},
+      missingClientId: false,
+    });
+    const promptSpy = vi.spyOn(inquirer, "prompt").mockResolvedValue({
+      runnerAppCredentials: credentials,
+    });
+
+    const result = await prompts(deps)(inquirer);
+
+    expect(result.runnerAppCredentials).toEqual(credentials);
+    expect(promptSpy).toHaveBeenCalledExactlyOnceWith(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "runnerAppCredentials.id" }),
+        expect.objectContaining({ name: "runnerAppCredentials.clientId" }),
+        expect.objectContaining({
+          name: "runnerAppCredentials.installationId",
+        }),
+        expect.objectContaining({ name: "runnerAppCredentials.key" }),
+      ]),
+    );
+    expect(
+      deps.cloudAccountService.storeRunnerAppClientId,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("reuses credentials when only the Terraform backend is missing", async () => {
+    const deps = createDependencies({ credentials, missingClientId: false });
+    deps.cloudAccountService.getTerraformBackend.mockResolvedValue(undefined);
+    const promptSpy = vi.spyOn(inquirer, "prompt");
+    const consoleSpy = vi
+      .spyOn(console, "log")
+      .mockImplementation(() => undefined);
+
+    const result = await prompts({
+      ...deps,
+      initialAnswers: { ...initialAnswers, init: { confirm: true } },
+      nonInteractive: true,
+    })(inquirer);
+
+    expect(result.runnerAppCredentials).toEqual(credentials);
+    expect(result.init?.runnerAppCredentials).toEqual(credentials);
+    expect(promptSpy).not.toHaveBeenCalled();
+    expect(consoleSpy).not.toHaveBeenCalled();
+  });
+});
+
+describe("Runner App credential selection", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("uses explicit values over vault values without changing stored credentials", async () => {
+    const deps = createDependencies({ credentials, missingClientId: false });
+
+    const result = await prompts({
+      ...deps,
+      initialAnswers: {
+        ...initialAnswers,
+        init: {
+          runnerAppCredentials: { clientId: "explicit-client-id" },
+        },
+      },
+      nonInteractive: true,
+    })(inquirer);
+
+    expect(result.runnerAppCredentials).toEqual({
+      ...credentials,
+      clientId: "explicit-client-id",
+    });
+    expect(
+      deps.cloudAccountService.storeRunnerAppClientId,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("does not backfill a client ID when the App ID is overridden", async () => {
+    const deps = createDependencies({
+      credentials: {
+        id: credentials.id,
+        installationId: credentials.installationId,
+        key: credentials.key,
+      },
+      missingClientId: true,
+    });
+
+    const result = await prompts({
+      ...deps,
+      initialAnswers: {
+        ...initialAnswers,
+        init: {
+          runnerAppCredentials: {
+            clientId: "explicit-client-id",
+            id: "different-app-id",
+          },
+        },
+      },
+      nonInteractive: true,
+    })(inquirer);
+
+    expect(result.runnerAppCredentials).toEqual({
+      ...credentials,
+      clientId: "explicit-client-id",
+      id: "different-app-id",
+    });
+    expect(
+      deps.cloudAccountService.storeRunnerAppClientId,
+    ).not.toHaveBeenCalled();
+  });
+
+  it("keeps credential input manual for multiple subscriptions", async () => {
+    const deps = createDependencies({ credentials, missingClientId: false });
+    const secondAccount: CloudAccount = {
+      ...account,
+      displayName: "DEV-Other",
+      id: "sub-456",
+    };
+    deps.cloudAccountRepository.list.mockResolvedValue([
+      account,
+      secondAccount,
+    ]);
+    const promptSpy = vi.spyOn(inquirer, "prompt").mockResolvedValue({
+      runnerAppCredentials: credentials,
+    });
+
+    const result = await prompts({
+      ...deps,
+      initialAnswers: {
+        ...initialAnswers,
+        env: {
+          ...initialAnswers.env,
+          cloudAccountIds: [account.id, secondAccount.id],
+          locations: {
+            [account.id]: "italynorth",
+            [secondAccount.id]: "italynorth",
+          },
+        },
+      },
+    })(inquirer);
+
+    expect(result.runnerAppCredentials).toEqual(credentials);
+    expect(promptSpy).toHaveBeenCalledExactlyOnceWith(
+      expect.arrayContaining([
+        expect.objectContaining({ name: "runnerAppCredentials.id" }),
+        expect.objectContaining({ name: "runnerAppCredentials.clientId" }),
+        expect.objectContaining({
+          name: "runnerAppCredentials.installationId",
+        }),
+        expect.objectContaining({ name: "runnerAppCredentials.key" }),
+      ]),
+    );
+    expect(
+      deps.cloudAccountService.getRunnerAppCredentials,
+    ).not.toHaveBeenCalled();
+  });
+});
 
 describe("workspaceSchema — domain transforms", () => {
   it("lowercases an uppercase domain", () => {
@@ -145,6 +482,9 @@ describe("prompts with prefilled answers", () => {
 
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getRunnerAppCredentials: vi
+        .fn()
+        .mockResolvedValue({ credentials: {}, missingClientId: false }),
       getTerraformBackend: vi.fn().mockResolvedValue({
         resourceGroupName: "rg-test",
         storageAccountName: "sttest",
@@ -155,6 +495,7 @@ describe("prompts with prefilled answers", () => {
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(true),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
     };
 
     const promptSpy = vi.spyOn(inquirer, "prompt");
@@ -265,6 +606,9 @@ describe("required tag prompts", () => {
     };
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getRunnerAppCredentials: vi
+        .fn()
+        .mockResolvedValue({ credentials: {}, missingClientId: false }),
       getTerraformBackend: vi.fn().mockResolvedValue({
         resourceGroupName: "rg-test",
         storageAccountName: "sttest",
@@ -275,6 +619,7 @@ describe("required tag prompts", () => {
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(true),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
     };
     const promptSpy = vi.spyOn(inquirer, "prompt");
     promptSpy.mockResolvedValueOnce({
@@ -355,6 +700,9 @@ describe("non-interactive tag defaults", () => {
     };
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getRunnerAppCredentials: vi
+        .fn()
+        .mockResolvedValue({ credentials: {}, missingClientId: false }),
       getTerraformBackend: vi.fn().mockResolvedValue({
         resourceGroupName: "rg-test",
         storageAccountName: "sttest",
@@ -365,6 +713,7 @@ describe("non-interactive tag defaults", () => {
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(true),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
     };
     const promptSpy = vi.spyOn(inquirer, "prompt");
     const dependencies: PromptsDependencies = {
@@ -446,6 +795,9 @@ describe("prompts", () => {
         },
         cloudAccountService: {
           configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+          getRunnerAppCredentials: vi
+            .fn()
+            .mockResolvedValue({ credentials: {}, missingClientId: false }),
           getTerraformBackend: vi.fn().mockResolvedValue({
             resourceGroupName: "rg-test",
             storageAccountName: "sttest",
@@ -456,6 +808,7 @@ describe("prompts", () => {
           initialize: vi.fn().mockResolvedValue(undefined),
           isInitialized: vi.fn().mockResolvedValue(true),
           provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+          storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
         },
         github: {
           owner: "pagopa",
@@ -523,11 +876,15 @@ describe("prompts", () => {
       },
       cloudAccountService: {
         configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+        getRunnerAppCredentials: vi
+          .fn()
+          .mockResolvedValue({ credentials: {}, missingClientId: false }),
         getTerraformBackend: vi.fn().mockResolvedValue(undefined),
         hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
         initialize: vi.fn().mockResolvedValue(undefined),
         isInitialized: vi.fn().mockResolvedValue(true),
         provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+        storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
       },
       github: {
         owner: "pagopa",
@@ -572,11 +929,15 @@ describe("prompts", () => {
 
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getRunnerAppCredentials: vi
+        .fn()
+        .mockResolvedValue({ credentials: {}, missingClientId: false }),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(true),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
     };
 
     const promptSpy = vi.spyOn(inquirer, "prompt");
@@ -650,11 +1011,15 @@ describe("prompts", () => {
 
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getRunnerAppCredentials: vi
+        .fn()
+        .mockResolvedValue({ credentials: {}, missingClientId: false }),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(false),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
     };
 
     const promptSpy = vi.spyOn(inquirer, "prompt");
@@ -749,11 +1114,15 @@ describe("prompts", () => {
 
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getRunnerAppCredentials: vi
+        .fn()
+        .mockResolvedValue({ credentials: {}, missingClientId: false }),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(false),
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(false),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
     };
 
     const promptSpy = vi.spyOn(inquirer, "prompt");
@@ -825,11 +1194,15 @@ describe("prompts with prefilled initialization answers", () => {
 
     const cloudAccountService: CloudAccountService = {
       configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
+      getRunnerAppCredentials: vi
+        .fn()
+        .mockResolvedValue({ credentials: {}, missingClientId: false }),
       getTerraformBackend: vi.fn().mockResolvedValue(undefined),
       hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
       initialize: vi.fn().mockResolvedValue(undefined),
       isInitialized: vi.fn().mockResolvedValue(false),
       provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+      storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
     };
 
     const promptSpy = vi.spyOn(inquirer, "prompt");
