@@ -25,8 +25,9 @@
         "Uses the canonical As/ I want/ so that Story structure.",
         "Keeps Stories and Tasks scoped to one two-week sprint or flags work that must be split.",
         "Represents repository setup and API contract wiring as Tasks rather than actor-facing Stories.",
-        "Routes concrete Tasks to the repository from the DR/SRS references.repository link.",
+        "Each concrete implementation Task, including both semantic error-handling Tasks, explicitly identifies the repository from the DR/SRS references.repository link.",
         "Links each item to its Epic and relevant source IDs; contract-only Tasks cite their DR contract IDs rather than inventing UC coverage.",
+        "The UC-01 Story cites NFR-01 under DR-01 because its AC-02 verifies the same no-cross-user-exposure requirement; unrelated NFRs are not added.",
         "Story Source lists follow the fixed document-key order and put AC IDs linked to the owning UC in AC Coverage, without duplicating them among Source children."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
@@ -145,15 +146,15 @@
     {
       "id": 10,
       "name": "repo-file-and-missing-locators",
-      "prompt": "Prepare a single Task, no live calls or Jira mutation: PAY project, parent PAY-10, summary Wire upload API, one-sprint outcome API conforms to the contract, check implementation contract test passes. Its DR is demo/outcome/design-review.md in pagopa/dx on default branch main, citing contracts.item-001 and NFR-04. That cited contract's artifact locator is missing. The application repository has not been chosen. Show the complete draft and Source block in proposal.md, explicitly mark missing source/routing information, and ask for the missing locator rather than inventing it.",
+      "prompt": "Read missing-contract-context.md as the complete offline source evidence. Prepare a single Task in PAY under PAY-10: Wire upload API, one-sprint outcome API conforms to the contract, check implementation contract test passes. Cite contracts.item-001 and NFR-04 from the supplied DR. Show the complete draft and Source block in proposal.md, identify missing source and routing information, and ask for the contract locator. Do not retrieve URLs, inspect other repositories, or mutate Jira.",
       "expected_output": "A repository-qualified DR source without fabricated anchors, a visibly missing contract locator, and an honest unresolved routing gap that prevents persistence.",
       "expectations": [
-        "Links dr to https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md, without a fragment.",
+        "Links dr to https://github.com/example/adhesion-design/blob/main/docs/design-review.md, without a fragment.",
         "Renders contracts.item-001 and NFR-04 as code-text children, not fabricated repo-file anchors.",
         "Includes a contract locator-missing entry or equivalent explicit gap and asks for the missing locator before persistence.",
-        "Does not treat pagopa/dx (the document repository) as the missing application repository and makes no live mutations."
+        "Does not treat example/adhesion-design (the document repository) as the missing application repository and makes no live calls or mutations."
       ],
-      "files": []
+      "files": ["evals/fixtures/missing-contract-context.md"]
     },
     {
       "id": 11,

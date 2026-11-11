@@ -95,6 +95,11 @@ exact ID, optionally followed by a short title. Examples include `JTBD-*`,
 ADR/RFC/CR IDs. Preserve the source's actual spelling; these examples do not
 define or migrate an ID naming convention.
 
+For a Story or Task that implements or verifies an identified NFR, cite that
+NFR under its owning document, even when a Use Case acceptance check also
+expresses the requirement. Do not add NFRs merely because they appear elsewhere
+in the DR/SRS.
+
 The UC identity is in its document label (and a nested section reference for
 an embedded UC). Put acceptance-check IDs in
 `## AC Coverage`, not among the nested Source IDs. Link each AC to its owning

@@ -129,9 +129,10 @@ preserve their IDs and do not invent missing checks.
 Create a technical Task for smaller enabling work such as repository setup,
 API/AsyncAPI/Data Contract wiring, migrations, instrumentation, test fixtures,
 security controls, deployment, or readiness actions. Route concrete Tasks to the
-repository named by `references.repository`. A Task may support a Story or Epic
-but must not masquerade as actor value. A task that cannot fit one sprint must be
-split or flagged.
+repository named by `references.repository`, stating the target on each Task,
+including implementation Tasks for Use Case errors. A Task may support a Story
+or Epic but must not masquerade as actor value. A task that cannot fit one
+sprint must be split or flagged.
 Select sources independently for each Task: enabling or contract-only work
 does not inherit the sources of every Story it supports.
 
