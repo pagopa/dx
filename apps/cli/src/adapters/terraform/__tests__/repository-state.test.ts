@@ -66,10 +66,10 @@ describe("ensureRemoteRepositoryState", () => {
 
   afterEach(() => fs.rm(dir, { force: true, recursive: true }));
 
-  it("does nothing when the backend is configured and no local state exists", async () => {
+  it("verifies the configured backend before accepting it as already remote", async () => {
     await fs.writeFile(file("providers.tf"), BACKEND);
     await expect(run()).resolves.toBe("already-remote");
-    expect(calls).toEqual([]);
+    expect(commands()).toEqual(["init", "plan"]);
   });
 
   it("migrates local state, verifies the plan and deletes the local files", async () => {
@@ -110,6 +110,48 @@ describe("ensureRemoteRepositoryState", () => {
     );
     await expect(exists("terraform.tfstate")).resolves.toBe(true);
   });
+
+  it.each([
+    { local: true, scenario: "migration" },
+    { local: false, scenario: "remote-state reuse" },
+  ])(
+    "keeps blocking retries after failed verification during $scenario",
+    async ({ local }) => {
+      if (local) {
+        await fs.writeFile(file("terraform.tfstate"), LOCAL_STATE);
+      }
+
+      await expect(
+        run({
+          onCall: async (args) => {
+            if (args.includes("-migrate-state")) {
+              await fs.writeFile(file("terraform.tfstate.backup"), LOCAL_STATE);
+              await fs.writeFile(
+                file("terraform.tfstate"),
+                JSON.stringify({ resources: [] }),
+              );
+            }
+          },
+          remote: !local,
+          responses: { plan: { exitCode: 2 } },
+        }),
+      ).rejects.toThrow(/not clean/);
+
+      for (const exitCode of [2, 1]) {
+        calls = [];
+        await expect(
+          run({ remote: true, responses: { plan: { exitCode } } }),
+        ).rejects.toThrow(/not clean/);
+        expect(commands()).toEqual(["init", "plan"]);
+      }
+      await expect(exists("terraform.tfstate.backup")).resolves.toBe(local);
+
+      calls = [];
+      await expect(run({ remote: true })).resolves.toBe("already-remote");
+      expect(commands()).toEqual(["init", "plan"]);
+      await expect(exists("terraform.tfstate.backup")).resolves.toBe(false);
+    },
+  );
 
   it("reuses state already present in the backend", async () => {
     await expect(run({ remote: true })).resolves.toBe("already-remote");
