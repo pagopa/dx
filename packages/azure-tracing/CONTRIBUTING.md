@@ -129,7 +129,11 @@ consumer.
 
 For the same reason `@opentelemetry/api` is declared with the distro range
 (`^1.9.1`) instead of a stricter one, so that consumer installs keep a single
-copy.
+copy. Inside the workspace it is additionally pinned to `1.9.1`: the `0.221` and
+`2.10.0` families peer-bound the API to `<1.10.0`, so letting the caret range
+resolve `1.10.0` leaves every SDK package with an unmet peer and breaks installs
+that enable strict peer validation. `1.9.1` is also the version the distro
+registers as the global API at runtime.
 
 Two versions of the same instrumentation must be avoided rather than tolerated:
 `InstrumentationBase._wrap` unwraps any existing wrapper before applying its own,
@@ -140,10 +144,15 @@ and a `disable()` from the losing copy can remove the surviving patch entirely.
 
 Only the artifacts that actually split need a pin: `core`, `resources`,
 `sdk-metrics`, `sdk-trace-base`, `sdk-trace-node` and `sdk-trace-web`.
-`context-async-hooks`, `exporter-zipkin`, `propagator-b3`, `propagator-jaeger`,
-`sdk-trace` and `@opentelemetry/api` are required exactly by
-`sdk-trace-node@2.10.0` (or resolve naturally through caret ranges), so they
-converge on the right version without an override.
+`context-async-hooks`, `exporter-zipkin`, `propagator-b3`, `propagator-jaeger`
+and `sdk-trace` are required exactly by `sdk-trace-node@2.10.0` (or resolve
+naturally through caret ranges), so they converge on the right version without an
+override. `@opentelemetry/api` is the exception: it needs a pin for its peer
+contract, not for deduplication.
+
+Verify the result with `pnpm peers check`; the only remaining complaints should be
+the unrelated `react`/`react-dom` peers of
+`@microsoft/docusaurus-plugin-application-insights`.
 
 ## Upgrading `@azure/monitor-opentelemetry`
 
@@ -166,10 +175,11 @@ converge on the right version without an override.
    > duplicated packages (`vite`, `vitest`, `memfs`, …) and running
    > `pnpm dedupe` would rewrite the whole lockfile.
 
-4. Confirm `pnpm install --frozen-lockfile` is clean and the integration suite is
-   green. The suites cover both regressions this alignment fixes: Live Metrics
-   exports through the QuickPulse endpoint, and request telemetry exported for a
-   Fastify server with a non-empty URL.
+4. Confirm `pnpm install --frozen-lockfile` is clean and `pnpm peers check` reports
+   no `@opentelemetry/*` peer complaint, then run the integration suite. The suites
+   cover both regressions this alignment fixes: Live Metrics exports through the
+   QuickPulse endpoint, and request telemetry exported for a Fastify server with a
+   non-empty URL.
 5. Check the published artifact, not just the workspace. The workspace overrides
    are not part of the tarball, so pack the package and install it in a scratch
    consumer with `npm` (Redis v5 and v6 each) and assert that a Redis command

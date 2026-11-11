@@ -34,6 +34,12 @@ overrides:
   # These are the only SDK artifacts that need pinning: context-async-hooks,
   # exporter-zipkin, propagator-b3/jaeger and sdk-trace already resolve to
   # 2.10.0 because sdk-trace-node 2.10.0 requires them exactly.
+  # The 0.221 / 2.10.0 families peer-bound `@opentelemetry/api` to `<1.10.0`
+  # (`sdk-trace-node`, `sdk-metrics`, `sdk-logs`, `core`, the propagators), so
+  # resolving 1.10.0 leaves every one of them with an unmet peer and breaks
+  # installs that enable strict peer validation. 1.9.1 is also the version the
+  # Azure Monitor distro registers as the global API at runtime.
+  "@opentelemetry/api": 1.9.1
   "@opentelemetry/core": 2.10.0
   "@opentelemetry/resources": 2.10.0
   "@opentelemetry/sdk-metrics": 2.10.0
