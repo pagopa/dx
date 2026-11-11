@@ -148,9 +148,22 @@ The managed identity (or other principal) must have the **Monitoring Metrics Pub
 - `pnpm nx test @pagopa/azure-tracing` runs the default unit test suite.
 - `pnpm nx run @pagopa/azure-tracing:integration` runs the opt-in integration suite.
 
+Unit tests live next to the source they cover. Integration suites are split by
+the entrypoint they exercise:
+
+| Directory                        | Entrypoint                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------ |
+| `src/__tests__/`                 | Standalone applications (Container Apps, App Services) importing `initAzureMonitor`. |
+| `src/azure/functions/__tests__/` | Azure Functions, instrumented through the `NODE_OPTIONS` preload.                    |
+
+Both trees share the collector and scenario harness in `src/__tests__/`, and the
+`runDependencyScenario` helper takes the preload module path as its last
+argument (`standalonePreloadModulePath` for standalone suites,
+`functionsPreloadModulePath` by default).
+
 > [!IMPORTANT]
 > Pre-condition for the integration suite: Docker must be installed and running locally so Testcontainers can start the required services.
-> The suite already uses the committed PEM fixtures in `src/azure/functions/__tests__/fixtures/`, so no extra certificate-generation step is required.
+> The suite already uses the committed PEM fixtures in `src/__tests__/fixtures/`, so no extra certificate-generation step is required.
 
 ## Dependency Constraints
 
@@ -197,6 +210,41 @@ npm view @opentelemetry/instrumentation@<version> dependencies | grep 'import-in
 ```
 
 Set `import-in-the-middle` in `package.json` to the same major range as the result.
+
+### `@opentelemetry/*` versions must stay on the `@azure/monitor-opentelemetry` release train
+
+> [!WARNING]
+> Do **not** bump a single `@opentelemetry/*` package past the line bundled by `@azure/monitor-opentelemetry`. The resulting duplicate registries degrade tracing without any error.
+
+#### Why this constraint exists
+
+`@azure/monitor-opentelemetry` ships a fixed set of OpenTelemetry packages, and the `0.221`-line releases pin `@opentelemetry/core`, `@opentelemetry/resources` and the `sdk-*` packages to an exact SDK version.
+Other dependencies (for example `@azure/monitor-opentelemetry-exporter`) accept a wider range, so pnpm would otherwise install two copies of the same provider and only one of them would be the global tracer/metrics provider.
+
+The `overrides` block in `pnpm-workspace.yaml` collapses the whole family onto a single version, and additionally forces `@opentelemetry/instrumentation-redis` onto that line.
+That instrumentation is the first release with Redis v6 support; it declares `@opentelemetry/instrumentation@^0.301.0` but only consumes APIs that the `0.221` line already exports, so it is safe to install next to the Azure Monitor distro.
+
+Only the artifacts that are actually split need a pin: `core`, `resources`, `sdk-metrics`, `sdk-trace-base`, `sdk-trace-node` and `sdk-trace-web`.
+`context-async-hooks`, `exporter-zipkin`, `propagator-b3`, `propagator-jaeger`, `sdk-trace` and `@opentelemetry/api` are pinned exactly by `sdk-trace-node@2.10.0` (or are only required through caret ranges that already resolve to `1.10.0`), so they converge on the right version without an override.
+
+When upgrading `@azure/monitor-opentelemetry`, update the catalog entry and the `@opentelemetry/*` overrides together, then verify that a single version is resolved:
+
+```bash
+pnpm why @opentelemetry/instrumentation-redis
+pnpm why @opentelemetry/core
+
+# Every @opentelemetry/* package must resolve to a single version.
+# The command prints nothing when the lockfile is aligned.
+rg -o "'@opentelemetry/[a-z-]+@[0-9][0-9a-z.-]*'" --no-filename pnpm-lock.yaml |
+  sort -u | cut -d@ -f2 | sort | uniq -d
+```
+
+> [!NOTE]
+> Do not use `pnpm dedupe --check` for this check: it reports unrelated duplicated
+> packages (`vite`, `vitest`, `memfs`, …) and running `pnpm dedupe` would rewrite
+> the whole lockfile.
+
+The integration suites cover both regressions this alignment fixes: Live Metrics exports through the QuickPulse endpoint, and request telemetry exported for a Fastify server with a non-empty URL.
 
 ## Running Integration Tests Locally
 

@@ -13,13 +13,13 @@ import {
   createContainerFixture,
   type DependencyTrackingFixtures,
   telemetryCollectorFixture,
-} from "./dependency-tracking-test-fixtures";
+} from "../../../__tests__/dependency-tracking-test-fixtures";
 import {
   createRunId,
   createStorageConnectionString,
   dependencyTestTimeoutMs,
   runDependencyScenario,
-} from "./dependency-tracking-test-helpers";
+} from "../../../__tests__/dependency-tracking-test-helpers";
 
 const test = baseTest.extend<
   DependencyTrackingFixtures & {

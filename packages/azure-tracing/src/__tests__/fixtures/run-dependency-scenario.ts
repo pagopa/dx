@@ -2,15 +2,18 @@ import { CosmosClient } from "@azure/cosmos";
 import { shutdownAzureMonitor } from "@azure/monitor-opentelemetry";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { context, trace } from "@opentelemetry/api";
+import Fastify from "fastify";
 /**
- * Child-process fixture that performs real Cosmos DB, Redis, and Blob Storage
- * operations after the package preload entrypoint has initialized telemetry.
+ * Child-process fixture that performs real Cosmos DB, Fastify, Redis, and Blob
+ * Storage operations after the package preload entrypoint has initialized
+ * telemetry.
  */
 import { Readable } from "node:stream";
+import { setTimeout as delay } from "node:timers/promises";
 import { createClient } from "redis";
 import { z } from "zod";
 
-const scenarioSchema = z.enum(["cosmos", "redis", "storage"]);
+const scenarioSchema = z.enum(["cosmos", "fastify", "redis", "storage"]);
 
 const cosmosEnvSchema = z.object({
   COSMOS_CONTAINER_ID: z.string().min(1),
@@ -18,6 +21,11 @@ const cosmosEnvSchema = z.object({
   COSMOS_ENDPOINT: z.string().url(),
   COSMOS_ITEM_ID: z.string().min(1),
   COSMOS_KEY: z.string().min(1),
+});
+
+const fastifyEnvSchema = z.object({
+  FASTIFY_REQUEST_PATH: z.string().startsWith("/"),
+  FASTIFY_RUN_ID: z.string().min(1),
 });
 
 const redisEnvSchema = z.object({
@@ -106,6 +114,42 @@ const runCosmosScenario = async () => {
   }
 };
 
+const runFastifyScenario = async () => {
+  const env = fastifyEnvSchema.parse(process.env);
+  const app = Fastify({ logger: false });
+
+  app.get<{ Params: { runId: string } }>(
+    "/dependency-tracking/:runId",
+    (request) => ({ runId: request.params.runId }),
+  );
+
+  const origin = await app.listen({ host: "127.0.0.1", port: 0 });
+
+  try {
+    const response = await fetch(`${origin}${env.FASTIFY_REQUEST_PATH}`);
+
+    if (!response.ok) {
+      throw new Error(
+        `The Fastify scenario received an unexpected status: ${response.status}.`,
+      );
+    }
+
+    const payload = (await response.json()) as { runId?: string };
+
+    if (payload.runId !== env.FASTIFY_RUN_ID) {
+      throw new Error(
+        "The Fastify scenario did not read back the expected route parameter.",
+      );
+    }
+
+    // Live Metrics pings the collector after 5s and starts posting 1s later, so
+    // the server outlives that handshake to let the suite observe both calls.
+    await delay(8_000);
+  } finally {
+    await app.close();
+  }
+};
+
 const runRedisScenario = async () => {
   const env = redisEnvSchema.parse(process.env);
   const client = createClient({ url: env.REDIS_URL });
@@ -123,7 +167,7 @@ const runRedisScenario = async () => {
     }
   } finally {
     if (client.isOpen) {
-      await client.quit();
+      await client.close();
     }
   }
 };
@@ -160,6 +204,11 @@ const main = async () => {
   try {
     if (scenario === "cosmos") {
       await withScenarioSpan("cosmos", runCosmosScenario);
+      return;
+    }
+
+    if (scenario === "fastify") {
+      await withScenarioSpan("fastify", runFastifyScenario);
       return;
     }
 
