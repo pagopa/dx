@@ -1,0 +1,195 @@
+{
+  "skill_name": "assess-jira-implementation-readiness",
+  "evals": [
+    {
+      "id": 0,
+      "name": "accept-all-eligible-types",
+      "prompt": "Assess implementation readiness for TEST-1, TEST-2, and TEST-3 using the supplied Jira response snapshots in accept-all-eligible-types.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "All three issues are Ready: their metadata, blockers, and applicable description sections pass.",
+      "expectations": [
+        "Reads the supplied metadata for every target issue without claiming a live Jira retrieval.",
+        "Reports Ready for each of Story, Task, and Bug in the new status category.",
+        "Checks the Story's binary check list without requiring one for the Task or Bug.",
+        "Adds no assignment or estimation gate.",
+        "Performs only read operations and does not implement the issues."
+      ],
+      "files": ["evals/fixtures/accept-all-eligible-types.json"]
+    },
+    {
+      "id": 1,
+      "name": "report-all-failed-criteria",
+      "prompt": "Assess TEST-4 using the supplied Jira response snapshot in report-all-failed-criteria.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Not ready, with the actual status name, a work-to-do hint, and the type failure.",
+      "expectations": [
+        "Reports Not ready.",
+        "Reports Backlog as the actual status, explains that work must be to do, and reports Epic as a failed type.",
+        "Uses the category key for the verdict rather than treating Backlog as eligible by name.",
+        "Preserves Jira state without changing the status or issue type."
+      ],
+      "files": ["evals/fixtures/report-all-failed-criteria.json"]
+    },
+    {
+      "id": 2,
+      "name": "use-status-category-key",
+      "prompt": "Assess TEST-5 using the supplied Jira response snapshot in use-status-category-key.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Ready because the status category key is new regardless of status name or category label.",
+      "expectations": [
+        "Uses the exact status category key rather than status name or category label.",
+        "Reports Ready and the actual status Open for this existing Story."
+      ],
+      "files": ["evals/fixtures/use-status-category-key.json"]
+    },
+    {
+      "id": 3,
+      "name": "confirmed-nonexistence",
+      "prompt": "Assess TEST-6 using the supplied Jira response snapshot in confirmed-nonexistence.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Not ready because existence fails; status and type are unavailable.",
+      "expectations": [
+        "Reports confirmed nonexistence as Not ready.",
+        "Marks status and type unavailable without inventing values."
+      ],
+      "files": ["evals/fixtures/confirmed-nonexistence.json"]
+    },
+    {
+      "id": 4,
+      "name": "ambiguous-retrieval-failure",
+      "prompt": "Assess TEST-7 using the supplied Jira response snapshot in ambiguous-retrieval-failure.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Unable to assess, preserving the ambiguous existence or permission error.",
+      "expectations": [
+        "Reports Unable to assess rather than Ready or confirmed nonexistence.",
+        "States the retrieval error and marks existence unverifiable.",
+        "Makes no Jira changes."
+      ],
+      "files": ["evals/fixtures/ambiguous-retrieval-failure.json"]
+    },
+    {
+      "id": 5,
+      "name": "missing-evidence",
+      "prompt": "Assess TEST-8 using the supplied Jira response snapshot in missing-evidence.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Unable to assess because the issue type cannot be verified.",
+      "expectations": [
+        "Reports verified existence and the actual status Open.",
+        "Reports the missing issue type explicitly without inferring it.",
+        "Withholds a Ready verdict."
+      ],
+      "files": ["evals/fixtures/missing-evidence.json"]
+    },
+    {
+      "id": 6,
+      "name": "missing-category-key",
+      "prompt": "Assess TEST-9 using the supplied Jira response snapshot in missing-category-key.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Unable to assess because the status category key is unavailable.",
+      "expectations": [
+        "Reports the category key as unverifiable without inferring it from the status name.",
+        "Withholds a Ready verdict."
+      ],
+      "files": ["evals/fixtures/missing-category-key.json"]
+    },
+    {
+      "id": 7,
+      "name": "pending-blockers",
+      "prompt": "Assess TEST-10 using the supplied Jira response snapshot in pending-blockers.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Not ready because TEST-11 and TEST-13 are unfinished inward blockers; the completed and outward links do not block readiness.",
+      "expectations": [
+        "Reports both TEST-11 and TEST-13 as pending blockers.",
+        "Does not count TEST-12 or the outward link as pending blockers.",
+        "Treats only the done category as completed."
+      ],
+      "files": ["evals/fixtures/pending-blockers.json"]
+    },
+    {
+      "id": 8,
+      "name": "unverifiable-blockers",
+      "prompt": "Assess TEST-23 using the supplied Jira response snapshots in unverifiable-blockers.json, including the recorded response for its linked issue. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Unable to assess; the blocker status could not be verified.",
+      "expectations": [
+        "Uses the supplied linked-issue retrieval error when the status is missing.",
+        "Reports TEST-15 as an unverifiable blocker and explains the permission failure.",
+        "Does not treat missing status as completed or pending."
+      ],
+      "files": ["evals/fixtures/unverifiable-blockers.json"]
+    },
+    {
+      "id": 9,
+      "name": "output-presence-only",
+      "prompt": "Assess TEST-16 and TEST-17 using the supplied Jira response snapshots in output-presence-only.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "TEST-16 is Ready because the Output section exists; TEST-17 is Not ready because a mention is not a section.",
+      "expectations": [
+        "Checks only the presence of the Output section, not whether it has content.",
+        "Distinguishes an actual section from a paragraph mentioning output.",
+        "Does not require Checks for either Task."
+      ],
+      "files": ["evals/fixtures/output-presence-only.json"]
+    },
+    {
+      "id": 10,
+      "name": "story-checks-format",
+      "prompt": "Assess TEST-18, TEST-19, and TEST-20 using the supplied Jira response snapshots in story-checks-format.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "TEST-18 is Ready; TEST-19 and TEST-20 are Not ready because Checks must be a nonempty list.",
+      "expectations": [
+        "Accepts different ID formats with brief binary descriptions.",
+        "Rejects a paragraph and an empty list as Checks.",
+        "Reports the failed Checks criterion for each affected Story."
+      ],
+      "files": ["evals/fixtures/story-checks-format.json"]
+    },
+    {
+      "id": 11,
+      "name": "invalid-check-items",
+      "prompt": "Assess TEST-24 using the supplied Jira response snapshot in invalid-check-items.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Not ready because list items lack an ID, a description, or a binary outcome.",
+      "expectations": [
+        "Examines every list item and identifies each invalid item and its reason.",
+        "Accepts the item with an ID and binary description.",
+        "Does not invent a required ID pattern."
+      ],
+      "files": ["evals/fixtures/invalid-check-items.json"]
+    },
+    {
+      "id": 12,
+      "name": "unavailable-description",
+      "prompt": "Assess TEST-21 and TEST-22 using the supplied Jira response snapshots in unavailable-description.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Unable to assess TEST-21 because description evidence is unavailable; TEST-22 is Not ready because both required sections are absent.",
+      "expectations": [
+        "Distinguishes an omitted description from an explicitly empty one.",
+        "Reports both missing sections for the empty Story description.",
+        "Does not infer the contents of the omitted description."
+      ],
+      "files": ["evals/fixtures/unavailable-description.json"]
+    },
+    {
+      "id": 13,
+      "name": "combine-metadata-and-content",
+      "prompt": "Assess TEST-25 using the supplied Jira response snapshot in combine-metadata-and-content.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Not ready, reporting the failed status, missing Output, and invalid Checks.",
+      "expectations": [
+        "Evaluates the description even when metadata fails.",
+        "Reports every failed criterion rather than stopping at the script verdict."
+      ],
+      "files": ["evals/fixtures/combine-metadata-and-content.json"]
+    },
+    {
+      "id": 14,
+      "name": "story-missing-checks",
+      "prompt": "Assess TEST-26 using the supplied Jira response snapshot in story-missing-checks.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Not ready because the Story is missing its Checks section.",
+      "expectations": [
+        "Reports the missing Checks section even though the deterministic metadata gate passes.",
+        "Treats the Output criterion as satisfied because the section exists, without judging its contents or quality."
+      ],
+      "files": ["evals/fixtures/story-missing-checks.json"]
+    },
+    {
+      "id": 15,
+      "name": "null-description-and-response-envelope",
+      "prompt": "Assess TEST-27 using the supplied Jira response snapshot in null-description-and-response-envelope.json. This is an offline evaluation; do not make remote calls.",
+      "expected_output": "Not ready because the explicitly empty description lacks both Output and Checks.",
+      "expectations": [
+        "Passes the issue inside the response envelope to the metadata script.",
+        "Treats the returned null description as empty rather than missing evidence.",
+        "Reports the missing Output and Checks sections."
+      ],
+      "files": ["evals/fixtures/null-description-and-response-envelope.json"]
+    }
+  ]
+}

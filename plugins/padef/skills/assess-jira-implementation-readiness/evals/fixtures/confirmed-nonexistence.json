@@ -1,0 +1,8 @@
+{
+  "TEST-6": {
+    "error": {
+      "message": "The issue TEST-6 does not exist. This is not a permission failure.",
+      "confirmedNonexistent": true
+    }
+  }
+}

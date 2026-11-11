@@ -1,0 +1,11 @@
+{
+  "TEST-26": {
+    "key": "TEST-26",
+    "fields": {
+      "status": { "name": "Open", "statusCategory": { "key": "new" } },
+      "issuetype": { "name": "Story" },
+      "issuelinks": [],
+      "description": "## Output\nA result."
+    }
+  }
+}
