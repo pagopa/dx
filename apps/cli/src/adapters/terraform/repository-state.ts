@@ -4,7 +4,7 @@
  * `dx init` leaves that state on the local disk. The first `dx add
  * environment` calls ensureRemoteRepositoryState to make it remote:
  *
- * - backend configured, no local state: nothing to do (`already-remote`);
+ * - backend configured, no local state: verify a clean plan (`already-remote`);
  * - local state: copied to the backend with `terraform init -migrate-state`,
  *   verified with a clean plan, then deleted (`migrated`);
  * - no local state but state already in the backend: reused (`already-remote`);
@@ -68,6 +68,14 @@ const readIfExists = async (file: string): Promise<string | undefined> => {
     }
     throw new Error(`Cannot read ${file}`, { cause });
   }
+};
+
+const removeLocalState = async (repositoryPath: string): Promise<void> => {
+  await Promise.all(
+    LOCAL_STATE_FILES.map((file) =>
+      fs.rm(path.join(repositoryPath, file), { force: true }),
+    ),
+  );
 };
 
 const hasLocalState = async (repositoryPath: string): Promise<boolean> => {
@@ -136,7 +144,7 @@ const verifyCleanPlan = async (terraform: TerraformRunner): Promise<void> => {
   ).exitCode;
   if (exitCode !== 0) {
     throw new Error(
-      "The repository state in the backend does not match the infrastructure (terraform plan is not clean)",
+      "The repository state in the backend does not match the infrastructure (terraform plan is not clean). Fix the problem and re-run the same `dx add environment` command.",
     );
   }
 };
@@ -183,11 +191,7 @@ const migrate = async (
     "-input=false",
   ]);
   await verifyCleanPlan(terraform);
-  await Promise.all(
-    LOCAL_STATE_FILES.map((file) =>
-      fs.rm(path.join(repositoryPath, file), { force: true }),
-    ),
-  );
+  await removeLocalState(repositoryPath);
 };
 
 const importExisting = async (
@@ -231,6 +235,10 @@ export const ensureRemoteRepositoryState = async (
   const hasLocal = await hasLocalState(repositoryPath);
 
   if (hasBackend && !hasLocal) {
+    // Migration can empty local state before verification succeeds.
+    await run(terraform, ["init", "-input=false"]);
+    await verifyCleanPlan(terraform);
+    await removeLocalState(repositoryPath);
     return "already-remote";
   }
   if (hasLocal) {
