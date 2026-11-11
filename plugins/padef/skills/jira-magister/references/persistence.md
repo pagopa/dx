@@ -1,6 +1,6 @@
 # Jira persistence
 
-Own the mechanics of turning a confirmed Jira item or backlog projection into
+Turn a confirmed Jira item or backlog projection into
 Jira state. The content contract is in
 [issue-contract.md](./issue-contract.md); the planning, decomposition, and
 readiness rules are in [SKILL.md](../SKILL.md). Apply this reference to a whole
@@ -31,13 +31,12 @@ project's supported link type for `blocks` and preserve its direction: blocking
 issue -> blocked issue. Create each spike's `blocks` link toward the dependent
 Story or Task.
 
-After creating or updating each confirmed Jira item, use the Atlassian MCP
-`addTeamworkGraphContext` relationship type
-`jira-work-item-links-jira-work-item-remote-link` to attach each applicable
-Confluence source page or Figma design artifact. Set the Jira issue as
-`objectIdentifier`, the full source URL as `targetObjectIdentifier`, and the
-page or artifact title as `title`. Keep the machine-readable source line in the
-description as well.
+Each confirmed item with a `## Source` must have one native remote link per
+Confluence or Figma document in that section, titled with the document title.
+Check existing links before adding one; match Confluence pages by page ID,
+not a title slug or an ID fragment. Preserve distinct Figma node targets. Do not duplicate links
+on synchronization. The description's Source list stays authoritative; remote
+links mirror it, not a second independently selected inventory.
 
 ## Confirmation protocol
 
@@ -52,14 +51,23 @@ Match an existing issue before creating a new one. Use the first unambiguous
 match:
 
 1. explicitly supplied Jira key;
-2. stored Jira URL or source mapping containing the stable source ID;
-3. an exact stable-ID match in the target project;
+2. stored Jira URL or confirmed source-to-item mapping;
+3. source-document locators plus document-scoped IDs in `Source` and AC
+   Coverage within the target project; confirm that the candidate's scope
+   matches the item;
 4. no match: propose creation;
 5. multiple matches: stop and ask the user to choose.
 
-The stable source ID includes `open.item-XX` for spike Tasks and the semantic
-error identifier for error-handling Tasks. Report ambiguity and stop instead of
-creating a duplicate.
+Compare page IDs/canonical file locators and document-scoped IDs, not bare
+`AC-01` across UCs or the shared DR alone. Several legitimate slices may share
+the same source documents or UC: use confirmed scope/coverage or a supplied
+correlation key to disambiguate; never merge slices just because their
+references overlap.
+For legacy Source lines, require an unambiguous mapping rather than silently
+rewriting or duplicating the issue. Spike matching includes `open.item-XX`.
+Error Tasks are shared by semantic error identifier within the projection;
+extend their affected UC references rather than duplicating them.
+Report ambiguous matches and stop.
 
 ## Field-level updates
 
@@ -68,7 +76,8 @@ Epic, unchanged acceptance IDs, existing status, and content outside the
 confirmed change. Do not change lifecycle status, assignee, priority, estimates,
 or unrelated description content unless the user confirmed those changes.
 Preserve existing Jira content not owned by this projection. Add a new
-traceability ID only when the source introduces new meaning.
+traceability ID only when the source introduces new meaning. Reformat a legacy
+description only when that change is explicitly included in the confirmed diff.
 
 ## Verification
 
@@ -76,15 +85,19 @@ Re-fetch every created or updated item and verify:
 
 - parent-child hierarchy and issue types;
 - every confirmed dependency link, including direction and link type;
-- source links and stable IDs;
+- for items with a `Source` section, the parsed `Source` and AC Coverage lists match
+  [issue-template.md](./issue-template.md): fixed key order, one document
+  entry per locator, IDs under their owning documents, complete
+  one-hop document set, and AC IDs linked to the owning UC;
+- canonical locators, no bare file paths or pinned Confluence versions,
+  and missing locators or unverified anchors reported honestly;
 - Story acceptance checks and Task/Story classification;
 - no duplicate was created, and no two error-handling Tasks share one semantic
   error identifier;
 - every spike's `blocks` link exists in the correct direction;
 - the returned Jira keys and URLs are usable;
-- every requested Confluence or Figma remote link is present on the intended
-  Jira item; verify with Jira remote-link retrieval when graph-context traversal
-  does not expose the relationship.
+- every Confluence or Figma Source document has exactly one remote link on
+  the intended item, with the correct title and locator.
 
 A failed verification makes the operation incomplete.
 

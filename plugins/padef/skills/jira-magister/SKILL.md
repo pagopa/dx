@@ -64,9 +64,9 @@ request is ambiguous.
 5. If a material criterion is missing, contradictory, or unpropagated, stop Jira
    creation and report the gap, impact, owner if known, and required resolution.
    Do not infer a value to make an item appear ready.
-6. Preserve source traceability in both the issue description and native Jira
-   remote links. When a source has a Confluence or Figma URL, link that page or
-   design artifact to the Jira item instead of relying only on prose references.
+6. Use [issue-template.md](./references/issue-template.md) for `## Source`
+   and `## AC Coverage`. The document list is authoritative; native Jira
+   remote links mirror its Confluence and Figma entries without duplicates.
 7. Treat open questions as projection input. A question flagged `Blocking: yes`
    becomes an independent spike Task that the dependent Story or Task
    `is blocked by`; a non-blocking question is recorded as a gap with its owner
@@ -95,8 +95,9 @@ Require:
 - Jira project key and target board/context, unless already unambiguous.
 
 Ask one focused clarification at a time when any required context is missing.
-Collect the canonical Confluence URLs for the parent DR/SRS, linked PRD, and
-selected Use Case pages, plus applicable Figma URLs, when they are available.
+Collect canonical page-ID URLs, the source repository and default branch for
+local documents, and directly applicable contract, Figma and Blueprint URLs.
+Report missing locators instead of using bare basenames or inventing links.
 
 ### 2. Propose Epic slices
 
@@ -128,20 +129,25 @@ preserve their IDs and do not invent missing checks.
 Create a technical Task for smaller enabling work such as repository setup,
 API/AsyncAPI/Data Contract wiring, migrations, instrumentation, test fixtures,
 security controls, deployment, or readiness actions. Route concrete Tasks to the
-repository named by `references.repository`. A Task may support a Story or Epic
-but must not masquerade as actor value. A task that cannot fit one sprint must be
-split or flagged.
+repository named by `references.repository`, stating the target on each Task,
+including implementation Tasks for Use Case errors. A Task may support a Story
+or Epic but must not masquerade as actor value. A task that cannot fit one
+sprint must be split or flagged.
+Select sources independently for each Task: enabling or contract-only work
+does not inherit the sources of every Story it supports.
 
 Turn blocking open questions into independent spike Tasks. A spike states the
 decision to be taken, its owner, its source `open.item-XX`, and the outcome that
 unblocks dependents; the dependent Story or Task `is blocked by` the spike. A
 non-blocking open question is recorded in the draft as a gap with its owner and
 creates no blocking edge. Do not invent the answer to an open question.
+Nest the question ID under the `dr` document in `Source`.
 
 Use Case errors may repeat across Use Cases with the same semantic identifier.
 Define the error-handling Task once per semantic identifier, not once per Use
 Case, keep the identifier in its traceability, and link the affected Stories;
 never create duplicate tasks for the same error condition.
+Nest the error ID under each owning `uc` document in the shared Task's `Source`.
 
 Keep hierarchy and dependencies distinct:
 
@@ -154,7 +160,8 @@ Keep hierarchy and dependencies distinct:
   delivery dependencies. Do not create speculative or informational links.
 
 Read [issue-contract.md](./references/issue-contract.md) for required content,
-traceability, and sizing.
+traceability, and sizing. Read [issue-template.md](./references/issue-template.md)
+before drafting descriptions.
 
 ### 4. Review the projection
 
@@ -164,7 +171,9 @@ Show a complete human-readable draft before any Jira mutation:
 - summaries and descriptions;
 - issue type, parent, dependency links with direction and link type, labels, and
   project;
-- source links and stable IDs;
+- complete `Source` blocks for items other than Sub-tasks, parent references
+  for Sub-tasks, nested IDs, and AC Coverage where applicable;
+- missing locators and whether Confluence ID anchors are known to exist;
 - acceptance checks, KPI target, qualitative guardrail, and readiness gaps;
 - spike Tasks derived from blocking open questions, with their `open.item-XX`
   source and the dependents they block;
@@ -177,7 +186,7 @@ backlog is not confirmation to create or update Jira.
 
 ### 5. Create or synchronize after confirmation
 
-Read [persistence.md](./references/persistence.md) for the Jira mechanics:
+Read [persistence.md](./references/persistence.md) for persistence requirements:
 integration selection, project metadata discovery, creation order, native and
 remote links, synchronization matching, field-level updates, and failure
 handling. Match existing issues before creating new ones, and create parents
@@ -195,28 +204,25 @@ verification step failed.
 Use this mode when the user supplies the item content directly instead of a body
 of requirements.
 
-1. **Normalize the item.** Identify its issue type (Epic, Story, or Task),
-   project, and parent. Shape it to the portable contract in
-   [issue-contract.md](./references/issue-contract.md): the canonical
-   `As a [Actor], I want to [action], so that [Gain]` summary for a Story,
-   one-sprint scope, binary acceptance checks, the machine-readable source line,
-   and any source links. Ask one focused question at a time for any missing
-   field; never infer the actor, gain, acceptance checks, parent, project, or
-   source ID.
+1. **Normalize the item.** Identify its issue type (Epic, Story, Task, Bug, or
+   Sub-task), project, and parent. Shape it according to
+   [issue-contract.md](./references/issue-contract.md). Ask one focused
+   question at a time for missing information; never infer the actor, gain,
+   acceptance checks, parent, project, or applicable source ID.
 2. **Review the item.** Show the complete item — type, summary, description,
    project, parent, links, labels, source IDs, and acceptance checks — and ask
    for explicit confirmation. A request to "prepare", "draft", or "show" is not
    confirmation.
 3. **Persist.** After confirmation, create or update the one item following
-   [persistence.md](./references/persistence.md), and attach its source remote
-   links.
+   [persistence.md](./references/persistence.md), and attach source remote
+   links when applicable.
 4. **Verify and report.** Re-fetch the item, verify it against
    [persistence.md](./references/persistence.md), and report its key, URL, and
    any failed step.
 
 The Definition of Ready gate is reduced in this mode: validate that the item is
 well formed and that no value is invented. Do not require a parent DR/SRS unless
-the source line or a link needs one.
+the supplied source or a link needs one.
 
 ## Clarification rules
 
@@ -242,6 +248,9 @@ confirmed Epic/Story/Task mapping, including spike Tasks derived from blocking
 open questions and deduplicated error-handling Tasks, the repository used,
 source IDs, Jira keys and URLs, unresolved readiness gaps, synchronization
 results, and any failed verification. In single-item mode, return the created or
-updated item, its key and URL, the preserved source line, and any failed step;
+updated item, its key and URL, its `Source` and AC Coverage blocks when
+applicable, its parent reference for a Sub-task, and any failed step;
 no backlog mapping is produced. Do not publish Confluence or edit source
 documents outside this skill's ownership.
+For a review-only draft, state that it is not persisted and that confirmation,
+persistence, and post-mutation verification are still pending.
