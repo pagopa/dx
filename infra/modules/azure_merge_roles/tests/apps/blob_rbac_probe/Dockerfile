@@ -1,5 +1,5 @@
 # Dockerfile
-FROM public.ecr.aws/docker/library/golang:1.27-alpine3.23@sha256:5d5113301ffcac84e2bfb20c42648803fecaea6789c89bb9b66884e18cbb30a7 AS build
+FROM public.ecr.aws/docker/library/golang:1.27-alpine3.23@sha256:7a93747afee80359e81dbe39c8a65037b147cada0262bf86f5b96dd06842b368 AS build
 
 WORKDIR /src
 COPY src/go.mod .
