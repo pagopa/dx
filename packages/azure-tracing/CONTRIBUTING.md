@@ -1,4 +1,4 @@
-# @pagopa/azure-tracing — Maintainer Notes
+# Contributing to @pagopa/azure-tracing
 
 Working notes for maintainers and coding agents. Consumer documentation lives in
 [README.md](./README.md); keep the readme free of internal procedures.

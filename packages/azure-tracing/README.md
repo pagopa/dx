@@ -168,4 +168,4 @@ pnpm why import-in-the-middle
 
 The remaining constraints — the OpenTelemetry release train this package is
 pinned to, its rationale, the validated version matrices and the upgrade
-procedures — are maintainer concerns. They live in [AGENTS.md](./AGENTS.md).
+procedures — are maintainer concerns. They live in [CONTRIBUTING.md](./CONTRIBUTING.md).
