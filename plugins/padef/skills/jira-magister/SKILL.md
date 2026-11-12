@@ -64,14 +64,9 @@ request is ambiguous.
 5. If a material criterion is missing, contradictory, or unpropagated, stop Jira
    creation and report the gap, impact, owner if known, and required resolution.
    Do not infer a value to make an item appear ready.
-6. Use [issue-template.md](./references/issue-template.md) for every item's
-   `## Source` document list and `## AC Coverage`, including source ordering and
-   selection. Follow its one-hop source-selection rule; Epics carry only the
-   DR. Every dispatchable item also needs explicit Output, slice-local binary
-   Checks and Scope/non-goals; canonical AC prose stays in the UC. Preserve an
-   optional supplied Slice Scope ID. The document list is authoritative;
-   native Jira remote links mirror its Confluence and Figma entries without
-   duplicates.
+6. Follow [issue-template.md](./references/issue-template.md) for each item's
+   Source, AC Coverage, and execution requirements. Block persistence when
+   required details are missing.
 7. Treat open questions as projection input. A question flagged `Blocking: yes`
    becomes an independent spike Task that the dependent Story or Task
    `is blocked by`; a non-blocking question is recorded as a gap with its owner
@@ -113,15 +108,14 @@ Each Epic proposal must:
 - be completable in a few two-week sprints, not an entire broad initiative;
 - list its included `UC-XX` entries, JTBD, KPI outcome, and at least one
   qualitative guardrail;
-- link the DR, PRD and included UCs in the review context so grouping evidence
-  stays traceable even though the persisted Epic Source is DR-only;
 - state exclusions, dependencies, readiness gaps, and likely delivery risk.
 
 Show the proposed grouping and ask for explicit approval before drafting the
 final Stories and Tasks. Do not create or update Jira during this phase.
-Keep this grouping evidence in the review proposal. The persisted Epic is
-non-dispatchable: outcome-oriented summary, DR-only Source and concise outcome
-body, not copied UC, KPI, design or readiness detail from the DR.
+Keep this grouping evidence, with links to the DR, PRD and included UCs, in the
+review proposal. The persisted Epic is non-dispatchable: outcome-oriented
+summary, DR-only Source and concise outcome body, not copied UC, KPI, design or
+readiness detail from the DR.
 
 ### 3. Draft Stories and Tasks
 
@@ -144,8 +138,6 @@ security controls, deployment, or readiness actions. Route concrete Tasks to the
 repository named by `references.repository`. A Task may support a Story or Epic
 but must not masquerade as actor value. A task that cannot fit one sprint must be
 split or flagged.
-Use the same Output/Checks/Scope contract for Tasks, Bugs and Sub-tasks;
-a Sub-task inherits Source, not its parent's deliverable or check list.
 Select sources independently for each Task: enabling or contract-only work
 does not inherit the sources of every Story it supports.
 
@@ -184,7 +176,8 @@ Show a complete human-readable draft before any Jira mutation:
 - summaries and descriptions;
 - issue type, parent, dependency links with direction and link type, labels, and
   project;
-- complete `Source` blocks, primary documents, nested IDs, and AC Coverage;
+- complete `Source` blocks for items other than Sub-tasks, parent references
+  for Sub-tasks, nested IDs, and AC Coverage where applicable;
 - missing locators and whether Confluence ID anchors are known to exist;
 - explicit Output, binary Checks, Scope/non-goals, optional supplied Slice Scope
   ID, and IDs-only coverage for dispatchable items; KPI, guardrail and readiness
@@ -195,13 +188,8 @@ Show a complete human-readable draft before any Jira mutation:
 - the repository target and any Task that cannot be routed;
 - proposed creates, updates, splits, and unchanged items.
 
-Run the [draft validation](#draft-validation) before saving or presenting it.
-
 Ask for explicit confirmation. A request to “prepare”, “draft”, or “show” the
 backlog is not confirmation to create or update Jira.
-Close review-only proposals with an explicit status: not persisted;
-confirmation, persistence and post-mutation verification pending. Include this
-status in a saved proposal as well as the conversational handoff.
 
 ### 5. Create or synchronize after confirmation
 
@@ -223,26 +211,11 @@ verification step failed.
 Use this mode when the user supplies the item content directly instead of a body
 of requirements.
 
-1. **Normalize the item.** First extract the supplied issue fields: type
-   (Epic, Story, Task, Bug, or Sub-task), summary, project, parent and execution
-   information. Separately extract document titles and locators into Source;
-   they are evidence labels, not alternative issue summaries. Keep an explicit
-   Task/Bug/Sub-task summary unchanged, including in an incomplete draft.
-   Shape the item to the portable contract in
-   [issue-contract.md](./references/issue-contract.md): the canonical
-   `As a [Actor], I want to [action], so that [Gain]` summary for a Story,
-   for dispatchable items, one-sprint scope, explicit Output, binary slice Checks, Scope/non-goals,
-   optional supplied Slice Scope ID, and the `Source`/`AC Coverage`
-   lists from [issue-template.md](./references/issue-template.md).
-   Ask one focused question at a time for any missing
-   field; never infer the actor, gain, product behavior, parent, project, or
-   source ID. Propose local checks only from approved work; if Output, Checks
-   or Scope cannot be established, ask and block persistence. Preserve complete
-   approved project mappings instead of forcing the default headings.
-   For an Epic, use the minimal non-dispatchable body instead.
-   If evidence conflicts with a supplied
-   missing-locator statement, report the candidate and conflict as a gap;
-   do not promote the candidate into the authoritative Source before clarification.
+1. **Normalize the item.** Follow the
+   [issue contract](./references/issue-contract.md) and
+   [issue template](./references/issue-template.md). If source evidence
+   conflicts with a supplied missing-locator statement, report the candidate
+   and conflict as a gap; do not make it authoritative before clarification.
 2. **Review the item.** Show the complete item — type, summary, description,
    project, parent, links, labels, sources and execution contract — and ask
    for explicit confirmation. A request to "prepare", "draft", or "show" is not
