@@ -18,22 +18,9 @@ registries:
 overrides:
   "copy-webpack-plugin>serialize-javascript": 7.1.3
   "css-minimizer-webpack-plugin>serialize-javascript": 7.1.3
-  # The 0.221 / 2.10.0 OpenTelemetry families bundled by
-  # @azure/monitor-opentelemetry 1.21.0 peer-bound `@opentelemetry/api` to
-  # `<1.10.0` (core, sdk-logs, sdk-metrics, sdk-trace-base, sdk-trace-node,
-  # sdk-trace-web, the propagators). Resolving 1.10.0 leaves every one of those
-  # copies with an unmet peer, which breaks installs that enable strict peer
-  # validation. 1.9.1 is also the version the distro registers as the global
-  # API at runtime, so pinning it keeps a single registry.
-  # Do not pin the rest of the OpenTelemetry packages: the duplicates that
-  # pnpm resolves for core/resources/sdk-* are harmless at runtime (the API
-  # package is the only global registry) and consumers never received these
-  # workspace-only overrides anyway.
-  # Never pin `@opentelemetry/instrumentation-redis` past the distro's own
-  # range (`^0.69.0`): newer lines require `@opentelemetry/instrumentation@^0.301`
-  # and `@opentelemetry/api@^1.10`, which bootstrap a second registry here and,
-  # for consumers, nest a second `@opentelemetry/api` copy. Redis v6 tracing is
-  # already included since `instrumentation-redis@0.69.0`.
+  # Keep the API on 1.9.1: the Azure Monitor SDK families peer-bound it to
+  # `<1.10.0`. Do not pin anything else in the family.
+  # Rationale: packages/azure-tracing/CONTRIBUTING.md#opentelemetry-overrides
   "@opentelemetry/api": 1.9.1
   "docusaurus-plugin-llms>minimatch": 11.0.1
   "mysql2": 3.24.5

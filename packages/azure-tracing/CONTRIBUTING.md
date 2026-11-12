@@ -98,7 +98,7 @@ npm view @opentelemetry/instrumentation@<version> dependencies | grep 'import-in
 
 Set `import-in-the-middle` in `package.json` to the same major range as the result.
 
-### `@opentelemetry/*` ranges belong to the consumer install
+### `@opentelemetry/*` overrides
 
 > [!WARNING]
 > Do **not** add a `@opentelemetry/*` override to fix something a consumer
@@ -122,14 +122,6 @@ So do not add a pin again unless a regression is reproduced, and reproduce it
 through the published tarball (step 5 of the upgrade checklist) rather than
 through the workspace.
 
-`@opentelemetry/api` is the one exception, and the workspace pins it to `1.9.1`.
-The 0.221 and 2.10.0 families peer-bound the API to `<1.10.0` in `core`,
-`sdk-logs`, `sdk-metrics`, `sdk-trace-base`, `sdk-trace-node`, `sdk-trace-web`
-and the propagators, so letting the `^1.9.1` catalog range resolve `1.10.0` leaves
-every one of those copies with an unmet peer: pnpm only warns, but installs that
-enable strict peer validation fail. `1.9.1` is also the version the distro
-registers as the global API at runtime, so the pin keeps a single registry.
-
 Redis v6 support is a consumer-side concern the distro already solves.
 `@azure/monitor-opentelemetry@1.21.0` pulls
 `@opentelemetry/instrumentation-redis@^0.69.0`, the first line declaring
@@ -147,6 +139,42 @@ applying its own, and `isWrapped` is detected through plain
 copies therefore steal each other's patch (last writer wins, decided by module
 load order) instead of being merged, and a `disable()` from the losing copy can
 remove the surviving patch entirely.
+
+### Why `@opentelemetry/api` is pinned to `1.9.1`
+
+`@opentelemetry/api` is the one exception to the rule above, and the workspace
+pins it to `1.9.1`. The reason is a peer contract, not deduplication: the API
+package is the runtime registry every instrumented library looks up, so all the
+copies of `core`, `resources` and `sdk-*` have to agree on it.
+
+| family                                                                                | peer range on `@opentelemetry/api` |
+| ------------------------------------------------------------------------------------- | ---------------------------------- |
+| `core`, `sdk-trace-node`, `context-async-hooks`, `propagator-b3`, `propagator-jaeger` | `>=1.0.0 <1.10.0`                  |
+| `sdk-trace-base`, `resources`, `sdk-trace`, `sdk-node@0.221.0`                        | `>=1.3.0 <1.10.0`                  |
+| `sdk-logs@0.221.0`                                                                    | `>=1.4.0 <1.10.0`                  |
+| `sdk-metrics@2.10.0`                                                                  | `>=1.9.0 <1.10.0`                  |
+
+The catalog declares `^1.9.1`, that is `>=1.9.1 <2.0.0`, and `1.10.0` is the
+published `latest`, so the range resolves to it. `1.10.0` satisfies the range but
+violates the `<1.10.0` upper bound of every family above, leaving those copies
+with an unmet peer. The failure mode depends on the installer:
+
+- `pnpm` is not peer-aware while resolving: it picks the highest match (`1.10.0`)
+  and only reports the conflict from `pnpm peers check`;
+- `npm` backtracks on unmet peers and settles on `1.9.1`, which is why a scratch
+  consumer can look healthy while the workspace is not;
+- installs that enable `strict-peer-dependencies` fail outright.
+
+`1.9.1` is also the version the distro registers as the global API at runtime, so
+the pin keeps a single registry instead of only silencing the warning.
+
+Do not "fix" this by moving to `1.10.0`: the 3.x and 0.301 lines (`core`,
+`resources`, `sdk-logs`, `sdk-metrics`, `sdk-trace`, `instrumentation`) ask for
+`>=1.10.0 <1.11.0`, while the `2.12` trace line and the whole
+`@azure/monitor-opentelemetry@1.21.0` closure ask for `<1.10.0`. The two contracts
+are disjoint, so no single API version satisfies both. Moving to `1.10.0` becomes
+possible only once Azure ships a distro built on the 0.301/3.x line, and then the
+entire family, `instrumentation-redis` included, moves in one step.
 
 Verify the result with `pnpm peers check` (no `@opentelemetry/*` complaint should
 appear; the remaining ones are the unrelated `react`/`react-dom` peers of
