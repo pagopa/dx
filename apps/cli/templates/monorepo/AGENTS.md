@@ -45,6 +45,12 @@ A change is done when `pnpm nx affected -t build test lint typecheck` and
   `validate-v2.yaml`, which formats, lints, scans and plans the affected
   projects: the local targets above reproduce what it runs.
 - `.github/copilot/settings.json` enables the PagoPA DX plugins.
+- `.github/workflows/copilot-setup-steps.yml` runs before the Copilot coding
+  agent starts: it installs the mise toolchain, authenticates pnpm to GitHub
+  Packages and installs the dependencies. The workflow token reads the public
+  packages, so there is no secret to configure; a private dependency would need
+  this repository granted under **Manage Actions access**, or a token stored as
+  a secret.
 
 ## Conventions
 

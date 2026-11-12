@@ -14,6 +14,12 @@ Bootstrap a new project following DevEx conventions.
 
 - The monorepository, both locally and remotely on GitHub.com, with dotfiles and
   a locked mise toolchain configuration.
+- The GitHub Copilot coding agent setup workflow
+  (`.github/workflows/copilot-setup-steps.yml`), which installs the toolchain,
+  authenticates pnpm to GitHub Packages and installs the dependencies before the
+  agent starts. It authenticates with the repository's workflow token, which
+  reads the public packages the scaffold depends on, so the repository needs no
+  secret; the generated `README.md` documents the workflow.
 
 Before generating anything, the command checks that Terraform and mise are
 installed and that the GitHub token can read the DX packages from GitHub
