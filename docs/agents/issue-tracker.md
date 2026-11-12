@@ -11,20 +11,17 @@ Every Jira tool call needs a `cloudId`. Get it once per session with
 
 ## Conventions
 
-- **Create an issue**: `createJiraIssue` with `cloudId`, `projectKey: "CES"`, `summary`, and
-  `description` (Atlassian Document Format, or plain text where the tool accepts it). If the
-  calling skill doesn't imply a type, ask: `Bug` for a defect, `Task` otherwise.
-- **Read an issue**: `getJiraIssue` with the issue key (`CES-123`).
-- **List comments**: `listJiraIssueComments`.
-- **Comment**: `addOrEditJiraIssueComment`.
-- **Search / list**: `searchJiraIssuesUsingJql`, always constraining the project, e.g.
-  `project = CES AND statusCategory != Done ORDER BY created DESC`. Request only the fields
-  you need.
-- **Update fields and labels**: `editJiraIssue`. Jira labels are a flat string list; add and
-  remove by rewriting the list.
-- **Move status**: `transitionJiraIssue`. Read the issue first to get the available
-  transitions; never assume a transition id.
-- **Close**: transition to the project's done-category status, with a closing comment first.
+- New issues go to project key **CES**: `createJiraIssue` with `cloudId`, `projectKey: "CES"`,
+  `summary`, and `description` in Markdown — the MCP server converts it to ADF. If the calling
+  skill doesn't imply a type, ask: `Bug` for a defect, `Task` otherwise.
+- `searchJiraIssuesUsingJql` must constrain the project, e.g.
+  `project = CES AND statusCategory != Done ORDER BY created DESC`. Request only the fields you
+  need.
+- Jira labels are a flat string list: add and remove by rewriting the list with `editJiraIssue`.
+- Read an issue before `transitionJiraIssue` to get the available transitions; never assume a
+  transition id.
+- Closing means transitioning to the project's done-category status, with a closing comment
+  first.
 
 Issue keys look like `CES-123`. A bare `#123` from another tool is not a Jira key — resolve it
 with the caller before acting.
