@@ -1,0 +1,25 @@
+name: Cleanup Static Web App Previews
+description: Remove Azure Static Web App previews associated with closed or merged pull requests.
+
+inputs:
+  static_web_app_name:
+    description: Azure Static Web App whose previews belong to the calling repository.
+    required: true
+  resource_group_name:
+    description: Resource group containing the Azure Static Web App.
+    required: true
+  github_token:
+    description: Token with pull-requests read permission on the calling repository.
+    required: false
+    default: ${{ github.token }}
+
+runs:
+  using: composite
+  steps:
+    - name: Remove stale preview environments
+      shell: bash
+      run: bash "$GITHUB_ACTION_PATH/cleanup.sh"
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        STATIC_WEB_APP_NAME: ${{ inputs.static_web_app_name }}
+        RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
