@@ -8,7 +8,7 @@
  * tree, so they cannot catch a published package that loses instrumentation.
  */
 import { globSync } from "node:fs";
-import { copyFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { copyFile, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -30,8 +30,8 @@ import {
   runProcess,
   type TelemetryCollector,
 } from "./dependency-tracking-test-helpers";
+import { getPackedPackageTarballPath } from "./packed-package-provided-context";
 
-const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
 const consumerFixtureDirectory = fileURLToPath(
   new URL("./fixtures/consumer/", import.meta.url),
 );
@@ -53,41 +53,6 @@ const test = baseTest.extend<
 });
 
 let workDirectory: string;
-let packageTarballPath: string;
-
-const requireValue = <T>(value: T | undefined, message: string) => {
-  if (value === undefined) {
-    throw new Error(message);
-  }
-
-  return value;
-};
-
-/**
- * Builds and packs the package so that the consumer exercises the artifact that
- * would be published, including its own `dependencies` and `exports`.
- */
-const packPackage = async () => {
-  const tarballDirectory = join(workDirectory, "tarball");
-  await mkdir(tarballDirectory);
-
-  await runProcess("pnpm", ["run", "build"], "The package build failed.", {
-    cwd: packageRoot,
-  });
-  await runProcess(
-    "pnpm",
-    ["pack", "--pack-destination", tarballDirectory],
-    "Packing the package failed.",
-    { cwd: packageRoot },
-  );
-
-  const [tarball] = globSync("*.tgz", { cwd: tarballDirectory });
-
-  return join(
-    tarballDirectory,
-    requireValue(tarball, "pnpm pack did not produce a tarball."),
-  );
-};
 
 /**
  * Installs the packed tarball in a throwaway consumer. `npm` is used on purpose:
@@ -119,7 +84,7 @@ const installConsumer = async (redisMajorVersion: string) => {
     "npm",
     [
       "install",
-      packageTarballPath,
+      getPackedPackageTarballPath(),
       `redis@${redisMajorVersion}`,
       "--no-audit",
       "--no-fund",
@@ -153,8 +118,7 @@ const runConsumerScenario = async (
 
 beforeAll(async () => {
   workDirectory = await mkdtemp(join(tmpdir(), "azure-tracing-consumer-"));
-  packageTarballPath = await packPackage();
-}, dependencyTestTimeoutMs);
+});
 
 afterAll(async () => {
   if (workDirectory !== undefined) {

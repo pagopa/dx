@@ -99,6 +99,11 @@
   },
   "nx": {
     "targets": {
+      "test": {
+        "dependsOn": [
+          "build"
+        ]
+      },
       "integration": {
         "executor": "nx:run-commands",
         "cache": false,
