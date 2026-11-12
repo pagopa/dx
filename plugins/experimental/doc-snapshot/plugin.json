@@ -1,0 +1,6 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "padef-doc-snapshot",
+  "description": "Discovery prototype for deterministic, local-only Jira source snapshots",
+  "version": "0.0.1"
+}

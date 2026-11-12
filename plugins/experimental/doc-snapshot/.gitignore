@@ -1,0 +1,7 @@
+# Keep runtime documents and independent OAuth credentials out of publication.
+snapshots/
+.cache/
+.mcp-auth/
+node_modules/
+.env*
+*.log
