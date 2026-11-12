@@ -42,8 +42,7 @@ For new Stories, Tasks, Bugs and Sub-tasks, default to `Source`, optional
 `Slice Scope ID`, `Output`, `Checks`, `Scope`, optional `AC Coverage`, in that
 order. These headings are a readable default, not a universal Jira schema.
 Respect an explicitly supplied approved project mapping if the same information
-is explicit, nonempty and verifiable. Do not reformat an existing description
-outside the confirmed diff.
+is explicit, nonempty and verifiable.
 
 - **Output:** the observable result of this item, distinct from its source
   locator or an instruction to "implement the UC".
@@ -57,24 +56,14 @@ outside the confirmed diff.
   Merely adding "integration" to an end-to-end AC does not make it slice-local.
 - **Scope:** explicit authorized work and evidenced non-goals. Do not infer
   exclusions or use "TBD" to make a missing boundary appear complete.
-- **Slice Scope ID:** optional correlation, included only when supplied or
-  already present. Preserve its spelling; do not generate one or demand it.
-- **AC Coverage:** optional links to canonical AC IDs only. Canonical AC prose
-  stays in the UC, not a copied Acceptance Criteria section or renamed Checks.
-  Checks verify the slice, not all end-to-end AC behavior just because an AC ID
-  is referenced. Missing optional coverage is not a readiness blocker.
+- **Slice Scope ID:** optional; include and preserve it only when supplied or
+  already present. Never generate one.
+- **AC Coverage:** optional links to canonical AC IDs. Keep AC prose in the UC;
+  coverage does not claim that a partial slice satisfies the full AC.
 
 If required Output, Checks or Scope cannot be established from approved input,
 show the gap, ask a focused question and block persistence. This applies even
 in prepared-item mode. A locator or AC ID alone does not supply these values.
-A Sub-task copies its parent's Source verbatim but gets its own Output,
-Checks and Scope. A spike's Output is a recorded decision, its check is the
-decision evidence, not an invented answer to the open question.
-
-Epics are non-dispatchable: use only the DR document in Source and a concise
-outcome body. Keep UC grouping, JTBD, KPI, guardrail, risk, exclusions and
-readiness evidence in the human review proposal and owning DR, not in the Epic
-body. Do not force Output/Checks/Scope sections or AC Coverage onto Epics.
 
 ## Document keys and source selection
 
@@ -124,7 +113,6 @@ as guidance rather than the sole criterion:
 - Task from DR/NFR/contract/readiness work, including a spike: `dr`.
 - Error-handling Task: `uc`; include every UC that defines the shared error.
 - Bug: the relevant `uc`, otherwise the supplied `incident`.
-- Sub-task: copy the parent's entire `Source` block verbatim.
 - Epic: `dr` only; keep grouping evidence outside its persisted body.
 - CR or pending-spec work: `cr` or `intake`, when that is the actual source.
 
@@ -242,6 +230,5 @@ Incident-backed Bug:
 - incident: [INC-12 - Upload outage](https://example.org/incidents/12)
 ```
 
-Sub-task: copy its parent's Source unchanged; a parent Jira link alone does not
-replace those documents. Epic: use only `dr`; the review proposal, not its
-persisted body, retains the included UC/JTBD grouping.
+Sub-task: identify the parent and refer to it for source context; omit `Source`. Epic: use only `dr`; the review proposal, not its persisted body, retains the
+included UC/JTBD grouping.
