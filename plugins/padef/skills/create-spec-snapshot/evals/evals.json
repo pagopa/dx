@@ -146,9 +146,9 @@
       "id": 8,
       "name": "numeric-id-uses-canonical-key",
       "prompt": "Create a spec snapshot for Jira issue 1008. Offline evaluation: make no remote calls. The recorded files in this workspace are this run's fresh reads: use jira-response.json as the Jira read of the issue. No snapshot exists yet.",
-      "expected_output": "Resolves ID 1008 to TEST-8, compares and saves under TEST-8 with --expect 1008.",
+      "expected_output": "Resolves ID 1008 to TEST-8; verify-snapshot.js reports that no TEST-8 snapshot exists yet, then it saves under TEST-8 with --expect 1008.",
       "expectations": [
-        "Runs verify-snapshot.js with the key TEST-8 taken from the response, not the numeric ID.",
+        "Runs verify-snapshot.js with the key TEST-8 taken from the response, not the numeric ID, and treats its missing-snapshot result as the cue to save.",
         "Runs save-snapshot.js with --expect 1008 and without --replace.",
         "Saves the snapshot under the TEST-8 folder, with no Confluence pages.",
         "Does not ask which issue or site to use."
