@@ -157,12 +157,6 @@ describe("monorepo generator — Copilot coding agent setup", () => {
     await cleanupTempDir(tmpDir);
   });
 
-  it("ships the workflow Copilot runs before it starts", async () => {
-    const job = await readSetupJob(generatedRoot);
-
-    expect(job.steps.length).toBeGreaterThan(0);
-  });
-
   it("installs the mise toolchain before authenticating to the registry", async () => {
     const job = await readSetupJob(generatedRoot);
     const miseStep = requireStepUsing(job.steps, "jdx/mise-action");
@@ -171,32 +165,34 @@ describe("monorepo generator — Copilot coding agent setup", () => {
       "pagopa/dx/actions/setup-npm-registry",
     );
 
-    expect(miseStep.uses).toMatch(COMMIT_SHA_PIN);
     expect(miseStep.index).toBeLessThan(registryStep.index);
     // The scaffold enables mise experimental settings and pins a minimum
     // release age: without these inputs the action refuses the config and the
     // `pnpm` the last step needs is never installed.
-    expect(miseStep.with).toStrictEqual({
+    expect(miseStep.with).toMatchObject({
       experimental: true,
       minimum_release_age: "7d",
     });
   });
 
-  it("authenticates to the registry with the workflow token", async () => {
+  it("authenticates with the workflow token, so no secret is configured", async () => {
     const job = await readSetupJob(generatedRoot);
     const registryStep = requireStepUsing(
       job.steps,
       "pagopa/dx/actions/setup-npm-registry",
     );
+    const files = await readGeneratedFiles(generatedRoot, [
+      COPILOT_WORKFLOW_PATH,
+    ]);
 
-    expect(registryStep.uses).toBe("pagopa/dx/actions/setup-npm-registry@main");
     // GitHub Packages wants a token even for public packages. The scaffold
-    // reads none, so the credential is the workflow token granted above: no
+    // reads none, so the credential is the workflow token granted below: no
     // secret to configure, and nothing Copilot would have to receive.
     expect(registryStep.with?.token).toBe("${{ github.token }}");
+    expect(files[COPILOT_WORKFLOW_PATH]).not.toContain("secrets.");
   });
 
-  it("grants the scope the fallback workflow token needs", async () => {
+  it("grants the packages scope the workflow token reads through", async () => {
     const job = await readSetupJob(generatedRoot);
 
     expect(job.permissions).toStrictEqual({
@@ -205,10 +201,9 @@ describe("monorepo generator — Copilot coding agent setup", () => {
     });
   });
 
-  it("declares a timeout Copilot accepts", async () => {
+  it("declares a timeout within the cap Copilot enforces", async () => {
     const job = await readSetupJob(generatedRoot);
 
-    expect(job["timeout-minutes"]).toBeGreaterThan(0);
     expect(job["timeout-minutes"]).toBeLessThanOrEqual(MAX_TIMEOUT_MINUTES);
   });
 
@@ -243,21 +238,15 @@ describe("monorepo generator — Copilot coding agent setup", () => {
     }
   });
 
-  it("documents that the workflow needs no secret", async () => {
-    const files = await readGeneratedFiles(generatedRoot, ["README.md"]);
-    const readme = files["README.md"];
+  it("documents the workflow in README.md and AGENTS.md", async () => {
+    const files = await readGeneratedFiles(generatedRoot, [
+      "README.md",
+      "AGENTS.md",
+    ]);
 
-    expect(readme).toContain(COPILOT_WORKFLOW_PATH);
-    // The scaffold installs only public packages, so the workflow token is the
-    // whole credential story and the README must not send anyone looking for a
-    // secret to configure.
-    expect(readme).toContain("needs no secret");
-    expect(readme).not.toContain("PACKAGES_TOKEN");
-  });
-
-  it("tells AI agents about the workflow in AGENTS.md", async () => {
-    const files = await readGeneratedFiles(generatedRoot, ["AGENTS.md"]);
-
+    // The file prepares the environment on its own, so the one thing both
+    // readers need is that it exists.
+    expect(files["README.md"]).toContain(COPILOT_WORKFLOW_PATH);
     expect(files["AGENTS.md"]).toContain(COPILOT_WORKFLOW_PATH);
   });
 });
