@@ -32,15 +32,26 @@ Definition of Ready used by Jira Magister.
    leaves those checks unverifiable; report it rather than treating it as a
    pass. Independently assess the description criteria below, including when
    another criterion has failed. Combine all results for the final verdict;
-   the script's verdict covers metadata only. Assignees, estimates, and linked
-   documents do not affect this gate.
-4. **Report and stop.** Return the verdict, issue key and link when available,
-   observed status name and type, and the evidence for every failed or
-   unverifiable criterion, including the relevant section or list item for
-   description failures. Include each pending or unverifiable blocker by key and
-   status when available. For a failed status check, include the script's hint;
-   describe an unavailable status name as unavailable. Keep the
-   assessment read-only: no comments, transitions, field changes, or implementation.
+   the script's verdict covers metadata only. Assignees and estimates do not
+   affect this gate.
+   Then verify the sources: extract every URL from the description's `## Source`
+   section, nested items included, as a JSON array `[{"url": "..."}]`, and pass
+   it through standard input to `node <skill-directory>/scripts/check-sources.js`.
+   Its per-URL results feed the `Sources` criterion. A script error leaves the
+   criterion unverifiable.
+4. **Report and stop.** Lead with the verdict and the issue key, plus its link
+   when available. Then list every applicable criterion on its own line as
+   `Criterion: result - evidence`:
+   - `Status category`: the observed status name, or `unavailable`; when it
+     fails, quote the script's hint.
+   - `Type`: the observed type name.
+   - `Blockers`: each pending or unverifiable blocker by key and status.
+   - `Output`, `Sources`, `Checks`: the section or URL behind the result. When
+     `Checks` fails, list every item verbatim with `valid` or the reason it is
+     invalid.
+
+   Keep the assessment read-only: no comments, transitions, field changes, or
+   implementation.
 
 ## Gate and verdicts
 
@@ -53,7 +64,16 @@ An issue is **Ready** if and only if all applicable criteria are verified:
 | Type            | `fields.issuetype.name` equals `Story`, `Task`, or `Bug`.                                                                                                                                            |
 | Blockers        | No inward issue link of type `Blocks` has a blocking issue whose status category key differs from `done`.                                                                                            |
 | Output          | The issue description has an `Output` section. Check presence only, not its contents.                                                                                                                |
+| Sources         | For `Story`, `Task`, and `Bug`, the description has a `## Source` section whose URLs are all extracted, at least one exists, and `check-sources.js` passes each (HTTP 2xx).                          |
 | Checks          | For a `Story`, the description has a `Checks` section containing a nonempty list of binary checks. Every item has an ID and a brief description; no particular ID or description format is required. |
+
+**Sources.** A `Sub-task` has no `Source` section; `Sources` is not applicable
+to it. For other types, an absent section, or one with no URL (including an
+item marked `locator missing`), fails the criterion. Any non-2xx response or
+non-http(s) URL fails it; a network error is unverifiable. List each failing or
+unverifiable URL with its HTTP status. An omitted or unreadable description
+makes it unverifiable. `check-sources.js` reaches URLs unauthenticated, so
+private pages fail with 401/403.
 
 Assess the description as content, not with the script. Recognize section
 headings and lists in Jira's structured description or rendered text; a

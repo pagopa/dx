@@ -2,19 +2,33 @@
   "TEST-16": {
     "key": "TEST-16",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Task" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Task"
+      },
       "issuelinks": [],
-      "description": "## Output"
+      "description": "## Output\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   },
   "TEST-17": {
     "key": "TEST-17",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Task" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Task"
+      },
       "issuelinks": [],
-      "description": "The output is a report."
+      "description": "The output is a report.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   }
 }

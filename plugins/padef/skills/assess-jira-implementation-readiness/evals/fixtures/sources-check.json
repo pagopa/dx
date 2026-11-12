@@ -1,0 +1,66 @@
+{
+  "TEST-28": {
+    "key": "TEST-28",
+    "fields": {
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Task"
+      },
+      "issuelinks": [],
+      "description": "## Output\nA result.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)\n  - [NFR-01](http://127.0.0.1:8787/ok#NFR-01)\n- contract: [Upload API](http://127.0.0.1:8787/missing)"
+    }
+  },
+  "TEST-29": {
+    "key": "TEST-29",
+    "fields": {
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Task"
+      },
+      "issuelinks": [],
+      "description": "## Output\nA result."
+    }
+  },
+  "TEST-30": {
+    "key": "TEST-30",
+    "fields": {
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Task"
+      },
+      "issuelinks": [],
+      "description": "## Output\nA result.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)\n- contract: Upload API - locator missing (artifact URL not supplied)"
+    }
+  },
+  "TEST-31": {
+    "key": "TEST-31",
+    "fields": {
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Task"
+      },
+      "issuelinks": [],
+      "description": "## Output\nA result.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)\n- adr: [ADR-3](https://unreachable.example.invalid/adr-3)"
+    }
+  }
+}

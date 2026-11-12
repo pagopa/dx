@@ -1,0 +1,14 @@
+# Harbor merges this file over its own compose config, so it can override the
+# main service. Starts the local HTTP service that eval source URLs point to
+# (/ok -> 200, anything else -> 404) next to harbor's keepalive command.
+# The healthcheck makes `docker compose up --wait` hold the agent until the
+# service answers.
+services:
+  main:
+    command:
+      ["sh", "-c", "node /workspace/fixtures-server.js & exec sleep infinity"]
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8787/ok"]
+      interval: 1s
+      timeout: 2s
+      retries: 30
