@@ -43,8 +43,12 @@ Definition of Ready used by Jira Magister.
    its per-URL results with the missing-URL check; any failure makes `Sources`
    fail. A script error leaves the criterion unverifiable unless another
    source failure is already established.
-4. **Report and stop.** Lead with the verdict and the issue key, plus its link
-   when available. Then list every applicable criterion on its own line as
+4. **Reconcile, report, and stop.** For each issue, derive the verdict from
+   its criteria: any failed criterion means `Not ready`; otherwise, any
+   unverifiable criterion means `Unable to assess`; otherwise, report `Ready`.
+   Confirm the headline verdict matches the listed criteria. Lead with the
+   verdict and the issue key, plus its link when available. Then list every
+   applicable criterion on its own line as
    `Criterion: result - evidence`:
    - `Status category`: the observed status name, or `unavailable`; when it
      fails, quote the script's hint.

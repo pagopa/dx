@@ -127,11 +127,11 @@
       "id": 10,
       "name": "story-checks-format",
       "prompt": "Assess TEST-18, TEST-19, and TEST-20 using the supplied Jira response snapshots in story-checks-format.json. This is an offline evaluation for Jira: do not call Jira. Run the source check for real; the source URLs point to a local service that is already running.",
-      "expected_output": "TEST-18 is Ready; TEST-19 and TEST-20 are Not ready because Checks must be a nonempty list.",
+      "expected_output": "TEST-18 is Ready; TEST-19 is Not ready because Checks is not a nonempty list; TEST-20 is Not ready because Checks is empty and Sources is absent.",
       "expectations": [
+        "Reports TEST-18 as Ready because every applicable criterion passes, with a verdict consistent with its criteria.",
         "Accepts different ID formats with brief binary descriptions.",
-        "Rejects a paragraph and an empty list as Checks.",
-        "Reports the failed Checks criterion for each affected Story."
+        "Reports Checks as failed for TEST-19 and TEST-20, and Sources as failed for TEST-20."
       ],
       "files": ["evals/fixtures/story-checks-format.json"]
     },
@@ -230,6 +230,16 @@
         "Identifies the unreachable ADR URL as unverifiable rather than failed."
       ],
       "files": ["evals/fixtures/sources-check.json"]
+    },
+    {
+      "id": 19,
+      "name": "single-issue-ready-verdict",
+      "prompt": "Assess only TEST-18 using the supplied Jira response snapshot in story-checks-format.json. This is an offline evaluation for Jira: do not call Jira. Run the source check for real; the source URLs point to a local service that is already running.",
+      "expected_output": "TEST-18 is Ready.",
+      "expectations": [
+        "Reports Ready because every applicable criterion passes and the verdict agrees with the reported criteria."
+      ],
+      "files": ["evals/fixtures/story-checks-format.json"]
     }
   ]
 }
