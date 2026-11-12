@@ -133,7 +133,7 @@ const getErrorProperty = (error: unknown, property: string) =>
     ? toOutputString(Object.getOwnPropertyDescriptor(error, property)?.value)
     : "";
 
-const runProcess = async (
+export const runProcess = async (
   command: string,
   args: readonly string[],
   failureMessage: string,

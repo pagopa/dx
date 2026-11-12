@@ -24,6 +24,15 @@ pointing at the committed self-signed certificate. The collector is a local HTTP
 server that answers the Application Insights endpoints, including the QuickPulse
 handshake (`x-ms-qps-subscribed: true`).
 
+Those suites import the sources, so they resolve the workspace dependency tree
+and inherit its overrides. `src/__tests__/packed-consumer.integration.test.ts`
+covers the gap: it runs `pnpm pack`, installs the tarball in a throwaway consumer
+with `npm` (no workspace overrides, no catalog), then runs the scenarios in
+`src/__tests__/fixtures/consumer/` and asserts that Redis dependency telemetry
+still reaches the collector and that `@opentelemetry/api` resolves to a single
+copy. Both Redis v5 and v6 are exercised, because `redis` is a consumer choice
+rather than a packaged dependency.
+
 ## Running integration tests locally
 
 Integration tests use [Testcontainers](https://node.testcontainers.org/) and
@@ -212,10 +221,19 @@ rg -o "'@opentelemetry/api@[0-9][0-9a-z.-]*'" --no-filename pnpm-lock.yaml | sor
    QuickPulse endpoint, and request telemetry exported for a Fastify server with a
    non-empty URL.
 5. Check the published artifact, not just the workspace. The workspace overrides
-   are not part of the tarball, so pack the package and install it in a scratch
-   consumer with `npm` (Redis v5 and v6 each) and assert that a Redis command
-   produces a `redis-*` span and that `@opentelemetry/api` resolves to a single
-   copy:
+   are not part of the tarball, so the suites that import the sources cannot
+   detect an artifact that loses instrumentation once installed by a consumer.
+   `packed-consumer.integration.test.ts` automates this: it packs the package,
+   installs the tarball with `npm` in a scratch consumer (Redis v5 and v6) and
+   asserts that a Redis command produces a `redis-*` span, and that
+   `@opentelemetry/api` resolves to a single copy. It runs with the rest of the
+   integration suite:
+
+   ```bash
+   pnpm nx run @pagopa/azure-tracing:integration
+   ```
+
+   The manual equivalent, useful when debugging:
 
    ```bash
    pnpm pack --pack-destination /tmp
