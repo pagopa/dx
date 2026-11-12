@@ -54,6 +54,10 @@ is explicit, nonempty and verifiable.
   verify that an authorization result controls a downstream call and that its
   result maps to the response, rather than restating "the actor can download".
   Merely adding "integration" to an end-to-end AC does not make it slice-local.
+  For retry behavior, preserve the source-specified initiator and trigger, and
+  check the retry interaction and result mapping at the supplied boundary.
+  Do not imply an automatic retry or change who initiates it unless the source
+  says so.
 - **Scope:** explicit authorized work and evidenced non-goals. Do not infer
   exclusions or use "TBD" to make a missing boundary appear complete.
 - **Slice Scope ID:** optional; include and preserve it only when supplied or
@@ -116,6 +120,11 @@ as guidance rather than the sole criterion:
 - Epic: the PRD and DR/SRS documents, plus UCs included in its scope; keep
   detailed grouping evidence outside its outcome body.
 - CR or pending-spec work: `cr` or `intake`, when that is the actual source.
+
+Include an NFR ID under its owning DR/SRS only when the item implements or
+checks that NFR. A shared constraint may apply to multiple items; establish
+applicability from each item's own scope and checks rather than copying every
+DR/SRS NFR onto related items.
 
 For non-Epic items, single-item mode accepts a self-contained source without
 requiring an unrelated DR. If a necessary source or locator is missing, ask for

@@ -27,7 +27,10 @@ Each item uses only the applicable boundary, not the whole backlog scope.
   `solution.components.item-001`: Receipt API.
   `contracts.item-001`: Receipt API, artifact
   `https://github.com/example/receipts/blob/main/api/openapi.yaml`.
-  `NFR-01`: receipts never expose another user's payment.
+  `NFR-01`: neither receipt flow may expose another user's payment. It applies
+  to UC-01 owner authorization and UC-02 support authorization; UC-02 AC-02
+  requires unauthorized access to be denied, without retrieving or returning
+  receipt data.
   `open.item-007`: choose the CAdES verification library for signed receipts;
   Blocking yes, owner Engineering; blocks signature verification only.
   `open.item-003`: optional support dashboard layout; Blocking no, owner Product.

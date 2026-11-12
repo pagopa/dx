@@ -11,25 +11,28 @@
         "Groups Use Cases by cohesive outcome and keeps each Epic boundary explicit.",
         "Shows traceability from each Epic to the parent DR/SRS, PRD/JTBD, and included UC-XX IDs.",
         "Asks for explicit approval before drafting or mutating Jira items.",
-        "Each proposed persisted Epic body has only dr in its Source and a concise outcome; UC/JTBD grouping, KPI, guardrail and readiness evidence remain in the review proposal, not copied into that body."
+        "Each proposed Epic Source includes PRD-01 and DR-01, plus its included UCs in key order; cited JTBD IDs are nested under the PRD.",
+        "Each Epic has a concise outcome body; grouping, KPI, guardrail and readiness evidence remain in the review proposal rather than being copied into that body."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
     {
       "id": 1,
       "name": "write-actor-stories-and-technical-tasks",
-      "prompt": "Read backlog-context.md as offline evidence. The Epic grouping is approved: PAY-11 (proposed self-service download) and PAY-10 (existing assisted recovery). Draft the Jira backlog projection for UC-01 and UC-02, without mutation. UC-01 has primary actor \"Cittadino pagatore\" and UC-02 has primary actor \"Operatore di assistenza\". Write actor-facing Stories using the canonical As a [Actor], I want to [action], so that [Gain] structure. Keep each Story deliverable in one two-week sprint. Put repository setup and API contract wiring into technical Tasks, and link every item to its Epic and relevant source documents/IDs. Save proposal.md and ask for confirmation.",
-      "expected_output": "A Jira-ready draft containing canonical actor-facing Stories, sprint-sized scope, technical Tasks for enabling work, and complete hierarchy/traceability.",
+      "prompt": "Read backlog-context.md as offline evidence. The Epic grouping is approved: PAY-11 (proposed self-service download) and PAY-10 (existing assisted recovery). Draft the Jira backlog projection for UC-01 and UC-02, without mutation. UC-01 has primary actor \"Cittadino pagatore\" and UC-02 has primary actor \"Operatore di assistenza\". Write actor-facing Stories using the canonical As a [Actor], I want to [action], so that [Gain] structure. Keep each Story deliverable in one two-week sprint. Put repository setup and API contract wiring into technical Tasks. Use PAY-11 as the single parent for all new technical Tasks, including shared work; PAY-20 remains under PAY-10. Link every item to its Epic and relevant source documents/IDs. Save proposal.md and ask for confirmation.",
+      "expected_output": "A reviewable PAY backlog proposal for the approved UC-01 and UC-02 outcome grouping, with actor-facing Stories, enabling Tasks, hierarchy, and source traceability.",
       "expectations": [
         "Uses the exact actor names supplied by the Use Cases.",
         "Uses the canonical As/ I want/ so that Story structure.",
         "Keeps Stories and Tasks scoped to one two-week sprint or flags work that must be split.",
         "Represents repository setup and API contract wiring as Tasks rather than actor-facing Stories.",
         "Each concrete implementation Task, including both semantic error-handling Tasks, explicitly identifies the repository from the DR/SRS references.repository link.",
-        "Links each item to its Epic and relevant source IDs; contract-only Tasks cite their DR contract IDs rather than inventing UC coverage.",
-        "The UC-01 Story cites NFR-01 under DR-01 because its AC-02 verifies the same no-cross-user-exposure requirement; unrelated NFRs are not added.",
+        "Uses the supplied parent mapping: all new technical Tasks are under PAY-11 and PAY-20 remains under PAY-10; contract-only Tasks cite their DR contract IDs rather than inventing UC coverage.",
+        "Both Story sources cite NFR-01 under DR-01 because their authorization checks prevent exposing another user's receipt; unrelated NFRs are not added.",
         "Story Source lists follow the fixed document-key order and put AC IDs linked to the owning UC in AC Coverage, without duplicating them among Source children.",
-        "Dispatchable draft descriptions expose nonempty Output, binary slice-local Checks and Scope/non-goals; canonical AC prose is not copied into the body or relabeled as Checks, and no optional correlation ID is invented."
+        "PAY-20's retry Check preserves the operator as initiator and verifies the retry interaction and result mapping at the handler/retrieval boundary, rather than only restating AC-UC-02-03.",
+        "Each Story and Task has separate, nonempty Output, Checks and Scope sections; no optional Slice Scope ID is invented. Check semantics are graded by the task-specific criteria.",
+        "Saves the proposal without Jira mutations and asks for explicit confirmation before persistence."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
@@ -76,16 +79,19 @@
     {
       "id": 5,
       "name": "project-open-questions-and-errors",
-      "prompt": "Read backlog-context.md as offline evidence. The two outcome Epic slices are approved. Project the ready DR/SRS and Use Cases into a draft without Jira mutations. The DR/SRS records open.item-007 with Blocking: yes (which CAdES verification library to use) and open.item-003 with Blocking: no. Use its references.repository. UC-01 defines AGREEMENT_EXTENSION_INVALID and AGREEMENT_SIGNATURE_INVALID; UC-02 reuses AGREEMENT_SIGNATURE_INVALID for the same condition. Show the spike, affected Stories, shared error Task, Source blocks and dependency directions in proposal.md; ask for confirmation.",
-      "expected_output": "A backlog draft where open.item-007 becomes a spike Task that blocks the dependent Story or Task, open.item-003 is recorded as a non-blocking gap, the error-handling Task for AGREEMENT_SIGNATURE_INVALID is created once and linked to both Use Cases, and concrete Tasks target the linked repository.",
+      "prompt": "Read backlog-context.md as offline evidence. The two outcome Epic slices are approved. Project the ready DR/SRS and Use Cases into a draft without Jira mutations. The DR/SRS records open.item-007 with Blocking: yes (which CAdES verification library to use) and open.item-003 with Blocking: no. Use its references.repository. UC-01 defines AGREEMENT_EXTENSION_INVALID and AGREEMENT_SIGNATURE_INVALID; UC-02 reuses AGREEMENT_SIGNATURE_INVALID for the same condition. Treat the PAY-50 source excerpt as context for the Sub-task eval only, not as an existing issue to match in this projection. Show the spike, affected Stories, shared error Task, Source blocks and dependency directions in proposal.md; ask for confirmation.",
+      "expected_output": "A reviewable PAY backlog proposal showing the source-supported hierarchy and dependencies for the approved receipt outcomes, with Jira mutations withheld pending confirmation.",
       "expectations": [
         "Turns open.item-007 (Blocking: yes) into an independent spike Task and makes the dependent item blocked by it.",
         "Records open.item-003 (Blocking: no) as a gap with an owner and no blocking edge.",
         "Creates one error-handling Task for AGREEMENT_SIGNATURE_INVALID, shared by UC-01 and UC-02, instead of duplicating it.",
         "Routes concrete Tasks to https://github.com/example/receipts from references.repository.",
         "Adds no Task and no link for a non-blocking question, and does not invent the answer to a spike.",
+        "Uses Epic parent relationships for Epic membership; every proposed blocks link represents an evidenced delivery dependency, and the spike blocks signature verification only.",
         "The spike Source starts with dr and nests open.item-007; the shared error Task nests AGREEMENT_SIGNATURE_INVALID under both owning UC documents.",
-        "Dispatchable draft descriptions expose nonempty Output, binary slice-local Checks and Scope/non-goals; canonical AC prose is not copied into the body or relabeled as Checks, and no optional correlation ID is invented."
+        "PAY-20's retry Check preserves the operator as initiator and verifies the retry interaction and result mapping at the handler/retrieval boundary, rather than only restating AC-UC-02-03.",
+        "Each Story and Task has separate, nonempty Output, Checks and Scope sections; no optional Slice Scope ID is invented. Check semantics are graded by the task-specific criteria.",
+        "Saves the proposal without Jira mutations and asks for explicit confirmation before persistence."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
     },
@@ -165,12 +171,13 @@
     {
       "id": 11,
       "name": "bug-and-subtask-sources",
-      "prompt": "Read backlog-context.md offline. Draft three independent prepared items in PAY: Bug A under PAY-11, invalid signature incorrectly stores a receipt (expected no write), citing UC-01 AGREEMENT_SIGNATURE_INVALID and DR-01; Bug B under PAY-10, receipt download fails with 503 during INC-12 (expected 200), incident-only with no UC or DR; and a Sub-task of PAY-50 to add the invalid-signature no-write test, copying exactly the Parent Source block in the fixture. Each check is that its described expected result holds in a regression test; all fit one sprint. Show complete descriptions in proposal.md and ask for confirmation without mutating Jira. Approved Scope for each Bug is only the described regression fix/test, excluding new features; the Sub-task is the no-write test only, excluding handler changes.",
+      "prompt": "Read backlog-context.md offline. Draft three independent prepared items in PAY: Bug A under PAY-11, invalid signature incorrectly stores a receipt (expected no write), citing UC-01 AGREEMENT_SIGNATURE_INVALID and DR-01; Bug B under PAY-10, receipt download fails with 503 during INC-12 (expected 200), incident-only with no UC or DR; and a Sub-task of PAY-50 to add the invalid-signature no-write test. Follow the template for Sub-tasks: refer to the parent for source context and omit the Sub-task's own Source section. Each check is that its described expected result holds in a regression test; all fit one sprint. Show complete descriptions in proposal.md and ask for confirmation without mutating Jira. Approved Scope for each Bug is only the described regression fix/test, excluding new features; the Sub-task is the no-write test only, excluding handler changes.",
+      "expected_output": "Two Bugs with applicable sources and a Sub-task referring to its parent for source context, each with a slice-local execution contract and no Jira mutation.",
       "expectations": [
         "Bug A includes dr page 102 and uc page 101 in key order, with AGREEMENT_SIGNATURE_INVALID nested under uc.",
         "Bug B cites https://example.org/incidents/12 and does not invent a UC or DR.",
-        "The Sub-task copies the fixture parent Source block verbatim, not just a parent Jira link or a newly selected document subset.",
-        "Uses list-based Source sections with no separate source inventory, does not invent AC coverage, and requests confirmation before mutation.",
+        "The Sub-task omits its own Source section and refers to its parent for source context.",
+        "Non-Sub-task items use list-based Source sections with no separate source inventory; no AC coverage is invented and confirmation is requested before mutation.",
         "Dispatchable draft descriptions expose nonempty Output, binary slice-local Checks and Scope/non-goals; canonical AC prose is not copied into the body or relabeled as Checks, and no optional correlation ID is invented."
       ],
       "files": ["evals/fixtures/backlog-context.md"]
@@ -210,6 +217,7 @@
       "expectations": [
         "Identifies missing Output and asks for that information rather than inventing it or presenting a placeholder as valid.",
         "Explicitly blocks persistence until the required execution information is supplied.",
+        "The saved proposal names missing Output as the blocker, and both the saved proposal and conversational handoff end with a focused question asking for Output; a pending or not-persisted status alone is insufficient.",
         "Preserves supplied source, parent and execution information; no invented optional Slice Scope ID and no Jira mutation."
       ],
       "files": []
@@ -241,11 +249,12 @@
     {
       "id": 17,
       "name": "minimal-epic-body",
-      "prompt": "Read backlog-context.md offline. The Epic grouping is approved. Prepare one PAY Epic for self-service receipt download. Show the exact proposed persisted description separately from review context. Include UC-01, JTBD-01, KPI, guardrail, boundaries and risks in the review proposal, but apply the Epic body policy. No Jira calls; save proposal.md and ask for confirmation.",
-      "expected_output": "A DR-only Source and concise outcome Epic, with grouping detail retained outside its body.",
+      "prompt": "Read backlog-context.md offline. The Epic grouping is approved. Prepare one PAY Epic for self-service receipt download. Show the exact proposed persisted description and proposed native remote links separately from review context. Include UC-01, JTBD-01, KPI, guardrail, boundaries and risks in the review proposal, but apply the Epic body policy. No Jira calls; save proposal.md and ask for confirmation.",
+      "expected_output": "An Epic with PRD, DR and applicable UC sources, a concise outcome body, and grouping detail retained in the review context.",
       "expectations": [
-        "Persisted Epic description has only DR-01 page 102 in its Source and a concise outcome body.",
-        "No Output/Checks/Scope/AC Coverage or copied KPI, UC, PRD, Figma or readiness inventory is forced into the Epic body.",
+        "Epic Source includes PRD-01 page 103 with JTBD-01 nested under it, DR-01 page 102 and UC-01 page 101 in key order.",
+        "Proposed native remote links include the Confluence and Figma documents in the Epic Source exactly once each.",
+        "The outcome body is concise; no Output/Checks/Scope/AC Coverage or copied KPI, UC/PRD prose or readiness inventory is forced into it.",
         "Review context retains the requested UC/JTBD, KPI, guardrail, boundaries and risks separately.",
         "Requests confirmation without mutation."
       ],
@@ -267,10 +276,10 @@
     {
       "id": 19,
       "name": "subtask-local-contract",
-      "prompt": "Read backlog-context.md offline. Prepare one Sub-task of PAY-50 in PAY. Copy the fixture Parent Source verbatim. Output: a handler regression test covers invalid-signature no-write behavior. Check: the test fails against a handler that invokes the writer on that error path. Scope: that test only, excluding handler implementation, policy changes and deployment. The parent delivers the whole upload flow; do not inherit that output or full-flow checks. No Slice Scope ID supplied. Save proposal.md, ask for confirmation, no live calls.",
-      "expected_output": "A Sub-task inheriting only Source, with its own test deliverable and no manufactured correlation.",
+      "prompt": "Read backlog-context.md offline. Prepare one Sub-task of PAY-50 in PAY. The fixture provides the parent's Source for context. Follow the template: refer to the parent for source context and omit the Sub-task's own Source section. Output: a handler regression test covers invalid-signature no-write behavior. Check: the test fails against a handler that invokes the writer on that error path. Scope: that test only, excluding handler implementation, policy changes and deployment. The parent delivers the whole upload flow; do not inherit that output or full-flow checks. No Slice Scope ID supplied. Save proposal.md, ask for confirmation, no live calls.",
+      "expected_output": "A Sub-task that refers to its parent for source context and has a deliverable and checks scoped to its own test, without manufactured correlation.",
       "expectations": [
-        "Copies the entire Parent Source block verbatim.",
+        "Omits its own Source section and refers to PAY-50 for source context instead of copying the parent's Source block.",
         "Output, Checks and Scope describe only the regression test and its supplied failure sensitivity, not the parent feature.",
         "Does not invent a Slice Scope ID or canonical AC coverage.",
         "Requires confirmation and makes no live mutation."
@@ -281,11 +290,49 @@
       "id": 20,
       "name": "subtask-requires-parent",
       "prompt": "Prepare a single Sub-task in project PAY to validate the Receipt API contract against its implementation. It fits one sprint and the verification is a passing contract test. No parent issue was supplied. Work offline; do not call Jira or invent a parent. Ask for the missing information before producing a ready-to-persist item.",
-      "expected_output": "A request for the missing parent and its source context, with no invented fields or Jira mutation.",
+      "expected_output": "A request for the missing parent, with no invented fields or Jira mutation.",
       "expectations": [
         "Asks for the parent issue rather than inventing a Jira key or substituting a source document.",
-        "Does not invent the parent's Source or execution details, and blocks persistence until they are supplied.",
+        "Does not invent a parent issue and blocks persistence until the required parent is supplied.",
         "Does not create or update Jira or claim the item is ready to persist."
+      ],
+      "files": []
+    },
+    {
+      "id": 21,
+      "name": "draft-validation-preserves-explicit-summary",
+      "prompt": "Prepare one PAY Task under PAY-11. The Jira summary is exactly \"Wire receipt adapter\"; the source document title is \"Receipt adapter intake\" at https://example.org/intake/adapter. One sprint. Output: the adapter returns the PDF bytes from the existing collaborator. Checks: a unit test verifies that the returned bytes are unchanged. Scope: the adapter and its unit test only; exclude authorization changes and deployment. Supplied Slice Scope ID: receipt-adapter-response. Save proposal.md and show the complete item for review. Compare the saved draft against these inputs before presenting it; ask for explicit confirmation and do not call Jira.",
+      "expected_output": "A draft whose issue summary and supplied fields match the input exactly, with the source title retained only as source context and confirmation requested.",
+      "expectations": [
+        "Uses the exact Jira summary \"Wire receipt adapter\" and does not replace it with the source title \"Receipt adapter intake\".",
+        "Preserves project PAY, parent PAY-11, the supplied Output, Checks, Scope and Slice Scope ID exactly in meaning.",
+        "Keeps the source title and locator in the Source section and uses the appropriate intake document key.",
+        "The saved proposal and conversational handoff both end with an explicit request to confirm the proposed Task.",
+        "Makes no Jira calls or mutations."
+      ],
+      "files": []
+    },
+    {
+      "id": 22,
+      "name": "epic-without-applicable-use-case",
+      "prompt": "Prepare one PAY Epic for a platform security baseline. Its sources are PRD-01 - Platform security at https://example.atlassian.net/wiki/spaces/PAY/pages/103 and DR-01 - Security baseline at https://example.atlassian.net/wiki/spaces/PAY/pages/102. The approved Epic outcome is a documented platform security baseline, deliverable in a few two-week sprints. No Use Case is included in this Epic's scope. Save proposal.md and ask for confirmation; work offline and make no Jira calls.",
+      "expected_output": "An Epic citing its PRD and DR without inventing a UC, with a concise outcome and a confirmation request.",
+      "expectations": [
+        "The Epic Source contains the supplied PRD and DR in key order.",
+        "Does not add a UC document or invent a UC ID when none is included in the Epic's scope.",
+        "Keeps the outcome body concise and asks for confirmation without mutating Jira."
+      ],
+      "files": []
+    },
+    {
+      "id": 23,
+      "name": "epic-missing-prd",
+      "prompt": "Prepare one PAY Epic for a platform security baseline. The DR is DR-01 - Security baseline at https://example.atlassian.net/wiki/spaces/PAY/pages/102; the PRD and its locator were not supplied. The approved Epic outcome is a documented platform security baseline, deliverable in a few two-week sprints. No Use Case is included in this Epic's scope. Save a draft proposal, ask for the missing information and make no Jira calls.",
+      "expected_output": "A blocked Epic proposal that asks for the missing PRD without inventing its title or locator.",
+      "expectations": [
+        "Keeps the supplied DR and identifies the missing PRD as a source gap.",
+        "Asks for the PRD and blocks persistence until the required source is supplied, rather than inventing a PRD or its locator.",
+        "Does not invent a UC or make Jira calls."
       ],
       "files": []
     }
