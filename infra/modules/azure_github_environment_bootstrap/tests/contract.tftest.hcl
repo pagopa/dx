@@ -312,13 +312,13 @@ run "azure_github_environment_bootstrap_rejects_upstream_without_recipients" {
   ]
 }
 
-run "azure_github_environment_bootstrap_rejects_state_account_resource_group_overlap" {
+run "azure_github_environment_bootstrap_rejects_case_insensitive_state_account_resource_group_overlap" {
   command = plan
 
   variables {
     terraform_state_container_access = {}
     additional_resource_group_ids = [
-      "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/terraform-state-rg",
+      "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/Terraform-State-RG",
     ]
   }
 
@@ -360,7 +360,7 @@ run "azure_github_environment_bootstrap_rejects_workload_state_resource_group_ov
     terraform_state_container_access = {}
     terraform_storage_account = {
       name                = "tfdevdx"
-      resource_group_name = "dx-u-itn-test-rg-02"
+      resource_group_name = "Dx-U-Itn-Test-RG-02"
     }
   }
 
