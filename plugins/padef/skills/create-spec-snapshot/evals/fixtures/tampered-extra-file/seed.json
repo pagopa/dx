@@ -1,0 +1,9 @@
+{
+  "key": "TEST-5",
+  "files": {
+    "issue.json": "{\n  \"id\": \"1005\",\n  \"key\": \"TEST-5\",\n  \"fields\": {\n    \"issuetype\": {\n      \"id\": \"10007\",\n      \"name\": \"Task\",\n      \"subtask\": false\n    },\n    \"project\": {\n      \"id\": \"10001\",\n      \"key\": \"TEST\",\n      \"name\": \"Test project\"\n    },\n    \"updated\": \"2026-11-10T10:00:00.000+0100\",\n    \"description\": \"See https://example.atlassian.net/wiki/spaces/SPEC/pages/101/Spec for the spec.\",\n    \"summary\": \"Implement TEST-5\"\n  }\n}\n",
+    "confluence-101.md": "---\nid: \"101\"\ntitle: \"Spec\"\nversion: 3\nurl: \"https://example.atlassian.net/wiki/spaces/SPEC/pages/101/Spec\"\n---\n\n# Spec\n\nThe service must retry three times.\n",
+    "SHA256SUMS": "4e0dcff3aa43ac4667f8970b449cbfd073725d9881cf327c5ea35fea936d49fa  confluence-101.md\n3772b3eadde1e405b1165f646574df2e6a95bbdc9bfa0e3ea1bfc7b6d0e5213a  issue.json\n",
+    "notes.md": "Local notes added by hand.\n"
+  }
+}

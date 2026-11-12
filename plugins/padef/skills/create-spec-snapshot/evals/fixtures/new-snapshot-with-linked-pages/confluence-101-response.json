@@ -1,0 +1,18 @@
+{
+  "data": {
+    "id": "101",
+    "type": "page",
+    "title": "Export design",
+    "status": "current",
+    "detail": "full",
+    "body": {
+      "format": "markdown",
+      "value": "# Export design\n\nExports run nightly.\n"
+    },
+    "metadata": {
+      "version": {
+        "number": 3
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "data": {
+    "id": "1001",
+    "key": "TEST-1",
+    "fields": {
+      "summary": "Implement TEST-1",
+      "issuetype": {
+        "id": "10007",
+        "name": "Task",
+        "subtask": false,
+        "hierarchyLevel": 0
+      },
+      "project": {
+        "id": "10001",
+        "key": "TEST",
+        "name": "Test project"
+      },
+      "description": "Build the export.\n\n- Design: https://example.atlassian.net/wiki/spaces/SPEC/pages/101/Export+design\n- Same design, older link: https://example.atlassian.net/wiki/pages/viewpage.action?pageId=101.\n- API contract: [contract](https://example.atlassian.net/wiki/spaces/SPEC/pages/202/API+contract)\n- Short link: https://example.atlassian.net/wiki/x/AbCd",
+      "updated": "2026-11-10T10:00:00.000+0100"
+    },
+    "appliedContentFormat": "markdown"
+  }
+}
