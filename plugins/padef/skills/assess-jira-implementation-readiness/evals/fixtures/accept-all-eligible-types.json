@@ -2,28 +2,49 @@
   "TEST-1": {
     "key": "TEST-1",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Story" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Story"
+      },
       "issuelinks": [],
-      "description": "## Output\nA response.\n## Checks\n- C1: The request returns 200"
+      "description": "## Output\nA response.\n## Checks\n- C1: The request returns 200\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   },
   "TEST-2": {
     "key": "TEST-2",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Task" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Task"
+      },
       "issuelinks": [],
-      "description": "## Output\nA completed task."
+      "description": "## Output\nA completed task.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   },
   "TEST-3": {
     "key": "TEST-3",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Bug" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Bug"
+      },
       "issuelinks": [],
-      "description": "## Output\nA corrected behavior."
+      "description": "## Output\nA corrected behavior.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   }
 }

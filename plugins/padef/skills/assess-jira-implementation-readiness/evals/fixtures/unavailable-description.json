@@ -2,16 +2,30 @@
   "TEST-21": {
     "key": "TEST-21",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Story" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Story"
+      },
       "issuelinks": []
     }
   },
   "TEST-22": {
     "key": "TEST-22",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Story" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Story"
+      },
       "issuelinks": [],
       "description": ""
     }

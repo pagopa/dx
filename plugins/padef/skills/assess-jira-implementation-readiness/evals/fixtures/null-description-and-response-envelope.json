@@ -3,8 +3,15 @@
     "data": {
       "key": "TEST-27",
       "fields": {
-        "status": { "name": "Open", "statusCategory": { "key": "new" } },
-        "issuetype": { "name": "Story" },
+        "status": {
+          "name": "Open",
+          "statusCategory": {
+            "key": "new"
+          }
+        },
+        "issuetype": {
+          "name": "Story"
+        },
         "issuelinks": [],
         "description": null
       }

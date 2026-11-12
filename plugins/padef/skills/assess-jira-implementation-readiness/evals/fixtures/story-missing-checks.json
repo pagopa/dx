@@ -2,10 +2,17 @@
   "TEST-26": {
     "key": "TEST-26",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Story" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Story"
+      },
       "issuelinks": [],
-      "description": "## Output\nA result."
+      "description": "## Output\nA result.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   }
 }

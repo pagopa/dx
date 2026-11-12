@@ -4,11 +4,15 @@
     "fields": {
       "status": {
         "name": "Backlog",
-        "statusCategory": { "key": "indeterminate" }
+        "statusCategory": {
+          "key": "indeterminate"
+        }
       },
-      "issuetype": { "name": "Epic" },
+      "issuetype": {
+        "name": "Epic"
+      },
       "issuelinks": [],
-      "description": "## Output\nA result."
+      "description": "## Output\nA result.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   }
 }
