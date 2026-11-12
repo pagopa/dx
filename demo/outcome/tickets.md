@@ -43,8 +43,8 @@ full blob URLs with no fabricated fragments; nested IDs remain code text.
 
 ## Epic grouping review (not Epic description content)
 
-- EPIC-01 includes STORY-01/02, TASK-01..06 and TASK-ERR-*; excludes Practice
-  creation, back-office review, notifications and production launch.
+- EPIC-01 includes UC-01, STORY-01/02, TASK-01..06 and TASK-ERR-*; excludes
+  Practice creation, back-office review, notifications and production launch.
   High delivery risk: template, signature format, authentication, repository and
   size-limit decisions remain unresolved.
 - EPIC-02 includes TASK-07..11 and the decision spikes. It excludes product
@@ -57,7 +57,10 @@ full blob URLs with no fabricated fragments; nested IDs remain code text.
 
 ## Source
 
+- prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
+  - `JTBD-01` - Join CED without manual tickets
 - dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
+- uc: [UC-01 - Upload signed agreement](https://github.com/pagopa/dx/blob/main/demo/outcome/use-cases/uc-01-upload-signed-agreement.md)
 
 ## Description
 
@@ -67,6 +70,8 @@ Enable signed agreement upload for the CED adhesion pilot.
 
 ## Source
 
+- prd: [PRD - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/prd.md)
+  - `JTBD-01` - Join CED without manual tickets
 - dr: [Design Review - CED Adhesion](https://github.com/pagopa/dx/blob/main/demo/outcome/design-review.md)
 
 ## Description

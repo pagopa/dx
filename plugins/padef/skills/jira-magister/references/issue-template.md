@@ -113,13 +113,14 @@ as guidance rather than the sole criterion:
 - Task from DR/NFR/contract/readiness work, including a spike: `dr`.
 - Error-handling Task: `uc`; include every UC that defines the shared error.
 - Bug: the relevant `uc`, otherwise the supplied `incident`.
-- Epic: `dr` only; keep grouping evidence outside its persisted body.
+- Epic: the PRD and DR/SRS documents, plus UCs included in its scope; keep
+  detailed grouping evidence outside its outcome body.
 - CR or pending-spec work: `cr` or `intake`, when that is the actual source.
 
-Single-item mode accepts a self-contained source without requiring an
-unrelated DR. If a necessary source or locator is missing, ask for it; in a
-review draft show `key: title - locator missing (gap)`. Do not invent a URL or
-present an unresolved item as ready to persist.
+For non-Epic items, single-item mode accepts a self-contained source without
+requiring an unrelated DR. If a necessary source or locator is missing, ask for
+it; in a review draft show `key: title - locator missing (gap)`. Do not invent
+a URL or present an unresolved item as ready to persist.
 
 ## IDs and acceptance coverage
 
@@ -147,8 +148,8 @@ uses the DR contract ID and artifact, not the consuming UCs or their AC/design
 documents. Keep those delivery relationships in dependency links instead.
 
 1. Include the associated DR/SRS. In backlog mode a missing DR is a readiness
-   gap; self-contained incident/intake/single-item work need not have one.
-   For an Epic, stop here: its Source contains only the DR.
+   gap; self-contained incident/intake/single-item work need not have one
+   unless required by its issue type.
 2. Include every document owning a cited ID: selected UCs, PRD for JTBD, and
    ADR/RFC/CR only when explicitly cited.
 3. Include the concrete artifact linked by each cited `contracts.item-*`,
@@ -230,5 +231,4 @@ Incident-backed Bug:
 - incident: [INC-12 - Upload outage](https://example.org/incidents/12)
 ```
 
-Sub-task: identify the parent and refer to it for source context; omit `Source`. Epic: use only `dr`; the review proposal, not its persisted body, retains the
-included UC/JTBD grouping.
+Sub-task: identify the parent and refer to it for source context; omit `Source`.

@@ -37,8 +37,8 @@ Check existing links before adding one; match Confluence pages by page ID,
 not a title slug or an ID fragment. Preserve distinct Figma node targets. Do not duplicate links
 on synchronization. The description's Source list stays authoritative; remote
 links mirror it, not a second independently selected inventory.
-Do not delete unrelated existing remote links when narrowing a confirmed Epic
-body or updating sources unless their removal is explicitly confirmed.
+Do not delete unrelated existing remote links unless their removal is
+explicitly confirmed.
 
 ## Confirmation protocol
 
@@ -101,7 +101,7 @@ Re-fetch every created or updated item and verify:
   every dispatchable item, in the default sections or approved project mapping;
 - canonical AC IDs linked without copied AC prose, supplied correlation IDs
   unchanged and optional sections omitted when inapplicable;
-- minimal Epic outcome body and DR-only Source; Task/Story classification;
+- concise Epic outcome body; Task/Story classification;
 - no duplicate was created, and no two error-handling Tasks share one semantic
   error identifier;
 - every spike's `blocks` link exists in the correct direction;

@@ -7,7 +7,7 @@ discovered in [persistence.md](./persistence.md):
 
 | Issue    | Required content                                                                                                                                                                                                               |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Epic     | outcome-oriented summary; DR-only Source; concise outcome body. Grouping, UC/JTBD, KPI, guardrail, risk and readiness remain in the review proposal and DR                                                                     |
+| Epic     | outcome-oriented summary; PRD and DR sources, plus applicable UCs; concise outcome body. Grouping, KPI, guardrail, risk and readiness remain in the review proposal and DR                                                     |
 | Story    | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; UC Source; optional IDs-only AC Coverage                                                                          |
 | Task     | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID, `open.item-XX` for a spike, or the semantic error identifier for error handling; dependency and verification evidence |
 | Bug      | observed defect and expected behavior; relevant UC or incident source; reproduction and verification evidence                                                                                                                  |

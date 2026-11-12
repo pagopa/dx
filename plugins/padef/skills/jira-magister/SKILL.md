@@ -78,7 +78,7 @@ request is ambiguous.
 In single-item mode, rules 1-2 and 4-5 apply to the supplied item: preserve its
 supplied stable IDs and traceability, reject a material omission rather than
 invent a value, and do not require an upstream DR/SRS when the item's source is
-self-contained.
+self-contained unless required by the issue type.
 
 ## Backlog workflow
 
@@ -114,8 +114,8 @@ Show the proposed grouping and ask for explicit approval before drafting the
 final Stories and Tasks. Do not create or update Jira during this phase.
 Keep this grouping evidence, with links to the DR, PRD and included UCs, in the
 review proposal. The persisted Epic is non-dispatchable: outcome-oriented
-summary, DR-only Source and concise outcome body, not copied UC, KPI, design or
-readiness detail from the DR.
+summary and concise outcome body, not copied UC, KPI, design or readiness
+detail from the DR.
 
 ### 3. Draft Stories and Tasks
 
@@ -232,8 +232,7 @@ of requirements.
    any failed step.
 
 The Definition of Ready gate is reduced in this mode: validate that the item is
-well formed and that no value is invented. Do not require a parent DR/SRS unless
-the supplied source or a link needs one.
+well formed and that no value is invented.
 
 ## Draft validation
 
