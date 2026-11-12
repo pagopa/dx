@@ -8,10 +8,10 @@ discovered in [persistence.md](./persistence.md):
 | Issue    | Required content                                                                                                                                                                                                               |
 | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Epic     | outcome-oriented summary; DR-only Source; concise outcome body. Grouping, UC/JTBD, KPI, guardrail, risk and readiness remain in the review proposal and DR                                                                     |
-| Story    | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; UC Source; explicit Output, slice-local binary Checks, Scope/non-goals; optional IDs-only AC Coverage            |
+| Story    | exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic; UC Source; optional IDs-only AC Coverage                                                                          |
 | Task     | concrete enabling outcome; one-sprint scope; parent Epic or Story; source contract/NFR/readiness/gap ID, `open.item-XX` for a spike, or the semantic error identifier for error handling; dependency and verification evidence |
 | Bug      | observed defect and expected behavior; relevant UC or incident source; reproduction and verification evidence                                                                                                                  |
-| Sub-task | tightly coupled parent work; copy the parent's `Source` block; explicit Output, slice-local Checks, Scope/non-goals, and verification evidence                                                                                 |
+| Sub-task | tightly coupled parent work; parent relationship and reference to the parent for source context                                                                                                                             |
 
 Descriptions may summarize source behavior, but the DR/SRS and Use Case remain
 authoritative. Use meaningful source titles/keys in prose and link labels, not
@@ -19,14 +19,11 @@ opaque source codes alone. Attribute decisions to evidenced owners rather than
 an inferred team; describe the work, not the agent's conversation or procedure.
 Use [issue-template.md](./issue-template.md) for the `## Source` document list,
 its source-selection guidance, one-hop selection, nested stable IDs, canonical
-locators, and `## AC Coverage`. This replaces the free-text `Source:` line;
-do not add a separate `Source documents` inventory. Apply it to every issue
-type above, while retaining that type's other required content.
-Every dispatchable Task, Bug and Sub-task also requires explicit Output,
-binary slice-local Checks and Scope/non-goals. A Sub-task inherits only Source.
-Keep canonical AC prose in the UC, not in Story bodies or relabeled Checks.
+locators, `## AC Coverage`, and execution-field format. Apply its execution
+contract to every dispatchable Story, Task, Bug and Sub-task: require Output,
+binary slice-local Checks and Scope/non-goals, and block persistence if any are
+missing.
 Optional supplied Slice Scope IDs are preserved, never generated.
-Missing required execution information blocks persistence in either entry mode.
 
 ## Sizing and decomposition
 
