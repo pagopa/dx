@@ -154,11 +154,11 @@
       "id": 12,
       "name": "unavailable-description",
       "prompt": "Assess TEST-21 and TEST-22 using the supplied Jira response snapshots in unavailable-description.json. This is an offline evaluation for Jira: do not call Jira. Run the source check for real; the source URLs point to a local service that is already running.",
-      "expected_output": "Unable to assess TEST-21 because description evidence is unavailable; TEST-22 is Not ready because both required sections are absent.",
+      "expected_output": "Unable to assess TEST-21 because its description was omitted; TEST-22 is Not ready because its explicitly empty description fails Output, Sources, and Checks.",
       "expectations": [
         "Distinguishes an omitted description from an explicitly empty one.",
-        "Reports both missing sections for the empty Story description.",
-        "Does not infer the contents of the omitted description."
+        "Reports Output, Sources, and Checks as unverifiable for TEST-21, without inferring the omitted description's contents.",
+        "Reports Output, Sources, and Checks as failed for TEST-22; an explicitly empty description is not unavailable evidence."
       ],
       "files": ["evals/fixtures/unavailable-description.json"]
     },
@@ -215,7 +215,7 @@
       "expected_output": "Both are Not ready: TEST-29 has no Source section and TEST-30 has a source without a URL.",
       "expectations": [
         "Reports Not ready for TEST-29 because the Source section is absent.",
-        "Reports Not ready for TEST-30 because an item with no URL fails the Sources criterion.",
+        "Reports Not ready for TEST-30 because its source-document entry without a URL fails the Sources criterion, even though another source URL is accessible.",
         "Does not invent a URL for the missing locator."
       ],
       "files": ["evals/fixtures/sources-check.json"]

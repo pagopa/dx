@@ -34,11 +34,15 @@ Definition of Ready used by Jira Magister.
    another criterion has failed. Combine all results for the final verdict;
    the script's verdict covers metadata only. Assignees and estimates do not
    affect this gate.
-   Then verify the sources: extract every URL from the description's `## Source`
-   section, nested items included, as a JSON array `[{"url": "..."}]`, and pass
-   it through standard input to `node <skill-directory>/scripts/check-sources.js`.
-   Its per-URL results feed the `Sources` criterion. A script error leaves the
-   criterion unverifiable.
+   Then verify the sources. Before extracting URLs, inspect each entry in the
+   description's `## Source` section: a source-document entry without a URL,
+   including one marked `locator missing`, fails `Sources` even if other
+   entries have accessible URLs. Extract every URL from the section, nested
+   items included, as a JSON array `[{"url": "..."}]`, and pass it through
+   standard input to `node <skill-directory>/scripts/check-sources.js`. Combine
+   its per-URL results with the missing-URL check; any failure makes `Sources`
+   fail. A script error leaves the criterion unverifiable unless another
+   source failure is already established.
 4. **Report and stop.** Lead with the verdict and the issue key, plus its link
    when available. Then list every applicable criterion on its own line as
    `Criterion: result - evidence`:
