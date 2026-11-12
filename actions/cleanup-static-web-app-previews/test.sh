@@ -23,6 +23,10 @@ az() {
 JSON
       ;;
     "staticwebapp environment delete")
+      if [[ "${FAIL_DELETE:-false}" == "true" ]]; then
+        echo "Azure deletion failed" >&2
+        return 1
+      fi
       while [[ "$1" != "--environment-name" ]]; do shift; done
       echo "$2" >> "$DELETE_LOG"
       ;;
@@ -49,7 +53,19 @@ test ! -e "$DELETE_LOG"
 
 bash "$action_dir/cleanup.sh" > "$test_dir/output"
 test "$(cat "$DELETE_LOG")" = 101
-grep -Fq 'Keeping preview environment for open PR #202.' "$test_dir/output"
+grep -Fxq '::notice::Deleted preview environment for closed PR #101.' "$test_dir/output"
+grep -Fxq '::debug::Keeping preview environment for open PR #202.' "$test_dir/output"
+
+: > "$DELETE_LOG"
+if FAIL_DELETE=true bash "$action_dir/cleanup.sh" > "$test_dir/output" 2>&1; then
+  echo "Expected an Azure deletion failure to stop cleanup." >&2
+  exit 1
+fi
+test ! -s "$DELETE_LOG"
+if grep -Fq '::notice::' "$test_dir/output"; then
+  echo "A failed deletion must not produce a success notice." >&2
+  exit 1
+fi
 
 : > "$DELETE_LOG"
 if FAIL_GITHUB=true bash "$action_dir/cleanup.sh" > "$test_dir/output" 2>&1; then

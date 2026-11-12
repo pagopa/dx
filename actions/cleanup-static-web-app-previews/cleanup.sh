@@ -43,16 +43,16 @@ while IFS= read -r preview_id; do
     if [[ "$dry_run" == "true" ]]; then
       echo "Would delete preview environment for closed PR #${preview_id}."
     else
-      echo "Deleting preview environment for closed PR #${preview_id}."
       az staticwebapp environment delete \
         --name "$STATIC_WEB_APP_NAME" \
         --resource-group "$RESOURCE_GROUP_NAME" \
         --environment-name "$preview_id" \
         --yes \
         --only-show-errors
+      echo "::notice::Deleted preview environment for closed PR #${preview_id}."
     fi
   elif [[ "$state" == "open" ]]; then
-    echo "Keeping preview environment for open PR #${preview_id}."
+    echo "::debug::Keeping preview environment for open PR #${preview_id}."
   else
     echo "::error::Unexpected GitHub state '${state}' for PR #${preview_id}."
     exit 1
