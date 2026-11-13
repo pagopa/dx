@@ -26,12 +26,30 @@ handshake (`x-ms-qps-subscribed: true`).
 
 Those suites import the sources, so they resolve the workspace dependency tree
 and inherit its overrides. `src/__tests__/packed-consumer.integration.test.ts`
-covers the gap: it runs `pnpm pack`, installs the tarball in a throwaway consumer
-with `npm` (no workspace overrides, no catalog), then runs the scenarios in
+covers the gap: it installs the tarball in a throwaway consumer with `npm` (no
+workspace overrides, no catalog), then runs the scenarios in
 `src/__tests__/fixtures/consumer/` and asserts that Redis dependency telemetry
 still reaches the collector and that `@opentelemetry/api` resolves to a single
 copy. Both Redis v5 and v6 are exercised, because `redis` is a consumer choice
 rather than a packaged dependency.
+
+The tarball itself is built once per integration run by
+`src/__tests__/packed-package.global-setup.ts`, wired through `globalSetup` in
+`vitest.integration.config.js`. The setup runs `pnpm build` and `pnpm pack` in a
+temporary directory, publishes the path with Vitest `provide`, and removes the
+directory when the run ends. Any integration suite can read it with
+`getPackedPackageTarballPath()` from
+`src/__tests__/packed-package-provided-context.ts` instead of packing the package
+again.
+
+`src/__tests__/artifact-contract.test.ts` guards the artifact without containers.
+It reads `package.json` and the built `dist`, then asserts that every `exports`
+subpath points at a file inside `dist` and that every bare module imported by
+those entries is declared in `dependencies` (or `peerDependencies`). Because
+`tsup` bundles with `bundle: true`, an undeclared runtime import of a
+`devDependency` would be inlined into `dist`, so consumers would receive a
+private copy. The suite runs in the regular `test` task without Docker; the
+package `test` target depends on `build`, so `dist` is always fresh.
 
 ## Running integration tests locally
 
