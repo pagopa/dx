@@ -45,6 +45,9 @@ A change is done when `pnpm nx affected -t build test lint typecheck` and
   `validate-v2.yaml`, which formats, lints, scans and plans the affected
   projects: the local targets above reproduce what it runs.
 - `.github/copilot/settings.json` enables the PagoPA DX plugins.
+- `.github/workflows/copilot-setup-steps.yml` installs the toolchain and the
+  dependencies before the Copilot coding agent starts, so a Copilot session
+  begins with them already in place.
 
 ## Conventions
 

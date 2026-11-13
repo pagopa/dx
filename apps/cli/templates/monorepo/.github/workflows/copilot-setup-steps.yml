@@ -1,0 +1,52 @@
+name: Copilot Setup Steps
+
+# Prepares the environment the GitHub Copilot coding agent works in: it installs
+# the toolchain pinned by mise, authenticates pnpm to GitHub Packages and
+# installs the workspace dependencies, so the agent can build, test and lint
+# without any manual step.
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+jobs:
+  # Copilot picks the setup steps up by job name: renaming it disables the file.
+  copilot-setup-steps:
+    # Copilot caps this job at 59 minutes anyway; declaring the same ceiling
+    # makes the `push` and `pull_request` runs of this file fail on the same
+    # budget instead of GitHub's 360-minute default.
+    timeout-minutes: 59
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install the mise toolchain
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          experimental: true
+          minimum_release_age: 7d
+
+      # GitHub Packages asks for a token even for the public DX plugins this
+      # scaffold installs, so the registry needs one even though nothing here is
+      # private. The workflow token reads every public package, and its
+      # `packages: read` permission is granted above, so no secret is involved.
+      - name: Authenticate to GitHub Packages
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: $\{{ github.token }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
