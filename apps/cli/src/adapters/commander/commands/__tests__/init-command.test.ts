@@ -56,6 +56,11 @@ import { makeInitCommand } from "../init.js";
 const makePayload = (
   overrides: Partial<MonorepoPayload> = {},
 ): MonorepoPayload => ({
+  ownership: {
+    namespaceType: "Organization",
+    owners: ["@pagopa/devex"],
+    reviewerTeams: ["devex"],
+  },
   repoDescription: "A test repo",
   repoName: "test-repo",
   repoOwner: "pagopa",

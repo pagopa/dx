@@ -183,6 +183,20 @@ describe("updateRepositoryEnvironmentsHcl", () => {
   });
 });
 
+describe("reviewer ownership preservation", () => {
+  it("preserves selected code-owner teams when adding an environment", async () => {
+    const content = repositoryConfig.replace(
+      "reviewers_teams        = []",
+      'reviewers_teams        = ["product-team", "platform-team"]',
+    );
+    const result = await updateRepositoryEnvironmentsHcl(content, "dev");
+    expect(result).toContain(
+      'reviewers_teams        = ["product-team", "platform-team"]',
+    );
+    expect(result).toContain('environments           = ["dev", "prod"]');
+  });
+});
+
 describe("structural repository HCL updates", () => {
   it("rejects a missing repository module", async () => {
     await expect(async () =>

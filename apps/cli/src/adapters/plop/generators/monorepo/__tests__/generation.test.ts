@@ -88,12 +88,68 @@ const registerMiseToolchainConfigurationTest = (
   });
 };
 
+const registerOwnershipTests = (
+  getPlop: () => NodePlopAPI,
+  getTempDir: () => string,
+  payload: Payload,
+) => {
+  it("uses the same teams for wildcard code ownership and deployment reviewers", async () => {
+    const files = await readGeneratedFiles(
+      path.join(getTempDir(), payload.repoName),
+      ["CODEOWNERS", "infra/repository/main.tf"],
+    );
+    expect(files["CODEOWNERS"]).toBe(
+      "# see https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file\n\n* @pagopa/product-team @alice @pagopa/platform-team\n",
+    );
+    await expect(
+      fs.access(
+        path.join(getTempDir(), payload.repoName, ".github", "CODEOWNERS"),
+      ),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+    expect(files["infra/repository/main.tf"]).toContain(
+      'reviewers_teams        = ["product-team", "platform-team"]',
+    );
+  });
+
+  it("includes the personal owner and additional users without team reviewers", async () => {
+    const personalPayload: Payload = {
+      ...payload,
+      ownership: {
+        namespaceType: "User",
+        owners: ["@alice", "@bob"],
+        reviewerTeams: [],
+      },
+      repoName: "personal-repo",
+      repoOwner: "alice",
+    };
+    const result = await getPlop()
+      .getGenerator(PLOP_MONOREPO_GENERATOR_NAME)
+      .runActions(personalPayload);
+    expect(result.failures).toEqual([]);
+    const files = await readGeneratedFiles(
+      path.join(getTempDir(), personalPayload.repoName),
+      ["CODEOWNERS", "infra/repository/main.tf"],
+    );
+    expect(files["CODEOWNERS"]).toBe(
+      "# see https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file\n\n* @alice @bob\n",
+    );
+    expect(files["infra/repository/main.tf"]).toContain(
+      "reviewers_teams        = []",
+    );
+  });
+};
+
 describe("monorepo generator — file generation", () => {
   let tmpDir: string;
   let originalCwd: string;
   let plop: NodePlopAPI;
 
   const payload: Payload = {
+    ownership: {
+      namespaceType: "Organization",
+      owners: ["@pagopa/product-team", "@alice", "@pagopa/platform-team"],
+      reviewerTeams: ["product-team", "platform-team"],
+    },
     repoDescription: "A test repository for DX",
     repoName: "my-test-repo",
     repoOwner: "pagopa",
@@ -139,6 +195,12 @@ describe("monorepo generator — file generation", () => {
 
     expect(generatedFiles).toMatchSnapshot();
   });
+
+  registerOwnershipTests(
+    () => plop,
+    () => tmpDir,
+    payload,
+  );
 
   it("uses the selected GitHub organization in repository provider configuration", async () => {
     const customPayload: Payload = {

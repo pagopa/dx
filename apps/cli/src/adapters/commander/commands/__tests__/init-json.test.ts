@@ -40,11 +40,16 @@ vi.mock("../../../github/packages.js", () => ({
   assertGitHubPackagesAccess: mocks.assertGitHubPackagesAccess,
 }));
 
-import { makeInitCommand } from "../init.js";
+import { getOwnershipGuidance, makeInitCommand } from "../init.js";
 
 const makePayload = (
   overrides: Partial<MonorepoPayload> = {},
 ): MonorepoPayload => ({
+  ownership: {
+    namespaceType: "Organization",
+    owners: ["@pagopa/devex"],
+    reviewerTeams: ["devex"],
+  },
   repoDescription: "A test repo",
   repoName: "test-repo",
   repoOwner: "pagopa",
@@ -172,6 +177,7 @@ describe("init command json output", () => {
       {
         data: {
           gitHubRepoCreationSkipped: true,
+          ownership: getOwnershipGuidance(payload),
           payload,
         },
         ok: true,
