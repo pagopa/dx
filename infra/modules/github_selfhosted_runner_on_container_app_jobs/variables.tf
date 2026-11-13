@@ -73,7 +73,8 @@ variable "use_github_app" {
     Set true to use GitHub App authentication instead of a Personal Access Token.
     If true, the module expects the Key Vault to contain the following secrets:
       - github-runner-app-installation-id: GitHub App Installation ID
-      - github-runner-app-id: GitHub App ID
+      - github-runner-app-id: GitHub App ID for KEDA
+      - github-runner-app-client-id: GitHub App Client ID for runner authentication
       - github-runner-app-key: GitHub App private key in PEM format
   EOT
 }
