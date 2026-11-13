@@ -1,12 +1,9 @@
 # Jira source template
 
-Use this structure in each proposed or confirmed issue description.
-The top-level document bullets are the complete **source document
-inventory**.
+Use this structure in each proposed or confirmed issue description. The
+top-level document bullets are the complete **source document inventory**.
 
 ```markdown
-<!-- Do NOT include Source for Sub-tasks; refer to the parent issue instead -->
-
 ## Source
 
 - prd: [PRD - Adhesion](https://example.atlassian.net/wiki/spaces/DEMO/pages/103)
@@ -17,19 +14,65 @@ inventory**.
   - [AGREEMENT_EXTENSION_INVALID](https://example.atlassian.net/wiki/spaces/DEMO/pages/101#AGREEMENT_EXTENSION_INVALID)
 - contract: [Upload API](https://github.com/example/adhesion/blob/main/api/openapi.yaml)
 
-## {{issue_specific_content}}
+## Output
+
+The upload endpoint validates the extension before attempting signature processing.
+
+## Checks
+
+- An endpoint test verifies that a disallowed extension never invokes the signature processor.
+
+## Scope
+
+- In scope: extension validation and its endpoint test.
+- Out of scope: signature verification and agreement persistence.
 
 ## AC Coverage
 
 - [AC-01](https://example.atlassian.net/wiki/spaces/DEMO/pages/101#AC-01)
 ```
 
-The example URLs and IDs are illustrative, not documents to retrieve.
+The example URLs and IDs are illustrative, not documents to retrieve. Use the
+execution contract below alongside the issue-type content requirements in
+[issue-contract.md](./issue-contract.md).
+
+## Execution contract
+
+For new Stories, Tasks, Bugs and Sub-tasks, default to `Source`, optional
+`Slice Scope ID`, `Output`, `Checks`, `Scope`, optional `AC Coverage`, in that
+order. These headings are a readable default, not a universal Jira schema.
+Respect an explicitly supplied approved project mapping if the same information
+is explicit, nonempty and verifiable.
+
+- **Output:** the observable result of this item, distinct from its source
+  locator or an instruction to "implement the UC".
+- **Checks:** binary checks of this item's deliverable. Propose them from the
+  approved work, not new requirements. Reference evidence when supplied;
+  never invent commands, test IDs, result links or a successful execution.
+  For an integration slice, name the supplied implementation boundary and
+  the collaborator interaction or response mapping being checked. For example,
+  verify that an authorization result controls a downstream call and that its
+  result maps to the response, rather than restating "the actor can download".
+  Merely adding "integration" to an end-to-end AC does not make it slice-local.
+  For retry behavior, preserve the source-specified initiator and trigger, and
+  check the retry interaction and result mapping at the supplied boundary.
+  Do not imply an automatic retry or change who initiates it unless the source
+  says so.
+- **Scope:** explicit authorized work and evidenced non-goals. Do not infer
+  exclusions or use "TBD" to make a missing boundary appear complete.
+- **Slice Scope ID:** optional; include and preserve it only when supplied or
+  already present. Never generate one.
+- **AC Coverage:** optional links to canonical AC IDs. Keep AC prose in the UC;
+  coverage does not claim that a partial slice satisfies the full AC.
+
+If required Output, Checks or Scope cannot be established from approved input,
+show the gap, ask a focused question and block persistence. This applies even
+in prepared-item mode. A locator or AC ID alone does not supply these values.
 
 ## Document keys and source selection
 
-Write each document once as `- key: [meaningful title](locator)`. In items
-with a `Source` section, use lowercase keys in this fixed order:
+Write each document once as `- key: [meaningful title](locator)`. Use lowercase
+keys in this fixed order for every item:
 
 - `prd`: PRD owning JTBD or other product requirements.
 - `dr`: operational DR/SRS owning solution, contract, NFR, or question IDs.
@@ -43,9 +86,9 @@ with a `Source` section, use lowercase keys in this fixed order:
 - `incident`: incident supplying a Bug without a relevant UC.
 - `intake`: self-contained intake or pending-spec source.
 
-Use the fixed key order above regardless of issue type or source relationships.
-Keep multiple documents with the same key in their source order. Do not invent
-documents to fill the catalog.
+Use the fixed key order above for every item, regardless of issue type or source
+relationships. Keep multiple documents with the same key in their source
+order. Do not invent documents to fill the catalog.
 
 Keys describe a document's role in this item, not a requirement for separate
 pages. If the selected UC is a section of the DR, list the shared page once
@@ -70,22 +113,23 @@ qualified ID or fragment.
 Select source documents based on the work and cited content, using issue type
 as guidance rather than the sole criterion:
 
-- For a Story or Task implementing UC behavior, include the owning `uc`.
-- For a Task from DR/NFR/contract/readiness work, including a spike, include
-  the owning `dr` and other directly required documents.
-- For an error-handling Task, include every `uc` that defines the shared error.
-- For a Bug, include the relevant `uc`, or the supplied `incident` when no
-  relevant UC applies.
-- For a Sub-task, omit the `Source` section and refer to its parent for the
-  full source context. Require an identified parent; ask when it is missing.
-- For an Epic, include the `dr` and applicable `prd`/`uc` documents.
-- For CR or pending-spec work, include `cr` or `intake` when it is the actual
-  source.
+- Story or Task realizing a UC: `uc`.
+- Task from DR/NFR/contract/readiness work, including a spike: `dr`.
+- Error-handling Task: `uc`; include every UC that defines the shared error.
+- Bug: the relevant `uc`, otherwise the supplied `incident`.
+- Epic: the PRD and DR/SRS documents, plus UCs included in its scope; keep
+  detailed grouping evidence outside its outcome body.
+- CR or pending-spec work: `cr` or `intake`, when that is the actual source.
 
-Single-item mode accepts a self-contained source without requiring an
-unrelated DR. If a necessary source or locator is missing, ask for it; in a
-review draft show `key: title - locator missing (gap)`. Do not invent a URL or
-present an unresolved item as ready to persist.
+Include an NFR ID under its owning DR/SRS only when the item implements or
+checks that NFR. A shared constraint may apply to multiple items; establish
+applicability from each item's own scope and checks rather than copying every
+DR/SRS NFR onto related items.
+
+For non-Epic items, single-item mode accepts a self-contained source without
+requiring an unrelated DR. If a necessary source or locator is missing, ask for
+it; in a review draft show `key: title - locator missing (gap)`. Do not invent
+a URL or present an unresolved item as ready to persist.
 
 ## IDs and acceptance coverage
 
@@ -96,30 +140,25 @@ exact ID, optionally followed by a short title. Examples include `JTBD-*`,
 ADR/RFC/CR IDs. Preserve the source's actual spelling; these examples do not
 define or migrate an ID naming convention.
 
-For a Story or Task that implements or verifies an identified NFR, cite that
-NFR under its owning document, even when a Use Case acceptance check also
-expresses the requirement. Do not add NFRs merely because they appear elsewhere
-in the DR/SRS.
-
 The UC identity is in its document label (and a nested section reference for
 an embedded UC). Put acceptance-check IDs in
 `## AC Coverage`, not among the nested Source IDs. Link each AC to its owning
 UC, including when several UCs use the same local `AC-01`. Coverage contains
 IDs only, not copied AC prose. Omit the section when no AC is covered; do not
-invent coverage. This does not change the existing Story acceptance-check body
-requirements.
+invent coverage. Do not copy canonical acceptance-check prose elsewhere in the
+issue body either.
 
 ## Select documents: one hop, no recursive collection
 
-For items other than Sub-tasks, derive this set separately for each item from
-the work it actually implements.
+Derive this set separately for each item from the work it actually implements.
 The UCs selected for the whole backlog, or the Stories that a Task unblocks,
 are not automatically that Task's sources. In particular, contract-only wiring
 uses the DR contract ID and artifact, not the consuming UCs or their AC/design
 documents. Keep those delivery relationships in dependency links instead.
 
 1. Include the associated DR/SRS. In backlog mode a missing DR is a readiness
-   gap; self-contained incident/intake/single-item work need not have one.
+   gap; self-contained incident/intake/single-item work need not have one
+   unless required by its issue type.
 2. Include every document owning a cited ID: selected UCs, PRD for JTBD, and
    ADR/RFC/CR only when explicitly cited.
 3. Include the concrete artifact linked by each cited `contracts.item-*`,
@@ -202,5 +241,3 @@ Incident-backed Bug:
 ```
 
 Sub-task: identify the parent and refer to it for source context; omit `Source`.
-Epic: include `dr` and its cited `uc` and `prd` documents in catalog order,
-and nest JTBD IDs under `prd`.
