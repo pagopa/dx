@@ -1,3 +1,18 @@
+## 0.0.13 (2026-11-13)
+
+### 🚀 Features
+
+- Use the GitHub App Client ID as the runner registration JWT issuer. ([#2446](https://github.com/pagopa/dx/pull/2446))
+
+  ## Migration guide
+
+  Before deploying this image, configure `GITHUB_APP_CLIENT_ID` for every GitHub App runner; `GITHUB_APP_ID` alone no longer authenticates this image. For Terraform-managed runners, provision `github-runner-app-client-id` in the common Key Vault and upgrade the runner module. PAT and registration-token authentication are unchanged.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 0.0.12 (2026-11-06)
 
 ### 🩹 Fixes

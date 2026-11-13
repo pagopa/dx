@@ -1,3 +1,15 @@
+## 7.0.2 (2026-11-13)
+
+### 🩹 Fixes
+
+- Normalize internal files ([#2496](https://github.com/pagopa/dx/pull/2496))
+- Update module documentation after internal modules folder rename. ([#2531](https://github.com/pagopa/dx/pull/2531))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Danilo Spinelli @gunzip
+
 ## 7.0.1 (2026-11-03)
 
 ### 🩹 Fixes
