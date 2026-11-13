@@ -7,39 +7,22 @@ resource "azurerm_resource_group" "example" {
   location = local.environment.location
 }
 
-data "azurerm_subnet" "pep" {
+resource "azurerm_storage_account" "origin" {
   name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "pep",
-    resource_type = "subnet"
+    resource_type = "storage_account"
   }))
-  virtual_network_name = local.virtual_network.name
-  resource_group_name  = local.virtual_network.resource_group_name
+  resource_group_name      = azurerm_resource_group.example.name
+  location                 = azurerm_resource_group.example.location
+  account_kind             = "StorageV2"
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+  public_network_access    = "Enabled"
+  tags                     = local.tags
 }
 
-
-module "storage_account" {
-  source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 4.0"
-
-  environment = local.environment
-
-  resource_group_name                  = azurerm_resource_group.example.name
-  use_case                             = "default"
-  subnet_pep_id                        = data.azurerm_subnet.pep.id
-  private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
-
-  force_public_network_access_enabled = true
-
-  static_website = {
-    enabled        = true
-    index_document = "index.html"
-  }
-
-  subservices_enabled = {
-    blob = false
-  }
-
-  tags = local.tags
+resource "azurerm_storage_account_static_website" "origin" {
+  storage_account_id = azurerm_storage_account.origin.id
+  index_document     = "index.html"
 }
 
 data "azurerm_key_vault" "kv" {
@@ -60,7 +43,7 @@ data "azurerm_key_vault_certificate" "cert" {
 
 module "azure_cdn" {
   source  = "pagopa-dx/azure-cdn/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   resource_group_name = azurerm_resource_group.example.name
 
@@ -69,7 +52,7 @@ module "azure_cdn" {
   # Basic origin configuration
   origins = {
     primary = {
-      host_name = module.storage_account.primary_web_host
+      host_name = azurerm_storage_account.origin.primary_web_host
     }
   }
 
@@ -103,6 +86,8 @@ module "azure_cdn" {
   ]
 
   tags = local.tags
+
+  depends_on = [azurerm_storage_account_static_website.origin]
 }
 
 # Optionally add FrontDoor rules to manage redirects
@@ -111,25 +96,24 @@ resource "azurerm_cdn_frontdoor_rule" "example" {
   name                      = "examplerule"
   cdn_frontdoor_rule_set_id = module.azure_cdn.rule_set_id
   order                     = 1
-  behavior_on_match         = "Continue"
+  behaviour_on_match        = "Continue"
 
   actions {
-    url_redirect_action {
-      redirect_type        = "PermanentRedirect"
-      redirect_protocol    = "MatchRequest"
-      query_string         = "clientIp={client_ip}"
-      destination_path     = "/exampleredirection"
-      destination_hostname = "contoso.com"
-      destination_fragment = "UrlRedirect"
+    url_redirect {
+      redirect_type         = "PermanentRedirect"
+      redirect_protocol     = "MatchRequest"
+      query_string          = "clientIp={client_ip}"
+      destination_path      = "/exampleredirection"
+      destination_host_name = "contoso.com"
+      destination_fragment  = "UrlRedirect"
     }
   }
 
   conditions {
-    host_name_condition {
-      operator         = "Equal"
-      negate_condition = false
-      match_values     = ["www.contoso.com", "images.contoso.com", "video.contoso.com"]
-      transforms       = ["Lowercase", "Trim"]
+    host_name {
+      operator   = "Equal"
+      values     = ["www.contoso.com", "images.contoso.com", "video.contoso.com"]
+      transforms = ["Lowercase", "Trim"]
     }
   }
 }

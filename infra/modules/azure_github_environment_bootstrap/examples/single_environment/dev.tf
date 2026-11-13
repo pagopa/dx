@@ -25,7 +25,7 @@ data "azuread_group" "externals_dev" {
 
 module "dev" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 6.0"
+  version = "~> 8.0"
 
   environment = merge(local.environment, { env_short = "u" })
 

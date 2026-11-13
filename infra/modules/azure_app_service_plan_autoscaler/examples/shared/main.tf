@@ -1,28 +1,15 @@
-data "azurerm_subnet" "pep" {
-  name                 = "${local.project}-pep-snet-01"
-  virtual_network_name = "${local.project}-common-vnet-01"
-  resource_group_name  = "${local.project}-network-rg-01"
-}
-
 resource "azurerm_resource_group" "example" {
   name     = "${local.project}-${local.environment.domain}-rg-${local.environment.instance_number}"
   location = local.environment.location
 }
 
 module "azure_function_app_1" {
-  source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 7.0"
+  source  = "pagopa-dx/azure-function-app-exposed/azurerm"
+  version = "~> 6.0"
 
   environment         = local.environment
   use_case            = "default"
   resource_group_name = azurerm_resource_group.example.name
-
-  virtual_network = {
-    name                = "${local.project}-common-vnet-01"
-    resource_group_name = "${local.project}-network-rg-01"
-  }
-  subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_cidr   = "10.50.249.0/24"
 
   app_settings      = {}
   slot_app_settings = {}
@@ -33,21 +20,14 @@ module "azure_function_app_1" {
 }
 
 module "azure_function_app_2" {
-  source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 7.0"
+  source  = "pagopa-dx/azure-function-app-exposed/azurerm"
+  version = "~> 6.0"
 
   environment         = merge(local.environment, { instance_number = "02" })
   use_case            = "default"
   resource_group_name = azurerm_resource_group.example.name
 
   app_service_plan_id = module.azure_function_app_1.function_app.plan.id
-
-  virtual_network = {
-    name                = "${local.project}-common-vnet-01"
-    resource_group_name = "${local.project}-network-rg-01"
-  }
-  subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_cidr   = "10.50.249.0/24"
 
   app_settings      = {}
   slot_app_settings = {}
@@ -58,21 +38,14 @@ module "azure_function_app_2" {
 }
 
 module "azure_app_service_1" {
-  source  = "pagopa-dx/azure-app-service/azurerm"
-  version = "~> 5.0"
+  source  = "pagopa-dx/azure-app-service-exposed/azurerm"
+  version = "~> 6.0"
 
   environment         = local.environment
   use_case            = "default"
   resource_group_name = azurerm_resource_group.example.name
 
   app_service_plan_id = module.azure_function_app_1.function_app.plan.id
-
-  virtual_network = {
-    name                = "${local.project}-common-vnet-01"
-    resource_group_name = "${local.project}-network-rg-01"
-  }
-  subnet_pep_id = data.azurerm_subnet.pep.id
-  subnet_cidr   = "10.50.249.0/24"
 
   app_settings      = {}
   slot_app_settings = {}
@@ -85,7 +58,7 @@ module "azure_app_service_1" {
 
 module "func_autoscaler" {
   source  = "pagopa-dx/azure-app-service-plan-autoscaler/azurerm"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   resource_group_name = azurerm_resource_group.example.name
   location            = local.environment.location

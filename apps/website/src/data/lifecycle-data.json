@@ -91,7 +91,7 @@
           "version": "azurerm (~> 4.x)",
           "status": "deprecated",
           "eolDate": "2026-12-31",
-          "notes": "DX tooling drops AzureRM v4 support on 31 December 2026. Plan migration to AzureRM v5 and compatible DX module versions before this date; check each module's required_providers constraints."
+          "notes": "DX tooling drops AzureRM v4 support on 31 December 2026. Upcoming major releases of modules already compatible with v4 and v5 are planned to require v5 only; they are not yet released. Older dual-compatible module versions remain usable during this support window. Modules that still require v4 are not migrated by this change. Check module and dependency constraints before upgrading; see the migration guidance below."
         },
         {
           "version": "azapi (2.8.0)",
