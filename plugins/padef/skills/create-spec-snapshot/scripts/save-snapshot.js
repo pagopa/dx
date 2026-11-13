@@ -1,6 +1,7 @@
 // Filters a Jira issue and its linked Confluence pages, then atomically persists them as a spec snapshot.
 import { createHash, randomBytes } from "node:crypto";
 import {
+  link,
   lstat,
   mkdir,
   readFile,
@@ -77,6 +78,9 @@ export function filterIssue(issue) {
 
 export const CHECKSUMS = "SHA256SUMS";
 export const ISSUE_FILE = "issue.json";
+const CURRENT = "CURRENT";
+const GENERATIONS = "generations";
+const GENERATION_PATTERN = /^[0-9a-f]{12}$/;
 
 export const pageFileName = (id) => `confluence-${id}.md`;
 
@@ -188,6 +192,47 @@ async function refuseSymlink(path) {
   }
 }
 
+export async function resolveCurrentSnapshotDirectory(directory) {
+  const snapshotDirectory = await lstatOrUndefined(directory);
+  if (!snapshotDirectory) {
+    return undefined;
+  }
+  if (!snapshotDirectory.isDirectory()) {
+    throw new Error(`Snapshot path is not a directory: ${directory}`);
+  }
+
+  const generationsDirectory = join(directory, GENERATIONS);
+  const generations = await lstatOrUndefined(generationsDirectory);
+  if (generations && !generations.isDirectory()) {
+    throw new Error(
+      `Snapshot generations path is not a directory: ${generationsDirectory}`,
+    );
+  }
+
+  const pointer = join(directory, CURRENT);
+  const pointerStat = await lstatOrUndefined(pointer);
+  if (!pointerStat) {
+    return undefined;
+  }
+  if (!pointerStat.isFile()) {
+    throw new Error(`Snapshot pointer is not a regular file: ${pointer}`);
+  }
+
+  const generation = (await readFile(pointer, "utf8")).trim();
+  if (!GENERATION_PATTERN.test(generation)) {
+    throw new Error(`Snapshot pointer is malformed: ${pointer}`);
+  }
+
+  const generationDirectory = join(generationsDirectory, generation);
+  const generationStat = await lstatOrUndefined(generationDirectory);
+  if (!generationStat?.isDirectory()) {
+    throw new Error(
+      `Snapshot generation is missing or not a directory: ${generationDirectory}`,
+    );
+  }
+  return generationDirectory;
+}
+
 export function renderChecksums(files) {
   return Object.keys(files)
     .sort()
@@ -240,20 +285,33 @@ export async function saveSnapshot(
   for (const segment of [join(cacheHome, "padef"), snapshots, directory]) {
     await refuseSymlink(segment);
   }
-  const current = await lstatOrUndefined(directory);
-  if (current && !current.isDirectory()) {
+  await mkdir(snapshots, { recursive: true, mode: 0o700 });
+  const existingDirectory = await lstatOrUndefined(directory);
+  if (existingDirectory && !existingDirectory.isDirectory()) {
     throw new Error(`Snapshot path is not a directory: ${directory}`);
   }
-  if (current && !replace) {
+  if (!existingDirectory) {
+    await mkdir(directory, { recursive: true, mode: 0o700 });
+  }
+  await refuseSymlink(directory);
+
+  const currentDirectory = await resolveCurrentSnapshotDirectory(directory);
+  if (currentDirectory && !replace) {
     throw new Error(
       `A snapshot already exists at ${directory}; pass --replace to overwrite it.`,
     );
   }
 
-  await mkdir(snapshots, { recursive: true, mode: 0o700 });
-  const suffix = randomBytes(6).toString("hex");
-  const staging = join(snapshots, `.${snapshot.key}.${suffix}.tmp`);
-  const backup = join(snapshots, `.${snapshot.key}.${suffix}.old`);
+  const generationsDirectory = join(directory, GENERATIONS);
+  await mkdir(generationsDirectory, { recursive: true, mode: 0o700 });
+  await refuseSymlink(generationsDirectory);
+
+  const generation = randomBytes(6).toString("hex");
+  const generationDirectory = join(generationsDirectory, generation);
+  const staging = join(generationsDirectory, `.${generation}.tmp`);
+  const pointer = join(directory, CURRENT);
+  const stagedPointer = join(directory, `.${CURRENT}.${generation}.tmp`);
+  let published = false;
   try {
     await mkdir(staging, { mode: 0o700 });
     for (const [name, content] of Object.entries(files)) {
@@ -272,25 +330,54 @@ export async function saveSnapshot(
       flag: "wx",
       mode: 0o444,
     });
-    if (current) {
-      await rename(directory, backup);
-    }
-    try {
-      await rename(staging, directory);
-    } catch (error) {
-      if (current) {
-        await rename(backup, directory);
+
+    await rename(staging, generationDirectory);
+    await writeFile(stagedPointer, `${generation}\n`, {
+      flag: "wx",
+      mode: 0o444,
+    });
+
+    const latestPointer = await lstatOrUndefined(pointer);
+    if (latestPointer) {
+      if (!latestPointer.isFile()) {
+        throw new Error(`Snapshot pointer is not a regular file: ${pointer}`);
       }
-      throw error;
+      if (!replace && !currentDirectory) {
+        throw new Error(
+          `A snapshot already exists at ${directory}; pass --replace to overwrite it.`,
+        );
+      }
+      await rename(stagedPointer, pointer);
+    } else {
+      try {
+        // Linking publishes the first pointer atomically without replacing a concurrent save.
+        await link(stagedPointer, pointer);
+      } catch (error) {
+        if (error.code !== "EEXIST" || !replace) {
+          if (error.code === "EEXIST") {
+            throw new Error(
+              `A snapshot already exists at ${directory}; pass --replace to overwrite it.`,
+              { cause: error },
+            );
+          }
+          throw error;
+        }
+        await rename(stagedPointer, pointer);
+      }
     }
+    published = true;
+    await rm(stagedPointer, { force: true });
   } catch (error) {
     await rm(staging, { recursive: true, force: true });
+    await rm(stagedPointer, { force: true });
+    if (!published) {
+      await rm(generationDirectory, { recursive: true, force: true });
+    }
     throw error;
   }
-  await rm(backup, { recursive: true, force: true });
   return {
     key: snapshot.key,
-    directory,
+    directory: generationDirectory,
     pages: pageFiles,
     unresolved,
   };

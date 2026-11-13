@@ -13,6 +13,7 @@ import {
   readResponse,
   renderChecksums,
   renderSnapshot,
+  resolveCurrentSnapshotDirectory,
   resolveSnapshotPath,
   sha256,
 } from "./save-snapshot.js";
@@ -37,15 +38,20 @@ function parseChecksums(content) {
 
 // Fails unless every file matches SHA256SUMS and the files match the linked pages.
 export async function verifySnapshot(issueKey, pathOptions = {}) {
-  const { directory } = resolveSnapshotPath(issueKey, pathOptions);
-  const current = await lstatOrUndefined(directory);
-  if (!current) {
-    throw new MissingSnapshotError(`No snapshot at ${directory}.`);
+  const { directory: snapshotDirectory } = resolveSnapshotPath(
+    issueKey,
+    pathOptions,
+  );
+  let directory;
+  try {
+    directory = await resolveCurrentSnapshotDirectory(snapshotDirectory);
+  } catch (error) {
+    throw new TamperedSnapshotError(error.message, { cause: error });
+  }
+  if (!directory) {
+    throw new MissingSnapshotError(`No snapshot at ${snapshotDirectory}.`);
   }
   try {
-    if (!current.isDirectory()) {
-      throw new Error(`${directory} is not a directory.`);
-    }
     const listed = await checkFiles(directory);
     return { key: issueKey, directory, listed };
   } catch (error) {

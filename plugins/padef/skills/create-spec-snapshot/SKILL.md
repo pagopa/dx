@@ -64,8 +64,12 @@ its description as Markdown, to
 
    The script filters the fields, checks the key, requires exactly one page per
    linked page ID, refuses symlinks, writes a `SHA256SUMS` covering every file,
-   and replaces the folder atomically, keeping the previous snapshot on any
-   failure. Without `--replace` it refuses to overwrite an existing snapshot.
+   and publishes a complete, immutable generation by atomically switching the
+   `CURRENT` pointer. Replacements leave the prior generation available to
+   readers that already opened it; failed or interrupted writes leave the
+   previous pointer intact.
+   Generations are retained under the issue directory. Without `--replace` the
+   script refuses to overwrite an existing snapshot.
 
 6. **Report.** In the final reply, state the step 4 verdict (new, up to date,
    stale, or tampered) with the files it named, then what was done: saved,

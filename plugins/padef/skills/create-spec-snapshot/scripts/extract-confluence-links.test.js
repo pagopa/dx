@@ -1,7 +1,7 @@
 // Exercises Confluence link extraction from Jira descriptions and its CLI.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -43,6 +43,17 @@ test("extracts each linked Confluence page once and lists links without a page I
   assert.deepEqual(extractConfluenceLinks(null), { pages: [], unresolved: [] });
 });
 
+test("rejects a page ID linked from different Confluence sites", () => {
+  assert.throws(
+    () =>
+      extractConfluenceLinks(
+        "https://a.atlassian.net/wiki/pages/101 and " +
+          "https://b.atlassian.net/wiki/pages/101",
+      ),
+    /Confluence page ID 101 is linked from multiple sites/,
+  );
+});
+
 test("CLI prints the links of a Jira response and rejects responses without a description", async () => {
   const directory = await mkdtemp(join(tmpdir(), "padef-links-"));
   try {
@@ -64,6 +75,22 @@ test("CLI prints the links of a Jira response and rejects responses without a de
     const failed = cli(response);
     assert.equal(failed.status, 1);
     assert.match(failed.stderr, /^Links not extracted: .*description/);
+
+    await writeFile(
+      response,
+      await readFile(
+        new URL(
+          "../evals/fixtures/retrieval-failure/jira-response.json",
+          import.meta.url,
+        ),
+        "utf8",
+      ),
+    );
+    const unavailable = cli(response);
+    assert.equal(unavailable.status, 1);
+    assert.match(unavailable.stderr, /Jira response is an error, not an issue/);
+    assert.match(unavailable.stderr, /503/);
+    assert.match(unavailable.stderr, /Jira is temporarily unavailable/);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

@@ -1,9 +1,16 @@
 // Exercises tamper and staleness checks on saved spec snapshots.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmod, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import {
+  chmod,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
@@ -91,6 +98,36 @@ test("detects edited, removed, added and unlisted snapshot files", async () => {
   });
 });
 
+test("keeps the current snapshot verifiable when an unpublished generation remains", async () => {
+  await withSnapshot(async ({ directory, options }) => {
+    const interruptedGeneration = join(dirname(directory), "abcdef123456");
+    await mkdir(interruptedGeneration);
+    await writeFile(join(interruptedGeneration, "issue.json"), "incomplete");
+
+    const verified = await verifySnapshot("TEST-7", options);
+    assert.equal(verified.directory, directory);
+  });
+});
+
+test("seeds evaluation snapshots through the CURRENT pointer", async () => {
+  await withSnapshot(async ({ cache, options }) => {
+    const seedScript = fileURLToPath(
+      new URL("../evals/fixtures/seed-snapshot.mjs", import.meta.url),
+    );
+    const seed = fileURLToPath(
+      new URL("../evals/fixtures/up-to-date/seed.json", import.meta.url),
+    );
+    const seeded = spawnSync(process.execPath, [seedScript, seed], {
+      encoding: "utf8",
+      env: { ...process.env, XDG_CACHE_HOME: cache },
+    });
+
+    assert.equal(seeded.status, 0, seeded.stderr);
+    const verified = await verifySnapshot("TEST-2", options);
+    assert.equal(verified.directory.endsWith("000000000001"), true);
+  });
+});
+
 test("treats only changes to saved content as stale", async () => {
   await withSnapshot(async ({ options }) => {
     const unsavedChange = {
@@ -140,6 +177,17 @@ test("treats only changes to saved content as stale", async () => {
         },
       ),
       /does not match the requested TEST-7/,
+    );
+    await assert.rejects(
+      checkFreshness(
+        "TEST-7",
+        issue(
+          "https://a.atlassian.net/wiki/pages/101 and " +
+            "https://b.atlassian.net/wiki/pages/101",
+        ),
+        { ...options, pages: [page("101")] },
+      ),
+      /Confluence page ID 101 is linked from multiple sites/,
     );
   });
 });

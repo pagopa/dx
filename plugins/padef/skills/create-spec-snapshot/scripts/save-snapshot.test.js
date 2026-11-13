@@ -13,7 +13,7 @@ import {
   writeFile,
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
@@ -169,9 +169,20 @@ test("saves the issue with one Markdown file per linked page and leaves no tempo
       { xdgCacheHome: cache, expect: "77", pages: [page("202"), page("101")] },
     );
 
-    const directory = join(snapshots, "TEST-7");
-    assert.equal(result.directory, directory);
+    const directory = result.directory;
+    assert.equal(dirname(dirname(directory)), join(snapshots, "TEST-7"));
     assert.deepEqual(await readdir(snapshots), ["TEST-7", "TEST-9"]);
+    assert.deepEqual(await readdir(join(snapshots, "TEST-7")), [
+      "CURRENT",
+      "generations",
+    ]);
+    assert.equal(
+      await readFile(join(snapshots, "TEST-7", "CURRENT"), "utf8"),
+      `${basename(directory)}\n`,
+    );
+    assert.deepEqual(await readdir(join(snapshots, "TEST-7", "generations")), [
+      basename(directory),
+    ]);
     assert.deepEqual(await readdir(directory), [
       "SHA256SUMS",
       "confluence-101.md",
@@ -193,6 +204,60 @@ test("saves the issue with one Markdown file per linked page and leaves no tempo
   });
 });
 
+test("publishes replacements through CURRENT and retains the previous generation", async () => {
+  await withCache(async (cache, snapshots) => {
+    const first = await saveSnapshot(linked, {
+      xdgCacheHome: cache,
+      pages: [page("101"), page("202")],
+    });
+    const updated = {
+      ...linked,
+      fields: { ...linked.fields, summary: "Updated" },
+    };
+    const second = await saveSnapshot(updated, {
+      xdgCacheHome: cache,
+      replace: true,
+      pages: [page("101"), page("202")],
+    });
+
+    assert.notEqual(first.directory, second.directory);
+    assert.equal(
+      await readFile(join(snapshots, "TEST-7", "CURRENT"), "utf8"),
+      `${basename(second.directory)}\n`,
+    );
+    assert.equal(
+      (await readJson(join(first.directory, "issue.json"))).fields.summary,
+      expected.fields.summary,
+    );
+    assert.equal(
+      (await readJson(join(second.directory, "issue.json"))).fields.summary,
+      "Updated",
+    );
+  });
+});
+
+test("allows only one concurrent initial save without replace", async () => {
+  await withCache(async (cache) => {
+    const results = await Promise.allSettled([
+      saveSnapshot(linked, {
+        xdgCacheHome: cache,
+        pages: [page("101"), page("202")],
+      }),
+      saveSnapshot(linked, {
+        xdgCacheHome: cache,
+        pages: [page("101"), page("202")],
+      }),
+    ]);
+
+    assert.equal(
+      results.filter(({ status }) => status === "fulfilled").length,
+      1,
+    );
+    const rejected = results.find(({ status }) => status === "rejected");
+    assert.match(rejected.reason.message, /already exists/);
+  });
+});
+
 test("rejects bad responses and mismatched pages without touching the existing snapshot", async () => {
   await withCache(async (cache, snapshots) => {
     const existing = join(snapshots, "TEST-7", "issue.json");
@@ -201,8 +266,20 @@ test("rejects bad responses and mismatched pages without touching the existing s
     const options = { xdgCacheHome: cache };
 
     for (const [response, pages, error] of [
-      [{ isError: true, message: "No permission" }, [], /error/],
+      [
+        { isError: true, message: "No permission" },
+        [],
+        /error, not an issue: \{"message":"No permission"\}/,
+      ],
       [{ key: "TEST-7", fields: {} }, [], /description/],
+      [
+        withDescription(
+          "https://a.atlassian.net/wiki/pages/101 and " +
+            "https://b.atlassian.net/wiki/pages/101",
+        ),
+        [page("101")],
+        /Confluence page ID 101 is linked from multiple sites/,
+      ],
       [linked, [page("101")], /page 202 was not supplied/],
       [issue, [page("101")], /page 101 is not linked/],
       [linked, [page("101"), page("101"), page("202")], /supplied twice/],
@@ -277,7 +354,16 @@ test("CLI saves from response files and reports failures without a stack trace",
 
     const saved = cli("--expect", "test-7", issuePath, ...pagePaths);
     assert.equal(saved.status, 0, saved.stderr);
-    const directory = join(cache, "padef", "snapshots", "TEST-7");
+    const pointer = join(cache, "padef", "snapshots", "TEST-7", "CURRENT");
+    const generation = (await readFile(pointer, "utf8")).trim();
+    const directory = join(
+      cache,
+      "padef",
+      "snapshots",
+      "TEST-7",
+      "generations",
+      generation,
+    );
     assert.equal(
       saved.stdout,
       `Saved TEST-7 snapshot with 2 Confluence page(s) to ${directory}\n`,
@@ -306,15 +392,18 @@ test("CLI saves from response files and reports failures without a stack trace",
 test("checksums every file read-only and drops unlinked pages on refresh", async () => {
   await withCache(async (cache) => {
     const options = { xdgCacheHome: cache };
-    const { directory } = await saveSnapshot(linked, {
+    await saveSnapshot(linked, {
       ...options,
       pages: [page("101"), page("202")],
     });
-    await saveSnapshot(withDescription(`Only ${pageUrl}`), {
-      ...options,
-      replace: true,
-      pages: [page("101", "# Updated")],
-    });
+    const { directory } = await saveSnapshot(
+      withDescription(`Only ${pageUrl}`),
+      {
+        ...options,
+        replace: true,
+        pages: [page("101", "# Updated")],
+      },
+    );
 
     const files = ["SHA256SUMS", "confluence-101.md", "issue.json"];
     assert.deepEqual(await readdir(directory), files);

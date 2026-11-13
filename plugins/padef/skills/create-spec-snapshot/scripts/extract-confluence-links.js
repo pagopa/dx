@@ -1,4 +1,4 @@
-// Lists the Confluence pages linked from a Jira issue description, once per page ID.
+// Extracts linked Confluence pages once per site-scoped ID and rejects collisions.
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -12,7 +12,15 @@ export function unwrapIssue(response) {
     throw new Error("Jira response must be a JSON object.");
   }
   if (response.isError === true || Object.hasOwn(response, "error")) {
-    throw new Error("Jira response is an error, not an issue.");
+    const detail =
+      response.error ??
+      response.content ??
+      (Object.hasOwn(response, "status") || Object.hasOwn(response, "message")
+        ? { status: response.status, message: response.message }
+        : null);
+    throw new Error(
+      `Jira response is an error, not an issue: ${JSON.stringify(detail)}`,
+    );
   }
   if (!Object.hasOwn(response, "key") && isObject(response.data)) {
     return response.data;
@@ -22,7 +30,7 @@ export function unwrapIssue(response) {
 
 const CONFLUENCE_URL_PATTERN =
   /https?:\/\/[a-z0-9-]+\.atlassian\.net\/wiki\/[^\s"'<>()[\]\\`|]*/gi;
-function confluencePageId(url) {
+function confluencePageDetails(url) {
   let parsed;
   try {
     parsed = new URL(url.replaceAll("&amp;", "&"));
@@ -31,13 +39,16 @@ function confluencePageId(url) {
   }
   const fromPath = parsed.pathname.match(/\/pages\/(\d+)(?:\/|$)/);
   const fromQuery = parsed.searchParams.get("pageId");
+  let id;
   if (fromPath) {
-    return fromPath[1];
+    id = fromPath[1];
+  } else if (/^\d+$/.test(fromQuery ?? "")) {
+    id = fromQuery;
   }
-  return /^\d+$/.test(fromQuery ?? "") ? fromQuery : undefined;
+  return id === undefined ? undefined : { id, site: parsed.hostname };
 }
 
-// Lists Confluence pages linked from a description, once per page ID in first-seen order.
+// Lists linked pages once per ID in first-seen order; rejects cross-site ID collisions.
 export function extractConfluenceLinks(description) {
   const text =
     typeof description === "string"
@@ -47,15 +58,23 @@ export function extractConfluenceLinks(description) {
   const unresolved = new Set();
   for (const [match] of text.matchAll(CONFLUENCE_URL_PATTERN)) {
     const url = match.replace(/[.,;:!?*_~]+$/, "");
-    const id = confluencePageId(url);
-    if (id === undefined) {
+    const page = confluencePageDetails(url);
+    if (page === undefined) {
       unresolved.add(url);
-    } else if (!pages.has(id)) {
-      pages.set(id, url);
+    } else {
+      const existing = pages.get(page.id);
+      if (existing && existing.site !== page.site) {
+        throw new Error(
+          `Confluence page ID ${page.id} is linked from multiple sites: ${existing.site} and ${page.site}.`,
+        );
+      }
+      if (!existing) {
+        pages.set(page.id, { url, site: page.site });
+      }
     }
   }
   return {
-    pages: [...pages].map(([id, url]) => ({ id, url })),
+    pages: [...pages].map(([id, { url }]) => ({ id, url })),
     unresolved: [...unresolved],
   };
 }
