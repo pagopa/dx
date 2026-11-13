@@ -55,7 +55,7 @@ resource "dx_available_subnet_cidr" "example" {
 
 module "azure_function_app" {
   source  = "pagopa-dx/azure-function-app/azurerm"
-  version = "~> 7.0"
+  version = "~> 8.0"
 
   environment         = local.environment
   use_case            = "default"
