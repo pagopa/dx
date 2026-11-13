@@ -27,7 +27,10 @@ The workflow performs the following steps:
 3. In **Single** mode, deploy the new image; Azure automatically routes 100% of
    traffic to the new revision when it is ready
 4. In **Multiple** mode (canary rollout):
-   1. Create a new revision with the updated image
+   1. Copy the current active revision with the updated image. If Azure returns
+      an existing inactive candidate from a previous attempt, reactivate it
+      before waiting for readiness. Keep current revision traffic at 100% and
+      candidate traffic at 0%
    2. Wait until the new revision reports **Healthy** status for the app
       (according to configured probes)
    3. Assign the stable `staging` revision label for testing the candidate
@@ -39,8 +42,88 @@ The workflow performs the following steps:
       - Use `nextPercentage` and `afterMs` to schedule gradual rollouts
    5. If no script is provided, perform a full switch (100% to new revision)
 5. After successful switch, deactivate the old revision and remove `staging`
-6. In case of failure, the new revision is deactivated, while the old revision
-   remains active
+6. In **Multiple** mode, failures restore traffic to the current revision and
+   deactivate the candidate only if it is still active. Cleanup is skipped if no
+   distinct candidate was identified
+
+```mermaid
+flowchart TD
+    Start([Release workflow called]) --> Build["Build and push image<br/>or reuse supplied image tag"]
+    Build --> BuildOK{"Build succeeded<br/>or was skipped?"}
+    BuildOK -->|No| Failed([Workflow failed])
+    BuildOK -->|Yes| ReleaseGate
+    BuildOK -->|Yes, in parallel| AutoEnabled
+
+    subgraph Approval["Approval handling"]
+        AutoEnabled{"Auto-deploy enabled<br/>and not running under act?"}
+        AutoEnabled -->|Yes| AutoTry["Auto-approval job attempts approval<br/>using configured reviewer token"]
+        AutoTry --> AutoOK{"Approval submitted?"}
+        AutoOK -->|Yes| Approved["Pending deployment approved"]
+        AutoOK -->|No| Manual["Manual approval<br/>if approval is still pending"]
+        AutoEnabled -->|No| Manual
+
+        ReleaseGate["Release job environment gate<br/>Proceed when protection rules are satisfied<br/>No approval needed if none is configured"]
+        Approved -.-> ReleaseGate
+        Manual -.-> ReleaseGate
+    end
+
+    subgraph Revision["Deploy revision - release job"]
+        ReleaseGate --> Prepare["Resolve image, log in to Azure<br/>Read Single or Multiple revision mode"]
+        Prepare --> Current["Select newest ACTIVE revision"]
+        Current --> Copy["Copy its template with the requested image<br/>Azure returns a candidate revision name"]
+        Copy --> Same{"Candidate equals<br/>current active revision?"}
+
+        Same -->|Yes| NoOp([Successful no-op<br/>Skip readiness and promotion])
+        Same -->|No| Mode{"Revision mode?"}
+
+        Mode -->|Multiple| Inspect{"Is the candidate inactive?"}
+        Inspect -->|Yes| Activate["Explicitly activate the existing revision"]
+        Inspect -->|No| Traffic
+        Activate --> Traffic["Keep current revision at 100% traffic<br/>Candidate at 0%"]
+
+        Mode -->|Single| Wait
+        Traffic --> Wait["Wait for candidate to become Healthy<br/>Currently: 30 polls with 3-second sleeps"]
+        Wait --> Healthy{"Healthy before timeout?"}
+        Healthy -->|No| ReleaseFailure
+        Healthy -->|Yes| ReadyMode{"Revision mode?"}
+
+        ReadyMode -->|Single| SingleDone([Complete<br/>Azure manages the traffic switch<br/>No separate swap job])
+        ReadyMode -->|Multiple| Label["Assign staging label to candidate"]
+    end
+
+    subgraph Promotion["Promote revision - swap job, Multiple mode only"]
+        Label --> Act{"Running under act?"}
+        Act -->|Yes| Staged([Candidate staged<br/>Swap job skipped])
+        Act -->|No| SwapGate["Same environment gate: environment-cd<br/>Satisfy any outstanding protection rules"]
+        Manual -.-> SwapGate
+
+        SwapGate --> Rollout["Log in to Azure and promote traffic<br/>Canary script: incremental rollout<br/>No script: directly set latest to 100%"]
+        Rollout --> RolloutOK{"Rollout succeeded?"}
+        RolloutOK -->|No| SwapFailure
+        RolloutOK -->|Yes| Finish["Remove staging label<br/>Deactivate old revision"]
+        Finish --> Done([Deployment complete])
+        Finish -.->|Command failure| SwapFailure
+    end
+
+    subgraph Recovery["Failure handling"]
+        ReleaseFailure["Release timeout or command failure"]
+        ReleaseFailure --> CanClean{"Multiple mode and<br/>valid, distinct candidate identified?"}
+        CanClean -->|No| Failed
+        CanClean -->|Yes| Restore
+
+        SwapFailure["Swap job failure"] --> Restore
+
+        Restore["Restore current revision traffic to 100%<br/>Avoid traffic operations on an inactive candidate"]
+        Restore --> Active{"Is candidate still active?"}
+        Active -->|Yes| Deactivate["Deactivate candidate"]
+        Active -->|No| Failed
+        Deactivate --> Failed
+    end
+
+    Copy -.->|Command failure| ReleaseFailure
+    Activate -.->|Command failure| ReleaseFailure
+    Label -.->|Command failure| ReleaseFailure
+```
 
 ### Manual Deployment Approval
 
