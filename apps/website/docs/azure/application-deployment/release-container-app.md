@@ -27,20 +27,24 @@ The workflow performs the following steps:
 3. In **Single** mode, deploy the new image; Azure automatically routes 100% of
    traffic to the new revision when it is ready
 4. In **Multiple** mode (canary rollout):
-    1. Create a new revision with the updated image
-    2. Wait until the new revision reports **Healthy** status for the app
+   1. Copy the current active revision with the updated image. If Azure returns
+      an existing inactive candidate from a previous attempt, reactivate it
+      before waiting for readiness. Keep current revision traffic at 100% and
+      candidate traffic at 0%
+   2. Wait until the new revision reports **Healthy** status for the app
       (according to configured probes)
-    3. Assign the stable `staging` revision label for testing the candidate
-    4. To implement a canary deployment, you can set up
+   3. Assign the stable `staging` revision label for testing the candidate
+   4. To implement a canary deployment, you can set up
       [a custom script](#implementing-a-canary-test-script) within your pipeline
       that guides the deployment process using its output, in JSON format (more
       details below):
-        - Use a `swap` flag to cut over immediately (100% traffic to new revision)
-        - Use `nextPercentage` and `afterMs` to schedule gradual rollouts
-    5. If no script is provided, perform a full switch (100% to new revision)
+      - Use a `swap` flag to cut over immediately (100% traffic to new revision)
+      - Use `nextPercentage` and `afterMs` to schedule gradual rollouts
+   5. If no script is provided, perform a full switch (100% to new revision)
 5. After successful switch, deactivate the old revision and remove `staging`
-6. In case of failure, the new revision is deactivated, while the old revision
-   remains active
+6. In **Multiple** mode, failures restore traffic to the current revision and
+   deactivate the candidate only if it is still active. Cleanup is skipped if no
+   distinct candidate was identified
 
 ```mermaid
 flowchart TD
