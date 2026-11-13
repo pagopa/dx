@@ -1,0 +1,23 @@
+{
+  "data": {
+    "id": "1007",
+    "key": "TEST-7",
+    "fields": {
+      "summary": "Implement TEST-7 (rescoped)",
+      "issuetype": {
+        "id": "10007",
+        "name": "Task",
+        "subtask": false,
+        "hierarchyLevel": 0
+      },
+      "project": {
+        "id": "10001",
+        "key": "TEST",
+        "name": "Test project"
+      },
+      "description": "See https://example.atlassian.net/wiki/spaces/SPEC/pages/101/Spec for the spec.",
+      "updated": "2026-11-12T11:00:00.000+0100"
+    },
+    "appliedContentFormat": "markdown"
+  }
+}

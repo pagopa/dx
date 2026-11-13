@@ -1,0 +1,8 @@
+{
+  "key": "TEST-10",
+  "files": {
+    "issue.json": "{\n  \"id\": \"1010\",\n  \"key\": \"TEST-10\",\n  \"fields\": {\n    \"issuetype\": {\n      \"id\": \"10007\",\n      \"name\": \"Task\",\n      \"subtask\": false\n    },\n    \"project\": {\n      \"id\": \"10001\",\n      \"key\": \"TEST\",\n      \"name\": \"Test project\"\n    },\n    \"updated\": \"2026-11-10T10:00:00.000+0100\",\n    \"description\": \"See https://example.atlassian.net/wiki/spaces/SPEC/pages/101/Spec for the spec.\",\n    \"summary\": \"Implement TEST-10 quickly\"\n  }\n}\n",
+    "confluence-101.md": "---\nid: \"101\"\ntitle: \"Spec\"\nversion: 3\nurl: \"https://example.atlassian.net/wiki/spaces/SPEC/pages/101/Spec\"\n---\n\n# Spec\n\nThe service must retry three times.\n",
+    "SHA256SUMS": "4e0dcff3aa43ac4667f8970b449cbfd073725d9881cf327c5ea35fea936d49fa  confluence-101.md\ne3497c9b1f684b0f9959ef0e7c3ee0ca340bb81ceeee9df809ab875f7364e2cc  issue.json\n"
+  }
+}

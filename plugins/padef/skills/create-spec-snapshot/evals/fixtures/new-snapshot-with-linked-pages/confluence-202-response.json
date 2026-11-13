@@ -1,0 +1,18 @@
+{
+  "data": {
+    "id": "202",
+    "type": "page",
+    "title": "API contract",
+    "status": "current",
+    "detail": "full",
+    "body": {
+      "format": "markdown",
+      "value": "# API contract\n\n`GET /exports/{id}` returns the file.\n"
+    },
+    "metadata": {
+      "version": {
+        "number": 3
+      }
+    }
+  }
+}
