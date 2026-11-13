@@ -1,3 +1,15 @@
+## 0.22.24 (2026-11-13)
+
+### 🩹 Fixes
+
+- Document Runner App credential reuse from the common Key Vault ([#2445](https://github.com/pagopa/dx/pull/2445))
+- Add opt-in stale PR preview cleanup to the reusable Azure Static Web App workflow, packaged as a composite action. Existing consumers remain unchanged unless enabled; cleanup requires Azure builds read/delete permissions and previews owned by the calling repository. ([#2527](https://github.com/pagopa/dx/pull/2527))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 0.22.23 (2026-11-03)
 
 ### 🩹 Fixes

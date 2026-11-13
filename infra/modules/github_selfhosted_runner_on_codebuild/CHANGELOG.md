@@ -1,3 +1,13 @@
+## 3.0.5 (2026-11-13)
+
+### 🩹 Fixes
+
+- Normalize internal files ([#2496](https://github.com/pagopa/dx/pull/2496))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 3.0.4 (2026-11-03)
 
 ### 🩹 Fixes

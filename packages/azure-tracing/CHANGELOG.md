@@ -1,3 +1,13 @@
+## 0.5.12 (2026-11-13)
+
+### 🩹 Fixes
+
+- Bump @azure/monitor-opentelemetry to 1.21.0 and align the OpenTelemetry SDK on its release train, restoring Live Metrics and Redis v6 auto-instrumentation. ([#2530](https://github.com/pagopa/dx/pull/2530))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.11 (2026-11-04)
 
 ### 🩹 Fixes

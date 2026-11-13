@@ -1,3 +1,15 @@
+## 0.27.30 (2026-11-13)
+
+### 🚀 Features
+
+- Reuse GitHub Runner App credentials from the environment common Key Vault when adding an environment. ([#2445](https://github.com/pagopa/dx/pull/2445))
+- Ship an `AGENTS.md` in the monorepo scaffold so AI agents find the toolchain, the validation commands and the repository conventions at the repository root. The file points at the `github-conventions` skill and the DX plugins enabled in `.github/copilot/settings.json` instead of duplicating their content, and leaves the Nx-owned section to `nx init`. ([#2529](https://github.com/pagopa/dx/pull/2529))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Danilo Spinelli @gunzip
+
 ## 0.27.29 (2026-11-06)
 
 ### 🚀 Features

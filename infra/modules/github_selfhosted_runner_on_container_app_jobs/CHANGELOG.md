@@ -1,3 +1,18 @@
+# 5.0.0 (2026-11-13)
+
+### ⚠️  Breaking Changes
+
+- Require the GitHub App Client ID secret in runner jobs. ([#2446](https://github.com/pagopa/dx/pull/2446))
+
+  ## Migration guide
+
+  Before upgrading, add the secret `github-runner-app-client-id` to the Key Vault `common` of your subscriptions with the Client ID of the same GitHub App.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
 ## 4.0.1 (2026-11-03)
 
 ### 🩹 Fixes

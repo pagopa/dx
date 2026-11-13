@@ -1,3 +1,13 @@
+## 0.2.21 (2026-11-13)
+
+### 🩹 Fixes
+
+- Bump dependencies ([#2511](https://github.com/pagopa/dx/pull/2511))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.12
+
 ## 0.2.20 (2026-11-04)
 
 ### 🧱 Updated Dependencies

@@ -1,3 +1,18 @@
+## 0.1.9 (2026-11-13)
+
+### 🚀 Features
+
+- Include Node.js 24 and npm in generated task environments. ([#2523](https://github.com/pagopa/dx/pull/2523))
+
+### 🩹 Fixes
+
+- Update generated task and verifier images to Ubuntu 26.04 ([#2520](https://github.com/pagopa/dx/pull/2520))
+- Fix missing LiteLLM MCP dependencies in the verifier. ([#2524](https://github.com/pagopa/dx/pull/2524))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.1.8 (2026-10-29)
 
 ### 🩹 Fixes
