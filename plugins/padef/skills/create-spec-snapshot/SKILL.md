@@ -13,8 +13,9 @@ its description as Markdown, to
 ## Workflow
 
 1. **Identify the issue and site.** Accept one issue key, numeric ID, or Jira
-   URL; uppercase a key. From a URL, take the site and the key, ignoring query
-   strings and fragments. Otherwise use the only accessible Jira site. Ask
+   URL; uppercase a key. From a URL, take the site and issue key from its path;
+   ignore query parameters and fragments. Otherwise use the only accessible
+   Jira site. Ask
    when the identifier is missing, is not a Jira key, ID, or URL, or when
    several sites could hold the issue.
 2. **Fetch only the snapshot fields.** Read the issue from that site as a JSON
