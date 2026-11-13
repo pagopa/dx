@@ -1,24 +1,3 @@
-#------------#
-# Core Infra #
-#------------#
-
-module "core" {
-  source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 6.0"
-
-  test_enabled = true
-
-  environment = local.environment
-
-  virtual_network_cidr = "10.60.0.0/16"
-
-  tags = local.tags
-}
-
-#----------------#
-# API Management #
-#----------------#
-
 resource "azurerm_subnet" "apim" {
   name = provider::dx::resource_name(merge({
     resource_type   = "apim_subnet",
@@ -31,7 +10,7 @@ resource "azurerm_subnet" "apim" {
 
 module "apim" {
   source  = "pagopa-dx/azure-api-management/azurerm"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
@@ -52,14 +31,10 @@ module "apim" {
   tags = local.tags
 }
 
-#-----------#
-# Cosmos DB #
-#-----------#
-
 ## Cosmos Account
 module "cosmos" {
   source  = "pagopa-dx/azure-cosmos-account/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
@@ -89,13 +64,10 @@ resource "azurerm_cosmosdb_sql_database" "db" {
   account_name        = module.cosmos.name
 }
 
-#-----------------#
-# Storage Account #
-#-----------------#
-
+## Storage Account
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 4.0"
+  version = "~> 6.0"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
