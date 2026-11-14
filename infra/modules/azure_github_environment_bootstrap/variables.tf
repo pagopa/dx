@@ -40,6 +40,55 @@ variable "terraform_storage_account" {
   description = "Details of the Storage Account (name and resource group) hosting the Terraform state file."
 }
 
+variable "terraform_state_container_access" {
+  type = object({
+    container_name = optional(string)
+    upstream = optional(map(object({
+      identities    = optional(set(string), [])
+      principal_ids = optional(set(string), [])
+    })), {})
+  })
+  default     = null
+  description = "Opt in to container-scoped state permissions and select upstream readers."
+
+  validation {
+    condition = var.terraform_state_container_access == null ? true : (
+      var.terraform_state_container_access.container_name == null ||
+      (
+        length(var.terraform_state_container_access.container_name) >= 3 &&
+        length(var.terraform_state_container_access.container_name) <= 63 &&
+        can(regex("^[a-z0-9]+(-[a-z0-9]+)*$", var.terraform_state_container_access.container_name))
+      )
+    )
+    error_message = "container_name must be a valid Azure container name."
+  }
+
+  validation {
+    condition = var.terraform_state_container_access == null ? true : alltrue([
+      for container, readers in var.terraform_state_container_access.upstream :
+      length(element(reverse(split("/", lower(container))), 0)) >= 3 &&
+      length(element(reverse(split("/", lower(container))), 0)) <= 63 &&
+      can(regex(
+        "^(/subscriptions/[^/]+/resourcegroups/[^/]+/providers/microsoft\\.storage/storageaccounts/[^/]+/blobservices/default/containers/)?[a-z0-9]+(-[a-z0-9]+)*$",
+        lower(container)
+      )) &&
+      length(setunion(readers.identities, readers.principal_ids)) > 0 &&
+      alltrue([
+        for identity in readers.identities : contains([
+          "infra_ci", "infra_cd", "app_ci", "app_cd", "opex_ci", "opex_cd"
+        ], identity)
+      ]) &&
+      alltrue([
+        for principal_id in readers.principal_ids : can(regex(
+          "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          lower(principal_id)
+        ))
+      ])
+    ])
+    error_message = "Each upstream must use a valid container reference and select at least one valid reader."
+  }
+}
+
 variable "private_dns_zone_resource_group_id" {
   type        = string
   description = "The ID of the resource group containing private DNS zones."

@@ -7,6 +7,8 @@ resource "azurerm_role_assignment" "opex_ci_subscription_reader" {
 }
 
 resource "azurerm_role_assignment" "opex_ci_subscription_data_access" {
+  count = var.terraform_state_container_access == null ? 1 : 0
+
   scope                = data.azurerm_subscription.current.id
   role_definition_name = "Reader and Data Access"
   principal_id         = azurerm_user_assigned_identity.opex_ci.principal_id
@@ -20,22 +22,23 @@ resource "azurerm_role_assignment" "opex_cd_subscription_reader" {
   description          = "Allow ${var.repository.name} Opex CD identity to read resources at subscription scope"
 }
 
-# Storage Account - Terraform state file
 resource "azurerm_role_assignment" "opex_ci_tf_rg_blob_contributor" {
-  scope                = local.tf_storage_account.id
+  scope                = local.terraform_state_scope
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.opex_ci.principal_id
-  description          = "Allow ${var.repository.name} Opex CI identity to apply changes to the Terraform state file Storage Account scope"
+  description          = var.terraform_state_container_access == null ? "Allow ${var.repository.name} Opex CI identity to apply changes to the Terraform state file Storage Account scope" : "Allow ${var.repository.name} Opex CI identity to manage Terraform state at ${local.terraform_state_scope} scope"
 }
 
 resource "azurerm_role_assignment" "opex_cd_tf_rg_blob_contributor" {
-  scope                = local.tf_storage_account.id
+  scope                = local.terraform_state_scope
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.opex_cd.principal_id
-  description          = "Allow ${var.repository.name} Opex CD identity to apply changes to the Terraform state file Storage Account scope"
+  description          = var.terraform_state_container_access == null ? "Allow ${var.repository.name} Opex CD identity to apply changes to the Terraform state file Storage Account scope" : "Allow ${var.repository.name} Opex CD identity to manage Terraform state at ${local.terraform_state_scope} scope"
 }
 
 resource "azurerm_role_assignment" "opex_cd_tf_rg_blob_data_access" {
+  count = var.terraform_state_container_access == null ? 1 : 0
+
   scope                = local.tf_storage_account.id
   role_definition_name = "Reader and Data Access"
   principal_id         = azurerm_user_assigned_identity.opex_cd.principal_id
