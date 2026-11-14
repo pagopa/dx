@@ -2,7 +2,9 @@
 id: UC-XX
 status: draft
 priority: <Must / Should>
-parent_dr: <parent DR/SRS path or URL>
+parent_dr: <parent DR/SRS path, URL, or content ID>
+proposed_by: <name or role, or N/A - not a proposal>
+owner: <Use Case owner or approver, or TBD>
 ---
 
 <!--
@@ -11,6 +13,13 @@ parent_dr: <parent DR/SRS path or URL>
   open questions, proposed values, or justified N/A values.
   Keep the canonical body fields in this order so the Markdown maps directly
   to the DR-01 Confluence Use Case template.
+
+  Status values: draft, ready, retired. A proposal stays draft and fills only
+  the source artifact, trigger, main flow, and one binary acceptance check on a
+  Must Use Case. Leave typed errors, tracking events, component and contract
+  references, and the sequence diagram as open questions until a human accepts
+  the proposal. A rejected or withdrawn proposal becomes retired and stays in
+  the catalog with its ID never reused.
 -->
 
 # `UC-XX`: <Use Case title>
