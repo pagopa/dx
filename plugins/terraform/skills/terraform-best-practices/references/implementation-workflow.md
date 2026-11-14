@@ -4,7 +4,7 @@ Use this workflow after module discovery and before final validation.
 
 ## Determine the Target Folder
 
-Read `apps/website/docs/terraform/infra-folder-structure.md` from the DX knowledge base and inspect the repository structure.
+Read `apps/website/docs/terraform/infra-folder-structure.md` under the selected knowledge-base root from Setup and inspect the repository structure.
 
 Typical placements:
 
@@ -45,6 +45,43 @@ Inspect existing `.tf` files in the target area to infer:
 Prefer `module.<name>.<output>` from `pagopa-dx/<csp>-core-values-exporter/<provider>` over new `data` sources when shared values are already exported.
 
 Never invent project-specific default values. If a required value is not present in the repository, docs, module source, examples, or user request, ask the user.
+
+## Configure State Backends
+
+Follow the naming and key convention in `apps/website/docs/terraform/code-style.md` under the selected knowledge-base root from Setup. Treat domain as an input and ask when it is unknown. Use each root's relative path for keys; do not add domain, prefix, or lifecycle components.
+
+Configure new roots with the documented convention. Migrate existing backends only on request.
+
+Before changing a backend, inspect `.tf` and `.tf.json`, resolving values that can be determined from the repository. Preserve all existing coordinates exactly; stop if they remain indeterminate rather than falling back to the new convention. Distinguish tenant-qualified names such as `ced-prod` from nested paths such as `prod/ced`.
+
+Use this Terraform contract for manual changes as well as supported tool flows. On a Bootstrap module version that exposes `terraform_state_container_access`, opt in explicitly; `null` keeps legacy grants. `container_name` is optional and defaults to `<environment.domain>-tf-state`; `upstream` is an optional, empty-by-default map. Its keys are the existing container name in the same account or its exact ARM container ID; values select internal identities and/or external principal IDs:
+
+```hcl
+terraform_state_container_access = {
+  upstream = {
+    "<existing-container-name-or-exact-ARM-container-ID>" = {
+      identities    = toset(["infra_ci"])
+      principal_ids = toset(["<external-principal-id>"])
+    }
+  }
+}
+```
+
+The six internal identities are `infra_ci`, `infra_cd`, `app_ci`, `app_cd`, `opex_ci`, and `opex_cd`. In opt-in mode, Bootstrap assigns `Storage Blob Data Contributor` to state writers on their own container and `Storage Blob Data Reader` only to declared upstream recipients. IAM does not create containers or state snapshots; preserve existing core state at its real coordinates, including the legacy `terraform-state` container.
+
+- Keep the backend resource group separate from workload, additional, Opex, and private-networking resource groups; enforce the module precondition.
+- Check inherited, external, and key-based access; describe container grants as least privilege, not absolute isolation.
+
+For Azure access:
+
+- For a newly managed domain or core container, ensure the operator can write and lock it before Terraform runs; use inherited access when sufficient and add Contributor only when needed. Keep an existing upstream core at its actual coordinates and grants; configure Reader only for declared upstream recipients.
+- The first bootstrap plan that reads upstream state needs Reader access prepared for its planning identity beforehand; grants applied by that plan cannot satisfy the prerequisite. Arrange missing access manually and import or adopt an existing grant before Terraform takes it over. Do not add a CLI Reader grant or automatic grant setup.
+
+## Migrate a Backend Only on Request
+
+For an explicitly requested migration, inspect the actual backend coordinates and consumers. Prepare the destination container and grants, suspend concurrent writes, and take a protected backup. Use `terraform init -migrate-state` when applicable; update consumers and pipelines in dependency order, then verify state, access, and plans before removing old grants.
+
+A backend migration moves a state between backend coordinates; it is not a split of one state across roots. Treat a requested split as a separate design, and do not use `terraform state mv` as a substitute for backend migration.
 
 ## Choose Inline Resources vs Local Module
 
