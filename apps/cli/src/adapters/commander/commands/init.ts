@@ -637,13 +637,23 @@ const runInitAction = ({
     );
 };
 
+const REPOSITORY_STATE_WARNING = {
+  code: "REPOSITORY_STATE_LOCAL",
+  message:
+    "Repository Terraform state is temporary and local: do not delete it or apply from another device; run `dx add environment`, which migrates it to the shared backend.",
+};
+
 const reportSummary =
   (presenter: CommandPresenter, outputMode: "json" | "text") =>
   (result: SummaryInput) => {
     if (outputMode === "json") {
-      presenter.reportResult(result);
+      presenter.reportResult({
+        ...result,
+        warnings: [REPOSITORY_STATE_WARNING],
+      });
     } else {
       displaySummary(result);
+      console.log(chalk.yellow(`⚠️ ${REPOSITORY_STATE_WARNING.message}\n`));
     }
   };
 

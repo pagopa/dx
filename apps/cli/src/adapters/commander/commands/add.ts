@@ -334,6 +334,7 @@ const toPublicEnvironmentPayload = ({
   env,
   github,
   init,
+  repositoryState,
   tags,
   terraform,
   workspace,
@@ -346,6 +347,7 @@ const toPublicEnvironmentPayload = ({
       terraformBackend: init.terraformBackend,
     },
   }),
+  ...(repositoryState && { repositoryState }),
   tags,
   ...(terraform && {
     terraform: {
@@ -368,6 +370,14 @@ type AddResult = {
 const displaySummary = (result: AddResult) => {
   const { authorizationPrs } = result;
   console.log(chalk.green.bold("\nCloud environment created successfully!"));
+  const { repositoryState } = result.payload;
+  if (repositoryState) {
+    const { containerName, key, storageAccountName } =
+      repositoryState.destination;
+    console.log(
+      `Repository state: remote and verified (${storageAccountName}/${containerName}/${key})`,
+    );
+  }
 
   let step = 1;
   console.log(chalk.green.bold("\nNext Steps:"));
