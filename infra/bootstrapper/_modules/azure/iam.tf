@@ -7,7 +7,7 @@ resource "azurerm_role_assignment" "user_access_administrator" {
 
 module "roles_ci" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   principal_id    = module.bootstrap.identities.infra.ci.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id
@@ -26,7 +26,7 @@ module "roles_ci" {
 
 module "roles_cd" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   principal_id    = module.bootstrap.identities.infra.cd.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id
