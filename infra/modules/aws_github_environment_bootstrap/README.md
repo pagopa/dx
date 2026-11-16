@@ -22,7 +22,7 @@ Use this module in your bootstrapper configuration to create all necessary GitHu
 ```hcl
 module "github_bootstrap" {
   source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 3.0"
+  version = "~> 2.4"
 
   environment = {
     prefix          = "dx"
@@ -382,12 +382,14 @@ approvals can enter an environment. This trust separation does not isolate
 steps within a job: every step in a matching job with `id-token: write` can
 request an OIDC token, including dependency installation before Cloud Login.
 
-### Migrating from 2.x
+### Upgrading to 2.4
 
-Version 3 removes repository-wide trust from the infrastructure and application
-roles. Before applying the upgrade:
+Version 2.4 keeps the module's inputs and outputs unchanged, but removes
+repository-wide trust from the infrastructure and application roles.
+Existing constraints such as `~> 2.3` already allow this minor release; review
+the authorization changes before applying the upgrade:
 
-1. Update module references to `~> 3.0`.
+1. Update module references to `~> 2.4`.
 2. Audit workflows assuming these roles and set each job's `environment` to the
    matching scope, environment and CI/CD suffix above, including the prefix
    when enabled. Qualifiers may appear before and/or after `<env>`, but must
@@ -449,7 +451,7 @@ module "core_values" {
 
 module "bootstrap" {
   source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 3.0"
+  version = "~> 2.4"
 
   environment = var.environment
 
