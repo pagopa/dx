@@ -10,6 +10,10 @@ output "log_analytics_workspace_id" {
   value = data.azurerm_log_analytics_workspace.logs.id
 }
 
+output "private_dns_zone_resource_group_name" {
+  value = data.azurerm_resource_group.network.name
+}
+
 output "tags" {
   value = local.tags
 }

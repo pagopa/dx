@@ -18,5 +18,10 @@ variable "tags" {
 variable "test_kind" {
   type        = string
   default     = "integration"
-  description = "The test kind used in generated test tags."
+  description = "The shared test infrastructure to use."
+
+  validation {
+    condition     = contains(["integration", "e2e"], var.test_kind)
+    error_message = "The test_kind variable must be either 'integration' or 'e2e'."
+  }
 }

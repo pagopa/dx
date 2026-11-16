@@ -52,11 +52,12 @@ run "apply_development" {
       app_name        = "apimdev"
       instance_number = run.setup.instance_numbers.development
     })
-    tags                = var.tags
-    resource_group_name = run.setup.resource_group_name
-    use_case            = "development"
-    publisher_email     = "example@pagopa.it"
-    publisher_name      = "Example Publisher"
+    tags                                 = var.tags
+    resource_group_name                  = run.setup.resource_group_name
+    private_dns_zone_resource_group_name = run.setup.private_dns_zone_resource_group_name
+    use_case                             = "development"
+    publisher_email                      = "example@pagopa.it"
+    publisher_name                       = "Example Publisher"
 
     virtual_network = run.setup.virtual_network_id
   }
@@ -95,12 +96,13 @@ run "apply_cost_optimized" {
       app_name        = "apimco"
       instance_number = run.setup.instance_numbers.cost_optimized
     })
-    tags                       = var.tags
-    resource_group_name        = run.setup.resource_group_name
-    use_case                   = "cost_optimized"
-    publisher_email            = "example@pagopa.it"
-    publisher_name             = "Example Publisher"
-    log_analytics_workspace_id = run.setup.log_analytics_workspace_id
+    tags                                 = var.tags
+    resource_group_name                  = run.setup.resource_group_name
+    private_dns_zone_resource_group_name = run.setup.private_dns_zone_resource_group_name
+    use_case                             = "cost_optimized"
+    publisher_email                      = "example@pagopa.it"
+    publisher_name                       = "Example Publisher"
+    log_analytics_workspace_id           = run.setup.log_analytics_workspace_id
 
     virtual_network = run.setup.virtual_network_id
   }

@@ -1,9 +1,10 @@
 locals {
-  naming_config = {
+  existing_resources = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
     location        = var.environment.location,
-    name            = var.environment.app_name,
+    domain          = "",
+    name            = var.test_kind,
     instance_number = tonumber(var.environment.instance_number),
   }
 
@@ -20,20 +21,27 @@ locals {
 }
 
 data "azurerm_virtual_network" "vnet" {
-  name                = "dx-u-itn-common-vnet-01"
-  resource_group_name = "dx-u-itn-network-rg-01"
+  name = provider::dx::resource_name(merge(local.existing_resources, {
+    resource_type = "virtual_network"
+  }))
+  resource_group_name = data.azurerm_resource_group.rg.name
 }
 
 data "azurerm_resource_group" "rg" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "test",
+  name = provider::dx::resource_name(merge(local.existing_resources, {
+    resource_type = "resource_group"
+  }))
+}
+
+data "azurerm_resource_group" "network" {
+  name = provider::dx::resource_name(merge(local.existing_resources, {
+    name          = "network",
     resource_type = "resource_group"
   }))
 }
 
 data "azurerm_log_analytics_workspace" "logs" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "test",
+  name = provider::dx::resource_name(merge(local.existing_resources, {
     resource_type = "log_analytics"
   }))
   resource_group_name = data.azurerm_resource_group.rg.name
