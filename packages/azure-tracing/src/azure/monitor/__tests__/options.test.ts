@@ -126,6 +126,21 @@ describe("resolveAzureMonitorOptions", () => {
     expect(options.samplingRatio).toBeCloseTo(0.05);
   });
 
+  it("drops undefined members of a group without an environment baseline", async () => {
+    vi.stubEnv("APPLICATIONINSIGHTS_CONNECTION_STRING", ENV_CONNECTION_STRING);
+    const resolveAzureMonitorOptions = await loadResolver();
+
+    const options = resolveAzureMonitorOptions({
+      browserSdkLoaderOptions: { connectionString: undefined },
+      instrumentationOptions: { http: undefined },
+    });
+
+    // An undefined member would otherwise replace the SDK default
+    // (`http: { enabled: true }`), silently disabling the instrumentation.
+    expect(options.instrumentationOptions).toStrictEqual({});
+    expect(options.browserSdkLoaderOptions).toStrictEqual({});
+  });
+
   it("replaces array options with the given ones", async () => {
     vi.stubEnv("APPLICATIONINSIGHTS_CONNECTION_STRING", ENV_CONNECTION_STRING);
     const resolveAzureMonitorOptions = await loadResolver();

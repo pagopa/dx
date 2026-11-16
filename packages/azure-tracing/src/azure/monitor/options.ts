@@ -45,12 +45,17 @@ const optionsFromEnv = (
 
 /**
  * Drops the own properties whose value is `undefined`, so that a caller
- * writing `{ samplingRatio: maybeUndefined }` does not shadow a default.
+ * writing `{ http: { enabled: maybeUndefined } }` or `{ samplingRatio: maybeUndefined }`
+ * does not shadow a default. An absent input stays absent.
  */
-const withoutUndefined = <T extends object>(value: T | undefined): Partial<T> =>
-  Object.fromEntries(
-    Object.entries(value ?? {}).filter(([, entry]) => entry !== undefined),
-  ) as Partial<T>;
+const withoutUndefined = <T extends object>(
+  value: T | undefined,
+): T | undefined =>
+  value === undefined
+    ? undefined
+    : (Object.fromEntries(
+        Object.entries(value).filter(([, entry]) => entry !== undefined),
+      ) as T);
 
 /**
  * Shallow-merges two optional option groups: the override wins key by key,
@@ -61,7 +66,9 @@ const mergeOptionGroup = <T extends object>(
   override: T | undefined,
 ): T | undefined => {
   if (defaults === undefined) {
-    return override;
+    // No environment baseline: the group is forwarded as-is, minus the
+    // undefined members, which would otherwise replace an SDK default.
+    return withoutUndefined(override);
   }
 
   if (override === undefined) {
