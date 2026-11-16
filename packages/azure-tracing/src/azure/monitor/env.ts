@@ -34,7 +34,10 @@ export const loadEnv = () =>
         .transform((value) => value / 100),
       APPLICATIONINSIGHTS_CONNECTION_STRING: z
         .string()
-        .describe("The connection string for Application Insights."),
+        .optional()
+        .describe(
+          "The connection string for Application Insights. Optional here because it may be provided through the Azure Monitor options override; the resolved configuration still requires it.",
+        ),
       APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: z
         .enum(["true", "false"])
         .optional()

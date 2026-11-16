@@ -102,13 +102,37 @@ If you want to enable Azure Monitor telemetry in your application, and you don't
 
 ```ts
 import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
-import { AzureMonitorOpenTelemetryOptions } from "@azure/monitor-opentelemetry";
 import { ExpressInstrumentation } from "@opentelemetry/instrumentation-express";
 ...
-const config: AzureMonitorOpenTelemetryOptions = {} // A valid AzureMonitorOpenTelemetryOptions object
 const instrumentations = [new ExpressInstrumentation()] // A list of custom OpenTelemetry instrumentations
-initAzureMonitor(instrumentations, config);
+initAzureMonitor(instrumentations);
 ...
+```
+
+The configuration is always derived from the environment first (see the table above) and the optional second argument overrides only the properties it sets:
+
+```ts
+import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
+
+initAzureMonitor([], {
+  samplingRatio: 0.5,
+  azureMonitorExporterOptions: {
+    // the connection string is inherited from the environment
+    disableOfflineStorage: true,
+  },
+});
+```
+
+Properties you don't override keep their environment-derived value: `enableLiveMetrics: true`, the `samplingRatio` from `APPINSIGHTS_SAMPLING_PERCENTAGE`, `tracesPerSecond: 0` and the `DefaultAzureCredential` when `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true`.
+
+Nested option groups (`azureMonitorExporterOptions`, `instrumentationOptions` and `browserSdkLoaderOptions`) are merged key by key, while arrays (`logRecordProcessors`, `spanProcessors`, ...) and object instances (`resource`, `credential`, ...) are replaced.
+
+`APPLICATIONINSIGHTS_CONNECTION_STRING` may be omitted when you provide `azureMonitorExporterOptions.connectionString` yourself:
+
+```ts
+initAzureMonitor([], {
+  azureMonitorExporterOptions: { connectionString: "InstrumentationKey=..." },
+});
 ```
 
 ### Logging Custom Events
