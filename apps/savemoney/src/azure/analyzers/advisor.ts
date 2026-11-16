@@ -25,10 +25,8 @@
  * **mutually exclusive purchase options** (e.g. different DB sizes or
  * quantities); the user would choose one, not buy all. We therefore report
  * the **maximum** savings amount across all unique configurations, matching
- * the portal's behaviour. Scope variants (Shared / Single / ResourceGroup)
- * that carry the same amount are deduplicated so they do not count more
- * than once. True duplicates — recommendations with the same ARM ID —
- * are also removed before taking the maximum.
+ * the portal's behaviour. Repeated amounts from scope variants cannot
+ * inflate the maximum. True duplicates with the same ARM ID are ignored.
  */
 
 import { AdvisorManagementClient } from "@azure/arm-advisor";
@@ -63,21 +61,12 @@ type RecommendationInfo = {
 type SubGroup = {
   /** Best (maximum) monthly savings among all deduplicated options in this group. */
   bestAmount: number;
-  /** Number of distinct savings configurations aggregated (unique amounts). */
-  count: number;
   /** ISO 4217 currency code of the first recommendation in this group. */
-  currency: string;
+  currency?: string;
   /** Prototype Finding shared by all recommendations in this group. */
   proto: Omit<Finding, "estimatedMonthlySavings">;
   /** ARM IDs of recommendations already counted — deduplicates true API duplicates. */
   recIds: Set<string>;
-  /**
-   * `"${amount}"` keys for already-seen savings — deduplicates scope variants.
-   * Advisor returns the same configuration for Shared, Single, and ResourceGroup
-   * scopes all with the same savings amount; we track each amount only once so
-   * we can take the max without double-counting identical scope variants.
-   */
-  uniqueSavingsKeys: Set<string>;
 };
 
 /**
@@ -210,8 +199,7 @@ function createSubGroup(
   }
   return {
     bestAmount: savings?.amount ?? 0,
-    count: savings ? 1 : 0,
-    currency: savings?.currency ?? "USD",
+    currency: savings?.currency,
     proto: {
       category: "cost",
       code: `advisor.${typeKey}`,
@@ -223,7 +211,6 @@ function createSubGroup(
       source: "advisor",
     },
     recIds: new Set(rec.id ? [rec.id] : []),
-    uniqueSavingsKeys: new Set(savings ? [`${savings.amount}`] : []),
   };
 }
 
@@ -265,14 +252,10 @@ function enrichReason(
 
 function flushSubGroups(subGroups: Map<string, SubGroup>): Finding[] {
   const findings: Finding[] = [];
-  for (const { bestAmount, count, currency, proto } of subGroups.values()) {
+  for (const { bestAmount, currency, proto } of subGroups.values()) {
     const estimatedMonthlySavings =
-      bestAmount > 0 ? { amount: bestAmount, currency } : undefined;
-    const reason =
-      count > 1
-        ? proto.reason.replace(/\.$/, ` (${count} options).`)
-        : proto.reason;
-    findings.push({ ...proto, estimatedMonthlySavings, reason });
+      bestAmount > 0 && currency ? { amount: bestAmount, currency } : undefined;
+    findings.push({ ...proto, estimatedMonthlySavings });
   }
   return findings;
 }
@@ -318,21 +301,7 @@ function updateSubGroup(
   if (recId && group.recIds.has(recId)) return; // true API duplicate
   if (recId) group.recIds.add(recId);
   if (!savings) return;
-  // Bootstrap currency from the first recommendation that carries savings.
-  // createSubGroup() defaults currency to "USD" when the first entry has no
-  // savings; without this check, later entries with a different currency (e.g.
-  // "EUR") would be silently dropped and no savings would ever be surfaced.
-  if (group.count === 0) {
-    group.currency = savings.currency;
-    group.uniqueSavingsKeys.add(`${savings.amount}`);
-    group.bestAmount = savings.amount;
-    group.count = 1;
-    return;
-  }
+  group.currency ??= savings.currency;
   if (savings.currency !== group.currency) return;
-  const key = `${savings.amount}`;
-  if (group.uniqueSavingsKeys.has(key)) return; // scope variant, already seen
-  group.uniqueSavingsKeys.add(key);
   group.bestAmount = Math.max(group.bestAmount, savings.amount);
-  group.count++;
 }

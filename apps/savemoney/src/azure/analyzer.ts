@@ -56,6 +56,7 @@ import {
   isAzqrReportMasked,
   loadAzqrReport,
 } from "./azqr.js";
+import { CostQueryClient } from "./cost-query.js";
 import {
   categorizeCustomFindings,
   MISSING_TAGS_REASON,
@@ -191,6 +192,10 @@ export async function analyzeAzureResources(
       allReports,
       logger,
     );
+  }
+
+  if (config.includeActualCost) {
+    await enrichWithActualCosts(allReports, config.subscriptionIds, credential);
   }
 
   // Sort to make the output more readable:
@@ -440,6 +445,47 @@ async function collectTaggedResourceIds(args: {
       taggedResourceIds.add(resourceId);
     }
   }
+}
+
+async function enrichWithActualCosts(
+  reports: AzureDetailedResourceReport[],
+  subscriptionIds: string[],
+  credential: TokenCredential,
+): Promise<void> {
+  const logger = getLogger(["savemoney", "azure"]);
+  const period = getLast30DayPeriod();
+  const client = new CostQueryClient(credential);
+
+  for (const subscriptionId of subscriptionIds) {
+    const sid = subscriptionId.trim();
+    const prefix = `/subscriptions/${sid.toLowerCase()}/`;
+    const resources = reports.filter((report) =>
+      report.resource.id?.trim().toLowerCase().startsWith(prefix),
+    );
+    if (resources.length === 0) {
+      continue;
+    }
+
+    logger.info(
+      `Querying actual costs for the last 30 days for subscription: ${subscriptionId}`,
+    );
+    const costs = await client.getResourceCosts(sid, period);
+    for (const report of resources) {
+      const resourceId = report.resource.id?.trim().toLowerCase();
+      const actualCosts = resourceId ? costs.get(resourceId) : undefined;
+      if (actualCosts?.length) {
+        report.actualCosts = actualCosts;
+      }
+    }
+  }
+}
+
+function getLast30DayPeriod(now = new Date()) {
+  const end = now.toISOString().slice(0, 10);
+  const start = new Date(now.getTime() - 29 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  return { end, start };
 }
 
 function getSubscriptionId(resourceId: string): string | undefined {

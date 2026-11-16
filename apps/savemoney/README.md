@@ -22,7 +22,8 @@ mise use npm:@pagopa/dx-savemoney
 ```
 
 Use `--format json` for a machine-readable report, or `--config config.yaml` to
-load thresholds and other settings.
+load thresholds and other settings. Add `--include-actual-cost` to fetch
+actual Azure costs for reported resources over the last 30 days.
 
 ## CLI options
 
@@ -42,6 +43,7 @@ fill unset values where available.
 | `--tags <tags...>`           | Filter by space-separated `key=value` tags.  | No filter                                         |
 | `--source <source>`          | `advisor`, `custom`, or `all`.               | All sources                                       |
 | `--no-pricing`               | Disable Retail Prices API estimates.         | Pricing enabled                                   |
+| `--include-actual-cost`      | Show actual costs for the last 30 days.      | Disabled; requires Cost Management read access.   |
 | `--azqr-report <path>`       | Merge findings from an AZQR JSON report.     | None                                              |
 | `--verbose`                  | Show debug logs.                             | `false`                                           |
 
@@ -51,7 +53,8 @@ Use `--format json` or `detailed-json` for a JSON array on stdout. Progress and
 diagnostics go to stderr; exit code `0` means success and `1` means failure.
 Check the exit code and stderr—empty stdout alone does not mean there are no
 findings. Authenticate Azure before running; the tool is read-only. Cost-at-risk
-is not guaranteed savings, and Advisor estimates are reported separately.
+is not guaranteed savings, Advisor estimates are reported separately, and
+actual cost is not itself a saving estimate.
 
 ## Supported Cloud Provider
 
@@ -141,14 +144,23 @@ The tool analyzes the following Azure resource types with specific detection met
 
 #### Pricing Coverage
 
-SaveMoney keeps two monetary signals separate:
+SaveMoney keeps three monetary signals separate:
 
 - **Retail Prices API** estimates the monthly list-price cost at risk for custom findings on resources with predictable pricing.
+- [**Cost Management Query API**](https://learn.microsoft.com/en-us/rest/api/cost-management/query/usage?view=rest-cost-management-2026-06-01) optionally adds pre-tax actual costs for the last 30 calendar days (UTC, including today) to resources with an exact resource-ID match. It requires Cost Management access; missing or uncorrelated records are not reported as zero or attributed to another resource.
 - **Azure Advisor** reports Microsoft-provided savings for Cost recommendations when available.
+
+> [!NOTE]
+> Actual costs exclude taxes and are not amortized: reservation purchases may appear
+> on their billing date rather than being spread over usage. Recent days can be
+> incomplete. Each amount covers only that resource ID, not linked resources such
+> as a VM's disks; the summary totals only matched resources in the report, not the
+> whole subscription. The 30-day window is independent of `--days` (metrics).
 
 | Resources                                                                     | Pricing source    | Notes                                                                                          |
 | :---------------------------------------------------------------------------- | :---------------- | :--------------------------------------------------------------------------------------------- |
 | Virtual Machines, Managed Disks, Public IP Addresses, empty App Service Plans | Retail Prices API | Reported as `Estimated monthly cost at risk (custom)`.                                         |
+| Any reported resource with a matching billing row                             | Cost Management Query API  | Opt-in `ActualCost` over 30 days; shown separately from estimated savings and list-price cost. |
 | Azure Advisor Cost recommendations                                            | Azure Advisor     | Reported separately as `Estimated monthly savings (advisor)` when Advisor returns an estimate. |
 
 #### Generic Checks
@@ -195,6 +207,7 @@ The tool requires the following configuration:
 | `subscriptionIds`   | `string[]`               |    ✅    | -            | Array of Azure subscription IDs to analyze                                |
 | `preferredLocation` | `string`                 |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged)              |
 | `timespanDays`      | `number`                 |    ❌    | `30`         | Number of days to look back for metrics analysis                          |
+| `includeActualCost` | `boolean`              |    ❌    | `false`      | Add Cost Management `ActualCost` for the trailing 30 days; requires Cost Management read access |
 | `sources`           | `FindingSource[]`        |    ❌    | all sources  | Restrict analysis to specific sources: `"advisor"`, `"custom"`, or both   |
 | `verbose`           | `boolean`                |    ❌    | `false`      | Enable detailed logging for each resource analyzed                        |
 | `filterTags`        | `Record<string, string>` |    ❌    | -            | Only analyze resources matching **all** the specified tag key-value pairs |
@@ -239,6 +252,7 @@ azure:
     - xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
   preferredLocation: italynorth
   timespanDays: 30
+  includeActualCost: true
   verbose: false
   thresholds: # optional — omit to use built-in defaults
     vm:

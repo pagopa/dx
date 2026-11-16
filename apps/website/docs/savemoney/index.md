@@ -78,6 +78,7 @@ resources to the report.
 | `--tags <key=value...>`                     | Filter resource-level findings by tags.                             |
 | `--azqr-report <path>`                      | Add findings from an AZQR JSON report.                              |
 | `--no-pricing`                              | Skip Retail Prices API lookups for custom findings.                 |
+| `--include-actual-cost`                     | Add actual costs for the last 30 days; requires Cost Management read access. |
 | `--verbose`                                 | Show additional diagnostic logs.                                    |
 
 ### Configuration
@@ -97,6 +98,7 @@ azure:
     - <subscription-id>
   preferredLocation: italynorth
   timespanDays: 30
+  includeActualCost: true # optional; disabled by default
   thresholds:
     vm:
       cpuPercent: 5
@@ -185,6 +187,12 @@ resource types. It is a list-price estimate of cost that might be avoided if a
 resource is no longer needed—not a guaranteed saving. Azure Advisor may report
 its own estimated monthly savings; those are separate from custom cost-at-risk
 estimates. Estimates may be unavailable.
+
+Use `--include-actual-cost` (or `azure.includeActualCost: true` in YAML) to
+add actual costs from Azure Cost Management for the last 30 days, including
+today (UTC). Costs are matched by resource ID and kept separate from savings;
+missing costs are not treated as zero. Recent days may be incomplete.
+This window is independent of `--days`.
 
 For scripts, `json` and `detailed-json` write the result array to stdout;
 progress and errors go to stderr. Exit code `0` indicates success and `1`
