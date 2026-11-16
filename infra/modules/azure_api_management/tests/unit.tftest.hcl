@@ -538,3 +538,23 @@ run "azure_api_management_development_honors_explicit_alerts" {
     error_message = "Explicit metric alerts must be honored for development."
   }
 }
+
+run "azure_api_management_normalizes_apim_subnet_name" {
+  command = plan
+
+  variables {
+    environment = {
+      prefix          = "dx"
+      env_short       = "d"
+      location        = "italynorth"
+      domain          = "modules"
+      app_name        = "apim"
+      instance_number = "01"
+    }
+  }
+
+  assert {
+    condition     = local.apim_subnet_name == "dx-d-itn-modules-apim-snet-01"
+    error_message = "The APIM subnet name must not include a redundant apim app-name prefix."
+  }
+}

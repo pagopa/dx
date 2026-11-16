@@ -289,6 +289,7 @@ locals {
   )
 
   apim_subnet_name = provider::dx::resource_name(merge(var.environment, {
+    app_name      = local.apim_name
     resource_type = "apim_subnet",
   }))
 
