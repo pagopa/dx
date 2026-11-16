@@ -8,9 +8,9 @@ locals {
   }
 
   tags = merge(var.tags, {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
-    Environment    = "Dev"
+    Environment    = "Uat"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_api_management/tests"
     ManagementTeam = "Developer Experience"
@@ -20,8 +20,8 @@ locals {
 }
 
 data "azurerm_virtual_network" "vnet" {
-  name                = "dx-d-itn-common-vnet-01"
-  resource_group_name = "dx-d-itn-network-rg-01"
+  name                = "dx-u-itn-common-vnet-01"
+  resource_group_name = "dx-u-itn-network-rg-01"
 }
 
 data "azurerm_resource_group" "rg" {
