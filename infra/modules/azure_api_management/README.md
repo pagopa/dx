@@ -93,33 +93,13 @@ The `cost_optimized` use case is designed to balance cost and performance for pr
 
 For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-api-management/tree/main/example/complete) folder in the module repository.
 
-## Migration from 4.x to 5.x
-
-The module now owns the APIM subnet, required public IP, networking mode,
-monitoring defaults, and production management lock.
-
-- Pass the full VNet resource ID as `virtual_network` instead of its name/resource-group object. Remove `subnet_id` and `subnet_pep_id`; the module creates an APIM /24 subnet and derives the standard `pep` subnet ID.
-- Remove `virtual_network_type_internal`, `enable_public_network_access`, and `public_ip_address_id`. Networking is selected by `use_case`.
-- Remove `private_dns_zone_ids`. Fixed APIM zone names and the private endpoint zone ID are derived from the VNet subscription and `private_dns_zone_resource_group_name`, which defaults to the VNet resource group.
-- Replace `monitoring` with `log_analytics_workspace_id`, required for production use cases. Metric-alert defaults and their overrides are unchanged.
-- Remove `notification_sender_email` and `lock_enable`; notifications use `publisher_email`, and locks follow the selected use case.
-- Remove `management_logger_application_insight_enabled`, `application_insights.enabled`, and `application_insights.connection_string`. Set `application_insights.id` to enable logging and resolve its connection string.
-- Remove `key_vault_id` and `certificate_names`. Use `key_vault_certificate_id` on each custom hostname; certificate versions are stripped internally. Replace the proxy hostname list with `{ use_resource_name_as_default = true }` if needed; the proxy hostname is managed from the APIM resource name.
-- Update the module version constraint to `~> 5.0`.
-
-Review the Terraform plan before migrating an existing deployment. Previously
-caller-managed subnets and public IPs are not automatically adopted; explicitly
-migrate ownership where appropriate to avoid subnet conflicts or APIM replacement.
-
 ## Troubleshooting
 
 ### ⚠️ Public Network Access Limitation ⚠️
 
 Azure may reject creation of a new API Management instance with public network
-access disabled. Public network access is now selected by `use_case`, not an
-`enable_public_network_access` override. The `cost_optimized` use case disables
-public network access; check this service limitation before creating a new
-instance or migrating an existing deployment.
+access disabled. The `cost_optimized` use case disables public network access;
+check this service limitation before creating a new instance.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
