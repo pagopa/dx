@@ -1,3 +1,4 @@
+import { parseJson } from "@nx/devkit";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -13,18 +14,9 @@ export const readTerraformProjectMetadata = async (
 ): Promise<TerraformProjectMetadata | undefined> => {
   const projectJsonPath = path.join(projectRoot, "project.json");
   const logger = getPackageLogger(["discovery"]);
+  let content: string;
   try {
-    const projectJson: unknown = JSON.parse(
-      await fs.readFile(projectJsonPath, "utf-8"),
-    );
-    if (
-      typeof projectJson !== "object" ||
-      projectJson === null ||
-      !("metadata" in projectJson)
-    ) {
-      return undefined;
-    }
-    return parseTerraformProjectMetadata(projectJson.metadata);
+    content = await fs.readFile(projectJsonPath, "utf-8");
   } catch (error) {
     if (
       typeof error === "object" &&
@@ -34,12 +26,29 @@ export const readTerraformProjectMetadata = async (
     ) {
       return undefined;
     }
-    if (error instanceof SyntaxError) {
-      logger.warn(
-        `Invalid project configuration at ${projectJsonPath}. ${error.message}`,
-      );
+    throw error;
+  }
+  let projectJson: unknown;
+  try {
+    // parseJson accepts comments and trailing commas, like Nx itself.
+    projectJson = parseJson(content);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    logger.warn(
+      `Invalid project configuration at ${projectJsonPath}. ${message}`,
+    );
+    return undefined;
+  }
+  try {
+    if (
+      typeof projectJson !== "object" ||
+      projectJson === null ||
+      !("metadata" in projectJson)
+    ) {
       return undefined;
     }
+    return parseTerraformProjectMetadata(projectJson.metadata);
+  } catch (error) {
     if (error instanceof TerraformProjectMetadataError) {
       logger.warn("Invalid Terraform publishing metadata", {
         issues: error.issues,
