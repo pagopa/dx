@@ -47,7 +47,7 @@ This centralization eliminates the need to navigate multiple GitHub repositories
 or documentation sources, making it faster and easier to implement modules
 correctly.
 
-To receive grouped pull requests for major DX module upgrades, enable the
+For DX-managed dependency updates, enable the
 [shared Renovate preset](../github/renovate.md).
 
 ## Security Implementation
