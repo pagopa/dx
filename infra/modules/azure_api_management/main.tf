@@ -36,7 +36,7 @@ resource "azurerm_api_management" "this" {
   virtual_network_type = local.virtual_network_type
 
   virtual_network_configuration {
-    subnet_id = azurerm_subnet.apim.id
+    subnet_id = azurerm_subnet_network_security_group_association.snet_nsg.subnet_id
   }
 
   dynamic "sign_up" {
@@ -106,8 +106,6 @@ resource "azurerm_api_management" "this" {
       sku_name,
     ]
   }
-
-  depends_on = [azurerm_network_security_group.nsg_apim]
 }
 
 resource "azurerm_api_management_policy" "this" {
