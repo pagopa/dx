@@ -24,6 +24,15 @@ additions, and removals; they do not stop deliberate tampering.
 `verify-snapshot.js <ISSUE-KEY>` checks the current generation, and given fresh
 Jira and Confluence responses it also reports whether the snapshot is stale.
 
+Select the [`Implementer`](./com.github.copilot/agents/implementer.agent.md)
+agent with a Jira issue key or URL to implement that issue. It stops unless
+`assess-jira-implementation-readiness` reports the issue `Ready`, then assigns
+the issue to you and moves it to `In Progress`. It reads requirements from the
+`create-spec-snapshot` snapshot first and live only for linked resources the
+snapshot lacks, works test-first with the `tdd` skill when available (otherwise
+a plain red-green loop), and finishes with a code review and a security review
+of the change.
+
 To enable the plugin in another repository, add `padef@pagopa-dx` to that
 repository's Copilot settings:
 
