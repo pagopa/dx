@@ -24,8 +24,7 @@
 
 - [ ] `environment` variable follows standard structure
 - [ ] All resources include required tags
-- [ ] New state backends follow the documented container and key convention; existing remote backends change only for an explicitly requested migration
-- [ ] State-container resource group is separate from workload, additional, Opex, and private-networking resource groups
+- [ ] New state backends follow [State Backends: Naming](./state-backends.md#naming); existing backends change only for a requested migration
 
 ## Security
 
@@ -33,7 +32,7 @@
 - [ ] No sensitive values hardcoded in Terraform code
 - [ ] For any sensitive value or secret managed through Azure Key Vault, the **`azure-keyvault-secret` skill** has been followed
 - [ ] For App Service, Function App, or Container Apps secret references, the **`azure-keyvault-reference` skill** has been followed or its baseline rules were applied
-- [ ] State access follows [Implementation Workflow](./implementation-workflow.md): opt-in grants, complete upstream snapshots, effective permissions, and rollout prerequisites are checked
+- [ ] For backend or state-access changes, check [Azure Access](./state-backends.md#azure-access), including backend group boundaries and first-plan permissions
 
 ## Technology Radar
 

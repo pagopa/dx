@@ -651,8 +651,8 @@ terraform {
   }
 
   backend "azurerm" {
-    resource_group_name  = "<state-resource-group>"
-    storage_account_name = "<state-storage-account>"
+    resource_group_name  = "<tfstate-rg>"
+    storage_account_name = "<tfstate-storage>"
     container_name       = "<domain>-tf-state"
     key                  = "<layer>.tfstate"
     use_azuread_auth     = true
@@ -669,13 +669,8 @@ provider "dx" {}
 
 :::tip State backend naming
 
-For new backends, use `<domain>-tf-state` for workspace state and `<prefix>-tf-state` for shared core state, preserving the existing 2-4 character prefix. Preserve existing backend coordinates and keys, including the legacy `terraform-state` container, unless migration is explicitly requested. The domain is an input, not a default: use the configured or requested domain, or ask the user. It must be 3-15 lowercase alphanumeric or hyphen characters, start and end with an alphanumeric character, and contain no `--`. For example, `payments-tf-state` is illustrative only.
+For new environments in DX-compliant projects, use [`dx add environment`](../dx-cli/usage.md#environment) to configure the backend. For agent-assisted changes, use the [`terraform-best-practices` skill](../coding-with-ai/plugin-marketplace.md#terraformpagopa-dx).
 
-Use `<layer>.tfstate` for a root directly under its layer, or `<layer>/<relative-root-path>.tfstate` for nested roots. In `infra/resources`, this covers direct roots and tenant roots under `<layer>/<lifecycle>/<domain>`, including nested subprojects; lifecycle and domain are part of the path, not extra key components. Preserve nested subproject components; `_modules` and `modules` directories are not application roots. This naming convention does not imply that scaffolding or discovery tools support every layout.
-
-- `infra/resources/ced-prod` uses `resources.tfstate`.
-- `infra/resources/prod/ced` uses `resources/ced.tfstate`.
-
-The container groups state by domain, not by layer. Roots for the same domain in an account share the container and its RBAC boundary. A `terraform_remote_state` consumer can read the complete state snapshot, so declare only intended consumers and inspect other effective grants before claiming access is restricted to them.
+New backends use `<domain>-tf-state` for workspace state and `<prefix>-tf-state` for shared core state. Keep existing backend coordinates and keys, including legacy `terraform-state` containers, unless a migration is planned.
 
 :::

@@ -40,7 +40,7 @@ Local KB paths to inspect, relative to the selected knowledge-base root (`DX_KB_
 - Place workload resources in the repository's own resource group. The shared `common` resource group (from `azure_core_infra`) is reserved for subscription-level core resources such as the VNet, Key Vault, Log Analytics, Application Insights and NAT gateways; keep domain resources out of it.
 - Pin DX registry module versions with `~> major.minor`, using the module `module.json` as the source for the current version.
 - Never create `variables.tf` in root environment folders. Root environment configuration belongs in `locals.tf`; local modules own their own `variables.tf`.
-- Follow the state convention in `apps/website/docs/terraform/code-style.md` under the selected knowledge-base root from Setup. Ask for a missing domain; migrate an existing backend only on request.
+- Preserve existing state backends unless migration is requested. For backend or state-access changes, read [State Backends](./references/state-backends.md).
 
 ## Workflow
 
@@ -73,5 +73,3 @@ Follow [Question Policy](./references/question-policy.md) whenever user input is
 - [Question Policy](./references/question-policy.md)
 - [Terraform Best Practices Checklist](./references/checklist.md)
 - [Terraform Troubleshooting](./references/troubleshooting.md)
-- [Eval Test Prompts](./references/eval-prompts.md)
-- [Eval Rubric](./references/eval-rubric.md)
