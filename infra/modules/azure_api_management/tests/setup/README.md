@@ -1,5 +1,9 @@
 # setup
 
+The integration scenarios use separate Terraform test state keys so development
+and cost-optimized deployments are created independently, not replaced between
+runs. Terraform tears down both deployments at the end of the test file.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

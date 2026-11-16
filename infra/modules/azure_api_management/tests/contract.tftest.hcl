@@ -9,14 +9,12 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
-    CreatedBy      = "Terraform"
-    Environment    = "Dev"
-    BusinessUnit   = "DevEx"
-    Source         = "https://github.com/pagopa/dx/infra/modules/azure_api_management/tests"
-    ManagementTeam = "Developer Experience"
-    Test           = "true"
-    TestName       = "Azure API Management contract tests"
+    CostCenter  = "TS000 - Tecnologia e Servizi"
+    Environment = "Dev"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/infra/modules/azure_api_management/tests"
+    Test        = "true"
+    TestName    = "Azure API Management contract tests"
   }
 
   resource_group_name        = "rg-test"

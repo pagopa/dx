@@ -19,14 +19,12 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS720 - DEV EX"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    BusinessUnit   = "DevEx"
-    Source         = "https://github.com/pagopa/dx/infra/modules/azure_api_management/tests"
-    ManagementTeam = "Developer Experience"
-    Test           = "true"
-    TestName       = "Azure API Management integration tests"
+    CostCenter  = "TS720 - DEV EX"
+    Environment = "Uat"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/infra/modules/azure_api_management/tests"
+    Test        = "true"
+    TestName    = "Azure API Management integration tests"
   }
 
   test_kind = "integration"
@@ -45,7 +43,8 @@ run "setup" {
 }
 
 run "apply_development" {
-  command = apply
+  command   = apply
+  state_key = "development"
 
   variables {
     environment = merge(var.environment, {
@@ -89,7 +88,8 @@ run "apply_development" {
 }
 
 run "apply_cost_optimized" {
-  command = apply
+  command   = apply
+  state_key = "cost_optimized"
 
   variables {
     environment = merge(var.environment, {

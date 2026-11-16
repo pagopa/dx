@@ -9,14 +9,12 @@ locals {
   }
 
   tags = merge(var.tags, {
-    CostCenter     = "TS720 - DEV EX"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    BusinessUnit   = "DevEx"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_api_management/tests"
-    ManagementTeam = "Developer Experience"
-    Test           = "true"
-    TestName       = "Azure API Management ${var.test_kind} tests"
+    CostCenter  = "TS720 - DEV EX"
+    Environment = "Uat"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_api_management/tests"
+    Test        = "true"
+    TestName    = "Azure API Management ${var.test_kind} tests"
   })
 }
 
