@@ -46,11 +46,11 @@ In order to enable tracing, you also need to set the following environment varia
 | **Name**                                      | **Required** | **Default** |
 | --------------------------------------------- | ------------ | ----------- |
 | **APPINSIGHTS_SAMPLING_PERCENTAGE**           | false        | 5           |
-| **APPLICATIONINSIGHTS_CONNECTION_STRING**     | conditional  | -           |
+| **APPLICATIONINSIGHTS_CONNECTION_STRING**     | true         | -           |
 | **APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED** | false        | false       |
 
 > [!NOTE]
-> `APPLICATIONINSIGHTS_CONNECTION_STRING` is required unless you provide the connection string through the `initAzureMonitor` options (see [Enabling Azure Monitor Telemetry](#enabling-azure-monitor-telemetry)).
+> This table describes the `NODE_OPTIONS` preload path, where `APPLICATIONINSIGHTS_CONNECTION_STRING` is **always required**: `--import @pagopa/azure-tracing` initializes Azure Monitor before any application code runs, so there is no opportunity to pass the connection string in code. It can only be omitted by applications that initialize the SDK themselves and pass `azureMonitorExporterOptions.connectionString` (see [Enabling Azure Monitor Telemetry](#enabling-azure-monitor-telemetry)).
 
 > [!WARNING]
 > Connection-string-only authentication (the current default) is **deprecated** and will be removed in the next major version.
@@ -112,7 +112,7 @@ initAzureMonitor(instrumentations);
 ...
 ```
 
-The configuration is always derived from the environment first (see the table above) and the optional second argument overrides only the properties it sets:
+The configuration is always derived from the environment first (see the `NODE_OPTIONS` table above) and the optional second argument overrides only the properties it sets:
 
 ```ts
 import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
@@ -133,7 +133,7 @@ Nested option groups (`azureMonitorExporterOptions`, `instrumentationOptions` an
 > [!IMPORTANT]
 > The options object **no longer replaces** the whole configuration: it is a partial override. It is layered on top of the environment, which is parsed and validated on every call: an invalid environment variable now throws even when you pass a complete configuration, and the environment-derived defaults (live metrics, sampling ratio, `tracesPerSecond`, the Entra ID credential) are always applied. Overriding only one group (e.g. just the connection string) therefore also keeps the environment `samplingRatio` instead of the SDK default.
 
-`APPLICATIONINSIGHTS_CONNECTION_STRING` may be omitted when you provide `azureMonitorExporterOptions.connectionString` yourself:
+When you initialize the SDK yourself, `APPLICATIONINSIGHTS_CONNECTION_STRING` may be omitted in favour of `azureMonitorExporterOptions.connectionString`:
 
 ```ts
 initAzureMonitor([], {
