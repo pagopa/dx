@@ -1,0 +1,129 @@
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { afterAll, beforeAll, describe, expect, it } from "vitest";
+
+import { TSX_FIXTURE, TYPESCRIPT_FIXTURE } from "./fixtures.ts";
+import {
+  BASE_CONFIG_PATH,
+  type Finding,
+  getEslintRules,
+  getTestRules,
+  loadBaseConfig,
+  runEslint,
+  runOxlint,
+  toCanonicalRuleId,
+} from "./support.ts";
+
+const PERFECTIONIST = "perfectionist/";
+
+/**
+ * `sort-export-attributes` and `sort-import-attributes` need `with` clauses
+ * carrying more than one attribute, which TypeScript does not model as a
+ * sortable list. They are the only two perfectionist rules this fixture cannot
+ * exercise.
+ */
+const UNCOVERED_PERFECTIONIST_RULES = [
+  "perfectionist/sort-export-attributes",
+  "perfectionist/sort-import-attributes",
+];
+
+const FIXTURES: [file: string, source: string][] = [
+  ["typescript.ts", TYPESCRIPT_FIXTURE],
+  ["tsx.tsx", TSX_FIXTURE],
+];
+
+const project = mkdtempSync(join(tmpdir(), "oxlint-config-"));
+
+mkdirSync(join(project, "src"), { recursive: true });
+writeFileSync(
+  join(project, ".oxlintrc.json"),
+  JSON.stringify({ extends: [BASE_CONFIG_PATH] }, null, 2),
+);
+for (const [file, source] of FIXTURES) {
+  writeFileSync(join(project, "src", file), source);
+}
+
+afterAll(() => {
+  rmSync(project, { force: true, recursive: true });
+});
+
+interface Result {
+  eslint: Finding[];
+  oxlint: Finding[];
+}
+
+const results = new Map<string, Result>();
+
+beforeAll(async () => {
+  for (const [file] of FIXTURES) {
+    const relativePath = `src/${file}`;
+    const eslintRules = await getEslintRules(relativePath);
+    results.set(relativePath, {
+      eslint: await runEslint(project, join(project, relativePath)),
+      oxlint: runOxlint(project, relativePath).map((finding) => ({
+        ...finding,
+        rule: toCanonicalRuleId(finding.rule, eslintRules) ?? finding.rule,
+      })),
+    });
+  }
+});
+
+const perfectionistFindings = (findings: Finding[]) =>
+  findings.filter(({ rule }) => rule.startsWith(PERFECTIONIST));
+
+const byPosition = ({ column, line, rule }: Finding) =>
+  `${rule}:${line}:${column}`;
+
+const byRuleAndLine = ({ line, rule }: Finding) => `${rule}:${line}`;
+
+describe("fixtures", () => {
+  describe.each(FIXTURES)("%s", (file) => {
+    const relativePath = `src/${file}`;
+    const result = () => results.get(relativePath) as Result;
+
+    it("reports every oxlint rule id as an ESLint rule id", async () => {
+      const eslintRules = await getEslintRules(relativePath);
+      const unmapped = runOxlint(project, relativePath)
+        .filter(
+          ({ rule }) =>
+            !rule.startsWith(PERFECTIONIST) &&
+            toCanonicalRuleId(rule, eslintRules) === undefined,
+        )
+        .map(byPosition);
+
+      expect(unmapped).toEqual([]);
+    });
+
+    it("reports the same rules on the same lines as ESLint", () => {
+      expect(result().oxlint.map(byRuleAndLine).toSorted()).toEqual(
+        result().eslint.map(byRuleAndLine).toSorted(),
+      );
+    });
+
+    it("reports perfectionist findings where ESLint reports them", () => {
+      const actual = perfectionistFindings(result().oxlint);
+      const expected = perfectionistFindings(result().eslint);
+
+      expect(actual.length).toBeGreaterThan(0);
+      expect(actual.map(byPosition).toSorted()).toEqual(
+        expected.map(byPosition).toSorted(),
+      );
+    });
+  });
+
+  it("covers every perfectionist rule except the attribute ones", () => {
+    const configured = [...getTestRules(loadBaseConfig()).keys()].filter(
+      (rule) => rule.startsWith(PERFECTIONIST),
+    );
+    const covered = new Set(
+      [...results.values()].flatMap(({ oxlint }) =>
+        perfectionistFindings(oxlint).map(({ rule }) => rule),
+      ),
+    );
+
+    expect(configured.filter((rule) => !covered.has(rule)).sort()).toEqual(
+      UNCOVERED_PERFECTIONIST_RULES,
+    );
+  });
+});

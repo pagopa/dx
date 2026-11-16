@@ -1,0 +1,42 @@
+{
+  "name": "@pagopa/oxlint-config",
+  "version": "0.0.0",
+  "description": "Oxlint port of @pagopa/eslint-config",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/oxlint-config"
+  },
+  "files": [
+    "base.json"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./base.json",
+    "./base.json": "./base.json"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "eslint-plugin-perfectionist": "^5.12.1"
+  },
+  "devDependencies": {
+    "@pagopa/eslint-config": "workspace:^",
+    "@tsconfig/node24": "catalog:",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "oxlint": "^1.93.0",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "oxlint": "^1.93.0"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  }
+}
