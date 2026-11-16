@@ -95,8 +95,11 @@ secrets with `environment.prefix`; for example, `prefix = "ced"` and
 `env_short = "p"` produce `infra-ced-prod-ci` and `infra-ced-prod-cd`. The flag
 defaults to `false`, preserving the existing `env_short` mapping
 (`d`/`u`/`p` to `dev`/`uat`/`prod`). Deployment-role OIDC trust follows the same
-environment names. The flag does not change AWS resource names or the
-repository-scoped trust of the dedicated ECR Public login role.
+base environment names, allowing additional tenant or other qualifiers as
+described below. The resource prefix is not an automatically detected tenant:
+with the flag disabled, `env_name` contains only the lifecycle. The flag does
+not change AWS resource names or the repository-scoped trust of the dedicated
+ECR Public login role.
 
 #### `repository`
 
@@ -321,8 +324,8 @@ The module creates five IAM roles:
 
 ### OIDC Trust Boundaries
 
-Each infrastructure and application role trusts only its matching GitHub
-environment in the configured repository:
+Each infrastructure and application role requires its own scope, configured
+environment and CI/CD suffix in the configured repository:
 
 | Role | GitHub environment |
 | ---- | ------------------ |
@@ -332,15 +335,47 @@ environment in the configured repository:
 | Application CD | `app-<env>-cd` |
 
 `<env>` is `dev`, `uat` or `prod`, prefixed with `environment.prefix` when
-`github_environment_prefix_enabled = true`. Both name-based and immutable
-repository subjects are matched exactly, with no subject wildcard. For example,
-the default dev infrastructure CD role accepts only
-`repo:OWNER/REPOSITORY:environment:infra-dev-cd` and
-`repo:OWNER@OWNER-ID/REPOSITORY@REPOSITORY-ID:environment:infra-dev-cd`.
+`github_environment_prefix_enabled = true`. `StringLike` accepts all four
+forms, retaining the literal hyphen boundaries around `<env>`:
 
-CI jobs, jobs in another environment and jobs without an environment cannot
-assume that CD role. Only the dedicated token-only ECR Public login role keeps
-repository-wide subject matching.
+```text
+<scope>-<env>-<ci|cd>
+<scope>-*-<env>-<ci|cd>
+<scope>-<env>-*-<ci|cd>
+<scope>-*-<env>-*-<ci|cd>
+```
+
+The variants are separate because IAM `*` can match an empty string but does
+not remove the adjacent hyphens. For example, the default dev infrastructure
+CD role accepts `infra-dev-cd`, `infra-ced-dev-cd`, `infra-dev-ced-cd` and
+`infra-ced-dev-west-cd`, in both name-based and immutable repository subjects.
+The allowed subject patterns never wildcard the scope, repository or CI/CD
+suffix. When the prefix flag is enabled, the configured prefix remains required
+inside `<env>`.
+
+Lifecycle names are reserved tokens: a `StringNotLike` condition rejects
+environment names containing another lifecycle as a hyphen-delimited token.
+For example, `infra-notdev-cd` does not match the dev role, while
+`infra-dev-prod-cd` is rejected by both dev and prod roles. Do not use
+`dev`, `uat` or `prod` as qualifier tokens for another lifecycle.
+
+Qualifiers are **not tenant authorization boundaries**: multiple tenants with
+matching scope, environment and suffix may assume the same role. All matching
+environments need equivalent protection rules. The module still publishes
+`ROLE_ARN` only to the base environment names in the table; provision that
+secret separately for any additional matching environments.
+
+The generic `github_environment_bootstrap` module creates `infra`, `app`,
+`opex` and `bootstrapper` environments for CI/CD, plus `automation` for CD.
+This AWS module manages only the four infra/app deployment roles above:
+`automation`, `opex` and `bootstrapper` are not implicit aliases for them.
+In particular, Azure's automation-to-infra identity sharing does not grant
+the equivalent AWS access.
+
+CI jobs cannot assume CD roles, other scopes and lifecycle tokens are
+rejected, and jobs without an environment cannot assume deployment roles.
+Only the dedicated token-only ECR Public login role keeps repository-wide
+subject matching.
 
 GitHub environment protection rules still control which branches, tags and
 approvals can enter an environment. This trust separation does not isolate
@@ -354,12 +389,14 @@ roles. Before applying the upgrade:
 
 1. Update module references to `~> 3.0`.
 2. Audit workflows assuming these roles and set each job's `environment` to the
-   matching value above, including the prefix when enabled. Branch/tag jobs
-   without an environment and custom environments no longer match deployment
-   trust.
-3. Check environment branch/tag restrictions and required reviewers, especially
-   for CD environments. Keep CI environments automatic if PR plans must remain
-   automatic.
+   matching scope, environment and CI/CD suffix above, including the prefix
+   when enabled. Qualifiers may appear before and/or after `<env>`, but must
+   not contain another lifecycle token. Jobs without an environment, with
+   unsupported scopes or with names outside these patterns no longer match.
+   Provide `ROLE_ARN` separately for additional qualified environments.
+3. Check branch/tag restrictions and required reviewers on **every** matching
+   environment, especially tenant-qualified CD environments. Keep CI
+   environments automatic if PR plans must remain automatic.
 4. Apply the bootstrapper upgrade using an authorized principal that can update
    IAM trust policies. Do not rely on an environment whose access the upgrade
    removes.
