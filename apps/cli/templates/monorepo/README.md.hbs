@@ -49,6 +49,24 @@ pnpm install
 pnpm nx run-many -t build
 ```
 
+### GitHub Copilot coding agent
+
+`.github/workflows/copilot-setup-steps.yml` prepares the environment the
+[Copilot coding agent](https://docs.github.com/en/copilot/concepts/agents/coding-agent/about-coding-agent)
+works in: it installs the mise toolchain, authenticates pnpm to GitHub Packages
+and runs `pnpm install` before the agent starts, so a task begins with the
+dependencies in place.
+
+The workflow **needs no secret**: it authenticates with `${{ github.token }}`,
+which reads the public packages this workspace depends on through the job's
+`packages: read` permission. GitHub Packages asks for a token on those public
+packages too, which is why the registry step exists.
+
+> [!NOTE]
+> A private package needs either this repository granted under **Manage Actions
+> access** or a secret passed to the `token` input. Without one, `pnpm install`
+> fails with a `401` from the registry.
+
 ### GitHub Copilot plugins
 
 This repository includes `.github/copilot/settings.json` with the
@@ -170,6 +188,9 @@ change; Terraform plans run under the `infra-<env>-ci` GitHub environment
 (or `bootstrapper-<env>-ci` for bootstrapper projects) and the result is
 published as a comment on the Pull Request. The workflow fails when a plan
 fails.
+
+The workflow `copilot-setup-steps.yml` prepares the environment of the GitHub
+Copilot coding agent, as described in the setup section above.
 
 Terraform roots under `infra/` are Nx projects inferred by
 `@pagopa/nx-terraform`, which provides the `fmt`, `validate`, `trivy`, `docs`,
