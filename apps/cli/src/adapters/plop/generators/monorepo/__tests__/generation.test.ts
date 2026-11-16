@@ -230,6 +230,17 @@ describe("monorepo generator — file generation", () => {
     );
   });
 
+  it("declares the repository Terraform root as the repository Nx project", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["infra/repository/project.json"],
+    );
+
+    expect(JSON.parse(generatedFiles["infra/repository/project.json"])).toEqual(
+      { name: "repository" },
+    );
+  });
+
   it("propagates action outputs into generated version files", async () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),
