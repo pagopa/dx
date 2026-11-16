@@ -203,6 +203,29 @@ run "azure_github_environment_bootstrap_rejects_empty_state_container_name" {
   ]
 }
 
+run "azure_github_environment_bootstrap_rejects_long_state_container_name" {
+  command = plan
+
+  variables {
+    terraform_state_container_access = {
+      container_name = "abcdefghijklmnop-tf-state"
+    }
+  }
+
+  expect_failures = [var.terraform_state_container_access]
+}
+
+run "azure_github_environment_bootstrap_rejects_long_default_state_container_name" {
+  command = plan
+
+  variables {
+    environment                      = merge(var.environment, { domain = "abcdefghijklmnop" })
+    terraform_state_container_access = {}
+  }
+
+  expect_failures = [var.terraform_state_container_access]
+}
+
 run "azure_github_environment_bootstrap_rejects_invalid_upstream_scope" {
   command = plan
 

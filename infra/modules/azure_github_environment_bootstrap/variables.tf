@@ -53,14 +53,14 @@ variable "terraform_state_container_access" {
 
   validation {
     condition = var.terraform_state_container_access == null ? true : (
-      var.terraform_state_container_access.container_name == null ||
+      var.terraform_state_container_access.container_name == null ? length(var.environment.domain) <= 15 :
       (
         length(var.terraform_state_container_access.container_name) >= 3 &&
-        length(var.terraform_state_container_access.container_name) <= 63 &&
+        length(var.terraform_state_container_access.container_name) <= 24 &&
         can(regex("^[a-z0-9]+(-[a-z0-9]+)*$", var.terraform_state_container_access.container_name))
       )
     )
-    error_message = "container_name must be a valid Azure container name."
+    error_message = "The state container name must be a valid Azure container name of 3-24 characters."
   }
 
   validation {

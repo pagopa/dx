@@ -216,88 +216,44 @@ terraform_storage_account = {
 
 #### `terraform_state_container_access`
 
-By default, the module preserves its existing storage-account-scoped assignments.
-Set this object to opt in to container-scoped state permissions. The module
-assigns `Storage Blob Data Contributor` to each state-managing identity on the
-managed container (`<environment.domain>-tf-state` by default), including CI
-identities that need blob leases for Terraform plans. It does not grant the
-initial user access; the DX CLI grants the applying user `Storage Blob Data
-Contributor` on the existing container before `terraform init`. The module
-does not create containers.
+Requires `azure-core-infra` version 7.1.0 or later.
 
-Opt in with an empty object when only the module's own container is needed.
-Declare upstreams by their container reference: use the container name for the
-configured storage account, or the exact ARM container ID for an existing
-upstream elsewhere. Select readers in that entry. `identities` names
-module-created identities (`infra_ci`, `infra_cd`, `app_ci`, `app_cd`, `opex_ci`,
-or `opex_cd`); `principal_ids` names external users or identities. Only
-selected principals receive `Storage Blob Data Reader`.
+Leave this option unset (`null`) to keep existing permissions. Set it to `{}`
+to give all six CI/CD identities `Storage Blob Data Contributor` on
+`<environment.domain>-tf-state`. Use `container_name` to choose another container
+(3-24 characters, including the suffix when present).
+
+Add `upstream` when identities also need to read state from other containers.
+For example, to let Infra CI/CD read shared core state in `dx-tf-state`:
 
 ```hcl
-# Own container only; defaults to <environment.domain>-tf-state
-terraform_state_container_access = {}
-
-# Core state in the same storage account, only readable by Infra CI
 terraform_state_container_access = {
   upstream = {
-    "${var.environment.prefix}-tf-state" = {
-      identities = ["infra_ci"]
-    }
-  }
-}
-
-# Legacy or cross-account upstream; preserve its exact ARM container scope
-terraform_state_container_access = {
-  upstream = {
-    "/subscriptions/<subscription-id>/resourceGroups/<state-rg>/providers/Microsoft.Storage/storageAccounts/<state-account>/blobServices/default/containers/<container>" = {
-      identities    = ["infra_ci"]
-      principal_ids = ["<external-user-or-identity-object-id>"]
+    "dx-tf-state" = {
+      identities = ["infra_ci", "infra_cd"]
     }
   }
 }
 ```
 
-Container names must be 3-63 lowercase letters, digits, or single hyphens,
-starting and ending with a letter or digit. Declare each upstream container
-only once and combine its recipients in that entry. Do not select an internal
-identity as Reader on its own managed container; it already has Contributor.
+Each `upstream` key is a container name in `terraform_storage_account` or a
+full ARM container ID. Use its actual name; upstream names may be up to 63 characters.
 
-In opt-in mode, the module replaces the Infra CI and Infra CD subscription
-bundles with their agreed core roles, removes the Opex `Reader and Data
-Access` assignments, and scopes its state Blob Contributor assignments to the
-managed container. The roles must be deployed to the target environment before
-the first bootstrap plan. Their names are `${subscription display name} DX Infra
-CI Subscription (No Storage Key Access)` and `${subscription display name} DX
-Infra CD Subscription (No RBAC Admin)`.
+Select readers with `identities` (`infra_ci`, `infra_cd`, `app_ci`, `app_cd`,
+`opex_ci`, `opex_cd`) or `principal_ids` for external users and identities.
+They receive `Storage Blob Data Reader` on that container. Declare each upstream
+once; the six identities do not need Reader on their own container.
 
-Upstream Reader assignments also need to exist before the first plan that
-reads those states. Create a missing assignment
-manually, then import it before applying so Terraform adopts rather than
-duplicates it. For example:
+Containers must already exist; this module does not create them or move state.
+The identity running Terraform needs write and lock access to its backend before
+`terraform init`, and read access to any upstream state before planning.
+An apply cannot grant access needed by its own plan. Import existing role
+assignments only when this module will manage those same grants.
 
-```sh
-terraform import \
-  'module.bootstrap.azurerm_role_assignment.terraform_state_upstream_reader["[\"dx-tf-state\",\"identity\",\"infra_ci\"]"]' \
-  '/subscriptions/<subscription-id>/resourceGroups/<state-rg>/providers/Microsoft.Storage/storageAccounts/<state-account>/blobServices/default/containers/<container>/providers/Microsoft.Authorization/roleAssignments/<assignment-id>'
-```
-
-To check container data-plane access for a selected identity, authenticate as
-that identity and use `--auth-mode login`:
-
-```sh
-az storage blob list \
-  --account-name "<state-account>" \
-  --container-name "<own-container>" \
-  --auth-mode login \
-  --output table
-```
-
-Repeat against an undeclared container and expect authorization to fail.
-
-In opt-in mode, the Terraform state account resource group must remain separate
-from the module's workload, additional, Opex, and private-networking resource
-groups; Terraform rejects overlapping scopes. External Entra group grants and
-other inherited permissions remain unchanged and must be audited separately.
+Keep the state storage account's resource group separate from workload, additional,
+Opex, and private-networking resource groups; Terraform rejects overlaps.
+Other inherited or external permissions remain unchanged, so container-scoped
+grants alone do not guarantee isolation.
 
 #### `repository`
 

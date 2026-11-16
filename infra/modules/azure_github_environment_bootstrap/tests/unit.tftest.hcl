@@ -169,6 +169,7 @@ run "azure_github_environment_bootstrap_container_state_access" {
 
   variables {
     terraform_state_container_access = {
+      container_name = "abcdefghijklmno-tf-state"
       upstream = {
         "dx-tf-state" = {
           identities    = ["infra_ci", "app_ci"]
@@ -205,9 +206,9 @@ run "azure_github_environment_bootstrap_container_state_access" {
         azurerm_role_assignment.app_cd_tf_rg_blob_contributor,
         azurerm_role_assignment.opex_ci_tf_rg_blob_contributor,
         azurerm_role_assignment.opex_cd_tf_rg_blob_contributor,
-      ] : lower(assignment.scope) == lower("${local.tf_storage_account.id}/blobServices/default/containers/test-tf-state") && assignment.role_definition_name == "Storage Blob Data Contributor"
+      ] : lower(assignment.scope) == lower("${local.tf_storage_account.id}/blobServices/default/containers/abcdefghijklmno-tf-state") && assignment.role_definition_name == "Storage Blob Data Contributor"
     ])
-    error_message = "All state identities must receive Blob Contributor on the default <domain>-tf-state container"
+    error_message = "All state identities must receive Blob Contributor on the 24-character state container"
   }
 
   assert {
@@ -238,11 +239,12 @@ run "azure_github_environment_bootstrap_container_state_access_own_container_onl
   command = plan
 
   variables {
+    environment                      = merge(var.environment, { domain = "abcdefghijklmno" })
     terraform_state_container_access = {}
   }
 
   assert {
-    condition     = azurerm_role_assignment.infra_ci_tf_st_blob_contributor.scope == "${local.tf_storage_account.id}/blobServices/default/containers/test-tf-state" && length(azurerm_role_assignment.terraform_state_upstream_reader) == 0
+    condition     = azurerm_role_assignment.infra_ci_tf_st_blob_contributor.scope == "${local.tf_storage_account.id}/blobServices/default/containers/abcdefghijklmno-tf-state" && length(azurerm_role_assignment.terraform_state_upstream_reader) == 0
     error_message = "Opting in without upstreams must grant own-container access only"
   }
 }
@@ -253,7 +255,7 @@ run "azure_github_environment_bootstrap_upstream_arm_id_override" {
   variables {
     terraform_state_container_access = {
       upstream = {
-        "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/legacy-state/providers/Microsoft.Storage/storageAccounts/legacytf/blobServices/default/containers/old-tf-state" = {
+        "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/legacy-state/providers/Microsoft.Storage/storageAccounts/legacytf/blobServices/default/containers/${format("%063d", 0)}" = {
           identities    = ["infra_ci"]
           principal_ids = ["00000000-0000-0000-0000-000000000099"]
         }
@@ -262,8 +264,8 @@ run "azure_github_environment_bootstrap_upstream_arm_id_override" {
   }
 
   assert {
-    condition     = azurerm_role_assignment.terraform_state_upstream_reader[jsonencode(["/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/legacy-state/providers/Microsoft.Storage/storageAccounts/legacytf/blobServices/default/containers/old-tf-state", "identity", "infra_ci"])].scope == "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/legacy-state/providers/Microsoft.Storage/storageAccounts/legacytf/blobServices/default/containers/old-tf-state"
-    error_message = "A full upstream container ID must be preserved for legacy or cross-account state"
+    condition     = azurerm_role_assignment.terraform_state_upstream_reader[jsonencode(["/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/legacy-state/providers/Microsoft.Storage/storageAccounts/legacytf/blobServices/default/containers/${format("%063d", 0)}", "identity", "infra_ci"])].scope == "/subscriptions/22222222-2222-2222-2222-222222222222/resourceGroups/legacy-state/providers/Microsoft.Storage/storageAccounts/legacytf/blobServices/default/containers/${format("%063d", 0)}"
+    error_message = "A full upstream container ID with a 63-character name must be preserved for legacy or cross-account state"
   }
 }
 
