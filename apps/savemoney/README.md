@@ -157,11 +157,11 @@ SaveMoney keeps three monetary signals separate:
 > as a VM's disks; the summary totals only matched resources in the report, not the
 > whole subscription. The 30-day window is independent of `--days` (metrics).
 
-| Resources                                                                     | Pricing source    | Notes                                                                                          |
-| :---------------------------------------------------------------------------- | :---------------- | :--------------------------------------------------------------------------------------------- |
-| Virtual Machines, Managed Disks, Public IP Addresses, empty App Service Plans | Retail Prices API | Reported as `Estimated monthly cost at risk (custom)`.                                         |
-| Any reported resource with a matching billing row                             | Cost Management Query API  | Opt-in `ActualCost` over 30 days; shown separately from estimated savings and list-price cost. |
-| Azure Advisor Cost recommendations                                            | Azure Advisor     | Reported separately as `Estimated monthly savings (advisor)` when Advisor returns an estimate. |
+| Resources                                                                     | Pricing source            | Notes                                                                                          |
+| :---------------------------------------------------------------------------- | :------------------------ | :--------------------------------------------------------------------------------------------- |
+| Virtual Machines, Managed Disks, Public IP Addresses, empty App Service Plans | Retail Prices API         | Reported as `Estimated monthly cost at risk (custom)`.                                         |
+| Any reported resource with a matching billing row                             | Cost Management Query API | Opt-in `ActualCost` over 30 days; shown separately from estimated savings and list-price cost. |
+| Azure Advisor Cost recommendations                                            | Azure Advisor             | Reported separately as `Estimated monthly savings (advisor)` when Advisor returns an estimate. |
 
 #### Generic Checks
 
@@ -202,17 +202,17 @@ await azure.generateReport(reports, "table");
 
 The tool requires the following configuration:
 
-| Input               | Type                     | Required | Default      | Description                                                               |
-| :------------------ | :----------------------- | :------: | :----------- | :------------------------------------------------------------------------ |
-| `subscriptionIds`   | `string[]`               |    ✅    | -            | Array of Azure subscription IDs to analyze                                |
-| `preferredLocation` | `string`                 |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged)              |
-| `timespanDays`      | `number`                 |    ❌    | `30`         | Number of days to look back for metrics analysis                          |
-| `includeActualCost` | `boolean`              |    ❌    | `false`      | Add Cost Management `ActualCost` for the trailing 30 days; requires Cost Management read access |
-| `sources`           | `FindingSource[]`        |    ❌    | all sources  | Restrict analysis to specific sources: `"advisor"`, `"custom"`, or both   |
-| `verbose`           | `boolean`                |    ❌    | `false`      | Enable detailed logging for each resource analyzed                        |
-| `filterTags`        | `Record<string, string>` |    ❌    | -            | Only analyze resources matching **all** the specified tag key-value pairs |
-| `thresholds`        | `Thresholds`             |    ❌    | see below    | Override the default numeric thresholds used during analysis              |
-| `azqrReportPath`    | `string`                 |    ❌    | -            | Path to an AZQR `--json` report to ingest (see AZQR Report Ingestion)     |
+| Input               | Type                     | Required | Default      | Description                                                                                     |
+| :------------------ | :----------------------- | :------: | :----------- | :---------------------------------------------------------------------------------------------- |
+| `subscriptionIds`   | `string[]`               |    ✅    | -            | Array of Azure subscription IDs to analyze                                                      |
+| `preferredLocation` | `string`                 |    ❌    | `italynorth` | Preferred Azure region (resources elsewhere will be flagged)                                    |
+| `timespanDays`      | `number`                 |    ❌    | `30`         | Number of days to look back for metrics analysis                                                |
+| `includeActualCost` | `boolean`                |    ❌    | `false`      | Add Cost Management `ActualCost` for the trailing 30 days; requires Cost Management read access |
+| `sources`           | `FindingSource[]`        |    ❌    | all sources  | Restrict analysis to specific sources: `"advisor"`, `"custom"`, or both                         |
+| `verbose`           | `boolean`                |    ❌    | `false`      | Enable detailed logging for each resource analyzed                                              |
+| `filterTags`        | `Record<string, string>` |    ❌    | -            | Only analyze resources matching **all** the specified tag key-value pairs                       |
+| `thresholds`        | `Thresholds`             |    ❌    | see below    | Override the default numeric thresholds used during analysis                                    |
+| `azqrReportPath`    | `string`                 |    ❌    | -            | Path to an AZQR `--json` report to ingest (see AZQR Report Ingestion)                           |
 
 #### Output Formats
 

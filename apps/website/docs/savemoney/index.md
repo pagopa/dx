@@ -67,19 +67,19 @@ resources to the report.
 
 ### Options commonly used
 
-| Option                                      | Use                                                                 |
-| ------------------------------------------- | ------------------------------------------------------------------- |
-| `--subscriptionIds <ids...>`                | Choose one or more subscriptions.                                   |
-| `--config <path>`                           | Load settings from a YAML file.                                     |
-| `--format table\|json\|detailed-json\|lint` | Choose a terminal, JSON, or lint-style report. Defaults to `table`. |
-| `--days <days>`                             | Change the metrics lookback period. Defaults to 30 days.            |
-| `--location <region>`                       | Set the preferred region. Defaults to `italynorth`.                 |
-| `--source advisor\|custom\|all`             | Choose which findings to include. Defaults to both sources.         |
-| `--tags <key=value...>`                     | Filter resource-level findings by tags.                             |
-| `--azqr-report <path>`                      | Add findings from an AZQR JSON report.                              |
-| `--no-pricing`                              | Skip Retail Prices API lookups for custom findings.                 |
+| Option                                      | Use                                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------------------- |
+| `--subscriptionIds <ids...>`                | Choose one or more subscriptions.                                            |
+| `--config <path>`                           | Load settings from a YAML file.                                              |
+| `--format table\|json\|detailed-json\|lint` | Choose a terminal, JSON, or lint-style report. Defaults to `table`.          |
+| `--days <days>`                             | Change the metrics lookback period. Defaults to 30 days.                     |
+| `--location <region>`                       | Set the preferred region. Defaults to `italynorth`.                          |
+| `--source advisor\|custom\|all`             | Choose which findings to include. Defaults to both sources.                  |
+| `--tags <key=value...>`                     | Filter resource-level findings by tags.                                      |
+| `--azqr-report <path>`                      | Add findings from an AZQR JSON report.                                       |
+| `--no-pricing`                              | Skip Retail Prices API lookups for custom findings.                          |
 | `--include-actual-cost`                     | Add actual costs for the last 30 days; requires Cost Management read access. |
-| `--verbose`                                 | Show additional diagnostic logs.                                    |
+| `--verbose`                                 | Show additional diagnostic logs.                                             |
 
 ### Configuration
 
