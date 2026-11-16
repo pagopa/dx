@@ -5,11 +5,16 @@ import {
   findSeverityMatch,
   getEslintRules,
   getOxlintRuleNames,
+  getScriptRules,
   getSourceRules,
   getTestRules,
   KNOWN_GAPS,
   loadBaseConfig,
+  NURSERY_GAPS,
   type Rule,
+  SCRIPT_SAMPLE_PATH,
+  SOURCE_SAMPLE_PATH,
+  TEST_SAMPLE_PATH,
   toEslintCandidates,
   toOxlintCandidates,
 } from "./support.ts";
@@ -22,14 +27,19 @@ const PARITY_CASES: {
   sampleFile: string;
 }[] = [
   {
+    name: "script files",
+    oxlintRules: getScriptRules(config),
+    sampleFile: SCRIPT_SAMPLE_PATH,
+  },
+  {
     name: "source files",
     oxlintRules: getSourceRules(config),
-    sampleFile: "src/example.ts",
+    sampleFile: SOURCE_SAMPLE_PATH,
   },
   {
     name: "test files",
     oxlintRules: getTestRules(config),
-    sampleFile: "src/example.test.ts",
+    sampleFile: TEST_SAMPLE_PATH,
   },
 ];
 
@@ -50,7 +60,9 @@ describe.each(PARITY_CASES)("$name", ({ oxlintRules, sampleFile }) => {
       .sort();
 
     expect(uncovered).toEqual(
-      KNOWN_GAPS.filter((gap) => eslintRules.has(gap)).sort(),
+      [...KNOWN_GAPS, ...NURSERY_GAPS]
+        .filter((gap) => eslintRules.has(gap))
+        .sort(),
     );
   });
 
@@ -143,6 +155,10 @@ describe("coverage", () => {
     expect(getTestRules(config).size).toBeGreaterThanOrEqual(141);
   });
 
+  it("enables at least 134 rules on script files", () => {
+    expect(getScriptRules(config).size).toBeGreaterThanOrEqual(134);
+  });
+
   it("keeps no rule of KNOWN_GAPS implemented by oxlint", () => {
     const oxlintRuleNames = getOxlintRuleNames();
     const implemented = KNOWN_GAPS.filter((gap) =>
@@ -159,12 +175,13 @@ describe("coverage", () => {
 
   it("does not enable a KNOWN_GAPS rule", () => {
     const enabled = new Set([
+      ...getScriptRules(config).keys(),
       ...getSourceRules(config).keys(),
       ...getTestRules(config).keys(),
     ]);
 
     expect(
-      KNOWN_GAPS.filter((gap) => enabled.has(gap)),
+      [...KNOWN_GAPS, ...NURSERY_GAPS].filter((gap) => enabled.has(gap)),
       "KNOWN_GAPS rules cannot be enforced by oxlint",
     ).toEqual([]);
   });

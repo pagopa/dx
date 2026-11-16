@@ -3,7 +3,7 @@ import { builtinRules } from "eslint/use-at-your-own-risk";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { dirname, join } from "node:path";
+import { dirname, join, matchesGlob } from "node:path";
 
 const require = createRequire(import.meta.url);
 
@@ -41,7 +41,24 @@ type RuleValue =
  * list exhaustive is what makes the parity test fail when a new ESLint rule is
  * added without an oxlint counterpart.
  */
-export const KNOWN_GAPS: readonly string[] = ["no-octal", "no-undef-init"];
+export const KNOWN_GAPS: readonly string[] = [
+  "no-dupe-args",
+  "no-octal",
+  "no-undef-init",
+];
+
+/**
+ * Rules `@pagopa/eslint-config` enables on plain JavaScript files that oxlint
+ * ships only in its nursery category, which this config keeps disabled.
+ */
+export const NURSERY_GAPS: readonly string[] = ["no-undef"];
+
+/** Paths the parity cases use to sample each kind of file. */
+export const SCRIPT_SAMPLE_PATH = "src/example.js";
+
+export const SOURCE_SAMPLE_PATH = "src/example.ts";
+
+export const TEST_SAMPLE_PATH = "src/example.test.ts";
 
 export const PACKAGE_ROOT = join(import.meta.dirname, "..", "..");
 
@@ -90,14 +107,13 @@ const toEnabledRules = (rules: Record<string, RuleValue>) => {
   return enabled;
 };
 
-/** Rules oxlint enforces on source files. */
-export const getSourceRules = (config: OxlintConfig) =>
-  toEnabledRules(config.rules);
-
-/** Rules oxlint enforces on files matched by the test overrides. */
-export const getTestRules = (config: OxlintConfig) => {
+/** Rules oxlint enforces on `relativePath`, with overrides applied in order. */
+export const getRulesFor = (config: OxlintConfig, relativePath: string) => {
   const enabled = toEnabledRules(config.rules);
   for (const override of config.overrides) {
+    if (!override.files.some((file) => matchesGlob(relativePath, file))) {
+      continue;
+    }
     for (const [rule, value] of Object.entries(override.rules)) {
       const severity = normalizeSeverity(value);
       if (severity === "off") {
@@ -109,6 +125,18 @@ export const getTestRules = (config: OxlintConfig) => {
   }
   return enabled;
 };
+
+/** Rules oxlint enforces on plain JavaScript files. */
+export const getScriptRules = (config: OxlintConfig) =>
+  getRulesFor(config, SCRIPT_SAMPLE_PATH);
+
+/** Rules oxlint enforces on TypeScript files. */
+export const getSourceRules = (config: OxlintConfig) =>
+  getRulesFor(config, SOURCE_SAMPLE_PATH);
+
+/** Rules oxlint enforces on TypeScript test files. */
+export const getTestRules = (config: OxlintConfig) =>
+  getRulesFor(config, TEST_SAMPLE_PATH);
 
 let eslint: ESLint | undefined;
 

@@ -3,7 +3,11 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { TSX_FIXTURE, TYPESCRIPT_FIXTURE } from "./fixtures.ts";
+import {
+  JAVASCRIPT_FIXTURE,
+  TSX_FIXTURE,
+  TYPESCRIPT_FIXTURE,
+} from "./fixtures.ts";
 import {
   BASE_CONFIG_PATH,
   type Finding,
@@ -28,7 +32,15 @@ const UNCOVERED_PERFECTIONIST_RULES = [
   "perfectionist/sort-import-attributes",
 ];
 
+/**
+ * Rules the two engines implement with different precision rather than
+ * configure differently: oxlint misses assignments that are read before being
+ * overwritten, so it reports fewer findings on the same code.
+ */
+const IMPLEMENTATION_GAPS = ["no-useless-assignment"];
+
 const FIXTURES: [file: string, source: string][] = [
+  ["javascript.js", JAVASCRIPT_FIXTURE],
   ["typescript.ts", TYPESCRIPT_FIXTURE],
   ["tsx.tsx", TSX_FIXTURE],
 ];
@@ -77,10 +89,17 @@ const byPosition = ({ column, line, rule }: Finding) =>
 
 const byRuleAndLine = ({ line, rule }: Finding) => `${rule}:${line}`;
 
+/** Fixtures typed enough for both engines to locate findings identically. */
+const TYPED_FIXTURES = FIXTURES.filter(
+  ([file]) => file.endsWith(".ts") || file.endsWith(".tsx"),
+);
+
+const rulesOf = (findings: Finding[]) =>
+  findings.map(({ rule }) => rule).toSorted();
+
 describe("fixtures", () => {
   describe.each(FIXTURES)("%s", (file) => {
     const relativePath = `src/${file}`;
-    const result = () => results.get(relativePath) as Result;
 
     it("reports every oxlint rule id as an ESLint rule id", async () => {
       const eslintRules = await getEslintRules(relativePath);
@@ -94,6 +113,11 @@ describe("fixtures", () => {
 
       expect(unmapped).toEqual([]);
     });
+  });
+
+  describe.each(TYPED_FIXTURES)("%s", (file) => {
+    const relativePath = `src/${file}`;
+    const result = () => results.get(relativePath) as Result;
 
     it("reports the same rules on the same lines as ESLint", () => {
       expect(result().oxlint.map(byRuleAndLine).toSorted()).toEqual(
@@ -108,6 +132,24 @@ describe("fixtures", () => {
       expect(actual.length).toBeGreaterThan(0);
       expect(actual.map(byPosition).toSorted()).toEqual(
         expected.map(byPosition).toSorted(),
+      );
+    });
+  });
+
+  describe("javascript.js", () => {
+    const result = () => results.get("src/javascript.js") as Result;
+
+    it("reports the same rules as ESLint", () => {
+      expect(rulesOf(result().oxlint)).toEqual(
+        rulesOf(result().eslint).filter(
+          (rule) => !IMPLEMENTATION_GAPS.includes(rule),
+        ),
+      );
+    });
+
+    it("leaves the TypeScript-only rules to TypeScript files", () => {
+      expect(rulesOf([...result().oxlint, ...result().eslint])).not.toContain(
+        "prefer-rest-params",
       );
     });
   });

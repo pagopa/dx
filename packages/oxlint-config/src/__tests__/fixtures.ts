@@ -121,3 +121,15 @@ export function Widget({ size, color }: { color: string; size: number }) {
   );
 }
 `;
+
+/**
+ * Exercises the rules `@pagopa/eslint-config` enables on plain JavaScript
+ * only: TypeScript files turn `no-const-assign` off and add
+ * `prefer-rest-params`, so this fixture proves the override is scoped.
+ */
+export const JAVASCRIPT_FIXTURE = `export const read = function () {
+  const total = 1;
+  total = 2;
+  return [total, Array.from(arguments)];
+};
+`;

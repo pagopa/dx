@@ -71,22 +71,31 @@ anything to your own configuration.
 
 | View                                             | Rules provided | Rules enabled by `@pagopa/eslint-config` |
 | ------------------------------------------------ | -------------- | ---------------------------------------- |
+| Script files (`*.js`)                            | 134            | 138                                      |
 | Source files (`*.ts`, `*.tsx`)                   | 120            | 122                                      |
 | Test files (`*.test.ts`, `*.spec.ts`, `test/**`) | 141            | 143                                      |
+
+`@pagopa/eslint-config` lints JavaScript and TypeScript differently, and so
+does `base.json`: rules that TypeScript already enforces (`no-const-assign`,
+`no-unreachable`, ...) are enabled for scripts and turned off for `*.ts` files,
+where `prefer-rest-params` and `prefer-spread` only make sense. The overrides
+are scoped so that neither set leaks into the other.
 
 All 22 `perfectionist/*` rules are enabled through `jsPlugins`, and 20 of them
 were verified to report the same findings, in the same place, as their ESLint
 counterparts; `sort-export-attributes` and `sort-import-attributes` need syntax
 the fixtures do not cover.
 
-The only two rules that cannot be ported are:
+The rules that cannot be ported are:
 
-- `no-octal` — [not implemented](https://oxc.rs/docs/guide/usage/linter/rules) by
-  oxlint.
-- `no-undef-init` — not implemented by oxlint.
+- `no-dupe-args`, `no-octal`, `no-undef-init` —
+  [not implemented](https://oxc.rs/docs/guide/usage/linter/rules) by oxlint.
+- `no-undef` — implemented by oxlint, but only in its `nursery` category, which
+  this config leaves disabled. It only applies to JavaScript files, where
+  TypeScript users rarely lint.
 
-Both are kept in sync by the test suite: if oxlint gains support for one of them,
-the tests fail and tell you to enable it.
+This list is kept in sync by the test suite: if oxlint gains support for one of
+these rules, the tests fail and tell you to enable it.
 
 ### Option-level divergences
 

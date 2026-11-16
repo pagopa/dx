@@ -28,6 +28,11 @@ const testOverlay = eslintConfig.filter((entry) =>
   Object.keys(entry.rules ?? {}).some((rule) => rule.startsWith("vitest/")),
 );
 
+/** The override of `base.json` that mirrors the vitest overlay. */
+const testOverride = config.overrides.find((override) =>
+  override.files.some((file) => file.includes("tests")),
+);
+
 /** The `@pagopa/eslint-config` entry holding the global ignores. */
 const globalIgnores = eslintConfig.filter(
   (entry) => Object.keys(entry).length === 1 && entry.ignores !== undefined,
@@ -84,10 +89,23 @@ describe("base config", () => {
     ).toEqual([]);
   });
 
-  it("applies its overrides to the same files as @pagopa/eslint-config", () => {
+  it("applies its test override to the files of @pagopa/eslint-config", () => {
     expect(testOverlay).toHaveLength(1);
-    expect(config.overrides).toHaveLength(1);
-    expect(config.overrides[0]?.files).toEqual(testOverlay[0]?.files);
+    expect(testOverride?.files).toEqual(testOverlay[0]?.files);
+  });
+
+  it("disables the core rules ESLint leaves to TypeScript on TS files", () => {
+    const typescriptOverride = config.overrides.find((override) =>
+      override.files.every((file) => file.includes("ts")),
+    );
+
+    expect(typescriptOverride?.rules).toMatchObject({
+      "no-const-assign": "off",
+      "no-redeclare": "off",
+      "no-unreachable": "off",
+      "prefer-rest-params": "error",
+      "prefer-spread": "error",
+    });
   });
 
   it("ignores the same paths as @pagopa/eslint-config", () => {
@@ -108,7 +126,7 @@ describe("base config", () => {
       .filter(([, severity]) => severity === "off")
       .map(([rule]) => rule.replace("@typescript-eslint/", ""));
 
-    expect(config.overrides[0]?.rules).toMatchObject(
+    expect(testOverride?.rules).toMatchObject(
       Object.fromEntries(relaxed.map((rule) => [rule, "off"])),
     );
   });
