@@ -110,9 +110,10 @@ jobs:
               set -euo pipefail
 
               affected_projects="$(pnpm nx show projects --affected --json)"
+              printf 'affected_projects=%s\n' "$affected_projects"
               if ! jq --exit-status 'length > 0' <<< "$affected_projects" > /dev/null; then
                 echo "affected-projects=false" >> "$GITHUB_OUTPUT"
-                echo "environments=[]" >> "$GITHUB_OUTPUT"
+                echo "environments=[]" | tee -a "$GITHUB_OUTPUT"
                 exit 0
               fi
 
@@ -179,7 +180,7 @@ jobs:
                 )"
               fi
 
-              printf 'environments=%s\n' "$environments" >> "$GITHUB_OUTPUT"
+              printf 'environments=%s\n' "$environments" | tee -a "$GITHUB_OUTPUT"
 
   code-review:
     name: No environment
