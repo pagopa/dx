@@ -96,7 +96,7 @@ variable "virtual_network" {
   description = "The resource ID of the virtual network in which to create the APIM subnet and resolve private endpoint subnets."
 
   validation {
-    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$", var.virtual_network))
+    condition     = can(regex("(?i)^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+$", var.virtual_network))
     error_message = "virtual_network must be a valid Microsoft.Network/virtualNetworks resource ID."
   }
 }
