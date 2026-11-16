@@ -1,3 +1,4 @@
+mock_provider "azuread" {}
 mock_provider "azurerm" {}
 mock_provider "dx" {}
 
