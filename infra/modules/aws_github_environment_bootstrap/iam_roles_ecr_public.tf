@@ -6,7 +6,7 @@ resource "aws_iam_role" "ecr_public_login" {
   }))
   description = "Role to authenticate GitHub Actions to Amazon ECR Public"
 
-  assume_role_policy = data.aws_iam_policy_document.github_assume_role_policy.json
+  assume_role_policy = data.aws_iam_policy_document.ecr_public_assume_role_policy.json
 }
 
 resource "aws_iam_role_policy" "ecr_public_login" {

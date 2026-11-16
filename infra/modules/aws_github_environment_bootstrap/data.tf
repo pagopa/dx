@@ -43,7 +43,46 @@ data "github_repository" "this" {
   name = var.repository.name
 }
 
-data "aws_iam_policy_document" "github_assume_role_policy" {
+data "aws_iam_policy_document" "github_environment_assume_role_policy" {
+  for_each = {
+    infra_ci = "infra-${local.env_name}-ci"
+    infra_cd = "infra-${local.env_name}-cd"
+    app_ci   = "app-${local.env_name}-ci"
+    app_cd   = "app-${local.env_name}-cd"
+  }
+
+  statement {
+    effect  = "Allow"
+    actions = ["sts:AssumeRoleWithWebIdentity"]
+    principals {
+      type        = "Federated"
+      identifiers = [var.oidc_provider_arn]
+    }
+
+    condition {
+      test     = "StringEquals"
+      variable = "token.actions.githubusercontent.com:sub"
+      values = [
+        "repo:${var.repository.owner}/${var.repository.name}:environment:${each.value}",
+        "repo:${local.immutable_repository_slug}:environment:${each.value}",
+      ]
+    }
+
+    condition {
+      test     = "ForAllValues:StringEquals"
+      variable = "token.actions.githubusercontent.com:iss"
+      values   = ["https://token.actions.githubusercontent.com"]
+    }
+
+    condition {
+      test     = "ForAllValues:StringEquals"
+      variable = "token.actions.githubusercontent.com:aud"
+      values   = ["sts.amazonaws.com"]
+    }
+  }
+}
+
+data "aws_iam_policy_document" "ecr_public_assume_role_policy" {
   statement {
     effect  = "Allow"
     actions = ["sts:AssumeRoleWithWebIdentity"]

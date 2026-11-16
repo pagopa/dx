@@ -6,7 +6,7 @@ resource "aws_iam_role" "infra_ci" {
   }))
   description = "Role to assume to run CI on the infrastructure via GitHub Actions"
 
-  assume_role_policy = data.aws_iam_policy_document.github_assume_role_policy.json
+  assume_role_policy = data.aws_iam_policy_document.github_environment_assume_role_policy["infra_ci"].json
 }
 
 resource "aws_iam_role_policy_attachment" "infra_ci_ro" {
@@ -22,7 +22,7 @@ resource "aws_iam_role" "infra_cd" {
   }))
   description = "Role to assume to run CD on the infrastructure via GitHub Actions"
 
-  assume_role_policy = data.aws_iam_policy_document.github_assume_role_policy.json
+  assume_role_policy = data.aws_iam_policy_document.github_environment_assume_role_policy["infra_cd"].json
 }
 
 resource "aws_iam_role_policy_attachment" "infra_cd_admin" {
