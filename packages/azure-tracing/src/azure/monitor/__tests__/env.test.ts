@@ -66,14 +66,24 @@ describe("loadEnv", () => {
     });
   });
 
-  it("rejects invalid APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED values", async () => {
+  it("parses APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED case-insensitively", async () => {
+    stubConnectionString();
+    vi.stubEnv("APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED", " TRUE ");
+    const { loadEnv } = await import("../env.js");
+
+    const env = loadEnv();
+
+    expect(env.APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED).toBe(true);
+  });
+
+  it("treats any other APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED value as disabled", async () => {
     stubConnectionString();
     vi.stubEnv("APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED", "anInvalidValue");
     const { loadEnv } = await import("../env.js");
 
-    expect(() => loadEnv()).toThrow(
-      /APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED[\s\S]*Invalid option/i,
-    );
+    const env = loadEnv();
+
+    expect(env.APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED).toBe(false);
   });
 
   it("parses environment variables", async () => {

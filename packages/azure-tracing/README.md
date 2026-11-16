@@ -131,7 +131,7 @@ Properties you don't override keep their environment-derived value: `enableLiveM
 Nested option groups (`azureMonitorExporterOptions`, `instrumentationOptions` and `browserSdkLoaderOptions`) are merged key by key, while arrays (`logRecordProcessors`, `spanProcessors`, ...) and object instances (`resource`, `credential`, ...) are replaced. Properties explicitly set to `undefined` are ignored, so a conditionally-set value never shadows the environment default.
 
 > [!IMPORTANT]
-> The options object **no longer replaces** the whole configuration. It is layered on top of the environment, which is parsed and validated on every call: an invalid environment variable now throws even when you pass a complete configuration, and the environment-derived defaults (live metrics, sampling ratio, `tracesPerSecond`, the Entra ID credential) are always applied.
+> The options object **no longer replaces** the whole configuration: it is a partial override. It is layered on top of the environment, which is parsed and validated on every call: an invalid environment variable now throws even when you pass a complete configuration, and the environment-derived defaults (live metrics, sampling ratio, `tracesPerSecond`, the Entra ID credential) are always applied. Overriding only one group (e.g. just the connection string) therefore also keeps the environment `samplingRatio` instead of the SDK default.
 
 `APPLICATIONINSIGHTS_CONNECTION_STRING` may be omitted when you provide `azureMonitorExporterOptions.connectionString` yourself:
 
@@ -162,6 +162,7 @@ This is especially useful for tracing domain-specific actions (e.g., resource cr
 > Connection-string-only authentication is deprecated and will be removed in the **next major release**.
 
 Set `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true` to enable [Microsoft Entra ID authentication](https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-ad-authentication).
+The value is matched case-insensitively after trimming; any other value leaves connection-string-only authentication in place.
 The package uses [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/azure/developer/javascript/sdk/authentication/credential-chains#use-defaultazurecredential-for-flexibility) from `@azure/identity`, which automatically resolves the right credential for the environment:
 
 - **Azure (production)**: uses the Managed Identity assigned to the resource (App Service, Azure Function, Container App, etc.)

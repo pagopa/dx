@@ -42,12 +42,12 @@ export const loadEnv = () =>
           "The connection string for Application Insights. Optional here because it may be provided through the Azure Monitor options override; the resolved configuration still requires it.",
         ),
       APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: z
-        .enum(["true", "false"])
+        .string()
         .optional()
-        .transform((value) => value === "true")
+        .transform((value) => value?.trim().toLowerCase() === "true")
         .describe(
-          "When set to 'true', enables Microsoft Entra ID (Managed Identity) authentication for Application Insights. " +
-            "Defaults to false (connection-string-only auth). " +
+          "When set to 'true' (case-insensitive), enables Microsoft Entra ID (Managed Identity) authentication for Application Insights. " +
+            "Any other value keeps connection-string-only auth, which is the default. " +
             "This will become the default in the next major release.",
         ),
     },
