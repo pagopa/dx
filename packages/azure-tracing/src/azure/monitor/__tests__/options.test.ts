@@ -163,3 +163,75 @@ describe("resolveAzureMonitorOptions", () => {
     expect(() => resolveAzureMonitorOptions()).toThrow(/connection string/i);
   });
 });
+
+describe("resolveAzureMonitorExporterOptions", () => {
+  const ENV_CONNECTION_STRING = "InstrumentationKey=env-key";
+
+  afterEach(() => {
+    vi.resetModules();
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+    vi.clearAllMocks();
+  });
+
+  const loadExporterResolver = async () => {
+    const [{ resolveAzureMonitorExporterOptions }, { loadEnv }] =
+      await Promise.all([import("../options.js"), import("../env.js")]);
+
+    return (
+      overrides?: Parameters<typeof resolveAzureMonitorExporterOptions>[1],
+    ) => resolveAzureMonitorExporterOptions(loadEnv(), overrides);
+  };
+
+  it("returns the environment-derived exporter options when no override is given", async () => {
+    vi.stubEnv("APPLICATIONINSIGHTS_CONNECTION_STRING", ENV_CONNECTION_STRING);
+    const resolveAzureMonitorExporterOptions = await loadExporterResolver();
+
+    const exporterOptions = resolveAzureMonitorExporterOptions();
+
+    expect(exporterOptions).toStrictEqual({
+      connectionString: ENV_CONNECTION_STRING,
+    });
+  });
+
+  it("adds the DefaultAzureCredential when Entra ID auth is enabled", async () => {
+    vi.stubEnv("APPLICATIONINSIGHTS_CONNECTION_STRING", ENV_CONNECTION_STRING);
+    vi.stubEnv("APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED", "true");
+    const resolveAzureMonitorExporterOptions = await loadExporterResolver();
+
+    const exporterOptions = resolveAzureMonitorExporterOptions();
+
+    expect(exporterOptions.connectionString).toBe(ENV_CONNECTION_STRING);
+    expect(exporterOptions.credential).toBeDefined();
+  });
+
+  it("layers the override over the environment defaults", async () => {
+    vi.stubEnv("APPLICATIONINSIGHTS_CONNECTION_STRING", ENV_CONNECTION_STRING);
+    const resolveAzureMonitorExporterOptions = await loadExporterResolver();
+
+    const exporterOptions = resolveAzureMonitorExporterOptions({
+      disableOfflineStorage: true,
+    });
+
+    expect(exporterOptions.connectionString).toBe(ENV_CONNECTION_STRING);
+    expect(exporterOptions.disableOfflineStorage).toBe(true);
+  });
+
+  it("accepts the connection string from the override when the env var is missing", async () => {
+    const resolveAzureMonitorExporterOptions = await loadExporterResolver();
+
+    const exporterOptions = resolveAzureMonitorExporterOptions({
+      connectionString: ENV_CONNECTION_STRING,
+    });
+
+    expect(exporterOptions.connectionString).toBe(ENV_CONNECTION_STRING);
+  });
+
+  it("throws naming both ways to provide the connection string", async () => {
+    const resolveAzureMonitorExporterOptions = await loadExporterResolver();
+
+    expect(() => resolveAzureMonitorExporterOptions()).toThrow(
+      /APPLICATIONINSIGHTS_CONNECTION_STRING[\s\S]*azureMonitorExporterOptions\.connectionString/,
+    );
+  });
+});

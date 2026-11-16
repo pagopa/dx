@@ -30,6 +30,14 @@ export const functionsPreloadModulePath = fileURLToPath(
 export const standalonePreloadModulePath = fileURLToPath(
   new URL("./fixtures/standalone-preload.mts", import.meta.url),
 );
+/**
+ * Preload entrypoint for applications that register the sampling exemptions log
+ * record processor. `ENABLE_TRACE_BASED_SAMPLING_FOR_LOGS` selects whether the
+ * distro filters the logs of unsampled traces.
+ */
+export const samplingExemptionsPreloadModulePath = fileURLToPath(
+  new URL("./fixtures/sampling-exemptions-preload.mts", import.meta.url),
+);
 const scenarioScriptPath = fileURLToPath(
   new URL("./fixtures/run-dependency-scenario.ts", import.meta.url),
 );
@@ -43,11 +51,21 @@ const collectorPrivateKeyPath = fileURLToPath(
 const azuriteAccountKey =
   "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
 
+const exceptionDetailsSchema = z
+  .object({
+    message: z.string().optional(),
+    typeName: z.string().optional(),
+  })
+  .passthrough();
+
 const telemetryBaseDataSchema = z
   .object({
     data: z.string().optional(),
+    exceptions: z.array(exceptionDetailsSchema).optional(),
+    message: z.string().optional(),
     name: z.string().optional(),
     responseCode: z.string().optional(),
+    severityLevel: z.union([z.number(), z.string()]).optional(),
     target: z.string().optional(),
     type: z.string().optional(),
     url: z.string().optional(),
@@ -68,16 +86,30 @@ const telemetryEnvelopeSchema = z
 const telemetryBatchSchema = z.array(telemetryEnvelopeSchema);
 
 export type TelemetryBaseData = z.infer<typeof telemetryBaseDataSchema>;
+
+const logBaseTypes = ["ExceptionData", "EventData", "MessageData"] as const;
+
+export type LogBaseType = (typeof logBaseTypes)[number];
+
+export interface LogTelemetry {
+  readonly baseData: TelemetryBaseData;
+  readonly baseType: LogBaseType;
+}
+
 export interface TelemetryCollector {
   readonly caCertificatePath: string;
   close: () => Promise<void>;
   readonly connectionString: string;
   getCapturedPaths: () => readonly string[];
+  getLogTelemetries: () => LogTelemetry[];
   getRemoteDependencies: () => TelemetryBaseData[];
   getRequestTelemetries: () => TelemetryBaseData[];
   waitForCapturedPath: (
     predicate: (path: string) => boolean,
   ) => Promise<string>;
+  waitForLogTelemetries: (
+    predicate: (telemetry: LogTelemetry) => boolean,
+  ) => Promise<readonly LogTelemetry[]>;
   waitForRemoteDependencies: (
     predicate: (dependency: TelemetryBaseData) => boolean,
   ) => Promise<readonly TelemetryBaseData[]>;
@@ -96,7 +128,7 @@ interface CollectorCertificate {
   readonly privateKey: Buffer;
 }
 
-type Scenario = "cosmos" | "fastify" | "redis" | "storage";
+type Scenario = "cosmos" | "fastify" | "log-sampling" | "redis" | "storage";
 
 type TelemetryEnvelope = z.infer<typeof telemetryEnvelopeSchema>;
 
@@ -187,11 +219,32 @@ const extractBaseData = (baseType: string) => (envelope: TelemetryEnvelope) =>
     ? [envelope.data.baseData]
     : [];
 
+const isLogBaseType = (value: string): value is LogBaseType =>
+  logBaseTypes.some((logBaseType) => logBaseType === value);
+
+const extractLogTelemetry = (envelope: TelemetryEnvelope): LogTelemetry[] => {
+  const { baseData, baseType } = envelope.data ?? {};
+
+  return baseType !== undefined &&
+    baseData !== undefined &&
+    isLogBaseType(baseType)
+    ? [{ baseData, baseType }]
+    : [];
+};
+
 const getRequestBaseData = (request: CapturedRequest, baseType: string) => {
   const parsedBatch = parseBatch(request.body);
 
   return parsedBatch.success
     ? parsedBatch.data.flatMap(extractBaseData(baseType))
+    : [];
+};
+
+const getRequestLogTelemetries = (request: CapturedRequest) => {
+  const parsedBatch = parseBatch(request.body);
+
+  return parsedBatch.success
+    ? parsedBatch.data.flatMap(extractLogTelemetry)
     : [];
 };
 
@@ -290,6 +343,9 @@ export const startTelemetryCollector =
 
     const collectorOrigin = `https://${address.address}:${address.port}`;
 
+    const getLogTelemetries = () =>
+      requests.flatMap((request) => getRequestLogTelemetries(request));
+
     const getRemoteDependencies = () =>
       requests.flatMap((request) =>
         getRequestBaseData(request, "RemoteDependencyData"),
@@ -332,6 +388,7 @@ export const startTelemetryCollector =
         `LiveEndpoint=${collectorOrigin}`,
       ].join(";"),
       getCapturedPaths: () => requests.map(({ path }) => path),
+      getLogTelemetries,
       getRemoteDependencies,
       getRequestTelemetries,
       waitForCapturedPath: async (predicate) => {
@@ -344,6 +401,13 @@ export const startTelemetryCollector =
 
         return path;
       },
+      waitForLogTelemetries: (predicate) =>
+        waitForMatch(
+          getLogTelemetries,
+          predicate,
+          (captured) =>
+            `Expected log telemetry but captured:\n${formatCapturedRequests(captured)}`,
+        ),
       waitForRemoteDependencies: (predicate) =>
         waitForMatch(
           getRemoteDependencies,
