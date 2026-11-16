@@ -2,6 +2,9 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+/** The environment as parsed and validated by {@link loadEnv}. */
+export type AzureTracingEnv = ReturnType<typeof loadEnv>;
+
 export const loadEnv = () =>
   createEnv({
     emptyStringAsUndefined: true,

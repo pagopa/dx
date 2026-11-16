@@ -28,9 +28,13 @@ describe("resolveAzureMonitorOptions", () => {
   });
 
   const loadResolver = async () => {
-    const { resolveAzureMonitorOptions } = await import("../options.js");
+    const [{ resolveAzureMonitorOptions }, { loadEnv }] = await Promise.all([
+      import("../options.js"),
+      import("../env.js"),
+    ]);
 
-    return resolveAzureMonitorOptions;
+    return (overrides?: Parameters<typeof resolveAzureMonitorOptions>[1]) =>
+      resolveAzureMonitorOptions(loadEnv(), overrides);
   };
 
   it("returns the environment-derived defaults when no override is given", async () => {
@@ -105,6 +109,21 @@ describe("resolveAzureMonitorOptions", () => {
       ENV_CONNECTION_STRING,
     );
     expect(options.enableLiveMetrics).toBe(true);
+  });
+
+  it("does not let an explicitly undefined property shadow the environment default", async () => {
+    vi.stubEnv("APPLICATIONINSIGHTS_CONNECTION_STRING", ENV_CONNECTION_STRING);
+    const resolveAzureMonitorOptions = await loadResolver();
+
+    const options = resolveAzureMonitorOptions({
+      azureMonitorExporterOptions: { connectionString: undefined },
+      samplingRatio: undefined,
+    });
+
+    expect(options.azureMonitorExporterOptions?.connectionString).toBe(
+      ENV_CONNECTION_STRING,
+    );
+    expect(options.samplingRatio).toBeCloseTo(0.05);
   });
 
   it("replaces array options with the given ones", async () => {

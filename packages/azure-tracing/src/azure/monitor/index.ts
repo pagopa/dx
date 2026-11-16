@@ -6,10 +6,13 @@ import {
 } from "@opentelemetry/instrumentation";
 
 import { registerUndiciInstrumentation } from "../opentelemetry/azure-undici-instrumentation";
+import { loadEnv } from "./env.js";
 import {
   type AzureMonitorOptionsOverride,
   resolveAzureMonitorOptions,
 } from "./options.js";
+
+export type { AzureMonitorOptionsOverride };
 
 /**
  * Initialize the Azure Monitor with the given instrumentations and options.
@@ -51,14 +54,14 @@ import {
  * });
  *
  * @param instrumentations - The list of instrumentations to register with the Azure Monitor.
- * @param azureMonitorOptions - Azure Monitor options overriding the configuration derived
+ * @param overrides - Azure Monitor options overriding the configuration derived
  *   from the environment. Properties that are not set keep the environment value.
  */
 export const initAzureMonitor = (
   instrumentations: readonly Instrumentation[] = [],
-  azureMonitorOptions: AzureMonitorOptionsOverride = {},
+  overrides: AzureMonitorOptionsOverride = {},
 ) => {
-  useAzureMonitor(resolveAzureMonitorOptions(azureMonitorOptions));
+  useAzureMonitor(resolveAzureMonitorOptions(loadEnv(), overrides));
 
   registerInstrumentations({
     instrumentations: [registerUndiciInstrumentation(), ...instrumentations],

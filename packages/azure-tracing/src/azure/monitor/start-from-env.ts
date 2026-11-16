@@ -6,6 +6,8 @@
  */
 import { useAzureMonitor } from "@azure/monitor-opentelemetry";
 
+import { loadEnv } from "./env.js";
 import { resolveAzureMonitorOptions } from "./options.js";
 
-export const initFromEnv = () => useAzureMonitor(resolveAzureMonitorOptions());
+export const initFromEnv = () =>
+  useAzureMonitor(resolveAzureMonitorOptions(loadEnv()));

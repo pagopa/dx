@@ -46,8 +46,11 @@ In order to enable tracing, you also need to set the following environment varia
 | **Name**                                      | **Required** | **Default** |
 | --------------------------------------------- | ------------ | ----------- |
 | **APPINSIGHTS_SAMPLING_PERCENTAGE**           | false        | 5           |
-| **APPLICATIONINSIGHTS_CONNECTION_STRING**     | true         | -           |
+| **APPLICATIONINSIGHTS_CONNECTION_STRING**     | conditional  | -           |
 | **APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED** | false        | false       |
+
+> [!NOTE]
+> `APPLICATIONINSIGHTS_CONNECTION_STRING` is required unless you provide the connection string through the `initAzureMonitor` options (see [Enabling Azure Monitor Telemetry](#enabling-azure-monitor-telemetry)).
 
 > [!WARNING]
 > Connection-string-only authentication (the current default) is **deprecated** and will be removed in the next major version.
@@ -125,7 +128,10 @@ initAzureMonitor([], {
 
 Properties you don't override keep their environment-derived value: `enableLiveMetrics: true`, the `samplingRatio` from `APPINSIGHTS_SAMPLING_PERCENTAGE`, `tracesPerSecond: 0` and the `DefaultAzureCredential` when `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true`.
 
-Nested option groups (`azureMonitorExporterOptions`, `instrumentationOptions` and `browserSdkLoaderOptions`) are merged key by key, while arrays (`logRecordProcessors`, `spanProcessors`, ...) and object instances (`resource`, `credential`, ...) are replaced.
+Nested option groups (`azureMonitorExporterOptions`, `instrumentationOptions` and `browserSdkLoaderOptions`) are merged key by key, while arrays (`logRecordProcessors`, `spanProcessors`, ...) and object instances (`resource`, `credential`, ...) are replaced. Properties explicitly set to `undefined` are ignored, so a conditionally-set value never shadows the environment default.
+
+> [!IMPORTANT]
+> The options object **no longer replaces** the whole configuration. It is layered on top of the environment, which is parsed and validated on every call: an invalid environment variable now throws even when you pass a complete configuration, and the environment-derived defaults (live metrics, sampling ratio, `tracesPerSecond`, the Entra ID credential) are always applied.
 
 `APPLICATIONINSIGHTS_CONNECTION_STRING` may be omitted when you provide `azureMonitorExporterOptions.connectionString` yourself:
 
@@ -161,7 +167,7 @@ The package uses [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/az
 - **Azure (production)**: uses the Managed Identity assigned to the resource (App Service, Azure Function, Container App, etc.)
 - **Local development**: falls back to Azure CLI, Azure Developer CLI, or service principal env vars
 
-The connection string (`APPLICATIONINSIGHTS_CONNECTION_STRING`) is still required in both modes — it identifies the Application Insights resource.
+The connection string (`APPLICATIONINSIGHTS_CONNECTION_STRING`) is still required in both modes — it identifies the Application Insights resource — unless you pass it through the `initAzureMonitor` options.
 
 ### Required Azure RBAC role
 

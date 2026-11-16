@@ -11,7 +11,7 @@ import type { AzureMonitorOpenTelemetryOptions } from "@azure/monitor-openteleme
 
 import { DefaultAzureCredential } from "@azure/identity";
 
-import { loadEnv } from "./env.js";
+import type { AzureTracingEnv } from "./env.js";
 
 /**
  * The subset of `AzureMonitorOpenTelemetryOptions` a caller may override.
@@ -22,9 +22,9 @@ import { loadEnv } from "./env.js";
 export type AzureMonitorOptionsOverride =
   Partial<AzureMonitorOpenTelemetryOptions>;
 
-type LoadedEnv = ReturnType<typeof loadEnv>;
-
-const optionsFromEnv = (env: LoadedEnv): AzureMonitorOpenTelemetryOptions => ({
+const optionsFromEnv = (
+  env: AzureTracingEnv,
+): AzureMonitorOpenTelemetryOptions => ({
   azureMonitorExporterOptions: {
     connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
     ...(env.APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED
@@ -44,6 +44,15 @@ const optionsFromEnv = (env: LoadedEnv): AzureMonitorOpenTelemetryOptions => ({
 });
 
 /**
+ * Drops the own properties whose value is `undefined`, so that a caller
+ * writing `{ samplingRatio: maybeUndefined }` does not shadow a default.
+ */
+const withoutUndefined = <T extends object>(value: T | undefined): Partial<T> =>
+  Object.fromEntries(
+    Object.entries(value ?? {}).filter(([, entry]) => entry !== undefined),
+  ) as Partial<T>;
+
+/**
  * Shallow-merges two optional option groups: the override wins key by key,
  * leaving the defaults it does not mention untouched.
  */
@@ -59,7 +68,7 @@ const mergeOptionGroup = <T extends object>(
     return defaults;
   }
 
-  return { ...defaults, ...override };
+  return { ...defaults, ...withoutUndefined(override) };
 };
 
 const mergeAzureMonitorOptions = (
@@ -81,7 +90,7 @@ const mergeAzureMonitorOptions = (
 
   return {
     ...defaults,
-    ...override,
+    ...withoutUndefined(override),
     // Nested option groups are merged instead of being replaced wholesale.
     // Arrays and class instances (Resource, TokenCredential, ...) are replaced.
     ...(azureMonitorExporterOptions === undefined
@@ -109,11 +118,15 @@ const assertConnectionString = (options: AzureMonitorOpenTelemetryOptions) => {
 /**
  * Builds the effective Azure Monitor options: environment defaults with the
  * caller overrides applied on top.
+ *
+ * @param env - The environment parsed by `loadEnv`.
+ * @param overrides - The properties the caller wants to override.
  */
 export const resolveAzureMonitorOptions = (
-  override: AzureMonitorOptionsOverride = {},
+  env: AzureTracingEnv,
+  overrides: AzureMonitorOptionsOverride = {},
 ): AzureMonitorOpenTelemetryOptions => {
-  const options = mergeAzureMonitorOptions(optionsFromEnv(loadEnv()), override);
+  const options = mergeAzureMonitorOptions(optionsFromEnv(env), overrides);
 
   assertConnectionString(options);
 
