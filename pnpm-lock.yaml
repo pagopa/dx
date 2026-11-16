@@ -328,6 +328,8 @@ overrides:
   nx>brace-expansion: 5.0.12
   nx>axios: 1.20.0
 
+pnpmfileChecksum: sha256-sTUNDtLholGhVYncMqUp5EyCamo5pQ0UgHQ+LHqllZk=
+
 patchedDependencies:
   nx@23.2.1: 2adb43734cd9af1a2dd52441ec49aacfa9671e2bef4933df93d45342920c092f
 
