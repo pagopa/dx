@@ -112,6 +112,11 @@ run "azure_api_management_cost_optimized_defaults" {
   }
 
   assert {
+    condition     = azurerm_subnet.apim.delegation[0].service_delegation[0].name == "Microsoft.Web/serverFarms"
+    error_message = "cost_optimized must delegate its subnet for Standard v2 outbound VNet integration."
+  }
+
+  assert {
     condition     = azurerm_private_dns_a_record.apim_azure_api_net.zone_name == "azure-api.net" && azurerm_private_dns_a_record.apim_management_azure_api_net.zone_name == "management.azure-api.net" && azurerm_private_dns_a_record.apim_scm_azure_api_net.zone_name == "scm.azure-api.net"
     error_message = "APIM DNS A records must use their fixed Azure API Management zone names."
   }
@@ -189,6 +194,11 @@ run "azure_api_management_high_load_public_ip_and_autoscale" {
   }
 
   assert {
+    condition     = length(azurerm_subnet.apim.delegation) == 0
+    error_message = "high_load must keep its classic injection subnet undelegated."
+  }
+
+  assert {
     condition     = azurerm_public_ip.apim[0].allocation_method == "Static" && azurerm_public_ip.apim[0].sku == "Standard"
     error_message = "APIM public IP must be static and Standard SKU."
   }
@@ -220,6 +230,11 @@ run "azure_api_management_development_defaults" {
   assert {
     condition     = azurerm_api_management.this.public_network_access_enabled == true
     error_message = "development must keep public network access enabled."
+  }
+
+  assert {
+    condition     = length(azurerm_subnet.apim.delegation) == 0
+    error_message = "development must keep its classic injection subnet undelegated."
   }
 
   assert {

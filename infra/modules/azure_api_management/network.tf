@@ -8,6 +8,19 @@ resource "azurerm_subnet" "apim" {
   virtual_network_name = local.virtual_network_name
   resource_group_name  = local.virtual_network_resource_group_name
   address_prefixes     = [dx_available_subnet_cidr.apim.cidr_block]
+
+  dynamic "delegation" {
+    for_each = var.use_case == "cost_optimized" ? [1] : []
+
+    content {
+      name = "apim"
+
+      service_delegation {
+        name    = "Microsoft.Web/serverFarms"
+        actions = ["Microsoft.Network/virtualNetworks/subnets/action"]
+      }
+    }
+  }
 }
 
 resource "azurerm_public_ip" "apim" {
