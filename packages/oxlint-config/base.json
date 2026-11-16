@@ -9,6 +9,7 @@
     "style": "off",
     "suspicious": "off"
   },
+  "ignorePatterns": ["**/generated/*", "**/dist/**", "**/bin/**"],
   "plugins": ["eslint", "typescript", "vitest"],
   "jsPlugins": [
     { "name": "perfectionist", "specifier": "eslint-plugin-perfectionist" }
@@ -16,7 +17,7 @@
   "rules": {
     "arrow-body-style": "error",
     "complexity": "error",
-    "eqeqeq": "error",
+    "eqeqeq": ["error", "smart"],
     "for-direction": "error",
     "guard-for-in": "error",
     "max-lines-per-function": ["error", 200],

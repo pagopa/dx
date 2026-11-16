@@ -26,9 +26,18 @@ Create an `.oxlintrc.json` file at the root of your workspace:
 
 ```json
 {
-  "extends": ["./node_modules/@pagopa/oxlint-config/base.json"]
+  "extends": ["./node_modules/@pagopa/oxlint-config/base.json"],
+  "ignorePatterns": ["**/generated/*", "**/dist/**", "**/bin/**"]
 }
 ```
+
+`ignorePatterns` repeats the global ignores of `@pagopa/eslint-config`. oxlint
+resolves each pattern against the directory of the configuration file that
+declares it, so the identical list inside `base.json` is relative to the
+installed package and never matches your files: keep the line in your own
+`.oxlintrc.json`, or `oxlint --fix` will rewrite generated code and build
+output. The copy in `base.json` only documents the values the tests compare
+against `@pagopa/eslint-config`.
 
 > [!IMPORTANT]  
 > oxlint only accepts **file paths** in `extends`, not package specifiers, so
@@ -84,8 +93,6 @@ the tests fail and tell you to enable it.
 The rules are enabled with the same options as in `@pagopa/eslint-config`, with
 these exceptions:
 
-- `eqeqeq`: ESLint is configured with `"smart"`, oxlint has no equivalent
-  option and always reports every `==`/`!=`. Expect slightly more findings.
 - `arrow-body-style`: oxlint only exposes `as-needed`, which is the behaviour
   `@pagopa/eslint-config` asks for, so reports match.
 - `radix`: `@pagopa/eslint-config` relies on the rule default (`always`), which

@@ -1,4 +1,5 @@
 import { ESLint } from "eslint";
+import { builtinRules } from "eslint/use-at-your-own-risk";
 import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
@@ -14,6 +15,7 @@ export interface Finding {
 
 export interface OxlintConfig {
   categories: Record<string, RuleValue>;
+  ignorePatterns: string[];
   jsPlugins: { name: string; specifier: string }[];
   overrides: { files: string[]; rules: Record<string, RuleValue> }[];
   plugins: string[];
@@ -164,33 +166,144 @@ export const toCanonicalRuleId = (
 const isPlainObject = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-/**
- * ESLint resolves the schema defaults of every rule, so the option objects it
- * reports are a superset of the ones a config sets: only the values oxlint
- * pins have to agree, while the rest is left to the rule defaults.
- */
-const matchesOptions = (actual: unknown, expected: unknown): boolean => {
-  if (isPlainObject(actual)) {
+const deepEqual = (actual: unknown, expected: unknown): boolean => {
+  if (Array.isArray(actual) || Array.isArray(expected)) {
     return (
-      isPlainObject(expected) &&
-      Object.keys(actual).every((key) =>
-        matchesOptions(actual[key], expected[key]),
-      )
-    );
-  }
-  if (Array.isArray(actual)) {
-    return (
+      Array.isArray(actual) &&
       Array.isArray(expected) &&
       actual.length === expected.length &&
-      actual.every((item, index) => matchesOptions(item, expected[index]))
+      actual.every((item, index) => deepEqual(item, expected[index]))
+    );
+  }
+  if (isPlainObject(actual) || isPlainObject(expected)) {
+    if (!isPlainObject(actual) || !isPlainObject(expected)) {
+      return false;
+    }
+    const keys = Object.keys(actual);
+    return (
+      keys.length === Object.keys(expected).length &&
+      keys.every(
+        (key) => key in expected && deepEqual(actual[key], expected[key]),
+      )
     );
   }
   return actual === expected;
 };
 
 /**
+ * Removes every value that equals the schema default in the same position, so
+ * that what a config pins can be compared with the options ESLint reports
+ * after merging those defaults. Keys and items without a default are kept.
+ */
+const withoutDefaults = (value: unknown, fallback: unknown): unknown => {
+  if (Array.isArray(value)) {
+    return value.map((item, index) =>
+      withoutDefaults(
+        item,
+        Array.isArray(fallback) ? fallback[index] : undefined,
+      ),
+    );
+  }
+  if (!isPlainObject(value)) {
+    return value;
+  }
+  const defaults = isPlainObject(fallback) ? fallback : {};
+  return Object.fromEntries(
+    Object.entries(value)
+      .filter(
+        ([key, item]) => !(key in defaults && deepEqual(item, defaults[key])),
+      )
+      .map(([key, item]) => [key, withoutDefaults(item, defaults[key])]),
+  );
+};
+
+const isEmptyOption = (value: unknown) =>
+  (isPlainObject(value) && Object.keys(value).length === 0) ||
+  (Array.isArray(value) && value.length === 0);
+
+/**
+ * Options a config pins explicitly: entries that only repeat the rule defaults
+ * are dropped from both sides, so a config that sets the severity alone and a
+ * config that spells the defaults out compare as equal, while a value only one
+ * side pins is kept and reported.
+ */
+const toPinnedOptions = (
+  options: readonly unknown[],
+  defaults: readonly unknown[],
+) => {
+  const pinned = options.map((option, index) =>
+    withoutDefaults(option, defaults[index]),
+  );
+  const isDefaultOnly = (index: number) =>
+    deepEqual(options[index], defaults[index]) ||
+    (index < defaults.length && isEmptyOption(pinned[index]));
+  let end = pinned.length;
+  while (end > 0 && isDefaultOnly(end - 1)) {
+    end -= 1;
+  }
+  return pinned.slice(0, end);
+};
+
+interface FlatConfigEntry {
+  plugins?: Record<string, { rules?: Record<string, RuleDefinition> }>;
+}
+
+interface RuleDefinition {
+  meta?: unknown;
+}
+
+const readDefaults = (meta: unknown): readonly unknown[] => {
+  if (!isPlainObject(meta)) {
+    return [];
+  }
+  const { defaultOptions } = meta as { defaultOptions?: unknown };
+  return Array.isArray(defaultOptions) ? defaultOptions : [];
+};
+
+const collectRuleDefaults = () => {
+  const defaults = new Map<string, readonly unknown[]>();
+  // `builtinRules` is the only entry point ESLint offers for core rule
+  // metadata: the `Linter` class does not expose the rule registry.
+  for (const [rule, { meta }] of builtinRules) {
+    defaults.set(rule, readDefaults(meta));
+  }
+  // Plugin rules are not part of `builtinRules`, so they are read from the
+  // flat config objects of @pagopa/eslint-config. `perfectionist/*`, `vitest/*`
+  // and most `typescript/*` rules do not declare `meta.defaultOptions` because
+  // their defaults are applied by the rule itself: ESLint resolves none for
+  // them either, so an empty list is accurate instead of a silent skip. If one
+  // of them starts reporting defaults, the mismatch surfaces rather than
+  // passing unnoticed.
+  const exported: unknown = require("@pagopa/eslint-config");
+  const entries =
+    isPlainObject(exported) && "default" in exported
+      ? exported["default"]
+      : exported;
+  for (const entry of Array.isArray(entries) ? entries : [entries]) {
+    const { plugins = {} } = (entry ?? {}) as FlatConfigEntry;
+    for (const [plugin, definition] of Object.entries(plugins)) {
+      for (const [rule, ruleDefinition] of Object.entries(
+        definition?.rules ?? {},
+      )) {
+        defaults.set(`${plugin}/${rule}`, readDefaults(ruleDefinition?.meta));
+      }
+    }
+  }
+  return defaults;
+};
+
+let ruleDefaults: Map<string, readonly unknown[]> | undefined;
+
+/** Schema defaults ESLint merges into the options of every rule. */
+const getRuleDefaults = () => {
+  ruleDefaults ??= collectRuleDefaults();
+  return ruleDefaults;
+};
+
+/**
  * Options that oxlint cannot be configured with the same shape as ESLint.
- * Every entry scores a rule that is still checked for its other options.
+ * Every entry excuses the option mismatch only: severity parity and coverage
+ * are still enforced for the rule.
  */
 export const OPTION_DIVERGENCES: Readonly<Record<string, string>> = {
   radix:
@@ -198,16 +311,19 @@ export const OPTION_DIVERGENCES: Readonly<Record<string, string>> = {
 };
 
 /**
- * Every option `base.json` pins which `@pagopa/eslint-config` resolves to a
- * different value, as `<rule>: expected <eslint>, got <oxlint>`.
+ * Effective options that `base.json` and `@pagopa/eslint-config` do not agree
+ * on, as `<rule>: expected <eslint>, got <oxlint>`. Defaults are removed from
+ * both sides, so an option pinned by one config and omitted by the other is
+ * reported in either direction.
  */
 export const findOptionMismatches = (
   oxlintRules: Map<string, Rule>,
   eslintRules: Map<string, Rule>,
 ) => {
+  const defaults = getRuleDefaults();
   const mismatches: string[] = [];
   for (const [rule, { options }] of oxlintRules) {
-    if (options.length === 0 || rule in OPTION_DIVERGENCES) {
+    if (rule in OPTION_DIVERGENCES) {
       continue;
     }
     const candidate = toEslintCandidates(rule).find((id) =>
@@ -216,10 +332,15 @@ export const findOptionMismatches = (
     if (candidate === undefined) {
       continue;
     }
-    const expected = eslintRules.get(candidate)?.options ?? [];
-    if (!matchesOptions(options, expected)) {
+    const ruleDefaultsForRule = defaults.get(candidate) ?? [];
+    const expected = toPinnedOptions(
+      eslintRules.get(candidate)?.options ?? [],
+      ruleDefaultsForRule,
+    );
+    const actual = toPinnedOptions(options, ruleDefaultsForRule);
+    if (!deepEqual(actual, expected)) {
       mismatches.push(
-        `${rule}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(options)}`,
+        `${rule}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,
       );
     }
   }

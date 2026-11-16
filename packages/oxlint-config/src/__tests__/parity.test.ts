@@ -71,6 +71,73 @@ describe.each(PARITY_CASES)("$name", ({ oxlintRules, sampleFile }) => {
   });
 });
 
+describe("option parity", () => {
+  const rules = (entries: Record<string, Rule["options"]>): Map<string, Rule> =>
+    new Map(
+      Object.entries(entries).map(([rule, options]) => [
+        rule,
+        { options, severity: "error" },
+      ]),
+    );
+
+  it("reports an option ESLint pins and oxlint omits", () => {
+    const mismatches = findOptionMismatches(
+      rules({ complexity: [] }),
+      rules({ complexity: [1] }),
+    );
+
+    expect(mismatches).toEqual(["complexity: expected [1], got []"]);
+  });
+
+  it("reports an option oxlint pins and ESLint omits", () => {
+    const mismatches = findOptionMismatches(
+      rules({ complexity: [5] }),
+      rules({ complexity: [] }),
+    );
+
+    expect(mismatches).toEqual(["complexity: expected [], got [5]"]);
+  });
+
+  it("reports an object key that only ESLint pins", () => {
+    const mismatches = findOptionMismatches(
+      rules({ "no-fallthrough": [{ allowEmptyCase: true }] }),
+      rules({
+        "no-fallthrough": [
+          { allowEmptyCase: true, commentPattern: "fallthrough" },
+        ],
+      }),
+    );
+
+    expect(mismatches).toEqual([
+      'no-fallthrough: expected [{"allowEmptyCase":true,"commentPattern":"fallthrough"}], got [{"allowEmptyCase":true}]',
+    ]);
+  });
+
+  it("accepts the same effective options", () => {
+    const mismatches = findOptionMismatches(
+      rules({ eqeqeq: ["smart"], "no-empty": [], "no-fallthrough": [] }),
+      rules({
+        eqeqeq: ["smart"],
+        "no-empty": [{ allowEmptyCatch: false }],
+        "no-fallthrough": [
+          { allowEmptyCase: false, reportUnusedFallthroughComment: false },
+        ],
+      }),
+    );
+
+    expect(mismatches).toEqual([]);
+  });
+
+  it("accepts an option documented as a divergence", () => {
+    const mismatches = findOptionMismatches(
+      rules({ radix: ["always"] }),
+      rules({ radix: [] }),
+    );
+
+    expect(mismatches).toEqual([]);
+  });
+});
+
 describe("coverage", () => {
   it("enables at least 141 rules on test files", () => {
     expect(getTestRules(config).size).toBeGreaterThanOrEqual(141);

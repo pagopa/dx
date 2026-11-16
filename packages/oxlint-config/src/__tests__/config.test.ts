@@ -15,6 +15,7 @@ const config = loadBaseConfig();
 
 interface FlatConfig {
   files?: string[];
+  ignores?: string[];
   rules?: Record<string, unknown>;
 }
 
@@ -25,6 +26,11 @@ const eslintConfig = (
 /** The `@pagopa/eslint-config` entry adding the vitest rules on test files. */
 const testOverlay = eslintConfig.filter((entry) =>
   Object.keys(entry.rules ?? {}).some((rule) => rule.startsWith("vitest/")),
+);
+
+/** The `@pagopa/eslint-config` entry holding the global ignores. */
+const globalIgnores = eslintConfig.filter(
+  (entry) => Object.keys(entry).length === 1 && entry.ignores !== undefined,
 );
 
 const allRules = (source: OxlintConfig) => [
@@ -82,6 +88,11 @@ describe("base config", () => {
     expect(testOverlay).toHaveLength(1);
     expect(config.overrides).toHaveLength(1);
     expect(config.overrides[0]?.files).toEqual(testOverlay[0]?.files);
+  });
+
+  it("ignores the same paths as @pagopa/eslint-config", () => {
+    expect(globalIgnores).toHaveLength(1);
+    expect(config.ignorePatterns).toEqual(globalIgnores[0]?.ignores);
   });
 
   it("exposes base.json through its own exports", () => {
