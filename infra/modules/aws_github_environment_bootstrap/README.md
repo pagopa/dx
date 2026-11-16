@@ -358,6 +358,9 @@ environment names containing another lifecycle as a hyphen-delimited token.
 For example, `infra-notdev-cd` does not match the dev role, while
 `infra-dev-prod-cd` is rejected by both dev and prod roles. Do not use
 `dev`, `uat` or `prod` as qualifier tokens for another lifecycle.
+When prefixing is enabled, this also applies to `environment.prefix`: the
+module rejects conflicting prefixes during planning, before trust policies
+can be applied. For example, `prefix = "prod"` with `env_short = "d"` is invalid.
 
 Qualifiers are **not tenant authorization boundaries**: multiple tenants with
 matching scope, environment and suffix may assume the same role. All matching
@@ -403,9 +406,18 @@ the authorization changes before applying the upgrade:
    IAM trust policies. Do not rely on an environment whose access the upgrade
    removes.
 
-Role names, ARNs, attached permissions, outputs and secret names are unchanged.
-No IAM role replacement or Terraform state move is required. The dedicated ECR
-Public role and shared repository secret retain their existing behavior.
+If a required resource prefix conflicts with the lifecycle, renaming only the
+GitHub environment cannot fix it. Either disable
+`github_environment_prefix_enabled` and prepare the unprefixed GitHub
+environments and their protections, or plan a separate resource-prefix
+migration. Changing `environment.prefix` changes AWS resource names and can
+replace IAM roles and other resources; inspect the plan and migrate ARN
+references and secrets using an authorized principal.
+
+With unchanged resource naming inputs, role names, ARNs, attached permissions,
+outputs and secret names are unchanged. No IAM role replacement or Terraform
+state move is required. The dedicated ECR Public role and shared repository
+secret retain their existing behavior.
 Publishing the new module alone does not update deployed trust: each consumer
 must upgrade and apply its bootstrapper configuration.
 
