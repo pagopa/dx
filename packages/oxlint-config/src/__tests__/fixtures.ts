@@ -27,6 +27,10 @@ type Named = {
 
 type Both = { size: number } & Named;
 
+const width = 123;
+
+export type Width = typeof width;
+
 export const config = {
   zeta,
   gamma,
@@ -132,4 +136,24 @@ export const JAVASCRIPT_FIXTURE = `export const read = function () {
   total = 2;
   return [total, Array.from(arguments)];
 };
+`;
+
+/**
+ * Exercises the Vitest overlay: `no-empty-function` is turned off for test
+ * files and the `vitest/*` rules take over, so this fixture proves the
+ * override applies at runtime instead of only existing in the config.
+ */
+export const VITEST_FIXTURE = `import { it, describe, expect } from "vitest";
+
+describe("sum", () => {
+  it("adds numbers", () => {
+    expect(1 + 1).toBe(2);
+  });
+
+  it("adds numbers", () => {
+    expect(1 + 1).toBe(2);
+  });
+
+  it("adds numbers", () => {});
+});
 `;

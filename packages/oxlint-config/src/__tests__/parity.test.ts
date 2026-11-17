@@ -148,6 +148,19 @@ describe("option parity", () => {
 
     expect(mismatches).toEqual([]);
   });
+
+  it("accepts an option only oxlint declares", () => {
+    const mismatches = findOptionMismatches(
+      rules({
+        "no-unused-vars": [
+          { args: "after-used", reportVarsOnlyUsedAsTypes: true },
+        ],
+      }),
+      rules({ "no-unused-vars": [{ args: "after-used" }] }),
+    );
+
+    expect(mismatches).toEqual([]);
+  });
 });
 
 describe("coverage", () => {

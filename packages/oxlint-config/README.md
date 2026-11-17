@@ -106,6 +106,11 @@ these exceptions:
   `@pagopa/eslint-config` asks for, so reports match.
 - `radix`: `@pagopa/eslint-config` relies on the rule default (`always`), which
   oxlint requires explicitly; behaviour is identical.
+- `@typescript-eslint/no-unused-vars`: oxlint leaves values consumed only by a
+  type (`const id = 1; export type Id = typeof id;`) unreported unless
+  `reportVarsOnlyUsedAsTypes` is set. ESLint always reports them, so `base.json`
+  pins the option for TypeScript files. It is the only option in the config that
+  ESLint does not declare.
 - `@typescript-eslint/consistent-type-definitions` and
   `@typescript-eslint/no-extraneous-class`: rules and lines match, but oxlint
   reports a different column. Tooling that deduplicates findings by exact
@@ -158,7 +163,10 @@ The rule mapping is locked by tests in `src/__tests__`:
   no category is left enabled, and the test-file overlay mirrors the
   `@pagopa/eslint-config` overlay.
 - `fixture.test.ts` runs both linters on the same sources and requires the same
-  rules on the same lines, plus the same columns for perfectionist rules.
+  rules on the same lines, plus the same columns for perfectionist rules. The
+  sources cover scripts, TypeScript, TSX and the Vitest overlay, so relaxations
+  such as `no-empty-function` being off in test files are checked on output, not
+  only in the configuration.
 
 Run them with:
 

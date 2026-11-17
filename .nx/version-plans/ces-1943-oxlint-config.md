@@ -15,6 +15,6 @@ Because oxlint only accepts file paths in `extends`, consumers point their confi
 }
 ```
 
-The rule mapping is enforced by tests that compare the oxlint configuration with the rule set ESLint computes from `@pagopa/eslint-config` in both directions, options included, so a change to the ESLint config fails this package's test suite until the oxlint config is updated. On a 500-file benchmark both linters report the same 1,500 findings and oxlint completes in 0.35s against ESLint's 1.02s.
+The rule mapping is enforced by tests that compare the oxlint configuration with the rule set ESLint computes from `@pagopa/eslint-config` in both directions, options included. The only option oxlint needs but ESLint does not declare is `reportVarsOnlyUsedAsTypes`, without which oxlint accepts a value consumed only by a type alias; `base.json` pins it for TypeScript files so both linters report the same findings. A change to the ESLint config fails this package's test suite until the oxlint config is updated. On a 500-file benchmark both linters report the same 1,500 findings and oxlint completes in 0.35s against ESLint's 1.02s.
 
 Type-aware rules are out of scope: they need `oxlint-tsgolint` and a TypeScript version newer than the one this monorepo uses. The package ships the Vitest overlay only, matching the default entry point of `@pagopa/eslint-config`.

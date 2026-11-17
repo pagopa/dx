@@ -241,6 +241,10 @@
         "no-this-before-super": "off",
         "no-unreachable": "off",
         "no-unsafe-negation": "off",
+        "no-unused-vars": [
+          "error",
+          { "args": "after-used", "reportVarsOnlyUsedAsTypes": true }
+        ],
         "no-with": "off",
         "prefer-rest-params": "error",
         "prefer-spread": "error"

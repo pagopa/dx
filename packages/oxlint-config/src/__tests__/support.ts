@@ -339,6 +339,33 @@ export const OPTION_DIVERGENCES: Readonly<Record<string, string>> = {
 };
 
 /**
+ * Options that only oxlint declares, because the ESLint rule always behaves
+ * that way. They are removed from the oxlint side before the comparison, so
+ * pinning them is not reported as a mismatch, while every shared option stays
+ * comparable in both directions.
+ */
+const OXLINT_ONLY_OPTIONS: Readonly<Record<string, readonly string[]>> = {
+  "no-unused-vars": ["reportVarsOnlyUsedAsTypes"],
+};
+
+const withoutOxlintOnlyOptions = (
+  rule: string,
+  options: readonly unknown[],
+) => {
+  const ignored = OXLINT_ONLY_OPTIONS[rule] ?? [];
+  if (ignored.length === 0) {
+    return options;
+  }
+  return options.map((option) =>
+    isPlainObject(option)
+      ? Object.fromEntries(
+          Object.entries(option).filter(([key]) => !ignored.includes(key)),
+        )
+      : option,
+  );
+};
+
+/**
  * Effective options that `base.json` and `@pagopa/eslint-config` do not agree
  * on, as `<rule>: expected <eslint>, got <oxlint>`. Defaults are removed from
  * both sides, so an option pinned by one config and omitted by the other is
@@ -365,7 +392,10 @@ export const findOptionMismatches = (
       eslintRules.get(candidate)?.options ?? [],
       ruleDefaultsForRule,
     );
-    const actual = toPinnedOptions(options, ruleDefaultsForRule);
+    const actual = toPinnedOptions(
+      withoutOxlintOnlyOptions(rule, options),
+      ruleDefaultsForRule,
+    );
     if (!deepEqual(actual, expected)) {
       mismatches.push(
         `${rule}: expected ${JSON.stringify(expected)}, got ${JSON.stringify(actual)}`,

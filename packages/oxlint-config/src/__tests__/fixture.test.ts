@@ -7,6 +7,7 @@ import {
   JAVASCRIPT_FIXTURE,
   TSX_FIXTURE,
   TYPESCRIPT_FIXTURE,
+  VITEST_FIXTURE,
 } from "./fixtures.ts";
 import {
   BASE_CONFIG_PATH,
@@ -43,6 +44,7 @@ const FIXTURES: [file: string, source: string][] = [
   ["javascript.js", JAVASCRIPT_FIXTURE],
   ["typescript.ts", TYPESCRIPT_FIXTURE],
   ["tsx.tsx", TSX_FIXTURE],
+  ["unit.test.ts", VITEST_FIXTURE],
 ];
 
 const project = mkdtempSync(join(tmpdir(), "oxlint-config-"));
@@ -132,6 +134,33 @@ describe("fixtures", () => {
       expect(actual.length).toBeGreaterThan(0);
       expect(actual.map(byPosition).toSorted()).toEqual(
         expected.map(byPosition).toSorted(),
+      );
+    });
+  });
+
+  describe("unit.test.ts", () => {
+    const result = () => results.get("src/unit.test.ts") as Result;
+
+    it("relaxes the rules the Vitest overlay turns off", () => {
+      const reported = rulesOf([...result().oxlint, ...result().eslint]);
+
+      expect(reported).toContain("vitest/prefer-todo");
+      expect(reported).not.toContain("no-empty-function");
+      expect(reported).not.toContain("@typescript-eslint/no-empty-function");
+    });
+  });
+
+  describe("typescript.ts", () => {
+    const result = () => results.get("src/typescript.ts") as Result;
+
+    it("reports a value a type alias consumes", () => {
+      const line =
+        TYPESCRIPT_FIXTURE.split("\n").findIndex((row) =>
+          row.startsWith("const width"),
+        ) + 1;
+
+      expect(result().oxlint.map(byRuleAndLine)).toContain(
+        `@typescript-eslint/no-unused-vars:${line}`,
       );
     });
   });
