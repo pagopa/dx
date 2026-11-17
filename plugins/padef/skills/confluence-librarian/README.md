@@ -48,10 +48,10 @@ client; bump both together when you upgrade.
 - `gh` authenticated, for `COPILOT_GITHUB_TOKEN`.
 - The OAuth store from step 1 (`~/.mcp-auth-atlassian`).
 
-The generated task environment image is prepared by this skill's
-[`harbor/environment/prepare.sh`](harbor/environment/prepare.sh) — it bakes
-Node 22 LTS (pinned release, digest-verified) and `mcp-remote` into the image,
-so the agent container needs nothing at run time.
+The generated task environment includes Node.js 24. This skill's
+[`harbor/environment/prepare.sh`](harbor/environment/prepare.sh) bakes
+`mcp-remote` into the image, so the agent container does not need the npm
+registry at run time.
 
 ## 3. Convert the evals to Harbor tasks
 
@@ -142,9 +142,8 @@ Confluence`** — the session is authenticated with an API token (Basic), not
   Export it on the host (see step 4); the template lives in
   each per-task `harbor/<generated-task-dir>/task.toml` `[environment].env`.
 - **MCP server exits before the initialize handshake with a Node stack trace** —
-  `mcp-remote` needs Node ≥ 20.18; the image installs Node 22 via
-  `harbor/environment/prepare.sh`. Rebuild the task image (or delete cached
-  images).
+  `mcp-remote` needs Node ≥ 20.18; the generated image includes Node.js 24.
+  Regenerate the tasks and rebuild the task image (or delete cached images).
 - **`Job directory … cannot be resumed with a different config`** — use a new
   `--job-name`.
 - **`reward 0` on a task that created the page** — RewardKit is an LLM judge;

@@ -97,9 +97,14 @@ describe("setupPnpm", () => {
       prompts: [],
     });
 
-    return await plop
-      .getGenerator("test")
-      .runActions({ repoName: "generated-repo" });
+    return await plop.getGenerator("test").runActions({
+      ownership: {
+        namespaceType: "Organization",
+        owners: ["@pagopa/devex"],
+        reviewerTeams: ["devex"],
+      },
+      repoName: "generated-repo",
+    });
   };
 
   it("installs the DX dependencies from the GitHub Packages registry", async () => {
@@ -116,11 +121,29 @@ describe("setupPnpm", () => {
     expect(mocks.commands[dependenciesCommand].npmrcExistsAt).toBe(true);
   });
 
+  it("passes the DX packages with the gh alias in the version slot", async () => {
+    await runGenerator();
+
+    const addCommand = mocks.commands.find(({ command }) =>
+      command.startsWith("mise exec -- pnpm -w add -D "),
+    )?.command;
+    const dependencyArguments = addCommand?.split(" ") ?? [];
+
+    // pnpm 12 rejects the prefix-first form (`gh:@pagopa/nx-terraform`) with
+    // ERR_PNPM_INVALID_DEPENDENCY_NAME: the package name comes first and the
+    // `gh:` alias prefix belongs to the version.
+    expect(NX_TERRAFORM_DEPENDENCY).toBe("@pagopa/nx-terraform@gh:latest");
+    expect(NX_DOCKER_DEPENDENCY).toBe("@pagopa/nx-docker@gh:latest");
+    expect(dependencyArguments).not.toContain(
+      expect.stringMatching(/^gh:@pagopa\//),
+    );
+  });
+
   it("trusts the config and pins pnpm before locking and installing mise tools", async () => {
     await runGenerator();
 
     const trustCommand = commandIndex("mise trust");
-    const corepackCommand = commandIndex("mise exec -- corepack use pnpm@11");
+    const corepackCommand = commandIndex("mise exec -- corepack use pnpm@12");
     const lockCommand = commandIndex("mise lock");
     const installCommand = commandIndex("mise install");
     const nxInitCommand = commandIndex(

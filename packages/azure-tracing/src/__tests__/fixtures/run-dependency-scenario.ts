@@ -1,0 +1,312 @@
+import { CosmosClient } from "@azure/cosmos";
+import { shutdownAzureMonitor } from "@azure/monitor-opentelemetry";
+import { BlobServiceClient } from "@azure/storage-blob";
+import { context, trace } from "@opentelemetry/api";
+import { logs, SeverityNumber } from "@opentelemetry/api-logs";
+import Fastify from "fastify";
+/**
+ * Child-process fixture that performs real Cosmos DB, Fastify, Redis, and Blob
+ * Storage operations after the package preload entrypoint has initialized
+ * telemetry. It also emits the log records the sampling exemptions processor
+ * has to keep alive.
+ */
+import { Readable } from "node:stream";
+import { setTimeout as delay } from "node:timers/promises";
+import { createClient } from "redis";
+import { z } from "zod";
+
+const scenarioSchema = z.enum([
+  "cosmos",
+  "fastify",
+  "log-sampling",
+  "redis",
+  "storage",
+]);
+
+const cosmosEnvSchema = z.object({
+  COSMOS_CONTAINER_ID: z.string().min(1),
+  COSMOS_DATABASE_ID: z.string().min(1),
+  COSMOS_ENDPOINT: z.string().url(),
+  COSMOS_ITEM_ID: z.string().min(1),
+  COSMOS_KEY: z.string().min(1),
+});
+
+const fastifyEnvSchema = z.object({
+  FASTIFY_REQUEST_PATH: z.string().startsWith("/"),
+  FASTIFY_RUN_ID: z.string().min(1),
+});
+
+/**
+ * The suite owns the log message and event name markers, so a scenario run and
+ * its assertions can never drift apart.
+ */
+const logSamplingEnvSchema = z.object({
+  LOG_SAMPLING_ERROR_MESSAGE: z.string().min(1),
+  LOG_SAMPLING_EVENT_BOOLEAN_NAME: z.string().min(1),
+  LOG_SAMPLING_EVENT_STRING_NAME: z.string().min(1),
+  LOG_SAMPLING_EXCEPTION_MESSAGE: z.string().min(1),
+  LOG_SAMPLING_INFO_MESSAGE: z.string().min(1),
+  LOG_SAMPLING_OUTSIDE_SPAN_MESSAGE: z.string().min(1),
+});
+
+const redisEnvSchema = z.object({
+  REDIS_KEY: z.string().min(1),
+  REDIS_URL: z.string().url(),
+  REDIS_VALUE: z.string().min(1),
+});
+
+const storageEnvSchema = z.object({
+  STORAGE_BLOB_NAME: z.string().min(1),
+  STORAGE_CONNECTION_STRING: z.string().min(1),
+  STORAGE_CONTAINER_NAME: z.string().min(1),
+});
+
+const readScenario = () => {
+  const result = scenarioSchema.safeParse(process.argv[2]);
+
+  if (!result.success) {
+    throw new Error(
+      `Unsupported dependency scenario: ${process.argv[2] ?? ""}`,
+    );
+  }
+
+  return result.data;
+};
+
+const readBuffer = async (stream: NodeJS.ReadableStream | undefined) => {
+  if (!stream) {
+    throw new Error("The blob download did not expose a readable stream.");
+  }
+
+  const chunks: Buffer[] = [];
+
+  for await (const chunk of Readable.from(stream)) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+
+  return Buffer.concat(chunks);
+};
+
+const withScenarioSpan = async <T>(
+  scenario: string,
+  action: () => Promise<T>,
+) => {
+  const tracer = trace.getTracer("azure-tracing-dependency-integration");
+  const span = tracer.startSpan(`${scenario}.scenario`);
+
+  try {
+    return await context.with(trace.setSpan(context.active(), span), action);
+  } finally {
+    span.end();
+  }
+};
+
+const runCosmosScenario = async () => {
+  const env = cosmosEnvSchema.parse(process.env);
+  const client = new CosmosClient({
+    connectionPolicy: { enableEndpointDiscovery: false },
+    endpoint: env.COSMOS_ENDPOINT,
+    key: env.COSMOS_KEY,
+  });
+
+  const { database } = await client.databases.createIfNotExists({
+    id: env.COSMOS_DATABASE_ID,
+  });
+
+  const { container } = await database.containers.createIfNotExists({
+    id: env.COSMOS_CONTAINER_ID,
+    partitionKey: { paths: ["/id"] },
+  });
+
+  await container.items.upsert({
+    id: env.COSMOS_ITEM_ID,
+    kind: "integration-test",
+    message: "dependency tracking",
+  });
+
+  const { resource } = await container
+    .item(env.COSMOS_ITEM_ID, env.COSMOS_ITEM_ID)
+    .read();
+
+  if (!resource || resource.id !== env.COSMOS_ITEM_ID) {
+    throw new Error(
+      "The Cosmos DB scenario did not read back the expected item.",
+    );
+  }
+};
+
+const runFastifyScenario = async () => {
+  const env = fastifyEnvSchema.parse(process.env);
+  const app = Fastify({ logger: false });
+
+  app.get<{ Params: { runId: string } }>(
+    "/dependency-tracking/:runId",
+    (request) => ({ runId: request.params.runId }),
+  );
+
+  const origin = await app.listen({ host: "127.0.0.1", port: 0 });
+
+  try {
+    const response = await fetch(`${origin}${env.FASTIFY_REQUEST_PATH}`);
+
+    if (!response.ok) {
+      throw new Error(
+        `The Fastify scenario received an unexpected status: ${response.status}.`,
+      );
+    }
+
+    const payload = (await response.json()) as { runId?: string };
+
+    if (payload.runId !== env.FASTIFY_RUN_ID) {
+      throw new Error(
+        "The Fastify scenario did not read back the expected route parameter.",
+      );
+    }
+
+    // Live Metrics pings the collector after 5s and starts posting 1s later, so
+    // the server outlives that handshake to let the suite observe both calls.
+    await delay(8_000);
+  } finally {
+    await app.close();
+  }
+};
+
+/**
+ * Emits the log records the sampling exemptions processor has to keep once
+ * trace-based sampling for logs has discarded the logs of an unsampled trace.
+ * Every record carries a marker owned by the suite, so the assertions only see
+ * the records of this run.
+ */
+const runLogSamplingScenario = async () => {
+  const env = logSamplingEnvSchema.parse(process.env);
+  const logger = logs.getLogger("azure-tracing-log-sampling-integration");
+
+  await withScenarioSpan("log-sampling", async () => {
+    logger.emit({
+      attributes: {
+        "exception.message": env.LOG_SAMPLING_EXCEPTION_MESSAGE,
+        "exception.stacktrace": "at runLogSamplingScenario (fixture.ts:1:1)",
+        "exception.type": "IntegrationTestError",
+      },
+      body: env.LOG_SAMPLING_EXCEPTION_MESSAGE,
+      severityNumber: SeverityNumber.ERROR,
+    });
+
+    logger.emit({
+      body: env.LOG_SAMPLING_ERROR_MESSAGE,
+      severityNumber: SeverityNumber.ERROR,
+    });
+
+    logger.emit({
+      attributes: {
+        "microsoft.custom_event.name": env.LOG_SAMPLING_EVENT_BOOLEAN_NAME,
+        samplingEnabled: false,
+      },
+      body: env.LOG_SAMPLING_EVENT_BOOLEAN_NAME,
+    });
+
+    logger.emit({
+      attributes: {
+        "microsoft.custom_event.name": env.LOG_SAMPLING_EVENT_STRING_NAME,
+        samplingEnabled: "false",
+      },
+      body: env.LOG_SAMPLING_EVENT_STRING_NAME,
+    });
+
+    logger.emit({
+      body: env.LOG_SAMPLING_INFO_MESSAGE,
+      severityNumber: SeverityNumber.INFO,
+    });
+  });
+
+  // A record without any span context is exported by the standard pipeline, so
+  // the processor must not re-emit it.
+  context.with(trace.deleteSpan(context.active()), () => {
+    logger.emit({
+      body: env.LOG_SAMPLING_OUTSIDE_SPAN_MESSAGE,
+      severityNumber: SeverityNumber.ERROR,
+    });
+  });
+};
+
+const runRedisScenario = async () => {
+  const env = redisEnvSchema.parse(process.env);
+  const client = createClient({ url: env.REDIS_URL });
+
+  await client.connect();
+
+  try {
+    await client.set(env.REDIS_KEY, env.REDIS_VALUE);
+    const value = await client.get(env.REDIS_KEY);
+
+    if (value !== env.REDIS_VALUE) {
+      throw new Error(
+        "The Redis scenario did not read back the expected value.",
+      );
+    }
+  } finally {
+    if (client.isOpen) {
+      await client.close();
+    }
+  }
+};
+
+const runStorageScenario = async () => {
+  const env = storageEnvSchema.parse(process.env);
+  const serviceClient = BlobServiceClient.fromConnectionString(
+    env.STORAGE_CONNECTION_STRING,
+  );
+  const containerClient = serviceClient.getContainerClient(
+    env.STORAGE_CONTAINER_NAME,
+  );
+
+  await containerClient.createIfNotExists();
+
+  const blobClient = containerClient.getBlockBlobClient(env.STORAGE_BLOB_NAME);
+  const payload = Buffer.from("dependency-tracking");
+
+  await blobClient.uploadData(payload);
+
+  const download = await blobClient.download();
+  const downloadedPayload = await readBuffer(download.readableStreamBody);
+
+  if (!downloadedPayload.equals(payload)) {
+    throw new Error(
+      "The Blob Storage scenario did not read back the uploaded payload.",
+    );
+  }
+};
+
+const main = async () => {
+  const scenario = readScenario();
+
+  try {
+    if (scenario === "cosmos") {
+      await withScenarioSpan("cosmos", runCosmosScenario);
+      return;
+    }
+
+    if (scenario === "fastify") {
+      await withScenarioSpan("fastify", runFastifyScenario);
+      return;
+    }
+
+    if (scenario === "log-sampling") {
+      // The scenario opens its own span: the records emitted outside of it must
+      // carry no span context at all.
+      await runLogSamplingScenario();
+      return;
+    }
+
+    if (scenario === "redis") {
+      await withScenarioSpan("redis", runRedisScenario);
+      return;
+    }
+
+    await withScenarioSpan("storage", runStorageScenario);
+  } finally {
+    await shutdownAzureMonitor();
+  }
+};
+
+await main();

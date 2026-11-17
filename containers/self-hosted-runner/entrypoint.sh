@@ -25,7 +25,7 @@ base64_url_encode() {
 }
 
 create_github_app_jwt() {
-  local app_id="$1"
+  local client_id="$1"
   local key_file="$2"
   local now
   local issued_at
@@ -40,7 +40,7 @@ create_github_app_jwt() {
   expires_at="$((now + 600))"
   header="$(printf '{"alg":"RS256","typ":"JWT"}' | base64_url_encode)"
   payload="$(printf '{"iat":%s,"exp":%s,"iss":"%s"}' \
-    "$issued_at" "$expires_at" "$app_id" | base64_url_encode)"
+    "$issued_at" "$expires_at" "$client_id" | base64_url_encode)"
   header_payload="${header}.${payload}"
   signature="$(printf '%s' "$header_payload" |
     openssl dgst -sha256 -sign "$key_file" -binary |
@@ -75,7 +75,7 @@ if [[ -z "$RUNNER_TOKEN" && -n "${GITHUB_PAT:-}" && -n "${REGISTRATION_TOKEN_API
     "runner registration token")"
   unset GITHUB_PAT
 elif [[ -z "$RUNNER_TOKEN" &&
-  -n "${GITHUB_APP_ID:-}" &&
+  -n "${GITHUB_APP_CLIENT_ID:-}" &&
   -n "${GITHUB_APP_KEY:-}" &&
   -n "${GITHUB_APP_INSTALLATION_ID:-}" &&
   -n "${REGISTRATION_TOKEN_API_URL:-}" ]]; then
@@ -85,7 +85,7 @@ elif [[ -z "$RUNNER_TOKEN" &&
   chmod 600 "$github_app_key_file"
   printf '%s' "$GITHUB_APP_KEY" >"$github_app_key_file"
 
-  github_app_jwt="$(create_github_app_jwt "$GITHUB_APP_ID" "$github_app_key_file")"
+  github_app_jwt="$(create_github_app_jwt "$GITHUB_APP_CLIENT_ID" "$github_app_key_file")"
   remove_github_app_key
   github_app_key_file=""
 
@@ -104,7 +104,7 @@ elif [[ -z "$RUNNER_TOKEN" ]]; then
   echo "Provide one of the following:"
   echo "  - RUNNER_TOKEN"
   echo "  - GITHUB_PAT and REGISTRATION_TOKEN_API_URL"
-  echo "  - GITHUB_APP_ID, GITHUB_APP_KEY, GITHUB_APP_INSTALLATION_ID, and REGISTRATION_TOKEN_API_URL"
+  echo "  - GITHUB_APP_CLIENT_ID, GITHUB_APP_KEY, GITHUB_APP_INSTALLATION_ID, and REGISTRATION_TOKEN_API_URL"
   exit 1
 fi
 

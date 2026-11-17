@@ -9,6 +9,11 @@ foster effective collaboration across teams using git and GitHub.
 
 ## Collaboration Practices
 
+### Dependency Updates
+
+Use the [shared Renovate preset](./renovate.md) to enable DX-managed dependency
+update rules in your repository.
+
 ### 🔄 Git and Version Control
 
 - **[Git Configuration](./git/git-config.md)** - Set up Git for seamless team

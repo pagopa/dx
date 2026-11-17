@@ -25,16 +25,16 @@ vi.mock("@logtape/logtape", () => ({
 }));
 
 import {
-  createNodesV2,
+  createNodes,
   getDiscoveryState,
   getDiscoveryStateWithValidation,
 } from "../index.ts";
 import { parseOptions } from "../options.ts";
 
-describe("createNodesV2", () => {
-  it("discovers terraform, module manifests, and supported test files", () => {
-    expect(createNodesV2[0]).toBe(
-      "**/{*.tf,module.json,tests/*.tftest.hcl,tests/*_test.go}",
+describe("createNodes", () => {
+  it("matches Terraform projects and supported test files", () => {
+    expect(createNodes[0]).toBe(
+      "**/{*.tf,project.json,tests/*.tftest.hcl,tests/*_test.go}",
     );
   });
 });
@@ -54,7 +54,7 @@ afterEach(() => {
 });
 
 describe("Terraform project discovery", () => {
-  it("infers applications and declared libraries but skips nested modules", () => {
+  it("only processes Terraform roots with project.json", () => {
     const applicationRoot = path.join("infra", "resources", "prod");
     const libraryRoot = path.join("infra", "modules", "azure_core_infra");
     const nestedModuleRoot = path.join(libraryRoot, "modules", "dns");
@@ -62,8 +62,9 @@ describe("Terraform project discovery", () => {
 
     const result = getDiscoveryState([
       path.join(applicationRoot, "main.tf"),
+      path.join(applicationRoot, "project.json"),
       path.join(libraryRoot, "main.tf"),
-      path.join(libraryRoot, "module.json"),
+      path.join(libraryRoot, "project.json"),
       path.join(nestedModuleRoot, "main.tf"),
       path.join(unmanifestedModuleRoot, "main.tf"),
     ]);
@@ -79,7 +80,7 @@ describe("Terraform project discovery", () => {
 
     const configFiles = [
       path.join("infra", "_modules", "good-module", "main.tf"),
-      path.join("infra", "_modules", "good-module", "module.json"),
+      path.join("infra", "_modules", "good-module", "project.json"),
       path.join("infra", "_modules", "good-module", "tests", "unit.tftest.hcl"),
       path.join(
         "infra",
@@ -90,10 +91,11 @@ describe("Terraform project discovery", () => {
       ),
       path.join("infra", "_modules", "good-module", "tests", "e2e_test.go"),
       path.join("infra", "_modules", "good-module", "variables.tf"),
-      path.join("infra", "_modules", "invalid-module", "module.json"),
+      path.join("infra", "_modules", "invalid-module", "project.json"),
       path.join("infra", "_modules", "invalid-module", "main.tf"),
-      path.join("infra", "_modules", "invalid-module-two", "module.json"),
-      path.join("infra", "_modules", "example", "module.json"),
+      path.join("infra", "_modules", "invalid-module-two", "main.tf"),
+      path.join("infra", "_modules", "invalid-module-two", "project.json"),
+      path.join("infra", "_modules", "example", "project.json"),
       path.join("infra", "_modules", "tests", "main.tf"),
       path.join("infra", "resources", "prod", "main.tf"),
       path.join("packages", "web", "tests", "e2e_test.go"),
@@ -117,12 +119,14 @@ describe("Terraform project discovery", () => {
         "infra",
         "_modules",
         "good-module",
-        "module.json",
+        "project.json",
       ),
       JSON.stringify({
-        description: "Terraform module description",
-        provider: "aws",
-        version: "1.2.3",
+        metadata: {
+          description: "Terraform module description",
+          provider: "aws",
+          version: "1.2.3",
+        },
       }),
       "utf-8",
     );
@@ -132,11 +136,13 @@ describe("Terraform project discovery", () => {
         "infra",
         "_modules",
         "invalid-module-two",
-        "module.json",
+        "project.json",
       ),
       JSON.stringify({
-        description: "Terraform module without version",
-        provider: "aws",
+        metadata: {
+          description: "Terraform module without version",
+          provider: "aws",
+        },
       }),
       "utf-8",
     );
@@ -146,11 +152,13 @@ describe("Terraform project discovery", () => {
         "infra",
         "_modules",
         "invalid-module",
-        "module.json",
+        "project.json",
       ),
       JSON.stringify({
-        description: "Terraform module without provider",
-        version: "1.2.3",
+        metadata: {
+          description: "Terraform module without provider",
+          version: "1.2.3",
+        },
       }),
       "utf-8",
     );
@@ -164,9 +172,9 @@ describe("Terraform project discovery", () => {
       path.join("infra", "_modules", "good-module", "main.tf"),
       path.join("infra", "_modules", "good-module", "variables.tf"),
       path.join("infra", "_modules", "invalid-module", "main.tf"),
-      path.join("infra", "resources", "prod", "main.tf"),
+      path.join("infra", "_modules", "invalid-module-two", "main.tf"),
     ]);
-    expect(Array.from(result.publishableManifestByRoot.keys())).toEqual([
+    expect(Array.from(result.publishableMetadataByRoot.keys())).toEqual([
       path.join("infra", "_modules", "good-module"),
     ]);
     expect(
@@ -183,7 +191,7 @@ describe("Terraform project discovery", () => {
       result.testCapabilitiesByRoot.has(path.join("packages", "web")),
     ).toBe(false);
     expect(
-      result.publishableManifestByRoot.get(
+      result.publishableMetadataByRoot.get(
         path.join("infra", "_modules", "good-module"),
       ),
     ).toEqual({
@@ -196,7 +204,7 @@ describe("Terraform project discovery", () => {
       "discovery",
     ]);
     expect(logtapeMocks.warn).toHaveBeenCalledWith(
-      "Invalid manifest file",
+      "Invalid Terraform publishing metadata",
       expect.objectContaining({
         issues: [
           expect.objectContaining({
@@ -204,11 +212,11 @@ describe("Terraform project discovery", () => {
             path: ["provider"],
           }),
         ],
-        path: expect.stringContaining("invalid-module/module.json"),
+        path: expect.stringContaining("invalid-module/project.json"),
       }),
     );
     expect(logtapeMocks.warn).toHaveBeenCalledWith(
-      "Invalid manifest file",
+      "Invalid Terraform publishing metadata",
       expect.objectContaining({
         issues: [
           expect.objectContaining({
@@ -216,12 +224,12 @@ describe("Terraform project discovery", () => {
             path: ["version"],
           }),
         ],
-        path: expect.stringContaining("invalid-module-two/module.json"),
+        path: expect.stringContaining("invalid-module-two/project.json"),
       }),
     );
     expect(logtapeMocks.warn).not.toHaveBeenCalledWith(
       expect.stringContaining(
-        "invalid-module/module.json. provider: Invalid input: expected string, received undefined",
+        "invalid-module/project.json. provider: Invalid input: expected string, received undefined",
       ),
     );
   });
@@ -238,14 +246,76 @@ describe("Terraform project discovery", () => {
   });
 });
 
-describe("createNodesV2 publish inference", () => {
+describe("createNodes publish inference", () => {
+  it("does not create a node when project.json is absent", async () => {
+    const workspaceRoot = await createWorkspaceRoot();
+    const moduleRoot = path.join("infra", "_modules", "unconfigured");
+    await fs.mkdir(path.join(workspaceRoot, moduleRoot), { recursive: true });
+    await fs.writeFile(path.join(workspaceRoot, moduleRoot, "main.tf"), "");
+
+    const result = await createNodes[1](
+      [path.join(moduleRoot, "main.tf")],
+      parseOptions(undefined),
+      { nxJsonConfiguration: {}, workspaceRoot },
+    );
+
+    expect(result).toEqual([]);
+  });
+
+  it("adds Terraform tags and inferred targets to a project.json root", async () => {
+    const workspaceRoot = await createWorkspaceRoot();
+    const moduleRoot = path.join("infra", "_modules", "configured");
+    await fs.mkdir(path.join(workspaceRoot, moduleRoot), { recursive: true });
+    await fs.writeFile(path.join(workspaceRoot, moduleRoot, "main.tf"), "");
+    await fs.writeFile(
+      path.join(workspaceRoot, moduleRoot, "project.json"),
+      JSON.stringify({
+        metadata: {
+          description: "Terraform module description",
+          github: { owner: "pagopa" },
+          provider: "aws",
+          version: "1.2.3",
+        },
+        name: "configured-module",
+      }),
+    );
+
+    const result = await createNodes[1](
+      [path.join(moduleRoot, "main.tf"), path.join(moduleRoot, "project.json")],
+      parseOptions(undefined),
+      { nxJsonConfiguration: {}, workspaceRoot },
+    );
+
+    expect(result[0]?.[1].projects?.[moduleRoot]).toEqual({
+      namedInputs: {
+        default: ["{projectRoot}/*.{tf,tfvars}"],
+        examples: ["{projectRoot}/examples/**/*.{tf,tfvars}"],
+      },
+      projectType: "library",
+      release: {
+        version: {
+          currentVersionResolver: "disk",
+          versionActions: "@pagopa/nx-dx/version-actions",
+        },
+      },
+      root: moduleRoot,
+      tags: ["terraform", "terraform:public"],
+      targets: expect.objectContaining({
+        docs: expect.any(Object),
+        fmt: expect.any(Object),
+        init: expect.any(Object),
+        "nx-release-publish": expect.any(Object),
+      }),
+    });
+  });
+
   it("warns and skips the publish target when merged options are invalid", async () => {
     const workspaceRoot = await createWorkspaceRoot();
 
     const moduleRoot = path.join("infra", "_modules", "missing-owner");
     const configFiles = [
       path.join(moduleRoot, "main.tf"),
-      path.join(moduleRoot, "module.json"),
+      path.join(moduleRoot, "project.json"),
     ];
 
     await fs.mkdir(path.join(workspaceRoot, moduleRoot), { recursive: true });
@@ -253,16 +323,18 @@ describe("createNodesV2 publish inference", () => {
       encoding: "utf-8",
     });
     await fs.writeFile(
-      path.join(workspaceRoot, moduleRoot, "module.json"),
+      path.join(workspaceRoot, moduleRoot, "project.json"),
       JSON.stringify({
-        description: "Terraform module description",
-        provider: "aws",
-        version: "1.2.3",
+        metadata: {
+          description: "Terraform module description",
+          provider: "aws",
+          version: "1.2.3",
+        },
       }),
       "utf-8",
     );
 
-    const result = await createNodesV2[1](
+    const result = await createNodes[1](
       configFiles,
       parseOptions({
         publish: {
@@ -286,14 +358,14 @@ describe("createNodesV2 publish inference", () => {
             path: ["github", "owner"],
           }),
         ],
-        path: expect.stringContaining("module.json"),
+        path: expect.stringContaining("project.json"),
       }),
     );
   });
 });
 
-describe("createNodesV2 static shared module inputs", () => {
-  it("includes the sibling _modules tree for applications only", async () => {
+describe("createNodes existing project inference", () => {
+  it("does not infer nodes for unconfigured shared modules", async () => {
     const workspaceRoot = await createWorkspaceRoot();
     const applicationRoots = [
       path.join("infra", "resources", "dev"),
@@ -305,13 +377,17 @@ describe("createNodesV2 static shared module inputs", () => {
     const resourcesSharedRoot = path.join("infra", "resources", "_modules");
     const networkSharedRoot = path.join("infra", "network", "_modules");
     const libraryRoot = path.join("infra", "modules", "published");
-    const moduleManifestPath = path.join(libraryRoot, "module.json");
+    const projectJsonPath = path.join(libraryRoot, "project.json");
     const configFiles = [
-      ...applicationRoots.map((root) => path.join(root, "main.tf")),
+      ...applicationRoots.flatMap((root) => [
+        path.join(root, "main.tf"),
+        path.join(root, "project.json"),
+      ]),
       path.join(resourcesSharedRoot, "shared", "main.tf"),
       path.join(resourcesSharedRoot, "shared", "new-module", "outputs.tf"),
+      path.join(networkSharedRoot, "shared", "main.tf"),
       path.join(libraryRoot, "main.tf"),
-      moduleManifestPath,
+      projectJsonPath,
     ];
 
     await Promise.all(
@@ -323,40 +399,43 @@ describe("createNodesV2 static shared module inputs", () => {
     );
     await fs.mkdir(path.join(workspaceRoot, libraryRoot), { recursive: true });
     await fs.writeFile(
-      path.join(workspaceRoot, moduleManifestPath),
+      path.join(workspaceRoot, projectJsonPath),
       JSON.stringify({
-        description: "Terraform module description",
-        provider: "aws",
-        version: "1.2.3",
+        metadata: {
+          description: "Terraform module description",
+          provider: "aws",
+          version: "1.2.3",
+        },
       }),
     );
 
-    const result = await createNodesV2[1](
-      configFiles,
-      parseOptions(undefined),
-      { nxJsonConfiguration: {}, workspaceRoot },
-    );
+    const result = await createNodes[1](configFiles, parseOptions(undefined), {
+      nxJsonConfiguration: {},
+      workspaceRoot,
+    });
     const projects = new Map(
       result.flatMap(([, node]) => Object.entries(node.projects ?? {})),
     );
-    const sharedInput = (root: string) =>
-      `{workspaceRoot}/${path.join(root, "**", "*").split(path.sep).join("/")}`;
-
     expect(Array.from(projects.keys()).sort()).toEqual(
       [...applicationRoots, libraryRoot].sort(),
     );
-    for (const root of applicationRoots.slice(0, 4)) {
-      expect(projects.get(root)?.namedInputs?.default).toEqual([
-        "{projectRoot}/*.{tf,tfvars}",
-        sharedInput(resourcesSharedRoot),
-      ]);
-    }
-    expect(projects.get(applicationRoots[4])?.namedInputs?.default).toEqual([
-      "{projectRoot}/*.{tf,tfvars}",
-      sharedInput(networkSharedRoot),
-    ]);
-    expect(projects.get(libraryRoot)?.namedInputs?.default).toEqual([
-      "{projectRoot}/*.{tf,tfvars}",
-    ]);
+    expect(Object.keys(projects.get(applicationRoots[0]) ?? {}).sort()).toEqual(
+      ["namedInputs", "projectType", "root", "tags", "targets"],
+    );
+    expect(projects.get(applicationRoots[0])?.targets).toEqual(
+      expect.objectContaining({
+        apply: expect.any(Object),
+        plan: expect.any(Object),
+      }),
+    );
+    expect(projects.get(libraryRoot)?.targets).toEqual(
+      expect.objectContaining({
+        docs: expect.any(Object),
+      }),
+    );
+    expect(projects.get(resourcesSharedRoot)).toBeUndefined();
+    expect(
+      projects.get(path.join(resourcesSharedRoot, "shared", "new-module")),
+    ).toBeUndefined();
   });
 });

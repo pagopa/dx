@@ -1,0 +1,18 @@
+{
+  "data": {
+    "id": "101",
+    "type": "page",
+    "title": "Spec",
+    "status": "current",
+    "detail": "full",
+    "body": {
+      "format": "markdown",
+      "value": "# Spec\n\nThe service must retry five times.\n"
+    },
+    "metadata": {
+      "version": {
+        "number": 4
+      }
+    }
+  }
+}

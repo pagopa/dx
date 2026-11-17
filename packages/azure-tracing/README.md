@@ -49,6 +49,9 @@ In order to enable tracing, you also need to set the following environment varia
 | **APPLICATIONINSIGHTS_CONNECTION_STRING**     | true         | -           |
 | **APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED** | false        | false       |
 
+> [!NOTE]
+> This table describes the `NODE_OPTIONS` preload path, where `APPLICATIONINSIGHTS_CONNECTION_STRING` is **always required**: `--import @pagopa/azure-tracing` initializes Azure Monitor before any application code runs, so there is no opportunity to pass the connection string in code. It can only be omitted by applications that initialize the SDK themselves and pass `azureMonitorExporterOptions.connectionString` (see [Enabling Azure Monitor Telemetry](#enabling-azure-monitor-telemetry)).
+
 > [!WARNING]
 > Connection-string-only authentication (the current default) is **deprecated** and will be removed in the next major version.
 > Set `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true` to adopt Microsoft Entra ID authentication now.
@@ -102,14 +105,85 @@ If you want to enable Azure Monitor telemetry in your application, and you don't
 
 ```ts
 import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
-import { AzureMonitorOpenTelemetryOptions } from "@azure/monitor-opentelemetry";
 import { ExpressInstrumentation } from "@opentelemetry/instrumentation-express";
 ...
-const config: AzureMonitorOpenTelemetryOptions = {} // A valid AzureMonitorOpenTelemetryOptions object
 const instrumentations = [new ExpressInstrumentation()] // A list of custom OpenTelemetry instrumentations
-initAzureMonitor(instrumentations, config);
+initAzureMonitor(instrumentations);
 ...
 ```
+
+The configuration is always derived from the environment first (see the `NODE_OPTIONS` table above) and the optional second argument overrides only the properties it sets:
+
+```ts
+import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
+
+initAzureMonitor([], {
+  samplingRatio: 0.5,
+  azureMonitorExporterOptions: {
+    // the connection string is inherited from the environment
+    disableOfflineStorage: true,
+  },
+});
+```
+
+Properties you don't override keep their environment-derived value: `enableLiveMetrics: true`, the `samplingRatio` from `APPINSIGHTS_SAMPLING_PERCENTAGE`, `tracesPerSecond: 0` and the `DefaultAzureCredential` when `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true`.
+
+Nested option groups (`azureMonitorExporterOptions`, `instrumentationOptions` and `browserSdkLoaderOptions`) are merged key by key, while arrays (`logRecordProcessors`, `spanProcessors`, ...) and object instances (`resource`, `credential`, ...) are replaced. Properties explicitly set to `undefined` are ignored — at the top level and as direct members of those groups — so a conditionally-set value never shadows a default. The filtering is not recursive: a value nested one level deeper (for example `instrumentationOptions.http.enabled`) is forwarded as-is, so only set it when you mean it.
+
+> [!IMPORTANT]
+> The options object **no longer replaces** the whole configuration: it is a partial override. It is layered on top of the environment, which is parsed and validated on every call: an invalid environment variable now throws even when you pass a complete configuration, and the environment-derived defaults (live metrics, sampling ratio, `tracesPerSecond`, the Entra ID credential) are always applied. Overriding only one group (e.g. just the connection string) therefore also keeps the environment `samplingRatio` instead of the SDK default.
+
+When you initialize the SDK yourself, `APPLICATIONINSIGHTS_CONNECTION_STRING` may be omitted in favour of `azureMonitorExporterOptions.connectionString`:
+
+```ts
+initAzureMonitor([], {
+  azureMonitorExporterOptions: { connectionString: "InstrumentationKey=..." },
+});
+```
+
+### Keeping Logs of Interest When Log Sampling Is On
+
+When `enableTraceBasedSamplingForLogs` is enabled, Azure Monitor drops the log records that belong to spans the sampler did not sample.
+This is usually what you want, except for the records you must always see: errors, exceptions and the custom events you explicitly exempt.
+
+`SamplingExemptionsLogRecordProcessor` re-emits those records through its own exporter, so they reach Application Insights even when the surrounding trace was sampled out:
+
+```ts
+import {
+  initAzureMonitor,
+  SamplingExemptionsLogRecordProcessor,
+} from "@pagopa/azure-tracing/azure-monitor";
+
+initAzureMonitor([], {
+  enableTraceBasedSamplingForLogs: true,
+  logRecordProcessors: [new SamplingExemptionsLogRecordProcessor()],
+});
+```
+
+A record is re-emitted when it belongs to a span context the standard pipeline did not export and at least one of these holds:
+
+- it carries the `exception.type` and `exception.stacktrace` attributes;
+- its severity is `ERROR` or above;
+- it is a custom event (`microsoft.custom_event.name` attribute) whose `samplingEnabled` attribute is `false` or `"false"`.
+
+Every other record, including the ones the standard pipeline already exported (to avoid duplicates) and the ones emitted outside a span, keeps following the default behavior.
+
+The processor takes an optional `azureMonitorExporterOptions` override, resolved from the environment exactly like `initAzureMonitor` does, so you normally pass nothing:
+
+```ts
+new SamplingExemptionsLogRecordProcessor({
+  // the connection string is inherited from the environment
+  disableOfflineStorage: true,
+});
+```
+
+> [!NOTE]
+> The processor is opt-in: applications that do not register it keep the default behavior of the Azure Monitor distro, with no extra export.
+
+> [!WARNING]
+> Register the processor only together with `enableTraceBasedSamplingForLogs: true`, which is off by default.
+> With `enableTraceBasedSamplingForLogs: false` the Azure Monitor distro does not filter log records at all, so every record already reaches Application Insights: the processor would then re-export the errors, exceptions and exempt custom events that belong to the traces the sampler discarded, duplicating them.
+> If you do not enable trace-based sampling for logs, leave the processor out.
 
 ### Logging Custom Events
 
@@ -132,12 +206,13 @@ This is especially useful for tracing domain-specific actions (e.g., resource cr
 > Connection-string-only authentication is deprecated and will be removed in the **next major release**.
 
 Set `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true` to enable [Microsoft Entra ID authentication](https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-ad-authentication).
+The value is matched case-insensitively after trimming; any other value leaves connection-string-only authentication in place.
 The package uses [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/azure/developer/javascript/sdk/authentication/credential-chains#use-defaultazurecredential-for-flexibility) from `@azure/identity`, which automatically resolves the right credential for the environment:
 
 - **Azure (production)**: uses the Managed Identity assigned to the resource (App Service, Azure Function, Container App, etc.)
 - **Local development**: falls back to Azure CLI, Azure Developer CLI, or service principal env vars
 
-The connection string (`APPLICATIONINSIGHTS_CONNECTION_STRING`) is still required in both modes — it identifies the Application Insights resource.
+The connection string (`APPLICATIONINSIGHTS_CONNECTION_STRING`) is still required in both modes — it identifies the Application Insights resource — unless you pass it through the `initAzureMonitor` options.
 
 ### Required Azure RBAC role
 
@@ -145,79 +220,27 @@ The managed identity (or other principal) must have the **Monitoring Metrics Pub
 
 ## Testing
 
-- `pnpm nx test @pagopa/azure-tracing` runs the default unit test suite.
-- `pnpm nx run @pagopa/azure-tracing:integration` runs the opt-in integration suite.
-
-> [!IMPORTANT]
-> Pre-condition for the integration suite: Docker must be installed and running locally so Testcontainers can start the required services.
-> The suite already uses the committed PEM fixtures in `src/azure/functions/__tests__/fixtures/`, so no extra certificate-generation step is required.
-
-## Dependency Constraints
-
-### `import-in-the-middle` version must match `@azure/monitor-opentelemetry`
-
-> [!WARNING]
-> Do **not** upgrade `import-in-the-middle` independently of `@azure/monitor-opentelemetry`. Doing so will silently break HTTP tracing (including CosmosDB calls) in ESM environments.
-
-#### Why this constraint exists
-
-The ESM instrumentation in this package works by registering a module loader hook via [`import-in-the-middle`](https://github.com/DataDog/import-in-the-middle) (iitm):
-
-```ts
-// packages/azure-tracing/src/azure/functions/index.mts
-const { registerOptions } = createAddHookMessageChannel(); // uses iitm@X
-register("import-in-the-middle/hook.mjs", ...);           // registers iitm@X as the active loader
-```
-
-`@azure/monitor-opentelemetry` internally creates an `HttpInstrumentation` instance that patches `node:https` (the transport layer used by CosmosDB, among others). This instrumentation registers its hooks using **its own** resolved version of iitm (transitively via `@opentelemetry/instrumentation`).
-
-Each major version of `import-in-the-middle` maintains **completely isolated internal state** — hook registries are not shared across versions. If the loader is registered with `iitm@X` but `HttpInstrumentation` pushes its hooks into `iitm@Y`'s registry, the loader never sees them. The result: `node:https` is never patched, and all HTTP dependency spans (including CosmosDB) are silently dropped.
-
-The table below shows what was validated empirically against Application Insights:
-
-| `import-in-the-middle` direct dep | `@azure/monitor-opentelemetry` | Loader iitm | HttpInstrumentation iitm |
-| --------------------------------- | ------------------------------ | ----------- | ------------------------ |
-| `^1.15.0`                         | `1.13.1`                       | `1.15.0`    | `1.15.0` ✅              |
-| `^3.0.0`                          | `1.13.1`                       | `3.0.0`     | `1.15.0` ❌              |
-| `^1.15.0`                         | `1.16.0`                       | `1.15.0`    | `2.0.6` ❌               |
-| `^1.15.0`                         | `1.18.1`                       | `1.15.0`    | `3.0.0` ❌               |
-| `^2.0.0`                          | `1.16.0`                       | `2.0.6`     | `2.0.6` ✅               |
-| **`^3.0.0`**                      | **`1.18.1`**                   | **`3.0.0`** | **`3.0.0`** ✅           |
-
-#### How to determine the correct version
-
-When upgrading `@azure/monitor-opentelemetry`, check which version of `@opentelemetry/instrumentation` it depends on, then look up the `import-in-the-middle` range that instrumentation version requires:
+Unit tests live next to the source they cover. The integration suite starts real
+services with [Testcontainers](https://node.testcontainers.org/), so a container
+runtime must be available.
 
 ```bash
-# Check what instrumentation version monitor-otel uses
-npm view @azure/monitor-opentelemetry@<version> dependencies | grep '@opentelemetry/instrumentation'
-
-# Check what iitm range that instrumentation version requires
-npm view @opentelemetry/instrumentation@<version> dependencies | grep 'import-in-the-middle'
-```
-
-Set `import-in-the-middle` in `package.json` to the same major range as the result.
-
-## Running Integration Tests Locally
-
-Integration tests use [Testcontainers](https://node.testcontainers.org/) and require a working container runtime.
-
-```bash
+pnpm nx test @pagopa/azure-tracing
 pnpm nx run @pagopa/azure-tracing:integration
 ```
 
-> [!NOTE]
-> Inside the devcontainer, tests work out of the box since Docker is available at the standard socket path.
+## Dependency Constraints
 
-### Rancher Desktop
-
-If you use Rancher Desktop on macOS outside a Linux devcontainer, you need to export two environment variables so that Testcontainers can locate the Docker socket and correctly mount it inside helper containers:
+> [!WARNING]
+> Keep `import-in-the-middle` at the same major version this package resolves
+> (currently `3.x`). The ESM loader registered by this package and the hooks
+> pushed by `@azure/monitor-opentelemetry` must share the same iitm registry,
+> otherwise HTTP dependency spans (including CosmosDB) are silently dropped.
 
 ```bash
-export DOCKER_HOST="unix://$HOME/.rd/docker.sock"
-export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+pnpm why import-in-the-middle
 ```
 
-`DOCKER_HOST` tells Testcontainers where the socket is on the host. `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE` tells it which path to bind-mount inside containers (the path inside the Rancher Desktop VM).
-
-Add these to your shell profile (`~/.zshrc` or `~/.bashrc`) to avoid setting them every time.
+The remaining constraints — the OpenTelemetry release train this package is
+pinned to, its rationale, the validated version matrices and the upgrade
+procedures — are maintainer concerns. They live in [CONTRIBUTING.md](./CONTRIBUTING.md).

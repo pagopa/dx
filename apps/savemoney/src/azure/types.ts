@@ -13,6 +13,16 @@ import type {
   Thresholds,
 } from "../types.js";
 
+export type ActualCost = {
+  amount: number;
+  basis: "ActualCost";
+  currency: string;
+  period: {
+    end: string;
+    start: string;
+  };
+};
+
 /**
  * Azure configuration extending base config
  */
@@ -36,6 +46,11 @@ export type AzureConfig = BaseConfig & {
    * If omitted, all resources are analyzed.
    */
   filterTags?: Map<string, string>;
+  /**
+   * Retrieve actual costs for the last 30 days through Cost Management.
+   * Disabled by default because it requires billing cost access.
+   */
+  includeActualCost?: Config["azure"]["includeActualCost"];
   /**
    * Runtime-only pricing enrichment switch. This is intentionally not exposed
    * in YAML config: the Retail Prices lookup uses internal defaults unless the
@@ -69,6 +84,8 @@ export type AzureConfig = BaseConfig & {
  * pricing aggregation) can read structured findings directly.
  */
 export type AzureDetailedResourceReport = {
+  /** Actual billing cost for the specified period, separate from estimates and savings. */
+  actualCosts?: ActualCost[];
   analysis: AnalysisResult;
   /**
    * Structured findings attached to the resource. Always populated by the
@@ -83,6 +100,7 @@ export type AzureDetailedResourceReport = {
  * Summary report for a single Azure resource
  */
 export type AzureResourceReport = {
+  actualCosts?: ActualCost[];
   costRisk: CostRisk;
   /** Custom cost at risk, or else the summed per-finding (Advisor) savings. */
   estimatedMonthlySavings?: Money;

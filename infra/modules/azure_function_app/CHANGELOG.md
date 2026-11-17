@@ -1,3 +1,18 @@
+# 8.0.0 (2026-11-17)
+
+### ⚠️  Breaking Changes
+
+- Require AzureRM v5 and Terraform >= 1.16.0. ([#2471](https://github.com/pagopa/dx/pull/2471))
+
+  ## Migration guide
+
+  This major release requires AzureRM `~> 5.8` and Terraform `>= 1.16.0`.
+  No changes are expected.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 7.1.1 (2026-11-03)
 
 ### 🩹 Fixes

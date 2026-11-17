@@ -88,12 +88,113 @@ const registerMiseToolchainConfigurationTest = (
   });
 };
 
+const registerOwnershipTests = (
+  getPlop: () => NodePlopAPI,
+  getTempDir: () => string,
+  payload: Payload,
+) => {
+  it("uses the same teams for wildcard code ownership and deployment reviewers", async () => {
+    const files = await readGeneratedFiles(
+      path.join(getTempDir(), payload.repoName),
+      ["CODEOWNERS", "infra/repository/main.tf"],
+    );
+    expect(files["CODEOWNERS"]).toBe(
+      "# see https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file\n\n* @pagopa/product-team @alice @pagopa/platform-team\n",
+    );
+    await expect(
+      fs.access(
+        path.join(getTempDir(), payload.repoName, ".github", "CODEOWNERS"),
+      ),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+    expect(files["infra/repository/main.tf"]).toContain(
+      'reviewers_teams        = ["product-team", "platform-team"]',
+    );
+  });
+
+  it("includes the personal owner and additional users without team reviewers", async () => {
+    const personalPayload: Payload = {
+      ...payload,
+      ownership: {
+        namespaceType: "User",
+        owners: ["@alice", "@bob"],
+        reviewerTeams: [],
+      },
+      repoName: "personal-repo",
+      repoOwner: "alice",
+    };
+    const result = await getPlop()
+      .getGenerator(PLOP_MONOREPO_GENERATOR_NAME)
+      .runActions(personalPayload);
+    expect(result.failures).toEqual([]);
+    const files = await readGeneratedFiles(
+      path.join(getTempDir(), personalPayload.repoName),
+      ["CODEOWNERS", "infra/repository/main.tf"],
+    );
+    expect(files["CODEOWNERS"]).toBe(
+      "# see https://help.github.com/en/articles/about-code-owners#example-of-a-codeowners-file\n\n* @alice @bob\n",
+    );
+    expect(files["infra/repository/main.tf"]).toContain(
+      "reviewers_teams        = []",
+    );
+  });
+};
+
+const registerRepositoryInfraTests = (
+  getPlop: () => NodePlopAPI,
+  getTempDir: () => string,
+  payload: Payload,
+) => {
+  it("uses the selected GitHub organization in repository provider configuration", async () => {
+    const customPayload: Payload = {
+      ...payload,
+      repoName: "my-custom-owner-repo",
+      repoOwner: "example-org",
+    };
+
+    const result = await getPlop()
+      .getGenerator(PLOP_MONOREPO_GENERATOR_NAME)
+      .runActions(customPayload);
+    const realFailures = result.failures.filter(
+      (failure) => failure.error !== "Aborted due to previous action failure",
+    );
+    expect(realFailures).toEqual([]);
+
+    const generatedFiles = await readGeneratedFiles(
+      path.join(getTempDir(), customPayload.repoName),
+      ["infra/repository/providers.tf"],
+    );
+
+    expect(generatedFiles["infra/repository/providers.tf"]).toContain(
+      'owner = "example-org"',
+    );
+    expect(generatedFiles["infra/repository/providers.tf"]).not.toContain(
+      'owner = "pagopa"',
+    );
+  });
+
+  it("declares the repository Terraform root as the repository Nx project", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(getTempDir(), payload.repoName),
+      ["infra/repository/project.json"],
+    );
+
+    expect(JSON.parse(generatedFiles["infra/repository/project.json"])).toEqual(
+      { name: "repository" },
+    );
+  });
+};
+
 describe("monorepo generator — file generation", () => {
   let tmpDir: string;
   let originalCwd: string;
   let plop: NodePlopAPI;
 
   const payload: Payload = {
+    ownership: {
+      namespaceType: "Organization",
+      owners: ["@pagopa/product-team", "@alice", "@pagopa/platform-team"],
+      reviewerTeams: ["product-team", "platform-team"],
+    },
     repoDescription: "A test repository for DX",
     repoName: "my-test-repo",
     repoOwner: "pagopa",
@@ -140,33 +241,17 @@ describe("monorepo generator — file generation", () => {
     expect(generatedFiles).toMatchSnapshot();
   });
 
-  it("uses the selected GitHub organization in repository provider configuration", async () => {
-    const customPayload: Payload = {
-      ...payload,
-      repoName: "my-custom-owner-repo",
-      repoOwner: "example-org",
-    };
+  registerOwnershipTests(
+    () => plop,
+    () => tmpDir,
+    payload,
+  );
 
-    const result = await plop
-      .getGenerator(PLOP_MONOREPO_GENERATOR_NAME)
-      .runActions(customPayload);
-    const realFailures = result.failures.filter(
-      (failure) => failure.error !== "Aborted due to previous action failure",
-    );
-    expect(realFailures).toEqual([]);
-
-    const generatedFiles = await readGeneratedFiles(
-      path.join(tmpDir, customPayload.repoName),
-      ["infra/repository/providers.tf"],
-    );
-
-    expect(generatedFiles["infra/repository/providers.tf"]).toContain(
-      'owner = "example-org"',
-    );
-    expect(generatedFiles["infra/repository/providers.tf"]).not.toContain(
-      'owner = "pagopa"',
-    );
-  });
+  registerRepositoryInfraTests(
+    () => plop,
+    () => tmpDir,
+    payload,
+  );
 
   it("propagates action outputs into generated version files", async () => {
     const generatedFiles = await readGeneratedFiles(
@@ -177,13 +262,20 @@ describe("monorepo generator — file generation", () => {
     expect(generatedFiles).toMatchSnapshot();
   });
 
-  it("does not add pnpm 11 build approval settings to the generated pnpm workspace", async () => {
+  it("allows the nx build script with the setting pnpm honours", async () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),
       ["pnpm-workspace.yaml"],
     );
 
-    expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain("allowBuilds:");
+    // pnpm 11 renamed `onlyBuiltDependencies` to `allowBuilds`: the old key is
+    // ignored, and the ignored postinstall makes `pnpm install` exit with
+    // ERR_PNPM_IGNORED_BUILDS. pnpm 12 still reads `allowBuilds`.
+    expect(generatedFiles["pnpm-workspace.yaml"]).toContain("allowBuilds:");
+    expect(generatedFiles["pnpm-workspace.yaml"]).toContain("nx: true");
+    expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain(
+      "onlyBuiltDependencies",
+    );
   });
 
   it("configures Renovate for DX actions and Docker images", async () => {

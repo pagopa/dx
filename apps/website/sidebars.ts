@@ -22,6 +22,7 @@ const sidebars: SidebarsConfig = {
           label: "Collaborating on GitHub",
           type: "doc",
         },
+        "github/renovate",
         {
           className: categoryClass("git"),
           items: [

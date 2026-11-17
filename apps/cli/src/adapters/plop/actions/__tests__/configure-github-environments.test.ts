@@ -12,8 +12,10 @@ const createMockGitHubService = (): GitHubService => ({
   createBranch: vi.fn(),
   createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
   createPullRequest: vi.fn(),
+  getAccount: vi.fn(),
   getFileContent: vi.fn(),
   getRepository: vi.fn(),
+  getTeam: vi.fn(),
   updateFile: vi.fn(),
 });
 
@@ -51,11 +53,15 @@ const createMockCloudAccountService = (
   configureGitHubEnvironment: CloudAccountService["configureGitHubEnvironment"],
 ): CloudAccountService => ({
   configureGitHubEnvironment,
+  getRunnerAppCredentials: vi
+    .fn()
+    .mockResolvedValue({ credentials: {}, missingClientId: false }),
   getTerraformBackend: vi.fn().mockResolvedValue(undefined),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),
   isInitialized: vi.fn().mockResolvedValue(true),
   provisionTerraformBackend: vi.fn().mockResolvedValue(undefined),
+  storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
 });
 
 describe("configureGitHubEnvironments", () => {

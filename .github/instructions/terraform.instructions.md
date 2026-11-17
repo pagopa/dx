@@ -20,4 +20,6 @@ applyTo: "**/*.tf, **/*.tfvars"
 
 - Every Terraform module MUST include a `README.md`, `examples/`, and a `tests/` directory.
 - Follow the structure and conventions found in `infra/modules/`.
-- Include a `module.json` and use `pnpm nx release plan` for any user-facing changes.
+- Store Terraform module publishing metadata (`description`, `provider`, and
+  `version`) in the module's `project.json` under `metadata`. Use
+  `pnpm nx release plan` for user-facing changes.

@@ -1,3 +1,9 @@
+## 0.5.30 (2026-11-17)
+
+### 🩹 Fixes
+
+- Bump dependencies ([#2533](https://github.com/pagopa/dx/pull/2533))
+
 ## 0.5.29 (2026-11-06)
 
 ### 🩹 Fixes

@@ -89,11 +89,13 @@ func TestGitHubSelfHostedRunnerAppE2E(t *testing.T) {
 		requiredEnv: [][]string{
 			{"GITHUB_TOKEN", "GH_TOKEN"},
 			{"E2E_GITHUB_APP_ID"},
+			{"E2E_GITHUB_APP_CLIENT_ID"},
 			{"E2E_GITHUB_APP_INSTALLATION_ID"},
 			{"E2E_GITHUB_APP_PRIVATE_KEY"},
 		},
 		seedSecrets: func(t *testing.T, keyVaultName string) {
 			setKeyVaultSecret(t, keyVaultName, "github-runner-app-id", requireEnv(t, "E2E_GITHUB_APP_ID"))
+			setKeyVaultSecret(t, keyVaultName, "github-runner-app-client-id", requireEnv(t, "E2E_GITHUB_APP_CLIENT_ID"))
 			setKeyVaultSecret(t, keyVaultName, "github-runner-app-installation-id", requireEnv(t, "E2E_GITHUB_APP_INSTALLATION_ID"))
 			setKeyVaultSecret(t, keyVaultName, "github-runner-app-key", requireEnv(t, "E2E_GITHUB_APP_PRIVATE_KEY"))
 		},

@@ -1,0 +1,20 @@
+diff --git a/dist/src/plugins/js/project-graph/affected/lock-file-changes.js b/dist/src/plugins/js/project-graph/affected/lock-file-changes.js
+index b8ebaa42f9681547d7ad12a5b8ca18d1e5bdf60a..20b0158be5a353f628b8f1830b694088c00fd7b2 100644
+--- a/dist/src/plugins/js/project-graph/affected/lock-file-changes.js
++++ b/dist/src/plugins/js/project-graph/affected/lock-file-changes.js
+@@ -80,11 +80,10 @@ function getChangedPackageNames(file, changes, packageJson) {
+                     changed.add(name);
+                 }
+             }
+-            for (const name of baseFingerprints.keys()) {
+-                if (!headFingerprints.has(name)) {
+-                    changed.add(name);
+-                }
+-            }
++            // Patched (nrwl/nx#37783): packages present only in the base lockfile
++            // have no head external node and used to force every project affected.
++            // Their removal is already reflected by the changed package.json or by
++            // the changed version of the package that depended on them.
+         }
+         return changed;
+     }

@@ -24,7 +24,7 @@ TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
 ENVIRONMENT_DOCKERFILE_TEMPLATE = "environment.Dockerfile.tmpl"
 
 # Defaults formerly configurable through evals.json Harbor metadata.
-DEFAULT_BASE_IMAGE = "ubuntu:24.04"
+DEFAULT_BASE_IMAGE = "ubuntu:26.04"
 DEFAULT_JUDGE_MODEL = "openai/gpt-6-luna"
 
 #: The exact set of files ``convert`` generates for every task (identical for
@@ -272,7 +272,10 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
     # Separate verifier image: Harbor builds the verifier container from this
     # Dockerfile; tests/ is NOT uploaded at runtime.
     (tests_dir / "Dockerfile").write_text(
-        render_template((TEMPLATES / "verifier-Dockerfile").read_text())
+        render_template(
+            (TEMPLATES / "verifier-Dockerfile").read_text(),
+            BASE_IMAGE=DEFAULT_BASE_IMAGE,
+        )
     )
 
     # solution/ = oracle stub

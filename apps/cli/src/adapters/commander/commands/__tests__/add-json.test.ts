@@ -20,6 +20,8 @@ import {
   AuthorizationResult,
   type AuthorizationService,
 } from "../../../../domain/authorization.js";
+import { RunnerAppCredentialsError } from "../../../../domain/cloud-account.js";
+import { MissingRunnerAppCredentialsError } from "../../../plop/generators/environment/prompts.js";
 
 const mocks = vi.hoisted(() => ({
   collectDeploymentEnvironmentPayload: vi.fn(),
@@ -106,6 +108,95 @@ const parseNdjson = (written: string[]) =>
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line));
+
+describe("add environment command CI errors", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it.each([
+    'Multiple common Key Vaults match environment "dev" in subscription sub-123.',
+    "Failed to read github-runner-app-key from dx-d-itn-common-kv-01.",
+    "Failed to save the Runner App Client ID to dx-d-itn-common-kv-01.",
+  ])("preserves safe credential diagnostics: %s", async (message) => {
+    const stdout = captureStream(process.stdout);
+    const stderr = captureStream(process.stderr);
+    const previousExitCode = process.exitCode;
+    mocks.getPlopInstance.mockResolvedValue({});
+    mocks.collectDeploymentEnvironmentPayload.mockRejectedValue(
+      new RunnerAppCredentialsError(message, {
+        cause: new Error("sensitive SDK error details"),
+      }),
+    );
+    const requireGitHubAuth: GitHubAuthFactory = () =>
+      okAsync({
+        authorizationService: mockDeep<AuthorizationService>(),
+        gitHubService: mockDeep<GitHubService>(),
+      });
+    const program = new Command()
+      .option("--verbose")
+      .option("--output <mode>", "Output mode", "text")
+      .addCommand(makeAddCommand(requireGitHubAuth, { CI: true }));
+
+    try {
+      await program.parseAsync([
+        "node",
+        "dx",
+        "--verbose",
+        "add",
+        "environment",
+      ]);
+
+      expect(parseNdjson(stdout.written)).toEqual([
+        { error: message, ok: false },
+      ]);
+      expect([...stdout.written, ...stderr.written].join("")).not.toContain(
+        "sensitive SDK error details",
+      );
+      expect(process.exitCode).toBe(1);
+      expect(mocks.runDeploymentEnvironmentActions).not.toHaveBeenCalled();
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+  });
+
+  it("reports missing Runner App flags in the CI JSON error", async () => {
+    const stdout = captureStream(process.stdout);
+    captureStream(process.stderr);
+    const previousExitCode = process.exitCode;
+    mocks.getPlopInstance.mockResolvedValue({});
+    mocks.collectDeploymentEnvironmentPayload.mockRejectedValue(
+      new MissingRunnerAppCredentialsError(["--client-id"]),
+    );
+    const requireGitHubAuth: GitHubAuthFactory = () =>
+      okAsync({
+        authorizationService: mockDeep<AuthorizationService>(),
+        gitHubService: mockDeep<GitHubService>(),
+      });
+    const program = new Command()
+      .option("--output <mode>", "Output mode", "text")
+      .addCommand(makeAddCommand(requireGitHubAuth, { CI: true }));
+
+    try {
+      await program.parseAsync(["node", "dx", "add", "environment"]);
+
+      expect(parseNdjson(stdout.written)).toEqual([
+        {
+          error:
+            "GitHub Runner App credentials are required in non-interactive mode. Provide: --client-id.",
+          ok: false,
+        },
+      ]);
+      expect(process.exitCode).toBe(1);
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+  });
+});
 
 describe("add environment command json output", () => {
   beforeEach(() => {

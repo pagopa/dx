@@ -9,14 +9,12 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS720 - DEV EX"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    BusinessUnit   = "DevEx"
-    ManagementTeam = "Developer Experience"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
-    Test           = "true"
-    TestName       = "Azure Function App unit tests"
+    CostCenter  = "TS720 - DEV EX"
+    Environment = "Uat"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
+    Test        = "true"
+    TestName    = "Azure Function App unit tests"
   }
 
   resource_group_name = "rg-test"
@@ -33,6 +31,17 @@ variables {
 }
 
 mock_provider "azurerm" {}
+
+override_resource {
+  target = azurerm_linux_function_app_slot.this
+  values = {
+    identity = {
+      type         = "SystemAssigned"
+      principal_id = "00000000-0000-0000-0000-000000000002"
+      tenant_id    = "00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
 
 override_data {
   target = data.azurerm_virtual_network.this
@@ -105,6 +114,30 @@ run "azure_function_app_default_configuration" {
     condition     = length(azurerm_storage_account.durable_function) == 0 && length(azurerm_subnet.this) == 1
     error_message = "The default configuration must not create durable storage and must create the integration subnet."
   }
+
+  assert {
+    condition     = length(azurerm_subnet.this[0].service_endpoint) == 0
+    error_message = "The subnet must not have service endpoints unless they are enabled."
+  }
+}
+
+run "azure_function_app_configures_subnet_service_endpoints" {
+  command = plan
+
+  variables {
+    subnet_service_endpoints = {
+      cosmos  = true
+      storage = true
+      web     = true
+    }
+  }
+
+  assert {
+    condition = toset([
+      for endpoint in azurerm_subnet.this[0].service_endpoint : endpoint.service
+    ]) == toset(["Microsoft.AzureCosmosDB", "Microsoft.Storage", "Microsoft.Web"])
+    error_message = "Enabled service endpoints must be configured using AzureRM v5 service_endpoint blocks."
+  }
 }
 
 run "azure_function_app_external_subnet" {
@@ -122,10 +155,51 @@ run "azure_function_app_external_subnet" {
 }
 
 run "azure_function_app_durable_functions" {
-  command = plan
+  command   = apply
+  state_key = "durable-functions"
 
   variables {
     has_durable_functions = true
+  }
+
+  override_resource {
+    target = azurerm_service_plan.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/serverFarms/plan-test"
+    }
+  }
+
+  override_resource {
+    target = azurerm_subnet.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/functions"
+    }
+  }
+
+  override_resource {
+    target = azurerm_storage_account.this
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/sttest"
+    }
+  }
+
+  override_resource {
+    target = azurerm_storage_account.durable_function[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/stdurable"
+    }
+  }
+
+  override_resource {
+    target = azurerm_linux_function_app.this
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/sites/function-test"
+      identity = {
+        type         = "SystemAssigned"
+        principal_id = "00000000-0000-0000-0000-000000000001"
+        tenant_id    = "00000000-0000-0000-0000-000000000000"
+      }
+    }
   }
 
   assert {
@@ -136,6 +210,39 @@ run "azure_function_app_durable_functions" {
   assert {
     condition     = azurerm_linux_function_app.this.app_settings["DfStorageConnectionName__accountname"] == azurerm_storage_account.durable_function[0].name
     error_message = "The Function App must use the dedicated Durable Functions storage account."
+  }
+
+  assert {
+    condition     = azurerm_subnet.this[0].address_prefixes == tolist([var.subnet_cidr]) && azurerm_subnet.this[0].delegation[0].service_delegation[0].name == "Microsoft.Web/serverFarms"
+    error_message = "The Function App subnet must use its allocated CIDR and the Microsoft.Web/serverFarms delegation."
+  }
+
+  assert {
+    condition = alltrue([
+      for endpoint in [
+        azurerm_private_endpoint.st_blob,
+        azurerm_private_endpoint.st_file,
+        azurerm_private_endpoint.st_queue,
+      ] : endpoint.private_service_connection[0].private_connection_resource_id == azurerm_storage_account.this.id
+      ]) && (
+      azurerm_private_endpoint.function_sites.private_service_connection[0].private_connection_resource_id == azurerm_linux_function_app.this.id &&
+      azurerm_private_endpoint.staging_function_sites[0].private_service_connection[0].private_connection_resource_id == azurerm_linux_function_app.this.id &&
+      toset(azurerm_private_endpoint.staging_function_sites[0].private_service_connection[0].subresource_names) == toset(["sites-${azurerm_linux_function_app_slot.this[0].name}"])
+    )
+    error_message = "Private endpoints must target the primary storage account, the Function App, and its staging slot."
+  }
+
+  assert {
+    condition = alltrue([
+      for assignment in [
+        azurerm_role_assignment.function_storage_blob_data_owner,
+        azurerm_role_assignment.staging_function_storage_blob_data_owner[0],
+      ] : assignment.scope == azurerm_storage_account.this.id && assignment.role_definition_name == "Storage Blob Data Owner"
+      ]) && (
+      azurerm_role_assignment.function_storage_blob_data_owner.principal_id == azurerm_linux_function_app.this.identity[0].principal_id &&
+      azurerm_role_assignment.staging_function_storage_blob_data_owner[0].principal_id == azurerm_linux_function_app_slot.this[0].identity[0].principal_id
+    )
+    error_message = "The Function App and staging slot identities must receive Storage Blob Data Owner on the primary storage account."
   }
 }
 
@@ -331,8 +438,12 @@ run "azure_function_app_package_state_for_container_migration" {
   override_resource {
     target = azurerm_linux_function_app.this
     values = {
-      id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/sites/function-test"
-      principal_id = "00000000-0000-0000-0000-000000000001"
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/sites/function-test"
+      identity = {
+        type         = "SystemAssigned"
+        principal_id = "00000000-0000-0000-0000-000000000001"
+        tenant_id    = "00000000-0000-0000-0000-000000000000"
+      }
     }
   }
 

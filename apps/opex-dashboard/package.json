@@ -48,7 +48,6 @@
     "@types/tmp": "^0.2.6",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
-    "prettier": "catalog:",
     "tsup": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",

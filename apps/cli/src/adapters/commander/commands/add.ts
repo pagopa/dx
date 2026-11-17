@@ -26,6 +26,7 @@ import {
   AuthorizationService,
   requestAuthorizationInputSchema,
 } from "../../../domain/authorization.js";
+import { RunnerAppCredentialsError } from "../../../domain/cloud-account.js";
 import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import {
   environmentSchema,
@@ -39,6 +40,7 @@ import {
 } from "../../azure/locations.js";
 import {
   costCenterSchema,
+  MissingRunnerAppCredentialsError,
   ownerSchema,
   workspaceSchema,
 } from "../../plop/generators/environment/prompts.js";
@@ -432,7 +434,13 @@ const addEnvironmentAction = (
           initialAnswers,
           nonInteractive,
         ),
-        asError("Failed to run the deployment environment generator"),
+        (cause) =>
+          cause instanceof MissingRunnerAppCredentialsError ||
+          cause instanceof RunnerAppCredentialsError
+            ? cause
+            : asError("Failed to run the deployment environment generator")(
+                cause,
+              ),
       ),
     )
     .andThen(({ generator, payload }) =>

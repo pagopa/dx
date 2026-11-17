@@ -1,5 +1,5 @@
 locals {
-  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/project.json")).name, "unknown") })
+  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/project.json")).metadata.version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/project.json")).name, "unknown") })
   naming_config = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
@@ -11,7 +11,7 @@ locals {
 
   subnet = {
     enable_service_endpoints = var.subnet_service_endpoints != null ? concat(
-      var.subnet_service_endpoints.cosmos ? ["Microsoft.CosmosDB"] : [],
+      var.subnet_service_endpoints.cosmos ? ["Microsoft.AzureCosmosDB"] : [],
       var.subnet_service_endpoints.web ? ["Microsoft.Web"] : [],
       var.subnet_service_endpoints.storage ? ["Microsoft.Storage"] : [],
     ) : []
