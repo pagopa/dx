@@ -396,6 +396,18 @@ describe("environment generator — file generation (no init)", () => {
     ).not.toHaveBeenCalled();
     await expect(fs.stat(corePath)).rejects.toThrow();
   });
+
+  it("names the bootstrapper Nx project after its Terraform root", async () => {
+    const generatedFiles = await readGeneratedFiles(tmpDir, [
+      `infra/bootstrapper/${payload.env.name}/project.json`,
+    ]);
+
+    expect(
+      JSON.parse(
+        generatedFiles[`infra/bootstrapper/${payload.env.name}/project.json`],
+      ),
+    ).toEqual({ name: "bootstrapper-dev" });
+  });
 });
 
 describe("environment generator — tenant-qualified bootstrap configuration", () => {
@@ -558,6 +570,16 @@ describe("environment generator — file generation (with init)", () => {
 
     expect(generatedFiles).toMatchSnapshot();
   });
+
+  it("names the core Nx project after its Terraform root", async () => {
+    const generatedFiles = await readGeneratedFiles(tmpDir, [
+      `infra/core/${payload.env.name}/project.json`,
+    ]);
+
+    expect(
+      JSON.parse(generatedFiles[`infra/core/${payload.env.name}/project.json`]),
+    ).toEqual({ name: "core-dev" });
+  });
 });
 
 describe("environment generator — tenant-qualified environment", () => {
@@ -633,5 +655,15 @@ describe("environment generator — tenant-qualified environment", () => {
       nxJson.plugins.find((entry) => entry.plugin === "@pagopa/nx-terraform")
         ?.options?.additionalEnvironments,
     ).toEqual(["ced-prod"]);
+  });
+
+  it("keeps the full tenant-qualified environment in the bootstrapper Nx project name", async () => {
+    const generatedFiles = await readGeneratedFiles(tmpDir, [
+      "infra/bootstrapper/ced-prod/project.json",
+    ]);
+
+    expect(
+      JSON.parse(generatedFiles["infra/bootstrapper/ced-prod/project.json"]),
+    ).toEqual({ name: "bootstrapper-ced-prod" });
   });
 });

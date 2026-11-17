@@ -139,6 +139,51 @@ const registerOwnershipTests = (
   });
 };
 
+const registerRepositoryInfraTests = (
+  getPlop: () => NodePlopAPI,
+  getTempDir: () => string,
+  payload: Payload,
+) => {
+  it("uses the selected GitHub organization in repository provider configuration", async () => {
+    const customPayload: Payload = {
+      ...payload,
+      repoName: "my-custom-owner-repo",
+      repoOwner: "example-org",
+    };
+
+    const result = await getPlop()
+      .getGenerator(PLOP_MONOREPO_GENERATOR_NAME)
+      .runActions(customPayload);
+    const realFailures = result.failures.filter(
+      (failure) => failure.error !== "Aborted due to previous action failure",
+    );
+    expect(realFailures).toEqual([]);
+
+    const generatedFiles = await readGeneratedFiles(
+      path.join(getTempDir(), customPayload.repoName),
+      ["infra/repository/providers.tf"],
+    );
+
+    expect(generatedFiles["infra/repository/providers.tf"]).toContain(
+      'owner = "example-org"',
+    );
+    expect(generatedFiles["infra/repository/providers.tf"]).not.toContain(
+      'owner = "pagopa"',
+    );
+  });
+
+  it("declares the repository Terraform root as the repository Nx project", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(getTempDir(), payload.repoName),
+      ["infra/repository/project.json"],
+    );
+
+    expect(JSON.parse(generatedFiles["infra/repository/project.json"])).toEqual(
+      { name: "repository" },
+    );
+  });
+};
+
 describe("monorepo generator — file generation", () => {
   let tmpDir: string;
   let originalCwd: string;
@@ -202,33 +247,11 @@ describe("monorepo generator — file generation", () => {
     payload,
   );
 
-  it("uses the selected GitHub organization in repository provider configuration", async () => {
-    const customPayload: Payload = {
-      ...payload,
-      repoName: "my-custom-owner-repo",
-      repoOwner: "example-org",
-    };
-
-    const result = await plop
-      .getGenerator(PLOP_MONOREPO_GENERATOR_NAME)
-      .runActions(customPayload);
-    const realFailures = result.failures.filter(
-      (failure) => failure.error !== "Aborted due to previous action failure",
-    );
-    expect(realFailures).toEqual([]);
-
-    const generatedFiles = await readGeneratedFiles(
-      path.join(tmpDir, customPayload.repoName),
-      ["infra/repository/providers.tf"],
-    );
-
-    expect(generatedFiles["infra/repository/providers.tf"]).toContain(
-      'owner = "example-org"',
-    );
-    expect(generatedFiles["infra/repository/providers.tf"]).not.toContain(
-      'owner = "pagopa"',
-    );
-  });
+  registerRepositoryInfraTests(
+    () => plop,
+    () => tmpDir,
+    payload,
+  );
 
   it("propagates action outputs into generated version files", async () => {
     const generatedFiles = await readGeneratedFiles(

@@ -328,6 +328,8 @@ overrides:
   nx>brace-expansion: 5.0.12
   nx>axios: 1.20.0
 
+pnpmfileChecksum: sha256-sTUNDtLholGhVYncMqUp5EyCamo5pQ0UgHQ+LHqllZk=
+
 patchedDependencies:
   nx@23.2.1: 2adb43734cd9af1a2dd52441ec49aacfa9671e2bef4933df93d45342920c092f
 
@@ -1524,6 +1526,12 @@ importers:
       '@octokit/auth-app':
         specifier: 'catalog:'
         version: 8.3.1
+      '@pagopa/dx-tasks':
+        specifier: workspace:^
+        version: link:../dx-tasks
+      '@pagopa/nx-dx':
+        specifier: workspace:^
+        version: link:../nx-dx-plugin
       execa:
         specifier: 'catalog:'
         version: 9.6.1
@@ -1540,9 +1548,6 @@ importers:
         specifier: 'catalog:'
         version: 4.6.7
     devDependencies:
-      '@pagopa/dx-tasks':
-        specifier: workspace:^
-        version: link:../dx-tasks
       '@pagopa/eslint-config':
         specifier: workspace:^
         version: link:../eslint-config
@@ -1561,9 +1566,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      tsdown:
-        specifier: 'catalog:'
-        version: 0.22.14(oxc-resolver@11.24.2)(tsx@4.23.15)(typescript@5.9.3)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3

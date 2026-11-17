@@ -1,7 +1,7 @@
 import * as semver from "semver";
 import { stringFormat, z } from "zod/v4";
 
-import type { ModulePublishManifest } from "./manifest.ts";
+import type { TerraformProjectMetadata } from "./project-metadata.ts";
 
 // Validates semver version strings using the semver package.
 // Accepts standard semver format (e.g., 1.2.3, 1.0.0-alpha, 1.2.3+build).
@@ -23,7 +23,7 @@ export const semverSchema = stringFormat(
   "Invalid semver version",
 );
 
-// Defines the publish option schemas shared by plugin defaults and module manifests.
+// Defines the publish option schemas shared by plugin defaults and project metadata.
 export const publishSchema = z.object({
   description: z.string().min(1),
   github: z.object({
@@ -59,14 +59,14 @@ export type PluginPublishOptions = z.infer<typeof pluginPublishOptionsSchema>;
 
 export const mergePublishOptions = (
   pluginPublishOptions: PluginPublishOptions,
-  manifest: ModulePublishManifest,
+  metadata: TerraformProjectMetadata,
 ): PublishOptions => {
   const parseResult = publishSchema.safeParse({
     ...pluginPublishOptions,
-    ...manifest,
+    ...metadata,
     github: {
       ...pluginPublishOptions.github,
-      ...manifest.github,
+      ...metadata.github,
     },
   });
 

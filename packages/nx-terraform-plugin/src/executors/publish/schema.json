@@ -10,19 +10,19 @@
       "type": "string"
     },
     "description": {
-      "description": "Module description from module.json",
+      "description": "Module description from project.json metadata",
       "type": "string"
     },
     "provider": {
-      "description": "Terraform provider from module.json",
+      "description": "Terraform provider from project.json metadata",
       "type": "string"
     },
     "version": {
-      "description": "Module version from module.json",
+      "description": "Module version from project.json metadata",
       "type": "string"
     },
     "githubOwner": {
-      "description": "Optional GitHub owner override from module.json.github.owner",
+      "description": "Optional GitHub owner override from project.json metadata.github.owner",
       "type": "string"
     },
     "useGitHubAppAuthentication": {
