@@ -7,8 +7,8 @@ import { getGitHubPAT } from "../octokit/index.js";
 export const GITHUB_PACKAGES_REGISTRY = "https://npm.pkg.github.com";
 
 /**
- * DX package used to probe the registry. It is the first `gh:@pagopa/*`
- * dependency that `dx init` installs into the generated workspace (see
+ * DX package used to probe the registry. It is the first DX plugin that
+ * `dx init` installs into the generated workspace (see
  * `NX_TERRAFORM_DEPENDENCY`), so reading it proves the DX packages are
  * reachable.
  */

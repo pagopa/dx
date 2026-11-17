@@ -18,17 +18,26 @@ import path from "node:path";
 import { getGitHubPAT } from "../../octokit/index.js";
 import { payloadSchema } from "../generators/monorepo/prompts.js";
 
-/**
- * DX Nx Terraform plugin installed in generated repositories. DX packages are
- * referenced through pnpm's built-in `gh:` alias (GitHub Packages) so that
- * every other dependency keeps resolving from the default registry.
- */
-export const NX_TERRAFORM_DEPENDENCY = "gh:@pagopa/nx-terraform";
+/** DX Nx Terraform plugin installed in generated repositories. */
+export const NX_TERRAFORM_PACKAGE = "@pagopa/nx-terraform";
+
+/** DX Nx Docker plugin installed in generated repositories. */
+export const NX_DOCKER_PACKAGE = "@pagopa/nx-docker";
 
 /**
- * DX Nx Docker plugin installed in generated repositories.
+ * Range of the DX packages inside GitHub Packages, referenced through pnpm's
+ * built-in `gh:` alias so that every other dependency keeps resolving from the
+ * default registry. pnpm 12 expects the alias prefix in the version slot
+ * (`<name>@gh:<range>`): the prefix-first form pnpm 11 accepted
+ * (`gh:<name>`) fails with `ERR_PNPM_INVALID_DEPENDENCY_NAME`.
  */
-export const NX_DOCKER_DEPENDENCY = "gh:@pagopa/nx-docker";
+const GITHUB_PACKAGES_RANGE = "gh:latest";
+
+/** DX Nx Terraform plugin as a pnpm dependency specifier. */
+export const NX_TERRAFORM_DEPENDENCY = `${NX_TERRAFORM_PACKAGE}@${GITHUB_PACKAGES_RANGE}`;
+
+/** DX Nx Docker plugin as a pnpm dependency specifier. */
+export const NX_DOCKER_DEPENDENCY = `${NX_DOCKER_PACKAGE}@${GITHUB_PACKAGES_RANGE}`;
 
 /**
  * Formatter used by `nx format:check` in generated repositories.
@@ -89,7 +98,7 @@ export default function (plop: NodePlopAPI) {
     await $`mise trust`;
     // Pin pnpm in package.json before locking so mise resolves it through the
     // idiomatic version file and records it in mise.lock.
-    await $`mise exec -- corepack use pnpm@11`;
+    await $`mise exec -- corepack use pnpm@12`;
     await $`mise lock`;
     await $`mise install`;
     await $`mise exec -- npx --yes nx@latest init --interactive=false --aiAgents=copilot`;
@@ -106,7 +115,7 @@ export default function (plop: NodePlopAPI) {
     } catch (cause) {
       throw new Error(
         [
-          `Failed to install the workspace dependencies (${NX_TERRAFORM_DEPENDENCY}, ${NX_DOCKER_DEPENDENCY}).`,
+          `Failed to install the workspace dependencies (${NX_TERRAFORM_PACKAGE}, ${NX_DOCKER_PACKAGE}).`,
           "The DX Nx plugins are served by GitHub Packages: make sure the GitHub token used by the CLI has the read:packages scope.",
           "Run `gh auth refresh --scopes read:packages` (or set GITHUB_TOKEN to a personal access token that includes read:packages) and try again.",
         ].join(" "),

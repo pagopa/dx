@@ -177,7 +177,7 @@ describe("monorepo generator — file generation", () => {
     expect(generatedFiles).toMatchSnapshot();
   });
 
-  it("allows the nx build script with the setting pnpm 11 honours", async () => {
+  it("allows the nx build script with the setting pnpm honours", async () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),
       ["pnpm-workspace.yaml"],
@@ -185,7 +185,7 @@ describe("monorepo generator — file generation", () => {
 
     // pnpm 11 renamed `onlyBuiltDependencies` to `allowBuilds`: the old key is
     // ignored, and the ignored postinstall makes `pnpm install` exit with
-    // ERR_PNPM_IGNORED_BUILDS.
+    // ERR_PNPM_IGNORED_BUILDS. pnpm 12 still reads `allowBuilds`.
     expect(generatedFiles["pnpm-workspace.yaml"]).toContain("allowBuilds:");
     expect(generatedFiles["pnpm-workspace.yaml"]).toContain("nx: true");
     expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain(
