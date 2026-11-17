@@ -7,15 +7,16 @@ import type { TokenCredential } from "@azure/identity";
 import { getLogger } from "@logtape/logtape";
 import { type NodePlopAPI } from "node-plop";
 import path from "node:path";
+import { isDeepStrictEqual } from "node:util";
 
-import { makeDestinationHasState } from "../../azure/repository-state-storage.js";
+import { makeRepositoryStateStorage } from "../../azure/repository-state-storage.js";
 import { tf$ } from "../../execa/terraform.js";
 import {
-  ensureRemoteRepositoryState,
-  type RepositoryStateDestination,
-} from "../../terraform/repository-state.js";
+  readRepositoryBackend,
+  repositoryStateDestination,
+} from "../../terraform/repository-backend.js";
+import { ensureRemoteRepositoryState } from "../../terraform/repository-state.js";
 import { payloadSchema } from "../generators/environment/prompts.js";
-import { terraformStateKey } from "../helpers/terraform-state-key.js";
 
 export default function (plop: NodePlopAPI, credential: TokenCredential): void {
   plop.setActionType("prepareRepositoryState", async (data) => {
@@ -25,13 +26,19 @@ export default function (plop: NodePlopAPI, credential: TokenCredential): void {
     if (!backend) {
       throw new Error("Terraform backend is not available");
     }
-    const destination: RepositoryStateDestination = {
-      containerName: "terraform-state",
-      key: terraformStateKey(payload, "repository"),
-      resourceGroupName: backend.resourceGroupName,
-      storageAccountName: backend.storageAccountName,
-      subscriptionId: backend.subscriptionId,
-    };
+    const repositoryPath = path.join(process.cwd(), "infra", "repository");
+    const destination =
+      (await readRepositoryBackend(repositoryPath)) ??
+      repositoryStateDestination(
+        backend,
+        payload.env.prefix,
+        payload.workspace.domain,
+      );
+    if (!isDeepStrictEqual(payload.repositoryStateDestination, destination)) {
+      throw new Error(
+        "The repository state destination was not confirmed or changed since confirmation. Re-run the same `dx add environment` command.",
+      );
+    }
     logger.info(
       "Repository Terraform state destination: {account}/{container}/{key}",
       {
@@ -40,17 +47,24 @@ export default function (plop: NodePlopAPI, credential: TokenCredential): void {
         key: destination.key,
       },
     );
-    const repositoryPath = path.join(process.cwd(), "infra", "repository");
-    const terraform = tf$({ cwd: repositoryPath, reject: false });
-    const status = await ensureRemoteRepositoryState({
-      destination,
-      destinationHasState: makeDestinationHasState(credential),
-      repositoryName: payload.github.repo,
-      repositoryPath,
-      terraform: async (args) => {
-        const { exitCode, stdout } = await terraform`terraform ${args}`;
-        return { exitCode: exitCode ?? 1, stdout: String(stdout) };
-      },
+    const storage = makeRepositoryStateStorage(credential);
+    const status = await storage.withLock(destination, async (cancelSignal) => {
+      const terraform = tf$({
+        cancelSignal,
+        cwd: repositoryPath,
+        reject: false,
+      });
+      return ensureRemoteRepositoryState({
+        destination,
+        destinationExists: storage.exists,
+        repositoryName: payload.github.repo,
+        repositoryPath,
+        terraform: async (args) => {
+          cancelSignal.throwIfAborted();
+          const { exitCode, stdout } = await terraform`terraform ${args}`;
+          return { exitCode: exitCode ?? 1, stdout: String(stdout) };
+        },
+      });
     });
     data.repositoryState = { destination, status };
     return `Repository state: ${status}`;

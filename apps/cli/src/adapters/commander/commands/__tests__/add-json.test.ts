@@ -217,8 +217,20 @@ describe("add environment command json output", () => {
       "preserves resolved backend metadata and omits credentials for $name",
       async ({ authorizationPrs, expectedPayload, sourcePayload }) => {
         const originalPayload = structuredClone(sourcePayload);
+        const repositoryState = {
+          destination: {
+            containerName: "terraform-state",
+            key: "legacy/repository.tfstate",
+            resourceGroupName: "original-rg",
+            storageAccountName: "originalstorage",
+            subscriptionId: "original-sub",
+          },
+          status: "already-remote",
+        };
         const actionResult = {
           ...sourcePayload,
+          repositoryState,
+          repositoryStateDestination: repositoryState.destination,
           terraform: {
             backend: {
               ...terraformBackend,
@@ -258,6 +270,7 @@ describe("add environment command json output", () => {
               authorizationPrs,
               payload: {
                 ...expectedPayload,
+                repositoryState,
                 terraform: { backend: terraformBackend },
               },
             },
@@ -266,6 +279,7 @@ describe("add environment command json output", () => {
         ]);
         const output = [...stdout.written, ...stderr.written].join("");
         expect(output).not.toContain("runnerAppCredentials");
+        expect(output).not.toContain("repositoryStateDestination");
         expect(output).not.toContain(runnerAppCredentials.key);
         expect(output).not.toContain(initializationCredentials.key);
         expect(output).not.toContain(actionResult.terraform.backend.accessKey);

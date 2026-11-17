@@ -168,6 +168,26 @@ Workspace created successfully!
 > The command will fail early if required tools are missing.
 > If you choose not to publish immediately, the CLI prints the manual Terraform and git steps required to finish the setup later.
 
+#### `add environment`
+
+Add a deployment environment and prepare shared Terraform state:
+
+```bash
+dx add environment
+```
+
+After `dx init`, keep the temporary local state in `infra/repository`. On the
+first environment addition, confirm its permanent Azure destination (environment,
+subscription, Resource Group, Storage Account, container, and key). New placements
+use `<prefix>/<domain>/repository.tfstate`; subsequent environments retain the
+configured backend and key. `--yes` accepts the placement non-interactively.
+
+The CLI validates local repository resources and refuses to overwrite an existing
+destination blob, including empty blobs. A clean plan is required before local
+state and backups are removed or GitHub environments are updated. On failure,
+resolve the reported issue and re-run the same command; conflicting local and
+remote states require manual reconciliation.
+
 #### `spec`
 
 Print the full CLI specification as JSON.
