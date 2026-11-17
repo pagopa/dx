@@ -179,9 +179,20 @@ resource "azurerm_monitor_autoscale_setting" "this" {
 }
 
 resource "azurerm_management_lock" "this" {
-  count      = local.use_case_features.lock ? 1 : 0
+  count = local.use_case_features.lock ? 1 : 0
+
   name       = azurerm_api_management.this.name
   scope      = azurerm_api_management.this.id
   lock_level = "CanNotDelete"
   notes      = "This item can't be deleted"
+
+  depends_on = [
+    azurerm_api_management_policy.this,
+    azurerm_monitor_autoscale_setting.this,
+    azurerm_api_management_logger.this,
+    azurerm_api_management_diagnostic.applicationinsights,
+    azurerm_monitor_diagnostic_setting.apim,
+    azurerm_monitor_metric_alert.this,
+    azurerm_private_endpoint.apim_pep,
+  ]
 }
