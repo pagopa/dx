@@ -25,14 +25,27 @@ This module deploys an Azure API Management instance with optional configuration
 | `cost_optimized` | Production workloads with Standard v2 outbound VNet integration. | Yes | Moderate | No | No | StandardV2 alerts |
 | `high_load`      | High-load production workloads.    | Yes  | High (Autoscale) | Yes | `["1", "2"]` | Premium alerts |
 
-For `cost_optimized`, the module delegates its APIM subnet to
-`Microsoft.Web/serverFarms` as required for Standard v2 outbound VNet
-integration. This is separate from the nondelegated subnet used by the APIM
-private endpoint.
+## ⚠️ Limitations ⚠️
+
+### Note about `cost_optimized` use case
+
+The `cost_optimized` use case is designed to balance cost and performance for production workloads. However, it is important to note that it does not support **Backup and Restore** features ([Official documentation](https://learn.microsoft.com/en-us/azure/api-management/v2-service-tiers-overview#classic-feature-availability)).
+
+### Public Network Access Limitation
+
+Azure rejects creation of a new API Management instance with public network
+access disabled. For a new `cost_optimized` deployment:
+
+1. Set `enable_public_network_access = true` and apply to create APIM and its
+   private endpoint. Public access is temporarily enabled during this step.
+2. After that apply succeeds, remove the override (or set it to `false`) and
+   apply again to disable public access.
+
+Existing instances with a configured private endpoint can use the default
+directly. The integration test follows the same two-apply sequence using one
+shared state key for the cost-optimized bootstrap and final configuration.
 
 ## Monitoring
-
-### Default metric alerts
 
 The module creates five-minute alerts with the following defaults, selected by
 `use_case`/SKU:
@@ -85,29 +98,9 @@ Azure creates some resources automatically when the `azurerm_monitor_diagnostic_
 Those resources are necessary to see the logs within the `AzureDiagnostics` table in the Log Analytics workspace.  
 Since Azure can take some time to create those resources, you may not see the logs immediately after the deployment.
 
-## ⚠️ Note about `cost_optimized` use case ⚠️
-
-The `cost_optimized` use case is designed to balance cost and performance for production workloads. However, it is important to note that it does not support **Backup and Restore** features ([Official documentation](https://learn.microsoft.com/en-us/azure/api-management/v2-service-tiers-overview#classic-feature-availability)).
-
 ## Usage Example
 
 For a complete example of how to use this module, refer to the [example/complete](https://github.com/pagopa-dx/terraform-azurerm-azure-api-management/tree/main/example/complete) folder in the module repository.
-
-## Troubleshooting
-
-### ⚠️ Public Network Access Limitation ⚠️
-
-Azure rejects creation of a new API Management instance with public network
-access disabled. For a new `cost_optimized` deployment:
-
-1. Set `enable_public_network_access = true` and apply to create APIM and its
-   private endpoint. Public access is temporarily enabled during this step.
-2. After that apply succeeds, remove the override (or set it to `false`) and
-   apply again to disable public access.
-
-Existing instances with a configured private endpoint can use the default
-directly. The integration test follows the same two-apply sequence using one
-shared state key for the cost-optimized bootstrap and final configuration.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
@@ -115,7 +108,7 @@ shared state key for the cost-optimized bootstrap and final configuration.
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
+| <a name="requirement\_terraform"></a> [terraform](#requirement_terraform) | > = 1.15.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.1 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
@@ -151,14 +144,14 @@ No modules.
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_action_group_id"></a> [action\_group\_id](#input\_action\_group\_id) | The ID of the custom string properties Action Group to include with the post webhook operation. | `string` | `null` | no |
-| <a name="input_application_insights"></a> [application\_insights](#input\_application\_insights) | Application Insights integration. Set to null to disable it or provide an object with the resource ID to enable it; the module resolves the connection string from the resource ID. | <pre>object({<br/>    id                  = string<br/>    sampling_percentage = optional(number, 0)<br/>    verbosity           = optional(string, "error")<br/>  })</pre> | `null` | no |
-| <a name="input_autoscale"></a> [autoscale](#input\_autoscale) | Configuration for autoscaling rules on capacity metrics. | <pre>object(<br/>    {<br/>      default_instances             = optional(number)<br/>      minimum_instances             = optional(number)<br/>      maximum_instances             = optional(number)<br/>      scale_out_capacity_percentage = optional(number)<br/>      scale_out_time_window         = optional(string)<br/>      scale_out_value               = optional(string)<br/>      scale_out_cooldown            = optional(string)<br/>      scale_in_capacity_percentage  = optional(number)<br/>      scale_in_time_window          = optional(string)<br/>      scale_in_value                = optional(string)<br/>      scale_in_cooldown             = optional(string)<br/>    }<br/>  )</pre> | `null` | no |
+| <a name="input\_application\_insights"></a> [application\_insights](#input_application_insights) | Application Insights integration. Set to null to disable it or provide an object with the resource ID to enable it; the module resolves the connection string from the resource ID. | <pre>object({<br>id                  = string<br>sampling\_percentage = optional(number, 0)<br>verbosity           = optional(string, "error")<br>})</pre> | `null` | no |
+| <a name="input\_autoscale"></a> [autoscale](#input_autoscale) | Configuration for autoscaling rules on capacity metrics. | <pre>object(<br>{<br>default\_instances             = optional(number)<br>minimum\_instances             = optional(number)<br>maximum\_instances             = optional(number)<br>scale\_out\_capacity\_percentage = optional(number)<br>scale\_out\_time\_window         = optional(string)<br>scale\_out\_value               = optional(string)<br>scale\_out\_cooldown            = optional(string)<br>scale\_in\_capacity\_percentage  = optional(number)<br>scale\_in\_time\_window          = optional(string)<br>scale\_in\_value                = optional(string)<br>scale\_in\_cooldown             = optional(string)<br>}<br>)</pre> | `null` | no |
 | <a name="input_enable_public_network_access"></a> [enable\_public\_network\_access](#input\_enable\_public\_network\_access) | Override public network access. For a new cost\_optimized instance, apply with true to create APIM and its private endpoint, then remove the override or set false and apply again. Null uses the use-case default. | `bool` | `null` | no |
-| <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
-| <a name="input_hostname_configuration"></a> [hostname\_configuration](#input\_hostname\_configuration) | Custom domain configurations. The proxy hostname is managed by the module; only whether the resource-name hostname is the default can be configured. Key Vault certificate IDs may include a version; the module strips it internally. | <pre>object({<br/>    proxy = optional(object({<br/>      use_resource_name_as_default = optional(bool, false)<br/>    }), {})<br/>    management = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>    portal = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>    developer_portal = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>    scm = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>  })</pre> | `{}` | no |
+| <a name="input\_environment"></a> [environment](#input_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br>prefix          = string<br>env\_short       = string<br>location        = string<br>domain          = optional(string)<br>app\_name        = string<br>instance\_number = string<br>})</pre> | n/a | yes |
+| <a name="input\_hostname\_configuration"></a> [hostname\_configuration](#input_hostname_configuration) | Custom domain configurations. The proxy hostname is managed by the module; only whether the resource-name hostname is the default can be configured. Key Vault certificate IDs may include a version; the module strips it internally. | <pre>object({<br>proxy = optional(object({<br>use\_resource\_name\_as\_default = optional(bool, false)<br>}), {})<br>management = optional(list(object({<br>host\_name                = string<br>key\_vault\_certificate\_id = string<br>})), [])<br>portal = optional(list(object({<br>host\_name                = string<br>key\_vault\_certificate\_id = string<br>})), [])<br>developer\_portal = optional(list(object({<br>host\_name                = string<br>key\_vault\_certificate\_id = string<br>})), [])<br>scm = optional(list(object({<br>host\_name                = string<br>key\_vault\_certificate\_id = string<br>})), [])<br>})</pre> | `{}` | no |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The Log Analytics workspace ID used for diagnostic logs and metrics. Required when the selected use\_case enables monitoring. | `string` | `null` | no |
 | <a name="input_metric_alert_thresholds"></a> [metric\_alert\_thresholds](#input\_metric\_alert\_thresholds) | Optional overrides for built-in metric alerts. Set a positive threshold to override it or null to disable that alert; omitted alerts keep their defaults. | `map(number)` | `{}` | no |
-| <a name="input_metric_alerts"></a> [metric\_alerts](#input\_metric\_alerts) | Optional map of metric alert definitions. When null, the module creates supported defaults for the selected use\_case. | <pre>map(object({<br/>    description   = string<br/>    frequency     = string<br/>    window_size   = string<br/>    severity      = number<br/>    auto_mitigate = bool<br/><br/>    criteria = set(object(<br/>      {<br/>        aggregation = string<br/>        dimension = list(object(<br/>          {<br/>            name     = string<br/>            operator = string<br/>            values   = list(string)<br/>          }<br/>        ))<br/>        metric_name            = string<br/>        metric_namespace       = string<br/>        operator               = string<br/>        skip_metric_validation = bool<br/>        threshold              = number<br/>      }<br/>    ))<br/><br/>    dynamic_criteria = set(object(<br/>      {<br/>        aggregation              = string<br/>        alert_sensitivity        = string<br/>        dimension                = list(object({ name = string, operator = string, values = list(string) }))<br/>        evaluation_failure_count = number<br/>        evaluation_total_count   = number<br/>        ignore_data_before       = string<br/>        metric_name              = string<br/>        metric_namespace         = string<br/>        operator                 = string<br/>        skip_metric_validation   = bool<br/>      }<br/>    ))<br/>  }))</pre> | `null` | no |
+| <a name="input\_metric\_alerts"></a> [metric\_alerts](#input_metric_alerts) | Optional map of metric alert definitions. When null, the module creates supported defaults for the selected use\_case. | <pre>map(object({<br>description   = string<br>frequency     = string<br>window\_size   = string<br>severity      = number<br>auto\_mitigate = bool<br>criteria = set(object(<br>{<br>aggregation = string<br>dimension = list(object(<br>{<br>name     = string<br>operator = string<br>values   = list(string)<br>}<br>))<br>metric\_name            = string<br>metric\_namespace       = string<br>operator               = string<br>skip\_metric\_validation = bool<br>threshold              = number<br>}<br>))<br>dynamic\_criteria = set(object(<br>{<br>aggregation              = string<br>alert\_sensitivity        = string<br>dimension                = list(object({ name = string, operator = string, values = list(string) }))<br>evaluation\_failure\_count = number<br>evaluation\_total\_count   = number<br>ignore\_data\_before       = string<br>metric\_name              = string<br>metric\_namespace         = string<br>operator                 = string<br>skip\_metric\_validation   = bool<br>}<br>))<br>}))</pre> | `null` | no |
 | <a name="input_private_dns_zone_resource_group_name"></a> [private\_dns\_zone\_resource\_group\_name](#input\_private\_dns\_zone\_resource\_group\_name) | The resource group name of the private DNS zones. Defaults to the Virtual Network resource group. Zones are resolved in the current subscription. | `string` | `null` | no |
 | <a name="input_publisher_email"></a> [publisher\_email](#input\_publisher\_email) | The email address of the publisher or company. Also used as the notification sender email. | `string` | n/a | yes |
 | <a name="input_publisher_name"></a> [publisher\_name](#input\_publisher\_name) | The name of the publisher or company. | `string` | n/a | yes |
