@@ -1,4 +1,4 @@
-FROM node:26-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
 
 RUN apk add --no-cache libc6-compat
 
@@ -10,10 +10,12 @@ COPY patches ./patches
 COPY apps/dx-metrics/package.json ./apps/dx-metrics/
 COPY packages/dx-metrics-core/package.json ./packages/dx-metrics-core/
 
-# Corepack is no longer bundled with Node.js >= 25, so pnpm is installed
-# directly from the version pinned in package.json (`packageManager`).
-RUN PNPM_VERSION="$(node -p 'require("./package.json").packageManager.replace(/^pnpm@/, "")')" && \
-    npm install -g "pnpm@${PNPM_VERSION}" && \
+# Corepack is no longer bundled with Node.js >= 25, so pnpm is installed with
+# get-pnpm, which resolves the version pinned in package.json (`packageManager`).
+ENV PNPM_HOME=/opt/pnpm
+ENV PATH="$PNPM_HOME/bin:$PATH"
+
+RUN npx --yes get-pnpm@latest --no-modify-path && \
     pnpm install --frozen-lockfile --filter dx-metrics...
 
 COPY apps/dx-metrics ./apps/dx-metrics

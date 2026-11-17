@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:26-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5 AS base
+FROM public.ecr.aws/docker/library/node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS base
 
 # 1. Set working directory
 WORKDIR /app
@@ -8,9 +8,12 @@ COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./nx.json ./tsconfig.
 COPY ./.pnpmfile.cjs ./
 COPY ./patches ./patches
 
-# 3. Install pnpm (Corepack is no longer bundled with Node.js >= 25)
-RUN PNPM_VERSION="$(node -p 'require("./package.json").packageManager.replace(/^pnpm@/, "")')" && \
-    npm install -g "pnpm@${PNPM_VERSION}"
+# 3. Install pnpm with get-pnpm, which resolves the version pinned in
+# package.json (`packageManager`); Corepack is no longer bundled with Node.js >= 25
+ENV PNPM_HOME=/opt/pnpm
+ENV PATH="$PNPM_HOME/bin:$PATH"
+
+RUN npx --yes get-pnpm@latest --no-modify-path
 
 # 4. Copy source code for apps and packages
 COPY ./apps ./apps
@@ -25,7 +28,7 @@ RUN pnpm nx build @pagopa/dx-mcpserver
 RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod --config.allow-unused-patches=true /app/deploy
 
 # --- Final Image ---
-FROM public.ecr.aws/docker/library/node:26-alpine@sha256:6bd9ab43c0ec0190ca7b2d193906cb8b7edf6e7f4afa43ddeccd6452710bffb5
+FROM public.ecr.aws/docker/library/node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
 WORKDIR /app
 
 # Copy the AWS Lambda Adapter
