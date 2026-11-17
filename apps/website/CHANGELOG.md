@@ -1,3 +1,13 @@
+## 0.22.25 (2026-11-17)
+
+### 🚀 Features
+
+- Update docs to reflect the new dx-cli `--code-owner` flag ([#2484](https://github.com/pagopa/dx/pull/2484))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.22.24 (2026-11-17)
 
 ### 🩹 Fixes
