@@ -32,6 +32,17 @@ variables {
 
 mock_provider "azurerm" {}
 
+override_resource {
+  target = azurerm_linux_function_app_slot.this
+  values = {
+    identity = {
+      type         = "SystemAssigned"
+      principal_id = "00000000-0000-0000-0000-000000000002"
+      tenant_id    = "00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
+
 override_data {
   target = data.azurerm_virtual_network.this
   values = {
@@ -183,6 +194,11 @@ run "azure_function_app_durable_functions" {
     target = azurerm_linux_function_app.this
     values = {
       id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/sites/function-test"
+      identity = {
+        type         = "SystemAssigned"
+        principal_id = "00000000-0000-0000-0000-000000000001"
+        tenant_id    = "00000000-0000-0000-0000-000000000000"
+      }
     }
   }
 
@@ -422,8 +438,12 @@ run "azure_function_app_package_state_for_container_migration" {
   override_resource {
     target = azurerm_linux_function_app.this
     values = {
-      id           = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/sites/function-test"
-      principal_id = "00000000-0000-0000-0000-000000000001"
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/sites/function-test"
+      identity = {
+        type         = "SystemAssigned"
+        principal_id = "00000000-0000-0000-0000-000000000001"
+        tenant_id    = "00000000-0000-0000-0000-000000000000"
+      }
     }
   }
 
