@@ -19,14 +19,12 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    BusinessUnit   = "DevEx"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
-    ManagementTeam = "Developer Experience"
-    Test           = "true"
-    TestName       = "Azure Function App integration tests"
+    CostCenter  = "DevEx"
+    Environment = "Uat"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
+    Test        = "true"
+    TestName    = "Azure Function App integration tests"
   }
 }
 

@@ -9,14 +9,12 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS720 - DEV EX"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    BusinessUnit   = "DevEx"
-    ManagementTeam = "Developer Experience"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
-    Test           = "true"
-    TestName       = "Azure Function App unit tests"
+    CostCenter  = "DevEx"
+    Environment = "Uat"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
+    Test        = "true"
+    TestName    = "Azure Function App unit tests"
   }
 
   resource_group_name = "rg-test"
