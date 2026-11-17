@@ -1,5 +1,5 @@
 resource "azurerm_api_management_logger" "this" {
-  count = var.application_insights.id != null ? 1 : 0
+  count = var.application_insights != null ? 1 : 0
 
   name                = "${local.apim.name}-logger"
   api_management_name = azurerm_api_management.this.name
@@ -12,7 +12,7 @@ resource "azurerm_api_management_logger" "this" {
 }
 
 resource "azurerm_api_management_diagnostic" "applicationinsights" {
-  count = var.application_insights.id != null ? 1 : 0
+  count = var.application_insights != null ? 1 : 0
 
   identifier               = "applicationinsights"
   api_management_name      = azurerm_api_management.this.name

@@ -151,12 +151,17 @@ variable "hostname_configuration" {
 
 variable "application_insights" {
   type = object({
-    id                  = optional(string, null)
+    id                  = string
     sampling_percentage = optional(number, 0)
     verbosity           = optional(string, "error")
   })
-  default     = {}
-  description = "Application Insights integration. Set id to enable it; the module resolves the connection string from the resource ID."
+  default     = null
+  description = "Application Insights integration. Set to null to disable it or provide an object with the resource ID to enable it; the module resolves the connection string from the resource ID."
+
+  validation {
+    condition     = var.application_insights == null ? true : var.application_insights.id != null
+    error_message = "You must provide a non-null resource ID when enabling Application Insights integration."
+  }
 
   validation {
     condition     = try(var.application_insights.sampling_percentage, 0) >= 0 && try(var.application_insights.sampling_percentage, 0) <= 100

@@ -103,6 +103,11 @@ run "azure_api_management_cost_optimized_defaults" {
   }
 
   assert {
+    condition     = length(data.azurerm_application_insights.this) == 0 && length(azurerm_api_management_logger.this) == 0 && length(azurerm_api_management_diagnostic.applicationinsights) == 0
+    error_message = "Application Insights integration must be disabled when its configuration is omitted."
+  }
+
+  assert {
     condition     = length(azurerm_private_endpoint.apim_pep) == 1
     error_message = "cost_optimized must create a private endpoint."
   }

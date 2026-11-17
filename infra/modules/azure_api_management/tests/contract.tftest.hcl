@@ -205,6 +205,7 @@ run "azure_api_management_invalid_application_insights_sampling" {
 
   variables {
     application_insights = {
+      id                  = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-observability/providers/Microsoft.Insights/components/appi-test"
       sampling_percentage = 101
       verbosity           = "error"
     }
@@ -220,8 +221,23 @@ run "azure_api_management_invalid_application_insights_verbosity" {
 
   variables {
     application_insights = {
+      id                  = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-observability/providers/Microsoft.Insights/components/appi-test"
       sampling_percentage = 50
       verbosity           = "debug"
+    }
+  }
+
+  expect_failures = [
+    var.application_insights,
+  ]
+}
+
+run "azure_api_management_rejects_null_application_insights_id" {
+  command = plan
+
+  variables {
+    application_insights = {
+      id = null
     }
   }
 
