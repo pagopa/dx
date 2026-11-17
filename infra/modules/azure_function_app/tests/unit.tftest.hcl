@@ -144,10 +144,46 @@ run "azure_function_app_external_subnet" {
 }
 
 run "azure_function_app_durable_functions" {
-  command = plan
+  command   = apply
+  state_key = "durable-functions"
 
   variables {
     has_durable_functions = true
+  }
+
+  override_resource {
+    target = azurerm_service_plan.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/serverFarms/plan-test"
+    }
+  }
+
+  override_resource {
+    target = azurerm_subnet.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/functions"
+    }
+  }
+
+  override_resource {
+    target = azurerm_storage_account.this
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/sttest"
+    }
+  }
+
+  override_resource {
+    target = azurerm_storage_account.durable_function[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/stdurable"
+    }
+  }
+
+  override_resource {
+    target = azurerm_linux_function_app.this
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/sites/function-test"
+    }
   }
 
   assert {
@@ -158,6 +194,39 @@ run "azure_function_app_durable_functions" {
   assert {
     condition     = azurerm_linux_function_app.this.app_settings["DfStorageConnectionName__accountname"] == azurerm_storage_account.durable_function[0].name
     error_message = "The Function App must use the dedicated Durable Functions storage account."
+  }
+
+  assert {
+    condition     = azurerm_subnet.this[0].address_prefixes == tolist([var.subnet_cidr]) && azurerm_subnet.this[0].delegation[0].service_delegation[0].name == "Microsoft.Web/serverFarms"
+    error_message = "The Function App subnet must use its allocated CIDR and the Microsoft.Web/serverFarms delegation."
+  }
+
+  assert {
+    condition = alltrue([
+      for endpoint in [
+        azurerm_private_endpoint.st_blob,
+        azurerm_private_endpoint.st_file,
+        azurerm_private_endpoint.st_queue,
+      ] : endpoint.private_service_connection[0].private_connection_resource_id == azurerm_storage_account.this.id
+      ]) && (
+      azurerm_private_endpoint.function_sites.private_service_connection[0].private_connection_resource_id == azurerm_linux_function_app.this.id &&
+      azurerm_private_endpoint.staging_function_sites[0].private_service_connection[0].private_connection_resource_id == azurerm_linux_function_app.this.id &&
+      toset(azurerm_private_endpoint.staging_function_sites[0].private_service_connection[0].subresource_names) == toset(["sites-${azurerm_linux_function_app_slot.this[0].name}"])
+    )
+    error_message = "Private endpoints must target the primary storage account, the Function App, and its staging slot."
+  }
+
+  assert {
+    condition = alltrue([
+      for assignment in [
+        azurerm_role_assignment.function_storage_blob_data_owner,
+        azurerm_role_assignment.staging_function_storage_blob_data_owner[0],
+      ] : assignment.scope == azurerm_storage_account.this.id && assignment.role_definition_name == "Storage Blob Data Owner"
+      ]) && (
+      azurerm_role_assignment.function_storage_blob_data_owner.principal_id == azurerm_linux_function_app.this.identity[0].principal_id &&
+      azurerm_role_assignment.staging_function_storage_blob_data_owner[0].principal_id == azurerm_linux_function_app_slot.this[0].identity[0].principal_id
+    )
+    error_message = "The Function App and staging slot identities must receive Storage Blob Data Owner on the primary storage account."
   }
 }
 

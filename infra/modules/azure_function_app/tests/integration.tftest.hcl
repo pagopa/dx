@@ -76,7 +76,7 @@ run "apply_default_and_durable_function_app" {
   }
 
   assert {
-    condition     = azurerm_subnet.this[0].address_prefixes == [run.setup.subnet_cidr] && azurerm_subnet.this[0].delegation[0].service_delegation[0].name == "Microsoft.Web/serverFarms"
+    condition     = azurerm_subnet.this[0].address_prefixes == tolist([run.setup.subnet_cidr]) && azurerm_subnet.this[0].delegation[0].service_delegation[0].name == "Microsoft.Web/serverFarms"
     error_message = "The Function App subnet must use its allocated CIDR and the Microsoft.Web/serverFarms delegation."
   }
 
@@ -91,8 +91,18 @@ run "apply_default_and_durable_function_app" {
   }
 
   assert {
-    condition     = length(azurerm_private_endpoint.st_blob) == 1 && length(azurerm_private_endpoint.st_file) == 1 && length(azurerm_private_endpoint.st_queue) == 1 && length(azurerm_private_endpoint.function_sites) == 1 && length(azurerm_private_endpoint.staging_function_sites) == 1
-    error_message = "The default Function App must create private endpoints for storage, the app, and its staging slot."
+    condition = alltrue([
+      for endpoint in [
+        azurerm_private_endpoint.st_blob,
+        azurerm_private_endpoint.st_file,
+        azurerm_private_endpoint.st_queue,
+      ] : endpoint.private_service_connection[0].private_connection_resource_id == azurerm_storage_account.this.id
+      ]) && (
+      azurerm_private_endpoint.function_sites.private_service_connection[0].private_connection_resource_id == azurerm_linux_function_app.this.id &&
+      azurerm_private_endpoint.staging_function_sites[0].private_service_connection[0].private_connection_resource_id == azurerm_linux_function_app.this.id &&
+      toset(azurerm_private_endpoint.staging_function_sites[0].private_service_connection[0].subresource_names) == toset(["sites-${azurerm_linux_function_app_slot.this[0].name}"])
+    )
+    error_message = "Private endpoints must target the primary storage account, the Function App, and its staging slot."
   }
 
   assert {
@@ -106,8 +116,16 @@ run "apply_default_and_durable_function_app" {
   }
 
   assert {
-    condition     = length(azurerm_role_assignment.function_storage_blob_data_owner) == 1 && length(azurerm_role_assignment.staging_function_storage_blob_data_owner) == 1
-    error_message = "The Function App and staging slot identities must receive storage data access."
+    condition = alltrue([
+      for assignment in [
+        azurerm_role_assignment.function_storage_blob_data_owner,
+        azurerm_role_assignment.staging_function_storage_blob_data_owner[0],
+      ] : assignment.scope == azurerm_storage_account.this.id && assignment.role_definition_name == "Storage Blob Data Owner"
+      ]) && (
+      azurerm_role_assignment.function_storage_blob_data_owner.principal_id == azurerm_linux_function_app.this.identity[0].principal_id &&
+      azurerm_role_assignment.staging_function_storage_blob_data_owner[0].principal_id == azurerm_linux_function_app_slot.this[0].identity[0].principal_id
+    )
+    error_message = "The Function App and staging slot identities must receive Storage Blob Data Owner on the primary storage account."
   }
 
   assert {
