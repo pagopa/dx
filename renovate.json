@@ -33,6 +33,13 @@
       "prCreation": "immediate"
     },
     {
+      "description": "Node.js 25+ drops Corepack; keep the images on the 24 line to stay aligned with .node-version and CI",
+      "matchManagers": ["dockerfile"],
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["node", "public.ecr.aws/docker/library/node"],
+      "allowedVersions": "<25"
+    },
+    {
       "matchManagers": ["terraform"],
       "matchDatasources": ["terraform-provider"],
       "matchPackageNames": ["!/^pagopa-dx\\//"],
