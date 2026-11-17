@@ -1,17 +1,22 @@
-import perfectionist from "eslint-plugin-perfectionist";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import {
   BASE_CONFIG_PATH,
-  getOxlintRuleNames,
   loadBaseConfig,
   type OxlintConfig,
+  runOxlint,
 } from "./support.ts";
 
 const require = createRequire(import.meta.url);
 
 const config = loadBaseConfig();
+
+const CLEAN_TYPESCRIPT =
+  "const value = 1;\nexport const doubled = value * 2;\n";
 
 const allRules = (source: OxlintConfig) => [
   ...Object.keys(source.rules),
@@ -23,20 +28,40 @@ const pluginOf = (rule: string) =>
 
 const jsPluginNames = config.jsPlugins.map(({ name }) => name);
 
-const perfectionistRules = new Set(Object.keys(perfectionist.rules ?? {}));
+/**
+ * Lints a clean file from a scratch directory whose `.oxlintrc.json` extends
+ * the published config, the way a consumer project loads it.
+ */
+const lintAsConsumer = (rules: Record<string, unknown> = {}) => {
+  const directory = mkdtempSync(join(tmpdir(), "oxlint-config-"));
+
+  try {
+    writeFileSync(join(directory, "clean.ts"), CLEAN_TYPESCRIPT);
+    writeFileSync(
+      join(directory, ".oxlintrc.json"),
+      JSON.stringify({ extends: [BASE_CONFIG_PATH], rules }),
+    );
+    return runOxlint(directory, "clean.ts");
+  } finally {
+    rmSync(directory, { force: true, recursive: true });
+  }
+};
 
 describe("base config", () => {
-  it("declares only rules oxlint knows about", () => {
-    const oxlintRules = getOxlintRuleNames();
-    const unknown = allRules(config).filter((rule) => {
-      const plugin = pluginOf(rule);
-      if (plugin && jsPluginNames.includes(plugin)) {
-        return !perfectionistRules.has(rule.slice(plugin.length + 1));
-      }
-      return !oxlintRules.has(rule);
+  it("lints a clean TypeScript file without findings", () => {
+    const { status, stdout } = lintAsConsumer();
+
+    expect(stdout).toBe("");
+    expect(status).toBe(0);
+  });
+
+  it("fails on a rule oxlint does not know about", () => {
+    const { status, stdout } = lintAsConsumer({
+      "no-debugger-typo": "error",
     });
 
-    expect(unknown).toEqual([]);
+    expect(stdout).toContain("not found in plugin");
+    expect(status).toBe(1);
   });
 
   it("registers the plugins its rules belong to", () => {

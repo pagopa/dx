@@ -1,8 +1,15 @@
+import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
 const require = createRequire(import.meta.url);
+
+export interface LintResult {
+  status: null | number;
+  stderr: string;
+  stdout: string;
+}
 
 export interface OxlintConfig {
   categories: Record<string, RuleValue>;
@@ -26,21 +33,25 @@ export const PACKAGE_ROOT = join(import.meta.dirname, "..", "..");
 
 export const BASE_CONFIG_PATH = join(PACKAGE_ROOT, "base.json");
 
-const OXLINT_PACKAGE_ROOT = dirname(require.resolve("oxlint/package.json"));
-
-export const OXLINT_SCHEMA_PATH = join(
-  OXLINT_PACKAGE_ROOT,
-  "configuration_schema.json",
+const OXLINT_BIN_PATH = join(
+  dirname(require.resolve("oxlint/package.json")),
+  "bin",
+  "oxlint",
 );
 
 export const loadBaseConfig = (): OxlintConfig =>
   JSON.parse(readFileSync(BASE_CONFIG_PATH, "utf8")) as OxlintConfig;
 
-export const getOxlintRuleNames = (): Set<string> => {
-  const schema = JSON.parse(readFileSync(OXLINT_SCHEMA_PATH, "utf8")) as {
-    definitions?: { DummyRuleMap?: { properties?: Record<string, unknown> } };
-  };
-  return new Set(
-    Object.keys(schema.definitions?.DummyRuleMap?.properties ?? {}),
+export const runOxlint = (cwd: string, target: string): LintResult => {
+  const { error, status, stderr, stdout } = spawnSync(
+    OXLINT_BIN_PATH,
+    [target],
+    { cwd, encoding: "utf8" },
   );
+
+  if (error) {
+    throw error;
+  }
+
+  return { status, stderr, stdout };
 };

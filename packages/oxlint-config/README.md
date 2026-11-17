@@ -142,17 +142,18 @@ pnpm exec eslint src
 
 ## How this package is verified
 
-The test suite in `src/__tests__` validates the shape of `base.json` against
-oxlint's own schema, so it fails on a typo, a rule that oxlint does not ship, a
-missing plugin registration, or a category left enabled:
+The test suite in `src/__tests__` runs oxlint itself, from a scratch directory
+whose `.oxlintrc.json` extends the published `base.json`, against a clean file.
+oxlint rejects a configuration that it cannot load, so a typo, a rule it does
+not ship, a broken plugin reference or an invalid option value all make this
+test fail. The suite also checks what oxlint alone cannot report:
 
-- every rule id exists in oxlint's `configuration_schema.json` or in the
-  perfectionist plugin;
 - every plugin prefix used by a rule is declared in `plugins` or `jsPlugins`,
   and no declared plugin is unused;
 - the seven oxlint categories are all `off`, so coverage is explicit;
 - TypeScript files turn off the checks the compiler already reports and enable
-  the two script-only ones.
+  the two script-only ones;
+- both `exports` entries resolve to `base.json`.
 
 Run them with:
 
