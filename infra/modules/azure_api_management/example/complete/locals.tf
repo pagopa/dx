@@ -28,7 +28,7 @@ locals {
   }
 
   tags = {
-    CostCenter  = "TS000 - Tecnologia e Servizi"
+    CostCenter  = "TS720 - DEV EX"
     Environment = "Dev"
     Owner       = "DevEx"
     Source      = "https://github.com/pagopa/dx/modules/azure_api_management/examples/complete"
