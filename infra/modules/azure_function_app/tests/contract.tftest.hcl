@@ -8,7 +8,7 @@ variables {
     instance_number = "01"
   }
 
-  tags                = { Owner = "DevEx" }
+  tags                = { CostCenter = "TS720 - DEV EX", Owner = "DevEx" }
   resource_group_name = "rg-test"
   virtual_network = {
     name                = "vnet-test"

@@ -1,12 +1,14 @@
 terraform {
+  required_version = ">= 1.16.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.8"
+      version = "~> 5.8"
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
+      version = "~> 0.12"
     }
   }
 }
@@ -35,6 +37,11 @@ locals {
 data "azurerm_virtual_network" "vnet" {
   name                = local.virtual_network.name
   resource_group_name = local.virtual_network.resource_group_name
+}
+
+resource "dx_available_subnet_cidr" "function_app" {
+  virtual_network_id = data.azurerm_virtual_network.vnet.id
+  prefix_length      = 24
 }
 
 data "azurerm_monitor_action_group" "appi" {
@@ -74,6 +81,10 @@ output "vnet" {
     name                = data.azurerm_virtual_network.vnet.name
     resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
   }
+}
+
+output "subnet_cidr" {
+  value = dx_available_subnet_cidr.function_app.cidr_block
 }
 
 output "action_group_appi_id" {
