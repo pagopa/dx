@@ -2,6 +2,9 @@ FROM node:26-alpine@sha256:8996bb5821d62a8fd9bb27c1cb07462f3fdce6e47d640c6a881ea
 
 RUN apk add --no-cache libc6-compat
 
+# Corepack is no longer bundled with Node.js >= 25, so install it explicitly
+RUN npm install -g corepack
+
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.json ./

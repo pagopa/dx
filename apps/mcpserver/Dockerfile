@@ -1,6 +1,6 @@
 FROM public.ecr.aws/docker/library/node:26-alpine@sha256:8996bb5821d62a8fd9bb27c1cb07462f3fdce6e47d640c6a881ead0b064ce216 AS base
-# 1. Enable pnpm
-RUN corepack enable
+# 1. Enable pnpm (Corepack is no longer bundled with Node.js >= 25)
+RUN npm install -g corepack && corepack enable
 
 # 2. Set working directory
 WORKDIR /app
