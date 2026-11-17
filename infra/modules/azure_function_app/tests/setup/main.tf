@@ -39,6 +39,11 @@ data "azurerm_virtual_network" "vnet" {
   resource_group_name = local.virtual_network.resource_group_name
 }
 
+resource "dx_available_subnet_cidr" "function_app" {
+  virtual_network_id = data.azurerm_virtual_network.vnet.id
+  prefix_length      = 24
+}
+
 data "azurerm_monitor_action_group" "appi" {
   name = "Application Insights Smart Detection"
   resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
@@ -76,6 +81,10 @@ output "vnet" {
     name                = data.azurerm_virtual_network.vnet.name
     resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
   }
+}
+
+output "subnet_cidr" {
+  value = dx_available_subnet_cidr.function_app.cidr_block
 }
 
 output "action_group_appi_id" {
