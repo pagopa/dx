@@ -7,6 +7,7 @@ import nodePlop from "node-plop";
 import { Octokit } from "octokit";
 
 import type { TerraformBackend } from "../../domain/remote-backend.js";
+import type { RepositoryStateStatus } from "../terraform/repository-state.js";
 
 import { GitHubRepo } from "../../domain/github-repo.js";
 import { GitHubService, RepositoryNotFoundError } from "../../domain/github.js";
@@ -24,6 +25,7 @@ import createMonorepoGenerator, {
   PLOP_MONOREPO_GENERATOR_NAME,
 } from "../plop/generators/monorepo/index.js";
 import setConfigureGitHubEnvironmentsAction from "./actions/configure-github-environments.js";
+import setPrepareRepositoryStateAction from "./actions/prepare-repository-state.js";
 import { resolveTemplatesPath } from "./templates-path.js";
 
 export const setMonorepoGenerator = (
@@ -171,9 +173,19 @@ export const collectDeploymentEnvironmentPayload = async (
 };
 
 export type DeploymentEnvironmentOutputPayload = EnvironmentPayload & {
+  repositoryState?: RepositoryStateResult;
   terraform?: {
     backend?: TerraformBackend;
   };
+};
+
+export type RepositoryStateResult = {
+  destination: {
+    containerName: string;
+    key: string;
+    storageAccountName: string;
+  };
+  status: RepositoryStateStatus;
 };
 
 /**
@@ -210,6 +222,7 @@ export const setDeploymentEnvironmentGenerator = (
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
   const cloudAccountService = new AzureCloudAccountService(credential);
 
+  setPrepareRepositoryStateAction(plop, credential);
   setConfigureGitHubEnvironmentsAction(
     plop,
     cloudAccountService,

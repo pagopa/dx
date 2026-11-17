@@ -173,6 +173,9 @@ describe("init command json output", () => {
         data: {
           gitHubRepoCreationSkipped: true,
           payload,
+          warnings: [
+            expect.objectContaining({ code: "REPOSITORY_STATE_LOCAL" }),
+          ],
         },
         ok: true,
       },

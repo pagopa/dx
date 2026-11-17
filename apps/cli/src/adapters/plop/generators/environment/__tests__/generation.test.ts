@@ -72,6 +72,12 @@ const registerEnvironmentSetup = (
     "initTerraformProjects",
     async () => "Generated Terraform projects initialized",
   );
+  // Repository state migration needs Azure and Terraform; covered by its own
+  // test of the repository-state module.
+  plop.setActionType(
+    "prepareRepositoryState",
+    async () => "Repository state prepared",
+  );
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
