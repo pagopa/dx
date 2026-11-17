@@ -11,6 +11,7 @@ import { makeSavemoneyCli } from "../cli.js";
 import { azure, loadConfig } from "../index.js";
 
 const config: AzureConfig = {
+  includeActualCost: false,
   preferredLocation: "italynorth",
   sources: ["advisor", "custom"],
   subscriptionIds: ["config-subscription"],
@@ -130,6 +131,7 @@ describe("savemoney CLI", () => {
       "--format",
       "json",
       "--no-pricing",
+      "--include-actual-cost",
       "--azqr-report",
       "./azqr-report.json",
       "--verbose",
@@ -146,6 +148,7 @@ describe("savemoney CLI", () => {
         ["env", "prod"],
         ["url", "https://example.com/path=1"],
       ]),
+      includeActualCost: true,
       preferredLocation: "westeurope",
       pricing: { enabled: false },
       sources: ["advisor", "custom"],

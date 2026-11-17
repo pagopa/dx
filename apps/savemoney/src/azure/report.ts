@@ -6,6 +6,7 @@ import Table from "cli-table3";
 
 import type { Money } from "../finding.js";
 import type {
+  ActualCost,
   AzureDetailedResourceReport,
   AzureResourceReport,
 } from "./types.js";
@@ -38,6 +39,8 @@ const RISK_COLOR = {
 } as const;
 
 type Summary = {
+  actualCostPeriod?: ActualCost["period"];
+  actualCostsByCurrency: Map<string, number>;
   /**
    * Per-resource cost (i.e. the monthly bill the resource is currently
    * generating) summed across resources flagged as suspected unused by
@@ -77,9 +80,18 @@ export async function generateReport(
     generateLintReport(report);
   } else {
     const summaryReport = report.map(toResourceReport);
+    const hasActualCosts = report.some((entry) => entry.actualCosts?.length);
     const table = new Table({
-      colWidths: [...COL_WIDTHS],
-      head: ["Name", "Type", "Resource Group", "Risk", "Reason", "Savings"],
+      colWidths: hasActualCosts ? [27, 30, 20, 8, 43, 14, 18] : [...COL_WIDTHS],
+      head: [
+        "Name",
+        "Type",
+        "Resource Group",
+        "Risk",
+        "Reason",
+        "Savings",
+        ...(hasActualCosts ? ["Actual cost (last 30 days)"] : []),
+      ],
       wordWrap: true,
     });
     for (const r of summaryReport) {
@@ -95,6 +107,7 @@ export async function generateReport(
               r.estimatedMonthlySavings.currency,
             )
           : "",
+        ...(hasActualCosts ? [formatActualCosts(r.actualCosts)] : []),
       ]);
     }
     console.log(table.toString());
@@ -106,17 +119,24 @@ export async function generateReport(
 
 /**
  * Walks the report once to compute totals, source breakdown and savings
- * per currency without mutating it. Used by the table format, which has
- * no per-line walk of its own.
+ * per currency without mutating it, shared by lint and table formats.
  */
 function computeSummary(report: AzureDetailedResourceReport[]): Summary {
   const summary: Summary = {
+    actualCostsByCurrency: new Map(),
     costAtRiskByCurrency: new Map(),
     counts: { high: 0, low: 0, medium: 0 },
     savingsByCurrency: new Map(),
     sourceCounts: {},
   };
   for (const entry of report) {
+    for (const cost of entry.actualCosts ?? []) {
+      summary.actualCostPeriod = cost.period;
+      summary.actualCostsByCurrency.set(
+        cost.currency,
+        (summary.actualCostsByCurrency.get(cost.currency) ?? 0) + cost.amount,
+      );
+    }
     const lines = entry.findings?.length
       ? entry.findings.map((f) => ({
           savings: f.estimatedMonthlySavings,
@@ -152,6 +172,12 @@ function computeSummary(report: AzureDetailedResourceReport[]): Summary {
     }
   }
   return summary;
+}
+
+function formatActualCosts(actualCosts: ActualCost[] | undefined): string {
+  return (actualCosts ?? [])
+    .map((cost) => formatAmount(cost.amount, cost.currency))
+    .join(" + ");
 }
 
 /**
@@ -217,29 +243,19 @@ function formatPerFindingSavings(savings?: Money): string {
  *   Estimated monthly savings (advisor):     € 12.50
  */
 function generateLintReport(report: AzureDetailedResourceReport[]): void {
-  const summary: Summary = {
-    costAtRiskByCurrency: new Map(),
-    counts: { high: 0, low: 0, medium: 0 },
-    savingsByCurrency: new Map(),
-    sourceCounts: {},
-  };
-
   for (const entry of report) {
     const resourceId =
       entry.resource.id ?? `unknown/${entry.resource.name ?? "unknown"}`;
     const costAtRisk = entry.analysis.estimatedMonthlySavings;
+    const actualCost = formatActualCosts(entry.actualCosts);
     const header = costAtRisk
       ? `${BOLD}${resourceId}${RESET}  ${GREEN}(cost at risk: ${formatAmount(costAtRisk.amount, costAtRisk.currency)}/mo)${RESET}`
       : `${BOLD}${resourceId}${RESET}`;
-    console.log(header);
-    if (costAtRisk) {
-      summary.costAtRiskByCurrency.set(
-        costAtRisk.currency,
-        (summary.costAtRiskByCurrency.get(costAtRisk.currency) ?? 0) +
-          costAtRisk.amount,
-      );
-    }
-
+    console.log(
+      actualCost
+        ? `${header}  ${CYAN}(last 30 days: ${actualCost})${RESET}`
+        : header,
+    );
     const lines = entry.findings?.length
       ? entry.findings.map((f) => ({
           extra:
@@ -266,27 +282,12 @@ function generateLintReport(report: AzureDetailedResourceReport[]): void {
       console.log(
         `  ${icon} ${label}  ${sourceBadge} ${DIM}${line.text}${RESET}${extra}`,
       );
-      summary.counts[line.severity]++;
-      summary.sourceCounts[line.source] =
-        (summary.sourceCounts[line.source] ?? 0) + 1;
-    }
-
-    if (entry.findings) {
-      for (const f of entry.findings) {
-        if (f.source === "advisor" && f.estimatedMonthlySavings) {
-          const { amount, currency } = f.estimatedMonthlySavings;
-          summary.savingsByCurrency.set(
-            currency,
-            (summary.savingsByCurrency.get(currency) ?? 0) + amount,
-          );
-        }
-      }
     }
 
     console.log();
   }
 
-  printSummary(summary);
+  printSummary(computeSummary(report));
 }
 
 /**
@@ -313,8 +314,14 @@ function printAmounts(label: string, byCurrency: Map<string, number>): void {
  * out of scope for this tool.
  */
 function printSummary(summary: Summary): void {
-  const { costAtRiskByCurrency, counts, savingsByCurrency, sourceCounts } =
-    summary;
+  const {
+    actualCostPeriod,
+    actualCostsByCurrency,
+    costAtRiskByCurrency,
+    counts,
+    savingsByCurrency,
+    sourceCounts,
+  } = summary;
   const total = counts.high + counts.medium + counts.low;
   const summaryLine =
     `${BOLD}Summary:${RESET} ${total} issue${total !== 1 ? "s" : ""} found` +
@@ -332,6 +339,12 @@ function printSummary(summary: Summary): void {
   }
 
   printAmounts("Estimated monthly cost at risk (custom)", costAtRiskByCurrency);
+  if (actualCostPeriod) {
+    printAmounts(
+      `Actual cost (last 30 days: ${actualCostPeriod.start} to ${actualCostPeriod.end})`,
+      actualCostsByCurrency,
+    );
+  }
   printAmounts("Estimated monthly savings (advisor)", savingsByCurrency);
 }
 
@@ -366,6 +379,7 @@ function splitReasons(reason: string): string[] {
 
 function toResourceReport(r: AzureDetailedResourceReport): AzureResourceReport {
   return {
+    actualCosts: r.actualCosts,
     costRisk: r.analysis.costRisk,
     estimatedMonthlySavings: resourceSavings(r),
     location: r.resource.location ?? "",

@@ -279,6 +279,13 @@ describe("createAdvisorAnalyzer — filtering", () => {
         makeFakeClient([
           {
             category: "Cost",
+            recommendationTypeId: "postgresql-ri",
+            shortDescription: {
+              problem: "Consider PostgreSQL reserved instance",
+            },
+          },
+          {
+            category: "Cost",
             extendedProperties: {
               savingsAmount: "121",
               savingsCurrency: "EUR",
@@ -305,14 +312,14 @@ describe("createAdvisorAnalyzer — filtering", () => {
         ]),
     });
     const findings = await analyzer.analyze(makeCtx());
-    // Two API entries with the same type → one aggregated finding.
+    // Missing estimates do not prevent later options from supplying savings.
     expect(findings).toHaveLength(1);
     expect(findings[0].code).toBe("advisor.postgresql-ri");
     expect(findings[0].estimatedMonthlySavings).toEqual({
       amount: 121,
       currency: "EUR",
     });
-    expect(findings[0].reason).toContain("2 options");
+    expect(findings[0].reason).toBe("Consider PostgreSQL reserved instance.");
   });
 
   it("deduplicates subscription-scoped entries with the same recommendation ARM ID", async () => {

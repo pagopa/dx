@@ -22,7 +22,12 @@ export {
 
 export type { AzureConfigLoadOptions } from "./azure/config.js";
 // Export common types
-export type { AzureConfig, AzureSource, PricingConfig } from "./azure/types.js";
+export type {
+  ActualCost,
+  AzureConfig,
+  AzureSource,
+  PricingConfig,
+} from "./azure/types.js";
 
 // Export Azure module
 import * as azureModule from "./azure/index.js";

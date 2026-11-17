@@ -60,6 +60,7 @@ describe("loadConfig", () => {
     expect(result.preferredLocation).toBe("italynorth");
     expect(result.sources).toEqual(["advisor", "custom"]);
     expect(result.timespanDays).toBe(30);
+    expect(result.includeActualCost).toBe(false);
     expect(result.azqrReportPath).toBeUndefined();
   });
 
@@ -163,6 +164,7 @@ describe("loadConfig", () => {
     expect(result.preferredLocation).toBe("westeurope");
     expect(result.sources).toEqual(["custom"]);
     expect(result.timespanDays).toBe(60);
+    expect(result.includeActualCost).toBe(true);
     expect(result.azqrReportPath).toBe("./azqr_action_plan.json");
 
     expect(result.thresholds?.vm.cpuPercent).toBe(5);
@@ -196,6 +198,7 @@ describe("loadConfig", () => {
         subscriptionIds: ["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
       },
     });
+
     expect(result.success).toBe(false);
   });
 

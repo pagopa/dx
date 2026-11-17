@@ -5,6 +5,9 @@ const loggerMocks = vi.hoisted(() => ({
   info: vi.fn(),
   warn: vi.fn(),
 }));
+const costQueryMocks = vi.hoisted(() => ({
+  getResourceCosts: vi.fn(),
+}));
 const { MockClient } = vi.hoisted(() => ({
   MockClient: class {
     readonly args: unknown[];
@@ -43,6 +46,11 @@ vi.mock("../analyzers/index.js", () => ({
   createDefaultAnalyzers: vi.fn(() => []),
   createDefaultSubscriptionAnalyzers: vi.fn(() => []),
 }));
+vi.mock("../cost-query.js", () => ({
+  CostQueryClient: class {
+    getResourceCosts = costQueryMocks.getResourceCosts;
+  },
+}));
 
 import { analyzeAzureResources } from "../analyzer.js";
 
@@ -52,6 +60,7 @@ const azqrReportPath = fileURLToPath(
 
 describe("AZQR subscription scope", () => {
   it("imports only selected resource IDs, even without live findings", async () => {
+    costQueryMocks.getResourceCosts.mockClear();
     const reports = await analyzeAzureResources({
       azqrReportPath,
       preferredLocation: "italynorth",
@@ -77,5 +86,46 @@ describe("AZQR subscription scope", () => {
         "ignored 2 out-of-scope and 3 unattributable finding(s)",
       ),
     );
+    expect(costQueryMocks.getResourceCosts).not.toHaveBeenCalled();
+  });
+
+  it("adds matching actual costs for the fixed 30-day window", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-11-16T14:00:00Z"));
+    const period = { end: "2026-11-16", start: "2026-10-18" };
+    const cost = { amount: 12.5, basis: "ActualCost", currency: "EUR", period };
+    costQueryMocks.getResourceCosts.mockResolvedValue(
+      new Map([
+        [
+          "/subscriptions/a/resourcegroups/rg/providers/microsoft.compute/disks/disk-a",
+          [cost],
+        ],
+        [
+          "/subscriptions/unreported/resourcegroups/rg/providers/x/y/z",
+          [{ ...cost, amount: 99 }],
+        ],
+      ]),
+    );
+
+    try {
+      const reports = await analyzeAzureResources({
+        azqrReportPath,
+        includeActualCost: true,
+        preferredLocation: "italynorth",
+        pricing: { enabled: false },
+        sources: ["advisor"],
+        subscriptionIds: [" A ", "b", "c"],
+        timespanDays: 7,
+      });
+
+      expect(costQueryMocks.getResourceCosts).toHaveBeenCalledExactlyOnceWith(
+        "A",
+        period,
+      );
+      expect(reports).toHaveLength(1);
+      expect(reports[0].actualCosts).toEqual([cost]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });
