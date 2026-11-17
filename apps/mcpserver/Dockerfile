@@ -18,7 +18,8 @@ RUN pnpm install --filter @pagopa/dx-mcpserver...
 # 6. Build the mcpserver app
 RUN pnpm nx build @pagopa/dx-mcpserver
 # 7. Prune development-only dependencies for the final image
-RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod /app/deploy
+# Workspace patches target dev-only packages (e.g. nx), which --prod omits.
+RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod --config.allow-unused-patches=true /app/deploy
 
 # --- Final Image ---
 FROM public.ecr.aws/docker/library/node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
