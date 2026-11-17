@@ -3,9 +3,10 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import type { RepositoryStateDestination } from "../repository-backend.js";
+
 import {
   ensureRemoteRepositoryState,
-  type RepositoryStateDestination,
   type TerraformRunner,
 } from "../repository-state.js";
 
@@ -17,55 +18,83 @@ const destination: RepositoryStateDestination = {
   subscriptionId: "sub",
 };
 
-const BACKEND = 'terraform {\n  backend "azurerm" {}\n}\n';
-const LOCAL_STATE = JSON.stringify({ resources: [{ type: "x" }] });
+const BACKEND = `terraform {
+  backend "azurerm" {
+    resource_group_name = "rg"
+    storage_account_name = "sa"
+    subscription_id = "sub"
+    container_name = "terraform-state"
+    key = "dx/repository.tfstate"
+  }
+}\n`;
+const LOCAL_STATE = JSON.stringify({
+  resources: [
+    ["github_repository", "this"],
+    ["github_repository_vulnerability_alerts", "repository"],
+    ["github_branch", "main"],
+    ["github_branch_default", "main"],
+    ["github_branch_protection", "main"],
+    ["github_actions_repository_permissions", "repo"],
+  ].map(([type, name]) => ({
+    instances: [{ attributes: { id: "repo", name: "repo" } }],
+    mode: "managed",
+    module: "module.github_repository",
+    name,
+    type,
+  })),
+});
 
-describe("ensureRemoteRepositoryState", () => {
-  let dir: string;
-  let calls: string[][];
+const PLAN_SUMMARY = JSON.stringify({ type: "change_summary" });
 
-  const file = (name: string) => path.join(dir, name);
-  const exists = (name: string) =>
-    fs.access(file(name)).then(
-      () => true,
-      () => false,
-    );
+let dir: string;
+let calls: string[][];
 
-  const run = ({
-    onCall,
-    remote = false,
-    responses = {},
-  }: {
-    onCall?: (args: string[]) => Promise<void>;
-    remote?: boolean;
-    responses?: Record<string, { exitCode: number; stdout?: string }>;
-  } = {}) => {
-    const terraform: TerraformRunner = async (args) => {
-      calls.push(args);
-      await onCall?.(args);
-      const response = responses[args[0]] ?? { exitCode: 0 };
-      return { exitCode: response.exitCode, stdout: response.stdout ?? "" };
+const file = (name: string) => path.join(dir, name);
+const exists = (name: string) =>
+  fs.access(file(name)).then(
+    () => true,
+    () => false,
+  );
+
+const run = ({
+  onCall,
+  remote = false,
+  responses = {},
+}: {
+  onCall?: (args: string[]) => Promise<void>;
+  remote?: boolean;
+  responses?: Record<string, { exitCode: number; stdout?: string }>;
+} = {}) => {
+  const terraform: TerraformRunner = async (args) => {
+    calls.push(args);
+    await onCall?.(args);
+    const response = responses[args[0]] ?? { exitCode: 0 };
+    return {
+      exitCode: response.exitCode,
+      stdout: response.stdout ?? PLAN_SUMMARY,
     };
-    return ensureRemoteRepositoryState({
-      destination,
-      destinationHasState: async () => remote,
-      repositoryName: "repo",
-      repositoryPath: dir,
-      terraform,
-    });
   };
-
-  const commands = () => calls.map(([command]) => command);
-
-  beforeEach(async () => {
-    dir = await fs.mkdtemp(path.join(os.tmpdir(), "repo-state-"));
-    calls = [];
-    await fs.writeFile(file("providers.tf"), "# providers\n");
-    await fs.writeFile(file("main.tf"), 'module "github_repository" {}\n');
+  return ensureRemoteRepositoryState({
+    destination,
+    destinationExists: async () => remote,
+    repositoryName: "repo",
+    repositoryPath: dir,
+    terraform,
   });
+};
 
-  afterEach(() => fs.rm(dir, { force: true, recursive: true }));
+const commands = () => calls.map(([command]) => command);
 
+beforeEach(async () => {
+  dir = await fs.mkdtemp(path.join(os.tmpdir(), "repo-state-"));
+  calls = [];
+  await fs.writeFile(file("providers.tf"), "# providers\n");
+  await fs.writeFile(file("main.tf"), 'module "github_repository" {}\n');
+});
+
+afterEach(() => fs.rm(dir, { force: true, recursive: true }));
+
+describe("repository state migration and reuse", () => {
   it("verifies the configured backend before accepting it as already remote", async () => {
     await fs.writeFile(file("providers.tf"), BACKEND);
     await expect(run()).resolves.toBe("already-remote");
@@ -102,6 +131,26 @@ describe("ensureRemoteRepositoryState", () => {
     expect(calls).toEqual([]);
     await expect(exists("terraform.tfstate")).resolves.toBe(true);
   });
+
+  it.each([
+    { resources: [{ type: "unrelated" }] },
+    { resources: JSON.parse(LOCAL_STATE).resources.slice(0, 1) },
+  ])(
+    "rejects unrelated or incomplete local state before copying",
+    async (state) => {
+      await fs.writeFile(file("terraform.tfstate"), JSON.stringify(state));
+
+      await expect(run()).rejects.toThrow(/expected repository resources/);
+
+      expect(calls).toEqual([]);
+      await expect(fs.readFile(file("providers.tf"), "utf8")).resolves.toBe(
+        "# providers\n",
+      );
+      await expect(
+        fs.readFile(file("terraform.tfstate"), "utf8"),
+      ).resolves.toBe(JSON.stringify(state));
+    },
+  );
 
   it("keeps the local state when the plan after the copy is not clean", async () => {
     await fs.writeFile(file("terraform.tfstate"), LOCAL_STATE);
@@ -157,7 +206,9 @@ describe("ensureRemoteRepositoryState", () => {
     await expect(run({ remote: true })).resolves.toBe("already-remote");
     expect(commands()).toEqual(["init", "plan"]);
   });
+});
 
+describe("repository state import", () => {
   it("imports existing GitHub objects when no state exists anywhere", async () => {
     let importFile = "";
     await expect(
@@ -174,6 +225,8 @@ describe("ensureRemoteRepositoryState", () => {
       "module.github_repository.github_repository.this",
     );
     expect(commands()).toEqual(["init", "plan", "apply"]);
+    expect(calls[1]).toContain(`-out=${calls[2][2]}`);
+    expect(calls[2]).not.toContain("-auto-approve");
     await expect(exists("dx-import.tf")).resolves.toBe(false);
   });
 
@@ -193,6 +246,43 @@ describe("ensureRemoteRepositoryState", () => {
     await expect(fs.readFile(file("providers.tf"), "utf8")).resolves.toBe(
       "# providers\n",
     );
+  });
+
+  it.each([
+    "{broken",
+    JSON.stringify({ change: { action: "delete" }, type: "planned_change" }),
+    JSON.stringify({
+      change: { action: "unsupported", resource: { addr: "repository" } },
+      type: "planned_change",
+    }),
+    "",
+  ])(
+    "rejects uninspectable import plan output without applying",
+    async (stdout) => {
+      await expect(
+        run({ responses: { plan: { exitCode: 0, stdout } } }),
+      ).rejects.toThrow(/import plan/);
+      expect(commands()).not.toContain("apply");
+    },
+  );
+
+  it("accepts valid unrelated Terraform events while inspecting changes", async () => {
+    const stdout = [
+      JSON.stringify({ terraform: "1.14.0", type: "version" }),
+      "",
+      JSON.stringify({
+        change: {
+          action: "import",
+          resource: { addr: "module.github_repository.github_repository.this" },
+        },
+        type: "planned_change",
+      }),
+      PLAN_SUMMARY,
+    ].join("\n");
+
+    await expect(
+      run({ responses: { plan: { exitCode: 0, stdout } } }),
+    ).resolves.toBe("imported");
   });
 
   it("aborts the import when environments are already configured", async () => {

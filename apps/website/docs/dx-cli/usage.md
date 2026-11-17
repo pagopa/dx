@@ -145,10 +145,24 @@ command.
 `dx init` leaves the Terraform state of `infra/repository` on your machine. Do
 not delete it or apply it from another device until you run `add environment`:
 the first run moves that state to the shared Azure backend
-(`<domain>/repository.tfstate`), verifies it with a clean `terraform plan`, and
-then removes the local copy. If it fails, fix the reported problem and re-run
-the same command. When no local state exists (for example on a new device), the
-GitHub repository objects are imported into the backend instead.
+(`<prefix>/<domain>/repository.tfstate`), verifies it with a clean
+`terraform plan`, and then removes the local copy. If it fails, fix the reported
+problem and re-run the same command. When no local state exists (for example on
+a new device), the GitHub repository objects are imported into the backend
+instead.
+
+Before first placement, the CLI asks you to confirm the environment,
+subscription, Resource Group, Storage Account, container, and key. Use `--yes`
+to accept this placement non-interactively. The destination is permanent for the
+repository: adding another environment keeps and reports the configured backend,
+including existing keys created by earlier CLI versions.
+
+Migration rejects any existing destination blob, even an empty one, rather than
+overwriting it. Concurrent CLI migrations are serialized; a rejected or failed
+plan blocks GitHub environment updates. Import applies the exact inspected plan.
+Keep local state and backups until verification succeeds. If both local and
+remote state exist, reconcile them manually before retrying; do not delete a
+remote blob merely to bypass this safeguard.
 
 :::
 
@@ -218,27 +232,28 @@ adding another environment also makes `prod` explicit. The command preserves
 other HCL settings and requires a single repository module with a literal
 repository object and a list of unique, literal environment names.
 
-Existing lists are normalized only when an environment needs to be added.
-Lists containing comments are left unchanged when the requested environment and
-`prod` already exist. Otherwise, the command refuses to edit them: move the
-comments outside the list or add both names manually before retrying. Comments
-outside the list are preserved.
+Existing lists are normalized only when an environment needs to be added. Lists
+containing comments are left unchanged when the requested environment and `prod`
+already exist. Otherwise, the command refuses to edit them: move the comments
+outside the list or add both names manually before retrying. Comments outside
+the list are preserved.
 
 If customized HCL is rejected, restore the generated module/object layout,
 replace dynamic `environments` expressions with a literal list, remove duplicate
-names, and run `terraform fmt infra/repository/main.tf`. Formatting alone does not
-remove comments or convert dynamic expressions.
+names, and run `terraform fmt infra/repository/main.tf`. Formatting alone does
+not remove comments or convert dynamic expressions.
 
 Unsupported target shapes are rejected before writing. Changed candidates must
-also pass `terraform fmt -` before replacing `main.tf` or running `terraform init`
-and `terraform apply`. Terraform diagnostics are included in validation errors,
-but its formatted output is not written over unrelated source.
+also pass `terraform fmt -` before replacing `main.tf` or running
+`terraform init` and `terraform apply`. Terraform diagnostics are included in
+validation errors, but its formatted output is not written over unrelated
+source.
 
-Updates require a regular UTF-8 `main.tf` file, preserve its permissions, and use
-atomic replacement. Run commands sequentially and do not edit the file during
-synchronization: concurrent writers in the same working copy are not supported.
-After a valid edit, a later `terraform init` or `terraform apply` failure does not
-roll back the edited file or any remote changes.
+Updates require a regular UTF-8 `main.tf` file, preserve its permissions, and
+use atomic replacement. Run commands sequentially and do not edit the file
+during synchronization: concurrent writers in the same working copy are not
+supported. After a valid edit, a later `terraform init` or `terraform apply`
+failure does not roll back the edited file or any remote changes.
 
 **Initialization and Runner App credentials**
 

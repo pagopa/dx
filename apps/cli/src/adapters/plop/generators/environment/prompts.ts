@@ -35,6 +35,7 @@ import {
 } from "../../../../domain/github.js";
 import { terraformBackendSchema } from "../../../../domain/remote-backend.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
+import { repositoryStateDestinationSchema } from "../../../terraform/repository-backend.js";
 import { validatePrompt } from "../../helpers/validate-prompt.js";
 
 const initSchema = z.object({
@@ -93,6 +94,7 @@ export const payloadSchema = z.object({
   env: environmentSchema,
   github: githubRepoSchema,
   init: initSchema.optional(),
+  repositoryStateDestination: repositoryStateDestinationSchema.optional(),
   runnerAppCredentials: githubAppCredentialsSchema.optional(),
   tags: tagsSchema,
   terraform: z

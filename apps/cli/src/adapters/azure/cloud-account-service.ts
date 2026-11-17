@@ -45,6 +45,7 @@ import {
   locationShort,
   LocationShortValue,
 } from "./locations.js";
+import { plannedTerraformBackend } from "./terraform-backend.js";
 
 // We are only interested in these properties for now;
 // the actual result structure contains the full cloud resource object
@@ -659,11 +660,6 @@ export class AzureCloudAccountService implements CloudAccountService {
 
     const logger = getLogger(["gen", "env"]);
 
-    const short = {
-      env: getEnvironmentShort(name),
-      location: locationShort[cloudAccount.defaultLocation],
-    };
-
     const existingBackend = await this.getTerraformBackend(
       cloudAccount.id,
       { name, prefix },
@@ -688,8 +684,12 @@ export class AzureCloudAccountService implements CloudAccountService {
         ...tags,
       },
     };
-    const resourceGroupName = `${prefix}-${short.env}-${short.location}-tfstate-rg-01`;
-    const storageAccountName = `${prefix}${short.env}${short.location}tfstatest01`;
+    const backend = plannedTerraformBackend(
+      cloudAccount,
+      { name, prefix },
+      domain,
+    );
+    const { resourceGroupName } = backend;
 
     await resourceManagementClient.resourceGroups.createOrUpdate(
       resourceGroupName,
@@ -699,7 +699,7 @@ export class AzureCloudAccountService implements CloudAccountService {
     const storageAccount =
       await storageManagementClient.storageAccounts.beginCreateAndWait(
         resourceGroupName,
-        storageAccountName,
+        backend.storageAccountName,
         {
           kind: "StorageV2",
           sku: {

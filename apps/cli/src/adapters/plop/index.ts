@@ -7,6 +7,7 @@ import nodePlop from "node-plop";
 import { Octokit } from "octokit";
 
 import type { TerraformBackend } from "../../domain/remote-backend.js";
+import type { RepositoryStateDestination } from "../terraform/repository-backend.js";
 import type { RepositoryStateStatus } from "../terraform/repository-state.js";
 
 import { GitHubRepo } from "../../domain/github-repo.js";
@@ -27,6 +28,7 @@ import createMonorepoGenerator, {
 import setConfigureGitHubEnvironmentsAction from "./actions/configure-github-environments.js";
 import setPrepareRepositoryStateAction from "./actions/prepare-repository-state.js";
 import { collectCodeOwnership } from "./collect-code-ownership.js";
+import { confirmRepositoryStatePlacement } from "./confirm-repository-state.js";
 import { basePayloadSchema } from "./generators/monorepo/prompts.js";
 import { resolveTemplatesPath } from "./templates-path.js";
 
@@ -183,7 +185,7 @@ export const collectDeploymentEnvironmentPayload = async (
   initialAnswers: DeploymentEnvironmentInitialAnswers = {},
   nonInteractive = false,
 ): Promise<{ generator: PlopGenerator; payload: EnvironmentPayload }> => {
-  setDeploymentEnvironmentGenerator(
+  const cloudAccountService = setDeploymentEnvironmentGenerator(
     plop,
     gitHubService,
     github,
@@ -193,6 +195,12 @@ export const collectDeploymentEnvironmentPayload = async (
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
   const answers = await generator.runPrompts();
   const payload = environmentPayloadSchema.parse(answers);
+  await confirmRepositoryStatePlacement(
+    payload,
+    cloudAccountService,
+    initialAnswers,
+    nonInteractive,
+  );
   return { generator, payload };
 };
 
@@ -206,11 +214,7 @@ export type DeploymentEnvironmentOutputPayload = EnvironmentPayload & {
 };
 
 export type RepositoryStateResult = {
-  destination: {
-    containerName: string;
-    key: string;
-    storageAccountName: string;
-  };
+  destination: RepositoryStateDestination;
   status: RepositoryStateStatus;
 };
 
@@ -265,4 +269,5 @@ export const setDeploymentEnvironmentGenerator = (
     initialAnswers,
     nonInteractive,
   );
+  return cloudAccountService;
 };
