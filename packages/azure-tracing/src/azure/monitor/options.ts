@@ -14,6 +14,16 @@ import { DefaultAzureCredential } from "@azure/identity";
 import type { AzureTracingEnv } from "./env.js";
 
 /**
+ * The subset of the exporter options a caller may override.
+ *
+ * Both the Azure Monitor initialization and the standalone log exporters (for
+ * example the sampling-exemptions processor) resolve their exporter the same
+ * way, so they share this shape.
+ */
+export type AzureMonitorExporterOptionsOverride =
+  Partial<AzureMonitorExporterOptions>;
+
+/**
  * The subset of `AzureMonitorOpenTelemetryOptions` a caller may override.
  *
  * Every property is optional: anything left out keeps the value derived from
@@ -22,20 +32,29 @@ import type { AzureTracingEnv } from "./env.js";
 export type AzureMonitorOptionsOverride =
   Partial<AzureMonitorOpenTelemetryOptions>;
 
+/** The exporter options resolved for an Azure Monitor exporter. */
+type AzureMonitorExporterOptions = NonNullable<
+  AzureMonitorOpenTelemetryOptions["azureMonitorExporterOptions"]
+>;
+
+const exporterOptionsFromEnv = (
+  env: AzureTracingEnv,
+): AzureMonitorExporterOptionsOverride => ({
+  connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
+  ...(env.APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED
+    ? {
+        // Entra ID (Managed Identity) authentication via DefaultAzureCredential.
+        // DefaultAzureCredential tries multiple credential providers in order:
+        // Managed Identity in production, Azure CLI / service principal for local dev.
+        credential: new DefaultAzureCredential(),
+      }
+    : {}),
+});
+
 const optionsFromEnv = (
   env: AzureTracingEnv,
 ): AzureMonitorOpenTelemetryOptions => ({
-  azureMonitorExporterOptions: {
-    connectionString: env.APPLICATIONINSIGHTS_CONNECTION_STRING,
-    ...(env.APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED
-      ? {
-          // Entra ID (Managed Identity) authentication via DefaultAzureCredential.
-          // DefaultAzureCredential tries multiple credential providers in order:
-          // Managed Identity in production, Azure CLI / service principal for local dev.
-          credential: new DefaultAzureCredential(),
-        }
-      : {}),
-  },
+  azureMonitorExporterOptions: exporterOptionsFromEnv(env),
   enableLiveMetrics: true,
   samplingRatio: env.APPINSIGHTS_SAMPLING_PERCENTAGE,
   // Disable rate limiter introduced in @azure/monitor-opentelemetry@1.16.0
@@ -120,6 +139,25 @@ const assertConnectionString = (options: AzureMonitorOpenTelemetryOptions) => {
       "Missing Application Insights connection string: set the APPLICATIONINSIGHTS_CONNECTION_STRING environment variable or provide azureMonitorExporterOptions.connectionString.",
     );
   }
+};
+
+/**
+ * Resolves only the exporter options, for the log exporters that live outside
+ * the Azure Monitor initialization (see `SamplingExemptionsLogRecordProcessor`).
+ *
+ * @param env - The environment parsed by `loadEnv`.
+ * @param overrides - The exporter properties the caller wants to override.
+ */
+export const resolveAzureMonitorExporterOptions = (
+  env: AzureTracingEnv,
+  overrides: AzureMonitorExporterOptionsOverride = {},
+): AzureMonitorExporterOptions => {
+  const { azureMonitorExporterOptions } = resolveAzureMonitorOptions(env, {
+    azureMonitorExporterOptions: overrides,
+  });
+
+  // `resolveAzureMonitorOptions` fails fast when the connection string is missing.
+  return azureMonitorExporterOptions ?? {};
 };
 
 /**

@@ -141,6 +141,50 @@ initAzureMonitor([], {
 });
 ```
 
+### Keeping Logs of Interest When Log Sampling Is On
+
+When `enableTraceBasedSamplingForLogs` is enabled, Azure Monitor drops the log records that belong to spans the sampler did not sample.
+This is usually what you want, except for the records you must always see: errors, exceptions and the custom events you explicitly exempt.
+
+`SamplingExemptionsLogRecordProcessor` re-emits those records through its own exporter, so they reach Application Insights even when the surrounding trace was sampled out:
+
+```ts
+import {
+  initAzureMonitor,
+  SamplingExemptionsLogRecordProcessor,
+} from "@pagopa/azure-tracing/azure-monitor";
+
+initAzureMonitor([], {
+  enableTraceBasedSamplingForLogs: true,
+  logRecordProcessors: [new SamplingExemptionsLogRecordProcessor()],
+});
+```
+
+A record is re-emitted when it belongs to a span context the standard pipeline did not export and at least one of these holds:
+
+- it carries the `exception.type` and `exception.stacktrace` attributes;
+- its severity is `ERROR` or above;
+- it is a custom event (`microsoft.custom_event.name` attribute) whose `samplingEnabled` attribute is `false` or `"false"`.
+
+Every other record, including the ones the standard pipeline already exported (to avoid duplicates) and the ones emitted outside a span, keeps following the default behavior.
+
+The processor takes an optional `azureMonitorExporterOptions` override, resolved from the environment exactly like `initAzureMonitor` does, so you normally pass nothing:
+
+```ts
+new SamplingExemptionsLogRecordProcessor({
+  // the connection string is inherited from the environment
+  disableOfflineStorage: true,
+});
+```
+
+> [!NOTE]
+> The processor is opt-in: applications that do not register it keep the default behavior of the Azure Monitor distro, with no extra export.
+
+> [!WARNING]
+> Register the processor only together with `enableTraceBasedSamplingForLogs: true`, which is off by default.
+> With `enableTraceBasedSamplingForLogs: false` the Azure Monitor distro does not filter log records at all, so every record already reaches Application Insights: the processor would then re-export the errors, exceptions and exempt custom events that belong to the traces the sampler discarded, duplicating them.
+> If you do not enable trace-based sampling for logs, leave the processor out.
+
 ### Logging Custom Events
 
 You can log custom events for additional observability using the `emitCustomEvent` function.

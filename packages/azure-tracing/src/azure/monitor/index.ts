@@ -12,7 +12,11 @@ import {
   resolveAzureMonitorOptions,
 } from "./options.js";
 
-export type { AzureMonitorOptionsOverride };
+export type {
+  AzureMonitorExporterOptionsOverride,
+  AzureMonitorOptionsOverride,
+} from "./options.js";
+export { SamplingExemptionsLogRecordProcessor } from "./sampling-exemptions-log-record-processor.js";
 
 /**
  * Initialize the Azure Monitor with the given instrumentations and options.

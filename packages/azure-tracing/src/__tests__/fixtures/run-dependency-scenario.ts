@@ -2,18 +2,26 @@ import { CosmosClient } from "@azure/cosmos";
 import { shutdownAzureMonitor } from "@azure/monitor-opentelemetry";
 import { BlobServiceClient } from "@azure/storage-blob";
 import { context, trace } from "@opentelemetry/api";
+import { logs, SeverityNumber } from "@opentelemetry/api-logs";
 import Fastify from "fastify";
 /**
  * Child-process fixture that performs real Cosmos DB, Fastify, Redis, and Blob
  * Storage operations after the package preload entrypoint has initialized
- * telemetry.
+ * telemetry. It also emits the log records the sampling exemptions processor
+ * has to keep alive.
  */
 import { Readable } from "node:stream";
 import { setTimeout as delay } from "node:timers/promises";
 import { createClient } from "redis";
 import { z } from "zod";
 
-const scenarioSchema = z.enum(["cosmos", "fastify", "redis", "storage"]);
+const scenarioSchema = z.enum([
+  "cosmos",
+  "fastify",
+  "log-sampling",
+  "redis",
+  "storage",
+]);
 
 const cosmosEnvSchema = z.object({
   COSMOS_CONTAINER_ID: z.string().min(1),
@@ -26,6 +34,19 @@ const cosmosEnvSchema = z.object({
 const fastifyEnvSchema = z.object({
   FASTIFY_REQUEST_PATH: z.string().startsWith("/"),
   FASTIFY_RUN_ID: z.string().min(1),
+});
+
+/**
+ * The suite owns the log message and event name markers, so a scenario run and
+ * its assertions can never drift apart.
+ */
+const logSamplingEnvSchema = z.object({
+  LOG_SAMPLING_ERROR_MESSAGE: z.string().min(1),
+  LOG_SAMPLING_EVENT_BOOLEAN_NAME: z.string().min(1),
+  LOG_SAMPLING_EVENT_STRING_NAME: z.string().min(1),
+  LOG_SAMPLING_EXCEPTION_MESSAGE: z.string().min(1),
+  LOG_SAMPLING_INFO_MESSAGE: z.string().min(1),
+  LOG_SAMPLING_OUTSIDE_SPAN_MESSAGE: z.string().min(1),
 });
 
 const redisEnvSchema = z.object({
@@ -150,6 +171,64 @@ const runFastifyScenario = async () => {
   }
 };
 
+/**
+ * Emits the log records the sampling exemptions processor has to keep once
+ * trace-based sampling for logs has discarded the logs of an unsampled trace.
+ * Every record carries a marker owned by the suite, so the assertions only see
+ * the records of this run.
+ */
+const runLogSamplingScenario = async () => {
+  const env = logSamplingEnvSchema.parse(process.env);
+  const logger = logs.getLogger("azure-tracing-log-sampling-integration");
+
+  await withScenarioSpan("log-sampling", async () => {
+    logger.emit({
+      attributes: {
+        "exception.message": env.LOG_SAMPLING_EXCEPTION_MESSAGE,
+        "exception.stacktrace": "at runLogSamplingScenario (fixture.ts:1:1)",
+        "exception.type": "IntegrationTestError",
+      },
+      body: env.LOG_SAMPLING_EXCEPTION_MESSAGE,
+      severityNumber: SeverityNumber.ERROR,
+    });
+
+    logger.emit({
+      body: env.LOG_SAMPLING_ERROR_MESSAGE,
+      severityNumber: SeverityNumber.ERROR,
+    });
+
+    logger.emit({
+      attributes: {
+        "microsoft.custom_event.name": env.LOG_SAMPLING_EVENT_BOOLEAN_NAME,
+        samplingEnabled: false,
+      },
+      body: env.LOG_SAMPLING_EVENT_BOOLEAN_NAME,
+    });
+
+    logger.emit({
+      attributes: {
+        "microsoft.custom_event.name": env.LOG_SAMPLING_EVENT_STRING_NAME,
+        samplingEnabled: "false",
+      },
+      body: env.LOG_SAMPLING_EVENT_STRING_NAME,
+    });
+
+    logger.emit({
+      body: env.LOG_SAMPLING_INFO_MESSAGE,
+      severityNumber: SeverityNumber.INFO,
+    });
+  });
+
+  // A record without any span context is exported by the standard pipeline, so
+  // the processor must not re-emit it.
+  context.with(trace.deleteSpan(context.active()), () => {
+    logger.emit({
+      body: env.LOG_SAMPLING_OUTSIDE_SPAN_MESSAGE,
+      severityNumber: SeverityNumber.ERROR,
+    });
+  });
+};
+
 const runRedisScenario = async () => {
   const env = redisEnvSchema.parse(process.env);
   const client = createClient({ url: env.REDIS_URL });
@@ -209,6 +288,13 @@ const main = async () => {
 
     if (scenario === "fastify") {
       await withScenarioSpan("fastify", runFastifyScenario);
+      return;
+    }
+
+    if (scenario === "log-sampling") {
+      // The scenario opens its own span: the records emitted outside of it must
+      // carry no span context at all.
+      await runLogSamplingScenario();
       return;
     }
 
