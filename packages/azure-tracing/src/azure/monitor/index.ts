@@ -1,15 +1,18 @@
-import {
-  AzureMonitorOpenTelemetryOptions,
-  useAzureMonitor,
-} from "@azure/monitor-opentelemetry";
+import { useAzureMonitor } from "@azure/monitor-opentelemetry";
 import { metrics, trace } from "@opentelemetry/api";
 import {
-  Instrumentation,
+  type Instrumentation,
   registerInstrumentations,
 } from "@opentelemetry/instrumentation";
 
 import { registerUndiciInstrumentation } from "../opentelemetry/azure-undici-instrumentation";
-import { initFromEnv } from "./start-from-env";
+import { loadEnv } from "./env.js";
+import {
+  type AzureMonitorOptionsOverride,
+  resolveAzureMonitorOptions,
+} from "./options.js";
+
+export type { AzureMonitorOptionsOverride };
 
 /**
  * Initialize the Azure Monitor with the given instrumentations and options.
@@ -22,8 +25,10 @@ import { initFromEnv } from "./start-from-env";
  * @remarks
  * - This function should be called at the start of your application to ensure
  *   telemetry is collected from the beginning.
- * - If `azureMonitorOptions` is not provided, the configuration will be initialized
- *   using environment variables. @see README for more details.
+ * - The configuration is always derived from the environment first; the given
+ *   options override only the properties they set, so `{ samplingRatio: 0.5 }`
+ *   keeps the environment-derived connection string, live metrics and so on.
+ *   @see README for more details.
  *
  * @example
  * // Basic usage with default settings
@@ -38,7 +43,7 @@ import { initFromEnv } from "./start-from-env";
  * initAzureMonitor([new MyCustomInstrumentation()]);
  *
  * @example
- * // Usage with custom Azure Monitor options
+ * // Usage with custom Azure Monitor options, merged over the environment defaults
  * import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
  *
  * initAzureMonitor([], {
@@ -49,18 +54,14 @@ import { initFromEnv } from "./start-from-env";
  * });
  *
  * @param instrumentations - The list of instrumentations to register with the Azure Monitor.
- * @param azureMonitorOptions - Custom configuration for Azure Monitor. If not provided,
- *   it will be initialized using environment variables.
+ * @param overrides - Azure Monitor options overriding the configuration derived
+ *   from the environment. Properties that are not set keep the environment value.
  */
 export const initAzureMonitor = (
   instrumentations: readonly Instrumentation[] = [],
-  azureMonitorOptions?: AzureMonitorOpenTelemetryOptions,
+  overrides: AzureMonitorOptionsOverride = {},
 ) => {
-  if (azureMonitorOptions) {
-    useAzureMonitor(azureMonitorOptions);
-  } else {
-    initFromEnv();
-  }
+  useAzureMonitor(resolveAzureMonitorOptions(loadEnv(), overrides));
 
   registerInstrumentations({
     instrumentations: [registerUndiciInstrumentation(), ...instrumentations],

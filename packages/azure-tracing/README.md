@@ -49,6 +49,9 @@ In order to enable tracing, you also need to set the following environment varia
 | **APPLICATIONINSIGHTS_CONNECTION_STRING**     | true         | -           |
 | **APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED** | false        | false       |
 
+> [!NOTE]
+> This table describes the `NODE_OPTIONS` preload path, where `APPLICATIONINSIGHTS_CONNECTION_STRING` is **always required**: `--import @pagopa/azure-tracing` initializes Azure Monitor before any application code runs, so there is no opportunity to pass the connection string in code. It can only be omitted by applications that initialize the SDK themselves and pass `azureMonitorExporterOptions.connectionString` (see [Enabling Azure Monitor Telemetry](#enabling-azure-monitor-telemetry)).
+
 > [!WARNING]
 > Connection-string-only authentication (the current default) is **deprecated** and will be removed in the next major version.
 > Set `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true` to adopt Microsoft Entra ID authentication now.
@@ -102,13 +105,40 @@ If you want to enable Azure Monitor telemetry in your application, and you don't
 
 ```ts
 import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
-import { AzureMonitorOpenTelemetryOptions } from "@azure/monitor-opentelemetry";
 import { ExpressInstrumentation } from "@opentelemetry/instrumentation-express";
 ...
-const config: AzureMonitorOpenTelemetryOptions = {} // A valid AzureMonitorOpenTelemetryOptions object
 const instrumentations = [new ExpressInstrumentation()] // A list of custom OpenTelemetry instrumentations
-initAzureMonitor(instrumentations, config);
+initAzureMonitor(instrumentations);
 ...
+```
+
+The configuration is always derived from the environment first (see the `NODE_OPTIONS` table above) and the optional second argument overrides only the properties it sets:
+
+```ts
+import { initAzureMonitor } from "@pagopa/azure-tracing/azure-monitor";
+
+initAzureMonitor([], {
+  samplingRatio: 0.5,
+  azureMonitorExporterOptions: {
+    // the connection string is inherited from the environment
+    disableOfflineStorage: true,
+  },
+});
+```
+
+Properties you don't override keep their environment-derived value: `enableLiveMetrics: true`, the `samplingRatio` from `APPINSIGHTS_SAMPLING_PERCENTAGE`, `tracesPerSecond: 0` and the `DefaultAzureCredential` when `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true`.
+
+Nested option groups (`azureMonitorExporterOptions`, `instrumentationOptions` and `browserSdkLoaderOptions`) are merged key by key, while arrays (`logRecordProcessors`, `spanProcessors`, ...) and object instances (`resource`, `credential`, ...) are replaced. Properties explicitly set to `undefined` are ignored — at the top level and as direct members of those groups — so a conditionally-set value never shadows a default. The filtering is not recursive: a value nested one level deeper (for example `instrumentationOptions.http.enabled`) is forwarded as-is, so only set it when you mean it.
+
+> [!IMPORTANT]
+> The options object **no longer replaces** the whole configuration: it is a partial override. It is layered on top of the environment, which is parsed and validated on every call: an invalid environment variable now throws even when you pass a complete configuration, and the environment-derived defaults (live metrics, sampling ratio, `tracesPerSecond`, the Entra ID credential) are always applied. Overriding only one group (e.g. just the connection string) therefore also keeps the environment `samplingRatio` instead of the SDK default.
+
+When you initialize the SDK yourself, `APPLICATIONINSIGHTS_CONNECTION_STRING` may be omitted in favour of `azureMonitorExporterOptions.connectionString`:
+
+```ts
+initAzureMonitor([], {
+  azureMonitorExporterOptions: { connectionString: "InstrumentationKey=..." },
+});
 ```
 
 ### Logging Custom Events
@@ -132,12 +162,13 @@ This is especially useful for tracing domain-specific actions (e.g., resource cr
 > Connection-string-only authentication is deprecated and will be removed in the **next major release**.
 
 Set `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true` to enable [Microsoft Entra ID authentication](https://learn.microsoft.com/en-us/azure/azure-monitor/app/azure-ad-authentication).
+The value is matched case-insensitively after trimming; any other value leaves connection-string-only authentication in place.
 The package uses [`DefaultAzureCredential`](https://learn.microsoft.com/en-us/azure/developer/javascript/sdk/authentication/credential-chains#use-defaultazurecredential-for-flexibility) from `@azure/identity`, which automatically resolves the right credential for the environment:
 
 - **Azure (production)**: uses the Managed Identity assigned to the resource (App Service, Azure Function, Container App, etc.)
 - **Local development**: falls back to Azure CLI, Azure Developer CLI, or service principal env vars
 
-The connection string (`APPLICATIONINSIGHTS_CONNECTION_STRING`) is still required in both modes — it identifies the Application Insights resource.
+The connection string (`APPLICATIONINSIGHTS_CONNECTION_STRING`) is still required in both modes — it identifies the Application Insights resource — unless you pass it through the `initAzureMonitor` options.
 
 ### Required Azure RBAC role
 
