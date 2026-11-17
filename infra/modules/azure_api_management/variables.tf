@@ -39,7 +39,11 @@ variable "use_case" {
 
 variable "enable_public_network_access" {
   type        = bool
-  description = "Override public network access. For a new cost_optimized instance, apply with true to create APIM and its private endpoint, then remove the override or set false and apply again. Null uses the use-case default."
+  description = <<-EOT
+    Override public network access.
+    For a new cost_optimized instance, apply with true to create APIM and its private endpoint, then remove the override or set false and apply again.
+    Null uses the use-case default.
+  EOT
   default     = null
 }
 
