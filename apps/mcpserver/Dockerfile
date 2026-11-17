@@ -7,6 +7,7 @@ WORKDIR /app
 
 # 3. Copy monorepo configuration files
 COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./nx.json ./tsconfig.json ./
+COPY ./.pnpmfile.cjs ./
 COPY ./patches ./patches
 
 # 4. Copy source code for apps and packages

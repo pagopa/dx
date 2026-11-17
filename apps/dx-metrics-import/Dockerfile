@@ -5,6 +5,7 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.json ./
+COPY .pnpmfile.cjs ./
 COPY patches ./patches
 COPY apps/dx-metrics-import/package.json ./apps/dx-metrics-import/
 COPY packages/dx-metrics-core/package.json ./packages/dx-metrics-core/
