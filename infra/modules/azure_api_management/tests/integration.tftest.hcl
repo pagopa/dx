@@ -87,6 +87,8 @@ run "apply_development" {
   }
 }
 
+# Azure requires public access during creation; the next run disables it
+# after the private endpoint exists, using the same state.
 run "bootstrap_cost_optimized" {
   command   = apply
   state_key = "cost_optimized"
@@ -156,5 +158,55 @@ run "apply_cost_optimized" {
   assert {
     condition     = length(azurerm_management_lock.this) == 1
     error_message = "Cost optimized integration scenario must create a management lock."
+  }
+}
+
+run "apply_high_load" {
+  command   = apply
+  state_key = "high_load"
+
+  variables {
+    environment = merge(var.environment, {
+      app_name        = "apimhl"
+      instance_number = run.setup.instance_numbers.high_load
+    })
+    tags                                 = var.tags
+    resource_group_name                  = run.setup.resource_group_name
+    private_dns_zone_resource_group_name = run.setup.private_dns_zone_resource_group_name
+    use_case                             = "high_load"
+    publisher_email                      = "example@pagopa.it"
+    publisher_name                       = "Example Publisher"
+    log_analytics_workspace_id           = run.setup.log_analytics_workspace_id
+    virtual_network                      = run.setup.virtual_network_id
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.sku_name == "Premium_2" && azurerm_api_management.this.virtual_network_type == "Internal"
+    error_message = "High load must provision Premium_2 APIM with internal virtual networking."
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.virtual_network_configuration[0].subnet_id == azurerm_subnet.apim.id && length(azurerm_subnet.apim.delegation) == 0
+    error_message = "High load must use the module-managed, undelegated subnet."
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.public_ip_address_id == azurerm_public_ip.apim[0].id && azurerm_public_ip.apim[0].sku == "Standard"
+    error_message = "High load must attach the module-managed Standard public IP."
+  }
+
+  assert {
+    condition     = toset(azurerm_api_management.this.zones) == toset(["1", "2"]) && toset(azurerm_public_ip.apim[0].zones) == toset(["1", "2"])
+    error_message = "High load APIM and its public IP must use availability zones 1 and 2."
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_autoscale_setting.this) == 1 && azurerm_monitor_autoscale_setting.this[0].target_resource_id == azurerm_api_management.this.id
+    error_message = "High load must provision autoscaling for the APIM instance."
+  }
+
+  assert {
+    condition     = length(azurerm_monitor_diagnostic_setting.apim) == 1 && length(azurerm_monitor_metric_alert.this) == 6 && length(azurerm_management_lock.this) == 1
+    error_message = "High load must provision diagnostics, metric alerts and a management lock."
   }
 }

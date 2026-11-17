@@ -22,5 +22,6 @@ output "instance_numbers" {
   value = {
     development    = tostring(random_integer.instance_base.result)
     cost_optimized = tostring(random_integer.instance_base.result + 1)
+    high_load      = tostring(random_integer.instance_base.result + 2)
   }
 }
