@@ -42,11 +42,14 @@ const OXLINT_BIN_PATH = join(
 export const loadBaseConfig = (): OxlintConfig =>
   JSON.parse(readFileSync(BASE_CONFIG_PATH, "utf8")) as OxlintConfig;
 
+// A single thread keeps the run cheap, because the tests of a project run in
+// parallel with the tasks of the other projects on the same CI runner.
 export const runOxlint = (cwd: string, args: string[]): LintResult => {
-  const { error, status, stderr, stdout } = spawnSync(OXLINT_BIN_PATH, args, {
-    cwd,
-    encoding: "utf8",
-  });
+  const { error, status, stderr, stdout } = spawnSync(
+    OXLINT_BIN_PATH,
+    ["--threads=1", ...args],
+    { cwd, encoding: "utf8" },
+  );
 
   if (error) {
     throw error;
