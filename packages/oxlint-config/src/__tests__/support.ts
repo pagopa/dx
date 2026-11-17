@@ -42,12 +42,11 @@ const OXLINT_BIN_PATH = join(
 export const loadBaseConfig = (): OxlintConfig =>
   JSON.parse(readFileSync(BASE_CONFIG_PATH, "utf8")) as OxlintConfig;
 
-export const runOxlint = (cwd: string, target: string): LintResult => {
-  const { error, status, stderr, stdout } = spawnSync(
-    OXLINT_BIN_PATH,
-    [target],
-    { cwd, encoding: "utf8" },
-  );
+export const runOxlint = (cwd: string, args: string[]): LintResult => {
+  const { error, status, stderr, stdout } = spawnSync(OXLINT_BIN_PATH, args, {
+    cwd,
+    encoding: "utf8",
+  });
 
   if (error) {
     throw error;

@@ -41,7 +41,7 @@ const lintAsConsumer = (rules: Record<string, unknown> = {}) => {
       join(directory, ".oxlintrc.json"),
       JSON.stringify({ extends: [BASE_CONFIG_PATH], rules }),
     );
-    return runOxlint(directory, "clean.ts");
+    return runOxlint(directory, ["--format=json", "clean.ts"]);
   } finally {
     rmSync(directory, { force: true, recursive: true });
   }
@@ -51,8 +51,10 @@ describe("base config", () => {
   it("lints a clean TypeScript file without findings", () => {
     const { status, stdout } = lintAsConsumer();
 
-    expect(stdout).toBe("");
     expect(status).toBe(0);
+    expect(
+      (JSON.parse(stdout) as { diagnostics: unknown[] }).diagnostics,
+    ).toEqual([]);
   });
 
   it("fails on a rule oxlint does not know about", () => {
