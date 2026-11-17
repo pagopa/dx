@@ -1,3 +1,13 @@
+## 0.27.31 (2026-11-17)
+
+### 🚀 Features
+
+- Add the repeatable `--code-owner` flag to `dx init`. ([#2484](https://github.com/pagopa/dx/pull/2484))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.27.30 (2026-11-17)
 
 ### 🚀 Features

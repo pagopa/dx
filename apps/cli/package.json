@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.27.30",
+  "version": "0.27.31",
   "description": "A CLI useful to manage DX tools.",
   "keywords": [
     "CLI",
