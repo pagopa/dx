@@ -53,7 +53,6 @@
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "eslint": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "vitest-mock-extended": "catalog:"

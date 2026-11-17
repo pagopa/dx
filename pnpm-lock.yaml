@@ -241,9 +241,6 @@ catalogs:
     plop:
       specifier: ^4.0.5
       version: 4.0.5
-    prettier:
-      specifier: 3.9.6
-      version: 3.9.6
     semver:
       specifier: ^7.8.5
       version: 7.8.5
@@ -389,9 +386,6 @@ importers:
       oxfmt:
         specifier: ^0.71.0
         version: 0.71.0
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -407,11 +401,7 @@ importers:
 
   actions/deploy: {}
 
-  actions/detect-node-package-manager:
-    devDependencies:
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
+  actions/detect-node-package-manager: {}
 
   actions/docker-build-push: {}
 
@@ -453,9 +443,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       tsup:
         specifier: 'catalog:'
         version: 8.5.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.28)(supports-color@8.1.1)(tsx@4.23.15)(typescript@5.9.3)(yaml@2.9.1)
@@ -534,9 +521,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       tsdown:
         specifier: 'catalog:'
         version: 0.22.14(oxc-resolver@11.24.2)(tsx@4.23.15)(typescript@5.9.3)
@@ -589,9 +573,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       tsup:
         specifier: 'catalog:'
         version: 8.5.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.28)(supports-color@8.1.1)(tsx@4.23.15)(typescript@5.9.3)(yaml@2.9.1)
@@ -630,9 +611,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.5
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       tsup:
         specifier: 'catalog:'
         version: 8.5.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.28)(supports-color@8.1.1)(tsx@4.23.15)(typescript@5.9.3)(yaml@2.9.1)
@@ -667,9 +645,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.5
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       tsup:
         specifier: 'catalog:'
         version: 8.5.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.28)(supports-color@8.1.1)(tsx@4.23.15)(typescript@5.9.3)(yaml@2.9.1)
@@ -837,9 +812,6 @@ importers:
       plop:
         specifier: 'catalog:'
         version: 4.0.5(@types/node@22.20.5)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -974,9 +946,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -1031,9 +1000,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       tsx:
         specifier: 'catalog:'
         version: 4.23.15
@@ -1083,9 +1049,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       tsup:
         specifier: 'catalog:'
         version: 8.5.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.28)(supports-color@8.1.1)(tsx@4.23.15)(typescript@5.9.3)(yaml@2.9.1)
@@ -1165,9 +1128,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -1256,9 +1216,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -1371,9 +1328,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       tsup:
         specifier: 'catalog:'
         version: 8.5.1(@swc/core@1.16.1(@swc/helpers@0.5.23))(jiti@2.7.0)(postcss@8.5.28)(supports-color@8.1.1)(tsx@4.23.15)(typescript@5.9.3)(yaml@2.9.1)
@@ -1405,9 +1359,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
@@ -1512,9 +1463,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       tsdown:
         specifier: 'catalog:'
         version: 0.22.14(oxc-resolver@11.24.2)(tsx@4.23.15)(typescript@5.9.3)
@@ -1610,9 +1558,6 @@ importers:
       eslint:
         specifier: 'catalog:'
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.6
       tsdown:
         specifier: 'catalog:'
         version: 0.22.14(oxc-resolver@11.24.2)(tsx@4.23.15)(typescript@5.9.3)
@@ -12738,11 +12683,6 @@ packages:
   prelude-ls@1.2.1:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
-
-  prettier@3.9.6:
-    resolution: {integrity: sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g==}
-    engines: {node: '>=14'}
-    hasBin: true
 
   pretty-error@4.0.0:
     resolution: {integrity: sha512-AoJ5YMAcXKYxKhuJGdcvse+Voc6v1RgnsR3nWcYU7q4t6z0Q6T86sv5Zq8VIRbOWWFpvdGE83LtdSMNd+6Y0xw==}
@@ -29350,8 +29290,6 @@ snapshots:
     optional: true
 
   prelude-ls@1.2.1: {}
-
-  prettier@3.9.6: {}
 
   pretty-error@4.0.0:
     dependencies:

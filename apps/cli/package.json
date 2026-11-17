@@ -77,7 +77,6 @@
     "memfs": "^4.68.0",
     "oxfmt": "^0.71.0",
     "plop": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "vitest-mock-extended": "catalog:"
