@@ -57,17 +57,17 @@ function allLogs(spy: ReturnType<typeof vi.spyOn>) {
 
 // ── tests ──────────────────────────────────────────────────────────────────
 
+let logSpy: ReturnType<typeof vi.spyOn>;
+
+beforeEach(() => {
+  logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
 describe("generateReport — lint format", () => {
-  let logSpy: ReturnType<typeof vi.spyOn>;
-
-  beforeEach(() => {
-    logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it("prints the resource ID for each entry", async () => {
     await generateReport([HIGH_ENTRY], "lint");
     const output = allLogs(logSpy);
@@ -246,17 +246,50 @@ describe("generateReport — lint format", () => {
   });
 });
 
+describe("generateReport — actual costs", () => {
+  const entry: AzureDetailedResourceReport = {
+    ...HIGH_ENTRY,
+    actualCosts: [
+      {
+        amount: 18.5,
+        basis: "ActualCost",
+        currency: "EUR",
+        period: { end: "2026-11-13", start: "2026-10-15" },
+      },
+    ],
+    analysis: {
+      ...HIGH_ENTRY.analysis,
+      estimatedMonthlySavings: { amount: 29.94, currency: "EUR" },
+    },
+  };
+  it("reports actual cost separately from estimated savings", async () => {
+    await generateReport([entry], "lint");
+    const output = allLogs(logSpy);
+    expect(output).toMatch(/\(last 30 days: .*18[.,]50/);
+    expect(output).toContain(
+      "Actual cost (last 30 days: 2026-10-15 to 2026-11-13)",
+    );
+    expect(output).toMatch(/cost at risk:.*29[.,]94/);
+    expect(output).toMatch(/Actual cost \(last 30 days:[\s\S]*18[.,]50/);
+
+    logSpy.mockClear();
+    await generateReport([entry], "json");
+    const [jsonReport] = JSON.parse(allLogs(logSpy));
+    expect(jsonReport.estimatedMonthlySavings).toEqual({
+      amount: 29.94,
+      currency: "EUR",
+    });
+    expect(jsonReport.actualCosts).toEqual(entry.actualCosts);
+
+    logSpy.mockClear();
+    await generateReport([entry], "table");
+    expect(allLogs(logSpy)).toContain("Actual cost");
+    expect(allLogs(logSpy)).toContain("30 days)");
+    expect(allLogs(logSpy)).toContain("18.50");
+  });
+});
+
 describe("generateReport — table format", () => {
-  let logSpy: ReturnType<typeof vi.spyOn>;
-
-  beforeEach(() => {
-    logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it("renders without throwing for an empty report", async () => {
     await expect(generateReport([], "table")).resolves.toBeUndefined();
     // Table is always printed; the summary line ("0 issues found") follows.
@@ -274,20 +307,11 @@ describe("generateReport — table format", () => {
       .join("\n");
     expect(output).toContain("vm-high");
     expect(output).toContain("VM is deallocated");
+    expect(output).not.toContain("Actual cost");
   });
 });
 
 describe("generateReport — JSON formats", () => {
-  let logSpy: ReturnType<typeof vi.spyOn>;
-
-  beforeEach(() => {
-    logSpy = vi.spyOn(console, "log").mockImplementation(() => undefined);
-  });
-
-  afterEach(() => {
-    vi.restoreAllMocks();
-  });
-
   it("keeps summary and detailed JSON aligned for the same report", async () => {
     await generateReport([HIGH_ENTRY], "json");
     const summary = JSON.parse(String(logSpy.mock.calls[0]?.[0]));

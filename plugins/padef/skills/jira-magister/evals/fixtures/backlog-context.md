@@ -5,6 +5,15 @@ these URLs or mutate Jira. Use the supplied records as the document contents
 and Jira state. Save the requested draft/diff to `proposal.md` for review.
 Project PAY supports Epic, Story, Task, Bug and Sub-task, plus `blocks`.
 There are no required custom fields. All work below fits a two-week sprint.
+Approved delivery boundaries: only the described receipt flow or enabling
+artifact and its relevant tests; exclude new payment behavior, new data models
+and deployment. For each flow slice, Output is its described handler/API
+integration; Checks exercise that integration's authorization, response or
+error-path collaborators, not a copied end-to-end AC. Contract wiring produces
+an integrated contract checked by an implementation contract test. Repository
+setup produces the TypeScript skeleton checked by a repository review. A spike
+produces an owner-confirmed decision record, checked for that confirmation.
+Each item uses only the applicable boundary, not the whole backlog scope.
 
 ## Documents
 
@@ -18,7 +27,10 @@ There are no required custom fields. All work below fits a two-week sprint.
   `solution.components.item-001`: Receipt API.
   `contracts.item-001`: Receipt API, artifact
   `https://github.com/example/receipts/blob/main/api/openapi.yaml`.
-  `NFR-01`: receipts never expose another user's payment.
+  `NFR-01`: neither receipt flow may expose another user's payment. It applies
+  to UC-01 owner authorization and UC-02 support authorization; UC-02 AC-02
+  requires unauthorized access to be denied, without retrieving or returning
+  receipt data.
   `open.item-007`: choose the CAdES verification library for signed receipts;
   Blocking yes, owner Engineering; blocks signature verification only.
   `open.item-003`: optional support dashboard layout; Blocking no, owner Product.
@@ -96,6 +108,17 @@ Confluence pages publish anchors matching each cited stable ID.
   Source UC-04 - Download payment receipt,
   `https://example.org/use-cases/download-receipt`.
   No other source documents. New requested payment-history check has no ID yet.
+  Acceptance checks are stored in the Jira **description** field. Its exact
+  current text is below; this legacy format is intentionally not the new-item
+  template:
+
+  ```markdown
+  Source: [UC-04 - Download payment receipt](https://example.org/use-cases/download-receipt)
+
+  Acceptance checks:
+
+  - AC-04: receipt downloads as a PDF.
+  ```
 
 ## Parent Source for the Sub-task test
 

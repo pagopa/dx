@@ -177,13 +177,20 @@ describe("monorepo generator — file generation", () => {
     expect(generatedFiles).toMatchSnapshot();
   });
 
-  it("does not add pnpm 11 build approval settings to the generated pnpm workspace", async () => {
+  it("allows the nx build script with the setting pnpm 11 honours", async () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),
       ["pnpm-workspace.yaml"],
     );
 
-    expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain("allowBuilds:");
+    // pnpm 11 renamed `onlyBuiltDependencies` to `allowBuilds`: the old key is
+    // ignored, and the ignored postinstall makes `pnpm install` exit with
+    // ERR_PNPM_IGNORED_BUILDS.
+    expect(generatedFiles["pnpm-workspace.yaml"]).toContain("allowBuilds:");
+    expect(generatedFiles["pnpm-workspace.yaml"]).toContain("nx: true");
+    expect(generatedFiles["pnpm-workspace.yaml"]).not.toContain(
+      "onlyBuiltDependencies",
+    );
   });
 
   it("configures Renovate for DX actions and Docker images", async () => {

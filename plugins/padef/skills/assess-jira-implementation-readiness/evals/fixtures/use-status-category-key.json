@@ -4,11 +4,16 @@
     "fields": {
       "status": {
         "name": "Open",
-        "statusCategory": { "name": "To Do", "key": "new" }
+        "statusCategory": {
+          "name": "To Do",
+          "key": "new"
+        }
       },
-      "issuetype": { "name": "Story" },
+      "issuetype": {
+        "name": "Story"
+      },
       "issuelinks": [],
-      "description": "## Output\nA result.\n## Checks\n- AC1: The request succeeds"
+      "description": "## Output\nA result.\n## Checks\n- AC1: The request succeeds\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   }
 }

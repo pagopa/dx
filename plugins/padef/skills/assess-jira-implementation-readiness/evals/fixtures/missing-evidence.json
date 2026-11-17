@@ -2,9 +2,14 @@
   "TEST-8": {
     "key": "TEST-8",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
       "issuelinks": [],
-      "description": "## Output\nA result."
+      "description": "## Output\nA result.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   }
 }

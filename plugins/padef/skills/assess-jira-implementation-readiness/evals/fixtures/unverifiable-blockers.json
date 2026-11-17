@@ -2,21 +2,36 @@
   "TEST-23": {
     "key": "TEST-23",
     "fields": {
-      "status": { "name": "Backlog", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Task" },
+      "status": {
+        "name": "Backlog",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Task"
+      },
       "issuelinks": [
         {
-          "type": { "name": "Blocks" },
+          "type": {
+            "name": "Blocks"
+          },
           "inwardIssue": {
             "key": "TEST-15",
-            "fields": { "status": { "name": "Unknown" } }
+            "fields": {
+              "status": {
+                "name": "Unknown"
+              }
+            }
           }
         }
       ],
-      "description": "## Output\nA result."
+      "description": "## Output\nA result.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   },
   "TEST-15": {
-    "error": { "message": "Permission denied while retrieving TEST-15." }
+    "error": {
+      "message": "Permission denied while retrieving TEST-15."
+    }
   }
 }

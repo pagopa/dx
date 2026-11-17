@@ -30,6 +30,7 @@ locals {
   secrets = var.use_github_app ? {
     GITHUB_APP_KEY             = "github-runner-app-key"
     GITHUB_APP_ID              = "github-runner-app-id"
+    GITHUB_APP_CLIENT_ID       = "github-runner-app-client-id"
     GITHUB_APP_INSTALLATION_ID = "github-runner-app-installation-id"
     } : {
     GITHUB_PAT = var.key_vault.secret_name
@@ -42,4 +43,3 @@ locals {
   key_vault_id  = provider::azurerm::normalise_resource_id("/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.key_vault.resource_group_name}/providers/Microsoft.KeyVault/vaults/${var.key_vault.name}")
   key_vault_uri = "https://${var.key_vault.name}.vault.azure.net/"
 }
-

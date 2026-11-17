@@ -1,4 +1,4 @@
-FROM public.ecr.aws/docker/library/node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8 AS base
+FROM public.ecr.aws/docker/library/node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS base
 # 1. Enable pnpm
 RUN corepack enable
 
@@ -7,6 +7,7 @@ WORKDIR /app
 
 # 3. Copy monorepo configuration files
 COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./nx.json ./tsconfig.json ./
+COPY ./patches ./patches
 
 # 4. Copy source code for apps and packages
 COPY ./apps ./apps
@@ -17,10 +18,11 @@ RUN pnpm install --filter @pagopa/dx-mcpserver...
 # 6. Build the mcpserver app
 RUN pnpm nx build @pagopa/dx-mcpserver
 # 7. Prune development-only dependencies for the final image
-RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod /app/deploy
+# Workspace patches target dev-only packages (e.g. nx), which --prod omits.
+RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod --config.allow-unused-patches=true /app/deploy
 
 # --- Final Image ---
-FROM public.ecr.aws/docker/library/node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8
+FROM public.ecr.aws/docker/library/node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
 WORKDIR /app
 
 # Copy the AWS Lambda Adapter

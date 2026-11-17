@@ -42,7 +42,6 @@
     "@types/react-dom": "catalog:react",
     "docusaurus-plugin-llms": "^0.5.1",
     "eslint": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:"
   },
   "browserslist": {

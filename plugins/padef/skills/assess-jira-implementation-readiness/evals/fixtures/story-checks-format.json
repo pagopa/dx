@@ -2,26 +2,47 @@
   "TEST-18": {
     "key": "TEST-18",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Story" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Story"
+      },
       "issuelinks": [],
-      "description": "## Output\nA file.\n## Checks\n- alpha: The file is created\n- 7 - The user can download it"
+      "description": "## Output\nA file.\n## Checks\n- alpha: The file is created\n- 7 - The user can download it\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   },
   "TEST-19": {
     "key": "TEST-19",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Story" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Story"
+      },
       "issuelinks": [],
-      "description": "## Output\nA file.\n## Checks\nThe file must be created."
+      "description": "## Output\nA file.\n## Checks\nThe file must be created.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   },
   "TEST-20": {
     "key": "TEST-20",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Story" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Story"
+      },
       "issuelinks": [],
       "description": {
         "type": "doc",
@@ -29,15 +50,32 @@
         "content": [
           {
             "type": "heading",
-            "attrs": { "level": 2 },
-            "content": [{ "type": "text", "text": "Output" }]
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Output"
+              }
+            ]
           },
           {
             "type": "heading",
-            "attrs": { "level": 2 },
-            "content": [{ "type": "text", "text": "Checks" }]
+            "attrs": {
+              "level": 2
+            },
+            "content": [
+              {
+                "type": "text",
+                "text": "Checks"
+              }
+            ]
           },
-          { "type": "bulletList", "content": [] }
+          {
+            "type": "bulletList",
+            "content": []
+          }
         ]
       }
     }

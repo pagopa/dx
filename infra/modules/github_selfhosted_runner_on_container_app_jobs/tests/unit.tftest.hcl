@@ -137,8 +137,32 @@ run "github_runner_app_authentication" {
   }
 
   assert {
-    condition     = length(azurerm_container_app_job.github_runner.secret) == 3
-    error_message = "GitHub App auth must configure exactly 3 Key Vault secrets"
+    condition     = length(azurerm_container_app_job.github_runner.secret) == 4
+    error_message = "GitHub App auth must configure exactly 4 Key Vault secrets"
+  }
+
+  assert {
+    condition = anytrue([
+      for env in azurerm_container_app_job.github_runner.template[0].container[0].env :
+      env.name == "GITHUB_APP_CLIENT_ID" && env.secret_name == "github-runner-app-client-id"
+    ])
+    error_message = "The runner must receive the GitHub App Client ID from Key Vault"
+  }
+
+  assert {
+    condition = anytrue([
+      for env in azurerm_container_app_job.github_runner.template[0].container[0].env :
+      env.name == "GITHUB_APP_ID" && env.secret_name == "github-runner-app-id"
+    ])
+    error_message = "KEDA must receive the GitHub App ID from Key Vault"
+  }
+
+  assert {
+    condition = anytrue([
+      for secret in azurerm_container_app_job.github_runner.secret :
+      secret.name == "github-runner-app-client-id" && secret.key_vault_secret_id == "https://kv-test.vault.azure.net/secrets/github-runner-app-client-id"
+    ])
+    error_message = "Client ID must reference the common Key Vault secret"
   }
 
   assert {
@@ -160,8 +184,8 @@ run "github_runner_keda_app_metadata" {
   }
 
   assert {
-    condition     = contains(keys(azurerm_container_app_job.github_runner.event_trigger_config[0].scale[0].rules[0].metadata), "applicationIDFromEnv")
-    error_message = "GitHub App auth must set applicationIDFromEnv in KEDA metadata"
+    condition     = azurerm_container_app_job.github_runner.event_trigger_config[0].scale[0].rules[0].metadata["applicationIDFromEnv"] == "GITHUB_APP_ID"
+    error_message = "KEDA must use the GitHub App ID, not the Client ID"
   }
 
   assert {

@@ -2,56 +2,82 @@
   "TEST-10": {
     "key": "TEST-10",
     "fields": {
-      "status": { "name": "Backlog", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Task" },
+      "status": {
+        "name": "Backlog",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Task"
+      },
       "issuelinks": [
         {
-          "type": { "name": "Blocks" },
+          "type": {
+            "name": "Blocks"
+          },
           "inwardIssue": {
             "key": "TEST-11",
             "fields": {
               "status": {
                 "name": "In Progress",
-                "statusCategory": { "key": "indeterminate" }
+                "statusCategory": {
+                  "key": "indeterminate"
+                }
               }
             }
           }
         },
         {
-          "type": { "name": "Blocks" },
+          "type": {
+            "name": "Blocks"
+          },
           "inwardIssue": {
             "key": "TEST-12",
             "fields": {
-              "status": { "name": "Done", "statusCategory": { "key": "done" } }
+              "status": {
+                "name": "Done",
+                "statusCategory": {
+                  "key": "done"
+                }
+              }
             }
           }
         },
         {
-          "type": { "name": "Blocks" },
+          "type": {
+            "name": "Blocks"
+          },
           "inwardIssue": {
             "key": "TEST-13",
             "fields": {
               "status": {
                 "name": "Undefined",
-                "statusCategory": { "key": "none" }
+                "statusCategory": {
+                  "key": "none"
+                }
               }
             }
           }
         },
         {
-          "type": { "name": "Blocks" },
+          "type": {
+            "name": "Blocks"
+          },
           "outwardIssue": {
             "key": "TEST-14",
             "fields": {
               "status": {
                 "name": "In Progress",
-                "statusCategory": { "key": "indeterminate" }
+                "statusCategory": {
+                  "key": "indeterminate"
+                }
               }
             }
           }
         }
       ],
-      "description": "## Output\nA result."
+      "description": "## Output\nA result.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   }
 }

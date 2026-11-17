@@ -1,10 +1,11 @@
-FROM node:24-alpine@sha256:a34ab6d7f6f4813f4d0c5469d74685604b962fbdbf5793a7bc7b4998ecb867c8
+FROM node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
 
 RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.json ./
+COPY patches ./patches
 COPY apps/dx-metrics-import/package.json ./apps/dx-metrics-import/
 COPY packages/dx-metrics-core/package.json ./packages/dx-metrics-core/
 

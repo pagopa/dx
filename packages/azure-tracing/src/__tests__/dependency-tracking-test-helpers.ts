@@ -15,9 +15,20 @@ import { promisify } from "node:util";
 import { gunzipSync } from "node:zlib";
 import { z } from "zod";
 
-const packageRoot = fileURLToPath(new URL("../../../../", import.meta.url));
-const preloadModulePath = fileURLToPath(
-  new URL("../index.mts", import.meta.url),
+const packageRoot = fileURLToPath(new URL("../../", import.meta.url));
+/**
+ * Preload entrypoint for Azure Functions runtimes, which cannot call
+ * `initAzureMonitor` themselves.
+ */
+export const functionsPreloadModulePath = fileURLToPath(
+  new URL("../azure/functions/index.mts", import.meta.url),
+);
+/**
+ * Preload entrypoint for standalone Node.js applications (Container Apps, App
+ * Services) that instrument themselves through `initAzureMonitor`.
+ */
+export const standalonePreloadModulePath = fileURLToPath(
+  new URL("./fixtures/standalone-preload.mts", import.meta.url),
 );
 const scenarioScriptPath = fileURLToPath(
   new URL("./fixtures/run-dependency-scenario.ts", import.meta.url),
@@ -32,12 +43,14 @@ const collectorPrivateKeyPath = fileURLToPath(
 const azuriteAccountKey =
   "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==";
 
-const remoteDependencyDataSchema = z
+const telemetryBaseDataSchema = z
   .object({
     data: z.string().optional(),
     name: z.string().optional(),
+    responseCode: z.string().optional(),
     target: z.string().optional(),
     type: z.string().optional(),
+    url: z.string().optional(),
   })
   .passthrough();
 
@@ -45,7 +58,7 @@ const telemetryEnvelopeSchema = z
   .object({
     data: z
       .object({
-        baseData: remoteDependencyDataSchema.optional(),
+        baseData: telemetryBaseDataSchema.optional(),
         baseType: z.string().optional(),
       })
       .optional(),
@@ -54,15 +67,23 @@ const telemetryEnvelopeSchema = z
 
 const telemetryBatchSchema = z.array(telemetryEnvelopeSchema);
 
-export type RemoteDependencyData = z.infer<typeof remoteDependencyDataSchema>;
+export type TelemetryBaseData = z.infer<typeof telemetryBaseDataSchema>;
 export interface TelemetryCollector {
   readonly caCertificatePath: string;
   close: () => Promise<void>;
   readonly connectionString: string;
-  getRemoteDependencies: () => RemoteDependencyData[];
+  getCapturedPaths: () => readonly string[];
+  getRemoteDependencies: () => TelemetryBaseData[];
+  getRequestTelemetries: () => TelemetryBaseData[];
+  waitForCapturedPath: (
+    predicate: (path: string) => boolean,
+  ) => Promise<string>;
   waitForRemoteDependencies: (
-    predicate: (dependency: RemoteDependencyData) => boolean,
-  ) => Promise<readonly RemoteDependencyData[]>;
+    predicate: (dependency: TelemetryBaseData) => boolean,
+  ) => Promise<readonly TelemetryBaseData[]>;
+  waitForRequestTelemetries: (
+    predicate: (telemetry: TelemetryBaseData) => boolean,
+  ) => Promise<readonly TelemetryBaseData[]>;
 }
 
 interface CapturedRequest {
@@ -75,7 +96,7 @@ interface CollectorCertificate {
   readonly privateKey: Buffer;
 }
 
-type Scenario = "cosmos" | "redis" | "storage";
+type Scenario = "cosmos" | "fastify" | "redis" | "storage";
 
 type TelemetryEnvelope = z.infer<typeof telemetryEnvelopeSchema>;
 
@@ -112,7 +133,7 @@ const getErrorProperty = (error: unknown, property: string) =>
     ? toOutputString(Object.getOwnPropertyDescriptor(error, property)?.value)
     : "";
 
-const runProcess = async (
+export const runProcess = async (
   command: string,
   args: readonly string[],
   failureMessage: string,
@@ -161,16 +182,16 @@ const parseBatch = (body: string) => {
   }
 };
 
-const extractRemoteDependency = (envelope: TelemetryEnvelope) =>
-  envelope.data?.baseType === "RemoteDependencyData" && envelope.data.baseData
+const extractBaseData = (baseType: string) => (envelope: TelemetryEnvelope) =>
+  envelope.data?.baseType === baseType && envelope.data.baseData
     ? [envelope.data.baseData]
     : [];
 
-const getRequestRemoteDependencies = (request: CapturedRequest) => {
+const getRequestBaseData = (request: CapturedRequest, baseType: string) => {
   const parsedBatch = parseBatch(request.body);
 
   return parsedBatch.success
-    ? parsedBatch.data.flatMap(extractRemoteDependency)
+    ? parsedBatch.data.flatMap(extractBaseData(baseType))
     : [];
 };
 
@@ -184,18 +205,33 @@ const readBuffer = async (stream: NodeJS.ReadableStream) => {
   return Buffer.concat(chunks);
 };
 
+const isLiveMetricsRequest = (path: string) =>
+  path.startsWith("/QuickPulseService.svc/");
+
 const collectTelemetryRequest = async (
   requests: CapturedRequest[],
   request: IncomingMessage,
   response: ServerResponse,
 ) => {
+  const path = request.url ?? "/";
+
   requests.push({
     body: decodeRequestBody(
       request.headers["content-encoding"],
       await readBuffer(request),
     ),
-    path: request.url ?? "/",
+    path,
   });
+
+  // Live Metrics clients ping the service until it reports a subscription and
+  // then publish metrics on the post endpoint. Answering with the subscribed
+  // header keeps the handshake going; the body stays empty so the client keeps
+  // using its default collection configuration.
+  if (isLiveMetricsRequest(path)) {
+    response.writeHead(200, { "x-ms-qps-subscribed": "true" });
+    response.end();
+    return;
+  }
 
   response.writeHead(200, { "content-type": "application/json" });
   response.end(acceptedTelemetryResponse);
@@ -255,29 +291,37 @@ export const startTelemetryCollector =
     const collectorOrigin = `https://${address.address}:${address.port}`;
 
     const getRemoteDependencies = () =>
-      requests.flatMap(getRequestRemoteDependencies);
+      requests.flatMap((request) =>
+        getRequestBaseData(request, "RemoteDependencyData"),
+      );
 
-    const waitForRemoteDependencies = async (
-      predicate: (dependency: RemoteDependencyData) => boolean,
+    const getRequestTelemetries = () =>
+      requests.flatMap((request) => getRequestBaseData(request, "RequestData"));
+
+    const waitForMatch = async <T>(
+      findMatches: () => readonly T[],
+      predicate: (value: T) => boolean,
+      describeFailure: (captured: readonly CapturedRequest[]) => string,
     ) => {
       for (let attempt = 0; attempt < 150; attempt += 1) {
-        const matchingDependencies = getRemoteDependencies().filter(predicate);
+        const matchingValues = findMatches().filter(predicate);
 
-        if (matchingDependencies.length > 0) {
-          return matchingDependencies;
+        if (matchingValues.length > 0) {
+          return matchingValues;
         }
 
         await delay(200);
       }
 
-      throw new Error(
-        `Expected dependency telemetry but captured:\n${JSON.stringify(
-          requests,
-          null,
-          2,
-        )}`,
-      );
+      throw new Error(describeFailure(requests));
     };
+
+    const formatCapturedRequests = (captured: readonly CapturedRequest[]) =>
+      JSON.stringify(
+        captured.map(({ body, path }) => ({ body, path })),
+        null,
+        2,
+      );
 
     return {
       caCertificatePath: collectorCertificatePath,
@@ -287,12 +331,40 @@ export const startTelemetryCollector =
         `IngestionEndpoint=${collectorOrigin}`,
         `LiveEndpoint=${collectorOrigin}`,
       ].join(";"),
+      getCapturedPaths: () => requests.map(({ path }) => path),
       getRemoteDependencies,
-      waitForRemoteDependencies,
+      getRequestTelemetries,
+      waitForCapturedPath: async (predicate) => {
+        const [path] = await waitForMatch(
+          () => requests.map((request) => request.path),
+          predicate,
+          (captured) =>
+            `Expected a captured request but received:\n${formatCapturedRequests(captured)}`,
+        );
+
+        return path;
+      },
+      waitForRemoteDependencies: (predicate) =>
+        waitForMatch(
+          getRemoteDependencies,
+          predicate,
+          (captured) =>
+            `Expected dependency telemetry but captured:\n${formatCapturedRequests(captured)}`,
+        ),
+      waitForRequestTelemetries: (predicate) =>
+        waitForMatch(
+          getRequestTelemetries,
+          predicate,
+          (captured) =>
+            `Expected request telemetry but captured:\n${formatCapturedRequests(captured)}`,
+        ),
     };
   };
 
-const mergeNodeOptions = (existingNodeOptions: string | undefined) =>
+const mergeNodeOptions = (
+  existingNodeOptions: string | undefined,
+  preloadModulePath: string,
+) =>
   [existingNodeOptions, "--import=tsx", `--import=${preloadModulePath}`]
     .filter((value) => value && value.length > 0)
     .join(" ");
@@ -301,6 +373,7 @@ export const runDependencyScenario = async (
   scenario: Scenario,
   env: NodeJS.ProcessEnv,
   collectorCertificatePath: string,
+  preloadModulePath: string = functionsPreloadModulePath,
 ) => {
   await runProcess(
     process.execPath,
@@ -312,7 +385,10 @@ export const runDependencyScenario = async (
         ...process.env,
         ...env,
         NODE_EXTRA_CA_CERTS: collectorCertificatePath,
-        NODE_OPTIONS: mergeNodeOptions(process.env.NODE_OPTIONS),
+        NODE_OPTIONS: mergeNodeOptions(
+          process.env.NODE_OPTIONS,
+          preloadModulePath,
+        ),
       },
     },
   );

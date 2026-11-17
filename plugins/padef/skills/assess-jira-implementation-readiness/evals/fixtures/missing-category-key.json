@@ -2,10 +2,14 @@
   "TEST-9": {
     "key": "TEST-9",
     "fields": {
-      "status": { "name": "Backlog" },
-      "issuetype": { "name": "Task" },
+      "status": {
+        "name": "Backlog"
+      },
+      "issuetype": {
+        "name": "Task"
+      },
       "issuelinks": [],
-      "description": "## Output\nA result."
+      "description": "## Output\nA result.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   }
 }

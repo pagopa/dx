@@ -20,6 +20,7 @@ type AnalyzeOptions = {
   config?: string;
   days?: number;
   format: ReportFormat;
+  includeActualCost?: boolean;
   location?: string;
   pricing: boolean;
   source?: "advisor" | "all" | "custom";
@@ -80,6 +81,10 @@ export function makeSavemoneyCli(
     )
     .option("--no-pricing", "Disable Retail Prices API cost estimates")
     .option(
+      "--include-actual-cost",
+      "Show actual costs for the last 30 days (requires Cost Management access)",
+    )
+    .option(
       "--azqr-report <path>",
       "Merge findings from an AZQR JSON report",
       parseNonEmptyString,
@@ -98,6 +103,7 @@ export function makeSavemoneyCli(
           ...(options.azqrReport ? { azqrReportPath: options.azqrReport } : {}),
           ...(filterTags.size ? { filterTags } : {}),
           ...(options.location ? { preferredLocation: options.location } : {}),
+          ...(options.includeActualCost ? { includeActualCost: true } : {}),
           ...(options.pricing === false ? { pricing: { enabled: false } } : {}),
           ...(options.source
             ? {

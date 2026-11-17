@@ -4,11 +4,15 @@
     "fields": {
       "status": {
         "name": "In Progress",
-        "statusCategory": { "key": "indeterminate" }
+        "statusCategory": {
+          "key": "indeterminate"
+        }
       },
-      "issuetype": { "name": "Story" },
+      "issuetype": {
+        "name": "Story"
+      },
       "issuelinks": [],
-      "description": "## Checks\nThe file must be created."
+      "description": "## Checks\nThe file must be created.\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   }
 }

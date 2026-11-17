@@ -2,10 +2,17 @@
   "TEST-24": {
     "key": "TEST-24",
     "fields": {
-      "status": { "name": "Open", "statusCategory": { "key": "new" } },
-      "issuetype": { "name": "Story" },
+      "status": {
+        "name": "Open",
+        "statusCategory": {
+          "key": "new"
+        }
+      },
+      "issuetype": {
+        "name": "Story"
+      },
       "issuelinks": [],
-      "description": "## Output\nA result.\n## Checks\n- A: The user can log in\n- The user can log out\n- B:\n- C: Improve performance"
+      "description": "## Output\nA result.\n## Checks\n- A: The user can log in\n- The user can log out\n- B:\n- C: Improve performance\n## Source\n- dr: [Design Review](http://127.0.0.1:8787/ok)"
     }
   }
 }
