@@ -9,7 +9,7 @@ variables {
   }
 
   tags = {
-    CostCenter  = "DevEx"
+    CostCenter  = "TS720 - DEV EX"
     Environment = "Uat"
     Owner       = "DevEx"
     Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
