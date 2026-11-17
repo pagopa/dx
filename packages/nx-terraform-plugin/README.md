@@ -9,7 +9,7 @@ planning, applying, and module publishing.
 The plugin is published to GitHub Packages. Install it with pnpm's `gh:` alias:
 
 ```sh
-pnpm add -D gh:@pagopa/nx-terraform
+pnpm add -D @pagopa/nx-terraform@gh:latest
 ```
 
 Then register it in `nx.json`:
