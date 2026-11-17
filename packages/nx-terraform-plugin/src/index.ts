@@ -1,18 +1,12 @@
-import {
-  type CreateDependencies,
-  type CreateNodes,
-  createNodesFromFiles,
-} from "@nx/devkit";
+import { type CreateNodes, createNodesFromFiles } from "@nx/devkit";
 import fs from "node:fs/promises";
 import path from "node:path";
 
 import type { TerraformProjectMetadata } from "./project-metadata.ts";
 
 import { readTerraformProjectMetadata } from "./discovery.ts";
-import { getStaticDependenciesFromFile } from "./fs.ts";
 import { configureLogger } from "./logger.ts";
 import { parseOptions, type TerraformPluginOptions } from "./options.ts";
-import { getTerraformProjectFiles } from "./project-file.ts";
 import { getProject, type TerraformTestCapabilities } from "./project.ts";
 
 const ignoreModules = ["tests", "_tests", "examples", "example"];
@@ -201,17 +195,3 @@ export const createNodes: CreateNodes<TerraformPluginOptions> = [
     );
   },
 ];
-
-export const createDependencies: CreateDependencies<
-  TerraformPluginOptions
-> = async (opts, ctx) => {
-  const filesToProcess = getTerraformProjectFiles(
-    // Get from Nx only changed Terraform files, then derive static project-graph
-    // dependencies from Terraform module source references in those files.
-    ctx.filesToProcess.projectFileMap,
-  );
-  const dependencies = await Promise.all(
-    filesToProcess.map(getStaticDependenciesFromFile),
-  );
-  return dependencies.flat();
-};
