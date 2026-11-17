@@ -2,11 +2,11 @@
 "@pagopa/oxlint-config": minor
 ---
 
-Add `@pagopa/oxlint-config`, a native [oxlint](https://oxc.rs/docs/guide/usage/linter) port of `@pagopa/eslint-config`.
+Add `@pagopa/oxlint-config`, a native [oxlint](https://oxc.rs/docs/guide/usage/linter) configuration for PagoPA projects.
 
-The package ships a single `base.json` artifact that reproduces the PagoPA rule set: 141 of the 143 rules enabled by `@pagopa/eslint-config` on test files (120 of 122 on source files, 134 of 138 on plain JavaScript files). The gaps are `no-dupe-args`, `no-octal` and `no-undef-init`, which oxlint does not implement, plus `no-undef`, which oxlint only ships in its disabled `nursery` category. Following ESLint, the rules that TypeScript already enforces are enabled for script files and turned off by a `**/*.ts` override, where `prefer-rest-params` and `prefer-spread` take over. All 22 `perfectionist/*` rules are loaded through `jsPlugins`, and 20 of them were verified to report the same findings as their ESLint counterparts (`sort-export-attributes` and `sort-import-attributes` need syntax the fixtures do not cover).
+The package ships a single `base.json` artifact that enables 134 core oxlint rules, all 22 `perfectionist/*` rules through `jsPlugins`, and 22 `vitest/*` rules on test files. `@pagopa/eslint-config` is frozen as of this release and `base.json` becomes the source of truth for linting: four rules from the ESLint preset have no counterpart (`no-dupe-args`, `no-octal` and `no-undef-init` are not implemented by oxlint, and `no-undef` only ships in oxlint's disabled `nursery` category). Following ESLint, the rules that TypeScript already enforces are enabled for script files and turned off by a `**/*.ts` override, where `prefer-rest-params` and `prefer-spread` take over.
 
-Because oxlint only accepts file paths in `extends`, consumers point their configuration at the installed artifact. oxlint resolves `ignorePatterns` against the directory of the configuration file that declares them, so the global ignores of `@pagopa/eslint-config` have to be repeated by the consumer rather than inherited:
+Because oxlint only accepts file paths in `extends`, consumers point their configuration at the installed artifact. oxlint resolves `ignorePatterns` against the directory of the configuration file that declares them, so the global ignores have to be repeated by the consumer rather than inherited:
 
 ```json
 {
@@ -15,6 +15,6 @@ Because oxlint only accepts file paths in `extends`, consumers point their confi
 }
 ```
 
-The rule mapping is enforced by tests that compare the oxlint configuration with the rule set ESLint computes from `@pagopa/eslint-config` in both directions, options included. The only option oxlint needs but ESLint does not declare is `reportVarsOnlyUsedAsTypes`, without which oxlint accepts a value consumed only by a type alias; `base.json` pins it for TypeScript files so both linters report the same findings. A change to the ESLint config fails this package's test suite until the oxlint config is updated. On a 500-file benchmark both linters report the same 1,500 findings and oxlint completes in 0.35s against ESLint's 1.02s.
+`base.json` pins `reportVarsOnlyUsedAsTypes` for TypeScript files, without which oxlint accepts a value consumed only by a type alias, and makes `arrow-body-style` and `radix` explicit because oxlint requires the mode. On a 500-file benchmark oxlint reports the same 1,500 findings as the ESLint preset in 0.35s against 1.02s.
 
-Type-aware rules are out of scope: they need `oxlint-tsgolint` and a TypeScript version newer than the one this monorepo uses. The package ships the Vitest overlay only, matching the default entry point of `@pagopa/eslint-config`.
+Type-aware rules are out of scope: they need `oxlint-tsgolint` and a TypeScript version newer than the one this monorepo uses. The package ships the Vitest overlay only.

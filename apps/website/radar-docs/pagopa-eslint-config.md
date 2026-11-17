@@ -11,6 +11,11 @@ supports both ESLint 9 and ESLint 10, so teams can adopt a consistent linting
 baseline by installing one package instead of maintaining their own
 configuration.
 
+The package is frozen at its current version: it keeps working, but new projects
+should start from
+[`@pagopa/oxlint-config`](https://github.com/pagopa/dx/tree/main/packages/oxlint-config)
+instead.
+
 ## Use cases
 
 - Enforcing a consistent set of lint rules across TypeScript and JavaScript

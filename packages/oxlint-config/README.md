@@ -1,11 +1,12 @@
 # @pagopa/oxlint-config
 
-PagoPA's lint rules, expressed as a native [oxlint](https://oxc.rs/docs/guide/usage/linter) configuration.
+PagoPA's lint rules, expressed as a native
+[oxlint](https://oxc.rs/docs/guide/usage/linter) configuration.
 
-It mirrors the rule set of [`@pagopa/eslint-config`](../eslint-config) so a
-workspace can run oxlint and get the same findings, roughly 3× faster than
-ESLint. It is a drop-in replacement for linting, not a replacement for every
-ESLint feature: see [Limitations](#limitations).
+This package is the source of truth for linting in PagoPA projects, and it
+lints a workspace roughly 3× faster than ESLint. It supersedes
+[`@pagopa/eslint-config`](../eslint-config), which is frozen: see
+[migrating from ESLint](#migrating-from-eslint).
 
 ## Installation
 
@@ -31,13 +32,11 @@ Create an `.oxlintrc.json` file at the root of your workspace:
 }
 ```
 
-`ignorePatterns` repeats the global ignores of `@pagopa/eslint-config`. oxlint
-resolves each pattern against the directory of the configuration file that
-declares it, so the identical list inside `base.json` is relative to the
-installed package and never matches your files: keep the line in your own
-`.oxlintrc.json`, or `oxlint --fix` will rewrite generated code and build
-output. The copy in `base.json` only documents the values the tests compare
-against `@pagopa/eslint-config`.
+`ignorePatterns` in your own file keeps `oxlint --fix` from rewriting
+generated code and build output. oxlint resolves each pattern against the
+directory of the configuration file that declares it, so the list inside
+`base.json` is relative to the installed package and never matches your files:
+the line in your `.oxlintrc.json` is the one that counts.
 
 > [!IMPORTANT]  
 > oxlint only accepts **file paths** in `extends`, not package specifiers, so
@@ -67,26 +66,31 @@ loaded through oxlint's `jsPlugins`, with the specifier resolved relative to
 `base.json` itself. You do not need to install it, and you do not need to add
 anything to your own configuration.
 
+## Migrating from ESLint
+
+`@pagopa/eslint-config` is frozen: it keeps working, but it will not receive new
+rules or fixes. To move a workspace over:
+
+1. `pnpm remove @pagopa/eslint-config eslint` — keep ESLint if you still need
+   the [type-aware rules](#limitations).
+2. `pnpm add -D oxlint @pagopa/oxlint-config` and add the `.oxlintrc.json`
+   shown above.
+3. Point the `lint` scripts at `oxlint` and delete `eslint.config.js`.
+4. Review the first run: the handful of rules oxlint cannot express are listed
+   under [rule coverage](#rule-coverage), and formatting is unchanged.
+
 ## Rule coverage
 
-| View                                             | Rules provided | Rules enabled by `@pagopa/eslint-config` |
-| ------------------------------------------------ | -------------- | ---------------------------------------- |
-| Script files (`*.js`)                            | 134            | 138                                      |
-| Source files (`*.ts`, `*.tsx`)                   | 120            | 122                                      |
-| Test files (`*.test.ts`, `*.spec.ts`, `test/**`) | 141            | 143                                      |
+`base.json` enables 134 core oxlint rules, plus all 22 `perfectionist/*` rules
+through `jsPlugins`, plus the 22 `vitest/*` rules on test files (`*.test.*`,
+`*.spec.*`, `test/**`).
 
-`@pagopa/eslint-config` lints JavaScript and TypeScript differently, and so
-does `base.json`: rules that TypeScript already enforces (`no-const-assign`,
-`no-unreachable`, ...) are enabled for scripts and turned off for `*.ts` files,
-where `prefer-rest-params` and `prefer-spread` only make sense. The overrides
-are scoped so that neither set leaks into the other.
+JavaScript and TypeScript are linted differently: rules that TypeScript already
+enforces (`no-const-assign`, `no-unreachable`, ...) are enabled for scripts and
+turned off for `*.ts` files, where `prefer-rest-params` and `prefer-spread` only
+make sense. The overrides are scoped so that neither set leaks into the other.
 
-All 22 `perfectionist/*` rules are enabled through `jsPlugins`, and 20 of them
-were verified to report the same findings, in the same place, as their ESLint
-counterparts; `sort-export-attributes` and `sort-import-attributes` need syntax
-the fixtures do not cover.
-
-The rules that cannot be ported are:
+Four rules from the ESLint era have no counterpart here:
 
 - `no-dupe-args`, `no-octal`, `no-undef-init` —
   [not implemented](https://oxc.rs/docs/guide/usage/linter/rules) by oxlint.
@@ -94,35 +98,23 @@ The rules that cannot be ported are:
   this config leaves disabled. It only applies to JavaScript files, where
   TypeScript users rarely lint.
 
-This list is kept in sync by the test suite: if oxlint gains support for one of
-these rules, the tests fail and tell you to enable it.
+### Pinned options
 
-### Option-level divergences
+A few options are pinned instead of relying on defaults:
 
-The rules are enabled with the same options as in `@pagopa/eslint-config`, with
-these exceptions:
-
-- `arrow-body-style`: oxlint only exposes `as-needed`, which is the behaviour
-  `@pagopa/eslint-config` asks for, so reports match.
-- `radix`: `@pagopa/eslint-config` relies on the rule default (`always`), which
-  oxlint requires explicitly; behaviour is identical.
-- `@typescript-eslint/no-unused-vars`: oxlint leaves values consumed only by a
-  type (`const id = 1; export type Id = typeof id;`) unreported unless
-  `reportVarsOnlyUsedAsTypes` is set. ESLint always reports them, so `base.json`
-  pins the option for TypeScript files. It is the only option in the config that
-  ESLint does not declare.
-- `@typescript-eslint/consistent-type-definitions` and
-  `@typescript-eslint/no-extraneous-class`: rules and lines match, but oxlint
-  reports a different column. Tooling that deduplicates findings by exact
-  position will see them as distinct.
+- `no-unused-vars` sets `reportVarsOnlyUsedAsTypes` for TypeScript files, so a
+  value consumed only by a type (`const id = 1; export type Id = typeof id;`)
+  is reported.
+- `arrow-body-style` uses `as-needed`, the only style oxlint exposes.
+- `radix` sets `always` explicitly, because oxlint requires the mode.
 
 ## Limitations
 
 - **Type-aware rules are not included.** They require `oxlint-tsgolint`, which
-  needs a TypeScript version newer than the one used by DX today. The rules that
-  depend on type information are therefore linted by ESLint only.
-- **Vitest only.** The configuration ships the Vitest overlay, like the default
-  entry point of `@pagopa/eslint-config`; there is no Jest flavour yet.
+  needs a TypeScript version newer than the one used by DX today. Projects that
+  need them keep a minimal ESLint setup next to oxlint.
+- **Vitest only.** The configuration ships the Vitest overlay; there is no Jest
+  flavour yet.
 - **No config inheritance for editors.** oxlint integrations that do not read
   `.oxlintrc.json` from the workspace root will not pick up these rules.
 
@@ -150,23 +142,17 @@ pnpm exec eslint src
 
 ## How this package is verified
 
-The rule mapping is locked by tests in `src/__tests__`:
+The test suite in `src/__tests__` validates the shape of `base.json` against
+oxlint's own schema, so it fails on a typo, a rule that oxlint does not ship, a
+missing plugin registration, or a category left enabled:
 
-- `parity.test.ts` compares the oxlint rule set with the one
-  `@pagopa/eslint-config` computes with the ESLint API, in **both directions**:
-  every ESLint rule must be covered (except the documented gaps) and oxlint must
-  not enable anything ESLint does not. It also compares the options of every
-  rule `base.json` pins, so a threshold or ordering change on the ESLint side
-  fails here too.
-- `config.test.ts` checks the shape of `base.json`: every rule exists in the
-  oxlint schema or in the perfectionist plugin, plugin prefixes are declared,
-  no category is left enabled, and the test-file overlay mirrors the
-  `@pagopa/eslint-config` overlay.
-- `fixture.test.ts` runs both linters on the same sources and requires the same
-  rules on the same lines, plus the same columns for perfectionist rules. The
-  sources cover scripts, TypeScript, TSX and the Vitest overlay, so relaxations
-  such as `no-empty-function` being off in test files are checked on output, not
-  only in the configuration.
+- every rule id exists in oxlint's `configuration_schema.json` or in the
+  perfectionist plugin;
+- every plugin prefix used by a rule is declared in `plugins` or `jsPlugins`,
+  and no declared plugin is unused;
+- the seven oxlint categories are all `off`, so coverage is explicit;
+- TypeScript files turn off the checks the compiler already reports and enable
+  the two script-only ones.
 
 Run them with:
 
@@ -174,9 +160,11 @@ Run them with:
 pnpm nx test @pagopa/oxlint-config
 ```
 
-## Keeping it in sync
+## Making changes
 
-When `@pagopa/eslint-config` changes, the tests in this package fail on the
-newly added or removed rules. Regenerate `base.json` accordingly: the fast path
-is to read the failures, since they name the exact rules to add or remove, and
-then run `pnpm nx test @pagopa/oxlint-config` again.
+`base.json` is the source of truth: nothing else has to be regenerated when a
+rule is added, removed or retuned. Update the file, run the tests, and add a
+version plan so consumers see the change in the changelog.
+
+When oxlint gains a rule that is missing here, or moves `no-undef` out of
+`nursery`, add it and drop it from the list in [rule coverage](#rule-coverage).

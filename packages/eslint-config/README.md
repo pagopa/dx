@@ -4,6 +4,14 @@ This package provides PagoPA's `eslint.config.js` as an extensible shared config
 
 It supports both **ESLint 9** and **ESLint 10**.
 
+> [!WARNING]  
+> **This package is frozen.** The version you are reading is the last one that
+> will be published: it keeps working, but it will not receive new rules or
+> fixes. New projects should use
+> [`@pagopa/oxlint-config`](../oxlint-config), the oxlint configuration that
+> replaces it. See its
+> [migration guide](../oxlint-config/README.md#migrating-from-eslint).
+
 ## Usage
 
 1. Install `@pagopa/eslint-config` together with its peer dependencies.

@@ -13,31 +13,6 @@ const require = createRequire(import.meta.url);
 
 const config = loadBaseConfig();
 
-interface FlatConfig {
-  files?: string[];
-  ignores?: string[];
-  rules?: Record<string, unknown>;
-}
-
-const eslintConfig = (
-  require("@pagopa/eslint-config") as { default: FlatConfig[] }
-).default;
-
-/** The `@pagopa/eslint-config` entry adding the vitest rules on test files. */
-const testOverlay = eslintConfig.filter((entry) =>
-  Object.keys(entry.rules ?? {}).some((rule) => rule.startsWith("vitest/")),
-);
-
-/** The override of `base.json` that mirrors the vitest overlay. */
-const testOverride = config.overrides.find((override) =>
-  override.files.some((file) => file.includes("tests")),
-);
-
-/** The `@pagopa/eslint-config` entry holding the global ignores. */
-const globalIgnores = eslintConfig.filter(
-  (entry) => Object.keys(entry).length === 1 && entry.ignores !== undefined,
-);
-
 const allRules = (source: OxlintConfig) => [
   ...Object.keys(source.rules),
   ...source.overrides.flatMap((override) => Object.keys(override.rules)),
@@ -89,12 +64,7 @@ describe("base config", () => {
     ).toEqual([]);
   });
 
-  it("applies its test override to the files of @pagopa/eslint-config", () => {
-    expect(testOverlay).toHaveLength(1);
-    expect(testOverride?.files).toEqual(testOverlay[0]?.files);
-  });
-
-  it("disables the core rules ESLint leaves to TypeScript on TS files", () => {
+  it("turns off on TypeScript files the checks TypeScript already reports", () => {
     const typescriptOverride = config.overrides.find((override) =>
       override.files.every((file) => file.includes("ts")),
     );
@@ -108,26 +78,10 @@ describe("base config", () => {
     });
   });
 
-  it("ignores the same paths as @pagopa/eslint-config", () => {
-    expect(globalIgnores).toHaveLength(1);
-    expect(config.ignorePatterns).toEqual(globalIgnores[0]?.ignores);
-  });
-
   it("exposes base.json through its own exports", () => {
     expect(require.resolve("@pagopa/oxlint-config")).toBe(BASE_CONFIG_PATH);
     expect(require.resolve("@pagopa/oxlint-config/base.json")).toBe(
       BASE_CONFIG_PATH,
-    );
-  });
-
-  it("relaxes the same rules as @pagopa/eslint-config on test files", () => {
-    const overlay = testOverlay[0]?.rules ?? {};
-    const relaxed = Object.entries(overlay)
-      .filter(([, severity]) => severity === "off")
-      .map(([rule]) => rule.replace("@typescript-eslint/", ""));
-
-    expect(testOverride?.rules).toMatchObject(
-      Object.fromEntries(relaxed.map((rule) => [rule, "off"])),
     );
   });
 });

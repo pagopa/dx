@@ -1,7 +1,7 @@
 {
   "name": "@pagopa/oxlint-config",
   "version": "0.0.0",
-  "description": "Oxlint port of @pagopa/eslint-config",
+  "description": "Oxlint configuration for PagoPA DX projects",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
