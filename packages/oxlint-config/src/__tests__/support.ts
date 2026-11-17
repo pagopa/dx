@@ -1,0 +1,59 @@
+import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
+import { dirname, join } from "node:path";
+
+const require = createRequire(import.meta.url);
+
+export interface LintResult {
+  status: null | number;
+  stderr: string;
+  stdout: string;
+}
+
+export interface OxlintConfig {
+  categories: Record<string, RuleValue>;
+  ignorePatterns: string[];
+  jsPlugins: { name: string; specifier: string }[];
+  overrides: { files: string[]; rules: Record<string, RuleValue> }[];
+  plugins: string[];
+  rules: Record<string, RuleValue>;
+}
+
+export type RuleValue =
+  | 0
+  | 1
+  | 2
+  | "error"
+  | "off"
+  | "warn"
+  | readonly [0 | 1 | 2 | "error" | "off" | "warn", ...unknown[]];
+
+export const PACKAGE_ROOT = join(import.meta.dirname, "..", "..");
+
+export const BASE_CONFIG_PATH = join(PACKAGE_ROOT, "base.json");
+
+const OXLINT_BIN_PATH = join(
+  dirname(require.resolve("oxlint/package.json")),
+  "bin",
+  "oxlint",
+);
+
+export const loadBaseConfig = (): OxlintConfig =>
+  JSON.parse(readFileSync(BASE_CONFIG_PATH, "utf8")) as OxlintConfig;
+
+// A single thread keeps the run cheap, because the tests of a project run in
+// parallel with the tasks of the other projects on the same CI runner.
+export const runOxlint = (cwd: string, args: string[]): LintResult => {
+  const { error, status, stderr, stdout } = spawnSync(
+    OXLINT_BIN_PATH,
+    ["--threads=1", ...args],
+    { cwd, encoding: "utf8" },
+  );
+
+  if (error) {
+    throw error;
+  }
+
+  return { status, stderr, stdout };
+};
