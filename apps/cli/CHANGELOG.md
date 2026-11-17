@@ -1,3 +1,18 @@
+## 0.27.30 (2026-11-17)
+
+### 🚀 Features
+
+- Ship an `AGENTS.md` in the monorepo scaffold so AI agents find the toolchain, the validation commands and the repository conventions at the repository root. The file points at the `github-conventions` skill and the DX plugins enabled in `.github/copilot/settings.json` instead of duplicating their content, and leaves the Nx-owned section to `nx init`. ([#2529](https://github.com/pagopa/dx/pull/2529))
+- Reuse GitHub Runner App credentials from the environment common Key Vault when adding an environment. ([#2445](https://github.com/pagopa/dx/pull/2445))
+- Ship a `copilot-setup-steps.yml` workflow in the monorepo scaffold, so the GitHub Copilot coding agent can install the workspace dependencies on a freshly generated repository without manual steps. The workflow installs the mise toolchain, authenticates pnpm to GitHub Packages through the `setup-npm-registry` action and installs the dependencies. ([#2536](https://github.com/pagopa/dx/pull/2536))
+
+  GitHub Packages asks for a token even for the public packages it serves, and the scaffold depends only on public ones, so the workflow authenticates with the repository's own workflow token and needs no secret. That also makes it independent of where Copilot takes its credentials from: the workflow token is available in every run, including the one Copilot executes before the agent starts. The workflow keeps the private case reachable by pointing the `token` input at a secret and granting the repository under `Manage Actions access` in the package settings. The generated `README.md` and `AGENTS.md` document the workflow and the local setup that writes a token to the git-ignored `.npmrc`.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Danilo Spinelli @gunzip
+
 ## 0.27.29 (2026-11-06)
 
 ### 🚀 Features
