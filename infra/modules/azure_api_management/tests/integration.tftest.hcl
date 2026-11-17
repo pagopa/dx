@@ -87,6 +87,32 @@ run "apply_development" {
   }
 }
 
+run "bootstrap_cost_optimized" {
+  command   = apply
+  state_key = "cost_optimized"
+
+  variables {
+    environment = merge(var.environment, {
+      app_name        = "apimco"
+      instance_number = run.setup.instance_numbers.cost_optimized
+    })
+    tags                                 = var.tags
+    resource_group_name                  = run.setup.resource_group_name
+    private_dns_zone_resource_group_name = run.setup.private_dns_zone_resource_group_name
+    use_case                             = "cost_optimized"
+    publisher_email                      = "example@pagopa.it"
+    publisher_name                       = "Example Publisher"
+    log_analytics_workspace_id           = run.setup.log_analytics_workspace_id
+    virtual_network                      = run.setup.virtual_network_id
+    enable_public_network_access         = true
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.public_network_access_enabled && length(azurerm_private_endpoint.apim_pep) == 1
+    error_message = "Bootstrap must create APIM with public access enabled and its private endpoint before disabling public access."
+  }
+}
+
 run "apply_cost_optimized" {
   command   = apply
   state_key = "cost_optimized"

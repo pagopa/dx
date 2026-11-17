@@ -97,9 +97,17 @@ For a complete example of how to use this module, refer to the [example/complete
 
 ### ⚠️ Public Network Access Limitation ⚠️
 
-Azure may reject creation of a new API Management instance with public network
-access disabled. The `cost_optimized` use case disables public network access;
-check this service limitation before creating a new instance.
+Azure rejects creation of a new API Management instance with public network
+access disabled. For a new `cost_optimized` deployment:
+
+1. Set `enable_public_network_access = true` and apply to create APIM and its
+   private endpoint. Public access is temporarily enabled during this step.
+2. After that apply succeeds, remove the override (or set it to `false`) and
+   apply again to disable public access.
+
+Existing instances with a configured private endpoint can use the default
+directly. The integration test follows the same two-apply sequence using one
+shared state key for the cost-optimized bootstrap and final configuration.
 
 <!-- markdownlint-disable -->
 <!-- BEGIN_TF_DOCS -->
@@ -145,6 +153,7 @@ No modules.
 | <a name="input_action_group_id"></a> [action\_group\_id](#input\_action\_group\_id) | The ID of the custom string properties Action Group to include with the post webhook operation. | `string` | `null` | no |
 | <a name="input_application_insights"></a> [application\_insights](#input\_application\_insights) | Application Insights integration. Set to null to disable it or provide an object with the resource ID to enable it; the module resolves the connection string from the resource ID. | <pre>object({<br/>    id                  = string<br/>    sampling_percentage = optional(number, 0)<br/>    verbosity           = optional(string, "error")<br/>  })</pre> | `null` | no |
 | <a name="input_autoscale"></a> [autoscale](#input\_autoscale) | Configuration for autoscaling rules on capacity metrics. | <pre>object(<br/>    {<br/>      default_instances             = optional(number)<br/>      minimum_instances             = optional(number)<br/>      maximum_instances             = optional(number)<br/>      scale_out_capacity_percentage = optional(number)<br/>      scale_out_time_window         = optional(string)<br/>      scale_out_value               = optional(string)<br/>      scale_out_cooldown            = optional(string)<br/>      scale_in_capacity_percentage  = optional(number)<br/>      scale_in_time_window          = optional(string)<br/>      scale_in_value                = optional(string)<br/>      scale_in_cooldown             = optional(string)<br/>    }<br/>  )</pre> | `null` | no |
+| <a name="input_enable_public_network_access"></a> [enable\_public\_network\_access](#input\_enable\_public\_network\_access) | Override public network access. For a new cost\_optimized instance, apply with true to create APIM and its private endpoint, then remove the override or set false and apply again. Null uses the use-case default. | `bool` | `null` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = optional(string)<br/>    app_name        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_hostname_configuration"></a> [hostname\_configuration](#input\_hostname\_configuration) | Custom domain configurations. The proxy hostname is managed by the module; only whether the resource-name hostname is the default can be configured. Key Vault certificate IDs may include a version; the module strips it internally. | <pre>object({<br/>    proxy = optional(object({<br/>      use_resource_name_as_default = optional(bool, false)<br/>    }), {})<br/>    management = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>    portal = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>    developer_portal = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>    scm = optional(list(object({<br/>      host_name                = string<br/>      key_vault_certificate_id = string<br/>    })), [])<br/>  })</pre> | `{}` | no |
 | <a name="input_log_analytics_workspace_id"></a> [log\_analytics\_workspace\_id](#input\_log\_analytics\_workspace\_id) | The Log Analytics workspace ID used for diagnostic logs and metrics. Required when the selected use\_case enables monitoring. | `string` | `null` | no |

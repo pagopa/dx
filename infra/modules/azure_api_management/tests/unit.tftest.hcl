@@ -192,6 +192,32 @@ run "azure_api_management_cost_optimized_defaults" {
   }
 }
 
+run "azure_api_management_cost_optimized_public_access_bootstrap" {
+  command = plan
+
+  variables {
+    enable_public_network_access = true
+  }
+
+  assert {
+    condition     = azurerm_api_management.this.public_network_access_enabled && length(azurerm_private_endpoint.apim_pep) == 1
+    error_message = "Bootstrap must allow public access while still creating the private endpoint."
+  }
+}
+
+run "azure_api_management_cost_optimized_public_access_disabled" {
+  command = plan
+
+  variables {
+    enable_public_network_access = false
+  }
+
+  assert {
+    condition     = !azurerm_api_management.this.public_network_access_enabled
+    error_message = "The second apply must allow explicitly disabling public access."
+  }
+}
+
 run "azure_api_management_subnet_created_from_dx_cidr" {
   command = plan
 

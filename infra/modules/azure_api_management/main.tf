@@ -24,7 +24,7 @@ resource "azurerm_api_management" "this" {
 
   sku_name                      = local.use_case_features.sku
   zones                         = local.use_case_features.zones
-  public_network_access_enabled = local.use_case_features.public_network_access_enabled
+  public_network_access_enabled = coalesce(var.enable_public_network_access, local.use_case_features.public_network_access_enabled)
   public_ip_address_id          = local.use_case_features.public_ip ? azurerm_public_ip.apim[0].id : null
 
   min_api_version = "2021-08-01"
