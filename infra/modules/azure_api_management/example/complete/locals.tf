@@ -28,11 +28,9 @@ locals {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
-    CreatedBy      = "Terraform"
-    Environment    = "Dev"
-    BusinessUnit   = "DevEx"
-    ManagementTeam = "Developer Experience"
-    Source         = "https://github.com/pagopa/dx/modules/azure_api_management/examples/complete"
+    CostCenter  = "TS000 - Tecnologia e Servizi"
+    Environment = "Dev"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/modules/azure_api_management/examples/complete"
   }
 }
