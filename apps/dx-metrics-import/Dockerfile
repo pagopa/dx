@@ -2,16 +2,16 @@ FROM node:26-alpine@sha256:8996bb5821d62a8fd9bb27c1cb07462f3fdce6e47d640c6a881ea
 
 RUN apk add --no-cache libc6-compat
 
-# Corepack is no longer bundled with Node.js >= 25, so install it explicitly
-RUN npm install -g corepack
-
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.json ./
 COPY apps/dx-metrics-import/package.json ./apps/dx-metrics-import/
 COPY packages/dx-metrics-core/package.json ./packages/dx-metrics-core/
 
-RUN corepack enable && corepack install && \
+# Corepack is no longer bundled with Node.js >= 25, so pnpm is installed
+# directly from the version pinned in package.json (`packageManager`).
+RUN PNPM_VERSION="$(node -p 'require("./package.json").packageManager.replace(/^pnpm@/, "")')" && \
+    npm install -g "pnpm@${PNPM_VERSION}" && \
     pnpm install --frozen-lockfile --filter dx-metrics-import...
 
 COPY apps/dx-metrics-import ./apps/dx-metrics-import
