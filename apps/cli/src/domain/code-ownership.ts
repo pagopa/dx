@@ -37,6 +37,7 @@ export type CodeOwnership = z.infer<typeof codeOwnershipSchema>;
 export type GitHubAccount = z.infer<typeof githubAccountSchema>;
 export type GitHubTeam = z.infer<typeof githubTeamSchema>;
 
+// Deduplicates case-insensitively while preserving the first occurrence's casing and order.
 const unique = (values: string[]): string[] =>
   values.filter(
     (value, index) =>
