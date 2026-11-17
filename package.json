@@ -22,7 +22,6 @@
     "eslint": "catalog:",
     "nx": "catalog:",
     "oxfmt": "^0.71.0",
-    "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
