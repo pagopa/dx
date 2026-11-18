@@ -88,6 +88,11 @@
       "vendorLifecycleUrl": "https://registry.terraform.io/browse/providers",
       "versions": [
         {
+          "version": "azurerm (~> 5.0)",
+          "status": "active",
+          "notes": "Primary Azure provider version used by DX modules."
+        },
+        {
           "version": "azurerm (~> 4.x)",
           "status": "deprecated",
           "eolDate": "2026-12-31",
