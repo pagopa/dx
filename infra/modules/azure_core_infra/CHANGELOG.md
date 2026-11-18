@@ -1,3 +1,17 @@
+## 7.1.0 (2026-11-18)
+
+### 🚀 Features
+
+- This update provides the roles needed to enable Bootstrap's ([#2508](https://github.com/pagopa/dx/pull/2508))
+  `terraform_state_container_access` option for CI/CD access to individual state
+  containers. The new roles let Infra CI read infrastructure without granting
+  storage-account key access, and Infra CD deploy without subscription-wide
+  permission management. Existing Bootstrap configurations keep their permissions.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 7.0.2 (2026-11-17)
 
 ### 🩹 Fixes
