@@ -118,22 +118,27 @@ describe("monorepo generator — DX validation pipeline", () => {
       ["nx.json"],
     );
 
-    const nxJson = JSON.parse(generatedFiles["nx.json"]) as {
-      plugins: Record<string, unknown>[];
-      targetDefaults: Record<string, unknown>;
-    };
+    const nxJson: unknown = JSON.parse(generatedFiles["nx.json"]);
 
-    expect(nxJson.plugins).toContainEqual({
-      options: { targetName: "lint" },
-      plugin: "@nx/oxlint",
-    });
-    // `--fix` is a CLI argument of the Oxlint executor: the target defaults
-    // carry it for local runs and drop it in the read-only CI configuration.
-    expect(nxJson.targetDefaults.lint).toContainEqual({
-      configurations: { ci: { args: "" } },
-      dependsOn: ["^build"],
-      filter: { plugin: "@nx/oxlint" },
-      options: { args: "--fix" },
+    expect(nxJson).toMatchObject({
+      plugins: expect.arrayContaining([
+        expect.objectContaining({
+          options: { targetName: "lint" },
+          plugin: "@nx/oxlint",
+        }),
+      ]),
+      // `--fix` is a CLI argument of the Oxlint executor: the target defaults
+      // carry it for local runs and drop it in the read-only CI configuration.
+      targetDefaults: {
+        lint: expect.arrayContaining([
+          expect.objectContaining({
+            configurations: { ci: { args: "" } },
+            dependsOn: ["^build"],
+            filter: { plugin: "@nx/oxlint" },
+            options: { args: "--fix" },
+          }),
+        ]),
+      },
     });
     expect(generatedFiles["nx.json"]).not.toContain("@nx/eslint");
   });
