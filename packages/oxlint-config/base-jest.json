@@ -1,0 +1,41 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "extends": ["./core.json"],
+  "plugins": ["jest"],
+  "overrides": [
+    {
+      "files": [
+        "**/tests/**/*.{js,ts,tsx}",
+        "**/__tests__/**/*.{js,ts,tsx}",
+        "**/*.{test,spec}.{js,ts,tsx}"
+      ],
+      "rules": {
+        "no-empty-function": "off",
+        "jest/expect-expect": [
+          "error",
+          {
+            "assertFunctionNames": ["expect", "assert"]
+          }
+        ],
+        "jest/no-commented-out-tests": "error",
+        "jest/no-conditional-expect": "error",
+        "jest/no-disabled-tests": "warn",
+        "jest/no-focused-tests": "error",
+        "jest/no-identical-title": "error",
+        "jest/no-interpolation-in-snapshots": "error",
+        "jest/no-mocks-import": "error",
+        "jest/no-standalone-expect": "error",
+        "jest/no-unneeded-async-expect-function": "error",
+        "jest/prefer-called-with": "error",
+        "jest/prefer-equality-matcher": "error",
+        "jest/prefer-expect-resolves": "error",
+        "jest/prefer-spy-on": "error",
+        "jest/prefer-todo": "error",
+        "jest/valid-describe-callback": "error",
+        "jest/valid-expect": "error",
+        "jest/valid-expect-in-promise": "error",
+        "jest/valid-title": "error"
+      }
+    }
+  ]
+}
