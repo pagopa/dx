@@ -1,14 +1,7 @@
 import { spawnSync } from "node:child_process";
-import {
-  mkdirSync,
-  mkdtempSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
-import { tmpdir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { dirname, join } from "node:path";
 
 const require = createRequire(import.meta.url);
 
@@ -111,73 +104,4 @@ export const runOxlint = (cwd: string, args: string[]): LintResult => {
   }
 
   return { status, stderr, stdout };
-};
-
-export interface Diagnostic {
-  code: string;
-  filename: string;
-  message: string;
-}
-
-export interface ProjectLintResult extends LintResult {
-  diagnostics: Diagnostic[];
-}
-
-const parseDiagnostics = (stdout: string): Diagnostic[] => {
-  try {
-    return (
-      (JSON.parse(stdout) as { diagnostics?: Diagnostic[] }).diagnostics ?? []
-    );
-  } catch {
-    return [];
-  }
-};
-
-interface ProjectOptions {
-  configPath: string;
-  files: Record<string, string>;
-}
-
-/**
- * Lints a scratch tree that mirrors the repository layout, so `ignorePatterns`,
- * per-directory overrides and inherited rules are exercised the way the
- * workspace relies on them. The scratch `.oxlintrc.json` keeps the entries of
- * the given config and only re-anchors its `extends` to absolute paths, because
- * oxlint resolves ignore patterns against the directory holding the config.
- */
-export const lintProject = ({
-  configPath,
-  files,
-}: ProjectOptions): ProjectLintResult => {
-  const directory = mkdtempSync(join(tmpdir(), "oxlint-project-"));
-
-  try {
-    for (const [name, contents] of Object.entries(files)) {
-      const path = join(directory, name);
-      mkdirSync(dirname(path), { recursive: true });
-      writeFileSync(path, contents);
-    }
-
-    const config = JSON.parse(readFileSync(configPath, "utf8")) as {
-      extends?: string[];
-    };
-    writeFileSync(
-      join(directory, ".oxlintrc.json"),
-      JSON.stringify({
-        ...config,
-        extends: (config.extends ?? []).map((path) =>
-          resolve(dirname(configPath), path),
-        ),
-      }),
-    );
-
-    const result = runOxlint(directory, ["--format=json", "."]);
-
-    return {
-      ...result,
-      diagnostics: parseDiagnostics(result.stdout),
-    };
-  } finally {
-    rmSync(directory, { force: true, recursive: true });
-  }
 };
