@@ -32,7 +32,6 @@
         "bruno-api-client.bruno",
         "vitest.explorer",
         "redhat.vscode-yaml",
-        "dbaeumer.vscode-eslint",
         "github.copilot",
         "github.copilot-chat",
         "nrwl.angular-console"

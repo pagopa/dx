@@ -24,12 +24,10 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@pagopa/eslint-config": "workspace:^",
     "@types/js-yaml": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "esbuild": "^0.28.2",
-    "eslint": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

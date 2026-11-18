@@ -14,8 +14,6 @@ Working notes for maintainers and coding agents. Consumer documentation lives in
 - `base-jest.json` — the Jest overlay: `extends: ["./core.json"]`,
   `plugins: ["jest"]`, the `jest/*` rules.
 
-All three are strict JSON, so any tool can parse them.
-
 Keeping the shared rules in `core.json` is what stops the two overlays from
 drifting apart. oxlint's `extends` takes file paths only, so the overlay points
 at its sibling: the nested `./core.json` resolves relative to the installed
@@ -31,15 +29,32 @@ oxlint cannot share an override between files either, so each overlay repeats
 the test-file globs and the `no-empty-function: "off"` override verbatim; the
 tests pin every copy to the same values.
 
+## Rule coverage
+
+Coverage is explicit: every oxlint category is `off` and each rule is turned on
+individually, so the rule set moves only when someone edits `core.json`.
+
+On test files (`*.test.*`, `*.spec.*`, `test/**`) the variant adds the rules of
+one runner. The Jest overlay mirrors the Vitest one rule for rule wherever
+oxlint ships a `jest/*` equivalent, with the same severity and the same
+options; the three without a Jest counterpart — `no-import-node-test`,
+`prefer-called-exactly-once-with` and
+`require-local-test-context-for-concurrent-snapshots` — are omitted rather than
+approximated.
+
+JavaScript and TypeScript are linted differently: rules that TypeScript already
+enforces (`no-const-assign`, `no-unreachable`, ...) are enabled for scripts and
+turned off for `*.ts` files, where `prefer-rest-params` and `prefer-spread` only
+make sense.
+
 ## Making changes
 
 `core.json` is the source of truth: adding, removing or retuning a rule there
 updates both variants at once. Framework rules stay in the overlays, and a rule
-both test runners need is written in both with the same value — the tests fail
-on any drift.
+both test runners need is written in both with the same value.
 
 When oxlint gains a rule missing here, or moves `no-undef` out of `nursery`,
-add it and drop it from the rule coverage list in [README.md](./README.md).
+add it and drop it from the uncovered list in [README.md](./README.md).
 
 After editing:
 
@@ -51,6 +66,34 @@ pnpm nx release plan
 
 Rule additions and new flavours are a minor bump; a removal or a changed export
 path is breaking and needs a migration note in the plan.
+
+## Known gaps
+
+The migration to oxlint did not rewrite code that needs more than a mechanical
+fix. These are the exemptions and the coverage holes it left in the DX
+workspace, none of them new to oxlint:
+
+- `apps/dx-metrics` is excluded from linting by an `apps/dx-metrics/**` entry
+  in the workspace `.oxlintrc.json`. The app needs a handful of code fixes and
+  an `overrides` entry of its own, so it lands in a follow-up change: until
+  then the entry keeps the lint gate honest instead of red. Note that the
+  `@nx/oxlint` plugin infers a `lint` target only for projects that still have
+  lintable files, so while the entry is in place the app has no `lint` target
+  at all rather than a target that skips its files. Removing the entry is part
+  of that follow-up change, not of this one.
+- Files that no project owns are not linted: the DX lint gate runs per project,
+  so root files (`oxfmt.config.ts`, `.pnpmfile.cjs`) and code living inside a
+  non-JavaScript project (`infra/modules/aws_open_next`, whose Lambda and
+  CloudFront functions are JavaScript next to Terraform) only show up in a
+  manual `oxlint .` run at the workspace root.
+- `plugins/padef/skills` ships its own scripts and is not an nx project, so the
+  lint gate skips it as well. Its findings are `perfectionist/sort-objects` and
+  `perfectionist/sort-modules` over script test fixtures almost entirely:
+  mechanical, but outside a migration that promises a green gate and nothing
+  else.
+
+Run `pnpm exec oxlint --format=json .` at the workspace root to see the current
+state of the last two groups.
 
 ## How the package is verified
 

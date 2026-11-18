@@ -24,7 +24,12 @@
         "jest/no-identical-title": "error",
         "jest/no-interpolation-in-snapshots": "error",
         "jest/no-mocks-import": "error",
-        "jest/no-standalone-expect": "error",
+        "jest/no-standalone-expect": [
+          "error",
+          {
+            "additionalTestBlockFunctions": ["it", "test"]
+          }
+        ],
         "jest/no-unneeded-async-expect-function": "error",
         "jest/prefer-called-with": "error",
         "jest/prefer-equality-matcher": "error",
