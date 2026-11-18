@@ -5,11 +5,17 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml nx.json tsconfig.json ./
+COPY .pnpmfile.cjs ./
 COPY patches ./patches
 COPY apps/dx-metrics-import/package.json ./apps/dx-metrics-import/
 COPY packages/dx-metrics-core/package.json ./packages/dx-metrics-core/
 
-RUN corepack enable && corepack install && \
+# Corepack is no longer bundled with Node.js >= 25, so pnpm is installed with
+# get-pnpm, which resolves the version pinned in package.json (`packageManager`).
+ENV PNPM_HOME=/opt/pnpm
+ENV PATH="$PNPM_HOME/bin:$PATH"
+
+RUN npx --yes get-pnpm@latest --no-modify-path && \
     pnpm install --frozen-lockfile --filter dx-metrics-import...
 
 COPY apps/dx-metrics-import ./apps/dx-metrics-import
