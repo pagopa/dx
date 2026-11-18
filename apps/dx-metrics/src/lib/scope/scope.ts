@@ -4,11 +4,13 @@
  */
 
 import type { DxMetricsRepository } from "@pagopa/dx-metrics-core/config";
+
 import { dxMetricsConfig } from "@pagopa/dx-metrics-core/config";
 
 import type { DashboardQuery } from "@/lib/query-params";
-import { resolveRepositories } from "@/lib/query-params";
 import type { ScopePayload } from "@/lib/scope/token";
+
+import { resolveRepositories } from "@/lib/query-params";
 
 /**
  * The repositories one visitor may see. `all` distinguishes the full-portfolio

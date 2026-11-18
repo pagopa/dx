@@ -11,16 +11,6 @@ import { sql, type SQL } from "drizzle-orm";
 import { dataRangeRowSchema, referenceDateRowSchema } from "./schemas";
 import { parseSqlRow } from "./sql-parsing";
 
-/** Inputs for {@link buildReferenceDateQuery}. */
-export interface ReferenceDateQuery {
-  /** Timestamp column / expression to take the maximum of. */
-  readonly column: SQL | string;
-  /** `FROM` clause, including joins. */
-  readonly from: SQL | string;
-  /** Optional `WHERE` predicate (repository scope, filters, ...). */
-  readonly where?: SQL;
-}
-
 /** Inputs for {@link buildDataRangeQuery}. */
 export interface DataRangeQuery extends ReferenceDateQuery {
   /**
@@ -34,6 +24,16 @@ export interface DataRangeQuery extends ReferenceDateQuery {
    * event instead of at the first row that has finished moving.
    */
   readonly minColumn?: SQL | string;
+}
+
+/** Inputs for {@link buildReferenceDateQuery}. */
+export interface ReferenceDateQuery {
+  /** Timestamp column / expression to take the maximum of. */
+  readonly column: SQL | string;
+  /** `FROM` clause, including joins. */
+  readonly from: SQL | string;
+  /** Optional `WHERE` predicate (repository scope, filters, ...). */
+  readonly where?: SQL;
 }
 
 const asFragment = (expression: SQL | string): SQL =>

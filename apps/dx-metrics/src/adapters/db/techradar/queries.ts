@@ -1,13 +1,14 @@
 /** Techradar dashboard domain logic — queries and aggregation. */
 
-import { asc, inArray } from "drizzle-orm";
-
 import {
   techRadarSnapshots,
   techRadarUsages,
 } from "@pagopa/dx-metrics-core/schema";
-import { buildTechRadarInsights } from "@/lib/insights/techradar";
+import { asc, inArray } from "drizzle-orm";
+
 import type { WithInsights } from "@/lib/insights/types";
+
+import { buildTechRadarInsights } from "@/lib/insights/techradar";
 import { buildTechRadarDashboardData } from "@/lib/tech-radar-dashboard";
 
 import type { Database, WithMeta } from "../shared/types";
@@ -23,8 +24,8 @@ import {
 import { parseSqlRows } from "../shared/sql-parsing";
 import {
   techRadarDashboardResultSchema,
-  techRadarUsageTrendRowSchema,
   type TechRadarUsageTrendRow,
+  techRadarUsageTrendRowSchema,
 } from "./schemas";
 
 /** Fetches tech-radar usages and builds the aggregated dashboard payload. */

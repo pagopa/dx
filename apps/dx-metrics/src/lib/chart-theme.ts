@@ -1,7 +1,8 @@
 "use client";
 
-import { useTheme } from "@/components/ThemeProvider";
 import type { Theme } from "@/lib/theme";
+
+import { useTheme } from "@/components/ThemeProvider";
 
 /**
  * Chart palettes.

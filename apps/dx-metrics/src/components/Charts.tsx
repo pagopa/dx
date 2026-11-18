@@ -177,6 +177,22 @@ interface SimpleBarChartProps {
   yAxisWidth?: number;
 }
 
+// --- Bar + Line Chart ---
+interface SimpleBarLineChartProps {
+  /** Bars, read on the left axis. */
+  bar: { color?: string; key: string; name: string; unit?: string };
+  /** Short note under the title, e.g. the time bucket a series uses. */
+  caption?: string;
+  className?: string;
+  data: Record<string, unknown>[];
+  /** Line, read on the right axis. */
+  line: { color?: string; key: string; name: string; unit?: string };
+  title: string;
+  tooltip?: string;
+  xKey: string;
+  xValueFormatter?: (value: unknown) => string;
+}
+
 // --- Line Chart ---
 interface SimpleLineChartProps {
   ariaLabel?: string;
@@ -196,22 +212,6 @@ interface SimpleLineChartProps {
   xValueFormatter?: (value: unknown) => string;
   /** When true (default) the y-axis starts at zero. */
   zeroBaseline?: boolean;
-}
-
-// --- Bar + Line Chart ---
-interface SimpleBarLineChartProps {
-  /** Bars, read on the left axis. */
-  bar: { color?: string; key: string; name: string; unit?: string };
-  /** Short note under the title, e.g. the time bucket a series uses. */
-  caption?: string;
-  className?: string;
-  data: Record<string, unknown>[];
-  /** Line, read on the right axis. */
-  line: { color?: string; key: string; name: string; unit?: string };
-  title: string;
-  tooltip?: string;
-  xKey: string;
-  xValueFormatter?: (value: unknown) => string;
 }
 
 // --- Pie Chart ---
@@ -265,152 +265,6 @@ export function ChartWrapper({
       )}
       {!isEmpty && footer}
     </div>
-  );
-}
-
-/** Tabular fallback exposing the same series rendered by a chart. */
-function ChartDataTable({
-  chartTitle,
-  data,
-  series,
-  unit,
-  valueFormatter,
-  xKey,
-  xValueFormatter,
-}: {
-  chartTitle: string;
-  data: Record<string, unknown>[];
-  series: readonly { key: string; name: string; unit?: string }[];
-  unit?: string;
-  valueFormatter?: (value: number) => string;
-  xKey: string;
-  xValueFormatter?: (value: unknown) => string;
-}) {
-  return (
-    <div className="custom-scrollbar mt-4 max-h-64 overflow-auto">
-      <table aria-label={`${chartTitle} data`} className="min-w-full text-xs">
-        <thead>
-          <tr className="border-b border-border">
-            <th
-              className="px-3 py-2 text-left font-semibold text-muted-foreground"
-              scope="col"
-            >
-              {xKey}
-            </th>
-            {series.map((entry) => (
-              <th
-                className="px-3 py-2 text-left font-semibold text-muted-foreground"
-                key={entry.key}
-                scope="col"
-              >
-                {entry.name}
-                {(entry.unit ?? unit) && (
-                  <span className="ml-1 font-normal text-subtle-foreground">
-                    ({entry.unit ?? unit})
-                  </span>
-                )}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((row, index) => (
-            <tr className="border-b border-border-subtle" key={index}>
-              <td className="px-3 py-1.5 text-foreground">
-                {xValueFormatter
-                  ? xValueFormatter(row[xKey])
-                  : String(row[xKey] ?? "")}
-              </td>
-              {series.map((entry) => (
-                <td className="px-3 py-1.5 text-foreground" key={entry.key}>
-                  {formatSeriesValue(
-                    row[entry.key],
-                    valueFormatter,
-                    entry.unit ?? unit,
-                  )}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-/** Toggle button plus tabular fallback shared by the chart components. */
-function ChartDataToggle({
-  chartTitle,
-  data,
-  series,
-  unit,
-  valueFormatter,
-  xKey,
-  xValueFormatter,
-}: {
-  chartTitle: string;
-  data: Record<string, unknown>[];
-  series: readonly { key: string; name: string; unit?: string }[];
-  unit?: string;
-  valueFormatter?: (value: number) => string;
-  xKey: string;
-  xValueFormatter?: (value: unknown) => string;
-}) {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const regionId = React.useId();
-
-  const handleDownload = () => {
-    const blob = new Blob(
-      [buildChartCsv(data, series, xKey, valueFormatter, unit)],
-      {
-        type: "text/csv;charset=utf-8;",
-      },
-    );
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-
-    link.download = csvFileName(chartTitle);
-    link.href = url;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  };
-
-  return (
-    <>
-      <div className="mt-3 flex items-center gap-4">
-        <button
-          aria-controls={regionId}
-          aria-expanded={isOpen}
-          className={`rounded text-xs font-medium text-muted-foreground transition-colors hover:text-foreground ${focusRing}`}
-          onClick={() => setIsOpen((open) => !open)}
-          type="button"
-        >
-          {isOpen ? "Hide data" : "Show data"}
-        </button>
-        <button
-          className={`rounded text-xs font-medium text-muted-foreground transition-colors hover:text-foreground ${focusRing}`}
-          onClick={handleDownload}
-          type="button"
-        >
-          Download CSV
-        </button>
-      </div>
-      <div id={regionId}>
-        {isOpen && (
-          <ChartDataTable
-            chartTitle={chartTitle}
-            data={data}
-            series={series}
-            unit={unit}
-            valueFormatter={valueFormatter}
-            xKey={xKey}
-            xValueFormatter={xValueFormatter}
-          />
-        )}
-      </div>
-    </>
   );
 }
 
@@ -703,132 +557,6 @@ export function SimpleBarChart({
   );
 }
 
-export function SimpleLineChart({
-  ariaLabel,
-  caption,
-  className,
-  data,
-  lines,
-  referenceLines,
-  targetBand,
-  title,
-  tooltip,
-  tooltipFormatter,
-  unit,
-  xKey,
-  xValueFormatter,
-  zeroBaseline = true,
-}: SimpleLineChartProps) {
-  const defaultTickFormatter = useDefaultTickFormatter();
-  const colors = useSeriesColors();
-  const chrome = useChartChrome();
-
-  return (
-    <ChartWrapper
-      ariaLabel={ariaLabel}
-      caption={caption}
-      className={className}
-      footer={
-        <ChartDataToggle
-          chartTitle={title}
-          data={data}
-          series={lines.map((line) => ({ key: line.key, name: line.name }))}
-          unit={unit}
-          valueFormatter={tooltipFormatter}
-          xKey={xKey}
-          xValueFormatter={xValueFormatter}
-        />
-      }
-      isEmpty={data.length === 0}
-      title={title}
-      tooltip={tooltip}
-    >
-      <LineChart
-        data={data}
-        height={288}
-        margin={{ bottom: 5, left: 10, right: 30, top: 20 }}
-        responsive
-        width="100%"
-      >
-        <CartesianGrid
-          stroke={chrome.grid}
-          strokeDasharray="3 3"
-          vertical={false}
-        />
-        <XAxis
-          angle={data.length > 6 ? -35 : 0}
-          dataKey={xKey}
-          height={data.length > 6 ? 70 : 30}
-          interval={Math.max(0, Math.floor(data.length / 8) - 1)}
-          stroke={chrome.axis}
-          tick={{
-            fill: chrome.tick,
-            fontSize: 11,
-            textAnchor: data.length > 6 ? "end" : "middle",
-          }}
-          tickFormatter={xValueFormatter ?? defaultTickFormatter}
-          tickMargin={data.length > 6 ? 15 : 0}
-        />
-        <YAxis
-          domain={zeroBaseline ? [0, "auto"] : ["auto", "auto"]}
-          stroke={chrome.axis}
-          tick={{ fill: chrome.tick, fontSize: 11 }}
-          tickFormatter={numericTickFormatter(unit)}
-        />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: chrome.tooltipBackground,
-            border: `1px solid ${chrome.tooltipBorder}`,
-            borderRadius: "8px",
-            color: chrome.tooltipText,
-          }}
-          formatter={(value) =>
-            formatTooltipValue(value, tooltipFormatter, unit)
-          }
-          itemStyle={{ color: chrome.tooltipText }}
-        />
-        <Legend
-          wrapperStyle={{
-            color: chrome.legend,
-            fontSize: "12px",
-            paddingTop: "10px",
-          }}
-        />
-        {targetBand && (
-          <ReferenceArea
-            fill={colors.green}
-            fillOpacity={0.08}
-            ifOverflow="extendDomain"
-            y1={targetBand.from}
-            y2={targetBand.to}
-          />
-        )}
-        {lines.map((line, i) => (
-          <Line
-            dataKey={line.key}
-            dot={false}
-            isAnimationActive={false}
-            key={line.key}
-            name={line.name}
-            stroke={line.color ?? colors[SERIES_ORDER[i % SERIES_ORDER.length]]}
-            strokeWidth={2}
-            type="linear"
-          />
-        ))}
-        {referenceLines?.map((line) => (
-          <ReferenceLine
-            key={`ref-${line.label}`}
-            label={line.label}
-            stroke={line.color ?? colors.gray}
-            strokeDasharray="4 4"
-            y={line.value}
-          />
-        ))}
-      </LineChart>
-    </ChartWrapper>
-  );
-}
-
 /**
  * Bars on the left axis plus a line on the right axis, for two series that share
  * a timeline but not a unit (e.g. a count and a duration). Kept as one chart so
@@ -955,6 +683,132 @@ export function SimpleBarLineChart({
   );
 }
 
+export function SimpleLineChart({
+  ariaLabel,
+  caption,
+  className,
+  data,
+  lines,
+  referenceLines,
+  targetBand,
+  title,
+  tooltip,
+  tooltipFormatter,
+  unit,
+  xKey,
+  xValueFormatter,
+  zeroBaseline = true,
+}: SimpleLineChartProps) {
+  const defaultTickFormatter = useDefaultTickFormatter();
+  const colors = useSeriesColors();
+  const chrome = useChartChrome();
+
+  return (
+    <ChartWrapper
+      ariaLabel={ariaLabel}
+      caption={caption}
+      className={className}
+      footer={
+        <ChartDataToggle
+          chartTitle={title}
+          data={data}
+          series={lines.map((line) => ({ key: line.key, name: line.name }))}
+          unit={unit}
+          valueFormatter={tooltipFormatter}
+          xKey={xKey}
+          xValueFormatter={xValueFormatter}
+        />
+      }
+      isEmpty={data.length === 0}
+      title={title}
+      tooltip={tooltip}
+    >
+      <LineChart
+        data={data}
+        height={288}
+        margin={{ bottom: 5, left: 10, right: 30, top: 20 }}
+        responsive
+        width="100%"
+      >
+        <CartesianGrid
+          stroke={chrome.grid}
+          strokeDasharray="3 3"
+          vertical={false}
+        />
+        <XAxis
+          angle={data.length > 6 ? -35 : 0}
+          dataKey={xKey}
+          height={data.length > 6 ? 70 : 30}
+          interval={Math.max(0, Math.floor(data.length / 8) - 1)}
+          stroke={chrome.axis}
+          tick={{
+            fill: chrome.tick,
+            fontSize: 11,
+            textAnchor: data.length > 6 ? "end" : "middle",
+          }}
+          tickFormatter={xValueFormatter ?? defaultTickFormatter}
+          tickMargin={data.length > 6 ? 15 : 0}
+        />
+        <YAxis
+          domain={zeroBaseline ? [0, "auto"] : ["auto", "auto"]}
+          stroke={chrome.axis}
+          tick={{ fill: chrome.tick, fontSize: 11 }}
+          tickFormatter={numericTickFormatter(unit)}
+        />
+        <Tooltip
+          contentStyle={{
+            backgroundColor: chrome.tooltipBackground,
+            border: `1px solid ${chrome.tooltipBorder}`,
+            borderRadius: "8px",
+            color: chrome.tooltipText,
+          }}
+          formatter={(value) =>
+            formatTooltipValue(value, tooltipFormatter, unit)
+          }
+          itemStyle={{ color: chrome.tooltipText }}
+        />
+        <Legend
+          wrapperStyle={{
+            color: chrome.legend,
+            fontSize: "12px",
+            paddingTop: "10px",
+          }}
+        />
+        {targetBand && (
+          <ReferenceArea
+            fill={colors.green}
+            fillOpacity={0.08}
+            ifOverflow="extendDomain"
+            y1={targetBand.from}
+            y2={targetBand.to}
+          />
+        )}
+        {lines.map((line, i) => (
+          <Line
+            dataKey={line.key}
+            dot={false}
+            isAnimationActive={false}
+            key={line.key}
+            name={line.name}
+            stroke={line.color ?? colors[SERIES_ORDER[i % SERIES_ORDER.length]]}
+            strokeWidth={2}
+            type="linear"
+          />
+        ))}
+        {referenceLines?.map((line) => (
+          <ReferenceLine
+            key={`ref-${line.label}`}
+            label={line.label}
+            stroke={line.color ?? colors.gray}
+            strokeDasharray="4 4"
+            y={line.value}
+          />
+        ))}
+      </LineChart>
+    </ChartWrapper>
+  );
+}
+
 export function SimplePieChart({
   caption,
   className,
@@ -1029,5 +883,151 @@ export function SimplePieChart({
         </PieChart>
       </ResponsiveContainer>
     </ChartWrapper>
+  );
+}
+
+/** Tabular fallback exposing the same series rendered by a chart. */
+function ChartDataTable({
+  chartTitle,
+  data,
+  series,
+  unit,
+  valueFormatter,
+  xKey,
+  xValueFormatter,
+}: {
+  chartTitle: string;
+  data: Record<string, unknown>[];
+  series: readonly { key: string; name: string; unit?: string }[];
+  unit?: string;
+  valueFormatter?: (value: number) => string;
+  xKey: string;
+  xValueFormatter?: (value: unknown) => string;
+}) {
+  return (
+    <div className="custom-scrollbar mt-4 max-h-64 overflow-auto">
+      <table aria-label={`${chartTitle} data`} className="min-w-full text-xs">
+        <thead>
+          <tr className="border-b border-border">
+            <th
+              className="px-3 py-2 text-left font-semibold text-muted-foreground"
+              scope="col"
+            >
+              {xKey}
+            </th>
+            {series.map((entry) => (
+              <th
+                className="px-3 py-2 text-left font-semibold text-muted-foreground"
+                key={entry.key}
+                scope="col"
+              >
+                {entry.name}
+                {(entry.unit ?? unit) && (
+                  <span className="ml-1 font-normal text-subtle-foreground">
+                    ({entry.unit ?? unit})
+                  </span>
+                )}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map((row, index) => (
+            <tr className="border-b border-border-subtle" key={index}>
+              <td className="px-3 py-1.5 text-foreground">
+                {xValueFormatter
+                  ? xValueFormatter(row[xKey])
+                  : String(row[xKey] ?? "")}
+              </td>
+              {series.map((entry) => (
+                <td className="px-3 py-1.5 text-foreground" key={entry.key}>
+                  {formatSeriesValue(
+                    row[entry.key],
+                    valueFormatter,
+                    entry.unit ?? unit,
+                  )}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/** Toggle button plus tabular fallback shared by the chart components. */
+function ChartDataToggle({
+  chartTitle,
+  data,
+  series,
+  unit,
+  valueFormatter,
+  xKey,
+  xValueFormatter,
+}: {
+  chartTitle: string;
+  data: Record<string, unknown>[];
+  series: readonly { key: string; name: string; unit?: string }[];
+  unit?: string;
+  valueFormatter?: (value: number) => string;
+  xKey: string;
+  xValueFormatter?: (value: unknown) => string;
+}) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const regionId = React.useId();
+
+  const handleDownload = () => {
+    const blob = new Blob(
+      [buildChartCsv(data, series, xKey, valueFormatter, unit)],
+      {
+        type: "text/csv;charset=utf-8;",
+      },
+    );
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.download = csvFileName(chartTitle);
+    link.href = url;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <>
+      <div className="mt-3 flex items-center gap-4">
+        <button
+          aria-controls={regionId}
+          aria-expanded={isOpen}
+          className={`rounded text-xs font-medium text-muted-foreground transition-colors hover:text-foreground ${focusRing}`}
+          onClick={() => setIsOpen((open) => !open)}
+          type="button"
+        >
+          {isOpen ? "Hide data" : "Show data"}
+        </button>
+        <button
+          className={`rounded text-xs font-medium text-muted-foreground transition-colors hover:text-foreground ${focusRing}`}
+          onClick={handleDownload}
+          type="button"
+        >
+          Download CSV
+        </button>
+      </div>
+      <div id={regionId}>
+        {isOpen && (
+          <ChartDataTable
+            chartTitle={chartTitle}
+            data={data}
+            series={series}
+            unit={unit}
+            valueFormatter={valueFormatter}
+            xKey={xKey}
+            xValueFormatter={xValueFormatter}
+          />
+        )}
+      </div>
+    </>
   );
 }

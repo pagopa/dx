@@ -2,8 +2,9 @@
 
 import { sql } from "drizzle-orm";
 
-import { buildPullRequestsReviewInsights } from "@/lib/insights/pull-requests-review";
 import type { WithInsights } from "@/lib/insights/types";
+
+import { buildPullRequestsReviewInsights } from "@/lib/insights/pull-requests-review";
 
 import type { Database, WithMeta } from "../shared/types";
 import type {
@@ -12,6 +13,7 @@ import type {
 } from "./schemas";
 
 import { buildDataRangeQuery, parseDataRange } from "../shared/reference-date";
+import { percentileRowSchema } from "../shared/schemas";
 import {
   botAuthorsExclusion,
   humanPullRequest,
@@ -19,7 +21,6 @@ import {
   repositoryIn,
 } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
-import { percentileRowSchema } from "../shared/schemas";
 import { previousWindow, resolveWindow, windowMeta } from "../shared/window";
 import {
   commentSummaryRowSchema,

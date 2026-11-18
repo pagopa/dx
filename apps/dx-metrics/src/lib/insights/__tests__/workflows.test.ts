@@ -82,8 +82,8 @@ describe("buildWorkflowsInsights", () => {
       deployments: [],
       durationPercentiles: { p50: 10, p85: 20, p95: 90 },
       failures: [],
-      successRatio: [],
       successRateStats: { current: 50, previous: 60 },
+      successRatio: [],
     });
 
     expect(

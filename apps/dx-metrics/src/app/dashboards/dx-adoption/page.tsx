@@ -1,22 +1,25 @@
 "use client";
 
+import type { Insight, InsightSeverity } from "@/lib/insights/types";
+
 import { DataTable, SimplePieChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
-import TooltipIcon from "@/components/TooltipIcon";
 import { SEVERITY_STYLES } from "@/components/severity";
+import TooltipIcon from "@/components/TooltipIcon";
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { severityFromTarget } from "@/lib/insights/insight-helpers";
-import type { Insight, InsightSeverity } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
 import { dxAdoptionTooltips as tooltipContent } from "./tooltips";
 
 interface DxAdoptionData {
+  insights: Insight[];
+  meta: { referenceDate: string };
   moduleAdoption: { moduleCount: number; moduleType: string }[];
   modulesList: {
     filePath: string;
@@ -44,8 +47,6 @@ interface DxAdoptionData {
     repository: string;
     workflowName: string;
   }[];
-  insights: Insight[];
-  meta: { referenceDate: string };
 }
 
 export default function DxAdoptionDashboard() {
@@ -183,10 +184,6 @@ export default function DxAdoptionDashboard() {
                 />
                 <MetricCard
                   label="Up-to-Date %"
-                  suffix="%"
-                  tooltip={tooltipContent.upToDatePercentage}
-                  value={driftUpToDatePct}
-                  target={METRIC_TARGETS.moduleUpToDatePct}
                   severity={
                     driftUpToDatePct != null
                       ? severityFromTarget(
@@ -199,6 +196,10 @@ export default function DxAdoptionDashboard() {
                         )
                       : undefined
                   }
+                  suffix="%"
+                  target={METRIC_TARGETS.moduleUpToDatePct}
+                  tooltip={tooltipContent.upToDatePercentage}
+                  value={driftUpToDatePct}
                 />
                 <MetricCard
                   label="Outdated Modules"

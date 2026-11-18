@@ -3,13 +3,14 @@
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
+import type { Insight } from "./types";
+
 import {
   confidenceFromSample,
   formatPercent,
   severityFromTarget,
   sortInsights,
 } from "./insight-helpers";
-import type { Insight } from "./types";
 
 export interface DxAdoptionInsightsInput {
   readonly moduleAdoption: readonly {

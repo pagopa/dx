@@ -12,11 +12,11 @@ import { requireScope } from "@/lib/scope/server";
 import { percentileRank } from "@/lib/stats";
 
 /** Peer comparison shape consumed by the pull-request insights. */
-type PeerBenchmark = {
+interface PeerBenchmark {
   leadTimeMedian: null | number;
   peerCount: number;
   percentileRank: null | number;
-};
+}
 
 /**
  * Builds the peer comparison for the selected repositories.

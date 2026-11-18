@@ -42,7 +42,7 @@ describe("formatSeriesValue", () => {
 describe("buildChartCsv", () => {
   it("rounds values and keeps a plain header", () => {
     const csv = buildChartCsv(
-      [{ week: "2026-01-01", value: 3.6666 }],
+      [{ value: 3.6666, week: "2026-01-01" }],
       [{ key: "value", name: "Value" }],
       "week",
     );
@@ -62,7 +62,7 @@ describe("buildChartCsv", () => {
 
   it("carries the unit in the header and values, matching the data table", () => {
     const csv = buildChartCsv(
-      [{ week: "2026-01-01", value: 3.6666 }],
+      [{ value: 3.6666, week: "2026-01-01" }],
       [{ key: "value", name: "Value" }],
       "week",
       undefined,
@@ -74,7 +74,7 @@ describe("buildChartCsv", () => {
 
   it("uses per-series units and lets them override the shared fallback", () => {
     const csv = buildChartCsv(
-      [{ week: "2026-01-01", commits: 2, lead: 3.6666 }],
+      [{ commits: 2, lead: 3.6666, week: "2026-01-01" }],
       [
         { key: "commits", name: "Commits", unit: "commits" },
         { key: "lead", name: "Lead time", unit: "days" },
@@ -91,7 +91,7 @@ describe("buildChartCsv", () => {
 
   it("falls back to the shared unit for a series without one", () => {
     const csv = buildChartCsv(
-      [{ week: "2026-01-01", a: 1, b: 2 }],
+      [{ a: 1, b: 2, week: "2026-01-01" }],
       [
         { key: "a", name: "A", unit: "days" },
         { key: "b", name: "B" },

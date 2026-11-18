@@ -71,7 +71,7 @@ export const formatWithUnit = (
 
 const DATE_ONLY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
-const toDate = (value: string | number | Date): Date | null => {
+const toDate = (value: Date | number | string): Date | null => {
   if (value instanceof Date) {
     return Number.isNaN(value.getTime()) ? null : value;
   }
@@ -100,7 +100,7 @@ const toDate = (value: string | number | Date): Date | null => {
  * React components pass the browser-derived locale via `useDateFormatters`.
  */
 export const formatShortDate = (
-  value: string | number | Date,
+  value: Date | number | string,
   locale: string = DEFAULT_LOCALE,
 ): string => {
   const date = toDate(value);
@@ -114,7 +114,7 @@ export const formatShortDate = (
 
 /** Formats a date as `10 Nov 2026`, or returns the raw string when invalid. */
 export const formatFullDate = (
-  value: string | number | Date,
+  value: Date | number | string,
   locale: string = DEFAULT_LOCALE,
 ): string => {
   const date = toDate(value);

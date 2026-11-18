@@ -5,6 +5,8 @@ import { TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY } from "@pagopa/dx-metrics-core/con
 import { INSIGHT_THRESHOLDS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
+import type { Insight } from "./types";
+
 import {
   confidenceFromSample,
   formatNumber,
@@ -12,7 +14,6 @@ import {
   severityFromUpperThreshold,
   sortInsights,
 } from "./insight-helpers";
-import type { Insight } from "./types";
 
 export interface TechRadarInsightsInput {
   readonly adoptionByTool: readonly {
@@ -160,12 +161,12 @@ const usageTrendInsight = (input: TechRadarInsightsInput): Insight | null => {
     byTool.set(row.toolKey, entry);
   }
 
-  let best: {
+  let best: null | {
     delta: number;
     first: number;
     last: number;
     toolName: string;
-  } | null = null;
+  } = null;
 
   for (const entry of byTool.values()) {
     const sorted = [...entry.pointsByCapturedAt.entries()].sort((left, right) =>

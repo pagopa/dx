@@ -1,7 +1,7 @@
 /** Reusable computations and formatting for insight rules. */
 
-import { linearRegression, percentChange } from "@/lib/stats";
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
+import { linearRegression, percentChange } from "@/lib/stats";
 
 import type { Insight, InsightSeverity } from "./types";
 
@@ -21,7 +21,7 @@ export const sortInsights = (insights: readonly Insight[]): Insight[] =>
   );
 
 /** Arithmetic mean of a numeric list, or `null` for an empty list. */
-export const mean = (values: readonly number[]): number | null => {
+export const mean = (values: readonly number[]): null | number => {
   const usable = values.filter((value) => Number.isFinite(value));
   if (usable.length === 0) {
     return null;
@@ -143,9 +143,9 @@ export const severityFromTarget = (
   value: number,
   target: number,
   options: {
+    criticalMultiplier?: number;
     higherIsBetter: boolean;
     tolerancePct: number;
-    criticalMultiplier?: number;
   },
 ): InsightSeverity => {
   const goalMet = options.higherIsBetter ? value >= target : value <= target;

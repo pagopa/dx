@@ -15,6 +15,24 @@ const makeRequest = (params: Record<string, string> = {}) => {
   return new NextRequest(url.toString());
 };
 
+type ParseResult = ReturnType<typeof parseDashboardQuery>;
+
+/** Narrows a successful response, failing the test instead of skipping it. */
+const parsedQuery = (result: ParseResult) => {
+  if ("error" in result) {
+    throw new Error(`expected a parsed query, got ${result.error.status}`);
+  }
+  return result.query;
+};
+
+/** Narrows a rejected response, failing the test instead of skipping it. */
+const queryError = (result: ParseResult) => {
+  if (!("error" in result)) {
+    throw new Error("expected an error response");
+  }
+  return result.error;
+};
+
 describe("DashboardQuerySchema", () => {
   it("applies default days of 120 when not provided", () => {
     const result = DashboardQuerySchema.safeParse({});
@@ -95,10 +113,8 @@ describe("DashboardQuerySchema", () => {
       start: "2026-06-01",
     });
     expect(result.success).toBe(true);
-    if (result.success) {
-      expect(result.data.start).toBe("2026-06-01");
-      expect(result.data.end).toBe("2026-11-02");
-    }
+    expect(result.success && result.data.start).toBe("2026-06-01");
+    expect(result.success && result.data.end).toBe("2026-11-02");
   });
 
   it("rejects malformed and impossible range dates", () => {
@@ -164,30 +180,22 @@ describe("parseDashboardQuery", () => {
 
   it("returns parsed query with provided valid params", () => {
     const req = makeRequest({ days: "30", repository: "myrepo" });
-    const result = parseDashboardQuery(req);
-    expect("query" in result).toBe(true);
-    if ("query" in result) {
-      expect(result.query.days).toBe(30);
-      expect(result.query.repository).toBe("myrepo");
-    }
+    const query = parsedQuery(parseDashboardQuery(req));
+    expect(query.days).toBe(30);
+    expect(query.repository).toBe("myrepo");
   });
 
   it("parses the comma-separated repositories parameter", () => {
     const req = makeRequest({ repositories: "dx,io-infra" });
-    const result = parseDashboardQuery(req);
-    expect("query" in result).toBe(true);
-    if ("query" in result) {
-      expect(result.query.repositories).toEqual(["dx", "io-infra"]);
-    }
+    expect(parsedQuery(parseDashboardQuery(req)).repositories).toEqual([
+      "dx",
+      "io-infra",
+    ]);
   });
 
   it("returns a 400 error response for invalid days", () => {
     const req = makeRequest({ days: "-5" });
-    const result = parseDashboardQuery(req);
-    expect("error" in result).toBe(true);
-    if ("error" in result) {
-      expect(result.error.status).toBe(400);
-    }
+    expect(queryError(parseDashboardQuery(req)).status).toBe(400);
   });
 
   it("returns a 400 error response for non-numeric days", () => {

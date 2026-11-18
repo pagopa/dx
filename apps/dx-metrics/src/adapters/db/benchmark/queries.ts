@@ -3,12 +3,13 @@
 import { sql, type SQL } from "drizzle-orm";
 
 import {
-  buildBenchmarkMetric,
   type BenchmarkMetric,
   type BenchmarkValueRow,
+  buildBenchmarkMetric,
 } from "@/lib/benchmark";
 
-import type { Database, DashboardMeta } from "../shared/types";
+import type { DashboardMeta, Database } from "../shared/types";
+import type { ResolvedWindow } from "../shared/window";
 import type {
   BenchmarkInput,
   PrBenchmarkRow,
@@ -16,14 +17,13 @@ import type {
 } from "./schemas";
 
 import { buildDataRangeQuery, parseDataRange } from "../shared/reference-date";
-import { parseSqlRows } from "../shared/sql-parsing";
 import {
   botAuthorsExclusion,
   isHumanReview,
   textArray,
   workflowNameExclusion,
 } from "../shared/sql-fragments";
-import type { ResolvedWindow } from "../shared/window";
+import { parseSqlRows } from "../shared/sql-parsing";
 import { resolveWindow, windowMeta } from "../shared/window";
 import { prBenchmarkRowSchema, workflowBenchmarkRowSchema } from "./schemas";
 

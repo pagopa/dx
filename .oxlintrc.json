@@ -4,7 +4,6 @@
     "**/generated/*",
     "**/dist/**",
     "**/bin/**",
-    "apps/dx-metrics/**",
     "apps/opex-dashboard/**/*local*",
     "apps/website/build/**",
     "apps/website/static/**",

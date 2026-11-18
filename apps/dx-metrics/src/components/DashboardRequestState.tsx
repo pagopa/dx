@@ -10,34 +10,6 @@ interface DashboardRequestStateProps {
 const SKELETON_CARDS = 4;
 const SKELETON_CHARTS = 2;
 
-/**
- * Placeholder layout shown while a dashboard loads. It mirrors the metric-card
- * grid and the chart grid so the real content lands in place instead of
- * pushing everything down after a spinner.
- */
-function DashboardSkeleton() {
-  return (
-    <div aria-hidden="true" className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {Array.from({ length: SKELETON_CARDS }, (_, index) => (
-          <div
-            className="h-28 animate-pulse rounded-xl border border-border bg-card"
-            key={index}
-          />
-        ))}
-      </div>
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {Array.from({ length: SKELETON_CHARTS }, (_, index) => (
-          <div
-            className="h-80 animate-pulse rounded-xl border border-border bg-card"
-            key={index}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export function DashboardRequestState({
   error,
   loading,
@@ -82,6 +54,34 @@ export function DashboardRequestState({
           </div>
         </div>
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Placeholder layout shown while a dashboard loads. It mirrors the metric-card
+ * grid and the chart grid so the real content lands in place instead of
+ * pushing everything down after a spinner.
+ */
+function DashboardSkeleton() {
+  return (
+    <div aria-hidden="true" className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {Array.from({ length: SKELETON_CARDS }, (_, index) => (
+          <div
+            className="h-28 animate-pulse rounded-xl border border-border bg-card"
+            key={index}
+          />
+        ))}
+      </div>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {Array.from({ length: SKELETON_CHARTS }, (_, index) => (
+          <div
+            className="h-80 animate-pulse rounded-xl border border-border bg-card"
+            key={index}
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -6,37 +6,6 @@
  * (see the sibling `build*Insights` modules) and rendered by `InsightsPanel`.
  */
 
-/** How urgently an insight deserves attention. */
-export type InsightSeverity = "positive" | "neutral" | "warning" | "critical";
-
-/** The engineering concern an insight belongs to. */
-export type InsightCategory =
-  | "velocity"
-  | "quality"
-  | "reliability"
-  | "adoption"
-  | "risk";
-
-/** A metric value with an optional comparison against a previous value. */
-export interface InsightValue {
-  readonly current: number;
-  readonly deltaPct?: number;
-  /**
-   * Names the statistic behind `current` (e.g. "average", "95th percentile").
-   * Shown under the headline number so it is never mistaken for a different
-   * statistic of the same metric rendered in a card nearby.
-   */
-  readonly label?: string;
-  readonly previous?: number;
-  readonly unit?: string;
-}
-
-/** A drill-down reference supporting an insight. */
-export interface InsightEvidence {
-  readonly href?: string;
-  readonly label: string;
-}
-
 /** A single deterministic reading of the dashboard data. */
 export interface Insight {
   readonly action?: string;
@@ -60,6 +29,37 @@ export interface Insight {
   readonly source?: string;
   readonly title: string;
   readonly value?: InsightValue;
+}
+
+/** The engineering concern an insight belongs to. */
+export type InsightCategory =
+  | "adoption"
+  | "quality"
+  | "reliability"
+  | "risk"
+  | "velocity";
+
+/** A drill-down reference supporting an insight. */
+export interface InsightEvidence {
+  readonly href?: string;
+  readonly label: string;
+}
+
+/** How urgently an insight deserves attention. */
+export type InsightSeverity = "critical" | "neutral" | "positive" | "warning";
+
+/** A metric value with an optional comparison against a previous value. */
+export interface InsightValue {
+  readonly current: number;
+  readonly deltaPct?: number;
+  /**
+   * Names the statistic behind `current` (e.g. "average", "95th percentile").
+   * Shown under the headline number so it is never mistaken for a different
+   * statistic of the same metric rendered in a card nearby.
+   */
+  readonly label?: string;
+  readonly previous?: number;
+  readonly unit?: string;
 }
 
 /** A dashboard payload enriched with its computed insights. */

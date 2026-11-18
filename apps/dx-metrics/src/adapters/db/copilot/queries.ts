@@ -2,9 +2,10 @@
 
 import { sql } from "drizzle-orm";
 
+import type { WithInsights } from "@/lib/insights/types";
+
 import { COPILOT_PR_AUTHOR } from "@/lib/config";
 import { buildCopilotInsights } from "@/lib/insights/copilot";
-import type { WithInsights } from "@/lib/insights/types";
 
 import type { Database, WithMeta } from "../shared/types";
 import type { CopilotDashboard, GetCopilotDashboardInput } from "./schemas";
@@ -77,7 +78,7 @@ export const getCopilotDashboard = async (
     end,
     start,
   });
-  const { days, endDate, startDate } = window;
+  const { endDate, startDate } = window;
   const previous = previousWindow(window);
 
   // --- Headline metrics (population: pull requests merged in the window) ---

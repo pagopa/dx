@@ -8,13 +8,8 @@
 
 import { median, percentileRank } from "@/lib/stats";
 
-/** A metric value for a single repository. */
-export interface BenchmarkValueRow {
-  /** Number of observations behind `value`, when known. */
-  readonly count?: null | number;
-  readonly repository: string;
-  readonly value: null | number;
-}
+/** Grouping used to organise benchmark metrics in the overview page. */
+export type BenchmarkCategory = "adoption" | "delivery" | "quality";
 
 /** A repository's value with its position within the peer set. */
 export interface BenchmarkEntry {
@@ -24,9 +19,6 @@ export interface BenchmarkEntry {
   readonly repository: string;
   readonly value: null | number;
 }
-
-/** Grouping used to organise benchmark metrics in the overview page. */
-export type BenchmarkCategory = "adoption" | "delivery" | "quality";
 
 /** A comparable metric across repositories. */
 export interface BenchmarkMetric {
@@ -46,6 +38,14 @@ export interface BenchmarkMetricInput {
   readonly lowerIsBetter: boolean;
   readonly rows: readonly BenchmarkValueRow[];
   readonly unit?: string;
+}
+
+/** A metric value for a single repository. */
+export interface BenchmarkValueRow {
+  /** Number of observations behind `value`, when known. */
+  readonly count?: null | number;
+  readonly repository: string;
+  readonly value: null | number;
 }
 
 /** Builds a benchmark metric from per-repository values. */
@@ -86,7 +86,7 @@ export const buildBenchmarkMetric = (
 export const classifyPercentile = (
   percentileRankValue: null | number,
   lowerIsBetter: boolean,
-): "best" | "needs-attention" | "middle" | "unknown" => {
+): "best" | "middle" | "needs-attention" | "unknown" => {
   if (percentileRankValue === null) {
     return "unknown";
   }
