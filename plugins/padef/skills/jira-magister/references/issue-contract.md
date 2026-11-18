@@ -5,13 +5,13 @@
 Project-specific Jira fields vary. Map these portable fields to the schema
 discovered in [persistence.md](./persistence.md):
 
-| Issue | Required content |
-| --- | --- |
-| Epic | Outcome-oriented summary and concise outcome body; keep detailed grouping, KPI, guardrail, risk and readiness evidence in the review proposal and DR |
-| Story | Exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic |
-| Task | Concrete enabling outcome; one-sprint scope; parent Epic or Story; dependency and verification evidence |
-| Bug | Observed defect and expected behavior; relevant UC or incident source; reproduction and verification evidence |
-| Sub-task | Tightly coupled work with a parent relationship |
+| Issue    | Required content                                                                                                                                     |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Epic     | Outcome-oriented summary and concise outcome body; keep detailed grouping, KPI, guardrail, risk and readiness evidence in the review proposal and DR |
+| Story    | Exact actor-facing `As a [Actor], I want to [action], so that [Gain]` summary; one-sprint scope; parent Epic                                         |
+| Task     | Concrete enabling outcome; one-sprint scope; parent Epic or Story; dependency and verification evidence                                              |
+| Bug      | Observed defect and expected behavior; relevant UC or incident source; reproduction and verification evidence                                        |
+| Sub-task | Tightly coupled work with a parent relationship                                                                                                      |
 
 Descriptions may summarize source behavior, but the DR/SRS and Use Case remain
 authoritative. Use meaningful source titles/keys in prose and link labels, not
