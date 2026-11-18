@@ -83,7 +83,7 @@ module "dx_infra_cd_subscription_no_rbac_admin" {
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CD Subscription (No RBAC Admin)"
-  reason    = "Merged role for DX Infra CD identities without subscription RBAC administration"
+  reason    = "Use for Infra CD deployments with Bootstrap's container-scoped state mode; Bootstrap assigns state access separately. Does not grant subscription-wide RBAC administration."
   source_roles = [
     "Reader",
     # Storage listKeys comes from Log Analytics Contributor; exclude it when merge-roles supports exclusions.
@@ -140,7 +140,7 @@ module "dx_infra_ci_subscription_reader_no_storage_keys" {
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CI Subscription (No Storage Key Access)"
-  reason    = "Merged role for DX Infra CI identities without Storage account key access"
+  reason    = "Use for Infra CI plans with Bootstrap's container-scoped state mode; Bootstrap assigns state access separately. Does not grant Storage account keys."
   source_roles = [
     "Reader",
     "PagoPA IaC Reader",
