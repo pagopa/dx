@@ -112,6 +112,61 @@ describe("monorepo generator — DX validation pipeline", () => {
     ).resolves.toContain(".npmrc");
   });
 
+  it("infers the lint target from the Oxlint plugin instead of ESLint", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["nx.json"],
+    );
+
+    const nxJson = JSON.parse(generatedFiles["nx.json"]) as {
+      plugins: Record<string, unknown>[];
+      targetDefaults: Record<string, unknown>;
+    };
+
+    expect(nxJson.plugins).toContainEqual({
+      plugin: "@nx/oxlint",
+      options: { targetName: "lint" },
+    });
+    // `--fix` is a CLI argument of the Oxlint executor: the target defaults
+    // carry it for local runs and drop it in the read-only CI configuration.
+    expect(nxJson.targetDefaults.lint).toContainEqual({
+      configurations: { ci: { args: "" } },
+      dependsOn: ["^build"],
+      filter: { plugin: "@nx/oxlint" },
+      options: { args: "--fix" },
+    });
+    expect(generatedFiles["nx.json"]).not.toContain("@nx/eslint");
+  });
+
+  it("ships the Oxlint configuration and no Prettier artifact", async () => {
+    const generatedRoot = path.join(tmpDir, payload.repoName);
+    const generatedFiles = await readGeneratedFiles(generatedRoot, [
+      ".gitignore",
+      ".oxlintrc.json",
+    ]);
+
+    // The scaffold extends the published PagoPA DX preset, resolved from
+    // GitHub Packages like the other DX packages. Oxlint only accepts file
+    // paths in `extends`, so the preset is referenced through its install
+    // path: a bare package specifier is rejected at lint time.
+    const oxlintConfig = JSON.parse(generatedFiles[".oxlintrc.json"]);
+    expect(oxlintConfig).toMatchObject({
+      extends: ["./node_modules/@pagopa/oxlint-config/base.json"],
+    });
+    // The preset's own ignore list never matches consumer files, so the
+    // scaffold carries the one that keeps `oxlint --fix` out of build output.
+    expect(oxlintConfig.ignorePatterns).toEqual(
+      expect.arrayContaining(["**/generated/*", "**/dist/**", "**/bin/**"]),
+    );
+    // Oxfmt replaced Prettier, so the scaffold ships no Prettier ignore file.
+    await expect(
+      fs.access(path.join(generatedRoot, ".prettierignore")),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+    // Oxlint has no cache, so neither the old nor a renamed cache entry ships.
+    expect(generatedFiles[".gitignore"]).not.toContain(".eslintcache");
+    expect(generatedFiles[".gitignore"]).not.toContain(".oxlintcache");
+  });
+
   it("generates the Code Review workflow and the Trivy configuration", async () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),

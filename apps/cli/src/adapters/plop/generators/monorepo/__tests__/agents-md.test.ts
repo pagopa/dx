@@ -23,6 +23,7 @@ const TOOLCHAIN: readonly ToolchainEntry[] = [
   { config: "mise.toml", name: "mise" },
   { config: "pnpm-workspace.yaml", name: "pnpm" },
   { config: "nx.json", name: "Nx" },
+  { config: ".oxlintrc.json", name: "oxlint" },
   { config: "oxfmt.config.ts", name: "oxfmt" },
 ];
 
@@ -104,6 +105,11 @@ describe("monorepo generator — AGENTS.md", () => {
       await expect(fs.access(generatedFile(config))).resolves.toBeUndefined();
       expect(agentsMd).toContain(name);
     }
+  });
+
+  it("names the Oxlint Nx plugin, not the ESLint one", () => {
+    expect(agentsMd).toContain("@nx/oxlint");
+    expect(agentsMd).not.toContain("@nx/eslint");
   });
 
   it("points at agent artifacts the generated repository ships", async () => {

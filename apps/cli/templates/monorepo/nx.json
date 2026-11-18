@@ -2,17 +2,22 @@
   "$schema": "./node_modules/nx/schemas/nx-schema.json",
   "parallel": 10,
   "targetDefaults": {
-    "lint": {
-      "dependsOn": ["^build"],
-      "options": {
-        "fix": true
-      },
-      "configurations": {
-        "ci": {
-          "fix": false
+    "lint": [
+      {
+        "filter": {
+          "plugin": "@nx/oxlint"
+        },
+        "dependsOn": ["^build"],
+        "options": {
+          "args": "--fix"
+        },
+        "configurations": {
+          "ci": {
+            "args": ""
+          }
         }
       }
-    },
+    ],
     "test": {
       "configurations": {
         "ci": {
@@ -55,7 +60,7 @@
       "include": ["apps/**", "packages/**"]
     },
     {
-      "plugin": "@nx/eslint/plugin",
+      "plugin": "@nx/oxlint",
       "options": {
         "targetName": "lint"
       }
