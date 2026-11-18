@@ -1,32 +1,40 @@
 ---
 title: "ESLint"
-ring: adopt
+ring: hold
 tags: [typescript, dx, tool]
 ---
 
-[ESLint](https://eslint.org/) is a static code analysis tool for identifying
-problematic patterns found in JavaScript code. It not only checks for syntax
-errors but also for best practices, coding standards, and stylistic issues. It's
-highly customizable and extendable, allowing developers to create their own
-linting rules.
+While [ESLint](https://eslint.org/) has been the reference linter for JavaScript
+and TypeScript for years, we no longer recommend it for new projects and we are
+migrating existing ones.
 
-## Use cases
+## Reasons:
 
-ESLint helps with:
+1. **Superseded:** [Oxlint](./oxlint.md) is our `adopt` linter, with no grace
+   period. New projects start on Oxlint and existing ones migrate as they go.
 
-- Enforcing coding standards and best practices
-- Identifying potential bugs and security vulnerabilities
-- Improving code maintainability and readability
-- Enforcing code style conventions across the team
-- Integrating with build tools and CI/CD pipelines
+2. **Slower:** Oxlint is built on [Oxc](https://oxc.rs/) and reports it as
+   substantially faster than ESLint on large codebases, which matters in local
+   hooks and CI.
 
-## DX ecosystem
+3. **Migration is small:** Oxlint is ESLint-compatible and covers ESLint core,
+   TypeScript, React, Jest, and Vitest rules, so `eslint --fix` becomes
+   `oxlint --fix`. Our rule set already ships as a native Oxlint configuration:
+   see [`@pagopa/oxlint-config`](./pagopa-oxlint-config.md).
 
-- [`@pagopa/eslint-config`](https://github.com/pagopa/dx/tree/main/packages/eslint-config)
-  is the shared flat config used by the DX ecosystem to standardize lint rules
-  across repositories and generated workspaces.
-- [Package documentation](https://github.com/pagopa/dx/blob/main/packages/eslint-config/README.md)
+4. **Config frozen:** [`@pagopa/eslint-config`](./pagopa-eslint-config.md) is
+   no longer maintained. Its published version stays installable for
+   repositories that have not migrated yet, but it receives no new rules or
+   fixes.
+
+## Why not keep both:
+
+ESLint keeps working, but running two linters over the same files doubles the
+maintenance and the CI time. Keep ESLint only while a plugin you depend on has
+no Oxlint equivalent, and point it at the DX baseline while you do.
 
 ## Reference of usage in our organization
 
-- https://github.com/search?q=org%3Apagopa+eslintrc&type=code
+ESLint is still found in several TypeScript projects while they migrate:
+
+https://github.com/search?q=org%3Apagopa+%22\%22eslint\%22%22+path%3A**%2Fpackage.json&type=code
