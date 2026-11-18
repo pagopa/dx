@@ -25,7 +25,12 @@
         "vitest/no-import-node-test": "error",
         "vitest/no-interpolation-in-snapshots": "error",
         "vitest/no-mocks-import": "error",
-        "vitest/no-standalone-expect": "error",
+        "vitest/no-standalone-expect": [
+          "error",
+          {
+            "additionalTestBlockFunctions": ["it", "test"]
+          }
+        ],
         "vitest/no-unneeded-async-expect-function": "error",
         "vitest/prefer-called-exactly-once-with": "error",
         "vitest/prefer-called-with": "error",

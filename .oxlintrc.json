@@ -1,0 +1,25 @@
+{
+  "extends": ["./packages/oxlint-config/base.json"],
+  "ignorePatterns": [
+    "**/generated/*",
+    "**/dist/**",
+    "**/bin/**",
+    "apps/dx-metrics/**",
+    "apps/opex-dashboard/**/*local*",
+    "apps/website/build/**",
+    "apps/website/static/**",
+    "apps/website/blog/**",
+    "apps/website/.docusaurus/**",
+    "apps/opex-dashboard/tests/**",
+    "apps/opex-dashboard/examples/**"
+  ],
+  "overrides": [
+    {
+      "files": ["apps/cli/**", "apps/mcpserver/**", "apps/savemoney/**"],
+      "rules": {
+        "typescript/consistent-type-definitions": ["error", "type"]
+      }
+    }
+  ],
+  "plugins": ["react", "jsx-a11y", "nextjs"]
+}

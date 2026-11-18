@@ -121,3 +121,42 @@ Rules from the ESLint era with no counterpart here:
   need them keep a minimal ESLint setup next to oxlint.
 - **No config inheritance for editors.** oxlint integrations that do not read
   `.oxlintrc.json` from the workspace root will not pick up these rules.
+- **Test blocks are matched by name.** oxlint does not follow the fixtures a
+  `test` object is extended from, so a `test` created with `baseTest.extend()`
+  is not recognised as a test block and every `expect` inside it is reported as
+  standalone. `base.json` and `base-jest.json` therefore pass
+  `additionalTestBlockFunctions: ["it", "test"]` to `no-standalone-expect`:
+  any function named like a test counts as a block, which clears the false
+  positives and still reports an `expect` sitting outside a block.
+- **`.cjs` is always CommonJS.** oxlint picks the module type from the
+  extension and `overrides` cannot change it, so an ESM mock has to be renamed
+  from `.cjs` to `.js` (or `.mjs`) to be parsed — the usual case being
+  `__mocks__/fs.cjs` for `node:fs`.
+
+## Known gaps
+
+The migration to oxlint did not rewrite code that needs more than a mechanical
+fix. These are the exemptions and the coverage holes it left, all of them
+visible in the DX workspace and none of them new to oxlint:
+
+- `apps/dx-metrics` is excluded from linting by an `apps/dx-metrics/**` entry
+  in the workspace `.oxlintrc.json`. The app needs a handful of code fixes and
+  an `overrides` entry of its own, so it lands in a follow-up change: until
+  then the entry keeps the lint gate honest instead of red. Note that the
+  `@nx/oxlint` plugin infers a `lint` target only for projects that still have
+  lintable files, so while the entry is in place the app has no `lint` target
+  at all rather than a target that skips its files. Removing the entry is part
+  of that follow-up change, not of this one.
+- Files that no project owns are not linted: the DX lint gate runs per project,
+  so root files (`oxfmt.config.ts`, `.pnpmfile.cjs`) and code living inside a
+  non-JavaScript project (`infra/modules/aws_open_next`, whose Lambda and
+  CloudFront functions are JavaScript next to Terraform) only show up in a
+  manual `oxlint .` run at the workspace root.
+- `plugins/padef/skills` ships its own scripts and is not an nx project, so the
+  lint gate skips it as well. Its findings are `perfectionist/sort-objects` and
+  `perfectionist/sort-modules` over script test fixtures almost entirely:
+  mechanical, but outside a migration that promises a green gate and nothing
+  else.
+
+Run `pnpm exec oxlint --format=json .` at the workspace root to see the current
+state of the last two groups.

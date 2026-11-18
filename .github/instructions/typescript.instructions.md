@@ -11,7 +11,7 @@ applyTo: "**/*.ts, **/*.js, package.json"
 - Use named exports; avoid default exports.
 - Keep modules free of side effects: export values and functions without executing code at import time.
 - Do not access `process.env` outside an entrypoint; pass configuration through parameters.
-- Use `@pagopa/eslint-config` for consistent linting rules.
+- Use `@pagopa/oxlint-config` for consistent linting rules; run them through the `lint` Nx target instead of invoking oxlint directly.
 - Keep modules and functions small and single-responsibility. Methods should fit within a single screen.
 - Adhere to Ports and Adapters Architecture by isolating implementation details within adapters and maintaining strict layering to prevent leaking implementation concerns.
 - Do not create global utility or types packages; keep helpers and types close to where they are used.

@@ -65,14 +65,12 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/inquirer": "^9.0.10",
     "@types/libsodium-wrappers": "^0.8.2",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "eslint": "catalog:",
     "fast-check": "^4.10.2",
     "memfs": "^4.68.0",
     "oxfmt": "^0.71.0",

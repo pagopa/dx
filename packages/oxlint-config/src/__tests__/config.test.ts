@@ -56,6 +56,24 @@ it("adds", () => {
 });
 `;
 
+const EXTENDED_TEST = `import { test as baseTest, expect } from "vitest";
+
+const test = baseTest.extend<{ service: string }>({
+  service: async (context, use) => {
+    await use("service");
+  },
+});
+
+test("uses the fixture", async ({ service }) => {
+  expect(service).toBe("service");
+});
+`;
+
+const STANDALONE_EXPECT = `import { expect } from "vitest";
+
+expect(1).toBe(1);
+`;
+
 /** Vitest rules whose behaviour oxlint has no Jest counterpart for. */
 const VITEST_ONLY_RULES = [
   "no-import-node-test",
@@ -303,5 +321,24 @@ describe("test-runner rule options", () => {
       (JSON.parse(stdout) as { diagnostics: unknown[] }).diagnostics,
     ).toEqual([]);
     expect(status).toBe(0);
+  });
+
+  it("reads the blocks of a test that extends the runner", () => {
+    const { status, stdout } = lintAsConsumer({
+      configPath: BASE_CONFIG_PATH,
+      files: {
+        "fixture.test.ts": EXTENDED_TEST,
+        "standalone.test.ts": STANDALONE_EXPECT,
+      },
+    });
+
+    const { diagnostics } = JSON.parse(stdout) as {
+      diagnostics: { code: string; filename: string }[];
+    };
+
+    expect(status).toBe(1);
+    expect(
+      diagnostics.map(({ code, filename }) => [basename(filename), code]),
+    ).toEqual([["standalone.test.ts", "vitest(no-standalone-expect)"]]);
   });
 });
