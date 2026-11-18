@@ -10,17 +10,18 @@ lints a workspace roughly 3× faster than ESLint. It supersedes
 
 ## Installation
 
-The package is published on GitHub Packages, so make sure your `.npmrc` points
-the `@pagopa` scope to the right registry (see the
-[DX documentation](https://dx.pagopa.it/docs/)).
+The package is published on GitHub Packages. Log in to that registry, then
+install through pnpm's [`gh:` alias](https://pnpm.io/registries#prefix):
 
 ```shell
-pnpm add -D oxlint @pagopa/oxlint-config
+pnpm login --registry https://npm.pkg.github.com/
+pnpm add @pagopa/oxlint-config@gh:latest
 ```
 
-`oxlint` is a peer dependency: the configuration relies on the rule set and the
-JS plugin support of oxlint `>= 1.93.0 < 2`. `eslint-plugin-perfectionist` comes
-with the package, so there is nothing else to install.
+`oxlint` is a peer dependency, install it alongside with `pnpm add -D oxlint`:
+the configuration relies on the rule set and the JS plugin support of oxlint
+`>= 1.93.0 < 2`. `eslint-plugin-perfectionist` comes with the package, so there
+is nothing else to install.
 
 ## Usage
 
