@@ -124,8 +124,8 @@ describe("monorepo generator — DX validation pipeline", () => {
     };
 
     expect(nxJson.plugins).toContainEqual({
-      plugin: "@nx/oxlint",
       options: { targetName: "lint" },
+      plugin: "@nx/oxlint",
     });
     // `--fix` is a CLI argument of the Oxlint executor: the target defaults
     // carry it for local runs and drop it in the read-only CI configuration.

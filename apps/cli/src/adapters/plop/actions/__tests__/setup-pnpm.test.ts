@@ -64,12 +64,36 @@ import setSetupPnpmAction, {
   OXLINT_DEPENDENCY,
 } from "../setup-pnpm.js";
 
-describe("setupPnpm", () => {
-  const originalCwd = process.cwd();
-  const originalGitHubToken = process.env.GITHUB_TOKEN;
-  const originalGhToken = process.env.GH_TOKEN;
-  let tmpDir: string;
+const originalCwd = process.cwd();
+const originalGitHubToken = process.env.GITHUB_TOKEN;
+const originalGhToken = process.env.GH_TOKEN;
 
+let tmpDir: string;
+
+const repositoryNpmrc = () => path.join(tmpDir, "generated-repo", ".npmrc");
+
+const commandIndex = (expected: string) =>
+  mocks.commands.findIndex(({ command }) => command === expected);
+
+const runGenerator = async () => {
+  const plop = await nodePlop();
+  setSetupPnpmAction(plop);
+  plop.setGenerator("test", {
+    actions: [{ type: "setupPnpm" }],
+    prompts: [],
+  });
+
+  return await plop.getGenerator("test").runActions({
+    ownership: {
+      namespaceType: "Organization",
+      owners: ["@pagopa/devex"],
+      reviewerTeams: ["devex"],
+    },
+    repoName: "generated-repo",
+  });
+};
+
+describe("setupPnpm", () => {
   beforeEach(async () => {
     mocks.commands.length = 0;
     mocks.execa$.mockClear();
@@ -97,29 +121,6 @@ describe("setupPnpm", () => {
       process.env.GH_TOKEN = originalGhToken;
     }
   });
-
-  const repositoryNpmrc = () => path.join(tmpDir, "generated-repo", ".npmrc");
-
-  const commandIndex = (expected: string) =>
-    mocks.commands.findIndex(({ command }) => command === expected);
-
-  const runGenerator = async () => {
-    const plop = await nodePlop();
-    setSetupPnpmAction(plop);
-    plop.setGenerator("test", {
-      actions: [{ type: "setupPnpm" }],
-      prompts: [],
-    });
-
-    return await plop.getGenerator("test").runActions({
-      ownership: {
-        namespaceType: "Organization",
-        owners: ["@pagopa/devex"],
-        reviewerTeams: ["devex"],
-      },
-      repoName: "generated-repo",
-    });
-  };
 
   it("installs the DX dependencies from the GitHub Packages registry", async () => {
     await runGenerator();
