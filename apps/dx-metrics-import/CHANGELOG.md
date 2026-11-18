@@ -1,3 +1,13 @@
+## 0.1.22 (2026-11-18)
+
+### 🩹 Fixes
+
+- Bump dependencies ([#2512](https://github.com/pagopa/dx/pull/2512))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
 ## 0.1.21 (2026-11-17)
 
 ### 🩹 Fixes

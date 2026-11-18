@@ -1,3 +1,13 @@
+## 0.0.3 (2026-11-18)
+
+### 🩹 Fixes
+
+- Recognise the test blocks created with `test.extend()`: oxlint does not follow the fixtures a test object is extended from, so every `expect` inside an extended block was reported as standalone. Both flavours now pass `additionalTestBlockFunctions: ["it", "test"]` to `no-standalone-expect`, which clears the false positives and still flags an `expect` sitting outside a test block. The maintainer notes document the exemptions and the coverage holes the migration left open. ([#2560](https://github.com/pagopa/dx/pull/2560))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.0.2 (2026-11-18)
 
 ### 🚀 Features
