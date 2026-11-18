@@ -15,10 +15,10 @@ data "azurerm_role_definition" "dx_infra_ci_subscription" {
   scope = data.azurerm_subscription.current.id
 }
 
-data "azurerm_role_definition" "dx_infra_ci_subscription_state_safe" {
+data "azurerm_role_definition" "dx_infra_ci_subscription_no_storage_keys" {
   count = var.terraform_state_container_access == null ? 0 : 1
 
-  name  = local.custom_role_definition_names.dx_infra_ci_subscription_state_safe
+  name  = local.custom_role_definition_names.dx_infra_ci_subscription_no_storage_keys
   scope = data.azurerm_subscription.current.id
 }
 

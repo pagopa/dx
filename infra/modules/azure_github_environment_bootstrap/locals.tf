@@ -111,15 +111,15 @@ locals {
 
   subscription_role_name_prefix = trimspace(data.azurerm_subscription.current.display_name)
   custom_role_definition_names = {
-    dx_app_cd_resource_groups              = "${local.subscription_role_name_prefix} DX App CD Resource Groups"
-    dx_app_ci_resource_groups              = "${local.subscription_role_name_prefix} DX App CI Resource Groups"
-    dx_infra_cd_private_networking         = "${local.subscription_role_name_prefix} DX Infra CD Private Networking"
-    dx_infra_cd_resource_groups            = "${local.subscription_role_name_prefix} DX Infra CD Resource Groups"
-    dx_infra_cd_subscription               = "${local.subscription_role_name_prefix} DX Infra CD Subscription"
-    dx_infra_cd_subscription_no_rbac_admin = "${local.subscription_role_name_prefix} DX Infra CD Subscription (No RBAC Admin)"
-    dx_infra_ci_resource_groups            = "${local.subscription_role_name_prefix} DX Infra CI Resource Groups"
-    dx_infra_ci_subscription               = "${local.subscription_role_name_prefix} DX Infra CI Subscription"
-    dx_infra_ci_subscription_state_safe    = "${local.subscription_role_name_prefix} DX Infra CI Subscription (No Storage Key Access)"
+    dx_app_cd_resource_groups                = "${local.subscription_role_name_prefix} DX App CD Resource Groups"
+    dx_app_ci_resource_groups                = "${local.subscription_role_name_prefix} DX App CI Resource Groups"
+    dx_infra_cd_private_networking           = "${local.subscription_role_name_prefix} DX Infra CD Private Networking"
+    dx_infra_cd_resource_groups              = "${local.subscription_role_name_prefix} DX Infra CD Resource Groups"
+    dx_infra_cd_subscription                 = "${local.subscription_role_name_prefix} DX Infra CD Subscription"
+    dx_infra_cd_subscription_no_rbac_admin   = "${local.subscription_role_name_prefix} DX Infra CD Subscription (No RBAC Admin)"
+    dx_infra_ci_resource_groups              = "${local.subscription_role_name_prefix} DX Infra CI Resource Groups"
+    dx_infra_ci_subscription                 = "${local.subscription_role_name_prefix} DX Infra CI Subscription"
+    dx_infra_ci_subscription_no_storage_keys = "${local.subscription_role_name_prefix} DX Infra CI Subscription (No Storage Key Access)"
   }
 
   repo_secrets = {

@@ -218,10 +218,11 @@ terraform_storage_account = {
 
 Requires `azure-core-infra` version 7.1.0 or later.
 
-Leave this option unset (`null`) to keep existing permissions. Set it to `{}`
-to give all six CI/CD identities `Storage Blob Data Contributor` on
-`<environment.domain>-tf-state`. Use `container_name` to choose another container
-(3-24 characters, including the suffix when present).
+Use this option when domains share a state storage account, to scope Bootstrap's
+state grants to each domain's container. Leave it unset (`null`) to keep existing
+permissions. Set it to `{}` to give all six CI/CD identities `Storage Blob Data
+Contributor` on `<environment.domain>-tf-state`. Use `container_name` to choose
+another container (3-24 characters, including the suffix when present).
 
 Add `upstream` when identities also need to read state from other containers.
 For example, to let Infra CI/CD read shared core state in `dx-tf-state`:
@@ -237,7 +238,7 @@ terraform_state_container_access = {
 ```
 
 Each `upstream` key is a container name in `terraform_storage_account` or a
-full ARM container ID. Use its actual name; upstream names may be up to 63 characters.
+full ARM container ID.
 
 Select readers with `identities` (`infra_ci`, `infra_cd`, `app_ci`, `app_cd`,
 `opex_ci`, `opex_cd`) or `principal_ids` for external users and identities.

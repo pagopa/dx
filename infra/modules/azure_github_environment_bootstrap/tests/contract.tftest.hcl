@@ -92,7 +92,7 @@ override_data {
 }
 
 override_data {
-  target = data.azurerm_role_definition.dx_infra_ci_subscription_state_safe
+  target = data.azurerm_role_definition.dx_infra_ci_subscription_no_storage_keys
   values = {
     id = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/00000000-0000-0000-0000-000000000108"
   }

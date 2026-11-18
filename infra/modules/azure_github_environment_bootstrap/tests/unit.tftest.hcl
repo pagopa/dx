@@ -120,7 +120,7 @@ override_data {
 }
 
 override_data {
-  target = data.azurerm_role_definition.dx_infra_ci_subscription_state_safe
+  target = data.azurerm_role_definition.dx_infra_ci_subscription_no_storage_keys
   values = {
     id = "/subscriptions/00000000-0000-0000-0000-000000000000/providers/Microsoft.Authorization/roleDefinitions/00000000-0000-0000-0000-000000000108"
   }
@@ -226,8 +226,8 @@ run "azure_github_environment_bootstrap_container_state_access" {
     condition = alltrue([
       length(azurerm_role_assignment.opex_ci_subscription_data_access) == 0,
       length(azurerm_role_assignment.opex_cd_tf_rg_blob_data_access) == 0,
-      azurerm_role_assignment.infra_ci_subscription_reader.role_definition_id == data.azurerm_role_definition.dx_infra_ci_subscription_state_safe[0].id,
-      local.custom_role_definition_names.dx_infra_ci_subscription_state_safe == "PagoPA Uat DX Infra CI Subscription (No Storage Key Access)",
+      azurerm_role_assignment.infra_ci_subscription_reader.role_definition_id == data.azurerm_role_definition.dx_infra_ci_subscription_no_storage_keys[0].id,
+      local.custom_role_definition_names.dx_infra_ci_subscription_no_storage_keys == "PagoPA Uat DX Infra CI Subscription (No Storage Key Access)",
       azurerm_role_assignment.infra_cd_subscription_rbac_admin.role_definition_id == data.azurerm_role_definition.dx_infra_cd_subscription_no_rbac_admin[0].id,
       local.custom_role_definition_names.dx_infra_cd_subscription_no_rbac_admin == "PagoPA Uat DX Infra CD Subscription (No RBAC Admin)",
     ])
