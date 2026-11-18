@@ -90,7 +90,7 @@
         {
           "version": "azurerm (~> 5.0)",
           "status": "active",
-          "notes": "Supported by compatible DX Terraform module releases. Check each module's required_providers block for its exact AzureRM constraint before upgrading."
+          "notes": "Primary Azure provider version used by DX modules."
         },
         {
           "version": "azurerm (~> 4.x)",
