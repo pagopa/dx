@@ -1,8 +1,8 @@
 {
-  "name": "azure_core_infra",
   "metadata": {
+    "version": "7.1.0",
     "description": "Sets up the core Azure infrastructure including VNet, DNS zones, and Key Vault. Useful to bootstrap production or development environments.",
-    "provider": "azurerm",
-    "version": "7.0.2"
-  }
+    "provider": "azurerm"
+  },
+  "name": "azure_core_infra"
 }
