@@ -1,3 +1,15 @@
+## 0.22.26 (2026-11-18)
+
+### 🩹 Fixes
+
+- Adopt Oxfmt as the formatter for JavaScript and TypeScript and move Prettier to hold, with no grace period. The radar entries, the devcontainer guidance and the npm script table now point at Oxfmt. ([#2556](https://github.com/pagopa/dx/pull/2556))
+- List AzureRM v5 as supported for compatible DX Terraform module releases. ([#2557](https://github.com/pagopa/dx/pull/2557))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Danilo Spinelli @gunzip
+
 ## 0.22.25 (2026-11-17)
 
 ### 🚀 Features

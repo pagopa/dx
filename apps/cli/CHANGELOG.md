@@ -1,3 +1,18 @@
+## 0.27.32 (2026-11-18)
+
+### 🚀 Features
+
+- Bootstrap the scaffold on pnpm 12: `dx init` pins `corepack use pnpm@12`, and the DX Nx plugins install with the `gh:` prefix in the version slot (`@pagopa/nx-docker@gh:latest`), since pnpm 12 rejects the prefix-first form. The generated `pnpm-workspace.yaml` needs no change. ([#2550](https://github.com/pagopa/dx/pull/2550))
+
+### 🩹 Fixes
+
+- Generate a `project.json` for the `repository`, `bootstrapper/<env>` and `core/<env>` Terraform roots, so the Nx Terraform plugin, which now only infers projects declared by a `project.json`, keeps exposing their targets and the generated projects can be initialized. ([#2435](https://github.com/pagopa/dx/pull/2435))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+- Luca Cavallaro
+
 ## 0.27.31 (2026-11-17)
 
 ### 🚀 Features

@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/oxlint-config",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Oxlint configuration for PagoPA DX projects",
   "repository": {
     "type": "git",
