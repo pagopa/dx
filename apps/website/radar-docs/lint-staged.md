@@ -10,9 +10,9 @@ pre-commit hook usually in combination with Husky.
 
 ## Use cases
 
-For example to run the linter and the prettier on all staged typescript or
-javascript files and prettier on all json or md files, before committing, a
-configuration like the following can be used:
+For example to run the linter and oxfmt on all staged typescript or javascript
+files and oxfmt on all json or md files, before committing, a configuration like
+the following can be used:
 
 - in `.husky/pre-commit`:
 
@@ -28,8 +28,8 @@ npx lint-staged --allow-empty
 ```json
 {
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": ["eslint -c .eslintrc.js --fix", "prettier --write"],
-    "*.{json,md}": ["prettier --write"]
+    "*.{js,jsx,ts,tsx}": ["eslint -c .eslintrc.js --fix", "oxfmt"],
+    "*.{json,md}": ["oxfmt"]
   }
 }
 ```

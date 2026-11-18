@@ -37,7 +37,7 @@ yet.
 ## Related radar entries
 
 - [ESLint](./eslint.md) — linter being replaced; its PagoPA config is frozen
-- [Oxfmt](./oxfmt.md) — companion Oxc formatter, also in trial
+- [Oxfmt](./oxfmt.md) — companion Oxc formatter
 
 ## Reference of usage in our organization
 
