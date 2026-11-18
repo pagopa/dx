@@ -37,4 +37,4 @@ no Oxlint equivalent, and point it at the DX baseline while you do.
 
 ESLint is still found in several TypeScript projects while they migrate:
 
-https://github.com/search?q=org%3Apagopa+%22\%22eslint\%22%22+path%3A**%2Fpackage.json&type=code
+https://github.com/search?q=org%3Apagopa+%22eslint%22+path%3A**%2Fpackage.json&type=code

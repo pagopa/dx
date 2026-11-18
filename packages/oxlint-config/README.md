@@ -103,8 +103,8 @@ rules or fixes. To move a workspace over:
 - **Type-aware rules.** They run through a separate backend rather than this
   config: install `tsrs`, the preferred one, and oxlint uses it automatically.
   They stay opt-in through `--type-aware` or `options.typeAware`, so projects
-  that need them before this package ships support keep a minimal ESLint setup
-  next to oxlint.
+  that need them can enable `--type-aware` or `options.typeAware` with `tsrs`; keep
+  ESLint only for rules or plugins that Oxlint cannot replace.
 - **Checks the TypeScript compiler already reports.** `no-const-assign`,
   `no-unreachable` and the like are on for scripts and off for `*.ts` files,
   where `tsc` fails first.
