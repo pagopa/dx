@@ -1,3 +1,13 @@
+## 0.0.2 (2026-11-18)
+
+### 🚀 Features
+
+- Add `base-jest.json`, a Jest flavour of the configuration for projects that cannot use Vitest: it mirrors the Vitest overlay rule for rule with oxlint's built-in `jest/*` rules, keeping the same severity, the same options and the same test file patterns. `no-import-node-test`, `prefer-called-exactly-once-with` and `require-local-test-context-for-concurrent-snapshots` have no Jest counterpart and are omitted. The rules shared by both flavours now live in `core.json`, which the two variants extend, so `base.json` keeps behaving exactly as before. ([#2555](https://github.com/pagopa/dx/pull/2555))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.0.1 (2026-11-17)
 
 ### 🚀 Features

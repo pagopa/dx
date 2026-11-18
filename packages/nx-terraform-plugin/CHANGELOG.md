@@ -1,3 +1,15 @@
+## 0.5.17 (2026-11-18)
+
+### 🚀 Features
+
+- Move Terraform plugin publishing configuration to project.json metadata ([#2435](https://github.com/pagopa/dx/pull/2435))
+
+  The plugin no longer adds project graph dependencies from local Terraform module sources; shared `_modules` changes are tracked through the `default` named input.
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.5.16 (2026-11-04)
 
 ### 🩹 Fixes

@@ -1,3 +1,9 @@
+## 0.2.22 (2026-11-18)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.13
+
 ## 0.2.21 (2026-11-17)
 
 ### 🩹 Fixes

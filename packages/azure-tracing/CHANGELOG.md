@@ -1,3 +1,13 @@
+## 0.5.13 (2026-11-18)
+
+### 🚀 Features
+
+- Add SamplingExemptionsLogRecordProcessor to keep errors and exempt custom events when trace-based log sampling is enabled ([#2540](https://github.com/pagopa/dx/pull/2540))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.12 (2026-11-17)
 
 ### 🚀 Features
