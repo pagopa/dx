@@ -8,11 +8,14 @@
     "directory": "packages/oxlint-config"
   },
   "files": [
-    "base.json"
+    "base-jest.json",
+    "base.json",
+    "core.json"
   ],
   "type": "module",
   "exports": {
     ".": "./base.json",
+    "./base-jest.json": "./base-jest.json",
     "./base.json": "./base.json"
   },
   "publishConfig": {
