@@ -38,7 +38,10 @@ variant that matches your test runner:
 `base.json` enables the `vitest/*` rules on test files. If your workspace tests
 with Jest instead — React Native projects, for instance — extend
 `base-jest.json`: everything else is identical, and only the test overlay
-changes to the `jest/*` rules.
+changes to the `jest/*` rules. It mirrors the Vitest rules one for one, except
+for the three that oxlint only ships for Vitest: `no-import-node-test`,
+`prefer-called-exactly-once-with` and
+`require-local-test-context-for-concurrent-snapshots`.
 
 ```json
 {
@@ -81,82 +84,37 @@ Then replace your `lint` scripts:
 rules or fixes. To move a workspace over:
 
 1. `pnpm remove @pagopa/eslint-config eslint` — keep ESLint if you still need
-   the [type-aware rules](#limitations).
+   the [type-aware rules](#what-is-not-covered).
 2. `pnpm add -D oxlint @pagopa/oxlint-config` and add the `.oxlintrc.json`
    shown above.
 3. Point the `lint` scripts at `oxlint` and delete `eslint.config.js`.
 4. Review the first run: the handful of rules oxlint cannot express are listed
-   under [rule coverage](#rule-coverage), and formatting is unchanged.
+   under [what is not covered](#what-is-not-covered), and formatting is
+   unchanged.
 
-## Rule coverage
+## What is not covered
 
-Coverage is explicit: every oxlint category is `off`, and the configuration
-turns each rule on individually. On test files (`*.test.*`, `*.spec.*`,
-`test/**`) the variant adds the rules of one runner: `vitest/*` rules with
-`base.json`, `jest/*` rules with `base-jest.json`.
-
-The Jest variant mirrors the Vitest one rule for rule wherever oxlint ships a
-`jest/*` equivalent, with the same severity and the same options. The rules
-without a Jest counterpart are omitted rather than approximated:
-`no-import-node-test`, `prefer-called-exactly-once-with` and
-`require-local-test-context-for-concurrent-snapshots`.
-
-JavaScript and TypeScript are linted differently: rules that TypeScript already
-enforces (`no-const-assign`, `no-unreachable`, ...) are enabled for scripts and
-turned off for `*.ts` files, where `prefer-rest-params` and `prefer-spread` only
-make sense.
-
-Rules from the ESLint era with no counterpart here:
-
-- `no-dupe-args`, `no-octal`, `no-undef-init` —
+- **Rules with no oxlint implementation.** `no-dupe-args`, `no-octal` and
+  `no-undef-init` are
   [not implemented](https://oxc.rs/docs/guide/usage/linter/rules) by oxlint.
-- `no-undef` — implemented by oxlint, but only in its `nursery` category, which
+- **`no-undef`.** oxlint implements it only in its `nursery` category, which
   this config leaves disabled. It only applies to JavaScript files, where
   TypeScript users rarely lint.
-
-## Limitations
-
-- **Type-aware rules are not included.** They require `oxlint-tsgolint`, which
-  needs a TypeScript version newer than the one used by DX today. Projects that
-  need them keep a minimal ESLint setup next to oxlint.
-- **No config inheritance for editors.** oxlint integrations that do not read
-  `.oxlintrc.json` from the workspace root will not pick up these rules.
-- **Test blocks are matched by name.** oxlint does not follow the fixtures a
-  `test` object is extended from, so a `test` created with `baseTest.extend()`
-  is not recognised as a test block and every `expect` inside it is reported as
-  standalone. `base.json` and `base-jest.json` therefore pass
-  `additionalTestBlockFunctions: ["it", "test"]` to `no-standalone-expect`:
-  any function named like a test counts as a block, which clears the false
+- **Type-aware rules.** They require `oxlint-tsgolint`, which needs a
+  TypeScript version newer than the one used by DX today. Projects that need
+  them keep a minimal ESLint setup next to oxlint.
+- **Checks the TypeScript compiler already reports.** `no-const-assign`,
+  `no-unreachable` and the like are on for scripts and off for `*.ts` files,
+  where `tsc` fails first.
+- **Editor integrations that ignore `.oxlintrc.json`.** oxlint integrations
+  that do not read the config from the workspace root will not pick up these
+  rules.
+- **Test blocks created by extending the runner.** A `test` created with
+  `baseTest.extend()` is not recognised as a test block, because oxlint does
+  not follow the fixtures it was extended from. Both variants treat any
+  function named `it` or `test` as a block instead, which clears the false
   positives and still reports an `expect` sitting outside a block.
-- **`.cjs` is always CommonJS.** oxlint picks the module type from the
+- **`.cjs` files are always CommonJS.** oxlint picks the module type from the
   extension and `overrides` cannot change it, so an ESM mock has to be renamed
   from `.cjs` to `.js` (or `.mjs`) to be parsed — the usual case being
   `__mocks__/fs.cjs` for `node:fs`.
-
-## Known gaps
-
-The migration to oxlint did not rewrite code that needs more than a mechanical
-fix. These are the exemptions and the coverage holes it left, all of them
-visible in the DX workspace and none of them new to oxlint:
-
-- `apps/dx-metrics` is excluded from linting by an `apps/dx-metrics/**` entry
-  in the workspace `.oxlintrc.json`. The app needs a handful of code fixes and
-  an `overrides` entry of its own, so it lands in a follow-up change: until
-  then the entry keeps the lint gate honest instead of red. Note that the
-  `@nx/oxlint` plugin infers a `lint` target only for projects that still have
-  lintable files, so while the entry is in place the app has no `lint` target
-  at all rather than a target that skips its files. Removing the entry is part
-  of that follow-up change, not of this one.
-- Files that no project owns are not linted: the DX lint gate runs per project,
-  so root files (`oxfmt.config.ts`, `.pnpmfile.cjs`) and code living inside a
-  non-JavaScript project (`infra/modules/aws_open_next`, whose Lambda and
-  CloudFront functions are JavaScript next to Terraform) only show up in a
-  manual `oxlint .` run at the workspace root.
-- `plugins/padef/skills` ships its own scripts and is not an nx project, so the
-  lint gate skips it as well. Its findings are `perfectionist/sort-objects` and
-  `perfectionist/sort-modules` over script test fixtures almost entirely:
-  mechanical, but outside a migration that promises a green gate and nothing
-  else.
-
-Run `pnpm exec oxlint --format=json .` at the workspace root to see the current
-state of the last two groups.
