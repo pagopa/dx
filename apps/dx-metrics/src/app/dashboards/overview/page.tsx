@@ -1,12 +1,13 @@
 "use client";
 
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
+import type { Insight } from "@/lib/insights/types";
+
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import TooltipIcon from "@/components/TooltipIcon";
-import type { DashboardMetaView } from "@/lib/dashboard-meta";
-import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 

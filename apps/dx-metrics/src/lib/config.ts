@@ -113,8 +113,8 @@ export const INSIGHT_THRESHOLDS = {
   // Below this many observations a rule still fires, but the reading is marked
   // low confidence so a signal from a handful of items is not over-trusted.
   minReliableSampleSize: 10,
-  reviewerLoadShare: 0.5,
   reviewBusFactorShare: 0.5,
+  reviewerLoadShare: 0.5,
   reviewWaitDominanceShare: 0.7,
   slowPrConcentrationShare: 0.6,
   spreadMinMedianDays: 1,
@@ -128,8 +128,8 @@ export const INSIGHT_THRESHOLDS = {
   teamBusFactorShare: 0.5,
   techradarCoverage: 0.3,
   trackerBacklogShare: 0.1,
-  unsupervisedShare: 0.6,
   unreviewedMergeShare: 0.4,
+  unsupervisedShare: 0.6,
 } as const;
 
 export const TIME_INTERVALS = [

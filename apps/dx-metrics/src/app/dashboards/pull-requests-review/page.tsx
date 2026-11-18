@@ -1,5 +1,8 @@
 "use client";
 
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
+import type { Insight } from "@/lib/insights/types";
+
 import {
   DataTable,
   SimpleBarChart,
@@ -13,10 +16,8 @@ import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
-import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatNumber } from "@/lib/format";
 import { severityFromTarget } from "@/lib/insights/insight-helpers";
-import type { Insight } from "@/lib/insights/types";
 import { percentChange } from "@/lib/stats";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
@@ -40,6 +41,7 @@ interface PrReviewDashboardData {
     p85: null | number;
     p95: null | number;
   };
+  insights: Insight[];
   // Share (0..1) of merged PRs with no human review before merge (feeds the
   // insights) / with no comments at all (rendered as a card).
   mergedWithoutCommentsShare: null | number;
@@ -47,6 +49,7 @@ interface PrReviewDashboardData {
   /** Merges in the window grouped by the person who merged. Optional so a
    * cached payload from before this field existed still renders. */
   mergers?: { login: string; merges: number; mergesOfOthers?: number }[];
+  meta: DashboardMetaView;
   reviewDistribution: {
     approvals: number;
     changeRequests: number;
@@ -60,8 +63,6 @@ interface PrReviewDashboardData {
   }[];
   timeToFirstReviewTrend: { avgHoursToFirstReview: number; week: string }[];
   timeToMergeTrend: { avgHoursToMerge: number; week: string }[];
-  insights: Insight[];
-  meta: DashboardMetaView;
 }
 
 export default function PullRequestsReviewDashboard() {
@@ -167,9 +168,9 @@ export default function PullRequestsReviewDashboard() {
       {data && (
         <>
           <DataFreshness
-            className="mb-2"
             availableFrom={data.meta.availableFrom}
             availableTo={data.meta.availableTo}
+            className="mb-2"
             referenceDate={data.meta.referenceDate}
             windowEnd={data.meta.windowEnd}
             windowStart={data.meta.windowStart}
@@ -191,14 +192,14 @@ export default function PullRequestsReviewDashboard() {
               label="Avg Time to First Review"
               previousValue={data.cards.previousAvgTimeToFirstReview}
               sampleSize={data.firstReviewPercentiles.count}
-              suffix="hours"
-              tooltip={tooltipContent.avgTimeToFirstReview}
-              value={data.cards.avgTimeToFirstReview}
-              target={METRIC_TARGETS.timeToFirstReviewHours}
               severity={firstReviewSeverity}
               sparkline={data.timeToFirstReviewTrend.map(
                 (row) => row.avgHoursToFirstReview,
               )}
+              suffix="hours"
+              target={METRIC_TARGETS.timeToFirstReviewHours}
+              tooltip={tooltipContent.avgTimeToFirstReview}
+              value={data.cards.avgTimeToFirstReview}
             />
             {/*
               Comment volume is a context signal, not a good/bad one: more

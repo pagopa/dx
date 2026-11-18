@@ -60,40 +60,11 @@ After editing:
 
 ```shell
 pnpm nx run-many -t test typecheck lint -p @pagopa/oxlint-config
-./node_modules/.bin/oxfmt --check packages/oxlint-config
-pnpm nx release plan
+pnpm exec oxfmt --check packages/oxlint-config
 ```
 
 Rule additions and new flavours are a minor bump; a removal or a changed export
-path is breaking and needs a migration note in the plan.
-
-## Known gaps
-
-The migration to oxlint did not rewrite code that needs more than a mechanical
-fix. These are the exemptions and the coverage holes it left in the DX
-workspace, none of them new to oxlint:
-
-- `apps/dx-metrics` is excluded from linting by an `apps/dx-metrics/**` entry
-  in the workspace `.oxlintrc.json`. The app needs a handful of code fixes and
-  an `overrides` entry of its own, so it lands in a follow-up change: until
-  then the entry keeps the lint gate honest instead of red. Note that the
-  `@nx/oxlint` plugin infers a `lint` target only for projects that still have
-  lintable files, so while the entry is in place the app has no `lint` target
-  at all rather than a target that skips its files. Removing the entry is part
-  of that follow-up change, not of this one.
-- Files that no project owns are not linted: the DX lint gate runs per project,
-  so root files (`oxfmt.config.ts`, `.pnpmfile.cjs`) and code living inside a
-  non-JavaScript project (`infra/modules/aws_open_next`, whose Lambda and
-  CloudFront functions are JavaScript next to Terraform) only show up in a
-  manual `oxlint .` run at the workspace root.
-- `plugins/padef/skills` ships its own scripts and is not an nx project, so the
-  lint gate skips it as well. Its findings are `perfectionist/sort-objects` and
-  `perfectionist/sort-modules` over script test fixtures almost entirely:
-  mechanical, but outside a migration that promises a green gate and nothing
-  else.
-
-Run `pnpm exec oxlint --format=json .` at the workspace root to see the current
-state of the last two groups.
+path is breaking and needs a migration note in the version plan.
 
 ## How the package is verified
 
@@ -111,10 +82,6 @@ prefix is declared in `plugins` or `jsPlugins` with no declared plugin unused,
 the categories stay `off`, the TypeScript override keeps its split, the overlays
 carry the same globs and matching rules with identical values, and every
 `exports` entry plus every extended file is present in the tarball.
-
-```shell
-pnpm nx test @pagopa/oxlint-config
-```
 
 ## Pinned options
 

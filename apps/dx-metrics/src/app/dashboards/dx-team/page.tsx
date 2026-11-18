@@ -1,5 +1,8 @@
 "use client";
 
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
+import type { Insight } from "@/lib/insights/types";
+
 import { DataTable, SimpleBarChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
@@ -8,8 +11,6 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
 import { ORGANIZATION } from "@/lib/config";
-import type { DashboardMetaView } from "@/lib/dashboard-meta";
-import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
@@ -42,8 +43,10 @@ interface DxTeamData {
     repositoryCommits: number;
   }[];
   dxPipelinesUsage: { dxPath: string; repositoryCount: number }[];
+  insights: Insight[];
   ioInfraPrs: { date: string; dxPr: number; nonDxPr: number }[];
   ioInfraPrTable: { author: string; createdAt: string }[];
+  meta: DashboardMetaView;
   /** Per-module Terraform usage across every imported repository. */
   terraformModules: {
     module: string;
@@ -53,8 +56,6 @@ interface DxTeamData {
     sources: string[];
     usageCount: number;
   }[];
-  insights: Insight[];
-  meta: DashboardMetaView;
 }
 
 export default function DxTeamDashboard() {
@@ -96,9 +97,9 @@ export default function DxTeamDashboard() {
       {data && (
         <>
           <DataFreshness
-            className="mb-2"
             availableFrom={data.meta.availableFrom}
             availableTo={data.meta.availableTo}
+            className="mb-2"
             referenceDate={data.meta.referenceDate}
             windowEnd={data.meta.windowEnd}
             windowStart={data.meta.windowStart}

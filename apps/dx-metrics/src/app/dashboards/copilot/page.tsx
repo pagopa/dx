@@ -1,5 +1,8 @@
 "use client";
 
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
+import type { Insight } from "@/lib/insights/types";
+
 import {
   DataTable,
   SimpleBarChart,
@@ -15,10 +18,8 @@ import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
 import { COPILOT_REVIEW_ADOPTION_PCT, INSIGHT_THRESHOLDS } from "@/lib/config";
-import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatDecimal, formatNumber } from "@/lib/format";
 import { severityFromTarget } from "@/lib/insights/insight-helpers";
-import type { Insight } from "@/lib/insights/types";
 import { useDateFormatters } from "@/lib/locale";
 import { percentChange } from "@/lib/stats";
 import { useDashboardData } from "@/lib/useDashboardData";
@@ -39,12 +40,12 @@ interface CopilotDashboardData {
   cards: {
     avgLeadTimeHoursWith: null | number;
     avgLeadTimeHoursWithout: null | number;
+    /** Share (0..1) of imported team commits carrying the Copilot trailer. */
+    coauthoredCommitShare: null | number;
     copilotAuthoredMergedPrs: number;
     copilotAuthoredPrs: number;
     copilotCoauthoredCommits: number;
     copilotReviewedPrs: number;
-    /** Share (0..1) of imported team commits carrying the Copilot trailer. */
-    coauthoredCommitShare: null | number;
     /** Share (0..1) of merged PRs in the window with a Copilot review. */
     coverageShare: null | number;
     mergedPrs: number;
@@ -66,6 +67,8 @@ interface CopilotDashboardData {
     cumulativeWithout: number;
     week: string;
   }[];
+  insights: Insight[];
+  meta: DashboardMetaView;
   prSizeBuckets: {
     bucket: string;
     copilotReviewedPrs: number;
@@ -80,8 +83,6 @@ interface CopilotDashboardData {
     noReview: number;
   };
   weeklyTrend: { reviewedPrs: number; reviews: number; week: string }[];
-  insights: Insight[];
-  meta: DashboardMetaView;
 }
 
 export default function CopilotDashboard() {
@@ -195,9 +196,9 @@ export default function CopilotDashboard() {
       {data && (
         <>
           <DataFreshness
-            className="mb-2"
             availableFrom={data.meta.availableFrom}
             availableTo={data.meta.availableTo}
+            className="mb-2"
             referenceDate={data.meta.referenceDate}
             windowEnd={data.meta.windowEnd}
             windowStart={data.meta.windowStart}

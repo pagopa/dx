@@ -3,12 +3,13 @@
 import { INSIGHT_THRESHOLDS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
+import type { Insight } from "./types";
+
 import {
   confidenceFromSample,
   formatPercent,
   sortInsights,
 } from "./insight-helpers";
-import type { Insight } from "./types";
 
 export interface DxTeamInsightsInput {
   /**

@@ -2,9 +2,10 @@
 
 import { Moon, Sun } from "lucide-react";
 
+import type { Theme } from "@/lib/theme";
+
 import { useTheme } from "@/components/ThemeProvider";
 import { cn, focusRing } from "@/lib/utils";
-import type { Theme } from "@/lib/theme";
 
 const OPTIONS: readonly {
   Icon: typeof Sun;

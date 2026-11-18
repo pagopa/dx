@@ -12,6 +12,7 @@ applyTo: "**/*.ts, **/*.js, package.json"
 - Keep modules free of side effects: export values and functions without executing code at import time.
 - Do not access `process.env` outside an entrypoint; pass configuration through parameters.
 - Use `@pagopa/oxlint-config` for consistent linting rules; run them through the `lint` Nx target instead of invoking oxlint directly.
+- The `lint` target only covers files an Nx project owns and lints. Root configs (`.pnpmfile.cjs`, `oxfmt.config.ts`), the JavaScript inside a Terraform module such as `infra/modules/aws_open_next`, and `plugins/padef/skills` fall outside it: run `pnpm exec oxlint .` at the workspace root to check them.
 - Keep modules and functions small and single-responsibility. Methods should fit within a single screen.
 - Adhere to Ports and Adapters Architecture by isolating implementation details within adapters and maintaining strict layering to prevent leaking implementation concerns.
 - Do not create global utility or types packages; keep helpers and types close to where they are used.

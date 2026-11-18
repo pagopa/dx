@@ -7,16 +7,16 @@ import { useId, useRef, useState } from "react";
 
 import { cn, focusRing } from "@/lib/utils";
 
-/** Whether picking a repository replaces or extends the current selection. */
-type RepositorySelectionMode = "single" | "multi";
-
 interface RepositoryMultiSelectProps {
-  /** Repositories currently selected, in display order. */
-  value: readonly string[];
   onChange: (repositories: string[]) => void;
   /** Every selectable repository, already sorted for display. */
   options: readonly string[];
+  /** Repositories currently selected, in display order. */
+  value: readonly string[];
 }
+
+/** Whether picking a repository replaces or extends the current selection. */
+type RepositorySelectionMode = "multi" | "single";
 
 const triggerClassName =
   "flex min-w-56 cursor-pointer items-center justify-between gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:border-accent focus-visible:border-accent";
@@ -44,65 +44,6 @@ const modeButtonClassName =
  */
 const matchesSearch = (value: string, search: string) =>
   value.toLowerCase().includes(search.toLowerCase()) ? 1 : 0;
-
-/**
- * The action row inside the popover.
- *
- * Lives inside `Command` so it can read the live search query through
- * `useCommandState`: "Select all results" must target only the repositories
- * that survive the current filter, not the whole option list.
- */
-function CommandActions({
-  mode,
-  onChange,
-  options,
-  value,
-}: {
-  mode: RepositorySelectionMode;
-  onChange: (repositories: string[]) => void;
-  options: readonly string[];
-  value: readonly string[];
-}) {
-  const search = useCommandState((state) => state.search);
-
-  const selectAllResults = () => {
-    // Mirror cmdk's own filtering exactly, so "results" means precisely what
-    // the user can see. An empty query keeps cmdk's unfiltered list, i.e. all
-    // repositories.
-    const visible = search
-      ? options.filter((option) => matchesSearch(option, search) > 0)
-      : options;
-
-    const selected = new Set(value);
-    visible.forEach((repository) => selected.add(repository));
-
-    // Re-derive from `options` so the selection keeps the display order.
-    onChange(options.filter((option) => selected.has(option)));
-  };
-
-  return (
-    <div className="flex items-center justify-between border-b border-border px-1.5 py-1">
-      {mode === "multi" ? (
-        <button
-          className={actionClassName}
-          onClick={selectAllResults}
-          type="button"
-        >
-          Select all results
-        </button>
-      ) : (
-        <span />
-      )}
-      <button
-        className={actionClassName}
-        onClick={() => onChange([])}
-        type="button"
-      >
-        Clear
-      </button>
-    </div>
-  );
-}
 
 /**
  * Multi-repository picker with inline search and a single/multi selection mode.
@@ -255,8 +196,8 @@ export function RepositoryMultiSelect({
 
                   return (
                     <Command.Item
-                      key={repository}
                       className={itemClassName}
+                      key={repository}
                       onSelect={() => toggle(repository)}
                       value={repository}
                     >
@@ -308,6 +249,65 @@ export function RepositoryMultiSelect({
           ))}
         </ul>
       )}
+    </div>
+  );
+}
+
+/**
+ * The action row inside the popover.
+ *
+ * Lives inside `Command` so it can read the live search query through
+ * `useCommandState`: "Select all results" must target only the repositories
+ * that survive the current filter, not the whole option list.
+ */
+function CommandActions({
+  mode,
+  onChange,
+  options,
+  value,
+}: {
+  mode: RepositorySelectionMode;
+  onChange: (repositories: string[]) => void;
+  options: readonly string[];
+  value: readonly string[];
+}) {
+  const search = useCommandState((state) => state.search);
+
+  const selectAllResults = () => {
+    // Mirror cmdk's own filtering exactly, so "results" means precisely what
+    // the user can see. An empty query keeps cmdk's unfiltered list, i.e. all
+    // repositories.
+    const visible = search
+      ? options.filter((option) => matchesSearch(option, search) > 0)
+      : options;
+
+    const selected = new Set(value);
+    visible.forEach((repository) => selected.add(repository));
+
+    // Re-derive from `options` so the selection keeps the display order.
+    onChange(options.filter((option) => selected.has(option)));
+  };
+
+  return (
+    <div className="flex items-center justify-between border-b border-border px-1.5 py-1">
+      {mode === "multi" ? (
+        <button
+          className={actionClassName}
+          onClick={selectAllResults}
+          type="button"
+        >
+          Select all results
+        </button>
+      ) : (
+        <span />
+      )}
+      <button
+        className={actionClassName}
+        onClick={() => onChange([])}
+        type="button"
+      >
+        Clear
+      </button>
     </div>
   );
 }

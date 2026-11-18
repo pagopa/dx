@@ -11,7 +11,11 @@ const CONFIGURED = [
   { name: "bb-a", tags: ["bb"] },
 ] as const;
 
-const scope = resolveScope({ tags: ["p4pa"], v: 1 }, CONFIGURED)!;
+const resolved = resolveScope({ tags: ["p4pa"], v: 1 }, CONFIGURED);
+if (resolved === null) {
+  throw new Error("the test scope must resolve");
+}
+const scope = resolved;
 
 const query = (overrides: Partial<DashboardQuery> = {}): DashboardQuery => ({
   days: 120,

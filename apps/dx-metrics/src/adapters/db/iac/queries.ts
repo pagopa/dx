@@ -2,18 +2,19 @@
 
 import { sql, type SQL } from "drizzle-orm";
 
-import { buildIacInsights } from "@/lib/insights/iac";
 import type { WithInsights } from "@/lib/insights/types";
+
 import { IAC_EXCLUDED_PR_TITLES } from "@/lib/config";
+import { buildIacInsights } from "@/lib/insights/iac";
 
 import type { Database, WithMeta } from "../shared/types";
+import type { ResolvedWindow } from "../shared/window";
 import type { GetIacDashboardInput, IacDashboardResult } from "./schemas";
 
 import { buildDataRangeQuery, parseDataRange } from "../shared/reference-date";
+import { percentileRowSchema } from "../shared/schemas";
 import { notInValues, repositoryIn } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
-import { percentileRowSchema } from "../shared/schemas";
-import type { ResolvedWindow } from "../shared/window";
 import { resolveWindow, windowMeta } from "../shared/window";
 import { buildMemberMatchSql } from "./member-match-sql";
 import {

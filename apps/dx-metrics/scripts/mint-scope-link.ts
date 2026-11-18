@@ -16,8 +16,8 @@ import { dxMetricsConfig } from "@pagopa/dx-metrics-core/config";
 import { resolveScope } from "../src/lib/scope/scope.js";
 import {
   SCOPE_TOKEN_VERSION,
-  signScopeToken,
   type ScopePayload,
+  signScopeToken,
 } from "../src/lib/scope/token.js";
 
 const DEFAULT_BASE_URL = "https://metrics.dx.pagopa.it";

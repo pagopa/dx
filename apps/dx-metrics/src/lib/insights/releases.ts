@@ -2,6 +2,8 @@
 
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 
+import type { Insight } from "./types";
+
 import {
   confidenceFromFit,
   confidenceFromSample,
@@ -12,7 +14,6 @@ import {
   severityFromUpperThreshold,
   sortInsights,
 } from "./insight-helpers";
-import type { Insight } from "./types";
 
 /** A module is considered stale after this many days without a release. */
 const STALE_MODULE_DAYS = 180;

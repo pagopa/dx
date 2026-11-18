@@ -35,7 +35,7 @@ const writeCache = (key: string, data: unknown): void => {
 };
 
 const buildDashboardQueryString = (
-  params: Record<string, number | string | readonly string[]>,
+  params: Record<string, number | readonly string[] | string>,
 ) => {
   const searchParams = new URLSearchParams();
 
@@ -77,7 +77,7 @@ const extractDashboardErrorMessage = async (response: Response) => {
 
 export function useDashboardData<T>(
   endpoint: string,
-  params: Record<string, number | string | readonly string[]>,
+  params: Record<string, number | readonly string[] | string>,
 ) {
   const paramsSerialized = useMemo(
     () =>

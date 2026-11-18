@@ -2,8 +2,9 @@
 
 import { sql } from "drizzle-orm";
 
-import { buildDxAdoptionInsights } from "@/lib/insights/dx-adoption";
 import type { WithInsights } from "@/lib/insights/types";
+
+import { buildDxAdoptionInsights } from "@/lib/insights/dx-adoption";
 
 import type { Database, WithMeta } from "../shared/types";
 import type { DxAdoptionResult, FetchDxAdoptionInput } from "./schemas";

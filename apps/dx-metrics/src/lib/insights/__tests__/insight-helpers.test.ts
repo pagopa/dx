@@ -2,6 +2,8 @@
 
 import { describe, expect, it } from "vitest";
 
+import type { Insight } from "@/lib/insights/types";
+
 import {
   confidenceFromFit,
   confidenceFromSample,
@@ -14,7 +16,6 @@ import {
   severityFromUpperThreshold,
   sortInsights,
 } from "@/lib/insights/insight-helpers";
-import type { Insight } from "@/lib/insights/types";
 
 describe("confidenceFromSample", () => {
   it("marks a small known sample as low confidence", () => {

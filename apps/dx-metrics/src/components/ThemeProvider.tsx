@@ -2,12 +2,12 @@
 
 import {
   createContext,
+  type ReactNode,
   useCallback,
   useContext,
   useEffect,
   useMemo,
   useState,
-  type ReactNode,
 } from "react";
 
 import {
@@ -27,9 +27,14 @@ interface ThemeContextValue {
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  setTheme: () => {},
+  // The provider always supplies the real implementations.
+  setTheme: () => {
+    /* noop default */
+  },
   theme: DEFAULT_THEME,
-  toggleTheme: () => {},
+  toggleTheme: () => {
+    /* noop default */
+  },
 });
 
 /**

@@ -1,5 +1,8 @@
 "use client";
 
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
+import type { Insight } from "@/lib/insights/types";
+
 import {
   DataTable,
   SimpleBarChart,
@@ -12,9 +15,7 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
 import { METRIC_TARGETS } from "@/lib/config";
-import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatNumber } from "@/lib/format";
-import type { Insight } from "@/lib/insights/types";
 import { useDateFormatters } from "@/lib/locale";
 import { pivotCumulativeSeries } from "@/lib/pivot-cumulative-series";
 import { useDashboardData } from "@/lib/useDashboardData";
@@ -23,8 +24,10 @@ import { useDashboardFilters } from "@/lib/useDashboardFilters";
 import { iacTooltips as tooltipContent } from "./tooltips";
 
 interface IacDashboardData {
+  insights: Insight[];
   leadTimeMovingAvg: { avgLeadTimeDays: number; week: string }[];
   leadTimeTrend: { date: string; trendLine: number }[];
+  meta: DashboardMetaView;
   prsByReviewer: {
     avgLeadTimeDays: null | number;
     mergedPrs: number;
@@ -37,8 +40,6 @@ interface IacDashboardData {
     prType: string;
     runDate: string;
   }[];
-  insights: Insight[];
-  meta: DashboardMetaView;
 }
 
 export default function IacDashboard() {
@@ -98,9 +99,9 @@ export default function IacDashboard() {
       {data && (
         <>
           <DataFreshness
-            className="mb-2"
             availableFrom={data.meta.availableFrom}
             availableTo={data.meta.availableTo}
+            className="mb-2"
             referenceDate={data.meta.referenceDate}
             windowEnd={data.meta.windowEnd}
             windowStart={data.meta.windowStart}

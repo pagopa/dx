@@ -1,9 +1,9 @@
 "use client";
 
-import { RepositoryMultiSelect } from "@/components/RepositoryMultiSelect";
-import { useScope } from "@/components/ScopeProvider";
 import type { DashboardFilterMode } from "@/lib/useDashboardFilters";
 
+import { RepositoryMultiSelect } from "@/components/RepositoryMultiSelect";
+import { useScope } from "@/components/ScopeProvider";
 import { TIME_INTERVALS } from "@/lib/config";
 import { addCalendarDays } from "@/lib/date-range";
 import { focusRing } from "@/lib/utils";

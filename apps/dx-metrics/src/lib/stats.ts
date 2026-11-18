@@ -1,11 +1,5 @@
 /** Pure statistical helpers shared by dashboard insight rules. */
 
-/** A single `(x, y)` observation used for trend fitting. */
-export interface TrendPoint {
-  readonly x: number;
-  readonly y: number;
-}
-
 /** Result of a least-squares linear regression over a set of points. */
 export interface LinearRegression {
   readonly intercept: number;
@@ -13,11 +7,17 @@ export interface LinearRegression {
   readonly slope: number;
 }
 
+/** A single `(x, y)` observation used for trend fitting. */
+export interface TrendPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
 /** Divides two numbers, returning `null` for a zero or non-finite denominator. */
 export const safeDivide = (
   numerator: number,
   denominator: number,
-): number | null => {
+): null | number => {
   if (!Number.isFinite(denominator) || denominator === 0) {
     return null;
   }
@@ -30,7 +30,7 @@ export const safeDivide = (
 export const percentChange = (
   current: number,
   previous: number,
-): number | null => {
+): null | number => {
   if (!Number.isFinite(current) || !Number.isFinite(previous)) {
     return null;
   }
@@ -101,7 +101,7 @@ export const linearRegression = (
 export const paretoShare = (
   values: readonly number[],
   fraction: number,
-): number | null => {
+): null | number => {
   const positive = values.filter((value) => value > 0);
 
   if (positive.length === 0 || fraction <= 0) {
@@ -120,13 +120,13 @@ export const paretoShare = (
 export const share = (
   numerator: number,
   denominator: number,
-): number | null => {
+): null | number => {
   const ratio = safeDivide(numerator, denominator);
   return ratio === null ? null : ratio;
 };
 
 /** Median (p50) of a numeric list, or `null` for an empty list. */
-export const median = (values: readonly number[]): number | null => {
+export const median = (values: readonly number[]): null | number => {
   const sorted = values
     .filter((value) => Number.isFinite(value))
     .slice()
@@ -150,7 +150,7 @@ export const median = (values: readonly number[]): number | null => {
 export const percentileRank = (
   value: number,
   values: readonly number[],
-): number | null => {
+): null | number => {
   const clean = values.filter((candidate) => Number.isFinite(candidate));
 
   if (clean.length === 0) {

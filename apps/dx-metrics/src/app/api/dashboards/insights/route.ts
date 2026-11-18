@@ -11,22 +11,23 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 
-import { getIacDashboard } from "@/adapters/db/iac/queries";
+import type { Insight, WithInsights } from "@/lib/insights/types";
+
 import { getCopilotDashboard } from "@/adapters/db/copilot/queries";
 import { fetchDxAdoption } from "@/adapters/db/dx-adoption/queries";
 import { fetchDxTeamDashboard } from "@/adapters/db/dx-team/queries";
-import { fetchPrDashboard } from "@/adapters/db/pull-requests/queries";
+import { getIacDashboard } from "@/adapters/db/iac/queries";
 import { getPullRequestsReviewDashboard } from "@/adapters/db/pull-requests-review/queries";
+import { fetchPrDashboard } from "@/adapters/db/pull-requests/queries";
 import { getReleasesDashboard } from "@/adapters/db/releases/queries";
+import { resolveWindow } from "@/adapters/db/shared/window";
 import { getTechRadarDashboard } from "@/adapters/db/techradar/queries";
 import { getTrackerDashboard } from "@/adapters/db/tracker/queries";
 import { getWorkflowDashboard } from "@/adapters/db/workflows/queries";
-import { resolveWindow } from "@/adapters/db/shared/window";
 import { db } from "@/db/instance";
 import { jsonWithNoStore } from "@/lib/api-cache";
 import { ORGANIZATION } from "@/lib/config";
 import { sortInsights } from "@/lib/insights/insight-helpers";
-import type { Insight, WithInsights } from "@/lib/insights/types";
 import { parseDashboardQuery } from "@/lib/query-params";
 import { resolveVisibleRepositories } from "@/lib/scope/scope";
 import { requireScope } from "@/lib/scope/server";

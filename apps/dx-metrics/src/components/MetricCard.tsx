@@ -1,9 +1,10 @@
 "use client";
 
+import type { InsightSeverity } from "@/lib/insights/types";
+
 import { SEVERITY_STYLES } from "@/components/severity";
 import TooltipIcon from "@/components/TooltipIcon";
 import { formatDecimal, formatInteger } from "@/lib/format";
-import type { InsightSeverity } from "@/lib/insights/types";
 
 interface MetricCardProps {
   /**
@@ -12,8 +13,6 @@ interface MetricCardProps {
    * headline number is not read as if it were the only aggregation.
    */
   breakdown?: readonly { label: string; value: string }[];
-  /** Percentage change versus the previous period, when available. */
-  deltaPct?: null | number;
   /**
    * Direction the metric is expected to move in. When provided, the delta is
    * coloured and labelled as favourable or not, so an arrow is never ambiguous.
@@ -24,6 +23,8 @@ interface MetricCardProps {
    * trend-based delta is not mistaken for a change in the headline value.
    */
   deltaLabel?: string;
+  /** Percentage change versus the previous period, when available. */
+  deltaPct?: null | number;
   label: string;
   /** Value from the previous period, shown next to the delta. */
   previousValue?: null | number;
@@ -89,8 +90,8 @@ const Sparkline = ({ points }: { points: readonly number[] }) => {
 export function MetricCard({
   breakdown,
   deltaDirection,
-  deltaPct,
   deltaLabel,
+  deltaPct,
   label,
   previousValue,
   sampleSize,
