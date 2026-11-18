@@ -224,8 +224,10 @@ permissions. Set it to `{}` to give all six CI/CD identities `Storage Blob Data
 Contributor` on `<environment.domain>-tf-state`. Use `container_name` to choose
 another container (3-24 characters, including the suffix when present).
 
-Add `upstream` when identities also need to read state from other containers.
-For example, to let Infra CI/CD read shared core state in `dx-tf-state`:
+Configure `upstream` if your pipelines read another container's Terraform state,
+for example to obtain shared networking outputs from core. Without it, Bootstrap
+does not assign Reader access to other state containers. The following grants
+Infra CI/CD read access to shared core state in `dx-tf-state`:
 
 ```hcl
 terraform_state_container_access = {

@@ -13,7 +13,7 @@ resource "azurerm_resource_group" "main" {
           [var.opex_resource_group_id, var.private_dns_zone_resource_group_id]
         ) : lower(provider::azurerm::normalise_resource_id(id)) != lower(local.terraform_state_resource_group_id)
       ])
-      error_message = "Container state mode requires the state account resource group to be separate from every resource group receiving module grants."
+      error_message = "The resource group hosting Terraform state must be separate from the workload, additional, Opex, and private-networking resource groups when container-scoped access is enabled."
     }
   }
 }
