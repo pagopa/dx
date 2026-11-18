@@ -13,8 +13,9 @@ Native libraries by providing a CLI that leverages `react-native-builder-bob`.
 
 1. **Simplicity**: Provides a CLI which guides you in the creation of different
    types of React Native libraries.
-2. **Toolchain**: Supports TypeScript, ESLint, Prettier, Lefthook and Release It
-   out of the box.
+2. **Toolchain**: Supports TypeScript, ESLint, Lefthook and Release It out of the
+   box. The generated project is configured with Prettier, which should be
+   replaced with [Oxfmt](./oxfmt.md).
 3. **Javascript library**: Supports for plain Javascript libraries supported by
    [Expo](https://expo.dev/).
 4. **Native view and native module**: Supports the creation of components with
