@@ -6,5 +6,11 @@ linkWorkspacePackages: true
 packageImportMethod: "clone-or-copy"
 cleanupUnusedCatalogs: true
 
+# pnpm holds back packages published in the last days, first-party ones
+# included: without this exclude `gh:latest` resolves to a stale
+# `@pagopa/*` release instead of the newest one.
+minimumReleaseAgeExclude:
+  - "@pagopa/*"
+
 allowBuilds:
   nx: true

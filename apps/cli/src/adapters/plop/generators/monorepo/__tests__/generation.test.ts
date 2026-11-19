@@ -278,6 +278,21 @@ describe("monorepo generator — file generation", () => {
     );
   });
 
+  it("excludes first-party packages from the minimum release age gate", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["pnpm-workspace.yaml"],
+    );
+
+    // pnpm 12 holds back versions published in the last days: first-party
+    // packages are released by this org, so the gate only makes `gh:latest`
+    // resolve to an outdated `@pagopa/*` release.
+    expect(generatedFiles["pnpm-workspace.yaml"]).toContain(
+      "minimumReleaseAgeExclude:",
+    );
+    expect(generatedFiles["pnpm-workspace.yaml"]).toContain('"@pagopa/*"');
+  });
+
   it("configures Renovate for DX actions and Docker images", async () => {
     const generatedFiles = await readGeneratedFiles(
       path.join(tmpDir, payload.repoName),
