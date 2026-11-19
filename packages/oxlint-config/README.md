@@ -100,9 +100,10 @@ rules or fixes. To move a workspace over:
 - **`no-undef`.** oxlint implements it only in its `nursery` category, which
   this config leaves disabled. It only applies to JavaScript files, where
   TypeScript users rarely lint.
-- **Type-aware rules.** They require `oxlint-tsgolint`, which needs a
-  TypeScript version newer than the one used by DX today. Projects that need
-  them keep a minimal ESLint setup next to oxlint.
+- **Type-aware rules.** They run through a separate backend rather than this
+  config: install `tsrs`, the preferred one, and oxlint uses it automatically.
+  They stay opt-in through `--type-aware` or `options.typeAware`; keep ESLint
+  only for rules or plugins that oxlint cannot replace.
 - **Checks the TypeScript compiler already reports.** `no-const-assign`,
   `no-unreachable` and the like are on for scripts and off for `*.ts` files,
   where `tsc` fails first.

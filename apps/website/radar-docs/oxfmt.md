@@ -37,7 +37,7 @@ pre-commit hooks, editors, and CI. There is no grace period:
 ## Related radar entries
 
 - [Prettier](./prettier.md) — formatter being replaced; now in hold
-- [Oxlint](./oxlint.md) — companion Oxc linter
+- [Oxlint](./oxlint.md) — companion Oxc linter, now in `adopt`
 
 ## Reference of usage in our organization
 
