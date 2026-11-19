@@ -146,6 +146,7 @@ jobs:
   release:
     name: Nx Release
     permissions:
+      actions: read
       contents: write
       id-token: write
       # The release job installs the repository dependencies and publishes the
@@ -173,6 +174,30 @@ ignores that file, so a Yarn Berry repository must configure the `pagopa` scope
 in `.yarnrc.yml` itself.
 
 :::
+
+### Runtime hardening
+
+The release job starts Falco monitoring and Bullfrog outbound blocking before
+the release steps. It attempts to stop Falco and write its findings to the job
+summary even when an earlier step fails. Bullfrog's blocked connections also
+appear in the summary.
+
+The initial allowlist includes domains for GitHub, npm and GitHub Packages,
+mise and Node.js, Sigstore provenance services, GHCR, Docker Hub, ECR Public,
+Alpine packages, and Falco's Python dependencies. It is not a guarantee that
+every build or publisher will work: custom Nx targets, private registries,
+Docker builds and registry redirects can require other domains. Domain
+wildcards also allow traffic to other services under the matching domain;
+review the allowlist when using sensitive credentials.
+
+For additional domains, pass `additional-allowed-domains` as a newline-separated
+list in the caller's `with` block. Existing cross-repository callers must also
+grant `actions: read` in their calling job: the Falco report uses the Actions
+jobs API, and a reusable workflow cannot elevate the caller's permissions.
+Without it, cleanup can fail after a publish.
+
+The job uses Ubuntu 26.04, which Bullfrog does not yet list as supported. Sudo
+remains enabled for Docker, so privileged code can bypass egress filtering.
 
 ### Optional: enable the pull request warning
 
@@ -210,9 +235,10 @@ missing or incomplete.
 
 ## Inputs
 
-| Input         | Description                                              | Required | Default       |
-| ------------- | -------------------------------------------------------- | -------- | ------------- |
-| `environment` | Repository Environment to associate with the release job | Yes      | `app-prod-cd` |
+| Input                        | Description                                                            | Required | Default       |
+| ---------------------------- | ---------------------------------------------------------------------- | -------- | ------------- |
+| `environment`                | Repository Environment to associate with the release job               | Yes      | `app-prod-cd` |
+| `additional-allowed-domains` | Additional newline-separated domains for release builds and publishers | No       | Empty         |
 
 ## Secrets
 
@@ -224,8 +250,10 @@ missing or incomplete.
 
 ```yaml
 permissions:
+  actions: read # For the Falco report
   contents: write # To push version bumps, tags, and commits
   id-token: write # For npm provenance (trusted publishing)
+  packages: write # To install and publish GitHub Packages
   pull-requests: write # To create/update the Version Packages PR
 ```
 
