@@ -113,6 +113,7 @@ const sidebars: SidebarsConfig = {
       items: [
         { id: "typescript/index", label: "Typescript in DX", type: "doc" },
         "typescript/npm-scripts",
+        "typescript/oxlint-config",
         "typescript/eslint-config",
         "typescript/code-review",
       ],
