@@ -41,11 +41,18 @@ runs:
         cicd-rules: false
         custom-rule-file: ${{ runner.temp }}/falco_cicd_rules.yaml
 
+    - name: Prepare allowed domains
+      id: domains
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+        ALLOWED_DOMAINS: ${{ inputs.allowed-domains }}
+        ADDITIONAL_ALLOWED_DOMAINS: ${{ inputs.additional-allowed-domains }}
+      run: bash "$ACTION_PATH/normalize-domains.sh"
+
     - name: Block unapproved outbound connections
       uses: bullfrogsec/bullfrog@7dee337d4575320b6d8cbe9a56d48d2fb765963a # v0.11.1
       with:
         egress-policy: block
         enable-sudo: true
-        allowed-domains: |
-          ${{ inputs.allowed-domains }}
-          ${{ inputs.additional-allowed-domains }}
+        allowed-domains: ${{ steps.domains.outputs.domains }}
