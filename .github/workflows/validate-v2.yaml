@@ -199,6 +199,13 @@ jobs:
       # Use the pilot branch until the new actions are available on main.
       - name: Start runtime hardening
         uses: pagopa/dx/actions/start-runtime-hardening@workflow-hardening-pilot
+        with:
+          additional-allowed-domains: |
+            mise-versions.jdx.dev
+            awscli.amazonaws.com
+            dl.google.com
+            nodejs.org
+            releases.hashicorp.com
 
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

@@ -13,6 +13,10 @@ inputs:
       registry.npmjs.org
       pypi.org
       files.pythonhosted.org
+  additional-allowed-domains:
+    description: Additional newline-separated domains required by the workload.
+    required: false
+    default: ""
 
 runs:
   using: composite
@@ -42,4 +46,6 @@ runs:
       with:
         egress-policy: block
         enable-sudo: true
-        allowed-domains: ${{ inputs.allowed-domains }}
+        allowed-domains: |
+          ${{ inputs.allowed-domains }}
+          ${{ inputs.additional-allowed-domains }}
