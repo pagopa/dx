@@ -107,6 +107,10 @@ When `enable_alarms` is set to `true`, the module creates CloudWatch alarms for:
 - **HTTPS Only**: CloudFront enforces HTTPS redirects
 - **Origin Access Control**: Secure S3 bucket access
 
+When WAF is enabled, its name and ARN are available as
+`module.open_next.cloudfront.waf.name` and `module.open_next.cloudfront.waf.arn`.
+The `waf` output is `null` when WAF is disabled.
+
 ## 💰 Cost Optimization
 
 - **ARM64 Architecture**: Lambda functions use ARM64 for better price-performance
