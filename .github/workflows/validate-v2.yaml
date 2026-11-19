@@ -208,6 +208,9 @@ jobs:
             releases.hashicorp.com
             tuf-repo-cdn.sigstore.dev
             productionresultssa*.blob.core.windows.net
+            sts.us-east-1.amazonaws.com
+            api.ecr-public.us-east-1.amazonaws.com
+            public.ecr.aws
 
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -281,6 +284,7 @@ jobs:
           # This is the authentication region, not the deployment region.
           # https://docs.aws.amazon.com/AmazonECR/latest/public/public-registry-auth.html
           aws-region: us-east-1
+          action-timeout-s: 120
           output-credentials: true
           output-env-credentials: false
           mask-aws-account-id: true
