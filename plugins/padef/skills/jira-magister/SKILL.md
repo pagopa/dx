@@ -164,6 +164,9 @@ it. Missing execution information blocks persistence, not this comparison:
 
 Correct discrepancies before requesting confirmation. Apply the same checks to
 saved proposals; a conversational disclaimer does not repair the saved draft.
+For review-only work, state explicitly in both the saved proposal and the
+conversational handoff that no Jira mutation has occurred and that confirmation,
+persistence, and post-mutation verification are still pending.
 When required information is missing, name it in the saved status and state that
 persistence is blocked until it is supplied. "Not persisted" or "pending" alone
 describes what has happened, not the condition preventing the next operation.
@@ -191,7 +194,3 @@ single-item mode, return the created or updated item, its key and URL, its
 and any failed step; no backlog mapping is produced. Include the dispatchable
 item's execution details and supplied correlation ID so its execution boundary
 remains visible.
-
-For review-only work, state in both the saved proposal and conversational
-handoff that it is not persisted and that confirmation, persistence, and
-post-mutation verification are still pending.
