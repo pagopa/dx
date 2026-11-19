@@ -8,6 +8,11 @@ on:
         required: true
         type: string
         default: "app-prod-cd"
+      additional-allowed-domains:
+        description: "Additional newline-separated domains needed by release builds and publishers"
+        required: false
+        type: string
+        default: ""
     secrets:
       app-client-id:
         description: "GitHub App Client ID for authentication"
@@ -22,11 +27,31 @@ jobs:
     runs-on: ubuntu-26.04
     environment: ${{ inputs.environment }}
     permissions:
+      actions: read
       contents: write
       id-token: write
       packages: write
       pull-requests: write
     steps:
+      - name: Start runtime hardening
+        uses: pagopa/dx/actions/start-runtime-hardening@main
+        with:
+          additional-allowed-domains: |
+            mise-versions.jdx.dev
+            nodejs.org
+            productionresultssa*.blob.core.windows.net
+            ghcr.io
+            fulcio.sigstore.dev
+            rekor.sigstore.dev
+            tuf-repo-cdn.sigstore.dev
+            public.ecr.aws
+            auth.docker.io
+            registry-1.docker.io
+            production.cloudfront.docker.com
+            production.cloudflare.docker.com
+            dl-cdn.alpinelinux.org
+            ${{ inputs.additional-allowed-domains }}
+
       - name: Generate GitHub App token
         id: generate-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -65,3 +90,7 @@ jobs:
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Stop runtime hardening
+        if: ${{ always() }}
+        uses: pagopa/dx/actions/stop-runtime-hardening@main
