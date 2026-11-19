@@ -19,6 +19,15 @@ application deployment, and infrastructure automation.
 - **[Drift Detection](../terraform/drift-detection.md)** - Monitor
   infrastructure changes
 
+The `validate-v2.yaml` workflow uses Falco and Bullfrog in the GitHub-hosted
+workspace and build and test jobs. These jobs use Ubuntu 26.04, which Bullfrog
+does not yet list as a supported runner, and block outbound traffic outside
+their initial allowlists; dependencies that need other domains can fail. The
+build and test job only runs when projects are affected. The other jobs,
+including self-hosted environment jobs, are not protected. Falco and Bullfrog
+findings appear in the job summary, not as PR comments. Sudo remains enabled
+for Docker, so privileged code can bypass Bullfrog's egress filtering.
+
 ### 📦 Release & Versioning
 
 - **[Release with Nx](./nx-release.md)** - Automate versioning and publishing
