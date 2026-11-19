@@ -1,0 +1,45 @@
+name: Start Runtime Hardening
+description: Start Falco monitoring and block outbound traffic with Bullfrog.
+
+inputs:
+  allowed-domains:
+    description: Newline-separated domains allowed by Bullfrog, including those needed by the workload and Falco report.
+    required: false
+    default: |
+      github.com
+      api.github.com
+      *.githubusercontent.com
+      npm.pkg.github.com
+      registry.npmjs.org
+      pypi.org
+      files.pythonhosted.org
+
+runs:
+  using: composite
+  steps:
+    # The action's default CI rules path points inside start/, but the rules
+    # are stored at the root of the pinned action repository.
+    - name: Fetch Falco CI rules
+      shell: bash
+      env:
+        RULES_PATH: ${{ runner.temp }}/falco_cicd_rules.yaml
+      run: |
+        curl --fail --silent --show-error --location \
+          https://raw.githubusercontent.com/falcosecurity/falco-actions/558a3ceeee9403e1c875ffbeb704c34c93e24752/rules/falco_cicd_rules.yaml \
+          --output "$RULES_PATH"
+        touch "$RUNNER_TEMP/dx-runtime-hardening-falco-attempted"
+
+    - name: Start Falco
+      uses: falcosecurity/falco-actions/start@558a3ceeee9403e1c875ffbeb704c34c93e24752
+      with:
+        mode: live
+        falco-version: sha256:ba05dfb209cc1c2e912ce116d230b5f59c4542e7286f05b663c499066d5d6a42
+        cicd-rules: false
+        custom-rule-file: ${{ runner.temp }}/falco_cicd_rules.yaml
+
+    - name: Block unapproved outbound connections
+      uses: bullfrogsec/bullfrog@7dee337d4575320b6d8cbe9a56d48d2fb765963a # v0.11.1
+      with:
+        egress-policy: block
+        enable-sudo: true
+        allowed-domains: ${{ inputs.allowed-domains }}

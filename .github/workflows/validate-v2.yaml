@@ -196,6 +196,10 @@ jobs:
     env:
       ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
     steps:
+      # Use the pilot branch until the new actions are available on main.
+      - name: Start runtime hardening
+        uses: pagopa/dx/actions/start-runtime-hardening@workflow-hardening-pilot
+
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -296,6 +300,10 @@ jobs:
         run: |
           EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
           pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci --outputStyle=static
+
+      - name: Stop runtime hardening
+        if: ${{ always() }}
+        uses: pagopa/dx/actions/stop-runtime-hardening@workflow-hardening-pilot
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
