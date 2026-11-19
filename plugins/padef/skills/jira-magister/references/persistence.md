@@ -70,9 +70,10 @@ Report ambiguous matches and stop.
 
 ## Field-level updates
 
-Update only fields included in the confirmed diff. Preserve issue keys,
-unchanged acceptance IDs and unrelated Jira content. Change the parent Epic,
-status, assignee, priority or estimates only when explicitly confirmed. Add a
+Update only fields included in the confirmed diff. Preserve issue keys, an
+existing item's parent Epic, unchanged acceptance IDs and unrelated Jira
+content. Change status, assignee, priority or estimates only when explicitly
+confirmed. Add a
 new traceability ID only when the source introduces new meaning. Reformat a
 legacy description only when explicitly confirmed.
 Apply the [execution contract](./issue-template.md#execution-contract) without

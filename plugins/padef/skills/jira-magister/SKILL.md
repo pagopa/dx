@@ -79,7 +79,16 @@ Draft actor-facing Stories and enabling Tasks from the approved sources. Apply
 [issue-contract.md](./references/issue-contract.md) for issue content, sizing,
 decomposition, dependencies, readiness, and routing; use
 [issue-template.md](./references/issue-template.md) for the execution contract
-and source formatting.
+and source formatting. For each drafted item:
+
+- give every Story and Task a parent from the approved Epic slices; when an
+  enabling Task serves several Epics, propose the most closely related one and
+  flag the choice for confirmation instead of leaving the parent unresolved;
+- write Output, Checks and Scope for this slice only. Checks name the supplied
+  implementation boundary and the interaction or result mapping they verify,
+  including for retry behavior, rather than restating the canonical AC;
+- add `blocks` only where the source shows the dependent item cannot proceed
+  without the blocking one.
 
 ### 4. Review the projection
 
