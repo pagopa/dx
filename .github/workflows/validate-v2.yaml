@@ -71,6 +71,14 @@ jobs:
       contents: read
       packages: read
     steps:
+      - name: Start runtime hardening
+        uses: pagopa/dx/actions/start-runtime-hardening@workflow-hardening-pilot
+        with:
+          additional-allowed-domains: |
+            mise-versions.jdx.dev
+            nodejs.org
+            productionresultssa*.blob.core.windows.net
+
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -181,6 +189,10 @@ jobs:
               fi
 
               printf 'environments=%s\n' "$environments" | tee -a "$GITHUB_OUTPUT"
+
+      - name: Stop runtime hardening
+        if: ${{ always() }}
+        uses: pagopa/dx/actions/stop-runtime-hardening@workflow-hardening-pilot
 
   code-review:
     name: No environment
