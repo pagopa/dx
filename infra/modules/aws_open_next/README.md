@@ -58,6 +58,32 @@ Before using this module, ensure you have:
 2. **OpenNext Build**: Your Next.js application must be built with OpenNext
 3. **Domain & Certificate** (optional): ACM certificate and Route53 hosted zone for custom domains
 
+The module requires the default AWS provider for regional resources and an
+`aws.us-east-1` provider configuration for the CloudFront-scope WAF ACL. Pass
+both configurations to the module:
+
+```hcl
+provider "aws" {
+  region = "eu-south-1"
+}
+
+provider "aws" {
+  alias  = "us-east-1"
+  region = "us-east-1"
+}
+
+module "open_next" {
+  source = "pagopa-dx/aws-open-next/aws"
+
+  providers = {
+    aws           = aws
+    aws.us-east-1 = aws.us-east-1
+  }
+
+  # Other module inputs...
+}
+```
+
 ## 📚 Examples
 
 For complete examples, see the [examples/](./examples/) directory:
