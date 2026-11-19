@@ -34,7 +34,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Start runtime hardening
-        uses: pagopa/dx/actions/start-runtime-hardening@main
+        uses: pagopa/dx/actions/start-runtime-hardening@runtime-hardening-actions
         with:
           additional-allowed-domains: |
             mise-versions.jdx.dev
@@ -93,4 +93,4 @@ jobs:
 
       - name: Stop runtime hardening
         if: ${{ always() }}
-        uses: pagopa/dx/actions/stop-runtime-hardening@main
+        uses: pagopa/dx/actions/stop-runtime-hardening@runtime-hardening-actions
