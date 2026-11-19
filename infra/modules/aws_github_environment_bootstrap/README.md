@@ -22,7 +22,7 @@ Use this module in your bootstrapper configuration to create all necessary GitHu
 ```hcl
 module "github_bootstrap" {
   source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 2.3"
+  version = "~> 2.4"
 
   environment = {
     prefix          = "dx"
@@ -94,8 +94,12 @@ Set `github_environment_prefix_enabled = true` to prefix GitHub environment
 secrets with `environment.prefix`; for example, `prefix = "ced"` and
 `env_short = "p"` produce `infra-ced-prod-ci` and `infra-ced-prod-cd`. The flag
 defaults to `false`, preserving the existing `env_short` mapping
-(`d`/`u`/`p` to `dev`/`uat`/`prod`). It does not change AWS resource names or the
-repository-scoped OIDC trust policy.
+(`d`/`u`/`p` to `dev`/`uat`/`prod`). Deployment-role OIDC trust follows the same
+base environment names, allowing additional tenant or other qualifiers as
+described below. The resource prefix is not an automatically detected tenant:
+with the flag disabled, `env_name` contains only the lifecycle. The flag does
+not change AWS resource names or the repository-scoped trust of the dedicated
+ECR Public login role.
 
 #### `repository`
 
@@ -192,9 +196,9 @@ service APIs or repository write permissions.
 The existing app/infra roles and environment-level `ROLE_ARN` secrets are
 unchanged.
 
-The role reuses the module's existing OIDC trust: the configured GitHub
-repository only, in both name-based and immutable subject formats, with the
-GitHub issuer and `sts.amazonaws.com` audience. The repository-scoped subject
+The role has its own OIDC trust: the configured GitHub repository only, in both
+name-based and immutable subject formats, with the GitHub issuer and
+`sts.amazonaws.com` audience. The repository-scoped subject
 wildcard covers PR jobs without an environment, branch/tag jobs and jobs using
 any GitHub environment, including environments managed by other instances.
 It does not match subjects belonging to another repository.
@@ -278,7 +282,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: infra-cd
+    environment: infra-dev-cd
     steps:
       - name: Checkout
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -318,7 +322,104 @@ The module creates five IAM roles:
 4. **Application CD Role** (`app-cd`): Full admin access for application deployment
 5. **ECR Public Login Role** (`ecr-public-login`): Token-only permissions for registry authentication, separate from deployment roles
 
-All roles are configured with OIDC trust relationships to allow GitHub Actions from your repository to assume them.
+### OIDC Trust Boundaries
+
+Each infrastructure and application role requires its own scope, configured
+environment and CI/CD suffix in the configured repository:
+
+| Role | GitHub environment |
+| ---- | ------------------ |
+| Infrastructure CI | `infra-<env>-ci` |
+| Infrastructure CD | `infra-<env>-cd` |
+| Application CI | `app-<env>-ci` |
+| Application CD | `app-<env>-cd` |
+
+`<env>` is `dev`, `uat` or `prod`, prefixed with `environment.prefix` when
+`github_environment_prefix_enabled = true`. `StringLike` accepts all four
+forms, retaining the literal hyphen boundaries around `<env>`:
+
+```text
+<scope>-<env>-<ci|cd>
+<scope>-*-<env>-<ci|cd>
+<scope>-<env>-*-<ci|cd>
+<scope>-*-<env>-*-<ci|cd>
+```
+
+The variants are separate because IAM `*` can match an empty string but does
+not remove the adjacent hyphens. For example, the default dev infrastructure
+CD role accepts `infra-dev-cd`, `infra-ced-dev-cd`, `infra-dev-ced-cd` and
+`infra-ced-dev-west-cd`, in both name-based and immutable repository subjects.
+The allowed subject patterns never wildcard the scope, repository or CI/CD
+suffix. When the prefix flag is enabled, the configured prefix remains required
+inside `<env>`.
+
+Lifecycle names are reserved tokens: a `StringNotLike` condition rejects
+environment names containing another lifecycle as a hyphen-delimited token.
+For example, `infra-notdev-cd` does not match the dev role, while
+`infra-dev-prod-cd` is rejected by both dev and prod roles. Do not use
+`dev`, `uat` or `prod` as qualifier tokens for another lifecycle.
+When prefixing is enabled, this also applies to `environment.prefix`: the
+module rejects conflicting prefixes during planning, before trust policies
+can be applied. For example, `prefix = "prod"` with `env_short = "d"` is invalid.
+
+Qualifiers are **not tenant authorization boundaries**: multiple tenants with
+matching scope, environment and suffix may assume the same role. All matching
+environments need equivalent protection rules. The module still publishes
+`ROLE_ARN` only to the base environment names in the table; provision that
+secret separately for any additional matching environments.
+
+The generic `github_environment_bootstrap` module creates `infra`, `app`,
+`opex` and `bootstrapper` environments for CI/CD, plus `automation` for CD.
+This AWS module manages only the four infra/app deployment roles above:
+`automation`, `opex` and `bootstrapper` are not implicit aliases for them.
+In particular, Azure's automation-to-infra identity sharing does not grant
+the equivalent AWS access.
+
+CI jobs cannot assume CD roles, other scopes and lifecycle tokens are
+rejected, and jobs without an environment cannot assume deployment roles.
+Only the dedicated token-only ECR Public login role keeps repository-wide
+subject matching.
+
+GitHub environment protection rules still control which branches, tags and
+approvals can enter an environment. This trust separation does not isolate
+steps within a job: every step in a matching job with `id-token: write` can
+request an OIDC token, including dependency installation before Cloud Login.
+
+### Upgrading to 2.4
+
+Version 2.4 keeps the module's inputs and outputs unchanged, but removes
+repository-wide trust from the infrastructure and application roles.
+Existing constraints such as `~> 2.3` already allow this minor release; review
+the authorization changes before applying the upgrade:
+
+1. Update module references to `~> 2.4`.
+2. Audit workflows assuming these roles and set each job's `environment` to the
+   matching scope, environment and CI/CD suffix above, including the prefix
+   when enabled. Qualifiers may appear before and/or after `<env>`, but must
+   not contain another lifecycle token. Jobs without an environment, with
+   unsupported scopes or with names outside these patterns no longer match.
+   Provide `ROLE_ARN` separately for additional qualified environments.
+3. Check branch/tag restrictions and required reviewers on **every** matching
+   environment, especially tenant-qualified CD environments. Keep CI
+   environments automatic if PR plans must remain automatic.
+4. Apply the bootstrapper upgrade using an authorized principal that can update
+   IAM trust policies. Do not rely on an environment whose access the upgrade
+   removes.
+
+If a required resource prefix conflicts with the lifecycle, renaming only the
+GitHub environment cannot fix it. Either disable
+`github_environment_prefix_enabled` and prepare the unprefixed GitHub
+environments and their protections, or plan a separate resource-prefix
+migration. Changing `environment.prefix` changes AWS resource names and can
+replace IAM roles and other resources; inspect the plan and migrate ARN
+references and secrets using an authorized principal.
+
+With unchanged resource naming inputs, role names, ARNs, attached permissions,
+outputs and secret names are unchanged. No IAM role replacement or Terraform
+state move is required. The dedicated ECR Public role and shared repository
+secret retain their existing behavior.
+Publishing the new module alone does not update deployed trust: each consumer
+must upgrade and apply its bootstrapper configuration.
 
 ## Resource Naming Convention
 
@@ -362,7 +463,7 @@ module "core_values" {
 
 module "bootstrap" {
   source  = "pagopa-dx/aws-github-environment-bootstrap/aws"
-  version = "~> 2.3"
+  version = "~> 2.4"
 
   environment = var.environment
 
@@ -486,9 +587,10 @@ resource "aws_iam_policy" "custom_app_policy" {
 | [aws_iam_policy.lambda_admin_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy) | data source |
 | [aws_iam_policy.lambda_read_only_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy) | data source |
 | [aws_iam_policy.read_only_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy) | data source |
+| [aws_iam_policy_document.ecr_public_assume_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.ecr_push_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.ecs_read_only_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.github_assume_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.github_environment_assume_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [github_organization.owner](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/organization) | data source |
 | [github_repository.this](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/repository) | data source |
 

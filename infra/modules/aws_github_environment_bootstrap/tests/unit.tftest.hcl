@@ -40,6 +40,18 @@ mock_provider "aws" {
   }
 }
 
+# Render IAM policy documents locally instead of mocking the trust policy JSON.
+provider "aws" {
+  alias                       = "policy_documents"
+  region                      = "eu-south-1"
+  access_key                  = "testing"
+  secret_key                  = "testing"
+  skip_credentials_validation = true
+  skip_requesting_account_id  = true
+  skip_metadata_api_check     = true
+  skip_region_validation      = true
+}
+
 mock_provider "github" {
   mock_data "github_organization" {
     defaults = {
@@ -130,6 +142,268 @@ override_module {
   }
 }
 
+run "aws_github_environment_bootstrap_deployment_role_trust" {
+  command = plan
+
+  providers = {
+    aws    = aws.policy_documents
+    github = github
+  }
+
+  assert {
+    condition = alltrue([
+      for role in [
+        { policy = aws_iam_role.infra_ci.assume_role_policy, scope = "infra", phase = "ci" },
+        { policy = aws_iam_role.infra_cd.assume_role_policy, scope = "infra", phase = "cd" },
+        { policy = aws_iam_role.app_ci.assume_role_policy, scope = "app", phase = "ci" },
+        { policy = aws_iam_role.app_cd.assume_role_policy, scope = "app", phase = "cd" },
+        ] : try(
+        toset(jsondecode(role.policy).Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]) == toset(flatten([
+          for slug in ["pagopa/example", "pagopa@123456/example@654321"] : [
+            for environment in [
+              "${role.scope}-dev-${role.phase}",
+              "${role.scope}-*-dev-${role.phase}",
+              "${role.scope}-dev-*-${role.phase}",
+              "${role.scope}-*-dev-*-${role.phase}",
+            ] : "repo:${slug}:environment:${environment}"
+          ]
+        ])),
+        false
+      )
+    ])
+    error_message = "Each deployment role must require its own scope, delimited lifecycle and CI/CD suffix, allowing optional tenant qualifiers in both subject formats."
+  }
+
+  assert {
+    condition = alltrue([
+      for role in [
+        { policy = aws_iam_role.infra_ci.assume_role_policy, scope = "infra", phase = "ci" },
+        { policy = aws_iam_role.infra_cd.assume_role_policy, scope = "infra", phase = "cd" },
+        { policy = aws_iam_role.app_ci.assume_role_policy, scope = "app", phase = "ci" },
+        { policy = aws_iam_role.app_cd.assume_role_policy, scope = "app", phase = "cd" },
+        ] : alltrue([
+          for slug in ["pagopa/example", "pagopa@123456/example@654321"] : alltrue([
+            for environment in [
+              "${role.scope}-dev-${role.phase}",
+              "${role.scope}-ced-dev-${role.phase}",
+              "${role.scope}-dev-ced-${role.phase}",
+              "${role.scope}-tenant-a-dev-region-a-${role.phase}",
+              ] : try(
+              anytrue([
+                for pattern in jsondecode(role.policy).Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"] :
+                can(regex("^${replace(pattern, "*", ".*")}$", "repo:${slug}:environment:${environment}"))
+                ]) && !anytrue([
+                for pattern in jsondecode(role.policy).Statement[0].Condition.StringNotLike["token.actions.githubusercontent.com:sub"] :
+                can(regex("^${replace(pattern, "*", ".*")}$", "repo:${slug}:environment:${environment}"))
+              ]),
+              false
+            )
+          ])
+      ])
+    ])
+    error_message = "Bare, tenant-prefixed, tenant-suffixed and doubly qualified dev environments must all match their own role, even when the tenant differs from the AWS resource prefix."
+  }
+
+  assert {
+    condition = alltrue([
+      for role in [
+        { policy = aws_iam_role.infra_ci.assume_role_policy, scope = "infra", phase = "ci" },
+        { policy = aws_iam_role.infra_cd.assume_role_policy, scope = "infra", phase = "cd" },
+        { policy = aws_iam_role.app_ci.assume_role_policy, scope = "app", phase = "ci" },
+        { policy = aws_iam_role.app_cd.assume_role_policy, scope = "app", phase = "cd" },
+        ] : alltrue([
+          for subject in concat(flatten([
+            for slug in ["pagopa/example", "pagopa@123456/example@654321"] : [
+              for environment in [
+                "${role.scope}-dev-${role.phase == "ci" ? "cd" : "ci"}",
+                "${role.scope == "infra" ? "app" : "infra"}-dev-${role.phase}",
+                "automation-dev-${role.phase}",
+                "opex-dev-${role.phase}",
+                "bootstrapper-dev-${role.phase}",
+                "other-dev-${role.phase}",
+                "${role.scope}-prod-${role.phase}",
+                "${role.scope}-tenant-prod-west-${role.phase}",
+                "${role.scope}-uat-${role.phase}",
+                "${role.scope}-notdev-${role.phase}",
+                "${role.scope}-development-${role.phase}",
+                "${role.scope}-dev-prod-${role.phase}",
+                "${role.scope}-prod-dev-${role.phase}",
+                "${role.scope}-dev-uat-${role.phase}",
+                "${role.scope}-uat-dev-${role.phase}",
+                "${role.scope}-dev-${role.phase}-extra",
+              ] : "repo:${slug}:environment:${environment}"
+            ]
+            ]), [
+            "repo:pagopa/example:pull_request",
+            "repo:pagopa@123456/example@654321:ref:refs/heads/main",
+            "repo:other-owner/example:environment:${role.scope}-dev-${role.phase}",
+            "repo:pagopa/example-fork:environment:${role.scope}-dev-${role.phase}",
+            "repo:pagopa@999/example@888:environment:${role.scope}-dev-${role.phase}",
+            ]) : try(
+            !anytrue([
+              for pattern in jsondecode(role.policy).Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"] :
+              can(regex("^${replace(pattern, "*", ".*")}$", subject))
+              ]) || anytrue([
+              for pattern in jsondecode(role.policy).Statement[0].Condition.StringNotLike["token.actions.githubusercontent.com:sub"] :
+              can(regex("^${replace(pattern, "*", ".*")}$", subject))
+            ]),
+            false
+          )
+      ])
+    ])
+    error_message = "Trust must reject other roles, unsupported scopes, repositories, no-environment jobs, lifecycle substrings and names containing conflicting lifecycle tokens."
+  }
+
+  assert {
+    condition = alltrue([
+      for policy in [
+        aws_iam_role.infra_ci.assume_role_policy,
+        aws_iam_role.infra_cd.assume_role_policy,
+        aws_iam_role.app_ci.assume_role_policy,
+        aws_iam_role.app_cd.assume_role_policy,
+        ] : (
+        length(jsondecode(policy).Statement) == 1 &&
+        jsondecode(policy).Statement[0].Effect == "Allow" &&
+        jsondecode(policy).Statement[0].Action == "sts:AssumeRoleWithWebIdentity" &&
+        jsondecode(policy).Statement[0].Principal.Federated == var.oidc_provider_arn &&
+        toset(keys(jsondecode(policy).Statement[0].Condition)) == toset(["StringLike", "StringNotLike", "ForAllValues:StringEquals"]) &&
+        jsondecode(policy).Statement[0].Condition["ForAllValues:StringEquals"] == {
+          "token.actions.githubusercontent.com:iss" = "https://token.actions.githubusercontent.com"
+          "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com"
+        }
+      )
+    ])
+    error_message = "Deployment trust must retain a single web-identity statement with the configured provider, GitHub issuer, STS audience and lifecycle exclusions."
+  }
+
+  assert {
+    condition = toset(jsondecode(aws_iam_role.ecr_public_login.assume_role_policy).Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]) == toset([
+      "repo:pagopa/example:*",
+      "repo:pagopa@123456/example@654321:*",
+    ])
+    error_message = "The dedicated token-only ECR Public role must retain repository-scoped trust for jobs without an environment."
+  }
+}
+
+run "aws_github_environment_bootstrap_prefixed_deployment_role_trust" {
+  command = plan
+
+  providers = {
+    aws    = aws.policy_documents
+    github = github
+  }
+
+  variables {
+    environment                       = merge(var.environment, { prefix = "ced", env_short = "u" })
+    github_environment_prefix_enabled = true
+    repository = {
+      owner = "another-org"
+      name  = "another-repo"
+    }
+  }
+
+  assert {
+    condition = alltrue([
+      for role in [
+        { policy = aws_iam_role.infra_ci.assume_role_policy, scope = "infra", phase = "ci" },
+        { policy = aws_iam_role.infra_cd.assume_role_policy, scope = "infra", phase = "cd" },
+        { policy = aws_iam_role.app_ci.assume_role_policy, scope = "app", phase = "ci" },
+        { policy = aws_iam_role.app_cd.assume_role_policy, scope = "app", phase = "cd" },
+        ] : try(
+        toset(jsondecode(role.policy).Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]) == toset(flatten([
+          for slug in ["another-org/another-repo", "another-org@123456/another-repo@654321"] : [
+            for environment in [
+              "${role.scope}-ced-uat-${role.phase}",
+              "${role.scope}-*-ced-uat-${role.phase}",
+              "${role.scope}-ced-uat-*-${role.phase}",
+              "${role.scope}-*-ced-uat-*-${role.phase}",
+            ] : "repo:${slug}:environment:${environment}"
+          ]
+        ])),
+        false
+      )
+    ])
+    error_message = "Deployment trust must follow the configured repository and prefixed UAT environments in both subject formats."
+  }
+
+  assert {
+    condition = alltrue([
+      for role in [
+        { policy = aws_iam_role.infra_ci.assume_role_policy, scope = "infra", phase = "ci" },
+        { policy = aws_iam_role.infra_cd.assume_role_policy, scope = "infra", phase = "cd" },
+        { policy = aws_iam_role.app_ci.assume_role_policy, scope = "app", phase = "ci" },
+        { policy = aws_iam_role.app_cd.assume_role_policy, scope = "app", phase = "cd" },
+        ] : alltrue([
+          for slug in ["another-org/another-repo", "another-org@123456/another-repo@654321"] : alltrue([
+            for environment in ["${role.scope}-uat-${role.phase}", "${role.scope}-cgn-uat-${role.phase}"] : try(
+              !anytrue([
+                for pattern in jsondecode(role.policy).Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"] :
+                can(regex("^${replace(pattern, "*", ".*")}$", "repo:${slug}:environment:${environment}"))
+              ]),
+              false
+            )
+          ])
+      ])
+    ])
+    error_message = "Enabling the GitHub environment prefix must keep that prefix required, rather than trusting unprefixed environments or another configured prefix."
+  }
+}
+
+run "aws_github_environment_bootstrap_production_deployment_role_trust" {
+  command = plan
+
+  providers = {
+    aws    = aws.policy_documents
+    github = github
+  }
+
+  variables {
+    environment = merge(var.environment, { env_short = "p" })
+  }
+
+  assert {
+    condition = alltrue([
+      for role in [
+        { policy = aws_iam_role.infra_ci.assume_role_policy, scope = "infra", phase = "ci" },
+        { policy = aws_iam_role.infra_cd.assume_role_policy, scope = "infra", phase = "cd" },
+        { policy = aws_iam_role.app_ci.assume_role_policy, scope = "app", phase = "ci" },
+        { policy = aws_iam_role.app_cd.assume_role_policy, scope = "app", phase = "cd" },
+        ] : try(
+        toset(jsondecode(role.policy).Statement[0].Condition.StringLike["token.actions.githubusercontent.com:sub"]) == toset(flatten([
+          for slug in ["pagopa/example", "pagopa@123456/example@654321"] : [
+            for environment in [
+              "${role.scope}-prod-${role.phase}",
+              "${role.scope}-*-prod-${role.phase}",
+              "${role.scope}-prod-*-${role.phase}",
+              "${role.scope}-*-prod-*-${role.phase}",
+            ] : "repo:${slug}:environment:${environment}"
+          ]
+        ])),
+        false
+      )
+    ])
+    error_message = "Production deployment roles must allow tenant-qualified production environments in both subject formats."
+  }
+
+  assert {
+    condition = alltrue([
+      for policy in [
+        aws_iam_role.infra_ci.assume_role_policy,
+        aws_iam_role.infra_cd.assume_role_policy,
+        aws_iam_role.app_ci.assume_role_policy,
+        aws_iam_role.app_cd.assume_role_policy,
+        ] : try(
+        toset(jsondecode(policy).Statement[0].Condition.StringNotLike["token.actions.githubusercontent.com:sub"]) == toset([
+          "repo:*:environment:*-dev-*",
+          "repo:*:environment:*-uat-*",
+        ]),
+        false
+      )
+    ])
+    error_message = "Production roles must reject names that also contain dev or uat lifecycle tokens; tenant wildcards must not create cross-lifecycle trust."
+  }
+}
+
 run "aws_github_environment_bootstrap_ecr_public_created_by_default" {
   command = plan
 
@@ -161,7 +435,7 @@ run "aws_github_environment_bootstrap_ecr_public_created_by_default" {
   assert {
     condition = (
       aws_iam_role.ecr_public_login.name == "dx-d-eus1-test-ecr-public-login-role-01" &&
-      aws_iam_role.ecr_public_login.assume_role_policy == data.aws_iam_policy_document.github_assume_role_policy.json &&
+      aws_iam_role.ecr_public_login.assume_role_policy == data.aws_iam_policy_document.ecr_public_assume_role_policy.json &&
       aws_iam_role_policy.ecr_public_login.role == aws_iam_role.ecr_public_login.name
     )
     error_message = "The dedicated role must use DX naming, repository OIDC trust and its own inline policy."
@@ -202,17 +476,17 @@ run "aws_github_environment_bootstrap_ecr_public_repository_trust" {
 
   assert {
     condition = (
-      length(data.aws_iam_policy_document.github_assume_role_policy.statement) == 1 &&
-      one(data.aws_iam_policy_document.github_assume_role_policy.statement).effect == "Allow" &&
-      one(data.aws_iam_policy_document.github_assume_role_policy.statement).actions == toset(["sts:AssumeRoleWithWebIdentity"]) &&
-      one(one(data.aws_iam_policy_document.github_assume_role_policy.statement).principals).type == "Federated" &&
-      one(one(data.aws_iam_policy_document.github_assume_role_policy.statement).principals).identifiers == toset([var.oidc_provider_arn])
+      length(data.aws_iam_policy_document.ecr_public_assume_role_policy.statement) == 1 &&
+      one(data.aws_iam_policy_document.ecr_public_assume_role_policy.statement).effect == "Allow" &&
+      one(data.aws_iam_policy_document.ecr_public_assume_role_policy.statement).actions == toset(["sts:AssumeRoleWithWebIdentity"]) &&
+      one(one(data.aws_iam_policy_document.ecr_public_assume_role_policy.statement).principals).type == "Federated" &&
+      one(one(data.aws_iam_policy_document.ecr_public_assume_role_policy.statement).principals).identifiers == toset([var.oidc_provider_arn])
     )
     error_message = "Trust must allow only GitHub web identity federation via the configured OIDC provider."
   }
 
   assert {
-    condition = one(data.aws_iam_policy_document.github_assume_role_policy.statement).condition == toset([
+    condition = one(data.aws_iam_policy_document.ecr_public_assume_role_policy.statement).condition == toset([
       {
         test     = "StringLike"
         variable = "token.actions.githubusercontent.com:sub"
@@ -237,7 +511,7 @@ run "aws_github_environment_bootstrap_ecr_public_repository_trust" {
       for slug in ["pagopa/example", "pagopa@123456/example@654321"] : alltrue([
         for context in ["pull_request", "ref:refs/heads/main", "environment:infra-dev-ci", "environment:infra-prod-ci"] : anytrue([
           for pattern in one([
-            for condition in one(data.aws_iam_policy_document.github_assume_role_policy.statement).condition :
+            for condition in one(data.aws_iam_policy_document.ecr_public_assume_role_policy.statement).condition :
             condition.values if condition.variable == "token.actions.githubusercontent.com:sub"
           ]) : can(regex("^${replace(pattern, "*", ".*")}$", "repo:${slug}:${context}"))
         ])
@@ -250,7 +524,7 @@ run "aws_github_environment_bootstrap_ecr_public_repository_trust" {
     condition = alltrue([
       for subject in ["repo:fork-owner/example:pull_request", "repo:pagopa/example-fork:environment:infra-dev-ci", "repo:fork-owner@999/example@888:pull_request"] : !anytrue([
         for pattern in one([
-          for condition in one(data.aws_iam_policy_document.github_assume_role_policy.statement).condition :
+          for condition in one(data.aws_iam_policy_document.ecr_public_assume_role_policy.statement).condition :
           condition.values if condition.variable == "token.actions.githubusercontent.com:sub"
         ]) : can(regex("^${replace(pattern, "*", ".*")}$", subject))
       ])
@@ -271,7 +545,7 @@ run "aws_github_environment_bootstrap_ecr_public_custom_repository" {
 
   assert {
     condition = tolist(one([
-      for condition in one(data.aws_iam_policy_document.github_assume_role_policy.statement).condition :
+      for condition in one(data.aws_iam_policy_document.ecr_public_assume_role_policy.statement).condition :
       condition.values if condition.variable == "token.actions.githubusercontent.com:sub"
     ])) == tolist(["repo:another-org/another-repo:*", "repo:another-org@123456/another-repo@654321:*"])
     error_message = "OIDC trust must be derived from the configured repository, not hardcoded to pagopa/dx."
