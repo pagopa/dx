@@ -50,8 +50,6 @@ Keep ownership hierarchy separate from delivery dependencies:
 - Use `blocks` from an independent enabling Task to the Story or Task that
   cannot proceed without it. The dependent issue is then `is blocked by` that
   Task.
-- A spike Task derived from a blocking `open.item-XX` uses the same `blocks`
-  direction toward the dependent Story or Task.
 - Use `blocks` between Stories or between Tasks only when the source identifies
   a real sequencing or delivery dependency.
 - Do not create links for ordinary Epic membership, related context, or

@@ -70,17 +70,13 @@ Report ambiguous matches and stop.
 
 ## Field-level updates
 
-Update only fields included in the confirmed diff. Preserve issue keys, parent
-Epic, unchanged acceptance IDs, existing status, and content outside the
-confirmed change. Do not change lifecycle status, assignee, priority, estimates,
-or unrelated description content unless the user confirmed those changes.
-Preserve existing Jira content not owned by this projection. Add a new
-traceability ID only when the source introduces new meaning. Reformat a legacy
-description only when that change is explicitly included in the confirmed diff.
-Preserve complete approved project mappings instead of forcing default headings.
-Preserve supplied Slice Scope IDs; do not manufacture correlation identifiers.
-Identify missing Output, Checks or Scope and block persistence; do not use
-placeholders or silently expand the update to repair unrelated legacy gaps.
+Update only fields included in the confirmed diff. Preserve issue keys,
+unchanged acceptance IDs and unrelated Jira content. Change the parent Epic,
+status, assignee, priority or estimates only when explicitly confirmed. Add a
+new traceability ID only when the source introduces new meaning. Reformat a
+legacy description only when explicitly confirmed.
+Apply the [execution contract](./issue-template.md#execution-contract) without
+silently expanding the update to repair unrelated legacy gaps.
 
 ## Verification
 

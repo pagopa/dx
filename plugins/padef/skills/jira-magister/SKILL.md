@@ -1,6 +1,6 @@
 ---
 name: jira-magister
-description: Project approved DR/SRS and Use Case contracts into a reviewable Jira backlog, and format or persist a single already-specified Jira item. Use whenever a user asks to create, decompose, refine, synchronize, or update Jira Epics, User Stories, or technical Tasks — from a PRD, DR/SRS, Use Case, JTBD, acceptance check, RFC, or requirements document, or from one item the user has already specified. Propose multiple cohesive Epics that fit a few sprints, write actor-facing Stories sized for one two-week sprint, separate enabling work into Tasks, preserve source traceability, and require explicit confirmation before Jira mutations.
+description: Project approved DR/SRS and Use Case contracts into a reviewable Jira backlog, and format or persist a single already-specified Jira item. Use whenever a user asks to create, decompose, refine, synchronize, or update Jira Epics, User Stories, Tasks, Bugs, or Sub-tasks, or assess requirements readiness for Jira — from a PRD, DR/SRS, Use Case, JTBD, acceptance check, RFC, requirements document, or a specified item. Propose cohesive, sprint-sized work, preserve source traceability, and require explicit confirmation before Jira mutations.
 ---
 
 # Jira Magister
@@ -8,19 +8,6 @@ description: Project approved DR/SRS and Use Case contracts into a reviewable Ji
 Turn validated Use Cases into a Jira execution projection, or format and persist
 a single prepared Jira item, without replacing the PRD or DR/SRS as the source
 of truth.
-
-## When to use this skill
-
-Use this skill when the user asks to:
-
-- generate Jira Epics, User Stories, Tasks, or a backlog from a DR/SRS or Use Case;
-- split a large DR/SRS into several delivery Epics;
-- refine a Jira projection after a Use Case, acceptance check, contract, or
-  readiness decision changes;
-- synchronize existing Jira items with stable PRD, JTBD, UC, or AC identifiers;
-- prepare Jira work for a sprint or ask whether requirements are ready for Jira;
-- format and create or update one Jira item the user has already specified,
-  without generating a full backlog.
 
 Do not use it to author detailed Use Cases, rewrite the PRD or DR/SRS, decide
 unapproved product behavior, or publish Confluence pages. Hand those operations
@@ -132,14 +119,12 @@ Use this mode when the user supplies the item content directly instead of a body
 of requirements.
 
 1. **Normalize the item.** Extract the supplied issue fields: type, summary,
-   project, parent and execution information. Separately extract document titles
-   and locators into Source; they are evidence labels, not alternative issue
-   summaries. Validate against [issue-contract.md](./references/issue-contract.md)
-   and [issue-template.md](./references/issue-template.md). Ask one focused
-   question at a time for any missing field. If evidence conflicts with a
-   supplied missing-locator statement, report the candidate and conflict as a
-   gap; do not promote the candidate into the authoritative Source before
-   clarification.
+   project, parent, execution information and source evidence. Validate against
+   [issue-contract.md](./references/issue-contract.md) and
+   [issue-template.md](./references/issue-template.md). Ask one focused question
+   at a time for any missing field. If evidence conflicts with a supplied
+   missing-locator statement, report the candidate and conflict as a gap; do not
+   promote the candidate into the authoritative Source before clarification.
 2. **Review the item.** Show the complete item — type, summary, description,
    project, parent, links, labels, sources and execution contract. Run
    [draft validation](#draft-validation) on this item only, including when
@@ -193,9 +178,10 @@ When invoked by `uc-engraver` or `dr-blacksmith`, return the proposed and
 confirmed Epic/Story/Task mapping, repository, source IDs, Jira keys and URLs,
 readiness gaps, synchronization results, and any failed verification. In
 single-item mode, return the created or updated item, its key and URL, its
-`Source` and AC Coverage blocks, and any failed step; no backlog mapping is
-produced. Include the dispatchable item's execution details and supplied
-correlation ID so its execution boundary remains visible.
+`Source` and AC Coverage blocks where applicable, its parent for a Sub-task,
+and any failed step; no backlog mapping is produced. Include the dispatchable
+item's execution details and supplied correlation ID so its execution boundary
+remains visible.
 
 For review-only work, state in both the saved proposal and conversational
 handoff that it is not persisted and that confirmation, persistence, and
