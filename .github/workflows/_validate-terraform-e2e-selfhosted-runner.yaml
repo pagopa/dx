@@ -18,13 +18,12 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  actions: read
   contents: read
 
 jobs:
   smoke:
     timeout-minutes: 20
-    runs-on: ${{ fromJSON(inputs.runner_label) }}
+    runs-on: ${{ inputs.runner_label }}
 
     steps:
       - name: Verify runner execution
@@ -33,46 +32,3 @@ jobs:
           echo "test_id=${{ inputs.test_id }}"
           echo "runner_name=${RUNNER_NAME}"
           echo "runner_os=${RUNNER_OS}"
-
-      - name: Inspect runner capabilities
-        id: safety
-        run: |
-          set -euo pipefail
-          echo "kernel=$(uname -r)"
-          echo "user=$(id -u)"
-          echo "network_namespace=$(readlink /proc/self/ns/net)"
-          echo "process_one_network_namespace=$(readlink /proc/1/ns/net)"
-          awk '/^(CapEff|NoNewPrivs):/ { print }' /proc/self/status
-          if [ -e /.dockerenv ]; then echo "docker_environment=true"; else echo "docker_environment=false"; fi
-          if [ -S /var/run/docker.sock ]; then echo "docker_socket=true"; else echo "docker_socket=false"; fi
-          if command -v docker >/dev/null; then echo "docker_cli=true"; else echo "docker_cli=false"; fi
-          if command -v docker >/dev/null && timeout 5 docker info >/dev/null 2>&1; then echo "docker_daemon=true"; else echo "docker_daemon=false"; fi
-          if command -v sudo >/dev/null && sudo -n true 2>/dev/null; then echo "sudo=true"; else echo "sudo=false"; fi
-          test "$(id -u)" != 0
-          test "$(awk '/^CapEff:/ { print $2 }' /proc/self/status)" = 0000000000000000
-          test "$(awk '/^NoNewPrivs:/ { print $2 }' /proc/self/status)" = 1
-          test ! -S /var/run/docker.sock
-          test -z "${DOCKER_HOST:-}"
-          if command -v sudo >/dev/null && sudo -n true 2>/dev/null; then exit 1; fi
-          if command -v docker >/dev/null && timeout 5 docker info >/dev/null 2>&1; then exit 1; fi
-
-      - name: Start runtime hardening
-        id: start
-        continue-on-error: true
-        uses: pagopa/dx/actions/start-runtime-hardening@runtime-hardening-actions
-
-      - name: Stop runtime hardening
-        id: stop
-        if: ${{ always() && steps.safety.outcome == 'success' }}
-        continue-on-error: true
-        uses: pagopa/dx/actions/stop-runtime-hardening@runtime-hardening-actions
-
-      - name: Report action outcomes
-        if: ${{ always() && steps.safety.outcome == 'success' }}
-        env:
-          START_OUTCOME: ${{ steps.start.outcome }}
-          STOP_OUTCOME: ${{ steps.stop.outcome }}
-        run: |
-          echo "start_outcome=$START_OUTCOME"
-          echo "stop_outcome=$STOP_OUTCOME"
-          test "$START_OUTCOME" = success && test "$STOP_OUTCOME" = success
