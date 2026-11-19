@@ -72,7 +72,7 @@ jobs:
       packages: read
     steps:
       - name: Start runtime hardening
-        uses: pagopa/dx/actions/start-runtime-hardening@main
+        uses: pagopa/dx/actions/start-runtime-hardening@runtime-hardening-actions
         with:
           additional-allowed-domains: |
             mise-versions.jdx.dev
@@ -192,7 +192,7 @@ jobs:
 
       - name: Stop runtime hardening
         if: ${{ always() }}
-        uses: pagopa/dx/actions/stop-runtime-hardening@main
+        uses: pagopa/dx/actions/stop-runtime-hardening@runtime-hardening-actions
 
   code-review:
     name: No environment
@@ -209,7 +209,7 @@ jobs:
       ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
     steps:
       - name: Start runtime hardening
-        uses: pagopa/dx/actions/start-runtime-hardening@main
+        uses: pagopa/dx/actions/start-runtime-hardening@runtime-hardening-actions
         with:
           additional-allowed-domains: |
             mise-versions.jdx.dev
@@ -327,7 +327,7 @@ jobs:
 
       - name: Stop runtime hardening
         if: ${{ always() }}
-        uses: pagopa/dx/actions/stop-runtime-hardening@main
+        uses: pagopa/dx/actions/stop-runtime-hardening@runtime-hardening-actions
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
