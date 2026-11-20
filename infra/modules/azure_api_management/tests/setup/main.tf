@@ -1,121 +1,54 @@
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.0"
-    }
-    dx = {
-      source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
-    }
-  }
-}
-
 locals {
-  naming_config = {
+  existing_resources = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
-    location        = var.environment.location
-    name            = var.environment.app_name,
+    location        = var.environment.location,
+    domain          = "",
+    name            = var.test_kind,
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  tags = {
-    CostCenter     = "TS720 - DEV EX"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    BusinessUnit   = "DevEx"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_api_management/tests"
-    ManagementTeam = "Developer Experience"
-    Test           = "true"
-    TestName       = "Create APIM for test"
-  }
-
-  virtual_network = {
-    name = provider::dx::resource_name(merge(local.naming_config, {
-      name          = "common",
-      resource_type = "virtual_network"
-    }))
-    resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
-      name          = "network",
-      resource_type = "resource_group"
-    }))
-  }
+  tags = merge(var.tags, {
+    CostCenter  = "TS720 - DEV EX"
+    Environment = "Uat"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_api_management/tests"
+    Test        = "true"
+    TestName    = "Azure API Management ${var.test_kind} tests"
+  })
 }
 
 data "azurerm_virtual_network" "vnet" {
-  name                = "dx-u-itn-common-vnet-01"
-  resource_group_name = "dx-u-itn-network-rg-01"
-}
-
-resource "dx_available_subnet_cidr" "cidr" {
-  virtual_network_id = data.azurerm_virtual_network.vnet.id
-  prefix_length      = 24
-}
-
-resource "azurerm_subnet" "subnet" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "test",
-    resource_type = "apim_subnet"
+  name = provider::dx::resource_name(merge(local.existing_resources, {
+    resource_type = "virtual_network"
   }))
-  virtual_network_name = data.azurerm_virtual_network.vnet.name
-  resource_group_name  = data.azurerm_virtual_network.vnet.resource_group_name
-  address_prefixes     = [dx_available_subnet_cidr.cidr.cidr_block]
-}
-
-resource "azurerm_public_ip" "pip" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "apim-test",
-    resource_type = "public_ip"
-  }))
-  resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
-  location            = var.environment.location
-  allocation_method   = "Static"
-  sku                 = "Standard"
-  zones               = ["1", "2"]
-
-  tags = local.tags
-}
-
-data "azurerm_subnet" "pep" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "pep",
-    resource_type = "subnet"
-  }))
-  virtual_network_name = local.virtual_network.name
-  resource_group_name  = local.virtual_network.resource_group_name
+  resource_group_name = data.azurerm_resource_group.rg.name
 }
 
 data "azurerm_resource_group" "rg" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "test",
+  name = provider::dx::resource_name(merge(local.existing_resources, {
     resource_type = "resource_group"
   }))
 }
 
-output "subnet_id" {
-  value = azurerm_subnet.subnet.id
+data "azurerm_resource_group" "network" {
+  name = provider::dx::resource_name(merge(local.existing_resources, {
+    name          = "network",
+    resource_type = "resource_group"
+  }))
 }
 
-output "pip_id" {
-  value = azurerm_public_ip.pip.id
+data "azurerm_log_analytics_workspace" "logs" {
+  name = provider::dx::resource_name(merge(local.existing_resources, {
+    resource_type = "log_analytics"
+  }))
+  resource_group_name = data.azurerm_resource_group.rg.name
 }
 
-output "pep_id" {
-  value = data.azurerm_subnet.pep.id
-}
-
-output "resource_group_name" {
-  value = data.azurerm_resource_group.rg.name
-}
-
-output "vnet" {
-  value = {
-    name                = data.azurerm_virtual_network.vnet.name
-    resource_group_name = data.azurerm_virtual_network.vnet.resource_group_name
+resource "random_integer" "instance_base" {
+  min = 10
+  max = 70
+  keepers = {
+    run_timestamp = timestamp()
   }
-}
-
-output "tags" {
-  value = local.tags
 }
