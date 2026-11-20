@@ -28,6 +28,22 @@ GitHub, and Falco's report dependencies (`pypi.org` and
 domains, use `additional-allowed-domains`. Blocked connections appear in the
 job summary. An incomplete list can make the job fail.
 
+The action initializes `setup-telemetry` unless the job already has a
+telemetry session. Its collector runs after Bullfrog's post step and queues
+sanitized Falco and Bullfrog events for the telemetry action's post step.
+Falco events contain rule, priority and timestamp; Bullfrog events contain
+domain, port, protocol, decision, reason and timestamp. Command lines, raw
+output, executable paths and IP addresses are not exported. The telemetry
+export itself happens after collection and is not included in the Bullfrog
+results. An existing telemetry session must remain available until the post
+phase; in particular, a later checkout must not remove its event file.
+
+The default telemetry connection string uses
+`italynorth-0.in.applicationinsights.azure.com`, included in the default
+allowlist. If overriding the allowlist or connection string, allow the actual
+Application Insights ingestion endpoint. Telemetry is best effort; collection
+errors are reported as warnings.
+
 Bullfrog supports GitHub-hosted Ubuntu runners, not container jobs or
 self-hosted runners. Ubuntu 26.04 is not listed among its documented supported
 versions. Sudo remains enabled for Docker, so privileged code can bypass

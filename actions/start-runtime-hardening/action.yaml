@@ -13,6 +13,7 @@ inputs:
       registry.npmjs.org
       pypi.org
       files.pythonhosted.org
+      italynorth-0.in.applicationinsights.azure.com
   additional-allowed-domains:
     description: Additional newline-separated domains required by the workload.
     required: false
@@ -21,6 +22,26 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Setup telemetry session
+      id: telemetry
+      if: ${{ env.OTEL_EVENT_FILE == '' }}
+      continue-on-error: true
+      uses: pagopa/dx/actions/setup-telemetry@main
+
+    - name: Preserve telemetry session across checkout
+      id: telemetry-file
+      if: ${{ steps.telemetry.outcome == 'success' }}
+      continue-on-error: true
+      shell: bash
+      run: |
+        mkdir -p "$RUNNER_TEMP/dx-telemetry"
+        mv "$OTEL_EVENT_FILE" "$RUNNER_TEMP/dx-telemetry/events.ndjson"
+        echo "OTEL_EVENT_FILE=$RUNNER_TEMP/dx-telemetry/events.ndjson" >> "$GITHUB_ENV"
+
+    - name: Register runtime hardening telemetry
+      if: ${{ env.OTEL_EVENT_FILE != '' && (steps.telemetry.outcome == 'skipped' || steps.telemetry-file.outcome == 'success') }}
+      uses: pagopa/dx/actions/start-runtime-hardening/telemetry@workflow-hardening-pilot
+
     # The action's default CI rules path points inside start/, but the rules
     # are stored at the root of the pinned action repository.
     - name: Fetch Falco CI rules
@@ -40,6 +61,10 @@ runs:
         falco-version: sha256:ba05dfb209cc1c2e912ce116d230b5f59c4542e7286f05b663c499066d5d6a42
         cicd-rules: false
         custom-rule-file: ${{ runner.temp }}/falco_cicd_rules.yaml
+
+    - name: Mark Falco as started
+      shell: bash
+      run: touch "$RUNNER_TEMP/dx-runtime-hardening-falco-started"
 
     - name: Prepare allowed domains
       id: domains
