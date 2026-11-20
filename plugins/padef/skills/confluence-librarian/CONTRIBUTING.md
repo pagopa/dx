@@ -166,14 +166,36 @@ assert that each run creates a fresh working copy.
 
 ## 5. Report / compare
 
+Build one report from existing job directories:
+
 ```sh
 uv run --project apps/harbor-bench --package harbor-bench harbor-bench report \
   runs/skill-a runs/skill-b --format html --report comparison.html
 ```
 
-or use `harbor-bench compare` for a base/head skill delta. See the
-[harbor-bench README](../../../../apps/harbor-bench/README.md) and
-[advanced usage](../../../../apps/harbor-bench/docs/advanced-usage.md).
+To compare the skill on two refs, use `harbor-bench compare`. It converts the
+eval set once, then runs the base skill and the head skill against the same
+tasks, so only the skill differs. Point the second argument at the working tree
+to measure the local changes. Keep concurrency at 1 for the reason in step 4,
+because both runs write to the same Playground:
+
+```sh
+export COPILOT_GITHUB_TOKEN="$(gh auth token)"
+export MCP_AUTH_B64="$(tar -C "$HOME" -czf - .mcp-auth-atlassian | base64 | tr -d '\n')"
+
+uv run --project apps/harbor-bench --package harbor-bench harbor-bench compare \
+  https://github.com/pagopa/dx/tree/main/plugins/padef/skills/confluence-librarian \
+  plugins/padef/skills/confluence-librarian \
+  -t 'confluence-librarian-*' --n-concurrent 1 \
+  --run-id main-vs-branch-$(date +%Y%m%d-%H%M) --token "$COPILOT_GITHUB_TOKEN"
+```
+
+`compare` defaults to `--n-concurrent 4`, so pass `--n-concurrent 1` every time.
+Results land in `runs/<run-id>/base/` and `runs/<run-id>/head/`, and the delta
+report is `runs/<run-id>/comparison.md`. Archive the pages both runs created
+(see above). See the [harbor-bench README](../../../../apps/harbor-bench/README.md)
+and [advanced usage](../../../../apps/harbor-bench/docs/advanced-usage.md) for
+the other flags.
 
 ## Troubleshooting
 
