@@ -4,7 +4,7 @@ Use this workflow after module discovery and before final validation.
 
 ## Determine the Target Folder
 
-Read `apps/website/docs/terraform/infra-folder-structure.md` from the DX knowledge base and inspect the repository structure.
+Read `apps/website/docs/terraform/infra-folder-structure.md` under the selected knowledge-base root from Setup and inspect the repository structure.
 
 Typical placements:
 
