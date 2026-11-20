@@ -12,6 +12,7 @@ import {
   describeMatches,
   findElements,
   scanHtml,
+  unwrapBody,
 } from "./extract-node.js";
 
 const script = fileURLToPath(new URL("./extract-node.js", import.meta.url));
@@ -231,4 +232,37 @@ test("reads the page from stdin when the path is -", async () => {
     stdin.stdout.trim(),
     /^1\/1 section\[local-id=sec-2\] — bytes \d+-\d+ — anchor=self$/,
   );
+});
+
+test("unwraps the HTML body from a saved MCP tool-output envelope", () => {
+  assert.equal(
+    unwrapBody(JSON.stringify({ data: { body: { value: baseline } } })),
+    baseline,
+  );
+  assert.equal(unwrapBody(`\uFEFF  {"value":"<p>one</p>"}`), "<p>one</p>");
+  assert.equal(unwrapBody(baseline), baseline);
+  assert.equal(unwrapBody('{"status":"draft"}'), '{"status":"draft"}');
+});
+
+test("selects a node inside a tool-output envelope", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "extract-node-"));
+  try {
+    const envelope = join(dir, "page.json");
+    await writeFile(
+      envelope,
+      JSON.stringify({ data: { body: { value: baseline } } }),
+    );
+    const run = spawnSync(
+      process.execPath,
+      [script, envelope, "--local-id", "panel-1", "--list"],
+      { encoding: "utf8" },
+    );
+    assert.equal(run.status, 0);
+    assert.match(
+      run.stdout.trim(),
+      /^1\/1 div\[local-id=panel-1\] — bytes \d+-\d+ — anchor=self$/,
+    );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
 });

@@ -318,6 +318,37 @@ export function ambiguityHint(elements, limit = 10) {
   );
 }
 
+const BODY_EXTRACTORS = [
+  (parsed) => parsed?.data?.body?.value,
+  (parsed) => parsed?.data?.value,
+  (parsed) => parsed?.body?.value,
+  (parsed) => parsed?.value,
+];
+
+/**
+ * Accepts raw HTML or a saved MCP tool-output envelope and returns the HTML body.
+ * An envelope holds the page under `data.body.value`; anything else passes through.
+ */
+export function unwrapBody(source) {
+  const candidate = source.replace(/^\uFEFF/, "").trimStart();
+  if (!candidate.startsWith("{")) {
+    return source;
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(candidate);
+  } catch {
+    return source;
+  }
+  for (const pick of BODY_EXTRACTORS) {
+    const value = pick(parsed);
+    if (typeof value === "string" && value.includes("<")) {
+      return value;
+    }
+  }
+  return source;
+}
+
 function parseArgs(argv) {
   const options = { list: false, json: false, all: false };
   const positional = [];
@@ -345,7 +376,8 @@ function parseArgs(argv) {
   if (positional.length !== 1) {
     throw new Error(
       "Usage: node extract-node.js <baseline.html|-> " +
-        "(--local-id <id> | --text <needle>) [--list] [--json] [--all]",
+        "(--local-id <id> | --text <needle>) [--list] [--json] [--all]. " +
+        "The file may be raw HTML or a saved MCP tool-output envelope.",
     );
   }
   if (!options.localId && !options.text) {
@@ -364,8 +396,9 @@ async function readStdin() {
 
 async function main() {
   const { file, options } = parseArgs(process.argv.slice(2));
-  const html =
+  const source =
     file === "-" ? await readStdin() : await readFile(resolve(file), "utf8");
+  const html = unwrapBody(source);
   const { matches, textMisses } = findElements(html, options);
 
   if (matches.length === 0) {
