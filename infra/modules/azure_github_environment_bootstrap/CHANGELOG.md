@@ -1,3 +1,20 @@
+## 7.2.0 (2026-11-20)
+
+### 🚀 Features
+
+- You can now limit CI/CD state permissions to one container with ([#2509](https://github.com/pagopa/dx/pull/2509))
+  `terraform_state_container_access = {}` and use `upstream` to give selected
+  identities read access to other state containers. Leaving the option unset
+  keeps existing permissions; no state is moved.
+
+  Requires `azure-core-infra` version 7.1.0 or later. The identity running
+  Terraform needs read access to any upstream state before planning.
+  Import existing role assignments only when this module will manage them.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 7.1.2 (2026-11-03)
 
 ### 🩹 Fixes

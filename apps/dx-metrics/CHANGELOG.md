@@ -1,3 +1,13 @@
+## 0.5.32 (2026-11-20)
+
+### 🩹 Fixes
+
+- `buildPullRequestsInsights` now reads the peer benchmark from `input.peerBenchmark` instead of a third positional argument, which brings the call below the parameter limit oxlint enforces. The dashboard passes the benchmark inside the input object and keeps producing the peer-comparison insight. ([#2561](https://github.com/pagopa/dx/pull/2561))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.31 (2026-11-18)
 
 ### 🩹 Fixes
