@@ -8,7 +8,7 @@ locals {
 {{#if (eq displayName "PROD-IO")}}
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 7.2"
+  version = "~> 7.3"
 
   providers = {
     azurerm = azurerm.{{displayName}}
@@ -41,6 +41,7 @@ module "azure-{{displayName}}_bootstrap" {
 
   github_private_runner = {
     container_app_environment_id       = data.azurerm_container_app_environment.runner.id
+    enable_dx_runner                   = true
     labels = [
       "{{@root.env.name}}"
     ]
@@ -76,7 +77,7 @@ module "azure-{{displayName}}_core_values" {
 
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 7.2"
+  version = "~> 7.3"
 
   providers = {
     azurerm = azurerm.{{displayName}}
@@ -116,6 +117,7 @@ module "azure-{{displayName}}_bootstrap" {
 
   github_private_runner = {
     container_app_environment_id       = module.azure-{{displayName}}_core_values.github_runner.environment_id
+    enable_dx_runner                   = true
     labels = [
       "{{@root.env.name}}"
     ]

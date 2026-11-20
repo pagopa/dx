@@ -154,6 +154,8 @@ you may need to customize how the workflow runs:
 - Set `override_labels` when you need more granular runner selection beyond the
   environment name, such as for region-specific or cloud-specific runners (e.g.,
   "codebuild-prod-project").
+- To use a DX runner, set `override_labels` to its dedicated label (for example,
+  `dev-ced-dx`) on its own. Do not combine it with `self-hosted`.
 
 These options are particularly useful for projects with complex deployment
 strategies across multiple cloud providers or subscriptions.

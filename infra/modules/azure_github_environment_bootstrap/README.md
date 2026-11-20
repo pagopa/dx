@@ -310,18 +310,31 @@ github_private_runner = {
   # Optional: Runner labels for job targeting
   labels = ["dev", "my-app"]
 
+  # Optional: Add the DX runner beside the existing runner
+  enable_dx_runner = true
+
   # Optional: Resource allocation
   cpu    = 1.5      # CPU cores (default: 1.5)
   memory = "3Gi"    # Memory (default: "3Gi")
 }
 ```
 
-The `github_private_runner` configuration is shared by both runners. The
-legacy runner keeps the configured environment label, while the DX runner uses
-the `ghcr.io/pagopa/dx-github-self-hosted-runner:latest` image and appends the
-`dx` label. Workflows can target it with `runs-on: [self-hosted, dx]`. The DX
-runner is provisioned only when `environment.prefix` starts with `dx`; otherwise
-the runner is removed and `github_dx_runner` is `null`.
+The DX runner is optional. Set `enable_dx_runner = true` to add it without
+changing the existing runner. Its label is `dev-dx` in development, or
+`dev-ced-dx` for a tenant with the `ced` prefix and
+`github_environment_prefix_enabled = true`. The domain does not affect the
+label. Workflows can move to DX one at a time by
+using that label on its own; workflows that are not migrated continue using the
+existing runner labels. When the option is omitted, the previous behavior
+remains: the DX runner is created only when the environment prefix starts with
+`dx`, with its existing labels.
+
+If the DX runner uses a GitHub App, make sure its Client ID is available in Key
+Vault as `github-runner-app-client-id` before applying the bootstrapper.
+
+To return a migrated workflow to the existing runner, restore its previous
+`runs-on` labels. For environments whose prefix does not start with `dx`, also
+remove `enable_dx_runner` to stop provisioning the DX runner.
 
 #### `private_dns_zone_resource_group_id`
 
@@ -517,7 +530,7 @@ This module includes practical examples to help you get started quickly:
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
-| <a name="module_github_runner_dx"></a> [github\_runner\_dx](#module\_github\_runner\_dx) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
+| <a name="module_github_runner_dx"></a> [github\_runner\_dx](#module\_github\_runner\_dx) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 5.1 |
 
 ## Resources
 
@@ -604,7 +617,7 @@ This module includes practical examples to help you get started quickly:
 | <a name="input_entraid_groups"></a> [entraid\_groups](#input\_entraid\_groups) | The Azure Entra ID groups to give role to. | <pre>object({<br/>    admins_object_id    = string<br/>    devs_object_id      = string<br/>    externals_object_id = optional(string, null)<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and location short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_github_environment_prefix_enabled"></a> [github\_environment\_prefix\_enabled](#input\_github\_environment\_prefix\_enabled) | Prefix GitHub environment names with environment.prefix. | `bool` | `false` | no |
-| <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration. | <pre>object({<br/>    container_app_environment_id = string<br/>    replica_timeout_in_seconds   = optional(number, 1800)<br/>    polling_interval_in_seconds  = optional(number, 30)<br/>    min_instances                = optional(number, 0)<br/>    max_instances                = optional(number, 30)<br/>    labels                       = optional(list(string), [])<br/>    key_vault = object({<br/>      name                = string<br/>      resource_group_name = string<br/>      secret_name         = optional(string, "github-runner-pat")<br/>      use_rbac            = optional(bool, false)<br/>    })<br/>    use_github_app = optional(bool, false)<br/>    cpu            = optional(number, 1.5)<br/>    memory         = optional(string, "3Gi")<br/>  })</pre> | n/a | yes |
+| <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration. | <pre>object({<br/>    container_app_environment_id = string<br/>    replica_timeout_in_seconds   = optional(number, 1800)<br/>    polling_interval_in_seconds  = optional(number, 30)<br/>    min_instances                = optional(number, 0)<br/>    max_instances                = optional(number, 30)<br/>    labels                       = optional(list(string), [])<br/>    enable_dx_runner             = optional(bool, false)<br/>    key_vault = object({<br/>      name                = string<br/>      resource_group_name = string<br/>      secret_name         = optional(string, "github-runner-pat")<br/>      use_rbac            = optional(bool, false)<br/>    })<br/>    use_github_app = optional(bool, false)<br/>    cpu            = optional(number, 1.5)<br/>    memory         = optional(string, "3Gi")<br/>  })</pre> | n/a | yes |
 | <a name="input_opex_resource_group_id"></a> [opex\_resource\_group\_id](#input\_opex\_resource\_group\_id) | The ID of the resource group containing Opex dashboards. | `string` | n/a | yes |
 | <a name="input_private_dns_zone_resource_group_id"></a> [private\_dns\_zone\_resource\_group\_id](#input\_private\_dns\_zone\_resource\_group\_id) | The ID of the resource group containing private DNS zones. | `string` | n/a | yes |
 | <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository. `owner` is the GitHub login or organization name; `owner_id` is the positive numeric GitHub owner ID used in immutable OIDC subjects. For personal-account repositories, set `owner_id` to `owner.id` from `GET /repos/{owner}/{repo}`. | <pre>object({<br/>    owner    = optional(string, "pagopa")<br/>    name     = string<br/>    owner_id = optional(number)<br/>  })</pre> | n/a | yes |
@@ -616,7 +629,7 @@ This module includes practical examples to help you get started quickly:
 
 | Name | Description |
 | ---- | ----------- |
-| <a name="output_github_dx_runner"></a> [github\_dx\_runner](#output\_github\_dx\_runner) | Details of the DX GitHub self-hosted runner, or null when environment.prefix does not start with dx. |
+| <a name="output_github_dx_runner"></a> [github\_dx\_runner](#output\_github\_dx\_runner) | Details of the DX GitHub self-hosted runner, or null when it is not enabled. |
 | <a name="output_github_private_runner"></a> [github\_private\_runner](#output\_github\_private\_runner) | Details of the GitHub private runner, including ID, name, and resource group name. |
 | <a name="output_identities"></a> [identities](#output\_identities) | Details of the user-assigned identities for app, infra, and opex, including IDs and names. |
 | <a name="output_repository"></a> [repository](#output\_repository) | GitHub repository name and owner. |

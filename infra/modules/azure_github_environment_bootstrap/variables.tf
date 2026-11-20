@@ -125,6 +125,7 @@ variable "github_private_runner" {
     min_instances                = optional(number, 0)
     max_instances                = optional(number, 30)
     labels                       = optional(list(string), [])
+    enable_dx_runner             = optional(bool, false)
     key_vault = object({
       name                = string
       resource_group_name = string
