@@ -23,3 +23,11 @@ output "hosted_zone_id" {
   value       = aws_cloudfront_distribution.distribution.hosted_zone_id
   description = "The hosted zone ID of the CloudFront distribution."
 }
+
+output "waf" {
+  value = var.enable_waf ? {
+    name = aws_wafv2_web_acl.cloudfront[0].name
+    arn  = aws_wafv2_web_acl.cloudfront[0].arn
+  } : null
+  description = "The CloudFront WAF web ACL name and ARN, or null when WAF is disabled."
+}
