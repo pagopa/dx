@@ -18,12 +18,13 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
+  actions: read
   contents: read
 
 jobs:
   smoke:
     timeout-minutes: 20
-    runs-on: ${{ inputs.runner_label }}
+    runs-on: ${{ fromJSON(inputs.runner_label) }}
 
     steps:
       - name: Verify runner execution
@@ -32,3 +33,63 @@ jobs:
           echo "test_id=${{ inputs.test_id }}"
           echo "runner_name=${RUNNER_NAME}"
           echo "runner_os=${RUNNER_OS}"
+
+      - name: Check runner isolation
+        id: safety
+        run: |
+          set -euo pipefail
+          echo "kernel=$(uname -r)"
+          echo "user=$(id -u)"
+          awk '/^(CapEff|NoNewPrivs):/ { print }' /proc/self/status
+          test "$(id -u)" != 0
+          test "$(awk '/^CapEff:/ { print $2 }' /proc/self/status)" = 0000000000000000
+          test "$(awk '/^NoNewPrivs:/ { print $2 }' /proc/self/status)" = 1
+          test ! -S /var/run/docker.sock
+          test -z "${DOCKER_HOST:-}"
+          if command -v sudo >/dev/null && sudo -n true 2>/dev/null; then exit 1; fi
+          if command -v docker >/dev/null && timeout 5 docker info >/dev/null 2>&1; then exit 1; fi
+
+      - name: Prepare temporary Python environment
+        run: |
+          uv venv --seed --python /usr/bin/python3 "$RUNNER_TEMP/falco-python"
+          echo "$RUNNER_TEMP/falco-python/bin" >> "$GITHUB_PATH"
+
+      - name: Start runtime hardening
+        id: start
+        continue-on-error: true
+        uses: pagopa/dx/actions/start-runtime-hardening@runtime-hardening-actions
+
+      - name: Stop runtime hardening
+        id: stop
+        if: ${{ always() && steps.safety.outcome == 'success' }}
+        continue-on-error: true
+        uses: pagopa/dx/actions/stop-runtime-hardening@runtime-hardening-actions
+
+      - name: Test Bullfrog independently
+        id: bullfrog
+        if: ${{ always() && steps.safety.outcome == 'success' }}
+        continue-on-error: true
+        uses: bullfrogsec/bullfrog@7dee337d4575320b6d8cbe9a56d48d2fb765963a
+        with:
+          egress-policy: block
+          enable-sudo: true
+          allowed-domains: |
+            github.com
+            api.github.com
+            *.githubusercontent.com
+            npm.pkg.github.com
+            registry.npmjs.org
+            pypi.org
+            files.pythonhosted.org
+
+      - name: Report action outcomes
+        if: ${{ always() && steps.safety.outcome == 'success' }}
+        env:
+          START_OUTCOME: ${{ steps.start.outcome }}
+          STOP_OUTCOME: ${{ steps.stop.outcome }}
+          BULLFROG_OUTCOME: ${{ steps.bullfrog.outcome }}
+        run: |
+          echo "start_outcome=$START_OUTCOME"
+          echo "stop_outcome=$STOP_OUTCOME"
+          echo "bullfrog_outcome=$BULLFROG_OUTCOME"
+          test "$START_OUTCOME" = success && test "$STOP_OUTCOME" = success && test "$BULLFROG_OUTCOME" = success
