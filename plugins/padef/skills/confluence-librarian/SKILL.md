@@ -36,10 +36,9 @@ confirmed.
 
 ## Workflow
 
-Both paths run the same gates in order: **confirm** the write with an explicit
-yes, **resolve** what is unknown, **summarize** the irreversible action, then
-**report the URL**. _Confirm, resolve, and summarize_ covers all but the URL
-report; each path ends with its own completion check and URL report.
+Both paths follow this pipeline:
+
+**confirm → resolve → summarize → write → report the URL**.
 
 Both paths follow the server's authoring rules: load `getContentFormatGuide`
 once for the write's `toolName` (`createConfluencePage` / `updateConfluencePage`)
@@ -51,11 +50,11 @@ when the content you read reports space instructions.
 Choose the path from the target, not the wording of the request:
 
 - an **existing page** must change → **Edit** (section below);
-- no target page yet → **Create** (section below).
+- otherwise, resolve the destination and prepared source → **Create** (section
+  below).
 
-If the request does not name an existing page, ask before assuming edit. If the
-prepared source or the desired change is unavailable, ask for it; report only
-content you actually read, published, or edited.
+Ask for a missing destination or change. Report only content you actually read,
+published, or edited.
 
 ### Confirm, resolve, and summarize
 
@@ -86,51 +85,31 @@ Change: <the intended difference>      [edit only]
    Markdown-only rich constructs to their Confluence equivalents:
    `<details>`/`<summary>` → collapsible expand; `> [!NOTE]`, `> [!TIP]`,
    `> [!WARNING]`, `> [!CAUTION]` → info/tip/warning/error callouts; a Mermaid
-   fence → a rendered diagram with its source in an expand (read
-   [references/mermaid.md](./references/mermaid.md)). Front matter is not native
-   metadata: render it as a metadata table. Publish with
-   `createConfluenceContent` (`body.format: html`), or as an unpublished draft
-   (`draft: true`) when the user wants to edit before publishing.
+   fence → a rendered diagram with its source retained. Front matter is not
+   native metadata: render it as a metadata table.
 3. **Translate if requested.** Apply the Translation rules below.
-4. **Write.** Create the page with the body from step 2. A body carrying
-   diagrams runs the assemble-on-draft sequence in
+4. **Write.** Use one `createConfluenceContent` call with
+   `body.format: html`. A Mermaid fence takes the multipass branch documented in
    [references/mermaid.md](./references/mermaid.md).
-5. **Done when** the page exists at the returned URL — the draft's resume URL
-   when the user asked for an unpublished draft — and its body carries the
-   source's structure, stable IDs, status values, and a rendered diagram in
-   place of every Mermaid fence.
+5. **Done when** the write response returns the requested page or draft URL,
+   and the response content preserves the source's structure, stable IDs, and
+   status values. For Mermaid, also verify that every fence has both its media
+   node and unchanged source expand.
 
 ### Edit — change an existing page in place
 
-Read [references/edit.md](./references/edit.md) before the first write; it holds
-the edit protocol, the edit shape, and the baseline contract.
+Read [references/edit.md](./references/edit.md) before the first write. It owns
+the copy, bootstrap, edit, and baseline branches.
 
-An in-place edit runs on the page's unpublished **draft**: the published page
-stays untouched until the user publishes. A page with no draft yet gets one from
-the first `draft: true` write — the write creates it from the published body,
-and its response `webUrl` is the draft's resume URL
-(`…/pages/resumedraft.action?draftId=…`).
-
-To edit a **working copy** instead of the original, create it once with the
-working-copy shape and keep the `contentId` it returns.
-
-1. **Fetch the baseline once.** Fetch the page's **draft as native HTML** —
-   `getConfluenceContent` with `draft: true`, `content_format: html`,
-   `detail: full` — and keep its content and `snapshotToken` as the baseline for
-   the whole task. A fresh working copy has no draft yet, so its first
-   `draft: true` write creates one from the published body.
-2. **Apply the minimal change.** Express it as granular edits addressed by a
-   node's `data-local-id`, keeping every node you are not changing intact. When
-   the change is handed over as a document, take only its differing lines (a
-   diff or a targeted match) and change exactly the nodes those lines touch; the
-   rest of the file stays unread.
-3. **Persist on the draft.** Write with the edit shape and the baseline's
-   `snapshotToken`; the response echoes the applied content and carries the
-   draft's resume URL.
-4. **Done when** the change is staged on the draft and you report the draft's
-   resume URL from the write's response, verified against the baseline you
-   already hold. The change reaches the published page only when the user
-   publishes the draft.
+1. **Fetch the draft baseline once** as native HTML.
+2. **Bootstrap a draft** only when the read returns published content with no
+   token; use the response as the draft baseline.
+3. **Apply the minimal change** as `data-local-id` edits; leave every other node
+   intact.
+4. **Persist on the draft** with the baseline's `snapshotToken`.
+5. **Done when** the write response verifies the requested change and returns
+   the draft's resume URL; the published page remains unchanged until the user
+   publishes that draft.
 
 ## Structure and traceability rules
 

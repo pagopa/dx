@@ -24,16 +24,32 @@ copy. Do not filter it away: omit `responseFields`, or request
 response, and a filter naming them drops the id, leaving only `title`/`status`.
 Build the page URL from the response's `baseUrl` + `_links.webui`.
 
-## Edit shape — `updateConfluenceContent`
+## Write shapes — `updateConfluenceContent`
+
+### Bootstrap a draft
+
+When the draft read returns published content with no `snapshotToken`, first
+create the draft without changing the content:
 
 ```text
-contentId:     <the target's id: the copy's contentId for a working copy, else
-               the published page's id>
+contentId: <target id>
+draft:     true
+body:      { format: "html", value: "<unchanged baseline body>" }
+```
+
+Use the returned `snapshotToken` and draft resume URL for the granular edit that
+follows. This tokenless write is the only bootstrap exception; every subsequent
+update sends the baseline token.
+
+### Edit an existing draft
+
+```text
+contentId:     <target id>
 draft:         true
-snapshotToken: <the baseline fetch's snapshotToken, sent verbatim>
+snapshotToken: <baseline token, verbatim>
 edits:         [ { name: "replaceNode" | "insertNodeAfter" |
                        "insertNodeBefore" | "deleteNode",
-                   localId: "<data-local-id of the target node>",
+                   localId: "<data-local-id>",
                    value:  "<replacement node HTML>" } ]
 ```
 
@@ -44,64 +60,48 @@ dry-run is needed.
 
 ## Baseline contract
 
-The **baseline** is the page's current native HTML together with its
-`snapshotToken` and version — the reference for verifying that an edit changed
-only what was requested.
+The **baseline** is the native HTML plus any draft token and version from the
+read or write. It is the reference for proving that only the requested nodes
+changed. Follow one branch:
 
-- **In context by default.** Hold the baseline in context or on disk for the
-  task and read it from there. A fresh full read is warranted only for a new
-  `snapshotToken` or after `snapshot_stale`; the write's response (echoed
-  content, `status`, `webUrl`) verifies the edit on its own, and any other
-  follow-up uses a cheap shape (`detail: summary`, `responseFields`).
-- **No draft yet.** A page never edited in draft mode returns its published
-  body (`status: "current"`) and no draft token. That read is the baseline: send
-  the first `draft: true` write against it, which creates the draft, and take
-  the draft token and resume URL from the write's response. There is nothing to
-  refetch and no token to wait for.
-- **Stale draft.** Only a draft that already existed has a token that can go
-  dead: `snapshot_stale`, or a token that came back missing or as the published
-  base mid-task. Discard it, refetch the draft once, reapply the intended
-  change, and keep the new token. A rejection after that refetch means the page
-  moved underneath the task: re-read the changed nodes before writing again.
-- **A new baseline** comes from a fresh fetch, or when the integration returns
-  canonical output (a dry-run result or the persisted page) with a new snapshot
-  token. Never rebuild it from memory.
-- **Do not rediscover what you created.** Take the copy's `contentId` (or a
-  page's `id`/`webUrl`/`title`) from the create/copy/update response, rather
-  than locating it again with `search`, `listConfluenceContent`, or
-  `getConfluenceContentDescendants`.
-- **Persist to a file only when it pays.** For a large page edited repeatedly, or
-  work that resumes in another session, save it and read it back as the starting
-  baseline on resume:
+| Read result                                 | Action                                                                    |
+| ------------------------------------------- | ------------------------------------------------------------------------- |
+| Draft body and token                        | Hold it in context; apply the granular edit.                              |
+| Published body, no token                    | Bootstrap the draft unchanged, then use the token returned by that write. |
+| `snapshot_stale` or published base mid-task | Refetch the draft, hold the new baseline, and reapply the change once.    |
 
-  ```text
-  <working-dir>/confluence/<content-id>.html      # full native HTML body
-  <working-dir>/confluence/<content-id>.json      # { contentId, title, spaceId,
-                                                   #   snapshotToken, version } —
-                                                   # all from the baseline fetch
-                                                   # response; the copy response
-                                                   # carries only the copy's id
-  ```
+If the refetched draft is rejected again, the page moved; re-read the affected
+nodes before another write. The update response's echoed content, `status`, and
+`webUrl` verify the result. Use a cheaper shape for unrelated follow-up reads.
 
-  Once persisted, query the file — never `view` it whole. This skill ships
-  `scripts/extract-node.js`, a dependency-free extractor that prints one
-  complete element with its `data-local-id` and byte span:
+Take identifiers and URLs from the create/copy/update response; do not rediscover
+them. Build a new baseline only from a fresh fetch or a canonical response with
+a new token, never from memory.
 
-  ```sh
-  node <skill-dir>/scripts/extract-node.js confluence/<content-id>.html \
-    --local-id <data-local-id>        # the exact node to change
-  node <skill-dir>/scripts/extract-node.js confluence/<content-id>.html \
-    --text "rollout date"             # smallest element holding that body text
-  ```
+Persist the baseline only for a large page or resumable task:
 
-  It matches decoded visible text only, never attribute values or script
-  bodies, so `R&D` finds `R&amp;D` and a needle spans inline tags
-  (`rollout date` finds `<p>rollout <strong>date</strong></p>`, selecting the
-  paragraph). It rebuilds the element from a balanced scan, so the node it
-  prints is never truncated. A needle that
-  matches several nodes exits `2` and lists their anchors: pass the `--local-id`
-  it names, add `--all` when every match is wanted, or `--list` for anchors
-  alone. The same holds for any large tool output the environment saved to a
-  file: slice or match it, never read the file back in full.
+```text
+<working-dir>/confluence/<content-id>.html      # full native HTML body
+<working-dir>/confluence/<content-id>.json      # { contentId, title, spaceId,
+                                                 #   snapshotToken, version } —
+                                                 # all from the baseline fetch
+                                                 # response; the copy response
+                                                 # carries only the copy's id
+```
+
+Query a persisted baseline by node; do not load the whole file:
+
+```sh
+node <skill-dir>/scripts/extract-node.js confluence/<content-id>.html \
+  --local-id <data-local-id>
+node <skill-dir>/scripts/extract-node.js confluence/<content-id>.html \
+  --text "rollout date"
+```
+
+The extractor returns one complete element and its anchor. `--text` matches
+decoded visible text across inline tags; ambiguous matches list the candidate
+anchors. Use `--list` or `--all` when the command reports multiple matches, then
+re-run with the exact `--local-id`. Apply the same slice-or-match rule to any
+large saved tool output.
 
 - Never store credentials in baseline files.

@@ -1,7 +1,7 @@
 # Mermaid diagrams
 
-Reached from [SKILL.md](../SKILL.md) whenever the source or the page holds a
-Mermaid fence. Show readers the diagram and keep its source one click away.
+Reached from [SKILL.md](../SKILL.md) for any Mermaid fence. Render the diagram
+and retain its unchanged source beside it.
 
 ## Render the fence to SVG
 
@@ -59,8 +59,6 @@ files, so the diagram reaches the page as an attachment-backed media node:
    </details>
    ```
 
-Every expand ships beside its media node.
-
 ## Assemble a page that carries diagrams
 
 A create cannot attach a file to a page that does not exist yet, so a new page
@@ -81,9 +79,8 @@ with diagrams lands in two passes:
    `body` set to the assembled native HTML. When the user asked for an
    unpublished draft, stop at step 4 and report the draft's resume URL.
 
-A document without diagrams keeps the single published create. An existing page
-keeps its edits draft-only, media node included: its published version stays
-untouched until the user publishes.
+No diagrams means one create call. Existing pages stay draft-only, including
+diagram edits, until the user publishes them.
 
 Done when the diagram itself renders in the page — not just its source expand —
 and the expand holds the fence's lines unchanged.

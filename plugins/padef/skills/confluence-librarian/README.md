@@ -29,27 +29,15 @@ If no existing page is named, it asks before treating the request as an edit.
 
 ## What it does
 
-- **Create** writes the document once as native HTML, so headings, tables,
-  lists, code blocks, and macros survive the conversion. Markdown-only
-  constructs are mapped to their Confluence equivalents, and a Mermaid fence
-  becomes a rendered diagram ([Pele](https://pele.run/)) with the fence kept in
-  an expand below it. It can stop at an unpublished draft when you want to
-  review before publishing.
-- **Edit** reads the page's draft as native HTML once, then writes only the
-  nodes that change, addressed by their `data-local-id`. The write lands on the
-  page's unpublished draft, so the live page changes when you publish it. Ask
-  for a working copy to leave the original untouched.
-- **Translate** any of the above on request: human-facing text changes, while
-  stable IDs, code, endpoints, URLs, status values, and references stay
-  unchanged.
+| Path          | Result                                                                                                                               |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **Create**    | One native-HTML create, or a draft multipass for Mermaid attachments. The rendered diagram and unchanged source both reach the page. |
+| **Edit**      | One draft baseline, then minimal `data-local-id` edits. The published page changes only when the user publishes the draft.           |
+| **Translate** | Human-facing text changes while stable IDs, code, endpoints, URLs, status values, and references stay unchanged.                     |
 
-## What you see along the way
-
-It asks for an explicit yes and shows the operation summary first — operation,
-title, space, parent, language, source, and for an edit the target URL and the
-intended difference — then reports the page or draft URL when done. Lifecycle
-state stays as you left it: publishing never marks content as reviewed or
-approved.
+Before writing it asks for an explicit yes and shows the intended operation.
+After writing it reports the page or draft URL. Publication does not change the
+document's review or approval state.
 
 ## Maintainers
 
