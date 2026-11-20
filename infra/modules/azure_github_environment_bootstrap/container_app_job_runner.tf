@@ -45,7 +45,7 @@ module "github_runner" {
 module "github_runner_dx" {
   count   = local.dx_runner_enabled ? 1 : 0
   source  = "pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm"
-  version = "~> 3.0"
+  version = "~> 5.1"
 
   environment = {
     prefix          = var.environment.prefix
@@ -70,7 +70,8 @@ module "github_runner_dx" {
     min_instances               = var.github_private_runner.min_instances
     max_instances               = var.github_private_runner.max_instances
     use_labels                  = true
-    override_labels             = concat(var.github_private_runner.labels, ["dx"])
+    override_labels             = local.dx_runner_labels
+    no_default_labels           = var.github_private_runner.enable_dx_runner
     cpu                         = var.github_private_runner.cpu
     memory                      = var.github_private_runner.memory
     image                       = "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"

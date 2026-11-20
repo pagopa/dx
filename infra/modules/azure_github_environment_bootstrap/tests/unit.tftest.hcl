@@ -479,7 +479,7 @@ run "azure_github_environment_bootstrap_dx_runner_configuration" {
   }
 
   assert {
-    condition     = output.github_dx_runner.labels == ["uat", "dx"]
+    condition     = tolist(output.github_dx_runner.labels) == tolist(["uat", "dx"])
     error_message = "The DX GitHub self-hosted runner should preserve configured labels and append dx"
   }
 }
@@ -511,6 +511,43 @@ run "azure_github_environment_bootstrap_dx_runner_provisioned_for_dx_prefix_vari
   assert {
     condition     = output.github_dx_runner != null
     error_message = "The DX runner should be provisioned when the environment prefix starts with dx"
+  }
+}
+
+run "azure_github_environment_bootstrap_dx_runner_enabled_for_tenant_environment" {
+  command = plan
+
+  variables {
+    environment = merge(var.environment, {
+      prefix    = "ced"
+      env_short = "d"
+      domain    = "bonus"
+    })
+    github_environment_prefix_enabled = true
+    github_private_runner = merge(var.github_private_runner, {
+      enable_dx_runner = true
+    })
+  }
+
+  assert {
+    condition     = tolist(output.github_dx_runner.labels) == tolist(["dev-ced-dx"])
+    error_message = "The DX runner label must use the GitHub environment prefix, not the domain"
+  }
+}
+
+run "azure_github_environment_bootstrap_dx_runner_enabled_without_github_environment_prefix" {
+  command = plan
+
+  variables {
+    github_private_runner = merge(var.github_private_runner, {
+      enable_dx_runner = true
+      labels           = ["uat"]
+    })
+  }
+
+  assert {
+    condition     = tolist(output.github_dx_runner.labels) == tolist(["uat-dx"])
+    error_message = "The DX runner must use only uat-dx, even when legacy labels are configured"
   }
 }
 
