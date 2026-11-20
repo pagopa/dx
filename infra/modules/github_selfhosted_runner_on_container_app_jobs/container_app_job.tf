@@ -37,7 +37,8 @@ resource "azurerm_container_app_job" "github_runner" {
             applicationIDFromEnv  = "GITHUB_APP_ID"
             installationIDFromEnv = "GITHUB_APP_INSTALLATION_ID"
           } : {},
-          var.container_app_environment.use_labels ? { labels = local.labels } : {}
+          var.container_app_environment.use_labels ? { labels = local.labels } : {},
+          var.container_app_environment.no_default_labels ? { noDefaultLabels = "true" } : {}
         )
 
         authentication {
