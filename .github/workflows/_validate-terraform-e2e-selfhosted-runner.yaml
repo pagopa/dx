@@ -25,6 +25,8 @@ jobs:
   smoke:
     timeout-minutes: 20
     runs-on: ${{ fromJSON(inputs.runner_label) }}
+    env:
+      RUNNER_TOOL_CACHE: ${{ runner.temp }}/toolcache
 
     steps:
       - name: Verify runner execution
@@ -49,10 +51,13 @@ jobs:
           if command -v sudo >/dev/null && sudo -n true 2>/dev/null; then exit 1; fi
           if command -v docker >/dev/null && timeout 5 docker info >/dev/null 2>&1; then exit 1; fi
 
+      - name: Prepare temporary tool cache
+        run: mkdir -p "$RUNNER_TOOL_CACHE"
+
       - name: Prepare temporary Python environment
-        run: |
-          uv venv --seed --python /usr/bin/python3 "$RUNNER_TEMP/falco-python"
-          echo "$RUNNER_TEMP/falco-python/bin" >> "$GITHUB_PATH"
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: "3.12"
 
       - name: Start runtime hardening
         id: start
