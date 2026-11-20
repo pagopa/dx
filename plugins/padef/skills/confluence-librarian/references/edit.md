@@ -30,7 +30,7 @@ Build the page URL from the response's `baseUrl` + `_links.webui`.
 contentId:     <the target's id: the copy's contentId for a working copy, else
                the published page's id>
 draft:         true
-snapshotToken: <token from the baseline fetch, e.g. "v:1">
+snapshotToken: <the baseline fetch's snapshotToken, sent verbatim>
 edits:         [ { name: "replaceNode" | "insertNodeAfter" |
                        "insertNodeBefore" | "deleteNode",
                    localId: "<data-local-id of the target node>",
@@ -53,8 +53,16 @@ only what was requested.
   `snapshotToken` or after `snapshot_stale`; the write's response (echoed
   content, `status`, `webUrl`) verifies the edit on its own, and any other
   follow-up uses a cheap shape (`detail: summary`, `responseFields`).
-- **Staleness.** A token that comes back missing, as the published base, or
-  stale is dead: refetch the draft once and reapply the intended change.
+- **No draft yet.** A page never edited in draft mode returns its published
+  body (`status: "current"`) and no draft token. That read is the baseline: send
+  the first `draft: true` write against it, which creates the draft, and take
+  the draft token and resume URL from the write's response. There is nothing to
+  refetch and no token to wait for.
+- **Stale draft.** Only a draft that already existed has a token that can go
+  dead: `snapshot_stale`, or a token that came back missing or as the published
+  base mid-task. Discard it, refetch the draft once, reapply the intended
+  change, and keep the new token. A rejection after that refetch means the page
+  moved underneath the task: re-read the changed nodes before writing again.
 - **A new baseline** comes from a fresh fetch, or when the integration returns
   canonical output (a dry-run result or the persisted page) with a new snapshot
   token. Never rebuild it from memory.
@@ -75,10 +83,22 @@ only what was requested.
                                                    # carries only the copy's id
   ```
 
-  Once persisted, query the file — never `view` it whole. One deterministic
-  extraction that prints the target node and its `data-local-id` is enough
-  (e.g. `jq -r '.data.body.value' <file> | rg -o '.{0,80}<needle>.{0,200}'`).
-  The same holds for any large tool output the environment saved to a file:
-  slice or match it, never read the file back in full.
+  Once persisted, query the file — never `view` it whole. This skill ships
+  `scripts/extract-node.js`, a dependency-free extractor that prints one
+  complete element with its `data-local-id` and byte span:
+
+  ```sh
+  node <skill-dir>/scripts/extract-node.js confluence/<content-id>.html \
+    --local-id <data-local-id>        # the exact node to change
+  node <skill-dir>/scripts/extract-node.js confluence/<content-id>.html \
+    --text "rollout date"             # smallest element holding that body text
+  ```
+
+  It matches body text only, never attribute values, and rebuilds the element
+  from a balanced scan, so the node it prints is never truncated. A needle that
+  matches several nodes exits `2` and lists their anchors: pass the `--local-id`
+  it names, add `--all` when every match is wanted, or `--list` for anchors
+  alone. The same holds for any large tool output the environment saved to a
+  file: slice or match it, never read the file back in full.
 
 - Never store credentials in baseline files.

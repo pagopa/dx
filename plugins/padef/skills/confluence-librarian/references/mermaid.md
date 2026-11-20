@@ -52,10 +52,28 @@ attachment-backed media node:
    </details>
    ```
 
-A create cannot attach to a page that does not exist yet: create the page with
-the expand alone, attach the SVG, then insert the media node above the expand.
-For an edit, both the attachment and the media node are changes on the draft,
-applied with the edit shape in [edit.md](./edit.md).
+A create cannot attach a file to a page that does not exist yet, and an unbuilt
+diagram must never reach a reader as a bare expand. Assemble the page on a
+draft, then publish the assembled result:
 
-Done when the diagram renders in the page and the same Mermaid text is in the
-expand.
+1. `createConfluenceContent` with `draft: true`: the body from SKILL.md step 2
+   minus the media nodes, each diagram's expand already in place. Keep the
+   draft's `contentId`.
+2. Read the draft once as the baseline (`draft: true`, HTML, `detail: full`).
+   It carries the `snapshotToken` and the `data-local-id` of every expand, which
+   the create response does not.
+3. Upload the SVGs to that `contentId`, as the upload step above describes.
+4. Insert each media node above its expand with the edit shape in
+   [edit.md](./edit.md): `draft: true`, the baseline's `snapshotToken`,
+   `insertNodeBefore` the expand's `data-local-id`.
+5. Publish only when the user asked for a published page: one more
+   `updateConfluenceContent` on the same `contentId` with `draft` omitted and
+   `body` set to the assembled native HTML. When the user asked for an
+   unpublished draft, stop at step 4 and report the draft's resume URL.
+
+A document without diagrams keeps the single published create. An existing page
+keeps its edits draft-only, media node included: its published version stays
+untouched until the user publishes.
+
+Done when the diagram itself renders in the page — not just its source expand —
+and the expand holds the fence's lines unchanged.

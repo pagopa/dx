@@ -7,9 +7,12 @@ Working notes for maintainers and coding agents. Consumer documentation lives in
 
 `SKILL.md` holds the workflow and the rules both paths share. The two
 branch-only bodies sit in `references/`: `edit.md` (edit protocol, call shapes,
-baseline contract) and `mermaid.md` (Mermaid to SVG). Keep pointers relative and
-inside this folder — Harbor stages the whole skill directory into the container,
-so the agent can read `references/` at run time.
+baseline contract) and `mermaid.md` (Mermaid to SVG). `scripts/extract-node.js`
+is the offline node extractor `edit.md` points at for a persisted baseline; it
+is dependency-free ESM and its tests run with `node --test` next to it. Keep
+pointers relative and inside this folder — Harbor stages the whole skill
+directory into the container, so the agent can read `references/` and
+`scripts/` at run time.
 
 ## The Harbor benchmark
 

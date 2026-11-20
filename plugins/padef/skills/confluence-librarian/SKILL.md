@@ -92,9 +92,13 @@ Change: <the intended difference>      [edit only]
    `createConfluenceContent` (`body.format: html`), or as an unpublished draft
    (`draft: true`) when the user wants to edit before publishing.
 3. **Translate if requested.** Apply the Translation rules below.
-4. **Write.** Create the page with the body from step 2.
-5. **Done when** the page exists at the returned URL and its body carries the
-   source's structure, stable IDs, and status values.
+4. **Write.** Create the page with the body from step 2. A body carrying
+   diagrams runs the assemble-on-draft sequence in
+   [references/mermaid.md](./references/mermaid.md).
+5. **Done when** the page exists at the returned URL — the draft's resume URL
+   when the user asked for an unpublished draft — and its body carries the
+   source's structure, stable IDs, status values, and a rendered diagram in
+   place of every Mermaid fence.
 
 ### Edit — change an existing page in place
 
