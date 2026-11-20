@@ -46,6 +46,44 @@ Lifecycle transitions are communicated through:
 
 <LifecycleTable />
 
+## Preparing for AzureRM v5-only module releases
+
+DX tooling's AzureRM v4 support window ends on **31 December 2026**. Upcoming
+major releases of the twenty DX modules that already support both v4 and v5
+are planned to require `hashicorp/azurerm ~> 5.0`. This is a
+future release plan, not an announcement that these majors are already
+published. Older dual-compatible module versions remain usable during the
+published v4 support window.
+
+The planned change does **not** migrate the v4-only `azure_api_management`,
+`azure_app_service`, `azure_function_app`, `azure_core_infra`, or
+`azure_storage_account` modules. Do not upgrade a root configuration to v5
+until all its modules and transitive dependencies support v5. Keep using a
+compatible module version while those dependencies are being migrated.
+
+When adopting a v5-only module major, retain Terraform **>= 1.16.0** (or any
+higher minimum already required by your configuration), update the root
+provider requirement, and select compatible versions of every module:
+
+```hcl
+terraform {
+  required_version = ">= 1.16.0"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 5.0"
+    }
+  }
+}
+```
+
+Run `terraform init -upgrade` to refresh `.terraform.lock.hcl`, commit the
+updated lockfile, and review `terraform plan` before applying. Follow the
+[AzureRM v5 upgrade guide](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/guides/5.0-upgrade-guide)
+for provider-specific changes in your own resources. Removing v4 support
+does not itself rename DX module resources or require state address changes.
+
 ## Related Resources
 
 - [Technology Radar](/radar) — DX technology adoption recommendations

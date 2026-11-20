@@ -7,7 +7,7 @@ resource "azurerm_resource_group" "roles" {
 
 module "test_app" {
   source  = "pagopa-dx/azure-function-app-exposed/azurerm"
-  version = "~> 5.0"
+  version = "~> 6.0"
 
   environment = merge(local.naming_config, {
     app_name = "roles"
@@ -39,7 +39,7 @@ resource "azurerm_app_configuration" "this" {
 
 module "roles" {
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   principal_id    = module.test_app.function_app.function_app.principal_id
   subscription_id = data.azurerm_subscription.current.subscription_id

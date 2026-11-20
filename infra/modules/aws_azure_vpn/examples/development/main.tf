@@ -1,33 +1,26 @@
-module "azure" {
-  source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 6.0"
-
-  environment = local.azure_environment
-
-  nat_enabled             = false
-  vpn_enabled             = true
-  test_enabled            = true
-  cross_cloud_dns_enabled = true
-
-  virtual_network_cidr = local.azure.vnet_cidr
-
-  tags = local.tags
+data "aws_availability_zones" "available" {
+  state = "available"
 }
 
 module "aws" {
-  source  = "pagopa-dx/aws-core-infra/aws"
-  version = "~> 2.0"
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 6.0"
 
-  environment       = local.aws_environment
-  vpc_cidr          = local.aws.vpc_cidr
-  nat_gateway_count = 1 # Must be at least 1 in development
+  name                 = "${local.aws_environment.prefix}-${local.aws_environment.env_short}-vpn-example"
+  cidr                 = local.aws.vpc_cidr
+  azs                  = slice(data.aws_availability_zones.available.names, 0, 3)
+  public_subnets       = [for index in range(3) : cidrsubnet(local.aws.vpc_cidr, 8, index)]
+  private_subnets      = [for index in range(3) : cidrsubnet(local.aws.vpc_cidr, 8, index + 3)]
+  enable_dns_hostnames = true
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
 
   tags = local.tags
 }
 
 module "vpn" {
   source  = "pagopa-dx/aws-azure-vpn/aws"
-  version = "~> 2.0"
+  version = "~> 4.0"
 
   environment = {
     prefix          = local.azure_environment.prefix
@@ -42,24 +35,12 @@ module "vpn" {
     region               = local.aws_environment.region
     vpc_id               = module.aws.vpc_id
     vpc_cidr             = local.aws.vpc_cidr
-    route_table_ids      = concat(module.aws.private_route_table_ids, module.aws.isolated_route_table_ids)
-    private_subnet_ids   = module.aws.private_subnet_ids
-    private_subnet_cidrs = [for snet in module.aws.private_subnets : snet.cidr_block]
+    route_table_ids      = module.aws.private_route_table_ids
+    private_subnet_ids   = module.aws.private_subnets
+    private_subnet_cidrs = module.aws.private_subnets_cidr_blocks
   }
 
-  azure = {
-    resource_group_name = module.azure.network_resource_group_name
-    location            = local.azure_environment.location
-    vnet_id             = module.azure.common_vnet.id
-    vnet_name           = module.azure.common_vnet.name
-    vnet_cidr           = local.azure.vnet_cidr
-    dns_forwarder_ip    = module.azure.dns_forwarder.private_ip
-    vpn = {
-      virtual_network_gateway_id = module.azure.vpn_gateway_id
-      public_ips                 = module.azure.vpn_public_ips
-    }
-    private_dns_zones = module.azure.private_dns_zones
-  }
+  azure = var.azure
 
   tags = local.tags
 }
