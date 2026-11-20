@@ -35,6 +35,12 @@ The app-based E2E fixture uses the DX runner image. Its scheduled workflow
 requires the `E2E_GITHUB_APP_CLIENT_ID` secret in the `automation-uat-cd`
 GitHub environment.
 
+Set `no_default_labels = true` when a runner must accept only its custom labels.
+Enable `use_labels`, provide at least one non-blank label in `override_labels`,
+and use the DX runner image (`ghcr.io/pagopa/dx-github-self-hosted-runner:latest`)
+or a custom image that supports `RUNNER_NO_DEFAULT_LABELS`. The default image
+does not support this option.
+
 See [Obtaining GitHub App credentials](https://dx.pagopa.it/docs/monorepository-setup#obtaining-github-app-credentials)
 for step-by-step instructions on how to create the App and populate these secrets.
 
@@ -100,7 +106,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_container_app_environment"></a> [container\_app\_environment](#input\_container\_app\_environment) | Configuration for the Container App Environment. | <pre>object({<br/>    id                          = string<br/>    location                    = string<br/>    replica_timeout_in_seconds  = optional(number, 1800)<br/>    polling_interval_in_seconds = optional(number, 30)<br/>    min_instances               = optional(number, 0)<br/>    max_instances               = optional(number, 30)<br/>    use_labels                  = optional(bool, false)<br/>    override_labels             = optional(list(string), [])<br/>    cpu                         = optional(number, 1.5)<br/>    memory                      = optional(string, "3Gi")<br/>    image                       = optional(string, "ghcr.io/pagopa/github-self-hosted-runner-azure:latest")<br/>    env_vars                    = optional(map(string), {})<br/>    secrets                     = optional(map(string), {})<br/>  })</pre> | n/a | yes |
+| <a name="input_container_app_environment"></a> [container\_app\_environment](#input\_container\_app\_environment) | Configuration for the Container App Environment. | <pre>object({<br/>    id                          = string<br/>    location                    = string<br/>    replica_timeout_in_seconds  = optional(number, 1800)<br/>    polling_interval_in_seconds = optional(number, 30)<br/>    min_instances               = optional(number, 0)<br/>    max_instances               = optional(number, 30)<br/>    use_labels                  = optional(bool, false)<br/>    override_labels             = optional(list(string), [])<br/>    no_default_labels           = optional(bool, false)<br/>    cpu                         = optional(number, 1.5)<br/>    memory                      = optional(string, "3Gi")<br/>    image                       = optional(string, "ghcr.io/pagopa/github-self-hosted-runner-azure:latest")<br/>    env_vars                    = optional(map(string), {})<br/>    secrets                     = optional(map(string), {})<br/>  })</pre> | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names.<br/>They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
 | <a name="input_key_vault"></a> [key\_vault](#input\_key\_vault) | Details of the Key Vault used to store GitHub credentials.<br/>The field 'secret\_name' is used only when 'use\_github\_app' is set to false. | <pre>object({<br/>    name                = string<br/>    resource_group_name = string<br/>    use_rbac            = optional(bool, false)<br/>    secret_name         = optional(string, "github-runner-pat")<br/>  })</pre> | n/a | yes |
 | <a name="input_repository"></a> [repository](#input\_repository) | Details of the GitHub repository, including the owner and repository name. | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |

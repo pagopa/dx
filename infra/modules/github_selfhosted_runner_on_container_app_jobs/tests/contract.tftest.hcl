@@ -63,6 +63,39 @@ run "github_runner_repository_owner_used" {
   }
 }
 
+run "github_runner_no_default_labels_rejects_blank_labels" {
+  command = plan
+
+  variables {
+    container_app_environment = {
+      id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.App/managedEnvironments/cae-test"
+      location          = "italynorth"
+      use_labels        = true
+      override_labels   = [" "]
+      no_default_labels = true
+      image             = "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
+    }
+  }
+
+  expect_failures = [var.container_app_environment]
+}
+
+run "github_runner_no_default_labels_rejects_default_image" {
+  command = plan
+
+  variables {
+    container_app_environment = {
+      id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.App/managedEnvironments/cae-test"
+      location          = "italynorth"
+      use_labels        = true
+      override_labels   = ["dev-dx"]
+      no_default_labels = true
+    }
+  }
+
+  expect_failures = [var.container_app_environment]
+}
+
 run "github_runner_repository_name_used_in_keda" {
   command = plan
 
