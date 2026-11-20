@@ -541,12 +541,13 @@ run "azure_github_environment_bootstrap_dx_runner_enabled_without_github_environ
   variables {
     github_private_runner = merge(var.github_private_runner, {
       enable_dx_runner = true
+      labels           = ["uat"]
     })
   }
 
   assert {
     condition     = tolist(output.github_dx_runner.labels) == tolist(["uat-dx"])
-    error_message = "The DX runner label must omit the prefix when GitHub environment prefixing is disabled"
+    error_message = "The DX runner must use only uat-dx, even when legacy labels are configured"
   }
 }
 

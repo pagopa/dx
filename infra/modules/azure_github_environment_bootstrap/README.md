@@ -322,10 +322,12 @@ github_private_runner = {
 The DX runner is optional. Set `enable_dx_runner = true` to add it without
 changing the existing runner. Its label is `dev-dx` in development, or
 `dev-ced-dx` for a tenant with the `ced` prefix and
-`github_environment_prefix_enabled = true`. The domain does not affect the
-label. Workflows can move to DX one at a time by
-using that label on its own; workflows that are not migrated continue using the
-existing runner labels. When the option is omitted, the previous behavior
+`github_environment_prefix_enabled = true`. The label identifies the GitHub
+environment, not an Azure subscription or region. If that environment has
+runners in multiple subscriptions or regions, the label can match any of them.
+Don't switch workflows that need a specific Azure network to this label alone.
+Other workflows can move to DX one at a time by using the label on its own.
+When the option is omitted, the previous behavior
 remains: the DX runner is created only when the environment prefix starts with
 `dx`, with its existing labels.
 
