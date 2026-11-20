@@ -3,6 +3,8 @@
 import { COPILOT_REVIEW_ADOPTION_PCT, INSIGHT_THRESHOLDS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
+import type { Insight } from "./types";
+
 import {
   confidenceFromSample,
   formatNumber,
@@ -10,7 +12,6 @@ import {
   severityFromTarget,
   sortInsights,
 } from "./insight-helpers";
-import type { Insight } from "./types";
 
 export interface CopilotInsightsInput {
   readonly cards: {

@@ -3,13 +3,14 @@
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { useId, useState } from "react";
 
+import type { Insight, InsightSeverity } from "@/lib/insights/types";
+
 import {
   SEVERITY_STYLES,
   SEVERITY_SUMMARY_LABELS,
   SEVERITY_SUMMARY_ORDER,
 } from "@/components/severity";
 import { formatInteger, formatWithUnit } from "@/lib/format";
-import type { Insight, InsightSeverity } from "@/lib/insights/types";
 import { focusRing } from "@/lib/utils";
 
 interface InsightsPanelProps {

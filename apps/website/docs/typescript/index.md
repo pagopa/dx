@@ -19,5 +19,5 @@ script naming ([npm scripts conventions](./npm-scripts.md)).
 This setup unlocks powerful features, such as our streamlined DX code review
 pipeline for TypeScript projects ([TypeScript code review](./code-review.md)).
 
-For comprehensive code quality enforcement, explore our shared ESLint
-configuration ([ESLint Configuration Excellence](./eslint-config.md)).
+For comprehensive code quality enforcement, explore our shared Oxlint
+configuration ([Oxlint Configuration Excellence](./oxlint-config.md)).

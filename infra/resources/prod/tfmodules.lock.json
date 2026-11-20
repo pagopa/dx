@@ -22,8 +22,8 @@
       "source": "https://registry.terraform.io/modules/pagopa-dx/azure-container-app-environment/azurerm/1.2.0"
     },
     "metrics_portal.container_app": {
-      "hash": "36254e3b4cb985aa6140838bdff9a76501e12b4838f09d6691a59cb6c66c242a",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-container-app/azurerm/8.0.2"
+      "hash": "1b22b0e7d3a0159918027d803245cc73356e0fd597dfb085cb2d51edadb38570",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-container-app/azurerm/8.0.3"
     }
   }
 }

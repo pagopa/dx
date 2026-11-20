@@ -1,5 +1,7 @@
 "use client";
 
+import type { Insight } from "@/lib/insights/types";
+
 import { SimpleBarChart, SimpleLineChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
@@ -7,7 +9,6 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
-import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 
 import { trackerTooltips as tooltipContent } from "./tooltips";

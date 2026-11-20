@@ -19,6 +19,8 @@ export const copilotCardsSchema = z.object({
   avgLeadTimeHoursWith: nullableSqlNumberSchema,
   /** Average hours from open to merge, on merged PRs without one. */
   avgLeadTimeHoursWithout: nullableSqlNumberSchema,
+  /** Share (0..1) of imported team commits carrying the Copilot trailer. */
+  coauthoredCommitShare: nullableSqlNumberSchema,
   /** Pull requests opened in the window by the Copilot coding agent. */
   copilotAuthoredMergedPrs: sqlNumberSchema,
   copilotAuthoredPrs: sqlNumberSchema,
@@ -26,8 +28,6 @@ export const copilotCardsSchema = z.object({
   copilotCoauthoredCommits: sqlNumberSchema,
   /** Merged pull requests in the window with at least one Copilot review. */
   copilotReviewedPrs: sqlNumberSchema,
-  /** Share (0..1) of imported team commits carrying the Copilot trailer. */
-  coauthoredCommitShare: nullableSqlNumberSchema,
   /** Share (0..1) of merged pull requests carrying a Copilot review. */
   coverageShare: nullableSqlNumberSchema,
   mergedPrs: sqlNumberSchema,
@@ -108,8 +108,8 @@ export const copilotDashboardSchema = z.object({
   weeklyTrend: z.array(copilotWeeklyTrendRowSchema),
 });
 
+export type CopilotAuthoredPrRow = z.infer<typeof copilotAuthoredPrRowSchema>;
+export type CopilotDashboard = z.infer<typeof copilotDashboardSchema>;
 export type GetCopilotDashboardInput = z.infer<
   typeof getCopilotDashboardInputSchema
 >;
-export type CopilotDashboard = z.infer<typeof copilotDashboardSchema>;
-export type CopilotAuthoredPrRow = z.infer<typeof copilotAuthoredPrRowSchema>;

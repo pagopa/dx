@@ -1,5 +1,7 @@
 "use client";
 
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
+
 import { DataTable, SimpleBarChart } from "@/components/Charts";
 import { DashboardFilters } from "@/components/DashboardFilters";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
@@ -7,12 +9,16 @@ import { DataFreshness } from "@/components/DataFreshness";
 import TooltipIcon from "@/components/TooltipIcon";
 import { classifyPercentile } from "@/lib/benchmark";
 import { useSeriesColors } from "@/lib/chart-theme";
-import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatInteger, formatNumber, formatWithUnit } from "@/lib/format";
 import { useDashboardData } from "@/lib/useDashboardData";
 import { useDashboardFilters } from "@/lib/useDashboardFilters";
 
 import { benchmarkTooltips as tooltipContent } from "./tooltips";
+
+interface BenchmarkData {
+  meta: DashboardMetaView;
+  metrics: BenchmarkMetric[];
+}
 
 interface BenchmarkEntry {
   count: null | number;
@@ -29,11 +35,6 @@ interface BenchmarkMetric {
   lowerIsBetter: boolean;
   median: null | number;
   unit?: string;
-}
-
-interface BenchmarkData {
-  meta: DashboardMetaView;
-  metrics: BenchmarkMetric[];
 }
 
 interface BenchmarkRow {
@@ -54,10 +55,10 @@ const positionLabel = (position: null | string): string => {
   switch (position) {
     case "best":
       return "Best in class";
-    case "needs-attention":
-      return "Needs attention";
     case "middle":
       return "In line";
+    case "needs-attention":
+      return "Needs attention";
     default:
       return "—";
   }
@@ -216,9 +217,9 @@ export default function BenchmarkDashboard() {
       {data && (
         <>
           <DataFreshness
-            className="mb-4"
             availableFrom={data.meta.availableFrom}
             availableTo={data.meta.availableTo}
+            className="mb-4"
             referenceDate={data.meta.referenceDate}
             windowEnd={data.meta.windowEnd}
             windowStart={data.meta.windowStart}

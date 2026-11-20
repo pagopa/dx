@@ -1,3 +1,18 @@
+# 8.0.0 (2026-11-17)
+
+### ⚠️  Breaking Changes
+
+- Require AzureRM v5 and Terraform >= 1.16.0. ([#2471](https://github.com/pagopa/dx/pull/2471))
+
+  ## Migration guide
+
+  This major release requires AzureRM `~> 5.8` and Terraform `>= 1.16.0`.
+  No changes are expected.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 7.1.1 (2026-11-03)
 
 ### 🩹 Fixes
@@ -345,7 +360,7 @@
      - Navigate to the Storage Account associated with the Function App
      - Select the `Networking` tab
      - Under `Public Access`, select `Manage`
-       - For `Public network access` option select `Enable`
+       - For `Public network access` option select `Enable`
        - For `Public network access scope` option select `Enable from selected networks` and add the Function App's subnet
      - (Optional) Tick the option `Add your client IPv4 address ('<ip>')`
      - Click `Save` to apply the changes

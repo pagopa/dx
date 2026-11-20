@@ -1,3 +1,42 @@
+## 0.22.26 (2026-11-18)
+
+### 🩹 Fixes
+
+- Adopt Oxfmt as the formatter for JavaScript and TypeScript and move Prettier to hold, with no grace period. The radar entries, the devcontainer guidance and the npm script table now point at Oxfmt. ([#2556](https://github.com/pagopa/dx/pull/2556))
+- List AzureRM v5 as supported for compatible DX Terraform module releases. ([#2557](https://github.com/pagopa/dx/pull/2557))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Danilo Spinelli @gunzip
+
+## 0.22.25 (2026-11-17)
+
+### 🚀 Features
+
+- Update docs to reflect the new dx-cli `--code-owner` flag ([#2484](https://github.com/pagopa/dx/pull/2484))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 0.22.24 (2026-11-17)
+
+### 🩹 Fixes
+
+- Document Azure Cost Management actual costs and the --include-actual-cost option. ([#2544](https://github.com/pagopa/dx/pull/2544))
+- Document Runner App credential reuse from the common Key Vault ([#2445](https://github.com/pagopa/dx/pull/2445))
+- Add opt-in stale PR preview cleanup to the reusable Azure Static Web App workflow, packaged as a composite action. Existing consumers remain unchanged unless enabled; cleanup requires Azure builds read/delete permissions and previews owned by the calling repository. ([#2527](https://github.com/pagopa/dx/pull/2527))
+- Ship a `copilot-setup-steps.yml` workflow in the monorepo scaffold, so the GitHub Copilot coding agent can install the workspace dependencies on a freshly generated repository without manual steps. The workflow installs the mise toolchain, authenticates pnpm to GitHub Packages through the `setup-npm-registry` action and installs the dependencies. ([#2536](https://github.com/pagopa/dx/pull/2536))
+
+  GitHub Packages asks for a token even for the public packages it serves, and the scaffold depends only on public ones, so the workflow authenticates with the repository's own workflow token and needs no secret. That also makes it independent of where Copilot takes its credentials from: the workflow token is available in every run, including the one Copilot executes before the agent starts. The workflow keeps the private case reachable by pointing the `token` input at a secret and granting the repository under `Manage Actions access` in the package settings. The generated `README.md` and `AGENTS.md` document the workflow and the local setup that writes a token to the git-ignored `.npmrc`.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Danilo Spinelli @gunzip
+- Mario Mupo @mamu0
+
 ## 0.22.23 (2026-11-03)
 
 ### 🩹 Fixes

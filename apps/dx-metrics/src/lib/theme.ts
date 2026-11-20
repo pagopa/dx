@@ -10,11 +10,6 @@
 export type Theme = "dark" | "light";
 
 const INLINE_SCRIPT_UNSAFE_CHAR_MAP: Record<string, string> = {
-  "<": "\\u003C",
-  ">": "\\u003E",
-  "/": "\\u002F",
-  "\\": "\\\\",
-  "\b": "\\b",
   "\f": "\\f",
   "\n": "\\n",
   "\r": "\\r",
@@ -22,11 +17,16 @@ const INLINE_SCRIPT_UNSAFE_CHAR_MAP: Record<string, string> = {
   "\0": "\\0",
   "\u2028": "\\u2028",
   "\u2029": "\\u2029",
+  "\b": "\\b",
+  "/": "\\u002F",
+  "<": "\\u003C",
+  ">": "\\u003E",
+  "\\": "\\\\",
 };
 
 const escapeUnsafeForInlineScript = (value: string): string =>
   value.replace(
-    /[<>\/\\\b\f\n\r\t\0\u2028\u2029]/g,
+    /[<>/\\\b\f\n\r\t\0\u2028\u2029]/g,
     (ch) => INLINE_SCRIPT_UNSAFE_CHAR_MAP[ch],
   );
 

@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-cli",
-  "version": "0.27.28",
+  "version": "0.27.32",
   "description": "A CLI useful to manage DX tools.",
   "keywords": [
     "CLI",
@@ -65,19 +65,16 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/inquirer": "^9.0.10",
     "@types/libsodium-wrappers": "^0.8.2",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "eslint": "catalog:",
     "fast-check": "^4.10.2",
     "memfs": "^4.68.0",
     "oxfmt": "^0.71.0",
     "plop": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "vitest-mock-extended": "catalog:"

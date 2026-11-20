@@ -5,15 +5,15 @@
     "lint": [
       {
         "filter": {
-          "plugin": "@nx/eslint"
+          "plugin": "@nx/oxlint"
         },
         "dependsOn": ["^build"],
         "options": {
-          "fix": true
+          "args": "--fix"
         },
         "configurations": {
           "ci": {
-            "fix": false
+            "args": ""
           }
         }
       }
@@ -79,7 +79,7 @@
       }
     },
     {
-      "plugin": "@nx/eslint/plugin",
+      "plugin": "@nx/oxlint",
       "options": {
         "targetName": "lint"
       }

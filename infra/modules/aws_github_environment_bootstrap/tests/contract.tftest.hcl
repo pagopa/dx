@@ -120,3 +120,52 @@ run "aws_github_environment_bootstrap_ecr_public_ignore_value_changes" {
     error_message = "A different desired role ARN must not update a repository secret already tracked in state."
   }
 }
+
+run "aws_github_environment_bootstrap_reject_prod_prefix_for_dev" {
+  command = plan
+
+  variables {
+    environment                       = merge(var.environment, { prefix = "prod", env_short = "d" })
+    github_environment_prefix_enabled = true
+  }
+
+  expect_failures = [var.github_environment_prefix_enabled]
+}
+
+run "aws_github_environment_bootstrap_reject_dev_prefix_for_prod" {
+  command = plan
+
+  variables {
+    environment                       = merge(var.environment, { prefix = "dev" })
+    github_environment_prefix_enabled = true
+  }
+
+  expect_failures = [var.github_environment_prefix_enabled]
+}
+
+run "aws_github_environment_bootstrap_allow_lifecycle_prefix_when_disabled" {
+  command = plan
+
+  variables {
+    environment = merge(var.environment, { prefix = "prod", env_short = "d" })
+  }
+
+  assert {
+    condition     = github_actions_environment_secret.infra_cd["ROLE_ARN"].environment == "infra-dev-cd"
+    error_message = "A resource prefix must not restrict GitHub environment naming when prefixing is disabled."
+  }
+}
+
+run "aws_github_environment_bootstrap_allow_matching_lifecycle_prefix" {
+  command = plan
+
+  variables {
+    environment                       = merge(var.environment, { prefix = "prod" })
+    github_environment_prefix_enabled = true
+  }
+
+  assert {
+    condition     = github_actions_environment_secret.infra_cd["ROLE_ARN"].environment == "infra-prod-prod-cd"
+    error_message = "A required prefix matching the selected lifecycle must remain valid."
+  }
+}

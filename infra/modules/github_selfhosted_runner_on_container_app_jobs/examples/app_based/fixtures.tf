@@ -93,6 +93,16 @@ resource "azurerm_key_vault_secret" "github_app_id" {
 #trivy:ignore:AVD-AZU-0015
 #trivy:ignore:AVD-AZU-0016
 #trivy:ignore:AVD-AZU-0017
+resource "azurerm_key_vault_secret" "github_app_client_id" {
+  name         = "github-runner-app-client-id"
+  value        = local.github_app.client_id
+  key_vault_id = azurerm_key_vault.test.id
+  depends_on   = [azurerm_role_assignment.kv_admin]
+}
+
+#trivy:ignore:AVD-AZU-0015
+#trivy:ignore:AVD-AZU-0016
+#trivy:ignore:AVD-AZU-0017
 resource "azurerm_key_vault_secret" "github_app_installation_id" {
   name         = "github-runner-app-installation-id"
   value        = local.github_app.installation_id

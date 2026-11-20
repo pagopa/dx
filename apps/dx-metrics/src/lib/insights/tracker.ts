@@ -3,6 +3,8 @@
 import { INSIGHT_THRESHOLDS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
+import type { Insight } from "./types";
+
 import {
   confidenceFromSample,
   formatNumber,
@@ -10,7 +12,6 @@ import {
   severityFromUpperThreshold,
   sortInsights,
 } from "./insight-helpers";
-import type { Insight } from "./types";
 
 export interface TrackerInsightsInput {
   readonly byCategory: readonly {

@@ -25,6 +25,16 @@ const cookieRequest = (value: string): NextRequest =>
     headers: { cookie: `${SCOPE_COOKIE_NAME}=${value}` },
   });
 
+type ScopeResult = ReturnType<typeof requireScope>;
+
+/** Narrows a refused scope check, failing the test instead of skipping it. */
+const scopeError = (result: ScopeResult) => {
+  if (!("error" in result)) {
+    throw new Error("expected the scope check to be refused");
+  }
+  return result.error;
+};
+
 beforeAll(() => {
   vi.stubEnv("DX_METRICS_SCOPE_SECRET", SECRET);
 });
@@ -91,29 +101,25 @@ describe("requireScope", () => {
   });
 
   it("returns a 401 that no proxy may cache when the cookie is missing", () => {
-    const result = requireScope(
-      new NextRequest("http://localhost/api/dashboards/pull-requests"),
+    const error = scopeError(
+      requireScope(
+        new NextRequest("http://localhost/api/dashboards/pull-requests"),
+      ),
     );
 
-    expect("error" in result).toBe(true);
-    if ("error" in result) {
-      expect(result.error.status).toBe(401);
-      expect(result.error.headers.get("cache-control")).toBe("no-store");
-    }
+    expect(error.status).toBe(401);
+    expect(error.headers.get("cache-control")).toBe("no-store");
   });
 });
 
 describe("requireFullScope", () => {
   it("refuses a narrowed scope with a 403", () => {
-    const result = requireFullScope(
-      cookieRequest(token({ tags: ["p4pa"], v: 1 })),
+    const error = scopeError(
+      requireFullScope(cookieRequest(token({ tags: ["p4pa"], v: 1 }))),
     );
 
-    expect("error" in result).toBe(true);
-    if ("error" in result) {
-      expect(result.error.status).toBe(403);
-      expect(result.error.headers.get("cache-control")).toBe("no-store");
-    }
+    expect(error.status).toBe(403);
+    expect(error.headers.get("cache-control")).toBe("no-store");
   });
 
   it("allows the full-portfolio scope", () => {

@@ -1,5 +1,7 @@
 "use client";
 
+import type { Insight } from "@/lib/insights/types";
+
 import { DataTable, SimpleLineChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
@@ -7,7 +9,6 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
-import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 
 import { releasesTooltips as tooltipContent } from "./tooltips";
@@ -24,11 +25,11 @@ interface ModuleSummary {
 }
 
 interface ReleasesDashboardData {
+  insights: Insight[];
+  meta: { referenceDate: string };
   modulesSummary: ModuleSummary[];
   releasesTimeline: ReleasesTimeline[];
   stats: ReleaseStats;
-  insights: Insight[];
-  meta: { referenceDate: string };
 }
 
 interface ReleaseStats {

@@ -2,10 +2,12 @@
 
 import { sql } from "drizzle-orm";
 
-import { buildWorkflowsInsights } from "@/lib/insights/workflows";
 import type { WithInsights } from "@/lib/insights/types";
 
+import { buildWorkflowsInsights } from "@/lib/insights/workflows";
+
 import type { Database, WithMeta } from "../shared/types";
+import type { ResolvedWindow } from "../shared/window";
 import type {
   GetWorkflowDashboardInput,
   WorkflowDashboardResult,
@@ -26,7 +28,6 @@ import {
   parseSqlRow,
   parseSqlRows,
 } from "../shared/sql-parsing";
-import type { ResolvedWindow } from "../shared/window";
 import {
   previousWindow,
   resolveWindow,
@@ -42,8 +43,8 @@ import {
   workflowFailureSchema,
   workflowFailureTrendSchema,
   workflowRunCountSchema,
-  workflowSuccessRatioSchema,
   workflowSuccessRateStatsSchema,
+  workflowSuccessRatioSchema,
   workflowSummarySchema,
   workflowTriggerBreakdownSchema,
   workflowTriggerTypeSchema,
@@ -53,7 +54,7 @@ import {
 export const getWorkflowDashboard = async (
   db: Database,
   params: GetWorkflowDashboardInput,
-): Promise<WorkflowDashboardResult & WithInsights & WithMeta> => {
+): Promise<WithInsights & WithMeta & WorkflowDashboardResult> => {
   const { days: requestedDays, end, fullNames, start } = params;
 
   const range = await fetchDataRange(db, fullNames);
@@ -104,8 +105,8 @@ export const getWorkflowDashboard = async (
     dxVsNonDx,
     failures,
     runCount,
-    successRatio,
     successRateStats,
+    successRatio,
     summary: summaryResult,
     topFailureTrend,
     topSlowestDurationTrend,

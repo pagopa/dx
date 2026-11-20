@@ -5,6 +5,8 @@
 import { TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY } from "@pagopa/dx-metrics-core/config";
 import Link from "next/link";
 
+import type { Insight } from "@/lib/insights/types";
+
 import { DataTable, SimpleBarChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
 import { DataFreshness } from "@/components/DataFreshness";
@@ -12,7 +14,6 @@ import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
-import type { Insight } from "@/lib/insights/types";
 import { useDashboardData } from "@/lib/useDashboardData";
 
 import { techradarTooltips as tooltipContent } from "./tooltips";
@@ -29,6 +30,8 @@ interface TechradarDashboardData {
     toolKey: string;
     toolName: string;
   }[];
+  insights: Insight[];
+  meta: { referenceDate: string };
   repositoriesWithoutDetectedTools: string[];
   repositoryCoverage: {
     alignedTools: number;
@@ -54,8 +57,6 @@ interface TechradarDashboardData {
     toolsDetected: number;
     usagesNotInRadar: number;
   };
-  insights: Insight[];
-  meta: { referenceDate: string };
   usageTrend: {
     capturedAt: string;
     radarRing: null | string;
@@ -298,8 +299,8 @@ export default function TechradarDashboard() {
                 Repositories without detections
               </h3>
               <ul
-                className="flex flex-wrap gap-2"
                 aria-label="Repositories without detections"
+                className="flex flex-wrap gap-2"
               >
                 {data.repositoriesWithoutDetectedTools.map((repository) => (
                   <li

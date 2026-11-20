@@ -1,5 +1,8 @@
 "use client";
 
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
+import type { Insight } from "@/lib/insights/types";
+
 import {
   DataTable,
   SimpleBarChart,
@@ -14,9 +17,7 @@ import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
 import { useSeriesColors } from "@/lib/chart-theme";
 import { WEEKLY_BUCKET_THRESHOLD_DAYS } from "@/lib/config";
-import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatInteger, formatNumber } from "@/lib/format";
-import type { Insight } from "@/lib/insights/types";
 import { useDateFormatters } from "@/lib/locale";
 import { pivotCumulativeSeries } from "@/lib/pivot-cumulative-series";
 import { percentChange } from "@/lib/stats";
@@ -44,6 +45,8 @@ interface WorkflowDashboardData {
     runDate: string;
   }[];
   failures: { failedRuns: number; workflowName: string }[];
+  insights: Insight[];
+  meta: DashboardMetaView;
   runCount: { runCount: number; workflowName: string }[];
   successRatio: {
     failedRuns: number;
@@ -64,17 +67,6 @@ interface WorkflowDashboardData {
     totalDurationMinutes: number;
     totalPipelines: number;
   };
-  triggerTypes: { runCount: number; triggerType: string }[];
-  /**
-   * Optional so a cached payload from before this field existed still renders:
-   * the chart falls back to an empty list instead of throwing.
-   */
-  triggerBreakdown?: {
-    automatic: number;
-    manual: number;
-    unknown: number;
-    workflowName: string;
-  }[];
   /** Daily/weekly failure counts for the two most failing pipelines. */
   topFailureTrend: {
     bucket: string;
@@ -87,8 +79,17 @@ interface WorkflowDashboardData {
     bucket: string;
     workflowName: string;
   }[];
-  insights: Insight[];
-  meta: DashboardMetaView;
+  /**
+   * Optional so a cached payload from before this field existed still renders:
+   * the chart falls back to an empty list instead of throwing.
+   */
+  triggerBreakdown?: {
+    automatic: number;
+    manual: number;
+    unknown: number;
+    workflowName: string;
+  }[];
+  triggerTypes: { runCount: number; triggerType: string }[];
 }
 
 interface WorkflowTrendRow {
@@ -292,9 +293,9 @@ function WorkflowsDashboardContent({
   return (
     <>
       <DataFreshness
-        className="mb-2"
         availableFrom={data.meta.availableFrom}
         availableTo={data.meta.availableTo}
+        className="mb-2"
         referenceDate={data.meta.referenceDate}
         windowEnd={data.meta.windowEnd}
         windowStart={data.meta.windowStart}

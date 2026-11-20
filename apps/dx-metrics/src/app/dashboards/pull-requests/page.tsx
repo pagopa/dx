@@ -1,5 +1,8 @@
 "use client";
 
+import type { DashboardMetaView } from "@/lib/dashboard-meta";
+import type { Insight } from "@/lib/insights/types";
+
 import {
   DataTable,
   SimpleBarChart,
@@ -18,13 +21,11 @@ import {
   ORGANIZATION,
   WEEKLY_BUCKET_THRESHOLD_DAYS,
 } from "@/lib/config";
-import type { DashboardMetaView } from "@/lib/dashboard-meta";
 import { formatNumber, formatShortDate } from "@/lib/format";
 import {
   severityFromTargetWithTrend,
   severityFromUpperThreshold,
 } from "@/lib/insights/insight-helpers";
-import type { Insight } from "@/lib/insights/types";
 import { useDateFormatters } from "@/lib/locale";
 import { percentChange } from "@/lib/stats";
 import { useDashboardData } from "@/lib/useDashboardData";
@@ -44,6 +45,7 @@ interface PrDashboardData {
     totalPrs: null | number;
   };
   cumulatedNewPrs: { cumulativeCount: number; date: string }[];
+  insights: Insight[];
   leadTimeMovingAvg: { avgLeadTimeDays: number; week: string }[];
   leadTimePercentiles: {
     count: number;
@@ -53,6 +55,7 @@ interface PrDashboardData {
   };
   leadTimeTrend: { date: string; trendLine: number }[];
   mergedPrs: { date: string; prCount: number }[];
+  meta: DashboardMetaView;
   newPrs: { date: string; prCount: number }[];
   /**
    * Optional so a cached payload from before this field existed still renders:
@@ -64,6 +67,8 @@ interface PrDashboardData {
     stale: number;
   };
   prComments: { avgComments: number; week: string }[];
+  previousLeadTime: null | number;
+  prsByContributor: { author: string; prCount: number }[];
   prSize: { avgAdditions: number; week: string }[];
   prSizeDistribution: {
     avgAdditions: number;
@@ -71,7 +76,6 @@ interface PrDashboardData {
     prCount: number;
     sizeRange: string;
   }[];
-  prsByContributor: { author: string; prCount: number }[];
   slowestPrs: {
     createdAt: string;
     leadTimeDays: number;
@@ -87,9 +91,6 @@ interface PrDashboardData {
     updatedAt: string;
   }[];
   unmergedPrs: { date: string; openPrs: number }[];
-  previousLeadTime: null | number;
-  insights: Insight[];
-  meta: DashboardMetaView;
 }
 
 export default function PullRequestsDashboard() {
@@ -263,18 +264,18 @@ export default function PullRequestsDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
               breakdown={leadTimeBreakdown}
-              label="Mean Lead Time"
-              suffix="days"
-              tooltip={tooltipContent.avgLeadTime}
-              value={data.cards.avgLeadTime}
-              deltaPct={leadTimeDelta}
               deltaDirection="lower-is-better"
               deltaLabel="vs prev"
+              deltaPct={leadTimeDelta}
+              label="Mean Lead Time"
               previousValue={data.previousLeadTime}
               sampleSize={data.leadTimePercentiles.count}
-              target={METRIC_TARGETS.leadTimeDays}
               severity={leadTimeSeverity}
               sparkline={leadTimeSparkline}
+              suffix="days"
+              target={METRIC_TARGETS.leadTimeDays}
+              tooltip={tooltipContent.avgLeadTime}
+              value={data.cards.avgLeadTime}
             />
             <MetricCard
               deltaDirection="lower-is-better"

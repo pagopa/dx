@@ -3,6 +3,8 @@
 import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { share } from "@/lib/stats";
 
+import type { Insight } from "./types";
+
 import {
   confidenceFromFit,
   confidenceFromSample,
@@ -14,7 +16,6 @@ import {
   severityFromUpperThreshold,
   sortInsights,
 } from "./insight-helpers";
-import type { Insight } from "./types";
 
 export interface IacInsightsInput {
   readonly leadTimeMovingAvg: readonly { readonly avgLeadTimeDays: number }[];

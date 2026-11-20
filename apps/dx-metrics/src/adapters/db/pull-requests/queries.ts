@@ -1,12 +1,14 @@
 /** SQL queries and data transformation for the pull-request dashboard. */
 import { sql } from "drizzle-orm";
 
+import type { WithInsights } from "@/lib/insights/types";
+
 import { METRIC_TARGETS } from "@/lib/config";
 import { buildPullRequestsInsights } from "@/lib/insights/pull-requests";
-import type { WithInsights } from "@/lib/insights/types";
 import { PR_SIZE_BUCKETS } from "@/lib/pr-size-buckets";
 
 import type { Database, WithMeta } from "../shared/types";
+import type { ResolvedWindow } from "../shared/window";
 import type {
   FetchPrDashboardInput,
   PrCountData,
@@ -26,7 +28,6 @@ import {
   timeBucketInterval,
 } from "../shared/sql-fragments";
 import { parseSqlRow, parseSqlRows } from "../shared/sql-parsing";
-import type { ResolvedWindow } from "../shared/window";
 import { previousWindow, resolveWindow, windowMeta } from "../shared/window";
 import {
   prCommentsRowSchema,
@@ -36,9 +37,9 @@ import {
   prLeadTimeTrendRowSchema,
   prOpenBacklogRowSchema,
   prOpenCountRowSchema,
+  prsByContributorRowSchema,
   prSizeDistributionRowSchema,
   prSizeRowSchema,
-  prsByContributorRowSchema,
   prSummaryCardsSchema,
   slowestPrRowSchema,
   stalePrRowSchema,
@@ -135,75 +136,14 @@ export const fetchPrDashboard = async (
   return {
     ...dashboard,
     insights: buildPullRequestsInsights(
-      dashboard,
+      { ...dashboard, peerBenchmark },
       // Deep links only make sense when a single repository is in scope; with a
       // multi-repository selection there is no one repository to link to.
       fullNames.length === 1 ? `https://github.com/${fullNames[0]}` : undefined,
-      peerBenchmark,
     ),
     meta: windowMeta(window),
   };
 };
-
-/**
- * Lead-time distribution percentiles for the selected window and the average of
- * the immediately preceding, equally-sized window. Comparing two adjacent
- * windows of the same length makes the "previous" value directly comparable to
- * the headline average, unlike a first-half split of the same window.
- */
-async function fetchLeadTimeStats(
-  db: Database,
-  fullNames: readonly string[],
-  window: ResolvedWindow,
-): Promise<
-  Pick<PrDashboardResult, "leadTimePercentiles" | "previousLeadTime">
-> {
-  const { endDate, startDate } = window;
-  const previousBounds = previousWindow(window);
-  const [percentiles, previous] = await Promise.all([
-    db.execute(sql`
-      SELECT
-        COUNT(*) AS "count",
-        ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (
-          ORDER BY EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400
-        )::numeric, 2) AS "p50",
-        ROUND(PERCENTILE_CONT(0.85) WITHIN GROUP (
-          ORDER BY EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400
-        )::numeric, 2) AS "p85",
-        ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (
-          ORDER BY EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400
-        )::numeric, 2) AS "p95"
-      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-      WHERE ${repositoryIn("r.full_name", fullNames)}
-        AND pr.merged_at >= ${startDate}::timestamptz
-        AND pr.merged_at <= ${endDate}::timestamptz
-        AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-        AND ${humanPullRequest("pr")}
-    `),
-    db.execute(sql`
-      SELECT ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS "previous"
-      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-      WHERE ${repositoryIn("r.full_name", fullNames)}
-        AND pr.merged_at >= ${previousBounds.startDate}::timestamptz
-        AND pr.merged_at < ${previousBounds.endDate}::timestamptz
-        AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
-        AND ${humanPullRequest("pr")}
-    `),
-  ]);
-
-  return {
-    leadTimePercentiles: parseSqlRow(
-      percentileRowSchema,
-      percentiles.rows[0],
-      "pull-requests leadTimePercentiles",
-    ),
-    previousLeadTime: parseSqlRow(
-      previousValueRowSchema,
-      previous.rows[0],
-      "pull-requests previousLeadTime",
-    ).previous,
-  };
-}
 
 async function fetchLeadTimeData(
   db: Database,
@@ -277,6 +217,66 @@ async function fetchLeadTimeData(
       leadTimeTrend.rows,
       "pull-requests leadTimeTrend",
     ),
+  };
+}
+
+/**
+ * Lead-time distribution percentiles for the selected window and the average of
+ * the immediately preceding, equally-sized window. Comparing two adjacent
+ * windows of the same length makes the "previous" value directly comparable to
+ * the headline average, unlike a first-half split of the same window.
+ */
+async function fetchLeadTimeStats(
+  db: Database,
+  fullNames: readonly string[],
+  window: ResolvedWindow,
+): Promise<
+  Pick<PrDashboardResult, "leadTimePercentiles" | "previousLeadTime">
+> {
+  const { endDate, startDate } = window;
+  const previousBounds = previousWindow(window);
+  const [percentiles, previous] = await Promise.all([
+    db.execute(sql`
+      SELECT
+        COUNT(*) AS "count",
+        ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (
+          ORDER BY EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400
+        )::numeric, 2) AS "p50",
+        ROUND(PERCENTILE_CONT(0.85) WITHIN GROUP (
+          ORDER BY EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400
+        )::numeric, 2) AS "p85",
+        ROUND(PERCENTILE_CONT(0.95) WITHIN GROUP (
+          ORDER BY EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400
+        )::numeric, 2) AS "p95"
+      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+      WHERE ${repositoryIn("r.full_name", fullNames)}
+        AND pr.merged_at >= ${startDate}::timestamptz
+        AND pr.merged_at <= ${endDate}::timestamptz
+        AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
+        AND ${humanPullRequest("pr")}
+    `),
+    db.execute(sql`
+      SELECT ROUND(AVG(EXTRACT(EPOCH FROM (pr.merged_at - pr.created_at)) / 86400)::numeric, 2) AS "previous"
+      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+      WHERE ${repositoryIn("r.full_name", fullNames)}
+        AND pr.merged_at >= ${previousBounds.startDate}::timestamptz
+        AND pr.merged_at < ${previousBounds.endDate}::timestamptz
+        AND pr.merged_at IS NOT NULL AND pr.created_at IS NOT NULL
+        AND ${humanPullRequest("pr")}
+    `),
+  ]);
+
+  return {
+    leadTimePercentiles: parseSqlRow(
+      percentileRowSchema,
+      percentiles.rows[0],
+      "pull-requests leadTimePercentiles",
+    ),
+    previousLeadTime: parseSqlRow(
+      previousValueRowSchema,
+      previous.rows[0],
+      "pull-requests previousLeadTime",
+    ).previous,
   };
 }
 
@@ -393,6 +393,71 @@ async function fetchPrCountData(
   };
 }
 
+/**
+ * Point-in-time backlog for pull requests that were never merged: how many are
+ * still open now, how many of those have had no activity for longer than the
+ * stale target, and how many were closed without merging during the window.
+ * The list of stale PRs carries the concrete numbers so the reading is
+ * actionable instead of just descriptive.
+ */
+async function fetchPrOpenBacklog(
+  db: Database,
+  fullNames: readonly string[],
+  window: ResolvedWindow,
+): Promise<Pick<PrDashboardResult, "openBacklog" | "stalePrs">> {
+  // Snapshot as of the end of the window: `openNow` and `stale` are point-in-time
+  // values, so they are anchored to `endDate` rather than filtered into it.
+  const { endDate, startDate } = window;
+  const [summary, stale] = await Promise.all([
+    db.execute(sql`
+      SELECT
+        COUNT(*) FILTER (WHERE pr.closed_at IS NULL) AS "openNow",
+        COUNT(*) FILTER (
+          WHERE pr.closed_at IS NULL
+            AND COALESCE(pr.updated_at, pr.created_at)
+              < ${endDate}::timestamptz - MAKE_INTERVAL(days => ${METRIC_TARGETS.staleOpenPrDays})
+        ) AS "stale",
+        COUNT(*) FILTER (
+          WHERE pr.closed_at IS NOT NULL
+            AND pr.closed_at >= ${startDate}::timestamptz
+            AND pr.closed_at <= ${endDate}::timestamptz
+        ) AS "closedUnmerged"
+      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+      WHERE ${repositoryIn("r.full_name", fullNames)}
+        AND pr.merged_at IS NULL
+        AND ${humanPullRequest("pr")}
+    `),
+    db.execute(sql`
+      SELECT pr.number, pr.title, pr.author,
+        ROUND(EXTRACT(EPOCH FROM (
+          ${endDate}::timestamptz - COALESCE(pr.updated_at, pr.created_at)
+        )) / 86400, 0) AS "idleDays",
+        COALESCE(pr.updated_at, pr.created_at) AS "updatedAt"
+      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
+      WHERE ${repositoryIn("r.full_name", fullNames)}
+        AND pr.merged_at IS NULL AND pr.closed_at IS NULL
+        AND COALESCE(pr.updated_at, pr.created_at)
+          < ${endDate}::timestamptz - MAKE_INTERVAL(days => ${METRIC_TARGETS.staleOpenPrDays})
+        AND ${humanPullRequest("pr")}
+      ORDER BY "idleDays" DESC, pr.number
+      LIMIT 25
+    `),
+  ]);
+
+  return {
+    openBacklog: parseSqlRow(
+      prOpenBacklogRowSchema,
+      summary.rows[0],
+      "pull-requests openBacklog",
+    ),
+    stalePrs: parseSqlRows(
+      stalePrRowSchema,
+      stale.rows,
+      "pull-requests stalePrs",
+    ),
+  };
+}
+
 async function fetchPrQualityData(
   db: Database,
   fullNames: readonly string[],
@@ -498,71 +563,6 @@ async function fetchPrsByContributor(
       prsByContributorRowSchema,
       result.rows,
       "pull-requests prsByContributor",
-    ),
-  };
-}
-
-/**
- * Point-in-time backlog for pull requests that were never merged: how many are
- * still open now, how many of those have had no activity for longer than the
- * stale target, and how many were closed without merging during the window.
- * The list of stale PRs carries the concrete numbers so the reading is
- * actionable instead of just descriptive.
- */
-async function fetchPrOpenBacklog(
-  db: Database,
-  fullNames: readonly string[],
-  window: ResolvedWindow,
-): Promise<Pick<PrDashboardResult, "openBacklog" | "stalePrs">> {
-  // Snapshot as of the end of the window: `openNow` and `stale` are point-in-time
-  // values, so they are anchored to `endDate` rather than filtered into it.
-  const { endDate, startDate } = window;
-  const [summary, stale] = await Promise.all([
-    db.execute(sql`
-      SELECT
-        COUNT(*) FILTER (WHERE pr.closed_at IS NULL) AS "openNow",
-        COUNT(*) FILTER (
-          WHERE pr.closed_at IS NULL
-            AND COALESCE(pr.updated_at, pr.created_at)
-              < ${endDate}::timestamptz - MAKE_INTERVAL(days => ${METRIC_TARGETS.staleOpenPrDays})
-        ) AS "stale",
-        COUNT(*) FILTER (
-          WHERE pr.closed_at IS NOT NULL
-            AND pr.closed_at >= ${startDate}::timestamptz
-            AND pr.closed_at <= ${endDate}::timestamptz
-        ) AS "closedUnmerged"
-      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-      WHERE ${repositoryIn("r.full_name", fullNames)}
-        AND pr.merged_at IS NULL
-        AND ${humanPullRequest("pr")}
-    `),
-    db.execute(sql`
-      SELECT pr.number, pr.title, pr.author,
-        ROUND(EXTRACT(EPOCH FROM (
-          ${endDate}::timestamptz - COALESCE(pr.updated_at, pr.created_at)
-        )) / 86400, 0) AS "idleDays",
-        COALESCE(pr.updated_at, pr.created_at) AS "updatedAt"
-      FROM pull_requests pr JOIN repositories r ON pr.repository_id = r.id
-      WHERE ${repositoryIn("r.full_name", fullNames)}
-        AND pr.merged_at IS NULL AND pr.closed_at IS NULL
-        AND COALESCE(pr.updated_at, pr.created_at)
-          < ${endDate}::timestamptz - MAKE_INTERVAL(days => ${METRIC_TARGETS.staleOpenPrDays})
-        AND ${humanPullRequest("pr")}
-      ORDER BY "idleDays" DESC, pr.number
-      LIMIT 25
-    `),
-  ]);
-
-  return {
-    openBacklog: parseSqlRow(
-      prOpenBacklogRowSchema,
-      summary.rows[0],
-      "pull-requests openBacklog",
-    ),
-    stalePrs: parseSqlRows(
-      stalePrRowSchema,
-      stale.rows,
-      "pull-requests stalePrs",
     ),
   };
 }

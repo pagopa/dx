@@ -1,3 +1,13 @@
+## 0.6.12 (2026-11-17)
+
+### 🚀 Features
+
+- Add Azure Cost Management actual costs for the last 30 days with `--include-actual-cost`. ([#2544](https://github.com/pagopa/dx/pull/2544))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.6.11 (2026-11-04)
 
 ### 🩹 Fixes

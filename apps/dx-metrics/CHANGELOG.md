@@ -1,3 +1,29 @@
+## 0.5.31 (2026-11-18)
+
+### 🩹 Fixes
+
+- Bump dependencies ([#2512](https://github.com/pagopa/dx/pull/2512))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
+## 0.5.30 (2026-11-17)
+
+### 🩹 Fixes
+
+- Bump dependencies ([#2533](https://github.com/pagopa/dx/pull/2533))
+
+## 0.5.29 (2026-11-06)
+
+### 🩹 Fixes
+
+- Update Docker base images to Node.js 24 ([#2504](https://github.com/pagopa/dx/pull/2504))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.28 (2026-11-03)
 
 ### 🚀 Features

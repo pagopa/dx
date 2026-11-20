@@ -2,8 +2,9 @@
 
 import { sql } from "drizzle-orm";
 
-import { buildTrackerInsights } from "@/lib/insights/tracker";
 import type { WithInsights } from "@/lib/insights/types";
+
+import { buildTrackerInsights } from "@/lib/insights/tracker";
 
 import type { Database, WithMeta } from "../shared/types";
 import type { TrackerDashboard } from "./schemas";

@@ -2,11 +2,12 @@
 
 import { describe, expect, it } from "vitest";
 
+import type { Insight } from "@/lib/insights/types";
+
 import {
   buildPullRequestsInsights,
   type PullRequestsInsightsInput,
 } from "@/lib/insights/pull-requests";
-import type { Insight } from "@/lib/insights/types";
 
 const baseInput = (): PullRequestsInsightsInput => ({
   cards: { avgLeadTime: 5 },

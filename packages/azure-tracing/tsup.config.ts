@@ -8,6 +8,7 @@ export default defineConfig({
     "src",
     "!src/**/__tests__/**",
     "!src/azure/monitor/start-from-env.ts",
+    "!src/azure/monitor/options.ts",
     "!src/azure/monitor/env.ts",
     "!src/azure/opentelemetry/azure-undici-instrumentation.ts",
   ],

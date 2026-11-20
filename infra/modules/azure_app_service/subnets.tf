@@ -6,7 +6,12 @@ resource "azurerm_subnet" "this" {
   resource_group_name  = data.azurerm_virtual_network.this.resource_group_name
   address_prefixes     = [var.subnet_cidr]
 
-  service_endpoints = local.subnet.enable_service_endpoints
+  dynamic "service_endpoint" {
+    for_each = local.subnet.enable_service_endpoints
+    content {
+      service = service_endpoint.value
+    }
+  }
 
   delegation {
     name = "default"

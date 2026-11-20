@@ -2,17 +2,19 @@
 
 import { sql } from "drizzle-orm";
 
-import { buildDxTeamInsights } from "@/lib/insights/dx-team";
 import type { WithInsights } from "@/lib/insights/types";
-import { aggregateTerraformModuleUsage } from "@/lib/terraform-module-name";
+
 import {
   DX_ADOPTION_CODE_SEARCH_QUERY,
-  DX_TEAM_COMMITS_BY_REPO_EXCLUDED_SUBSTRINGS,
   DX_TEAM_COMMIT_EXCLUDED_SUBSTRINGS,
+  DX_TEAM_COMMITS_BY_REPO_EXCLUDED_SUBSTRINGS,
   DX_TEAM_IO_INFRA_REPOSITORY,
 } from "@/lib/config";
+import { buildDxTeamInsights } from "@/lib/insights/dx-team";
+import { aggregateTerraformModuleUsage } from "@/lib/terraform-module-name";
 
 import type { Database, WithMeta } from "../shared/types";
+import type { ResolvedWindow } from "../shared/window";
 import type {
   DxTeamDashboardResult,
   FetchDxTeamDashboardInput,
@@ -26,7 +28,6 @@ import {
   timeBucketInterval,
 } from "../shared/sql-fragments";
 import { parseSqlRows } from "../shared/sql-parsing";
-import type { ResolvedWindow } from "../shared/window";
 import { resolveWindow, windowMeta } from "../shared/window";
 import {
   commitsByRepoRowSchema,

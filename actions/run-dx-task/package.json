@@ -21,11 +21,8 @@
   "devDependencies": {
     "@actions/core": "catalog:github-actions",
     "@pagopa/dx-tasks": "workspace:^",
-    "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "tsdown": "catalog:",
     "typescript": "catalog:",
     "zod": "catalog:"

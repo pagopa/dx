@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-savemoney",
-  "version": "0.6.11",
+  "version": "0.6.12",
   "description": "Azure resource analyzer for finding unused or cost-inefficient resources.",
   "keywords": [
     "DX",
@@ -47,13 +47,10 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/js-yaml": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:",
     "vitest-mock-extended": "catalog:"

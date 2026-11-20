@@ -9,6 +9,8 @@ export const pullRequestsReviewTooltips = {
     "Who reviews whom across the team. Reveals code ownership patterns and knowledge distribution.",
   avgTimeToFirstReview:
     "Average time to first review. Indicates how quickly code reviews are initiated.",
+  changeRequests:
+    "Number of change requests by reviewer. Reflects code quality standards and thoroughness.",
   commentsPerPr:
     "Average comments per pull request opened in the selected period (conversation and review comments, bots included). Indicates review quality and collaboration intensity.",
   mergedWithoutCommentsShare:
@@ -17,8 +19,6 @@ export const pullRequestsReviewTooltips = {
     "Top ten people by merges of other people's pull requests in the selected period, for this repository. Excludes merges performed by the pull request's own author, isolating the merges that unblock someone else's work. A long bar signals concentrated review/merge responsibility.",
   mergesPerMerger:
     "Top ten people by merges in the selected period, for this repository. A long bar for one person relative to the rest signals concentrated merge rights, a delivery-risk (bus factor) signal rather than a performance ranking.",
-  changeRequests:
-    "Number of change requests by reviewer. Reflects code quality standards and thoroughness.",
   reviewerStats:
     "Summary table of review activity. Identifies hotspots and reviewer expertise areas.",
   reviewsPerReviewer:

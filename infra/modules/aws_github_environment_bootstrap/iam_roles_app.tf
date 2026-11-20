@@ -6,7 +6,7 @@ resource "aws_iam_role" "app_ci" {
   }))
   description = "Role to assume to run CI for applications via GitHub Actions"
 
-  assume_role_policy = data.aws_iam_policy_document.github_assume_role_policy.json
+  assume_role_policy = data.aws_iam_policy_document.github_environment_assume_role_policy["app_ci"].json
 }
 
 resource "aws_iam_role_policy_attachment" "app_ci_ro_lambda" {
@@ -36,7 +36,7 @@ resource "aws_iam_role" "app_cd" {
   }))
   description = "Role to assume to run CD for applications via GitHub Actions"
 
-  assume_role_policy = data.aws_iam_policy_document.github_assume_role_policy.json
+  assume_role_policy = data.aws_iam_policy_document.github_environment_assume_role_policy["app_cd"].json
 }
 
 resource "aws_iam_role_policy_attachment" "app_cd_admin_lambda" {

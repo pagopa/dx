@@ -1,5 +1,7 @@
 import { z } from "zod/v4";
 
+import type { GitHubAccount, GitHubTeam } from "./code-ownership.js";
+
 export type CreateBranchParams = {
   branchName: string;
   fromRef: string; // source branch (e.g., "main")
@@ -50,6 +52,8 @@ export interface GitHubService {
    */
   createPullRequest(params: PullRequestBody): Promise<PullRequest>;
 
+  getAccount(login: string): Promise<GitHubAccount>;
+
   /**
    * Gets the content of a file from a GitHub repository.
    * @throws FileNotFoundError if file doesn't exist (404)
@@ -63,6 +67,8 @@ export interface GitHubService {
    * @throws Error for other failures
    */
   getRepository(owner: string, name: string): Promise<Repository>;
+
+  getTeam(organization: string, slug: string): Promise<GitHubTeam>;
 
   /**
    * Updates a file in a GitHub repository.

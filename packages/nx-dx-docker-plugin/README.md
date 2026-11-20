@@ -18,12 +18,13 @@ It provides the Docker target inference with:
 
 ## Installation
 
-The package is published to GitHub Packages. With pnpm 11.23+, install through
+The package is published to GitHub Packages. With pnpm 12+, install through
 the [`gh:` registry prefix](https://pnpm.io/registries#prefix) without
-configuring scope routing:
+configuring scope routing. The prefix belongs to the version, so the package
+name comes first:
 
 ```bash
-pnpm add -D gh:@pagopa/nx-docker
+pnpm add -D @pagopa/nx-docker@gh:latest
 ```
 
 All package managers need authentication to download from GitHub Packages.

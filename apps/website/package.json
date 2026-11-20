@@ -1,6 +1,6 @@
 {
   "name": "docs",
-  "version": "0.22.23",
+  "version": "0.22.26",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
@@ -36,13 +36,10 @@
     "@docusaurus/theme-classic": "^3.10.2",
     "@docusaurus/tsconfig": "^3.10.2",
     "@docusaurus/types": "^3.10.2",
-    "@pagopa/eslint-config": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
     "docusaurus-plugin-llms": "^0.5.1",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:"
   },
   "browserslist": {

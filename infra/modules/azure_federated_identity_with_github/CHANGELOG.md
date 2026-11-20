@@ -90,7 +90,7 @@
 
 ### Patch Changes
 
-- c429f43: Remove deprecated property from `azurerm_federated_identity_credential` resource
+- c429f43: Remove deprecated property from `azurerm_federated_identity_credential` resource
 
 ## 1.0.3
 

@@ -120,6 +120,8 @@ const AzureSectionSchema = z
      * subscription. Defaults to 8 when not provided.
      */
     concurrency: z.number().int().positive().optional(),
+    /** Fetches actual costs for the last 30 days; requires Cost Management read access. */
+    includeActualCost: z.boolean().default(false),
     preferredLocation: z.string().default("italynorth"),
     /**
      * Which finding sources to include. Defaults to all known sources.

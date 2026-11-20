@@ -32,6 +32,11 @@ export type CloudAccountService = {
     additionalBackends?: readonly TerraformBackend[],
   ): Promise<void>;
 
+  getRunnerAppCredentials(
+    cloudAccount: CloudAccount,
+    environment: EnvironmentId,
+  ): Promise<RunnerAppCredentialsLookup>;
+
   getTerraformBackend(
     cloudAccountId: CloudAccount["id"],
     environment: EnvironmentId,
@@ -63,11 +68,30 @@ export type CloudAccountService = {
     tags?: Record<string, string>,
   ): Promise<TerraformBackend>;
 
+  storeRunnerAppClientId(
+    cloudAccount: CloudAccount,
+    environment: EnvironmentId,
+    clientId: string,
+  ): Promise<void>;
+
   verifyTerraformBackendReadAccess(
     backend: TerraformBackend,
     key: string,
   ): Promise<void>;
 };
+
+export type RunnerAppCredentialsLookup = {
+  credentials: Partial<GitHubAppCredentials>;
+  missingClientId: boolean;
+};
+
+/** A credential lookup failure whose message is safe for command output. */
+export class RunnerAppCredentialsError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "RunnerAppCredentialsError";
+  }
+}
 
 export const cloudRegionSchema = z.object({
   displayName: z.string().min(1),

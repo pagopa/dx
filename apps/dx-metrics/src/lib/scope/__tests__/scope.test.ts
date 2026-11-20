@@ -1,4 +1,5 @@
 import type { DxMetricsRepository } from "@pagopa/dx-metrics-core/config";
+
 import { describe, expect, it } from "vitest";
 
 import { fullPortfolioScope, intersectScope, resolveScope } from "../scope.js";
@@ -66,7 +67,11 @@ describe("resolveScope", () => {
 });
 
 describe("intersectScope", () => {
-  const scope = resolveScope({ tags: ["p4pa"], v: 1 }, CONFIGURED)!;
+  const resolved = resolveScope({ tags: ["p4pa"], v: 1 }, CONFIGURED);
+  if (resolved === null) {
+    throw new Error("the test scope must resolve");
+  }
+  const scope = resolved;
 
   it("keeps the allowed repositories and drops the rest", () => {
     expect(intersectScope(["p4pa-a", "dx", "shared"], scope)).toEqual([

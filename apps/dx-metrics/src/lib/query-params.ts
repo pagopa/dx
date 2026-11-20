@@ -36,34 +36,14 @@ export const DashboardQuerySchema = z.object({
   days: z.coerce.number().int().positive().default(120),
   /** End of the custom range, inclusive. Requires `start` to take effect. */
   end: calendarDateParam,
+  repositories: repositoriesParam,
   /** @deprecated Single-repository alias kept for existing bookmarks. */
   repository: z.string().min(1).optional(),
-  repositories: repositoriesParam,
   /** Start of the custom range, inclusive. Takes precedence over `days`. */
   start: calendarDateParam,
 });
 
 export type DashboardQuery = z.infer<typeof DashboardQuerySchema>;
-
-/**
- * Resolves the requested repositories, preserving the three-way distinction
- * between "not provided" (the default selection), "single legacy value" and
- * "explicitly empty" (empty results).
- */
-export function resolveRepositories(
-  query: DashboardQuery,
-  defaultRepositories: readonly string[],
-): string[] {
-  if (query.repositories !== undefined) {
-    return query.repositories;
-  }
-
-  if (query.repository !== undefined) {
-    return [query.repository];
-  }
-
-  return [...defaultRepositories];
-}
 
 /**
  * Parses and validates dashboard query parameters from the request URL.
@@ -84,4 +64,24 @@ export function parseDashboardQuery(
     };
   }
   return { query: result.data };
+}
+
+/**
+ * Resolves the requested repositories, preserving the three-way distinction
+ * between "not provided" (the default selection), "single legacy value" and
+ * "explicitly empty" (empty results).
+ */
+export function resolveRepositories(
+  query: DashboardQuery,
+  defaultRepositories: readonly string[],
+): string[] {
+  if (query.repositories !== undefined) {
+    return query.repositories;
+  }
+
+  if (query.repository !== undefined) {
+    return [query.repository];
+  }
+
+  return [...defaultRepositories];
 }

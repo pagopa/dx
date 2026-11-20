@@ -1,0 +1,49 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "extends": ["./core.json"],
+  "plugins": ["vitest"],
+  "overrides": [
+    {
+      "files": [
+        "**/tests/**/*.{js,ts,tsx}",
+        "**/__tests__/**/*.{js,ts,tsx}",
+        "**/*.{test,spec}.{js,ts,tsx}"
+      ],
+      "rules": {
+        "no-empty-function": "off",
+        "vitest/expect-expect": [
+          "error",
+          {
+            "assertFunctionNames": ["expect", "assert"]
+          }
+        ],
+        "vitest/no-commented-out-tests": "error",
+        "vitest/no-conditional-expect": "error",
+        "vitest/no-disabled-tests": "warn",
+        "vitest/no-focused-tests": "error",
+        "vitest/no-identical-title": "error",
+        "vitest/no-import-node-test": "error",
+        "vitest/no-interpolation-in-snapshots": "error",
+        "vitest/no-mocks-import": "error",
+        "vitest/no-standalone-expect": [
+          "error",
+          {
+            "additionalTestBlockFunctions": ["it", "test"]
+          }
+        ],
+        "vitest/no-unneeded-async-expect-function": "error",
+        "vitest/prefer-called-exactly-once-with": "error",
+        "vitest/prefer-called-with": "error",
+        "vitest/prefer-equality-matcher": "error",
+        "vitest/prefer-expect-resolves": "error",
+        "vitest/prefer-spy-on": "error",
+        "vitest/prefer-todo": "error",
+        "vitest/require-local-test-context-for-concurrent-snapshots": "error",
+        "vitest/valid-describe-callback": "error",
+        "vitest/valid-expect": "error",
+        "vitest/valid-expect-in-promise": "error",
+        "vitest/valid-title": "error"
+      }
+    }
+  ]
+}

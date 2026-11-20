@@ -51,7 +51,7 @@ projects. This includes consolidating documentation, unifying pipeline
 configurations, and creating a comprehensive strategy for maintaining repository
 health and organization.
 
-## Reference of usage in our organization
+## Reference of usage in our organization
 
 - https://github.com/pagopa/io-fims
 - https://github.com/pagopa/io-sign

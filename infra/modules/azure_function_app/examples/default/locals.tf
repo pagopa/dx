@@ -28,11 +28,9 @@ locals {
   }
 
   tags = {
-    CostCenter     = "TS720 - DEV EX"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    BusinessUnit   = "DevEx"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/examples/default"
-    ManagementTeam = "Developer Experience"
+    CostCenter  = "TS720 - DEV EX"
+    Environment = "Uat"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/examples/default"
   }
 }

@@ -104,11 +104,17 @@ const createMockCloudAccountService = (
 ): CloudAccountService => ({
   configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
   ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
+
+  getRunnerAppCredentials: vi
+    .fn()
+    .mockResolvedValue({ credentials: {}, missingClientId: false }),
   getTerraformBackend: vi.fn().mockResolvedValue(backend),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),
   isInitialized: vi.fn().mockResolvedValue(isInitialized),
   provisionTerraformBackend: vi.fn().mockResolvedValue(backend),
+  storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
+
   verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
 });
 
@@ -116,8 +122,10 @@ const createMockGitHubService = (): GitHubService => ({
   createBranch: vi.fn().mockResolvedValue(undefined),
   createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
   createPullRequest: vi.fn().mockResolvedValue(undefined),
+  getAccount: vi.fn(),
   getFileContent: vi.fn().mockResolvedValue(undefined),
   getRepository: vi.fn().mockResolvedValue(undefined),
+  getTeam: vi.fn(),
   updateFile: vi.fn().mockResolvedValue(undefined),
 });
 
@@ -697,6 +705,49 @@ describe("ambiguous nested backend layouts", () => {
   });
 });
 
+describe("environment generator ownership preservation", () => {
+  it("preserves existing CODEOWNERS and deployment reviewer teams", async () => {
+    const codeOwners = "* @pagopa/product-team @alice\n";
+    const generated = await runEnvironmentGenerator({
+      mockCloudAccountService: createMockCloudAccountService(
+        mockTerraformBackend,
+        true,
+      ),
+      mockGitHubService: createMockGitHubService(),
+      payload: structuredClone(payload),
+      prepareRepository: async (directory) => {
+        await fs.writeFile(path.join(directory, "CODEOWNERS"), codeOwners);
+        const main = path.join(directory, "infra", "repository", "main.tf");
+        const content = await fs.readFile(main, "utf8");
+        await fs.writeFile(
+          main,
+          content.replace(
+            "reviewers_teams        = []",
+            'reviewers_teams        = ["product-team"]',
+          ),
+        );
+      },
+      tmpDirPrefix: "dx-cli-env-ownership-test-",
+    });
+    try {
+      const files = await readGeneratedFiles(generated.tmpDir, [
+        "CODEOWNERS",
+        "infra/repository/main.tf",
+      ]);
+      expect(files["CODEOWNERS"]).toBe(codeOwners);
+      expect(files["infra/repository/main.tf"]).toContain(
+        'reviewers_teams        = ["product-team"]',
+      );
+      expect(files["infra/repository/main.tf"]).toContain(
+        'environments           = ["dev", "prod"]',
+      );
+    } finally {
+      process.chdir(generated.originalCwd);
+      await cleanupTempDir(generated.tmpDir);
+    }
+  });
+});
+
 describe("environment generator — file generation (no init)", () => {
   let tmpDir: string;
   let originalCwd: string;
@@ -854,6 +905,18 @@ describe("environment generator — file generation (no init)", () => {
       before,
     );
     expect(mockCloudAccountService.initialize).not.toHaveBeenCalled();
+  });
+
+  it("names the bootstrapper Nx project after its Terraform root", async () => {
+    const generatedFiles = await readGeneratedFiles(tmpDir, [
+      `infra/bootstrapper/${payload.env.name}/project.json`,
+    ]);
+
+    expect(
+      JSON.parse(
+        generatedFiles[`infra/bootstrapper/${payload.env.name}/project.json`],
+      ),
+    ).toEqual({ name: "bootstrapper-dev" });
   });
 });
 
@@ -1076,6 +1139,16 @@ describe("environment generator — file generation (with init)", () => {
 
     expect(generatedFiles).toMatchSnapshot();
   });
+
+  it("names the core Nx project after its Terraform root", async () => {
+    const generatedFiles = await readGeneratedFiles(tmpDir, [
+      `infra/core/${payload.env.name}/project.json`,
+    ]);
+
+    expect(
+      JSON.parse(generatedFiles[`infra/core/${payload.env.name}/project.json`]),
+    ).toEqual({ name: "core-dev" });
+  });
 });
 
 describe("environment generator — tenant-qualified environment", () => {
@@ -1151,5 +1224,15 @@ describe("environment generator — tenant-qualified environment", () => {
       nxJson.plugins.find((entry) => entry.plugin === "@pagopa/nx-terraform")
         ?.options?.additionalEnvironments,
     ).toEqual(["ced-prod"]);
+  });
+
+  it("keeps the full tenant-qualified environment in the bootstrapper Nx project name", async () => {
+    const generatedFiles = await readGeneratedFiles(tmpDir, [
+      "infra/bootstrapper/ced-prod/project.json",
+    ]);
+
+    expect(
+      JSON.parse(generatedFiles["infra/bootstrapper/ced-prod/project.json"]),
+    ).toEqual({ name: "bootstrapper-ced-prod" });
   });
 });

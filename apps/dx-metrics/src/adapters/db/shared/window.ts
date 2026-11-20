@@ -26,12 +26,16 @@ import {
 
 import type { DashboardMeta } from "./types";
 
-/** A closed interval of timestamps, `[startDate, endDate]`. */
-export interface WindowBounds {
-  /** Inclusive upper bound for the SQL predicates. */
-  readonly endDate: string;
-  /** Inclusive lower bound for the SQL predicates. */
-  readonly startDate: string;
+/** A window ready to be used by the adapters and exposed in the payload meta. */
+export interface ResolvedWindow extends WindowBounds {
+  readonly availableFrom: string;
+  readonly availableTo: string;
+  /** Inclusive length of the window, used by "previous period" comparisons. */
+  readonly days: number;
+  /** Latest data timestamp, kept for the freshness note. */
+  readonly referenceDate: string;
+  readonly windowEnd: string;
+  readonly windowStart: string;
 }
 
 /** Inputs for {@link resolveWindow}. Timestamps may be full ISO values. */
@@ -48,16 +52,12 @@ export interface ResolveWindowInput {
   readonly start?: string;
 }
 
-/** A window ready to be used by the adapters and exposed in the payload meta. */
-export interface ResolvedWindow extends WindowBounds {
-  readonly availableFrom: string;
-  readonly availableTo: string;
-  /** Inclusive length of the window, used by "previous period" comparisons. */
-  readonly days: number;
-  /** Latest data timestamp, kept for the freshness note. */
-  readonly referenceDate: string;
-  readonly windowEnd: string;
-  readonly windowStart: string;
+/** A closed interval of timestamps, `[startDate, endDate]`. */
+export interface WindowBounds {
+  /** Inclusive upper bound for the SQL predicates. */
+  readonly endDate: string;
+  /** Inclusive lower bound for the SQL predicates. */
+  readonly startDate: string;
 }
 
 const startOfDay = (date: string): string => `${date}T00:00:00.000Z`;

@@ -1,3 +1,13 @@
+## 0.1.10 (2026-11-18)
+
+### 🩹 Fixes
+
+- Bootstrap the scaffold on pnpm 12: `dx init` pins `corepack use pnpm@12`, and the DX Nx plugins install with the `gh:` prefix in the version slot (`@pagopa/nx-docker@gh:latest`), since pnpm 12 rejects the prefix-first form. The generated `pnpm-workspace.yaml` needs no change. ([#2550](https://github.com/pagopa/dx/pull/2550))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.1.9 (2026-11-04)
 
 ### 🩹 Fixes

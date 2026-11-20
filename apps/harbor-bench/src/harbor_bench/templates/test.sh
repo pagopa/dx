@@ -87,7 +87,8 @@ except Exception:
 PYEOF
   export PYTHONPATH="/tmp:${PYTHONPATH:-}"
 
-  uvx --from harbor-rewardkit==0.2.0 rewardkit /tests \
+  # LiteLLM's Responses API dispatch imports its optional MCP dependencies.
+  uvx --with 'litellm[mcp]' --from harbor-rewardkit==0.2.0 rewardkit /tests \
     --workspace {{WORKSPACE_DIR}} \
     --output {{REWARD_JSON}} \
     || true

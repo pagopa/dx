@@ -4,6 +4,8 @@ import { INSIGHT_THRESHOLDS, METRIC_TARGETS } from "@/lib/config";
 import { LARGE_PR_BUCKET_LABELS } from "@/lib/pr-size-buckets";
 import { paretoShare, percentChange, share } from "@/lib/stats";
 
+import type { Insight } from "./types";
+
 import {
   confidenceFromFit,
   confidenceFromSample,
@@ -16,7 +18,6 @@ import {
   severityFromUpperThreshold,
   sortInsights,
 } from "./insight-helpers";
-import type { Insight } from "./types";
 
 export interface PullRequestsInsightsInput {
   readonly cards: {
@@ -79,9 +80,9 @@ const leadTimeChangeInsight = (
   const current = input.cards.avgLeadTime;
   const previous = input.previousLeadTime ?? null;
 
-  let deltaPct: null | number = null;
-  let firstAverage: number | null = null;
-  let secondAverage: number | null = null;
+  let deltaPct: null | number;
+  let firstAverage: null | number;
+  let secondAverage: null | number;
   let conclusive = true;
 
   if (current !== null && previous !== null) {
@@ -507,14 +508,13 @@ const slowPrConcentrationInsight = (
  * Builds the ordered list of insights for the Pull Requests dashboard.
  *
  * `repositoryUrl` is optional: when provided, insights can carry deep links to
- * the concrete pull requests behind a reading. `peerBenchmark` is optional:
- * when provided, a peer-comparison insight anchors the lead time to the
- * organisation median and this repository's percentile rank.
+ * the concrete pull requests behind a reading. `input.peerBenchmark` is
+ * optional: when provided, a peer-comparison insight anchors the lead time to
+ * the organisation median and this repository's percentile rank.
  */
 export const buildPullRequestsInsights = (
   input: PullRequestsInsightsInput,
   repositoryUrl?: string,
-  peerBenchmark?: PullRequestsInsightsInput["peerBenchmark"],
 ): Insight[] =>
   sortInsights(
     [

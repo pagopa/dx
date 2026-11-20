@@ -1,3 +1,43 @@
+## 0.5.13 (2026-11-18)
+
+### 🚀 Features
+
+- Add SamplingExemptionsLogRecordProcessor to keep errors and exempt custom events when trace-based log sampling is enabled ([#2540](https://github.com/pagopa/dx/pull/2540))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.12 (2026-11-17)
+
+### 🚀 Features
+
+- Accept partial Azure Monitor options in `initAzureMonitor`, merged over the environment-derived defaults instead of replacing them. ([#2539](https://github.com/pagopa/dx/pull/2539))
+
+  **Behavior change**: the second argument of `initAzureMonitor` is now a **partial override**, not a complete configuration. The environment is parsed and validated on every call, so an invalid environment variable throws even when a complete configuration is passed, and the environment-derived defaults (live metrics, sampling ratio, `tracesPerSecond`, the Entra ID credential) are always applied. Overriding a single group (for example only `azureMonitorExporterOptions.connectionString`) therefore also keeps the environment `samplingRatio`, instead of falling back to the Azure Monitor SDK default. Properties explicitly set to `undefined` are ignored and do not shadow the environment values, at the top level and as direct members of the merged option groups (the filtering is not recursive). `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED` is now matched case-insensitively and any value other than `true` disables Entra ID authentication instead of failing validation. `AzureMonitorOptionsOverride` is now exported from `@pagopa/azure-tracing/azure-monitor`.
+
+  ## Migration guide
+
+  The signature is source compatible: a complete `AzureMonitorOpenTelemetryOptions` still satisfies `AzureMonitorOptionsOverride`, so no code change is required to upgrade.
+
+  No action is required for callers that already pass the connection string, a sampling ratio and an explicit `tracesPerSecond`. Audit the following only if you relied on the old "options replace everything" behavior:
+
+  - the trace rate limit: the environment-derived `tracesPerSecond: 0` turns off the Azure Monitor SDK default of `5` traces per second, and a positive `tracesPerSecond` takes precedence over `samplingRatio`. A caller that omitted `tracesPerSecond` therefore switches from rate-limited to percentage sampling: with `samplingRatio: 1` it exports every trace and can raise ingestion substantially. Pass `tracesPerSecond: 5` in the override to keep the previous rate-limited mode;
+  - the sampling ratio: when you do not pass `samplingRatio`, the value now comes from `APPINSIGHTS_SAMPLING_PERCENTAGE` (default `5` → `0.05`) instead of the Azure Monitor SDK default `1` (100%);
+  - the environment variables you previously passed only in code (`APPLICATIONINSIGHTS_CONNECTION_STRING`, `APPINSIGHTS_SAMPLING_PERCENTAGE`) are now read and validated on every call, so a malformed one throws at startup instead of being ignored;
+  - the environment-derived `enableLiveMetrics: true` and the `DefaultAzureCredential` (when `APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true`) are applied even when you pass options.
+
+  Two callers in the `pagopa` organization pass options and neither relied on the replaced configuration, but the `io-growth` telemetry adapter omits `tracesPerSecond`, so it is subject to the rate limit change: with its `samplingRatio: 1` it now exports every trace instead of at most five traces per second.
+
+
+### 🩹 Fixes
+
+- Bump @azure/monitor-opentelemetry to 1.21.0 and align the OpenTelemetry SDK on its release train, restoring Live Metrics and Redis v6 auto-instrumentation. ([#2530](https://github.com/pagopa/dx/pull/2530))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.5.11 (2026-11-04)
 
 ### 🩹 Fixes

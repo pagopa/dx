@@ -38,8 +38,8 @@ export const LocaleContext = createContext<string>(DEFAULT_LOCALE);
 export const useLocale = (): string => useContext(LocaleContext);
 
 export interface DateFormatters {
-  readonly full: (value: string | number | Date) => string;
-  readonly short: (value: string | number | Date) => string;
+  readonly full: (value: Date | number | string) => string;
+  readonly short: (value: Date | number | string) => string;
 }
 
 /** Date formatters bound to the active locale, memoised per locale. */

@@ -20,6 +20,14 @@ variable "github_environment_prefix_enabled" {
   type        = bool
   default     = false
   description = "Prefix GitHub environment names with environment.prefix."
+
+  validation {
+    condition = !var.github_environment_prefix_enabled || alltrue([
+      for environment_name in values(local.envs) :
+      environment_name == local.base_environment_name || !contains(split("-", var.environment.prefix), environment_name)
+    ])
+    error_message = "When github_environment_prefix_enabled is true, environment.prefix must not contain a different lifecycle (dev, uat or prod) as a hyphen-delimited token. Disable GitHub environment prefixing or plan a resource-prefix migration before applying."
+  }
 }
 
 variable "repository" {

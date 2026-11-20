@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/dx-mcpserver",
-  "version": "0.2.20",
+  "version": "0.2.23",
   "private": true,
   "description": "An MCP server that supports developers using DX tools.",
   "keywords": [
@@ -35,11 +35,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@pagopa/eslint-config": "workspace:^",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"

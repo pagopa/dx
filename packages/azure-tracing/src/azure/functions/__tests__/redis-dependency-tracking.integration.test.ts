@@ -13,12 +13,12 @@ import {
   createContainerFixture,
   type DependencyTrackingFixtures,
   telemetryCollectorFixture,
-} from "./dependency-tracking-test-fixtures";
+} from "../../../__tests__/dependency-tracking-test-fixtures";
 import {
   createRunId,
   dependencyTestTimeoutMs,
   runDependencyScenario,
-} from "./dependency-tracking-test-helpers";
+} from "../../../__tests__/dependency-tracking-test-helpers";
 
 const test = baseTest.extend<
   DependencyTrackingFixtures & {
@@ -70,6 +70,13 @@ test(
           ),
     );
 
+    const commands = dependencies
+      .flatMap((dependency) => [dependency.name, dependency.data])
+      .filter((value): value is string => value !== undefined)
+      .map((value) => value.toUpperCase());
+
+    expect(commands.some((command) => command.includes("SET"))).toBe(true);
+    expect(commands.some((command) => command.includes("GET"))).toBe(true);
     expect(dependencies.length).toBeGreaterThanOrEqual(2);
   },
   dependencyTestTimeoutMs,

@@ -13,6 +13,10 @@ const createMockCloudAccountService = (
 ): CloudAccountService => ({
   configureGitHubEnvironment: vi.fn().mockResolvedValue(undefined),
   ensureTerraformBackendAccess: vi.fn().mockResolvedValue(undefined),
+
+  getRunnerAppCredentials: vi
+    .fn()
+    .mockResolvedValue({ credentials: {}, missingClientId: false }),
   getTerraformBackend: vi.fn().mockResolvedValue(undefined),
   hasUserPermissionToInitialize: vi.fn().mockResolvedValue(true),
   initialize: vi.fn().mockResolvedValue(undefined),
@@ -20,6 +24,8 @@ const createMockCloudAccountService = (
   provisionTerraformBackend: vi
     .fn()
     .mockResolvedValue(createMockTerraformBackend()),
+  storeRunnerAppClientId: vi.fn().mockResolvedValue(undefined),
+
   verifyTerraformBackendReadAccess: vi.fn().mockResolvedValue(undefined),
   ...overrides,
 });
