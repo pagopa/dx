@@ -9,14 +9,13 @@ The agent inside the benchmark container talks to Confluence through the
 **Atlassian remote MCP server** (`mcp.atlassian.com/v2/mcp`). That server is
 authenticated with **OAuth only** — there is no static token — and the evals
 write **only** inside the DevEx Playground folder
-`…/spaces/DevEx/folder/3314123072`. The `native-edit` cases copy the seed page
-`…/spaces/DevEx/pages/3313926515` into that folder and then edit the copy's
-draft in place through Confluence's native HTML/granular edits (never a Markdown
-round trip), and the `small-update-large-file` case does the same starting from
-the larger read-only seed `…/spaces/DevEx/pages/3319005192` to measure token
-cost of a small update to a large page. The create cases publish their page
-directly under the folder. The seed pages themselves are read-only. Run them
-deliberately.
+`…/spaces/DevEx/folder/3314123072`. The create cases publish directly under that
+folder. The `native-edit-in-place` case copies the seed page
+`…/spaces/DevEx/pages/3313926515` into the folder and edits the copy's draft in
+place through Confluence's native HTML/granular edits, never a Markdown round
+trip; `small-update-large-file` starts from the larger seed
+`…/spaces/DevEx/pages/3319005192` to measure the token cost of a small change to
+a large page. Both seeds are read-only. Run these cases deliberately.
 
 ## 1. Obtain the Atlassian OAuth credential (one time)
 

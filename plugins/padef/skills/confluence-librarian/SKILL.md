@@ -55,18 +55,20 @@ Source: <document path or artifact>
 2. **Convert once to native HTML.** Build Confluence's native HTML body and map
    Markdown-only rich constructs to their Confluence equivalents:
    `<details>`/`<summary>` → collapsible expand; `> [!NOTE]`, `> [!TIP]`,
-   `> [!WARNING]`, `> [!CAUTION]` → info/tip/warning/error callouts. Front
-   matter is not native metadata: render it as a metadata table. Publish with
-   `createConfluenceContent` (`body.format: html`), or as an unpublished draft
-   (`draft: true`) when the user wants to edit before publishing.
+   `> [!WARNING]`, `> [!CAUTION]` → info/tip/warning/error callouts; a Mermaid
+   fence → a rendered diagram with its source in an expand (see Mermaid
+   diagrams). Front matter is not native metadata: render it as a metadata
+   table. Publish with `createConfluenceContent` (`body.format: html`), or as an
+   unpublished draft (`draft: true`) when the user wants to edit before
+   publishing.
 3. **Translate if requested.** Apply the Translation rules below.
-4. **Write.** Show the summary, then create the page.
+4. **Write.** Create the page with the body from step 2.
 5. **Done when** the page exists at the returned URL and its body carries the
    source's structure, stable IDs, and status values.
 
 ### Edit — change an existing page in place
 
-Apply the **native edit protocol** below; this section is its step order.
+Apply the **native edit protocol** rules below in this order.
 
 An in-place edit runs on the page's unpublished **draft**: the published page
 stays untouched until the user publishes. A page with no draft yet gets one from
@@ -80,22 +82,22 @@ copy call shape below and keep the `contentId` it returns.
 1. **Fetch the baseline once.** Fetch the published page **as native HTML** —
    `getConfluenceContent` with `content_format: html`, `detail: full` — for its
    current body and `snapshotToken`. That single fetch is the baseline for the
-   whole task. Do not fetch the draft up front (a fresh working copy has none);
-   its state comes from the write's response or a cheap follow-up read.
+   whole task. A fresh working copy has no draft yet, so the draft's state comes
+   from the write's response or a cheap follow-up read.
 2. **Apply the minimal change.** Express it as granular edits on the node's
    `data-local-id` (protocol rule 2) and keep every element you are not
    changing intact (protocol rule 3). When the change is handed over as
-   a document, extract only its differing lines (a diff or a targeted match)
-   and change exactly the nodes those lines touch — never read the whole file.
+   a document, take only its differing lines (a diff or a targeted match) and
+   change exactly the nodes those lines touch; the rest of the file stays
+   unread.
 3. **Persist directly, on the draft.** Write with the granular draft edit shape
    below — `draft: true`, never without it, with the published page's current
    `snapshotToken`. Treat the write's response as the verification: it echoes
    the applied content and carries the draft's resume URL.
 4. **Done when** the change is staged on the draft and you report the draft's
    resume URL from the write's response. Verify against the baseline you
-   already hold (Baseline contract) — never re-fetch the full body to check.
-   The change reaches the published page only when the user publishes the
-   draft.
+   already hold (Baseline contract). The change reaches the published page only
+   when the user publishes the draft.
 
 ### Preserve lifecycle state
 
@@ -124,10 +126,9 @@ HTML. The rules:
 
 ## MCP call shapes
 
-Exact payloads for the two writes this skill drives. Their responses carry the
-ids and URLs — read them from there. No `discover` and no
-`getContentFormatGuide` is needed for these two shapes; the payloads below are
-complete.
+Exact payloads for the two writes this skill drives: call them directly, with no
+`discover` or `getContentFormatGuide` step. Their responses carry the ids and
+URLs — read them from there.
 
 **Working copy** — `executeWrite`:
 
@@ -166,15 +167,11 @@ The **baseline** is the page's current native HTML together with its
 `snapshotToken` and version — the reference for verifying that an edit changed
 only what was requested.
 
-- **In context by default.** Hold the baseline in context for the task. Do not
-  re-fetch the full page before every edit; fetch only when a new baseline is
-  needed.
-- **Never re-read what you hold.** Do not re-fetch a page whose content is
-  already in context or on disk; a fresh read is warranted only to obtain a new
+- **In context by default.** Hold the baseline in context or on disk for the
+  task and read it from there. A fresh full read is warranted only for a new
   `snapshotToken` or after `snapshot_stale`. A write's response (echoed
-  content, `status`, `webUrl`) is verification enough; for any other follow-up
-  use a cheap shape (`detail: summary`, `responseFields`) — never `detail:
-  full` just to check state.
+  content, `status`, `webUrl`) is verification enough; any other follow-up uses
+  a cheap shape (`detail: summary`, `responseFields`), not `detail: full`.
 - **Do not rediscover what you created.** Take the copy's `contentId` (or a
   page's `id`/`webUrl`/`title`) from the create/copy/update response. Do not
   locate a page you just made with `search`, `listConfluenceContent`, or
@@ -217,6 +214,25 @@ only what was requested.
 - Verify edits by content, not byte equality: Confluence re-normalizes HTML
   cosmetics on import/export, but macros and node structure must survive
   identically.
+
+## Mermaid diagrams
+
+Show readers the diagram and keep its source one click away. Render the Mermaid
+fence to SVG with [Pele](https://pele.run/) instead of publishing the fence as a
+code block:
+
+- open `https://pele.run/playground#source=<url-encoded source>` in a browser
+  and use **Copy SVG** on the rendered diagram; or
+- load `https://cdn.jsdelivr.net/npm/pele@1/dist/pele.global.js` and read
+  `pele.render(source).svg`.
+
+Put that SVG in the page where the fence was, and keep the fence's lines
+unchanged in a collapsible expand directly below it, titled `Mermaid source`. A
+reader then sees the diagram without the source expanded and can copy the source
+to edit it.
+
+Done when the diagram renders in the page and the same Mermaid text is in the
+expand.
 
 ## Translation rules
 
