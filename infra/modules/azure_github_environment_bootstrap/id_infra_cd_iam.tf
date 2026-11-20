@@ -1,9 +1,9 @@
 # Subscription
 resource "azurerm_role_assignment" "infra_cd_subscription_rbac_admin" {
   scope              = data.azurerm_subscription.current.id
-  role_definition_id = data.azurerm_role_definition.dx_infra_cd_subscription.id
+  role_definition_id = var.terraform_state_container_access == null ? data.azurerm_role_definition.dx_infra_cd_subscription.id : data.azurerm_role_definition.dx_infra_cd_subscription_no_rbac_admin[0].id
   principal_id       = azurerm_user_assigned_identity.infra_cd.principal_id
-  description        = "Allow ${var.repository.name} Infra CD identity to manage the DX subscription admin bundle"
+  description        = var.terraform_state_container_access == null ? "Allow ${var.repository.name} Infra CD identity to manage the DX subscription admin bundle" : "Allow ${var.repository.name} Infra CD identity to use the DX subscription workload bundle"
 }
 
 # Resource Group
@@ -24,10 +24,9 @@ resource "azurerm_role_assignment" "infra_cd_rg_private_networking" {
   description        = "Allow ${var.repository.name} Infra CD identity to manage the DX private networking bundle at resource group level"
 }
 
-# Storage Account - Terraform state file
 resource "azurerm_role_assignment" "infra_cd_st_tf_blob_contributor" {
-  scope                = local.tf_storage_account.id
+  scope                = local.terraform_state_scope
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.infra_cd.principal_id
-  description          = "Allow ${var.repository.name} Infra CD identity to apply changes to the Terraform state file Storage Account scope"
+  description          = var.terraform_state_container_access == null ? "Allow ${var.repository.name} Infra CD identity to apply changes to the Terraform state file Storage Account scope" : "Allow ${var.repository.name} Infra CD identity to manage Terraform state at ${local.terraform_state_scope} scope"
 }

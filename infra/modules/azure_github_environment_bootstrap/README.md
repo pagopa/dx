@@ -167,6 +167,7 @@ For a complete production example using Core Values Exporter, see the [DX bootst
 | `environment`                        | object      |    ✅    | Naming conventions and resource location configuration |
 | `entraid_groups`                     | object      |    ✅    | Azure Entra ID security groups for RBAC                |
 | `terraform_storage_account`          | object      |    ✅    | Storage account for Terraform state files              |
+| `terraform_state_container_access`  | object      |    ❌    | Opt in to container-scoped Terraform state access       |
 | `repository`                         | object      |    ✅    | GitHub repository details                              |
 | `github_private_runner`              | object      |    ✅    | Self-hosted runner configuration                       |
 | `private_dns_zone_resource_group_id` | string      |    ✅    | Resource group with private DNS zones                  |
@@ -212,6 +213,50 @@ terraform_storage_account = {
   resource_group_name = "terraform-state-rg"
 }
 ```
+
+#### `terraform_state_container_access`
+
+Requires `azure-core-infra` version 7.1.0 or later.
+
+Use this option when domains share a state storage account, to scope Bootstrap's
+state grants to each domain's container. Leave it unset (`null`) to keep existing
+permissions. Set it to `{}` to give all six CI/CD identities `Storage Blob Data
+Contributor` on `<environment.domain>-tf-state`. Use `container_name` to choose
+another container (3-24 characters, including the suffix when present).
+
+Configure `upstream` if your pipelines read another container's Terraform state,
+for example to obtain shared networking outputs from core. Without it, Bootstrap
+does not assign Reader access to other state containers. The following grants
+Infra CI/CD read access to shared core state in `dx-tf-state`:
+
+```hcl
+terraform_state_container_access = {
+  upstream = {
+    "dx-tf-state" = {
+      identities = ["infra_ci", "infra_cd"]
+    }
+  }
+}
+```
+
+Each `upstream` key is a container name in `terraform_storage_account` or a
+full ARM container ID.
+
+Select readers with `identities` (`infra_ci`, `infra_cd`, `app_ci`, `app_cd`,
+`opex_ci`, `opex_cd`) or `principal_ids` for external users and identities.
+They receive `Storage Blob Data Reader` on that container. Declare each upstream
+once; the six identities do not need Reader on their own container.
+
+Containers must already exist; this module does not create them or move state.
+The identity running Terraform needs write and lock access to its backend before
+`terraform init`, and read access to any upstream state before planning.
+An apply cannot grant access needed by its own plan. Import existing role
+assignments only when this module will manage those same grants.
+
+Keep the state storage account's resource group separate from workload, additional,
+Opex, and private-networking resource groups; Terraform rejects overlaps.
+Other inherited or external permissions remain unchanged, so container-scoped
+grants alone do not guarantee isolation.
 
 #### `repository`
 
@@ -503,6 +548,7 @@ This module includes practical examples to help you get started quickly:
 | [azurerm_role_assignment.app_cd_tf_rg_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.app_ci_rgs_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.app_ci_subscription_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.app_ci_tf_state_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.devs_group_rgs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.devs_group_tf_rgs_kv_secr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.externals_group_rgs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
@@ -521,6 +567,7 @@ This module includes practical examples to help you get started quickly:
 | [azurerm_role_assignment.opex_ci_subscription_data_access](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.opex_ci_subscription_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.opex_ci_tf_rg_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.terraform_state_upstream_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_user_assigned_identity.app_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
 | [azurerm_user_assigned_identity.app_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
 | [azurerm_user_assigned_identity.infra_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
@@ -541,8 +588,10 @@ This module includes practical examples to help you get started quickly:
 | [azurerm_role_definition.dx_infra_cd_private_networking](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 | [azurerm_role_definition.dx_infra_cd_resource_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 | [azurerm_role_definition.dx_infra_cd_subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
+| [azurerm_role_definition.dx_infra_cd_subscription_no_rbac_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 | [azurerm_role_definition.dx_infra_ci_resource_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 | [azurerm_role_definition.dx_infra_ci_subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
+| [azurerm_role_definition.dx_infra_ci_subscription_no_storage_keys](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 | [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 | [github_organization.owner](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/organization) | data source |
 | [github_repository.this](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/repository) | data source |
@@ -560,6 +609,7 @@ This module includes practical examples to help you get started quickly:
 | <a name="input_private_dns_zone_resource_group_id"></a> [private\_dns\_zone\_resource\_group\_id](#input\_private\_dns\_zone\_resource\_group\_id) | The ID of the resource group containing private DNS zones. | `string` | n/a | yes |
 | <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository. `owner` is the GitHub login or organization name; `owner_id` is the positive numeric GitHub owner ID used in immutable OIDC subjects. For personal-account repositories, set `owner_id` to `owner.id` from `GET /repos/{owner}/{repo}`. | <pre>object({<br/>    owner    = optional(string, "pagopa")<br/>    name     = string<br/>    owner_id = optional(number)<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(string)` | n/a | yes |
+| <a name="input_terraform_state_container_access"></a> [terraform\_state\_container\_access](#input\_terraform\_state\_container\_access) | Opt in to container-scoped state permissions and select upstream readers. | <pre>object({<br/>    container_name = optional(string)<br/>    upstream = optional(map(object({<br/>      identities    = optional(set(string), [])<br/>      principal_ids = optional(set(string), [])<br/>    })), {})<br/>  })</pre> | `null` | no |
 | <a name="input_terraform_storage_account"></a> [terraform\_storage\_account](#input\_terraform\_storage\_account) | Details of the Storage Account (name and resource group) hosting the Terraform state file. | <pre>object({<br/>    resource_group_name = string<br/>    name                = string<br/>  })</pre> | n/a | yes |
 
 ## Outputs

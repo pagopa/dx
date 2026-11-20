@@ -82,3 +82,13 @@ moved {
   from = module.github_runner_dx
   to   = module.github_runner_dx[0]
 }
+
+moved {
+  from = azurerm_role_assignment.opex_ci_subscription_data_access
+  to   = azurerm_role_assignment.opex_ci_subscription_data_access[0]
+}
+
+moved {
+  from = azurerm_role_assignment.opex_cd_tf_rg_blob_data_access
+  to   = azurerm_role_assignment.opex_cd_tf_rg_blob_data_access[0]
+}
