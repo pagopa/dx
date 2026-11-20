@@ -1,3 +1,13 @@
+## 0.0.4 (2026-11-20)
+
+### 🩹 Fixes
+
+- Prefer tsrs in the type-aware rules note ([#2563](https://github.com/pagopa/dx/pull/2563))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.0.3 (2026-11-18)
 
 ### 🩹 Fixes

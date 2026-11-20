@@ -1,3 +1,38 @@
+## 0.27.33 (2026-11-20)
+
+### 🚀 Features
+
+- ## What ([#2517](https://github.com/pagopa/dx/pull/2517))
+
+  `dx add environment` uses `<domain>-tf-state` for new workspace state and
+  `<prefix>-tf-state` for shared core state. Keys are `<layer>.tfstate` for direct
+  roots or `<layer>/<relative-root-path>.tfstate` for nested roots. The CLI prepares
+  the operator's container access and verifies write and lock access before
+  Terraform initialization.
+
+  ## Why
+
+  Separate state by domain and scope permissions to each container instead of
+  sharing account-wide access. This is a minor feature release while the CLI is
+  still `0.x`; the stricter domain validation can reject previously accepted input.
+
+  ## Migration guide
+
+  Existing backend files, coordinates and state keys are preserved; upgrading does
+  not require moving state. Domains must contain 3-15 lowercase letters, numbers
+  and single hyphens, with alphanumeric endpoints. Update non-compliant domains
+  before using `add environment` and review resulting resource-name changes before
+  applying Terraform. Short core prefixes such as `dx` remain valid.
+
+  To move existing state to the new layout, suspend writes, back up state, prepare
+  destination and upstream access, run `terraform init -migrate-state`, and verify
+  state and consumers before removing old access. The identity running the first
+  bootstrap plan needs upstream core-state Reader access prepared beforehand.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.27.32 (2026-11-18)
 
 ### 🚀 Features
