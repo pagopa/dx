@@ -9,10 +9,13 @@ Working notes for maintainers and coding agents. Consumer documentation lives in
 branch-only bodies sit in `references/`: `edit.md` (edit protocol, call shapes,
 baseline contract) and `mermaid.md` (Mermaid to SVG). `scripts/extract-node.js`
 is the offline node extractor `edit.md` points at for a persisted baseline; it
-is dependency-free ESM and its tests run with `node --test` next to it. Keep
-pointers relative and inside this folder — Harbor stages the whole skill
-directory into the container, so the agent can read `references/` and
-`scripts/` at run time.
+is dependency-free ESM and its tests run with `node --test` next to it.
+`scripts/render-mermaid.mjs` is the renderer `mermaid.md` points at: it pins
+Pele in `PELE_VERSION`, installs it into a cache directory on first run, and
+converts in-process. A version bump is that one constant — the cache directory
+name follows it, so a new pin installs beside the old one. Keep pointers
+relative and inside this folder — Harbor stages the whole skill directory into
+the container, so the agent can read `references/` and `scripts/` at run time.
 
 ## The Harbor benchmark
 

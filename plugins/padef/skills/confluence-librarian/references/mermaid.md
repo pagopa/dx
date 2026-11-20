@@ -1,25 +1,32 @@
 # Mermaid diagrams
 
 Reached from [SKILL.md](../SKILL.md) whenever the source or the page holds a
-Mermaid fence. Show readers the diagram and keep its source one click away:
-render the fence to SVG with [Pele](https://pele.run/) instead of publishing the
-fence as a code block.
+Mermaid fence. Show readers the diagram and keep its source one click away.
 
-- open `https://pele.run/playground#source=<url-encoded source>` in a browser and
-  use **Copy SVG** on the rendered diagram; or
-- download the pinned build and read `pele.render(source).svg`:
+## Render the fence to SVG
 
-  ```sh
-  curl -fsSL -o pele.js https://cdn.jsdelivr.net/npm/pele@1.13.0/dist/pele.global.js
-  echo "0b0a46c57a5a6971670c09f5ec4066705bd78505f90fd11adf6260325efa0910  pele.js" | shasum -a 256 -c -
-  ```
+[scripts/render-mermaid.mjs](../scripts/render-mermaid.mjs) turns a fence into
+an SVG with [Pele](https://pele.run/): the script pins the renderer, installs it
+into a cache directory on first run, and converts in-process.
 
-  Version and checksum are pinned together, because `pele@1` is a moving range:
-  a bare hash would fail on the next 1.x release. Bump both when updating.
+1. Pipe the fence's lines in on stdin (`-`), or name a file that holds them, and
+   name the SVG:
 
-Save it as `<slug>.svg`. Confluence has no inline `<svg>` node and its HTML
-conversion never uploads files, so the diagram reaches the page as an
-attachment-backed media node:
+   ```sh
+   node …/scripts/render-mermaid.mjs - diagram-1.svg <<'EOF'
+   graph TD;A[Start]-->B{OK?};B-->|yes|C[Ship];B-->|no|D[Fix]
+   EOF
+   ```
+
+2. Read the status line: `rendered <type> <W>x<H> -> <path>`, or an `error`
+   line with a non-zero exit. `No diagram type detected` means the fence is not
+   Mermaid; `pele install failed` means the renderer did not download — retry
+   that run once.
+
+## Place the diagram on the page
+
+Confluence has no inline `<svg>` node and its HTML conversion never uploads
+files, so the diagram reaches the page as an attachment-backed media node:
 
 1. Upload the SVG with `createConfluenceAttachment` — `contentId` of the page
    plus `localFilePath` of the SVG. It returns a `curl` command; run it to upload
@@ -52,9 +59,12 @@ attachment-backed media node:
    </details>
    ```
 
-A create cannot attach a file to a page that does not exist yet, and an unbuilt
-diagram must never reach a reader as a bare expand. Assemble the page on a
-draft, then publish the assembled result:
+Every expand ships beside its media node.
+
+## Assemble a page that carries diagrams
+
+A create cannot attach a file to a page that does not exist yet, so a new page
+with diagrams lands in two passes:
 
 1. `createConfluenceContent` with `draft: true`: the body from SKILL.md step 2
    minus the media nodes, each diagram's expand already in place. Keep the
