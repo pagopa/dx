@@ -98,10 +98,22 @@ node <skill-dir>/scripts/extract-node.js confluence/<content-id>.html \
   --text "rollout date"
 ```
 
-The extractor returns one complete element and its anchor. `--text` matches
-decoded visible text across inline tags; ambiguous matches list the candidate
-anchors. Use `--list` or `--all` when the command reports multiple matches, then
-re-run with the exact `--local-id`. Apply the same slice-or-match rule to any
-large saved tool output.
+`--local-id` prints the whole element carrying that id: that output is the value
+`replaceNode` takes. `--text` finds the innermost element whose visible text
+contains the needle — case-sensitive, across inline markup — which is how you
+discover an id from what the page says. Exit `2` means several matches; the
+candidates are listed.
+
+Each match also reports its `anchor`, the nearest ancestor carrying a
+`data-local-id`:
+
+| Anchor                             | Next move                                                                               |
+| ---------------------------------- | --------------------------------------------------------------------------------------- |
+| `anchor=self`                      | The printed HTML is the value `replaceNode` takes.                                      |
+| `anchor=<tag>[local-id=…] bytes …` | The match has no id of its own: re-run with that `--local-id` for the replaceable HTML. |
+| `anchor=(none)`                    | Fall back to the full `body`.                                                           |
+
+`--json` reports the same anchor beside `html`, which stays the match's own
+slice. Apply the same slice-or-match rule to any large saved tool output.
 
 - Never store credentials in baseline files.

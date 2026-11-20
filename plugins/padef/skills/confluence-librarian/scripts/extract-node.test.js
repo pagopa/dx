@@ -7,7 +7,12 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "node:test";
 
-import { describeMatches, findElements, scanHtml } from "./extract-node.js";
+import {
+  anchorOf,
+  describeMatches,
+  findElements,
+  scanHtml,
+} from "./extract-node.js";
 
 const script = fileURLToPath(new URL("./extract-node.js", import.meta.url));
 const baseline = [
@@ -92,6 +97,37 @@ test("surfaces ambiguity instead of truncating a match", () => {
   assert.match(output, /match 2\/2 — <strong>/);
 });
 
+test("reports the nearest addressable ancestor for a text hit", () => {
+  const { matches } = findElements(baseline, { text: "Rollout window" });
+  assert.equal(matches.length, 1);
+  assert.equal(matches[0].localId, undefined);
+  assert.equal(anchorOf(matches[0]).localId, "sec-2");
+  const output = describeMatches(baseline, matches);
+  assert.match(
+    output,
+    /data-local-id=\(none\) — anchor=section\[local-id=sec-2\] bytes \d+-\d+/,
+  );
+  assert.doesNotMatch(output, /^note:/m);
+});
+
+test("reports a self anchor when the hit is already addressable", () => {
+  const { matches } = findElements(baseline, { localId: "panel-4" });
+  assert.equal(anchorOf(matches[0]), matches[0]);
+  assert.match(
+    describeMatches(baseline, matches),
+    /data-local-id=panel-4 — anchor=self/,
+  );
+});
+
+test("flags matches without any addressable ancestor", () => {
+  const html = "<div><p>nowhere addressable</p></div>";
+  const { matches } = findElements(html, { text: "nowhere addressable" });
+  assert.equal(anchorOf(matches[0]), null);
+  const output = describeMatches(html, matches);
+  assert.match(output, /anchor=\(none\)/);
+  assert.match(output, /note: no data-local-id on this node or its ancestors/);
+});
+
 test("scopes a text needle to the requested local-id", () => {
   const scoped = findElements(baseline, {
     text: "rollout date",
@@ -125,7 +161,7 @@ test("lists anchors without the element body", async () => {
     assert.equal(list.status, 0);
     assert.match(
       list.stdout.trim(),
-      /^1\/1 section\[local-id=sec-2\] — bytes \d+-\d+$/,
+      /^1\/1 section\[local-id=sec-2\] — bytes \d+-\d+ — anchor=self$/,
     );
     assert.doesNotMatch(list.stdout, /<section/);
 
@@ -169,6 +205,21 @@ test("matches a needle spanning inline markup and entities", () => {
   assert.equal(inline.matches[0].tag, "p");
 });
 
+test("exposes the anchor in machine-readable output", () => {
+  const json = spawnSync(
+    process.execPath,
+    [script, "-", "--text", "Rollout window", "--json"],
+    { input: baseline, encoding: "utf8" },
+  );
+  assert.equal(json.status, 0);
+  const [entry] = JSON.parse(json.stdout);
+  assert.equal(entry.tag, "p");
+  assert.equal(entry.localId, null);
+  assert.equal(entry.anchor.tag, "section");
+  assert.equal(entry.anchor.localId, "sec-2");
+  assert.match(entry.html, /^<p>Rollout window/);
+});
+
 test("reads the page from stdin when the path is -", async () => {
   const stdin = spawnSync(
     process.execPath,
@@ -178,6 +229,6 @@ test("reads the page from stdin when the path is -", async () => {
   assert.equal(stdin.status, 0);
   assert.match(
     stdin.stdout.trim(),
-    /^1\/1 section\[local-id=sec-2\] — bytes \d+-\d+$/,
+    /^1\/1 section\[local-id=sec-2\] — bytes \d+-\d+ — anchor=self$/,
   );
 });

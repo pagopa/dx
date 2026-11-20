@@ -188,6 +188,27 @@ export function describePath(element) {
     : chain.join(" > ");
 }
 
+// `edits` can only address a node that carries a data-local-id, so a text hit
+// nested in an anonymous paragraph reports the nearest addressable ancestor.
+export function anchorOf(element) {
+  for (let current = element; current; current = current.parent) {
+    if (current.localId) {
+      return current;
+    }
+  }
+  return null;
+}
+
+function describeAnchor(element) {
+  const anchor = anchorOf(element);
+  if (!anchor) {
+    return "anchor=(none)";
+  }
+  return anchor === element
+    ? "anchor=self"
+    : `anchor=${describe(anchor)} bytes ${anchor.start}-${anchor.end}`;
+}
+
 function isWithin(element, ancestor) {
   for (let current = element; current; current = current.parent) {
     if (current === ancestor) {
@@ -254,7 +275,7 @@ export function describeMatches(html, elements, { list = false } = {}) {
       .map(
         (element, index) =>
           `${index + 1}/${sorted.length} ${describePath(element)} — bytes ` +
-          `${element.start}-${element.end}`,
+          `${element.start}-${element.end} — ${describeAnchor(element)}`,
       )
       .join("\n");
   }
@@ -264,8 +285,17 @@ export function describeMatches(html, elements, { list = false } = {}) {
       const header =
         `match ${index + 1}/${sorted.length} — <${element.tag}> — ` +
         `bytes ${element.start}-${element.end} (${body.length}) — ` +
-        `data-local-id=${element.localId ?? "(none)"}`;
-      return [header, `path: ${describePath(element)}`, body].join("\n");
+        `data-local-id=${element.localId ?? "(none)"} — ` +
+        describeAnchor(element);
+      const lines = [header, `path: ${describePath(element)}`];
+      if (!anchorOf(element)) {
+        lines.push(
+          "note: no data-local-id on this node or its ancestors — a " +
+            "granular edit cannot address it; use a full body update.",
+        );
+      }
+      lines.push(body);
+      return lines.join("\n");
     })
     .join("\n\n");
 }
@@ -277,7 +307,7 @@ export function ambiguityHint(elements, limit = 10) {
     .map(
       (element, index) =>
         `  ${index + 1}. ${describePath(element)} — bytes ` +
-        `${element.start}-${element.end}`,
+        `${element.start}-${element.end} — ${describeAnchor(element)}`,
     );
   if (sorted.length > shown.length) {
     shown.push(`  … ${sorted.length - shown.length} more (use --list)`);
@@ -353,16 +383,27 @@ async function main() {
   if (options.json) {
     console.log(
       JSON.stringify(
-        matches.map((element) => ({
-          tag: element.tag,
-          localId: element.localId ?? null,
-          start: element.start,
-          end: element.end,
-          path: describePath(element),
-          html: options.list
-            ? undefined
-            : html.slice(element.start, element.end),
-        })),
+        matches.map((element) => {
+          const anchor = anchorOf(element);
+          return {
+            tag: element.tag,
+            localId: element.localId ?? null,
+            start: element.start,
+            end: element.end,
+            path: describePath(element),
+            anchor: anchor
+              ? {
+                  tag: anchor.tag,
+                  localId: anchor.localId,
+                  start: anchor.start,
+                  end: anchor.end,
+                }
+              : null,
+            html: options.list
+              ? undefined
+              : html.slice(element.start, element.end),
+          };
+        }),
         null,
         2,
       ),
