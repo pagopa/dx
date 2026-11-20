@@ -31,6 +31,8 @@ collect() {
       {type: "event", name: "runtime-hardening.invalid-record",
        body: ("Invalid " + $source + " record"), exception: false,
        attributes: (attributes + {"security.source": $source})}
+    elif $source == "bullfrog" and $entry.decision == "allowed" then
+      empty
     elif $source == "falco" then
       {type: "event", name: "runtime-hardening.falco",
        body: "Falco rule triggered", exception: false,

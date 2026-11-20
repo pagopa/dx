@@ -27,9 +27,10 @@ build and test job only runs when projects are affected. The other jobs,
 including self-hosted environment jobs, are not protected. Falco and Bullfrog
 findings appear in the job summary, not as PR comments. Sudo remains enabled
 for Docker, so privileged code can bypass Bullfrog's egress filtering.
-Sanitized Falco and Bullfrog events are also sent to the same Application
-Insights instance used by Terraform workflows. Command lines and raw output are
-not exported; Bullfrog events include destination domains.
+Sanitized Falco findings and blocked Bullfrog connections are also sent to the
+same Application Insights instance used by Terraform workflows. Allowed
+connections remain in the job summary. Command lines and raw output are not
+exported; Bullfrog events include destination domains.
 
 ### 📦 Release & Versioning
 

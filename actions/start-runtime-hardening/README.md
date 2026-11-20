@@ -30,13 +30,14 @@ job summary. An incomplete list can make the job fail.
 
 The action initializes `setup-telemetry` unless the job already has a
 telemetry session. Its collector runs after Bullfrog's post step and queues
-sanitized Falco and Bullfrog events for the telemetry action's post step.
-Falco events contain rule, priority and timestamp; Bullfrog events contain
-domain, port, protocol, decision, reason and timestamp. Command lines, raw
-output, executable paths and IP addresses are not exported. The telemetry
-export itself happens after collection and is not included in the Bullfrog
-results. An existing telemetry session must remain available until the post
-phase; in particular, a later checkout must not remove its event file.
+sanitized Falco findings and blocked Bullfrog connections for the telemetry
+action's post step. Falco events contain rule, priority and timestamp; Bullfrog
+events contain domain, port, protocol, decision, reason and timestamp. Allowed
+connections remain in Bullfrog's job summary but are not exported. Command
+lines, raw output, executable paths and IP addresses are not exported. The
+telemetry export itself happens after collection and is not included in the
+Bullfrog results. An existing telemetry session must remain available until
+the post phase; in particular, a later checkout must not remove its event file.
 
 The default telemetry connection string uses
 `italynorth-0.in.applicationinsights.azure.com`, included in the default

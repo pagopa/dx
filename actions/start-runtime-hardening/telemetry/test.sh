@@ -22,7 +22,7 @@ OTEL_EVENT_FILE="$events" GITHUB_JOB=workspace \
   bash "$script_dir/collect.sh" "$falco" "$bullfrog"
 
 jq -se '
-  length == 5 and
+  length == 4 and
   .[0].name == "runtime-hardening.falco" and
   .[0].attributes["falco.rule"] == "Sensitive action" and
   .[0].attributes["falco.priority"] == "Warning" and
@@ -32,12 +32,20 @@ jq -se '
   .[2].attributes["network.destination.domain"] == "example.com" and
   .[2].attributes["network.destination.port"] == "443" and
   .[2].attributes["bullfrog.decision"] == "blocked" and
-  .[3].attributes["bullfrog.decision"] == "allowed" and
-  .[4].name == "runtime-hardening.invalid-record"
+  .[3].name == "runtime-hardening.invalid-record"
 ' "$events" > /dev/null
 
-if grep -Eq 'secret|192\.0\.2\.1' "$events"; then
+if grep -Eq 'secret|192\.0\.2\.1|registry\.npmjs\.org' "$events"; then
   echo "Sensitive or unparsed data was included in telemetry" >&2
+  exit 1
+fi
+
+: > "$falco"
+printf '%s\n' '{"decision":"allowed","domain":"example.com"}' > "$bullfrog"
+: > "$events"
+OTEL_EVENT_FILE="$events" bash "$script_dir/collect.sh" "$falco" "$bullfrog"
+if [ -s "$events" ]; then
+  echo "Allowed connections produced telemetry" >&2
   exit 1
 fi
 
