@@ -79,7 +79,7 @@ module "dx_infra_cd_subscription_admin" {
 
 module "dx_infra_cd_subscription_no_rbac_admin" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CD Subscription (No RBAC Admin)"
@@ -136,7 +136,7 @@ module "dx_infra_ci_subscription_reader" {
 
 module "dx_infra_ci_subscription_reader_no_storage_keys" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CI Subscription (No Storage Key Access)"
