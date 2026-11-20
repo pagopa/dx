@@ -450,7 +450,10 @@ instead of a hand-rolled `judge.py`. `convert` renders a judge header
 (`[judge]`: model + evidence files, `[scoring]`: gate) and one binary
 `[[criterion]]` per `expected_output` / `expectations` entry, reading the
 agentskills.io rubric from `evals.json` (see the `quality-header.toml`
-template). `tests/test.sh` runs the mechanical checks (F1 skill load + invoke
+template). The aggregate criterion built from `expected_output` restates the
+`expectations`, so it is emitted with `weight = 0` whenever a case declares
+expectations: scoring both would charge a single miss twice. A case with no
+expectation scores that aggregate alone, at weight 1. `tests/test.sh` runs the mechanical checks (F1 skill load + invoke
 proof, evaluated by `tests/skill_use.py` over the ATIF trajectory) and, when a
 judge token is available, invokes
 `uvx --with 'litellm[mcp]' --from harbor-rewardkit==0.2.0 rewardkit /tests` to produce
