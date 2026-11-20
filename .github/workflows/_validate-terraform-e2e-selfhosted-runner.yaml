@@ -25,8 +25,6 @@ jobs:
   smoke:
     timeout-minutes: 20
     runs-on: ${{ fromJSON(inputs.runner_label) }}
-    env:
-      RUNNER_TOOL_CACHE: ${{ runner.temp }}/toolcache
 
     steps:
       - name: Verify runner execution
@@ -52,7 +50,9 @@ jobs:
           if command -v docker >/dev/null && timeout 5 docker info >/dev/null 2>&1; then exit 1; fi
 
       - name: Prepare temporary tool cache
-        run: mkdir -p "$RUNNER_TOOL_CACHE"
+        run: |
+          mkdir -p "$RUNNER_TEMP/toolcache"
+          echo "RUNNER_TOOL_CACHE=$RUNNER_TEMP/toolcache" >> "$GITHUB_ENV"
 
       - name: Prepare temporary Python environment
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
