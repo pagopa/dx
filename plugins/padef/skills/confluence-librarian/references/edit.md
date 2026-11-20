@@ -94,8 +94,11 @@ only what was requested.
     --text "rollout date"             # smallest element holding that body text
   ```
 
-  It matches body text only, never attribute values, and rebuilds the element
-  from a balanced scan, so the node it prints is never truncated. A needle that
+  It matches decoded visible text only, never attribute values or script
+  bodies, so `R&D` finds `R&amp;D` and a needle spans inline tags
+  (`rollout date` finds `<p>rollout <strong>date</strong></p>`, selecting the
+  paragraph). It rebuilds the element from a balanced scan, so the node it
+  prints is never truncated. A needle that
   matches several nodes exits `2` and lists their anchors: pass the `--local-id`
   it names, add `--all` when every match is wanted, or `--list` for anchors
   alone. The same holds for any large tool output the environment saved to a

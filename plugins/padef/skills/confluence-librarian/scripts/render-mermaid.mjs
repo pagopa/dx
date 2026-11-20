@@ -2,15 +2,22 @@
 // Render a Mermaid fence to SVG with Pele. The version is pinned here and
 // installed once into a cache directory, so repeat runs render in-process.
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  readFileSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 
 const PELE_VERSION = "1.13.0";
+const uid = typeof process.getuid === "function" ? process.getuid() : "user";
 const cacheRoot =
   process.env.CONFLUENCE_LIBRARIAN_CACHE ??
-  join(tmpdir(), "confluence-librarian");
+  join(tmpdir(), `confluence-librarian-${uid}`);
 const peleDir = join(cacheRoot, `pele-${PELE_VERSION}`);
 const peleEntry = join(peleDir, "node_modules/pele/dist/pele.js");
 
@@ -20,8 +27,21 @@ if (!fenceArg || !outPath) {
   process.exit(2);
 }
 
+// The cache is imported as code, so it must be ours alone: a shared location
+// could hold a module another account planted there.
+function privateDir(path) {
+  mkdirSync(path, { recursive: true, mode: 0o700 });
+  const stats = lstatSync(path);
+  const owned = typeof process.getuid !== "function" || stats.uid === uid;
+  if (stats.isSymbolicLink() || !stats.isDirectory() || !owned) {
+    console.error(`error cache directory ${path} is not a private directory`);
+    process.exit(1);
+  }
+}
+
+privateDir(peleDir);
+
 if (!existsSync(peleEntry)) {
-  mkdirSync(peleDir, { recursive: true });
   try {
     execFileSync(
       "npm",

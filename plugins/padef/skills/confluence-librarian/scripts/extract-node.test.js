@@ -152,3 +152,32 @@ test("lists anchors without the element body", async () => {
     await rm(directory, { recursive: true, force: true });
   }
 });
+
+test("matches a needle spanning inline markup and entities", () => {
+  const html =
+    "<div><p>R&amp;D notes</p>" +
+    "<p>rollout <strong>date</strong> is set.</p></div>";
+  const entities = findElements(html, { text: "R&D" });
+  assert.equal(entities.matches.length, 1);
+  assert.equal(
+    html.slice(entities.matches[0].start, entities.matches[0].end),
+    "<p>R&amp;D notes</p>",
+  );
+
+  const inline = findElements(html, { text: "rollout date" });
+  assert.equal(inline.matches.length, 1);
+  assert.equal(inline.matches[0].tag, "p");
+});
+
+test("reads the page from stdin when the path is -", async () => {
+  const stdin = spawnSync(
+    process.execPath,
+    [script, "-", "--local-id", "sec-2", "--list"],
+    { input: baseline, encoding: "utf8" },
+  );
+  assert.equal(stdin.status, 0);
+  assert.match(
+    stdin.stdout.trim(),
+    /^1\/1 section\[local-id=sec-2\] — bytes \d+-\d+$/,
+  );
+});

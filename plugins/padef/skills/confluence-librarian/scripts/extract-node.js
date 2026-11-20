@@ -84,6 +84,7 @@ export function scanHtml(html) {
         start: textStart,
         end: tagStart,
         value: html.slice(textStart, tagStart),
+        parent: open.at(-1) ?? null,
       });
     }
 
@@ -161,6 +162,7 @@ export function scanHtml(html) {
       start: textStart,
       end: html.length,
       value: html.slice(textStart),
+      parent: open.at(-1) ?? null,
     });
   }
   for (const element of open) {
@@ -186,23 +188,6 @@ export function describePath(element) {
     : chain.join(" > ");
 }
 
-function innermostContainer(elements, offset) {
-  let found = null;
-  for (const element of elements) {
-    if (
-      element.end === null ||
-      element.start > offset ||
-      offset >= element.end
-    ) {
-      continue;
-    }
-    if (!found || element.end - element.start < found.end - found.start) {
-      found = element;
-    }
-  }
-  return found;
-}
-
 function isWithin(element, ancestor) {
   for (let current = element; current; current = current.parent) {
     if (current === ancestor) {
@@ -210,6 +195,32 @@ function isWithin(element, ancestor) {
     }
   }
   return false;
+}
+
+// Visible text runs across inline markup and entities, so a needle is matched
+// against each element's decoded descendant text, then narrowed to the
+// smallest hit: "rollout date" in `<p>rollout <strong>date</strong></p>`
+// selects the paragraph.
+function smallestTextHits(texts, needle) {
+  const byElement = new Map();
+  for (const segment of texts) {
+    const decoded = decodeEntities(segment.value);
+    for (let node = segment.parent; node; node = node.parent) {
+      byElement.set(node, (byElement.get(node) ?? "") + decoded);
+    }
+  }
+  const hits = new Set(
+    [...byElement]
+      .filter(([, value]) => value.includes(needle))
+      .map(([element]) => element),
+  );
+  const enclosing = new Set();
+  for (const hit of hits) {
+    for (let node = hit.parent; node; node = node.parent) {
+      enclosing.add(node);
+    }
+  }
+  return [...hits].filter((hit) => !enclosing.has(hit));
 }
 
 export function findElements(html, { localId, text } = {}) {
@@ -226,26 +237,12 @@ export function findElements(html, { localId, text } = {}) {
 
   const matches = [];
   const textMisses = [];
-  for (const segment of texts) {
-    let from = 0;
-    for (;;) {
-      const at = segment.value.indexOf(text, from);
-      if (at === -1) {
-        break;
-      }
-      from = at + text.length;
-      const container = innermostContainer(elements, segment.start + at);
-      if (!container) {
-        continue;
-      }
-      if (scoped && !scoped.some((element) => isWithin(container, element))) {
-        textMisses.push(container);
-        continue;
-      }
-      if (!matches.includes(container)) {
-        matches.push(container);
-      }
+  for (const element of smallestTextHits(texts, text)) {
+    if (scoped && !scoped.some((scope) => isWithin(element, scope))) {
+      textMisses.push(element);
+      continue;
     }
+    matches.push(element);
   }
   return { matches, textMisses };
 }
@@ -327,12 +324,18 @@ function parseArgs(argv) {
   return { file: positional[0], options };
 }
 
+async function readStdin() {
+  const chunks = [];
+  for await (const chunk of process.stdin) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks).toString("utf8");
+}
+
 async function main() {
   const { file, options } = parseArgs(process.argv.slice(2));
   const html =
-    file === "-"
-      ? await readFile(0, "utf8")
-      : await readFile(resolve(file), "utf8");
+    file === "-" ? await readStdin() : await readFile(resolve(file), "utf8");
   const { matches, textMisses } = findElements(html, options);
 
   if (matches.length === 0) {
