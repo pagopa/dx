@@ -210,6 +210,14 @@ variable "static_website" {
     index_document     = null
     error_404_document = null
   }
+
+  validation {
+    condition = !var.static_website.enabled || anytrue([
+      var.static_website.index_document != null && trimspace(var.static_website.index_document) != "",
+      var.static_website.error_404_document != null && trimspace(var.static_website.error_404_document) != ""
+    ])
+    error_message = "At least one of index_document or error_404_document must be set when static website hosting is enabled."
+  }
 }
 
 variable "custom_domain" {
