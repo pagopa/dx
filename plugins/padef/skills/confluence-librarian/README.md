@@ -14,9 +14,8 @@ Change the rollout date on <page URL> to 2026-12-01.
 Translate the "Payments" page to English.
 ```
 
-Authoring skills such as `prd-alchemist` and `uc-engraver` hand the write step
-to this one once the content is confirmed. If no existing page is named, it asks
-before treating the request as an edit.
+Another skill can hand the write step to this one once the content is confirmed.
+If no existing page is named, it asks before treating the request as an edit.
 
 ## Prerequisites
 

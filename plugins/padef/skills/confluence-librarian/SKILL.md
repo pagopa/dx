@@ -21,9 +21,9 @@ Change the rollout date on <page URL> to 2026-12-01.
 Translate the "Payments" page to English.
 ```
 
-Authoring skills such as `prd-alchemist` and `uc-engraver` hand the write step
-to this one once the content is confirmed. If no existing page is named, ask
-before treating the request as an edit.
+A calling skill may hand the write step to this one once the content is
+confirmed. If no existing page is named, ask before treating the request as an
+edit.
 
 ## Prerequisites
 
@@ -255,8 +255,15 @@ code block:
 
 - open `https://pele.run/playground#source=<url-encoded source>` in a browser
   and use **Copy SVG** on the rendered diagram; or
-- load `https://cdn.jsdelivr.net/npm/pele@1/dist/pele.global.js` and read
-  `pele.render(source).svg`.
+- download the pinned build and read `pele.render(source).svg`:
+
+  ```sh
+  curl -fsSL -o pele.js https://cdn.jsdelivr.net/npm/pele@1.13.0/dist/pele.global.js
+  echo "0b0a46c57a5a6971670c09f5ec4066705bd78505f90fd11adf6260325efa0910  pele.js" | shasum -a 256 -c -
+  ```
+
+  Version and checksum are pinned together, because `pele@1` is a moving range:
+  a bare hash would fail on the next 1.x release. Bump both when updating.
 
 Save it as `<slug>.svg`. Confluence has no inline `<svg>` node and its HTML
 conversion never uploads files, so the diagram reaches the page as an
