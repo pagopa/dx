@@ -1,6 +1,6 @@
 module "core_values" {
   source  = "pagopa-dx/azure-core-values-exporter/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   core_state = var.core_state
 }
