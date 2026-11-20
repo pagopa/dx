@@ -4,5 +4,19 @@
     "description": "Deploy a serverless and scalable OpenNext solution on AWS",
     "provider": "aws",
     "version": "2.1.2"
+  },
+  "targets": {
+    "validate": {
+      "dependsOn": [],
+      "inputs": [
+        "default",
+        "examples",
+        "{projectRoot}/modules/**/*.{tf,tfvars}"
+      ],
+      "command": "terraform init -backend=false -input=false && terraform validate",
+      "options": {
+        "cwd": "{projectRoot}/examples/basic"
+      }
+    }
   }
 }
