@@ -1,3 +1,13 @@
+## 0.22.27 (2026-11-20)
+
+### 🩹 Fixes
+
+- Move ESLint to hold and Oxlint to adopt in the technology radar ([#2563](https://github.com/pagopa/dx/pull/2563))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.22.26 (2026-11-18)
 
 ### 🩹 Fixes
