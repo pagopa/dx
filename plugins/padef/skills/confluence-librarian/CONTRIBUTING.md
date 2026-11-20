@@ -3,6 +3,14 @@
 Working notes for maintainers and coding agents. Consumer documentation lives in
 [README.md](./README.md); keep the readme free of internal procedures.
 
+## Skill layout
+
+`SKILL.md` holds the workflow and the rules both paths share. The two
+branch-only bodies sit in `references/`: `edit.md` (edit protocol, call shapes,
+baseline contract) and `mermaid.md` (Mermaid to SVG). Keep pointers relative and
+inside this folder — Harbor stages the whole skill directory into the container,
+so the agent can read `references/` at run time.
+
 ## The Harbor benchmark
 
 The `evals/` benchmark publishes and updates **real Confluence pages**.
