@@ -6,7 +6,9 @@
 import type { NodePlopAPI } from "node-plop";
 
 import nodePlop from "node-plop";
+import { spawnSync } from "node:child_process";
 import * as fs from "node:fs/promises";
+import { createRequire } from "node:module";
 import * as os from "node:os";
 import * as path from "node:path";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -42,6 +44,44 @@ const payload: Payload = {
   repoDescription: "A test repository for DX",
   repoName: "my-test-repo",
   repoOwner: "pagopa",
+};
+
+const workspaceModule = createRequire(import.meta.url);
+
+/** The Oxlint binary and preset shipped by the DX workspace, if resolvable. */
+const resolveWorkspaceOxlint = () => ({
+  bin: path.join(
+    path.dirname(workspaceModule.resolve("oxlint/package.json")),
+    "bin/oxlint",
+  ),
+  preset: path.dirname(
+    workspaceModule.resolve("@pagopa/oxlint-config/base.json"),
+  ),
+});
+
+/**
+ * Lints a file of the generated repository with the workspace Oxlint binary,
+ * so configuration discovery and ignore patterns resolve from the scaffold
+ * root exactly as `nx lint` would inside a freshly generated repo.
+ */
+const lintGeneratedFile = (
+  bin: string,
+  generatedRoot: string,
+  file: string,
+) => {
+  const result = spawnSync(bin, [file], {
+    cwd: generatedRoot,
+    encoding: "utf8",
+  });
+
+  return { output: `${result.stdout}${result.stderr}`, status: result.status };
+};
+
+/** Mirrors the `@pagopa/oxlint-config` package that `setup-pnpm` installs. */
+const linkOxlintPreset = async (generatedRoot: string, preset: string) => {
+  const scopeDir = path.join(generatedRoot, "node_modules/@pagopa");
+  await fs.mkdir(scopeDir, { recursive: true });
+  await fs.symlink(preset, path.join(scopeDir, "oxlint-config"), "dir");
 };
 
 describe("monorepo generator — DX validation pipeline", () => {
@@ -110,6 +150,98 @@ describe("monorepo generator — DX validation pipeline", () => {
     await expect(
       fs.readFile(path.join(generatedRoot, ".gitignore"), "utf8"),
     ).resolves.toContain(".npmrc");
+  });
+
+  it("infers the lint target from the Oxlint plugin instead of ESLint", async () => {
+    const generatedFiles = await readGeneratedFiles(
+      path.join(tmpDir, payload.repoName),
+      ["nx.json"],
+    );
+
+    const nxJson: unknown = JSON.parse(generatedFiles["nx.json"]);
+
+    expect(nxJson).toMatchObject({
+      plugins: expect.arrayContaining([
+        expect.objectContaining({
+          options: { targetName: "lint" },
+          plugin: "@nx/oxlint",
+        }),
+      ]),
+      // `--fix` is a CLI argument of the Oxlint executor: the target defaults
+      // carry it for local runs and drop it in the read-only CI configuration.
+      targetDefaults: {
+        lint: expect.arrayContaining([
+          expect.objectContaining({
+            configurations: { ci: { args: "" } },
+            dependsOn: ["^build"],
+            filter: { plugin: "@nx/oxlint" },
+            options: { args: "--fix" },
+          }),
+        ]),
+      },
+    });
+    expect(generatedFiles["nx.json"]).not.toContain("@nx/eslint");
+  });
+
+  it("ships the Oxlint configuration and no Prettier artifact", async () => {
+    const generatedRoot = path.join(tmpDir, payload.repoName);
+    const generatedFiles = await readGeneratedFiles(generatedRoot, [
+      ".gitignore",
+      ".oxlintrc.json",
+    ]);
+
+    // The scaffold extends the published PagoPA DX preset, resolved from
+    // GitHub Packages like the other DX packages. Oxlint only accepts file
+    // paths in `extends`, so the preset is referenced through its install
+    // path: a bare package specifier is rejected at lint time.
+    const oxlintConfig = JSON.parse(generatedFiles[".oxlintrc.json"]);
+    expect(oxlintConfig).toMatchObject({
+      extends: ["./node_modules/@pagopa/oxlint-config/base.json"],
+    });
+    // The preset's own ignore list never matches consumer files, so the
+    // scaffold carries the one that keeps `oxlint --fix` out of build output.
+    expect(oxlintConfig.ignorePatterns).toEqual(
+      expect.arrayContaining(["**/generated/*", "**/dist/**", "**/bin/**"]),
+    );
+    // Oxfmt replaced Prettier, so the scaffold ships no Prettier ignore file.
+    await expect(
+      fs.access(path.join(generatedRoot, ".prettierignore")),
+    ).rejects.toMatchObject({ code: "ENOENT" });
+    // Oxlint has no cache, so neither the old nor a renamed cache entry ships.
+    expect(generatedFiles[".gitignore"]).not.toContain(".eslintcache");
+    expect(generatedFiles[".gitignore"]).not.toContain(".oxlintcache");
+  });
+
+  it("lints the generated sources with the Oxlint preset and the generated ignore list", async () => {
+    const generatedRoot = path.join(tmpDir, payload.repoName);
+    const { bin, preset } = resolveWorkspaceOxlint();
+    await linkOxlintPreset(generatedRoot, preset);
+    await fs.mkdir(path.join(generatedRoot, "dist"), { recursive: true });
+    await fs.mkdir(path.join(generatedRoot, "src"), { recursive: true });
+
+    // `@pagopa/oxlint-config` is only reachable through its install path, so
+    // a wrong `extends` entry fails the whole run instead of being ignored.
+    await fs.writeFile(
+      path.join(generatedRoot, "src/sample.ts"),
+      "export const isOne = (value: number) => value == 1;\n",
+    );
+    await fs.writeFile(
+      path.join(generatedRoot, "dist/bundle.ts"),
+      "export const broken = () => {\n  debugger;\n};\n",
+    );
+
+    // `eqeqeq` is not an Oxlint default rule: seeing it proves the scaffold
+    // extends the DX preset rather than linting with the built-in set.
+    const source = lintGeneratedFile(bin, generatedRoot, "src/sample.ts");
+    expect(source.output).toContain("eqeqeq");
+    expect(source.status).toBe(1);
+
+    // The preset ignore list never matches consumer files, so the generated
+    // one is what keeps `oxlint --fix` out of build output: the file is
+    // reported as not lintable instead of reporting its violation.
+    const buildOutput = lintGeneratedFile(bin, generatedRoot, "dist/bundle.ts");
+    expect(buildOutput.output).not.toContain("no-debugger");
+    expect(buildOutput.output).toContain("No files found to lint");
   });
 
   it("generates the Code Review workflow and the Trivy configuration", async () => {

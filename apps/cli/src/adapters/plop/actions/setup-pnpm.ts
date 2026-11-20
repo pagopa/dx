@@ -40,6 +40,18 @@ export const NX_TERRAFORM_DEPENDENCY = `${NX_TERRAFORM_PACKAGE}@${GITHUB_PACKAGE
 export const NX_DOCKER_DEPENDENCY = `${NX_DOCKER_PACKAGE}@${GITHUB_PACKAGES_RANGE}`;
 
 /**
+ * Oxlint preset shipped by PagoPA DX: the generated `.oxlintrc.json` extends
+ * `base.json` from this package.
+ */
+export const OXLINT_CONFIG_PACKAGE = "@pagopa/oxlint-config";
+
+/** Oxlint preset as a pnpm dependency specifier. */
+export const OXLINT_CONFIG_DEPENDENCY = `${OXLINT_CONFIG_PACKAGE}@${GITHUB_PACKAGES_RANGE}`;
+
+/** Linter binaries: the `@nx/oxlint` plugin leaves the peer dependency optional. */
+export const OXLINT_DEPENDENCY = "oxlint";
+
+/**
  * Formatter used by `nx format:check` in generated repositories.
  */
 export const OXFMT_DEPENDENCY = "oxfmt";
@@ -111,11 +123,11 @@ export default function (plop: NodePlopAPI) {
     }
 
     try {
-      await $`mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`;
+      await $`mise exec -- pnpm -w add -D @nx/js @nx/oxlint @nx/vitest ${OXLINT_DEPENDENCY} ${OXFMT_DEPENDENCY} ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXLINT_CONFIG_DEPENDENCY}`;
     } catch (cause) {
       throw new Error(
         [
-          `Failed to install the workspace dependencies (${NX_TERRAFORM_PACKAGE}, ${NX_DOCKER_PACKAGE}).`,
+          `Failed to install the workspace dependencies (${NX_TERRAFORM_PACKAGE}, ${NX_DOCKER_PACKAGE}, ${OXLINT_CONFIG_PACKAGE}).`,
           "The DX Nx plugins are served by GitHub Packages: make sure the GitHub token used by the CLI has the read:packages scope.",
           "Run `gh auth refresh --scopes read:packages` (or set GITHUB_TOKEN to a personal access token that includes read:packages) and try again.",
         ].join(" "),
