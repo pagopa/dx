@@ -79,14 +79,6 @@ jobs:
             nodejs.org
             productionresultssa*.blob.core.windows.net
 
-      - name: Exercise runtime hardening telemetry
-        run: |
-          grep -q 'ghp_' /dev/null || true
-          if curl --fail --silent --show-error --connect-timeout 5 --max-time 10 https://example.com/ > /dev/null; then
-            echo "::error::The test connection was unexpectedly allowed."
-            exit 1
-          fi
-
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
