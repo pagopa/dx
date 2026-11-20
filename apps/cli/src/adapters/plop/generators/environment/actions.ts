@@ -6,11 +6,12 @@ import {
   type Environment,
   getBaseEnvironmentName,
 } from "../../../../domain/environment.js";
-import { terraformStateKey } from "../../helpers/terraform-state-key.js";
 import { type Payload, payloadSchema } from "./prompts.js";
 
 const addModule = (
-  context: Pick<Payload, "env" | "workspace">,
+  context: Pick<Payload, "env"> & {
+    backendConfigFile: (layer: "bootstrapper" | "core") => string | undefined;
+  },
   templatesPath: string,
   init = false,
   githubEnvironmentPrefixEnabled = false,
@@ -24,7 +25,7 @@ const addModule = (
     (account) => account.displayName === "PROD-IO",
   );
   const cwd = process.cwd();
-  return (name: string) => [
+  return (name: "bootstrapper" | "core") => [
     {
       base: templatesPath,
       data: {
@@ -35,7 +36,14 @@ const addModule = (
       },
       destination: path.join(cwd, "infra"),
       force: true,
-      globOptions: { cwd: templatesPath, dot: true },
+      globOptions: {
+        cwd: templatesPath,
+        dot: true,
+        get ignore() {
+          const backendFile = context.backendConfigFile(name);
+          return backendFile ? [`**/${path.basename(backendFile)}.hbs`] : [];
+        },
+      },
       templateFiles: path.join(templatesPath, name),
       type: "addMany",
       verbose: true,
@@ -45,11 +53,17 @@ const addModule = (
       data: {
         cloudAccountsByCsp,
         init: init || undefined,
-        terraformBackendKey: terraformStateKey(context, name),
+        terraformBackendName: name === "core" ? "coreBackend" : "backend",
       },
       destination: path.join(cwd, "infra", name, "{{env.name}}"),
       force: true,
-      globOptions: { cwd: path.join(templatesPath, "shared"), dot: true },
+      globOptions: {
+        cwd: path.join(templatesPath, "shared"),
+        dot: true,
+        get ignore() {
+          return context.backendConfigFile(name) ? ["**/backend.tf.hbs"] : [];
+        },
+      },
       templateFiles: path.join(templatesPath, "shared"),
       type: "addMany",
       verbose: true,
@@ -91,12 +105,24 @@ export default function getActions(
   templatesPath: string,
 ): DynamicActionsFunction {
   return (input: unknown) => {
-    const { env, init, workspace } = payloadSchema.parse(input);
+    const { env, init } = payloadSchema.parse(input);
+    const data = input as Payload & {
+      terraform?: {
+        backendConfigFiles?: Partial<
+          Record<"bootstrapper" | "core", string | undefined>
+        >;
+        generateCore?: boolean;
+      };
+    };
     const githubEnvironmentPrefixEnabled =
       isGitHubEnvironmentPrefixEnabled(env);
 
     const addEnvironmentModule = addModule(
-      { env, workspace },
+      {
+        backendConfigFile: (layer) =>
+          data.terraform?.backendConfigFiles?.[layer],
+        env,
+      },
       templatesPath,
       !!init,
       githubEnvironmentPrefixEnabled,
@@ -104,42 +130,46 @@ export default function getActions(
 
     const actions: ActionType[] = [
       {
+        type: "validateTerraformBackendRoots",
+      },
+      {
         type: "setupCloudTools",
       },
-      {
-        type: "getTerraformBackend",
-      },
-      {
-        type: "syncNxAdditionalEnvironments",
-      },
-      {
-        type: "syncRepositoryEnvironments",
-      },
-      // Bootstrap Azure resources can pre-exist, but OIDC credentials and
-      // GitHub environment secrets are repository-specific and must be ensured
-      // on every add-environment run.
-      {
-        type: "configureGitHubEnvironments",
-      },
-      addWorkflowModule(templatesPath),
-      ...addEnvironmentModule("bootstrapper"),
     ];
 
     if (init) {
-      actions.splice(
-        1,
-        0,
-        {
-          type: "initCloudAccounts",
-        },
+      actions.push(
+        { type: "initCloudAccounts" },
         {
           type: init.terraformBackend
             ? "provisionTerraformBackend"
             : "getTerraformBackend",
         },
       );
-      actions.push(...addEnvironmentModule("core"));
+    } else {
+      actions.push({ type: "getTerraformBackend" });
     }
+
+    actions.push(
+      { type: "configureExistingTerraformRootBackends" },
+      { type: "syncNxAdditionalEnvironments" },
+      { type: "syncRepositoryEnvironments" },
+      {
+        type: "configureGitHubEnvironments",
+      },
+      addWorkflowModule(templatesPath),
+      ...addEnvironmentModule("bootstrapper"),
+    );
+
+    actions.push(
+      ...addEnvironmentModule("core").map((action) => ({
+        ...action,
+        skip: () =>
+          data.terraform?.generateCore
+            ? undefined
+            : "Existing core root preserved",
+      })),
+    );
 
     // The generated files are formatted in a single pass, once every file is
     // on disk.

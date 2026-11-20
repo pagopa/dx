@@ -8,13 +8,16 @@ locals {
 {{#if (eq displayName "PROD-IO")}}
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 7.1"
+  version = "~> 7.2"
 
   providers = {
     azurerm = azurerm.{{displayName}}
   }
 
   environment = merge(local.environment, local.azure_accounts.{{displayName}})
+  terraform_state_container_access = {
+    container_name = "{{@root.terraform.backend.containerName}}"
+  }
 {{#if @root.githubEnvironmentPrefixEnabled}}
   github_environment_prefix_enabled = true
 {{/if}}
@@ -63,23 +66,33 @@ module "azure-{{displayName}}_core_values" {
   }
 
   core_state = {
-    resource_group_name  = "{{@root.terraform.backend.resourceGroupName}}"
-    storage_account_name = "{{@root.terraform.backend.storageAccountName}}"
-    subscription_id      = "{{@root.terraform.backend.subscriptionId}}"
-    container_name       = "terraform-state"
-    key                  = "{{terraformStateKey @root "core"}}"
+    resource_group_name  = "{{@root.terraform.coreBackend.resourceGroupName}}"
+    storage_account_name = "{{@root.terraform.coreBackend.storageAccountName}}"
+    subscription_id      = "{{@root.terraform.coreBackend.subscriptionId}}"
+    container_name       = "{{@root.terraform.coreBackend.containerName}}"
+    key                  = "{{@root.terraform.coreBackend.key}}"
   }
 }
 
 module "azure-{{displayName}}_bootstrap" {
   source  = "pagopa-dx/azure-github-environment-bootstrap/azurerm"
-  version = "~> 7.1"
+  version = "~> 7.2"
 
   providers = {
     azurerm = azurerm.{{displayName}}
   }
 
   environment = merge(local.environment, local.azure_accounts.{{displayName}})
+  terraform_state_container_access = {
+    container_name = "{{@root.terraform.backend.containerName}}"
+{{#with (terraformStateContainerReaderKey @root.terraform.backend @root.terraform.coreBackend)}}
+    upstream = {
+      "{{this}}" = {
+        identities = ["infra_ci", "infra_cd"]
+      }
+    }
+{{/with}}
+  }
 {{#if @root.githubEnvironmentPrefixEnabled}}
   github_environment_prefix_enabled = true
 {{/if}}
