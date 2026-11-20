@@ -63,6 +63,7 @@ describe("Init Executor", () => {
       {
         args: ["-backend=false"],
         frozenLockfile: true,
+        platforms: [],
         projectRoot: "infra/example",
       },
       baseContext,
@@ -78,6 +79,7 @@ describe("Init Executor", () => {
         args: ["-backend=false"],
         frozenLockfile: true,
         modulePath: "infra/example",
+        platforms: [],
       },
     );
   });
@@ -97,6 +99,7 @@ describe("Init Executor", () => {
         args: [],
         frozenLockfile: false,
         modulePath: "infra/example",
+        platforms: [],
       },
     );
   });

@@ -1,0 +1,9 @@
+{
+  "key": "TEST-11",
+  "files": {
+    "issue.json": "{\n  \"id\": \"1011\",\n  \"key\": \"TEST-11\",\n  \"fields\": {\n    \"issuetype\": {\n      \"id\": \"10007\",\n      \"name\": \"Task\",\n      \"subtask\": false\n    },\n    \"project\": {\n      \"id\": \"10001\",\n      \"key\": \"TEST\",\n      \"name\": \"Test project\"\n    },\n    \"updated\": \"2026-11-10T10:00:00.000+0100\",\n    \"description\": \"Specs: https://example.atlassian.net/wiki/spaces/SPEC/pages/101/Spec and https://example.atlassian.net/wiki/spaces/SPEC/pages/202/Other\",\n    \"summary\": \"Implement TEST-11\"\n  }\n}\n",
+    "confluence-101.md": "---\nid: \"101\"\ntitle: \"Spec\"\nversion: 3\nurl: \"https://example.atlassian.net/wiki/spaces/SPEC/pages/101/Spec\"\n---\n\n# Spec\n\nThe service must retry three times.\n",
+    "confluence-202.md": "---\nid: \"202\"\ntitle: \"Other\"\nversion: 3\nurl: \"https://example.atlassian.net/wiki/spaces/SPEC/pages/202/Other\"\n---\n\n# Other\n",
+    "SHA256SUMS": "4e0dcff3aa43ac4667f8970b449cbfd073725d9881cf327c5ea35fea936d49fa  confluence-101.md\nf804d60a96a57d7809926f5ea219ca660694940008e40850331aa3c0e4072140  confluence-202.md\n64962162e960662be773a7f8687d057997789d282d0cef74536ee0bac2495e67  issue.json\n"
+  }
+}

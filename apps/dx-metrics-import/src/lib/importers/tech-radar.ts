@@ -1,7 +1,12 @@
 /** This module imports Techradar tool usage data via direct file existence checks. */
 
+import {
+  TECH_RADAR_SNAPSHOT_MARKER_STATUS,
+  TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY,
+  TECH_RADAR_SNAPSHOT_MARKER_TOOL_NAME,
+} from "@pagopa/dx-metrics-core/config";
 import * as schema from "@pagopa/dx-metrics-core/schema";
-import { sql } from "drizzle-orm";
+import { count, inArray, sql } from "drizzle-orm";
 
 import type { ImportContext } from "../import-context";
 
@@ -18,6 +23,70 @@ const isNotFoundError = (error: unknown): boolean =>
   error !== null &&
   "status" in error &&
   error.status === 404;
+
+/**
+ * Records the current Techradar adoption as one snapshot row per
+ * tool/ring/status, scoped to the configured repositories so obsolete repos
+ * cannot inflate the series. Must run after all repositories have been
+ * imported, so the snapshot reflects the whole organisation. When nothing is
+ * detected it still records a zero-valued marker, so a drop to zero stays
+ * visible in the trend instead of looking like a missing snapshot.
+ */
+export async function captureTechRadarSnapshot(
+  context: ImportContext,
+): Promise<void> {
+  const configuredFullNames = context.repositories.map(
+    (name) => `${context.organization}/${name}`,
+  );
+
+  const grouped = await context.db
+    .select({
+      radarRing: schema.techRadarUsages.radarRing,
+      radarStatus: schema.techRadarUsages.radarStatus,
+      repositoryCount: count(),
+      toolKey: schema.techRadarUsages.toolKey,
+      toolName: schema.techRadarUsages.toolName,
+    })
+    .from(schema.techRadarUsages)
+    .where(
+      inArray(schema.techRadarUsages.repositoryFullName, configuredFullNames),
+    )
+    .groupBy(
+      schema.techRadarUsages.toolKey,
+      schema.techRadarUsages.toolName,
+      schema.techRadarUsages.radarStatus,
+      schema.techRadarUsages.radarRing,
+    );
+
+  const capturedAt = new Date();
+
+  if (grouped.length === 0) {
+    await context.db.insert(schema.techRadarSnapshots).values({
+      capturedAt,
+      radarRing: null,
+      radarStatus: TECH_RADAR_SNAPSHOT_MARKER_STATUS,
+      repositoryCount: 0,
+      toolKey: TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY,
+      toolName: TECH_RADAR_SNAPSHOT_MARKER_TOOL_NAME,
+    });
+
+    console.log("  ✓ Techradar snapshot recorded (0 usages, marker row)");
+    return;
+  }
+
+  await context.db.insert(schema.techRadarSnapshots).values(
+    grouped.map((row) => ({
+      capturedAt,
+      radarRing: row.radarRing,
+      radarStatus: row.radarStatus,
+      repositoryCount: row.repositoryCount,
+      toolKey: row.toolKey,
+      toolName: row.toolName,
+    })),
+  );
+
+  console.log(`  ✓ Techradar snapshot recorded (${grouped.length} rows)`);
+}
 
 export async function importTechRadarRepositoryUsages(
   context: ImportContext,

@@ -24,8 +24,8 @@ TEMPLATES = Path(__file__).resolve().parent.parent / "templates"
 ENVIRONMENT_DOCKERFILE_TEMPLATE = "environment.Dockerfile.tmpl"
 
 # Defaults formerly configurable through evals.json Harbor metadata.
-DEFAULT_BASE_IMAGE = "ubuntu:24.04"
-DEFAULT_JUDGE_MODEL = "openai/gpt-5.6-luna"
+DEFAULT_BASE_IMAGE = "ubuntu:26.04"
+DEFAULT_JUDGE_MODEL = "openai/gpt-6-luna"
 
 #: The exact set of files ``convert`` generates for every task (identical for
 #: every task of every skill). These are the ONLY files a skill's ``harbor/``
@@ -37,6 +37,7 @@ GENERATED_TASK_FILES: frozenset[str] = frozenset(
         "environment/Dockerfile",
         "environment/.dockerignore",
         "tests/test.sh",
+        "tests/skill_use.py",
         "tests/quality.toml",
         "tests/Dockerfile",
         "solution/solve.sh",
@@ -259,6 +260,11 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
             SKILL_NAME=spec.skill_name,
         )
     )
+    # F1 skill-use proof: its own file so the predicate is unit-tested
+    # (tests/test_skill_use.py) and the verifier image reuses it verbatim.
+    (tests_dir / "skill_use.py").write_text(
+        render_template((TEMPLATES / "skill_use.py").read_text())
+    )
     # RewardKit quality.toml: header ([judge]/[scoring]) + per-eval criteria.
     (tests_dir / "quality.toml").write_text(
         build_quality_toml(case, DEFAULT_JUDGE_MODEL)
@@ -266,7 +272,10 @@ def generate_task(spec: TaskSpec, task_root: Path) -> list[str]:
     # Separate verifier image: Harbor builds the verifier container from this
     # Dockerfile; tests/ is NOT uploaded at runtime.
     (tests_dir / "Dockerfile").write_text(
-        render_template((TEMPLATES / "verifier-Dockerfile").read_text())
+        render_template(
+            (TEMPLATES / "verifier-Dockerfile").read_text(),
+            BASE_IMAGE=DEFAULT_BASE_IMAGE,
+        )
     )
 
     # solution/ = oracle stub

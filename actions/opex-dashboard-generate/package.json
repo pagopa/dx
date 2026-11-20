@@ -1,25 +1,25 @@
 {
   "name": "@pagopa/opex-dashboard-generate-action",
-  "private": true,
   "version": "0.1.1",
+  "private": true,
   "description": "GitHub Action to automatically generate Azure Dashboard Terraform from OpenAPI specifications",
+  "keywords": [
+    "azure",
+    "dashboard",
+    "github-actions",
+    "openapi",
+    "opex",
+    "terraform"
+  ],
+  "homepage": "https://github.com/pagopa/dx/tree/main/actions/opex-dashboard-generate#readme",
+  "bugs": {
+    "url": "https://github.com/pagopa/dx/issues"
+  },
+  "license": "MIT",
+  "author": "PagoPA S.p.A.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "actions/opex-dashboard-generate"
-  },
-  "keywords": [
-    "github-actions",
-    "opex",
-    "dashboard",
-    "terraform",
-    "azure",
-    "openapi"
-  ],
-  "author": "PagoPA S.p.A.",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/pagopa/dx/issues"
-  },
-  "homepage": "https://github.com/pagopa/dx/tree/main/actions/opex-dashboard-generate#readme"
+  }
 }

@@ -24,12 +24,23 @@ export type CloudAccountService = {
     environment: EnvironmentId,
     github: GitHubRepo,
     gitHubService: GitHubService,
-    runnerAppCredentials?: GitHubAppCredentials,
+    runnerAppCredentials: GitHubAppCredentials,
   ): Promise<void>;
+
+  ensureTerraformBackendAccess(
+    backend: TerraformBackend,
+    additionalBackends?: readonly TerraformBackend[],
+  ): Promise<void>;
+
+  getRunnerAppCredentials(
+    cloudAccount: CloudAccount,
+    environment: EnvironmentId,
+  ): Promise<RunnerAppCredentialsLookup>;
 
   getTerraformBackend(
     cloudAccountId: CloudAccount["id"],
     environment: EnvironmentId,
+    domain: string,
   ): Promise<TerraformBackend | undefined>;
 
   hasUserPermissionToInitialize(
@@ -53,9 +64,34 @@ export type CloudAccountService = {
   provisionTerraformBackend(
     cloudAccount: CloudAccount,
     environment: EnvironmentId,
+    domain: string,
     tags?: Record<string, string>,
   ): Promise<TerraformBackend>;
+
+  storeRunnerAppClientId(
+    cloudAccount: CloudAccount,
+    environment: EnvironmentId,
+    clientId: string,
+  ): Promise<void>;
+
+  verifyTerraformBackendReadAccess(
+    backend: TerraformBackend,
+    key: string,
+  ): Promise<void>;
 };
+
+export type RunnerAppCredentialsLookup = {
+  credentials: Partial<GitHubAppCredentials>;
+  missingClientId: boolean;
+};
+
+/** A credential lookup failure whose message is safe for command output. */
+export class RunnerAppCredentialsError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
+    this.name = "RunnerAppCredentialsError";
+  }
+}
 
 export const cloudRegionSchema = z.object({
   displayName: z.string().min(1),

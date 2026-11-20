@@ -18,7 +18,7 @@ run "core_is_correct_plan" {
     environment = run.setup_tests.environment
 
     tags = {
-      CostCenter     = "TS000 - Tecnologia e Servizi"
+      CostCenter     = "TS720 - DEV EX"
       CreatedBy      = "Terraform"
       Environment    = "Uat"
       Owner          = "DevEx"

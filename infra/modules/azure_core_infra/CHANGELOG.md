@@ -1,3 +1,104 @@
+## 7.1.0 (2026-11-18)
+
+### 🚀 Features
+
+- This update provides the roles needed to enable Bootstrap's ([#2508](https://github.com/pagopa/dx/pull/2508))
+  `terraform_state_container_access` option for CI/CD access to individual state
+  containers. The new roles let Infra CI read infrastructure without granting
+  storage-account key access, and Infra CD deploy without subscription-wide
+  permission management. Existing Bootstrap configurations keep their permissions.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 7.0.2 (2026-11-17)
+
+### 🩹 Fixes
+
+- Normalize internal files ([#2496](https://github.com/pagopa/dx/pull/2496))
+- Update module documentation after internal modules folder rename. ([#2531](https://github.com/pagopa/dx/pull/2531))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Danilo Spinelli @gunzip
+
+## 7.0.1 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+# 7.0.0 (2026-10-28)
+
+### ⚠️  Breaking Changes
+
+- Raise Terraform to 1.16 and remove the redundant empty service-endpoints argument from the VPN subnet. ([#2327](https://github.com/pagopa/dx/pull/2327))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 6.0.7 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 6.0.6 (2026-10-13)
+
+### 🩹 Fixes
+
+- Update internal examples and AzureRM constraints ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 6.0.5 (2026-09-30)
+
+### 🩹 Fixes
+
+- Configure storage account private DNS zone resource groups in examples and test setup ([#2270](https://github.com/pagopa/dx/pull/2270))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 6.0.4 (2026-09-23)
+
+### 🩹 Fixes
+
+- Grant the Infra CI merged role the permissions Terraform needs to refresh Static Web Apps and App Configuration. ([#2242](https://github.com/pagopa/dx/pull/2242))
+
+  The `azurerm` provider reads the computed secrets of both resources on every plan (`staticSites/listSecrets` and `configurationStores/listKeys`), so once a repository creates a Static Web App or an App Configuration store, the next plan fails with a 403 under the Infra CI identity. Add the `PagoPA Static Web Apps List Secrets` role and the App Configuration `listKeys` action to `DX Infra CI Resource Groups`.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 6.0.3 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 ## 6.0.2 (2026-09-08)
 
 ### 🩹 Fixes

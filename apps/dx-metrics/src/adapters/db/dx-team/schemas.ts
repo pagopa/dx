@@ -10,7 +10,11 @@ import {
 
 export const fetchDxTeamDashboardInputSchema = z.object({
   days: z.number().int().nonnegative(),
+  /** End of the custom range (`YYYY-MM-DD`), inclusive. */
+  end: z.string().optional(),
   organization: z.string().min(1),
+  /** Start of the custom range (`YYYY-MM-DD`), inclusive. */
+  start: z.string().optional(),
 });
 
 export const commitsByRepoRowSchema = z.object({
@@ -45,6 +49,22 @@ export const ioInfraPrTableRowSchema = z.object({
   createdAt: sqlTimestampSchema,
 });
 
+/** One module declaration as returned by the source scan. */
+export const terraformModuleDeclarationRowSchema = z.object({
+  module: z.string().min(1),
+  repository: z.string().min(1),
+});
+
+/** One module and how widely it is used across the imported repositories. */
+export const terraformModuleRowSchema = z.object({
+  module: z.string().min(1),
+  moduleType: z.enum(["DX", "Non-DX"]),
+  repositoryCount: sqlNumberSchema,
+  /** Non-normalised sources used to build the GitHub search link. */
+  sources: z.array(z.string().min(1)),
+  usageCount: sqlNumberSchema,
+});
+
 export const dxTeamDashboardResultSchema = z.object({
   commitsByRepo: z.array(commitsByRepoRowSchema),
   dxAdoptingProjects: z.array(dxAdoptingProjectRowSchema),
@@ -52,6 +72,7 @@ export const dxTeamDashboardResultSchema = z.object({
   dxPipelinesUsage: z.array(dxPipelinesUsageRowSchema),
   ioInfraPrs: z.array(ioInfraPrRowSchema),
   ioInfraPrTable: z.array(ioInfraPrTableRowSchema),
+  terraformModules: z.array(terraformModuleRowSchema),
 });
 
 export type CommitsByRepoRow = z.infer<typeof commitsByRepoRowSchema>;

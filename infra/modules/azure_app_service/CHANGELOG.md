@@ -1,3 +1,62 @@
+# 6.0.0 (2026-11-05)
+
+### ⚠️  Breaking Changes
+
+- Support AzureRM v5 and Terraform 1.16 as a breaking major release. ([#2472](https://github.com/pagopa/dx/pull/2472))
+
+  ## Migration guide
+
+  - Use AzureRM provider `~> 5.0` and Terraform `>= 1.16.0` in the calling root module.
+  - Back up the existing Terraform state, update the provider constraint, and run `terraform init -upgrade`.
+  - Review `terraform plan` and confirm existing App Service, slot, subnet, and private endpoint resources are updated in place before applying. Do not apply if Terraform proposes replacement.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 5.1.0 (2026-10-22)
+
+### 🚀 Features
+
+- Add an optional `container_image` input to run the App Service and its staging slot from a container image, automatically enabling managed identity pulls for standard Azure Container Registry hostnames. ([#2355](https://github.com/pagopa/dx/pull/2355))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 5.0.6 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 5.0.5 (2026-10-13)
+
+### 🩹 Fixes
+
+- Update internal examples and AzureRM constraints ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 5.0.4 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+- Address App Service Trivy findings ([#2195](https://github.com/pagopa/dx/pull/2195))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 ## 5.0.3 (2026-09-15)
 
 ### 🩹 Fixes

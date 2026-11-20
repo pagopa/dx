@@ -181,7 +181,7 @@ const getExpectedPublishTarget = (
   useGitHubAppAuthentication: boolean,
 ) => ({
   cache: false,
-  executor: "@pagopa/nx-terraform-plugin:publish",
+  executor: "@pagopa/nx-terraform:publish",
   options: {
     description: "Terraform module description",
     github: {
@@ -299,7 +299,13 @@ describe("getProject applications", () => {
       expect(project.name).toBe("resources-prod-my-stack");
       expect(project.projectType).toBe("application");
       expect(project.root).toBe(root);
-      expect(project.namedInputs).toEqual(expectedNamedInputs);
+      expect(project.namedInputs).toEqual({
+        ...expectedNamedInputs,
+        default: [
+          "{projectRoot}/*.{tf,tfvars}",
+          "{workspaceRoot}/infra/resources/_modules/**/*",
+        ],
+      });
       expect(project.tags).toEqual(["terraform", "env:prod"]);
       expect(Object.keys(targets)).toEqual([
         "init",
@@ -369,9 +375,8 @@ describe("getProject applications", () => {
 
     it("does not add docs to applications", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
-      const targets = getTargetsOrThrow(
-        getProject(defaultOptions, root, true, publishManifest),
-      );
+      const project = getProject(defaultOptions, root, true, publishManifest);
+      const targets = getTargetsOrThrow(project);
 
       expect(Object.keys(targets)).toEqual([
         "init",
@@ -389,6 +394,7 @@ describe("getProject applications", () => {
       ]);
       expect(targets["docs"]).toBeUndefined();
       expect(targets["nx-release-publish"]).toBeUndefined();
+      expect(project.release).toBeUndefined();
     });
     it("sets correct dependency chains", () => {
       const root = path.join("infra", "resources", "prod", "my_stack");
@@ -418,9 +424,10 @@ describe("getProject application initialization and tags", () => {
             frozenLockfile: true,
           },
         },
-        executor: "@pagopa/nx-terraform-plugin:init",
+        executor: "@pagopa/nx-terraform:init",
         inputs: ["default"],
         options: {
+          platforms: [],
           projectRoot: "{projectRoot}",
         },
         outputs: [
@@ -428,6 +435,21 @@ describe("getProject application initialization and tags", () => {
           "{projectRoot}/.terraform.lock.hcl",
           "{projectRoot}/tfmodules.lock.json",
         ],
+      });
+    });
+
+    it("passes configured provider lock platforms to the init target", () => {
+      const root = path.join("infra", "resources", "prod", "my_stack");
+      const options = parseOptions({
+        initTarget: {
+          platforms: ["linux_amd64", "darwin_arm64"],
+        },
+      });
+      const targets = getTargetsOrThrow(getProject(options, root));
+
+      expect(targets["init"]?.options).toEqual({
+        platforms: ["linux_amd64", "darwin_arm64"],
+        projectRoot: "{projectRoot}",
       });
     });
 
@@ -455,6 +477,10 @@ describe("getProject application initialization and tags", () => {
       expect(targets["apply"]).toEqual(
         expect.objectContaining({
           dependsOn: ["init"],
+          executor: "@pagopa/nx-terraform:apply",
+          options: {
+            projectRoot: "{projectRoot}",
+          },
         }),
       );
     });
@@ -473,6 +499,9 @@ describe("getProject application initialization and tags", () => {
       const project = getProject(defaultOptions, root);
 
       expect(project.tags).toEqual(["terraform", "env:prod"]);
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/infra/resources/_modules/**/*",
+      );
     });
 
     it("adds the environment tag from non-resources application paths", () => {
@@ -492,6 +521,17 @@ describe("getProject application initialization and tags", () => {
       );
 
       expect(project.tags).toEqual(["terraform", "env:sandbox"]);
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/infra/core/_modules/**/*",
+      );
+    });
+
+    it("normalizes the shared input when the environment is the root segment", () => {
+      const project = getProject(defaultOptions, path.join("prod", "network"));
+
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/_modules/**/*",
+      );
     });
 
     it("defaults the environment tag to prod when no environment is found", () => {
@@ -499,6 +539,9 @@ describe("getProject application initialization and tags", () => {
       const project = getProject(defaultOptions, root);
 
       expect(project.tags).toEqual(["terraform", "env:prod"]);
+      expect(project.namedInputs?.default).toContain(
+        "{workspaceRoot}/infra/core/_modules/**/*",
+      );
     });
   });
 });
@@ -782,6 +825,26 @@ describe("getProject libraries", () => {
   });
 });
 
+describe("getProject release configuration", () => {
+  it("uses the shared project.json version action for publishable libraries", () => {
+    const root = path.join("infra", "modules", "network_stack");
+    const project = getProject(
+      defaultOptions,
+      root,
+      false,
+      publishManifestWithOwner,
+    );
+
+    expect(project.release).toEqual({
+      version: {
+        currentVersionResolver: "disk",
+        versionActions: "@pagopa/nx-dx/version-actions",
+      },
+    });
+    expect(getProject(defaultOptions, root).release).toBeUndefined();
+  });
+});
+
 describe("library initialization", () => {
   it("uses plain Terraform initialization without module locking", () => {
     const root = path.join("infra", "modules", "network_stack");
@@ -853,48 +916,5 @@ describe("getProject prefixed target names", () => {
       getExpectedPublishTarget("pagopa-dx", false),
     );
     expect(targets["tf-nx-release-publish"]).toBeUndefined();
-  });
-});
-
-describe("getProject release configuration", () => {
-  describe("when the library is publishable", () => {
-    it("infers release.version config for publishable Terraform libraries", () => {
-      const root = path.join("infra", "modules", "network_stack");
-      const project = getProject(
-        defaultOptions,
-        root,
-        true,
-        publishManifestWithOwner,
-      );
-
-      expect(project.release).toBeDefined();
-      expect(project.release?.version).toBeDefined();
-      expect(project.release?.version).toEqual({
-        currentVersionResolver: "disk",
-        manifestRootsToUpdate: ["{projectRoot}"],
-        versionActions: "@pagopa/nx-terraform-plugin/release/version-actions",
-      });
-    });
-
-    it("does not infer release config for libraries without publish manifest", () => {
-      const root = path.join("infra", "modules", "network_stack");
-      const project = getProject(defaultOptions, root, true);
-
-      expect(project.release).toBeUndefined();
-    });
-  });
-
-  describe("when the root is an application", () => {
-    it("does not infer release config for applications even with publish manifest", () => {
-      const root = path.join("infra", "resources", "prod", "my_stack");
-      const project = getProject(
-        defaultOptions,
-        root,
-        true,
-        publishManifestWithOwner,
-      );
-
-      expect(project.release).toBeUndefined();
-    });
   });
 });

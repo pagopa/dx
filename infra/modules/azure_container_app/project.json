@@ -1,0 +1,8 @@
+{
+  "name": "azure_container_app",
+  "metadata": {
+    "description": "Provisions an Azure Container App with a given configuration",
+    "provider": "azurerm",
+    "version": "9.1.1"
+  }
+}

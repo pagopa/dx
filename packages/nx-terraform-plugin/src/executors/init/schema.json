@@ -18,9 +18,17 @@
       "default": []
     },
     "frozenLockfile": {
-      "description": "Fail instead of updating tfmodules.lock.json when downloaded modules differ",
+      "description": "Fail instead of updating tfmodules.lock.json or when .terraform.lock.hcl changes",
       "type": "boolean",
       "default": false
+    },
+    "platforms": {
+      "description": "Additional Terraform provider lock platforms",
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": []
     }
   },
   "required": ["projectRoot"]

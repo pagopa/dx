@@ -42,7 +42,7 @@ concurrency:
 jobs:
   get-versions:
     name: Get Terraform and pre-commit Version
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: ${{ inputs.terraform_version == '' || inputs.pre_commit_tf_tag == '' }}
     outputs:
       terraform_version: ${{ steps.get-terraform-version.outputs.terraform_version }}
@@ -66,7 +66,7 @@ jobs:
 
   tf_analysis:
     name: Terraform Validation
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [get-versions]
     if: ${{ !cancelled() && (needs.get-versions.result == 'success' || needs.get-versions.result == 'skipped') }}
     env:

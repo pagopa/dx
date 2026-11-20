@@ -8,30 +8,20 @@
 # {{ARTIFACT_DIR}}/; {{VERIFIER_LOG_DIR}}/ is mounted for the reward.
 set -uo pipefail
 
-# --- F1: skill load + invoke proof (agent trajectory under {{AGENT_LOG_DIR}}) ----------
+# --- F1: skill load + invoke proof (ATIF trajectory under {{AGENT_LOG_DIR}}) ----------
 # Enforced unless SKILL_EVAL_ENFORCE_SKILL_USE=false (e.g. without-skill jobs).
+# The proof reads the transferred ATIF trajectory — the same artifact the
+# RewardKit judge sees — via /tests/skill_use.py instead of grepping the raw
+# Copilot CLI stream: Harbor normalizes every `--output-format json` shape
+# into ATIF, so CLI output-format drift (e.g. 1.0.97 dropping the legacy
+# `<skill-context>` messages) can no longer break the gate.
 SKILL_OK=1
-TRANSCRIPT=""
-if [ -d {{AGENT_LOG_DIR}} ]; then
-  TRANSCRIPT=$(find {{AGENT_LOG_DIR}} -type f -name '*.jsonl' 2>/dev/null | head -n 1)
-fi
 if [ "${SKILL_EVAL_ENFORCE_SKILL_USE:-true}" = "true" ]; then
   SKILL_NAME="${SKILL_EVAL_SKILL_NAME:-{{SKILL_NAME}}}"
-  if [ -n "$TRANSCRIPT" ]; then
-    # load: skill context injected into the user turn
-    if ! grep -q '<skill-context' "$TRANSCRIPT" 2>/dev/null; then
-      SKILL_OK=0
-    fi
-    # invoke: at least one tool call to the `skill` tool
-    if ! grep -q '"name" *: *"skill"' "$TRANSCRIPT" 2>/dev/null; then
-      SKILL_OK=0
-    fi
-  else
-    SKILL_OK=0
-  fi
+  SKILL_OK=$(python3 /tests/skill_use.py {{TRAJECTORY_JSON}} "$SKILL_NAME" 2>/dev/null || echo 0)
 fi
 
-if [ "$SKILL_OK" -eq 0 ]; then
+if [ "$SKILL_OK" != "1" ]; then
   echo 0 > /logs/verifier/reward.txt
   echo "skill_use_ok=$SKILL_OK" > /logs/verifier/reason.txt
   exit 0
@@ -47,6 +37,12 @@ if [ -n "$JUDGE_TOKEN" ]; then
     curl -LsSf https://astral.sh/uv/install.sh | sh
     export PATH="$HOME/.local/bin:$PATH"
   fi
+  # Quarantine freshly published distributions. RewardKit declares
+  # `litellm>=1.83` with no upper bound and `uvx` resolves it here at runtime,
+  # so without a cooldown a just-published release lands in a container that
+  # holds the judge credentials. Mirrors the workspace
+  # `[tool.uv] exclude-newer` policy, which does not apply outside the lock.
+  export UV_EXCLUDE_NEWER="7 days"
   # Recursive workspace packet: RewardKit [judge].files does not recurse
   # directories, so concat the produced files (transferred artifact {{WORKSPACE_DIR}})
   # into one markdown the judge reads; the ATIF trajectory ({{AGENT_LOG_DIR}}) lets
@@ -91,10 +87,26 @@ except Exception:
 PYEOF
   export PYTHONPATH="/tmp:${PYTHONPATH:-}"
 
-  uvx --from harbor-rewardkit==0.2.0 rewardkit /tests \
+  # LiteLLM's Responses API dispatch imports its optional MCP dependencies.
+  uvx --with 'litellm[mcp]' --from harbor-rewardkit==0.2.0 rewardkit /tests \
     --workspace {{WORKSPACE_DIR}} \
     --output {{REWARD_JSON}} \
     || true
+
+  # Record the scoring gate (quality.toml [scoring]) next to the reward.
+  # RewardKit 0.2.0 does not persist its scoring config, and Harbor downloads
+  # the whole {{VERIFIER_LOG_DIR}} directory: this file is how a comparison
+  # report on a copied run directory shows a score against its gate. Absent
+  # when the task declares no scoring block.
+  python3 - <<'PYEOF' || true
+import json
+import tomllib
+with open("/tests/quality.toml", "rb") as fh:
+    scoring = (tomllib.load(fh) or {}).get("scoring") or {}
+if scoring:
+    with open("{{SCORING_JSON}}", "w", encoding="utf-8") as fh:
+        json.dump(scoring, fh, indent=2)
+PYEOF
 
   # Harbor reads reward.json by default and falls back to reward.txt. Only
   # write the text fallback when RewardKit produced no usable reward.json.

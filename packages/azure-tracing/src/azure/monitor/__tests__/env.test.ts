@@ -9,7 +9,7 @@ describe("loadEnv", () => {
     vi.unstubAllEnvs();
   });
 
-  const stubRequiredEnvVariables = () => {
+  const stubConnectionString = () => {
     vi.stubEnv(
       "APPLICATIONINSIGHTS_CONNECTION_STRING",
       "InstrumentationKey=test-key",
@@ -17,7 +17,7 @@ describe("loadEnv", () => {
   };
 
   it("succeeds with only the connection string (backward-compatible default)", async () => {
-    stubRequiredEnvVariables();
+    stubConnectionString();
     const { loadEnv } = await import("../env.js");
 
     const env = loadEnv();
@@ -29,14 +29,17 @@ describe("loadEnv", () => {
     });
   });
 
-  it("throws when required environment variable is missing", async () => {
+  it("tolerates a missing connection string, which the options resolver validates", async () => {
     const { loadEnv } = await import("../env.js");
 
-    expect(() => loadEnv()).toThrow();
+    const env = loadEnv();
+
+    expect(env.APPLICATIONINSIGHTS_CONNECTION_STRING).toBeUndefined();
+    expect(env.APPINSIGHTS_SAMPLING_PERCENTAGE).toBe(0.05);
   });
 
   it("parses APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=true", async () => {
-    stubRequiredEnvVariables();
+    stubConnectionString();
     vi.stubEnv("APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED", "true");
     const { loadEnv } = await import("../env.js");
 
@@ -50,7 +53,7 @@ describe("loadEnv", () => {
   });
 
   it("parses APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED=false", async () => {
-    stubRequiredEnvVariables();
+    stubConnectionString();
     vi.stubEnv("APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED", "false");
     const { loadEnv } = await import("../env.js");
 
@@ -63,18 +66,28 @@ describe("loadEnv", () => {
     });
   });
 
-  it("rejects invalid APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED values", async () => {
-    stubRequiredEnvVariables();
+  it("parses APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED case-insensitively", async () => {
+    stubConnectionString();
+    vi.stubEnv("APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED", " TRUE ");
+    const { loadEnv } = await import("../env.js");
+
+    const env = loadEnv();
+
+    expect(env.APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED).toBe(true);
+  });
+
+  it("treats any other APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED value as disabled", async () => {
+    stubConnectionString();
     vi.stubEnv("APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED", "anInvalidValue");
     const { loadEnv } = await import("../env.js");
 
-    expect(() => loadEnv()).toThrow(
-      /APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED[\s\S]*Invalid option/i,
-    );
+    const env = loadEnv();
+
+    expect(env.APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED).toBe(false);
   });
 
   it("parses environment variables", async () => {
-    stubRequiredEnvVariables();
+    stubConnectionString();
     vi.stubEnv("APPINSIGHTS_SAMPLING_PERCENTAGE", "60");
     vi.stubEnv("APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED", "true");
     const { loadEnv } = await import("../env.js");

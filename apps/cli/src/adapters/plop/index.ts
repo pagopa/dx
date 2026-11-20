@@ -6,6 +6,8 @@ import { Answers } from "inquirer";
 import nodePlop from "node-plop";
 import { Octokit } from "octokit";
 
+import type { TerraformBackend } from "../../domain/remote-backend.js";
+
 import { GitHubRepo } from "../../domain/github-repo.js";
 import { GitHubService, RepositoryNotFoundError } from "../../domain/github.js";
 import { AzureSubscriptionRepository } from "../azure/cloud-account-repository.js";
@@ -22,6 +24,8 @@ import createMonorepoGenerator, {
   PLOP_MONOREPO_GENERATOR_NAME,
 } from "../plop/generators/monorepo/index.js";
 import setConfigureGitHubEnvironmentsAction from "./actions/configure-github-environments.js";
+import { collectCodeOwnership } from "./collect-code-ownership.js";
+import { basePayloadSchema } from "./generators/monorepo/prompts.js";
 import { resolveTemplatesPath } from "./templates-path.js";
 
 export const setMonorepoGenerator = (
@@ -102,11 +106,15 @@ export const collectMonorepoPayload = async (
   plop: NodePlopAPI,
   githubService: GitHubService,
   initialAnswers: Partial<MonorepoPayload> = {},
+  { nonInteractive = false }: { nonInteractive?: boolean } = {},
 ): Promise<{ generator: PlopGenerator; payload: MonorepoPayload }> => {
+  if (nonInteractive && !initialAnswers.repoName) {
+    throw new Error("Non-interactive init requires --name <repository-name>.");
+  }
   setMonorepoGenerator(plop, initialAnswers);
   const generator = plop.getGenerator(PLOP_MONOREPO_GENERATOR_NAME);
-  const answers = await generator.runPrompts();
-  const payloadResult = monorepoPayloadSchema.safeParse({
+  const answers = nonInteractive ? {} : await generator.runPrompts();
+  const payloadResult = basePayloadSchema.safeParse({
     ...initialAnswers,
     ...answers,
   });
@@ -115,7 +123,25 @@ export const collectMonorepoPayload = async (
       cause: payloadResult.error,
     });
   }
-  const payload = payloadResult.data;
+  const basePayload = payloadResult.data;
+  const namespace = await githubService.getAccount(basePayload.repoOwner);
+  const ownership = await collectCodeOwnership(
+    namespace,
+    basePayload.codeOwners,
+    githubService,
+    nonInteractive,
+  );
+  const resolvedPayload = monorepoPayloadSchema.safeParse({
+    ...basePayload,
+    ownership,
+    repoOwner: namespace.login,
+  });
+  if (!resolvedPayload.success) {
+    throw new Error("Cannot scaffold invalid resolved code ownership", {
+      cause: resolvedPayload.error,
+    });
+  }
+  const payload = resolvedPayload.data;
   await validatePayload(payload, githubService);
   return { generator, payload };
 };
@@ -153,17 +179,27 @@ export const collectDeploymentEnvironmentPayload = async (
   gitHubService: GitHubService,
   github?: GitHubRepo,
   initialAnswers: DeploymentEnvironmentInitialAnswers = {},
+  nonInteractive = false,
 ): Promise<{ generator: PlopGenerator; payload: EnvironmentPayload }> => {
   setDeploymentEnvironmentGenerator(
     plop,
     gitHubService,
     github,
     initialAnswers,
+    nonInteractive,
   );
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
   const answers = await generator.runPrompts();
   const payload = environmentPayloadSchema.parse(answers);
   return { generator, payload };
+};
+
+export type DeploymentEnvironmentOutputPayload = EnvironmentPayload & {
+  terraform?: {
+    backend?: TerraformBackend;
+    backendKey?: string;
+    coreBackend?: TerraformBackend & { key: string };
+  };
 };
 
 /**
@@ -176,7 +212,7 @@ export const collectDeploymentEnvironmentPayload = async (
 export const runDeploymentEnvironmentActions = async (
   generator: PlopGenerator,
   payload: EnvironmentPayload,
-): Promise<EnvironmentPayload> => {
+): Promise<DeploymentEnvironmentOutputPayload> => {
   await runActions(generator, payload);
   return payload;
 };
@@ -194,6 +230,7 @@ export const setDeploymentEnvironmentGenerator = (
   gitHubService: GitHubService,
   github?: GitHubRepo,
   initialAnswers: DeploymentEnvironmentInitialAnswers = {},
+  nonInteractive = false,
 ) => {
   const credential = new AzureCliCredential();
   const cloudAccountRepository = new AzureSubscriptionRepository(credential);
@@ -213,5 +250,6 @@ export const setDeploymentEnvironmentGenerator = (
     gitHubService,
     github,
     initialAnswers,
+    nonInteractive,
   );
 };

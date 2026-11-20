@@ -4,7 +4,9 @@
 
 import type { TemplateContext } from "../../core/template/context.schema.js";
 
-import { uriToRegex } from "../../core/template/helpers.js";
+import { joinUriPath, uriToRegex } from "../../core/template/helpers.js";
+import { responseTimeFieldName } from "./percentile-field.js";
+import { statusCodeCaseExpression } from "./status-codes.js";
 
 interface QueryContext extends TemplateContext {
   endpoint: string;
@@ -23,7 +25,7 @@ export function availabilityQuery(ctx: QueryContext): string {
   const props = ctx.endpoints?.[endpoint];
   const method = props?.method;
   const path = props?.path ?? endpoint;
-  const uriPattern = uriToRegex(basePath + path);
+  const uriPattern = uriToRegex(joinUriPath(basePath, path));
   const timespan = ctx.timespan || "5m";
   const isAlarm = ctx.is_alarm ?? false;
   // NOTE: Threshold inversion logic to match legacy template behavior
@@ -35,7 +37,7 @@ export function availabilityQuery(ctx: QueryContext): string {
 
   return `${isAlarm ? "" : "\n"}let threshold = ${displayThreshold};
 AzureDiagnostics
-| where url_s matches regex "${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
+| where tostring(parse_url(url_s)["Path"]) matches regex @"${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
 | summarize
   Total=count(),
   Success=count(responseCode_d < 500 and responseCode_d != 0) by bin(TimeGenerated, ${timespan})
@@ -59,18 +61,16 @@ export function responseCodesQuery(ctx: QueryContext): string {
   const props = ctx.endpoints?.[endpoint];
   const method = props?.method;
   const path = props?.path ?? endpoint;
-  const uriPattern = uriToRegex(basePath + path);
+  const uriPattern = uriToRegex(joinUriPath(basePath, path));
   const timespan = ctx.timespan || "5m";
 
-  return `\nlet api_url = "${uriPattern}";
+  return `\nlet api_url = @"${uriPattern}";
 AzureDiagnostics
-| where url_s matches regex api_url${method ? `\n| where method_s == "${method}"` : ""}
-| extend HTTPStatus = case(
-  responseCode_d between (100 .. 199), "1XX",
-  responseCode_d between (200 .. 299), "2XX",
-  responseCode_d between (300 .. 399), "3XX",
-  responseCode_d between (400 .. 499), "4XX",
-  "5XX")
+| where tostring(parse_url(url_s)["Path"]) matches regex api_url${method ? `\n| where method_s == "${method}"` : ""}
+| extend HTTPStatus = ${statusCodeCaseExpression(
+    "responseCode_d",
+    ctx.queries?.status_code_categories,
+  )}
 | summarize count() by HTTPStatus, bin(TimeGenerated, ${timespan})
 | render areachart with (xtitle = "time", ytitle= "count")
 `;
@@ -87,17 +87,18 @@ export function responseTimeQuery(ctx: QueryContext): string {
   const props = ctx.endpoints?.[endpoint];
   const method = props?.method;
   const path = props?.path ?? endpoint;
-  const uriPattern = uriToRegex(basePath + path);
+  const uriPattern = uriToRegex(joinUriPath(basePath, path));
   const timespan = ctx.timespan || "5m";
   const isAlarm = ctx.is_alarm ?? false;
   const percentile = ctx.queries?.response_time_percentile ?? 95;
+  const percentileField = responseTimeFieldName(percentile);
 
   return `${isAlarm ? "" : "\n"}let threshold = ${threshold};
 AzureDiagnostics
-| where url_s matches regex "${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
+| where tostring(parse_url(url_s)["Path"]) matches regex @"${uriPattern}"${method ? `\n| where method_s == "${method}"` : ""}
 | summarize
     watermark=threshold,
-    duration_percentile_${percentile}=percentiles(todouble(DurationMs)/1000, ${percentile}) by bin(TimeGenerated, ${timespan})
-${isAlarm ? `| where duration_percentile_${percentile} > threshold` : `| render timechart with (xtitle = "time", ytitle= "response time(s)")`}
+    ${percentileField}=percentiles(todouble(DurationMs)/1000, ${percentile}) by bin(TimeGenerated, ${timespan})
+${isAlarm ? `| where ${percentileField} > threshold` : `| render timechart with (xtitle = "time", ytitle= "response time(s)")`}
 `;
 }

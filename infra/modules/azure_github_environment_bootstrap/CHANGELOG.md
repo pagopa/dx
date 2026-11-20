@@ -1,3 +1,137 @@
+## 7.2.0 (2026-11-20)
+
+### 🚀 Features
+
+- You can now limit CI/CD state permissions to one container with ([#2509](https://github.com/pagopa/dx/pull/2509))
+  `terraform_state_container_access = {}` and use `upstream` to give selected
+  identities read access to other state containers. Leaving the option unset
+  keeps existing permissions; no state is moved.
+
+  Requires `azure-core-infra` version 7.1.0 or later. The identity running
+  Terraform needs read access to any upstream state before planning.
+  Import existing role assignments only when this module will manage them.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 7.1.2 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 7.1.1 (2026-11-02)
+
+### 🩹 Fixes
+
+- Provision the DX runner only when the environment prefix starts with dx. ([#2453](https://github.com/pagopa/dx/pull/2453))
+
+  ## Migration guide
+
+  For prefixes that do not start with `dx`, applying this version removes the existing DX runner and changes `github_dx_runner` to `null`. Before applying, migrate workflows targeting that runner to another available runner and update consumers of `github_dx_runner` to handle `null`.
+
+  For prefixes starting with `dx`, the existing runner is retained through the included Terraform state move; no manual state migration is required.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 7.1.0 (2026-10-29)
+
+### 🚀 Features
+
+- Adds `github_environment_prefix_enabled` to the Azure and AWS bootstrap modules. When enabled, GitHub names include the resource prefix—for example, `infra-prod-ci` becomes `infra-ced-prod-ci`. Cloud resource names are unchanged. ([#2371](https://github.com/pagopa/dx/pull/2371))
+
+  The CLI enables this automatically for tenant-qualified environments. Existing configurations remain unchanged by default.
+  The feature is introduced in Azure module version 7.1.0 and AWS module version 2.3.0; consumers enabling the flag must use those versions or later.
+
+  Enabling the flag on an existing deployment changes where secrets are stored and, on Azure, the credentials used by workflows. Existing workflows must use the new environment names before the old configuration is removed.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+# 7.0.0 (2026-10-29)
+
+### ⚠️  Breaking Changes
+
+- Allow AzureRM v5 alongside v4 and require Terraform >= 1.16.0. The Terraform floor is a major breaking change for the 18 modules marked major here. The VPN and Cosmos Account modules receive their major upgrade through CES-2366; their minor entries here cover dual-provider support and are superseded by that major bump. ([#2339](https://github.com/pagopa/dx/pull/2339))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 6.2.3 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 6.2.2 (2026-10-14)
+
+### 🩹 Fixes
+
+- Add automation CI environment ([#2345](https://github.com/pagopa/dx/pull/2345))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 6.2.1 (2026-10-09)
+
+### 🩹 Fixes
+
+- Support personal GitHub owners in generated bootstrapper configurations ([#2266](https://github.com/pagopa/dx/pull/2266))
+
+### ❤️ Thank You
+
+- Copilot @github-copilot
+- Marco Comi @kin0992
+
+## 6.2.0 (2026-09-24)
+
+### 🚀 Features
+
+- Provision a DX GitHub self-hosted runner Container App Job alongside the legacy runner. ([#2244](https://github.com/pagopa/dx/pull/2244))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 6.1.0 (2026-09-22)
+
+### 🚀 Features
+
+- Federate managed identities and IAM roles with GitHub repositories that emit immutable OIDC subject claims (created or renamed after 2026-07-15). The DX CLI and the Azure and AWS Terraform modules now also trust the immutable subject embedding the numeric GitHub owner and repository IDs, keeping the name-based trust for older repositories.  ([#2219](https://github.com/pagopa/dx/pull/2219))
+
+  See https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 6.0.5 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 ## 6.0.4 (2026-09-15)
 
 ### 🩹 Fixes
@@ -170,7 +304,7 @@
 
 ### Patch Changes
 
-- c429f43: Remove deprecated property from `azurerm_federated_identity_credential` resource
+- c429f43: Remove deprecated property from `azurerm_federated_identity_credential` resource
 
 ## 3.1.2
 

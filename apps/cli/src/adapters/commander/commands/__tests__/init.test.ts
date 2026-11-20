@@ -2,6 +2,7 @@
  * Tests for confirmGitHubRepoCreation in the init command.
  */
 
+import chalk from "chalk";
 import { Command } from "commander";
 import { ExecaError } from "execa";
 import inquirer from "inquirer";
@@ -16,6 +17,11 @@ import type { GitHubService } from "../../../../domain/github.js";
 import type { Payload as MonorepoPayload } from "../../../plop/generators/monorepo/index.js";
 
 const mocks = vi.hoisted(() => {
+  type ExecaTemplate = (
+    strings: TemplateStringsArray,
+    ...values: readonly unknown[]
+  ) => Promise<{ stdout: string }>;
+
   const reportError = vi.fn();
   const reportResult = vi.fn();
   const trackStepMock = vi.fn();
@@ -29,8 +35,12 @@ const mocks = vi.hoisted(() => {
   };
 
   return {
+    assertGitHubPackagesAccess: vi.fn(),
     collectMonorepoPayload: vi.fn(),
     createCommandPresenter: vi.fn(() => presenter),
+    execa$: vi.fn<() => ExecaTemplate>(
+      () => () => Promise.resolve({ stdout: "" }),
+    ),
     getPlopInstance: vi.fn(),
     presenter,
     reportError,
@@ -53,17 +63,26 @@ vi.mock("inquirer");
 vi.mock("ora", () => ({
   oraPromise: <T>(promise: Promise<T>) => promise,
 }));
+vi.mock("execa", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("execa")>();
+
+  return { ...actual, $: mocks.execa$ };
+});
 vi.mock("../../../plop/index.js", () => ({
   collectMonorepoPayload: mocks.collectMonorepoPayload,
   getPlopInstance: mocks.getPlopInstance,
   runMonorepoActions: mocks.runMonorepoActions,
 }));
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
+vi.mock("../../../github/packages.js", () => ({
+  assertGitHubPackagesAccess: mocks.assertGitHubPackagesAccess,
+}));
 vi.mock("../../presenters/index.js", () => ({
   createCommandPresenter: mocks.createCommandPresenter,
   resolveOutputMode: mocks.resolveOutputMode,
 }));
 
+import { extractCliSpec } from "../../spec.js";
 import {
   confirmGitHubRepoCreation,
   getMonorepoInitialAnswers,
@@ -75,6 +94,11 @@ import {
 const makePayload = (
   overrides: Partial<MonorepoPayload> = {},
 ): MonorepoPayload => ({
+  ownership: {
+    namespaceType: "Organization",
+    owners: ["@pagopa/devex"],
+    reviewerTeams: ["devex"],
+  },
   repoDescription: "A test repo",
   repoName: "test-repo",
   repoOwner: "pagopa",
@@ -93,6 +117,7 @@ const silentOutput = {
 const runInitCommand = async (
   output: "json" | "text" = "json",
   gitHubService: GitHubService = mockDeep<GitHubService>(),
+  publish = false,
 ) => {
   const requireGitHubAuth: GitHubAuthFactory = () =>
     okAsync({
@@ -108,7 +133,14 @@ const runInitCommand = async (
     .option("--output <mode>", "Output mode", output)
     .addCommand(initCommand);
 
-  await program.parseAsync(["node", "dx", "--output", output, "init"]);
+  await program.parseAsync([
+    "node",
+    "dx",
+    "--output",
+    output,
+    "init",
+    ...(publish ? ["--publish"] : []),
+  ]);
 };
 
 const makeExecaError = ({
@@ -189,6 +221,15 @@ describe("confirmGitHubRepoCreation", () => {
 });
 
 describe("parseInitCommandOptions", () => {
+  it("accepts repeated code owners and rejects explicit blank owners", () => {
+    expect(
+      parseInitCommandOptions({ codeOwners: [" @alice ", "@pagopa/team"] }),
+    ).toEqual({ codeOwners: ["@alice", "@pagopa/team"] });
+    expect(() => parseInitCommandOptions({ codeOwners: [" "] })).toThrow(
+      "Invalid init command options",
+    );
+  });
+
   it("returns the provided init flags", () => {
     expect(
       parseInitCommandOptions({
@@ -218,12 +259,14 @@ describe("getMonorepoInitialAnswers", () => {
   it("maps init CLI options to the monorepo payload keys", () => {
     expect(
       getMonorepoInitialAnswers({
+        codeOwners: ["@alice", "@pagopa/team"],
         description: "My DX workspace",
         name: "my-dx-workspace",
         owner: "pagopa",
         publish: true,
       }),
     ).toEqual({
+      codeOwners: ["@alice", "@pagopa/team"],
       publishToGitHub: true,
       repoDescription: "My DX workspace",
       repoName: "my-dx-workspace",
@@ -272,7 +315,7 @@ describe("mapGitRemoteAddError", () => {
   });
 });
 
-describe("makeInitCommand", () => {
+const registerInitCommandHooks = () => {
   const payload = makePayload();
 
   beforeEach(() => {
@@ -289,7 +332,10 @@ describe("makeInitCommand", () => {
     vi.restoreAllMocks();
     process.exitCode = undefined;
   });
+};
 
+describe("makeInitCommand options", () => {
+  registerInitCommandHooks();
   it("registers flags for every init input", () => {
     const requireGitHubAuth: GitHubAuthFactory = () =>
       okAsync({
@@ -307,21 +353,150 @@ describe("makeInitCommand", () => {
       expect.arrayContaining([
         "--name <name>",
         "--owner <owner>",
+        "--code-owner <@user|@org/team>",
         "--description <description>",
         "--publish",
       ]),
     );
   });
 
+  it("exposes the ownership contract in help and the generated spec", () => {
+    const command = makeInitCommand(
+      () =>
+        okAsync({
+          authorizationService: mockDeep<AuthorizationService>(),
+          gitHubService: mockDeep<GitHubService>(),
+        }),
+      { CI: false },
+    );
+    expect(command.helpInformation().replace(/\s+/g, " ")).toContain(
+      "required for organizations",
+    );
+    const spec = extractCliSpec(new Command().addCommand(command), "0.0.0");
+    expect(spec.commands[0]?.options).toContainEqual(
+      expect.objectContaining({
+        description: expect.stringContaining("repeatable"),
+        flags: "--code-owner <@user|@org/team>",
+      }),
+    );
+  });
+
+  it("forwards every repeated code-owner flag into payload collection", async () => {
+    const command = makeInitCommand(
+      () =>
+        okAsync({
+          authorizationService: mockDeep<AuthorizationService>(),
+          gitHubService: mockDeep<GitHubService>(),
+        }),
+      { CI: true },
+    );
+    await new Command()
+      .addCommand(command)
+      .parseAsync(
+        [
+          "init",
+          "--name",
+          "test-repo",
+          "--code-owner",
+          "@alice",
+          "--code-owner",
+          "@pagopa/devex",
+        ],
+        { from: "user" },
+      );
+    expect(mocks.collectMonorepoPayload).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      { codeOwners: ["@alice", "@pagopa/devex"], repoName: "test-repo" },
+      { nonInteractive: true },
+    );
+    expect(command.opts()).toMatchObject({
+      codeOwners: ["@alice", "@pagopa/devex"],
+    });
+    expect(command.opts()).not.toHaveProperty("codeOwner");
+    expect(inquirer.prompt).not.toHaveBeenCalled();
+  });
+});
+
+describe("init ownership guidance", () => {
+  registerInitCommandHooks();
+  it("reports selected owners and pending grants in publication-skipped JSON results", async () => {
+    await runInitCommand("json");
+    expect(mocks.reportResult).toHaveBeenCalledWith(
+      expect.objectContaining({
+        ownership: expect.objectContaining({
+          authorizationRepository:
+            "https://github.com/pagopa/eng-github-authorization",
+          owners: ["@pagopa/devex"],
+          permissionStatus: "manual-authorization-required",
+          reviewerTeams: ["devex"],
+        }),
+      }),
+    );
+  });
+
+  it.each([true, false])(
+    "prints authorization guidance when scaffold PR creation succeeds: %s",
+    async (succeeds) => {
+      const output = vi
+        .spyOn(console, "log")
+        .mockImplementation(() => undefined);
+      const github = mockDeep<GitHubService>();
+      if (succeeds) {
+        github.createPullRequest.mockResolvedValue({
+          url: "https://github.com/pagopa/test-repo/pull/1",
+        });
+      } else {
+        github.createPullRequest.mockRejectedValue(
+          new Error("Cannot create scaffold PR"),
+        );
+      }
+      mocks.tf$.mockImplementation((...args: unknown[]) =>
+        Array.isArray(args[0])
+          ? Promise.resolve({ stdout: "ok" })
+          : () => Promise.resolve({ stdout: "" }),
+      );
+      await runInitCommand("text", github, true);
+      const text = output.mock.calls.flat().join("\n");
+      expect(text).toContain(
+        "Open a PR in https://github.com/pagopa/eng-github-authorization",
+      );
+      expect(text).toContain("@pagopa/devex");
+      expect(text).toContain("Write access");
+      expect(text).toContain("not been validated or granted");
+      expect(github.createPullRequest).toHaveBeenCalledWith(
+        expect.objectContaining({
+          title: "Scaffold repository",
+        }),
+      );
+    },
+  );
+
+  it("prints authorization guidance when publication is skipped", async () => {
+    const output = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    await runInitCommand("text");
+    expect(output.mock.calls.flat().join("\n")).toContain(
+      "grant @pagopa/devex repository Write access",
+    );
+  });
+});
+
+describe("makeInitCommand execution", () => {
+  const payload = makePayload();
+  registerInitCommandHooks();
   it("uses the command presenter to report json progress and results", async () => {
     await runInitCommand("json");
 
+    expect(mocks.trackStepMock).toHaveBeenCalledWith(
+      "Checking GitHub Packages access...",
+      expect.any(Function),
+    );
     expect(mocks.trackStepMock).toHaveBeenCalledWith(
       "Checking Terraform installation...",
       expect.any(Function),
     );
     expect(mocks.trackStepMock).toHaveBeenCalledWith(
-      "Checking Corepack installation...",
+      "Checking mise installation...",
       expect.any(Function),
     );
     expect(mocks.reportResult).toHaveBeenCalledWith(
@@ -329,6 +504,42 @@ describe("makeInitCommand", () => {
         gitHubRepoCreationSkipped: true,
         payload,
       }),
+    );
+  });
+
+  it("prints the getting-started documentation URL without trailing punctuation", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+
+    await runInitCommand("text");
+
+    expect(log).toHaveBeenCalledWith(
+      `3. Visit ${chalk.underline("https://dx.pagopa.it/docs/getting-started")} to deploy your first project\n`,
+    );
+  });
+
+  it("initializes the Terraform projects even when the publication is declined", async () => {
+    const commands: string[] = [];
+    mocks.execa$.mockImplementation(
+      () =>
+        (strings: TemplateStringsArray, ...values: readonly unknown[]) => {
+          commands.push(
+            strings.reduce(
+              (fullCommand, string, index) =>
+                `${fullCommand}${string}${values[index] ?? ""}`,
+              "",
+            ),
+          );
+          return Promise.resolve({ stdout: "" });
+        },
+    );
+
+    await runInitCommand("json");
+
+    expect(commands).toEqual([
+      "mise exec -- pnpm exec nx run-many -t init --projects=repository",
+    ]);
+    expect(mocks.reportResult).toHaveBeenCalledWith(
+      expect.objectContaining({ gitHubRepoCreationSkipped: true }),
     );
   });
 
@@ -340,7 +551,7 @@ describe("makeInitCommand", () => {
 
     expect(mocks.reportError).toHaveBeenCalledWith(
       expect.objectContaining({
-        message: "Failed to run the generator",
+        message: "Failed to run the generator: generator failed",
       }),
     );
     expect(process.exitCode).toBe(1);
@@ -375,7 +586,7 @@ describe("makeInitCommand", () => {
         : repoTerraform,
     );
 
-    await runInitCommand("json");
+    await runInitCommand("json", mockDeep<GitHubService>(), true);
 
     const reportedError = mocks.reportError.mock.lastCall?.[0];
     expect(reportedError).toMatchObject({ cause: terraformError });

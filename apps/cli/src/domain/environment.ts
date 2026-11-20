@@ -85,7 +85,8 @@ type CloudAccountNotInitializedIssue = {
 };
 
 type EnvironmentInitIssue =
-  CloudAccountNotInitializedIssue | MissingRemoteBackendIssue;
+  | CloudAccountNotInitializedIssue
+  | MissingRemoteBackendIssue;
 
 type MissingRemoteBackendIssue = {
   type: "MISSING_REMOTE_BACKEND";
@@ -94,6 +95,7 @@ type MissingRemoteBackendIssue = {
 export async function getInitializationStatus(
   cloudAccountService: CloudAccountService,
   environment: Environment,
+  domain: string,
 ): Promise<EnvironmentInitStatus> {
   const issues: EnvironmentInitIssue[] = [];
   for (const cloudAccount of environment.cloudAccounts) {
@@ -111,6 +113,7 @@ export async function getInitializationStatus(
   const terraformBackend = await getTerraformBackend(
     cloudAccountService,
     environment,
+    domain,
   );
   if (!terraformBackend) {
     issues.push({
@@ -131,11 +134,13 @@ export async function getInitializationStatus(
 export async function getTerraformBackend(
   cloudAccountService: CloudAccountService,
   environment: Environment,
+  domain: string,
 ): Promise<TerraformBackend | undefined> {
   for (const cloudAccount of environment.cloudAccounts) {
     const backend = await cloudAccountService.getTerraformBackend(
       cloudAccount.id,
       environment,
+      domain,
     );
     if (backend) {
       return backend;

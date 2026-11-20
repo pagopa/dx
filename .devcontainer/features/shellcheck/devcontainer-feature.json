@@ -4,7 +4,5 @@
   "name": "ShellCheck",
   "description": "Installs ShellCheck",
   "documentationURL": "https://github.com/pagopa/dx/tree/main/.devcontainer/features/shellcheck",
-  "installsAfter": [
-    "ghcr.io/devcontainers/features/common-utils"
-  ]
+  "installsAfter": ["ghcr.io/devcontainers/features/common-utils"]
 }

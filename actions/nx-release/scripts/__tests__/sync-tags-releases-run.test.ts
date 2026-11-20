@@ -19,6 +19,7 @@ const {
   extractTagEntriesFromPRBodyMock,
   getReleaseByTagMock,
   listPullsMock,
+  listReleasesMock,
 } = vi.hoisted(() => ({
   createReleaseMock: vi.fn(async () => undefined),
   execFilePromiseMock: vi.fn<
@@ -29,6 +30,7 @@ const {
   listPullsMock: vi.fn<() => Promise<{ data: PullListItem[] }>>(async () => ({
     data: [],
   })),
+  listReleasesMock: vi.fn(async () => ({ data: [] })),
 }));
 
 vi.mock("node:child_process", () => ({
@@ -45,6 +47,7 @@ vi.mock("../shared.js", () => ({
     repos: {
       createRelease: createReleaseMock,
       getReleaseByTag: getReleaseByTagMock,
+      listReleases: listReleasesMock,
     },
   }),
   extractTagEntriesFromPRBody: extractTagEntriesFromPRBodyMock,
@@ -55,11 +58,14 @@ import { run } from "../sync-tags-releases.js";
 
 describe("run", () => {
   beforeEach(() => {
-    createReleaseMock.mockClear();
+    createReleaseMock.mockReset();
+    createReleaseMock.mockResolvedValue(undefined);
     execFilePromiseMock.mockReset();
     extractTagEntriesFromPRBodyMock.mockReset();
     getReleaseByTagMock.mockReset();
     listPullsMock.mockClear();
+    listReleasesMock.mockClear();
+    listReleasesMock.mockResolvedValue({ data: [] });
   });
 
   it("creates a missing GitHub release even when the tag already exists remotely", async () => {
@@ -172,5 +178,11 @@ describe("run", () => {
       "git",
       expect.arrayContaining(["push", "origin", "--tags"]),
     );
+
+    // Remote tags are snapshotted once, not probed per tag.
+    const lsRemoteCalls = execFilePromiseMock.mock.calls.filter(
+      ([file, args]) => file === "git" && args[0] === "ls-remote",
+    );
+    expect(lsRemoteCalls).toHaveLength(1);
   });
 });

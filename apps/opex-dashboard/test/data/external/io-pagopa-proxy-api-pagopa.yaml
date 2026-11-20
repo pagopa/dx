@@ -1,9 +1,9 @@
 # Local test stub for io-pagopa-proxy definitions.
 # Keeps resolver tests offline and avoids raw GitHub throttling.
-swagger: '2.0'
+swagger: "2.0"
 info:
   title: Local io-pagopa-proxy test stub
-  version: '1.0.0'
+  version: "1.0.0"
 paths: {}
 definitions:
   CodiceContestoPagamento:

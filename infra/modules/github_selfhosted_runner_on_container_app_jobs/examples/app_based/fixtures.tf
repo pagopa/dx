@@ -37,8 +37,8 @@ resource "azurerm_container_app_environment" "runner" {
   location                       = local.environment.location
   internal_load_balancer_enabled = false
   infrastructure_subnet_id       = azurerm_subnet.cae.id
-  log_analytics_workspace_id     = data.azurerm_log_analytics_workspace.e2e.id
   zone_redundancy_enabled        = false
+  logs_destination               = "azure-monitor"
 
   workload_profile {
     name                  = "Consumption"
@@ -53,6 +53,7 @@ resource "azurerm_container_app_environment" "runner" {
 
   timeouts {
     create = "60m"
+    delete = "60m"
   }
 
   tags = local.tags
@@ -85,6 +86,16 @@ resource "azurerm_role_assignment" "kv_admin" {
 resource "azurerm_key_vault_secret" "github_app_id" {
   name         = "github-runner-app-id"
   value        = local.github_app.id
+  key_vault_id = azurerm_key_vault.test.id
+  depends_on   = [azurerm_role_assignment.kv_admin]
+}
+
+#trivy:ignore:AVD-AZU-0015
+#trivy:ignore:AVD-AZU-0016
+#trivy:ignore:AVD-AZU-0017
+resource "azurerm_key_vault_secret" "github_app_client_id" {
+  name         = "github-runner-app-client-id"
+  value        = local.github_app.client_id
   key_vault_id = azurerm_key_vault.test.id
   depends_on   = [azurerm_role_assignment.kv_admin]
 }

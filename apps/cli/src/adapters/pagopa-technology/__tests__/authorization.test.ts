@@ -61,6 +61,21 @@ const makeBootstrapIdentityPairInput = (): RequestAuthorizationInput =>
 const FILE_PATH =
   "src/azure-subscriptions/subscriptions/test-subscription/terraform.tfvars.json";
 
+const configureSuccessfulAuthorizationUpdate = (
+  gitHubService: ReturnType<typeof makeEnv>["gitHubService"],
+  content: string,
+  sha: string,
+): void => {
+  gitHubService.createBranch.mockResolvedValue(undefined);
+  gitHubService.getFileContent.mockResolvedValue({ content, sha });
+  gitHubService.updateFile.mockResolvedValue(undefined);
+  gitHubService.createPullRequest.mockResolvedValue(
+    new PullRequest(
+      "https://github.com/pagopa/eng-azure-authorization/pull/73",
+    ),
+  );
+};
+
 // eslint-disable-next-line max-lines-per-function
 describe("PagoPA AuthorizationService", () => {
   describe("bootstrap identity pair", () => {
@@ -234,6 +249,279 @@ describe("PagoPA AuthorizationService", () => {
   });
 
   // eslint-disable-next-line max-lines-per-function
+  describe("managed authorization groups", () => {
+    it("keeps Technology-owned names and applies least-privilege roles", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const content = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
+          },
+          groups: [],
+        },
+        null,
+        2,
+      );
+
+      configureSuccessfulAuthorizationUpdate(
+        gitHubService,
+        content,
+        "managed-groups-sha",
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updatedParsed = JSON.parse(
+        gitHubService.updateFile.mock.calls[0][0].content,
+      );
+      expect(updatedParsed.groups).toEqual([
+        {
+          members: [],
+          name: "test-d-adgroup-admin",
+          roles: ["Contributor"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-developers",
+          roles: ["Reader"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-externals",
+          roles: ["Reader"],
+        },
+      ]);
+    });
+
+    it("preserves Technology-owned organizational groups without managing them", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const organizationalGroups = [
+        {
+          members: ["operations@example.com"],
+          metadata: { owner: "technology" },
+          name: "test-d-adgroup-operations",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["security@example.com"],
+          metadata: { owner: "technology" },
+          name: "test-d-adgroup-security",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["tpm@example.com"],
+          metadata: { owner: "technology" },
+          name: "test-d-adgroup-technical-project-managers",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["product@example.com"],
+          metadata: { owner: "technology" },
+          name: "test-d-adgroup-product-owners",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["oncall@example.com"],
+          metadata: { owner: "technology" },
+          name: "test-d-adgroup-oncall",
+          roles: ["Technology-defined role"],
+        },
+      ];
+      const content = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
+          },
+          groups: organizationalGroups,
+        },
+        null,
+        2,
+      );
+
+      configureSuccessfulAuthorizationUpdate(
+        gitHubService,
+        content,
+        "organizational-groups-sha",
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updatedParsed = JSON.parse(
+        gitHubService.updateFile.mock.calls[0][0].content,
+      );
+      expect(
+        updatedParsed.groups.slice(0, organizationalGroups.length),
+      ).toEqual(organizationalGroups);
+      expect(updatedParsed.groups.slice(organizationalGroups.length)).toEqual([
+        {
+          members: [],
+          name: "test-d-adgroup-admin",
+          roles: ["Contributor"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-developers",
+          roles: ["Reader"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-externals",
+          roles: ["Reader"],
+        },
+      ]);
+    });
+
+    it("migrates managed group roles while preserving members and fields", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const managedGroups = [
+        {
+          members: ["admin@example.com"],
+          metadata: { source: "legacy" },
+          name: "test-d-adgroup-admin",
+          roles: ["Owner"],
+        },
+        {
+          members: ["developer@example.com"],
+          metadata: { source: "legacy" },
+          name: "test-d-adgroup-developers",
+          roles: ["Owner"],
+        },
+        {
+          members: ["external@example.com"],
+          metadata: { source: "legacy" },
+          name: "test-d-adgroup-externals",
+          roles: ["Owner"],
+        },
+      ];
+      const content = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
+          },
+          groups: managedGroups,
+        },
+        null,
+        2,
+      );
+
+      configureSuccessfulAuthorizationUpdate(
+        gitHubService,
+        content,
+        "managed-role-migration-sha",
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      const updatedParsed = JSON.parse(
+        gitHubService.updateFile.mock.calls[0][0].content,
+      );
+      expect(updatedParsed.groups).toEqual([
+        {
+          ...managedGroups[0],
+          roles: ["Contributor"],
+        },
+        {
+          ...managedGroups[1],
+          roles: ["Reader"],
+        },
+        {
+          ...managedGroups[2],
+          roles: ["Reader"],
+        },
+      ]);
+    });
+
+    it("skips a pull request when only unmanaged group roles differ", async () => {
+      const { authorizationService, gitHubService } = makeEnv();
+      const input = makeSampleInput();
+      const groups = [
+        {
+          members: [],
+          name: "test-d-adgroup-admin",
+          roles: ["Contributor"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-developers",
+          roles: ["Reader"],
+        },
+        {
+          members: [],
+          name: "test-d-adgroup-externals",
+          roles: ["Reader"],
+        },
+        {
+          members: ["operations@example.com"],
+          name: "test-d-adgroup-operations",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["security@example.com"],
+          name: "test-d-adgroup-security",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["tpm@example.com"],
+          name: "test-d-adgroup-technical-project-managers",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["product@example.com"],
+          name: "test-d-adgroup-product-owners",
+          roles: ["Technology-defined role"],
+        },
+        {
+          members: ["oncall@example.com"],
+          name: "test-d-adgroup-oncall",
+          roles: ["Technology-defined role"],
+        },
+      ];
+      const content = JSON.stringify(
+        {
+          directory_readers: {
+            service_principals_name: [
+              "test-bootstrap-identity-id",
+              "test-bootstrap-ci-identity-id",
+            ],
+          },
+          groups,
+        },
+        null,
+        2,
+      );
+
+      configureSuccessfulAuthorizationUpdate(
+        gitHubService,
+        content,
+        "unmanaged-role-noop-sha",
+      );
+
+      const result = await authorizationService.requestAuthorization(input);
+
+      expect(result.isOk()).toBe(true);
+      expect(result._unsafeUnwrap().url).toBeUndefined();
+      expect(gitHubService.createBranch).not.toHaveBeenCalled();
+      expect(gitHubService.updateFile).not.toHaveBeenCalled();
+      expect(gitHubService.createPullRequest).not.toHaveBeenCalled();
+    });
+  });
+
+  // eslint-disable-next-line max-lines-per-function
   describe("happy path", () => {
     it("should create a pull request when all steps succeed", async () => {
       const { authorizationService, gitHubService } = makeEnv();
@@ -359,7 +647,7 @@ describe("PagoPA AuthorizationService", () => {
       });
     });
 
-    it("should add all default AD groups when none exist", async () => {
+    it("should add all managed AD groups when none exist", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const originalContent = JSON.stringify(
@@ -434,7 +722,7 @@ describe("PagoPA AuthorizationService", () => {
       const updateCall = gitHubService.updateFile.mock.calls[0][0];
       const updatedParsed = JSON.parse(updateCall.content);
 
-      // All default groups should be present
+      // All managed groups should be present
       expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length);
 
       // Admin group should preserve existing member
@@ -452,7 +740,7 @@ describe("PagoPA AuthorizationService", () => {
           directory_readers: { service_principals_name: [] },
           groups: [
             {
-              // externals normally gets "Owner" but file has "Reader"
+              // Externals should keep the managed "Reader" role.
               members: ["bob@pagopa.it"],
               name: "test-d-adgroup-externals",
               roles: ["Reader"],
@@ -484,13 +772,13 @@ describe("PagoPA AuthorizationService", () => {
       const externalsGroup = updatedParsed.groups.find(
         (g: { name: string }) => g.name === "test-d-adgroup-externals",
       );
-      // Roles updated to default
-      expect(externalsGroup.roles).toEqual(["Owner"]);
+      // Roles remain aligned with the managed contract.
+      expect(externalsGroup.roles).toEqual(["Reader"]);
       // Members preserved
       expect(externalsGroup.members).toContain("bob@pagopa.it");
     });
 
-    it("should preserve custom (non-default) groups", async () => {
+    it("should preserve unmanaged groups", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
       const originalContent = JSON.stringify(
@@ -532,7 +820,7 @@ describe("PagoPA AuthorizationService", () => {
       );
       expect(customGroup).toBeDefined();
       expect(customGroup.members).toContain("carol@pagopa.it");
-      // All defaults also present
+      // All managed groups also present
       expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length + 1);
     });
 
@@ -584,7 +872,7 @@ describe("PagoPA AuthorizationService", () => {
       expect(updatedParsed.directory_readers.some_other_field).toBe("keep-me");
       expect(updatedParsed.entra_groups).toEqual({ readers: ["reader-group"] });
       expect(updatedParsed.other_top_level).toBe(true);
-      // All default groups added
+      // All managed groups added
       expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length);
     });
 
@@ -723,10 +1011,10 @@ describe("PagoPA AuthorizationService", () => {
       );
     });
 
-    it("should preserve original group order and append missing defaults at end", async () => {
+    it("should preserve original group order and append missing managed groups at end", async () => {
       const { authorizationService, gitHubService } = makeEnv();
       const input = makeSampleInput();
-      // Start with custom group + one default group (externals) in deliberate order
+      // Start with an unmanaged group and one managed group in deliberate order
       const originalContent = JSON.stringify(
         {
           directory_readers: { service_principals_name: [] },
@@ -771,7 +1059,7 @@ describe("PagoPA AuthorizationService", () => {
       // Original groups preserve their order
       expect(groupNames[0]).toBe("test-d-adgroup-custom-team");
       expect(groupNames[1]).toBe("test-d-adgroup-externals");
-      // Missing defaults appended after existing groups
+      // Missing managed groups appended after existing groups
       expect(groupNames.length).toBe(DEFAULT_GROUP_SPECS.length + 1);
     });
 
@@ -894,7 +1182,7 @@ describe("PagoPA AuthorizationService", () => {
         "test-bootstrap-ci-identity-id",
       );
 
-      // All default groups must be created
+      // All managed groups must be created
       expect(updatedParsed.groups).toHaveLength(DEFAULT_GROUP_SPECS.length);
     });
 
@@ -989,7 +1277,7 @@ describe("PagoPA AuthorizationService", () => {
       const externalsGroup = updatedParsed.groups.find(
         (g: { name: string }) => g.name === "test-d-adgroup-externals",
       );
-      expect(externalsGroup.roles).toEqual(["Owner"]);
+      expect(externalsGroup.roles).toEqual(["Reader"]);
       // Member preserved
       expect(externalsGroup.members).toContain("bob@pagopa.it");
       // Identities not duplicated

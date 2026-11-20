@@ -14,6 +14,8 @@ resource "azurerm_key_vault_secret" "github_app_id" {
   # Public application identifier — stored in Key Vault to avoid hard-coding in container config.
   value_wo         = "placeholder"
   value_wo_version = 1
+
+  tags = var.tags
 }
 
 # trivy:ignore:AVD-AZU-0015 Content type is optional for secrets
@@ -25,6 +27,8 @@ resource "azurerm_key_vault_secret" "github_app_installation_id" {
   # Identifies which GitHub organization installation the App authenticates against.
   value_wo         = "placeholder"
   value_wo_version = 1
+
+  tags = var.tags
 }
 
 # trivy:ignore:AVD-AZU-0015 Content type is optional for secrets
@@ -36,6 +40,8 @@ resource "azurerm_key_vault_secret" "github_app_private_key" {
   # PEM-encoded private key used to sign JWTs for GitHub App authentication.
   value_wo         = "placeholder"
   value_wo_version = 1
+
+  tags = var.tags
 }
 
 # Scheduled Container App Job for the data import task.

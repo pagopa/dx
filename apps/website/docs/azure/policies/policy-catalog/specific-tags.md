@@ -10,28 +10,32 @@ of tagging rules.
 
 ## Policy Rules
 
-This policy enforces the following conditions:
+This policy enforces the following conditions, only on the tags that are set
+(unless `requireTags` is `true`, in which case all the enabled ones are
+mandatory). A tag is enabled when its `allowed*` parameter is not empty:
 
-- The `CostCenter` tag must match the allowed user-defined value.
-- The `CreatedBy` tag must be either one of: `Terraform` or `ARM`.
-- The `Environment` tag must be one between: `Prod`, `Dev`, or `Uat`.
-- The `BusinessUnit` tag must be in the user-defined list of allowed values.
-- If `CreatedBy` is `Terraform`, the `Source` tag must match a specific URL to
-  the Terraform workspace in the codebase
-- The `ManagementTeam` tag must be in the user-defined list of allowed values.
+- The `CostCenter` tag must be one of the allowed user-defined values.
+- The `Owner` tag must be one of the allowed user-defined values.
+- The `Environment` tag must be one of the allowed user-defined values.
+- The `Source` tag must match the user-defined pattern.
+- The `BusinessUnit` tag must be one of the allowed user-defined values.
+- The `ManagementTeam` tag must be one of the allowed user-defined values.
 
 If any of these conditions are not met, resource creation is denied. The full
 policy definition can be found in
-[specific_tags_rule_v1.json](https://github.com/pagopa/dx/blob/main/infra/policy/_policy_rules/specific_tags_rule_v1.json).
+[specific_tags_rule_v2.json](https://github.com/pagopa/dx/blob/main/infra/policy/_policy_rules/specific_tags_rule_v2.json).
 
 ## Parameters
 
 The policy allows customization through the following parameters, defined in
-[specific_tags_parameters_v1.json](https://github.com/pagopa/dx/blob/main/infra/policy/_policy_rules/specific_tags_parameters_v1.json):
+[specific_tags_parameters_v2.json](https://github.com/pagopa/dx/blob/main/infra/policy/_policy_rules/specific_tags_parameters_v2.json):
 
-| Parameter        | Type   | Description                                     |
-| ---------------- | ------ | ----------------------------------------------- |
-| `CostCenter`     | String | Allowed CostCenter value.                       |
-| `BusinessUnit`   | Array  | Allowed Business Units.                         |
-| `ManagementTeam` | Array  | Allowed Management Teams.                       |
-| `SourceOrg`      | String | Allowed GitHub organization for source tagging. |
+| Parameter                | Type    | Description                                       |
+| ------------------------ | ------- | ------------------------------------------------- |
+| `allowedCostCenters`     | Array   | Allowed CostCenter values.                        |
+| `allowedOwners`          | Array   | Allowed Owner values.                             |
+| `allowedEnvironments`    | Array   | Allowed Environment values.                       |
+| `allowedSourcePattern`   | String  | Pattern (supports `*`) the Source tag must match. |
+| `allowedBusinessUnits`   | Array   | Allowed BusinessUnit values.                      |
+| `allowedManagementTeams` | Array   | Allowed ManagementTeam values.                    |
+| `requireTags`            | Boolean | Makes enabled tags mandatory. Default `false`.    |

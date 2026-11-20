@@ -1,3 +1,37 @@
+## 0.1.11 (2026-10-23)
+
+### 🩹 Fixes
+
+- Build and publish dx-tasks with package exports targeting generated output. ([#2398](https://github.com/pagopa/dx/pull/2398))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.9
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.1.10 (2026-10-08)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+- Updated @pagopa/dx-tasks to 0.2.8
+
+## 0.1.9 (2026-10-06)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.7
+
+## 0.1.8 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+- Updated @pagopa/dx-tasks to 0.2.6
+
 ## 0.1.7 (2026-09-02)
 
 ### 🧱 Updated Dependencies

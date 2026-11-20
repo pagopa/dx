@@ -41,10 +41,10 @@ simplifies writing project-agnostic abstractions like CI pipelines.
 | `build:watch`     | Watches for file changes and rebuilds the project.          | `build --watch`                                                              |
 | `typecheck`       | Performs type checking on TypeScript code.                  | `tsc --noEmit`                                                               |
 | `bundle`          | Packages the project into a deployable format (e.g., ZIP).  | `npm-pack-zip`, `yarn bundle`, `pnpm pack`                                   |
-| `format`          | Formats the project's files according to the style guide.   | `prettier --write .`                                                         |
-| `format:check`    | Verifies adherence to the style guide without reformatting. | `prettier --check .`                                                         |
-| `lint`            | Lints the code and fixes auto-fixable issues.               | `eslint --fix "src/**"`                                                      |
-| `lint:check`      | Lints the code without applying fixes.                      | `eslint "src/**"`                                                            |
+| `format`          | Formats the project's files according to the style guide.   | `oxfmt --write .`                                                            |
+| `format:check`    | Verifies adherence to the style guide without reformatting. | `oxfmt --check .`                                                            |
+| `lint`            | Lints the code and fixes auto-fixable issues.               | `oxlint --fix`                                                               |
+| `lint:check`      | Lints the code without applying fixes.                      | `oxlint`                                                                     |
 | `generate:<name>` | Generates files needed by the project (e.g., API models).   | `gen-api-models --api-spec ./openapi.yaml --out-dir ./src/infra/http/models` |
 
 :::note

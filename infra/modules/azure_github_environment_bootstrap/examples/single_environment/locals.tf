@@ -40,7 +40,7 @@ locals {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
     Owner          = "DevEx"
     Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_github_environment_bootstrap/examples/single_environment"

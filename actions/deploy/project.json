@@ -1,0 +1,11 @@
+{
+  "targets": {
+    "shellcheck": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "actions/deploy",
+        "command": "shellcheck *.sh"
+      }
+    }
+  }
+}

@@ -1,52 +1,54 @@
 {
   "name": "@pagopa/dx-mcpserver",
-  "version": "0.2.14",
-  "type": "module",
-  "nx": {
-    "docker": {
-      "repositoryName": "dx/mcp-server",
-      "platform": "linux/amd64"
-    }
-  },
+  "version": "0.2.23",
+  "private": true,
   "description": "An MCP server that supports developers using DX tools.",
+  "keywords": [
+    "DX",
+    "MCP"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/mcpserver"
   },
-  "keywords": [
-    "DX",
-    "MCP"
-  ],
-  "files": [
-    "dist"
-  ],
   "bin": {
     "dx": "./dist/cli.js"
   },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "scripts": {
+    "start": "tsx src/cli.ts",
+    "version": "node ./scripts/generate-server-manifest.js"
+  },
   "dependencies": {
-    "@aws-sdk/client-bedrock-agent-runtime": "^3.1117.0",
+    "@aws-sdk/client-bedrock-agent-runtime": "^3.1146.0",
     "@aws-sdk/client-s3": "catalog:aws",
-    "@aws-sdk/s3-request-presigner": "^3.1117.0",
+    "@aws-sdk/s3-request-presigner": "^3.1146.0",
     "@logtape/logtape": "catalog:",
     "@modelcontextprotocol/sdk": "catalog:",
     "@octokit/rest": "catalog:",
     "@pagopa/azure-tracing": "workspace:^",
-    "axios": "^1.19.0",
+    "axios": "^1.20.0",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@pagopa/eslint-config": "workspace:^",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   },
-  "scripts": {
-    "start": "tsx src/cli.ts",
-    "version": "node ./scripts/generate-server-manifest.js"
+  "nx": {
+    "docker": {
+      "platform": "linux/amd64"
+    },
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/dx-mcp-server"
+      }
+    }
   }
 }

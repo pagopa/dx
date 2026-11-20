@@ -7,6 +7,7 @@ import { z } from "zod/v4";
 export const initExecutorSchema = z.object({
   args: z.array(z.string()).default([]),
   frozenLockfile: z.boolean().default(false),
+  platforms: z.array(z.string()).default([]),
   projectRoot: z.string().min(1),
 });
 

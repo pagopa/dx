@@ -9,7 +9,7 @@ import {
   cleanStaleCheckpoints,
   completeCheckpoint,
   failCheckpoint,
-  hasCheckpoint,
+  hasRecentCheckpoint,
   startCheckpoint,
 } from "../checkpoints";
 
@@ -59,92 +59,45 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-describe("hasCheckpoint", () => {
-  it("normalizes the since date and computes the freshness cutoff in code", async () => {
+describe("hasRecentCheckpoint", () => {
+  it("computes the freshness cutoff in code and ignores the since window", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-05-08T12:00:00.000Z"));
 
     const { context, executeMock } = makeContext([{ has_checkpoint: 1 }]);
-    const result = await hasCheckpoint(
-      context,
-      "pull-requests",
-      "dx",
-      "2026-04-08",
-    );
+    const result = await hasRecentCheckpoint(context, "pull-requests", "dx");
     const rendered = renderExecutedSql(executeMock);
 
     expect(result).toBe(true);
     expect(rendered.sql).toContain("entity_type =");
-    expect(rendered.sql).toContain("since_date::date =");
-    expect(rendered.sql).not.toContain("since_date <=");
+    expect(rendered.sql).not.toContain("since_date");
     expect(rendered.sql).toContain("completed_at >=");
     expect(rendered.sql).not.toContain("INTERVAL '23 hours'");
     expect(rendered.params).toEqual([
       "pull-requests:dx",
-      "2026-04-08",
       new Date("2026-05-07T13:00:00.000Z"),
     ]);
   });
 
-  it("returns false when since date is invalid", async () => {
-    const { context, executeMock } = makeContext([]);
-    const result = await hasCheckpoint(
-      context,
-      "pull-requests",
-      "dx",
-      "not-a-date",
-    );
-    expect(result).toBe(false);
-    expect(executeMock).not.toHaveBeenCalled();
-  });
-
-  it("returns false when the calendar date overflows", async () => {
-    const { context, executeMock } = makeContext([]);
-    const result = await hasCheckpoint(
-      context,
-      "pull-requests",
-      "dx",
-      "2026-02-31",
-    );
-    expect(result).toBe(false);
-    expect(executeMock).not.toHaveBeenCalled();
-  });
-
   it("returns false when no matching checkpoint exists in db", async () => {
     const { context } = makeContext([]);
-    const result = await hasCheckpoint(
-      context,
-      "pull-requests",
-      "dx",
-      "2026-04-08",
-    );
+    const result = await hasRecentCheckpoint(context, "pull-requests", "dx");
     expect(result).toBe(false);
   });
 
   it("returns false when no global checkpoint exists (null repoName)", async () => {
     const { context } = makeContext([]);
-    const result = await hasCheckpoint(
-      context,
-      "code-search",
-      null,
-      "2026-04-08",
-    );
+    const result = await hasRecentCheckpoint(context, "code-search", null);
     expect(result).toBe(false);
   });
 
   it("uses the global entity key when repoName is null", async () => {
     const { context, executeMock } = makeContext([{ has_checkpoint: 1 }]);
-    const result = await hasCheckpoint(
-      context,
-      "code-search",
-      null,
-      "2026-04-08",
-    );
+    const result = await hasRecentCheckpoint(context, "code-search", null);
     const rendered = renderExecutedSql(executeMock);
 
     expect(result).toBe(true);
     expect(rendered.params[0]).toBe("code-search");
-    expect(rendered.params[1]).toBe("2026-04-08");
   });
 });
 
@@ -192,11 +145,23 @@ describe("startCheckpoint", () => {
 });
 
 describe("completeCheckpoint", () => {
-  it("updates the sync_run to done", async () => {
+  it("marks the sync_run done and persists the cursor", async () => {
     const { context, executeMock } = makeContext([]);
-    await completeCheckpoint(context, 42);
-    // eslint-disable-next-line vitest/prefer-called-with -- executeMock is called with a Drizzle SQL query object that cannot be usefully compared; call count is what matters here.
-    expect(executeMock).toHaveBeenCalledOnce();
+    const cursorAt = new Date("2026-05-08T00:00:00.000Z");
+    await completeCheckpoint(context, 42, cursorAt);
+    const rendered = renderExecutedSql(executeMock);
+
+    expect(rendered.sql).toContain("status = 'done'");
+    expect(rendered.sql).toContain("cursor_at =");
+    expect(rendered.params).toEqual([cursorAt, 42]);
+  });
+
+  it("clears the cursor when the entity has none", async () => {
+    const { context, executeMock } = makeContext([]);
+    await completeCheckpoint(context, 42, null);
+    const rendered = renderExecutedSql(executeMock);
+
+    expect(rendered.params).toEqual([null, 42]);
   });
 });
 

@@ -21,7 +21,7 @@ We propose a role-based access control (RBAC) model that leverages Azure Entra
 ID groups to manage access to Azure resources. Each team will have three Entra
 ID security groups:
 
-- Admins (domain experts)
+- Admin (domain experts)
 - Developers (regular team members)
 - Externals (contractors)
 

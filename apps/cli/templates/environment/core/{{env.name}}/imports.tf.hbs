@@ -4,6 +4,7 @@
 data "azurerm_resource_group" "azure-{{displayName}}_common" {
   provider = azurerm.{{displayName}}
   name = provider::dx::resource_name(merge(local.environment, {
+    domain = ""
     resource_type = "resource_group",
     name = "common"
     instance_number = 1
@@ -18,6 +19,7 @@ import {
 data "azurerm_key_vault" "azure-{{displayName}}_common" {
   provider            = azurerm.{{displayName}}
   name                = provider::dx::resource_name(merge(local.environment, {
+    domain = ""
     resource_type = "key_vault"
     name = "common"
     instance_number = 1

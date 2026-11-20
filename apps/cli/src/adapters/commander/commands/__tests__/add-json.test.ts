@@ -3,17 +3,25 @@
  *
  * Verifies that the command routes progress and the final result through the
  * shared CommandPresenter: step lifecycle events are emitted as NDJSON on
- * stderr while the structured result envelope is written to stdout.
+ * stderr while the credential-free result envelope is written to stdout.
  */
 import { Command } from "commander";
 import { okAsync } from "neverthrow";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { mockDeep } from "vitest-mock-extended";
 
-import type { AuthorizationService } from "../../../../domain/authorization.js";
+import type { CloudAccount } from "../../../../domain/cloud-account.js";
 import type { GitHubAuthFactory } from "../../../../domain/dependencies.js";
 import type { GitHubService } from "../../../../domain/github.js";
+import type { TerraformBackend } from "../../../../domain/remote-backend.js";
 import type { Payload as EnvironmentPayload } from "../../../plop/generators/environment/index.js";
+
+import {
+  AuthorizationResult,
+  type AuthorizationService,
+} from "../../../../domain/authorization.js";
+import { RunnerAppCredentialsError } from "../../../../domain/cloud-account.js";
+import { MissingRunnerAppCredentialsError } from "../../../plop/generators/environment/prompts.js";
 
 const mocks = vi.hoisted(() => ({
   collectDeploymentEnvironmentPayload: vi.fn(),
@@ -35,22 +43,54 @@ vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
 
 import { makeAddCommand } from "../add.js";
 
+const cloudAccount: CloudAccount = {
+  csp: "azure",
+  defaultLocation: "italynorth",
+  displayName: "DEV-FooBar",
+  id: "sub-123",
+};
+
 const payload: EnvironmentPayload = {
   env: {
-    cloudAccounts: [
-      {
-        csp: "azure",
-        defaultLocation: "italynorth",
-        displayName: "DEV-FooBar",
-        id: "sub-123",
-      },
-    ],
+    cloudAccounts: [cloudAccount],
     name: "dev",
     prefix: "dx",
   },
   github: { owner: "pagopa", repo: "test-repo" },
-  tags: { BusinessUnit: "BU", CostCenter: "TS000", ManagementTeam: "MT" },
+  tags: {
+    BusinessUnit: "BU",
+    CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+    ManagementTeam: "MT",
+    Owner: "DX Platform",
+  },
   workspace: { domain: "" },
+};
+
+const runnerAppCredentials = {
+  clientId: "runner-app-client-id",
+  id: "runner-app-id",
+  installationId: "runner-app-installation-id",
+  key: "runner-app-private-key",
+};
+
+const initializationCredentials = {
+  clientId: "initialization-client-id",
+  id: "initialization-app-id",
+  installationId: "initialization-installation-id",
+  key: "initialization-private-key",
+};
+
+const initialization = {
+  cloudAccountsToInitialize: [cloudAccount],
+  terraformBackend: { cloudAccount },
+};
+
+const terraformBackend: TerraformBackend = {
+  containerName: "payments-tf-state",
+  resourceGroupName: "dx-d-itn-tfstate-rg-01",
+  storageAccountName: "dxditntfst01",
+  subscriptionId: cloudAccount.id,
+  type: "azurerm",
 };
 
 const captureStream = (stream: NodeJS.WriteStream) => {
@@ -69,6 +109,95 @@ const parseNdjson = (written: string[]) =>
     .split("\n")
     .filter(Boolean)
     .map((line) => JSON.parse(line));
+
+describe("add environment command CI errors", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it.each([
+    'Multiple common Key Vaults match environment "dev" in subscription sub-123.',
+    "Failed to read github-runner-app-key from dx-d-itn-common-kv-01.",
+    "Failed to save the Runner App Client ID to dx-d-itn-common-kv-01.",
+  ])("preserves safe credential diagnostics: %s", async (message) => {
+    const stdout = captureStream(process.stdout);
+    const stderr = captureStream(process.stderr);
+    const previousExitCode = process.exitCode;
+    mocks.getPlopInstance.mockResolvedValue({});
+    mocks.collectDeploymentEnvironmentPayload.mockRejectedValue(
+      new RunnerAppCredentialsError(message, {
+        cause: new Error("sensitive SDK error details"),
+      }),
+    );
+    const requireGitHubAuth: GitHubAuthFactory = () =>
+      okAsync({
+        authorizationService: mockDeep<AuthorizationService>(),
+        gitHubService: mockDeep<GitHubService>(),
+      });
+    const program = new Command()
+      .option("--verbose")
+      .option("--output <mode>", "Output mode", "text")
+      .addCommand(makeAddCommand(requireGitHubAuth, { CI: true }));
+
+    try {
+      await program.parseAsync([
+        "node",
+        "dx",
+        "--verbose",
+        "add",
+        "environment",
+      ]);
+
+      expect(parseNdjson(stdout.written)).toEqual([
+        { error: message, ok: false },
+      ]);
+      expect([...stdout.written, ...stderr.written].join("")).not.toContain(
+        "sensitive SDK error details",
+      );
+      expect(process.exitCode).toBe(1);
+      expect(mocks.runDeploymentEnvironmentActions).not.toHaveBeenCalled();
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+  });
+
+  it("reports missing Runner App flags in the CI JSON error", async () => {
+    const stdout = captureStream(process.stdout);
+    captureStream(process.stderr);
+    const previousExitCode = process.exitCode;
+    mocks.getPlopInstance.mockResolvedValue({});
+    mocks.collectDeploymentEnvironmentPayload.mockRejectedValue(
+      new MissingRunnerAppCredentialsError(["--client-id"]),
+    );
+    const requireGitHubAuth: GitHubAuthFactory = () =>
+      okAsync({
+        authorizationService: mockDeep<AuthorizationService>(),
+        gitHubService: mockDeep<GitHubService>(),
+      });
+    const program = new Command()
+      .option("--output <mode>", "Output mode", "text")
+      .addCommand(makeAddCommand(requireGitHubAuth, { CI: true }));
+
+    try {
+      await program.parseAsync(["node", "dx", "add", "environment"]);
+
+      expect(parseNdjson(stdout.written)).toEqual([
+        {
+          error:
+            "GitHub Runner App credentials are required in non-interactive mode. Provide: --client-id.",
+          ok: false,
+        },
+      ]);
+      expect(process.exitCode).toBe(1);
+    } finally {
+      process.exitCode = previousExitCode;
+    }
+  });
+});
 
 describe("add environment command json output", () => {
   beforeEach(() => {
@@ -118,19 +247,19 @@ describe("add environment command json output", () => {
         status: "success",
         type: "step",
       },
-      { name: "Checking Azure login status...", status: "start", type: "step" },
+      { name: "Checking mise installation...", status: "start", type: "step" },
       {
-        name: "Checking Azure login status...",
+        name: "Checking mise installation...",
         status: "success",
         type: "step",
       },
       {
-        name: "Checking Corepack installation...",
+        name: "Checking Azure login status...",
         status: "start",
         type: "step",
       },
       {
-        name: "Checking Corepack installation...",
+        name: "Checking Azure login status...",
         status: "success",
         type: "step",
       },
@@ -150,5 +279,114 @@ describe("add environment command json output", () => {
     expect(parseNdjson(stdout.written)).toEqual([
       { data: { authorizationPrs: [], payload }, ok: true },
     ]);
+  });
+
+  describe.each([
+    { args: ["--output", "json"], CI: false, mode: "explicit JSON output" },
+    { args: ["--output", "text"], CI: true, mode: "CI output" },
+  ])("$mode", ({ args, CI }) => {
+    it.each([
+      {
+        authorizationPrs: [],
+        expectedPayload: payload,
+        name: "an initialized environment",
+        sourcePayload: { ...payload, runnerAppCredentials },
+      },
+      {
+        authorizationPrs: [{ url: "https://example.com/authorization-pr" }],
+        expectedPayload: { ...payload, init: initialization },
+        name: "environment initialization",
+        sourcePayload: {
+          ...payload,
+          init: {
+            ...initialization,
+            runnerAppCredentials: initializationCredentials,
+          },
+          runnerAppCredentials,
+        },
+      },
+    ])(
+      "preserves resolved backend metadata and omits credentials for $name",
+      async ({ authorizationPrs, expectedPayload, sourcePayload }) => {
+        const originalPayload = structuredClone(sourcePayload);
+        const actionResult = {
+          ...sourcePayload,
+          terraform: {
+            backend: {
+              ...terraformBackend,
+              accessKey: "terraform-backend-private-value",
+            },
+            backendKey: "bootstrapper.tfstate",
+            coreBackend: {
+              ...terraformBackend,
+              accessKey: "core-backend-private-value",
+              containerName: "dx-tf-state",
+              key: "core.tfstate",
+            },
+            privateValue: "terraform-private-value",
+          },
+        };
+        const originalActionResult = structuredClone(actionResult);
+        const stdout = captureStream(process.stdout);
+        const stderr = captureStream(process.stderr);
+        const authorizationService = mockDeep<AuthorizationService>();
+        authorizationService.requestAuthorization.mockReturnValue(
+          okAsync(
+            new AuthorizationResult("https://example.com/authorization-pr"),
+          ),
+        );
+        const requireGitHubAuth: GitHubAuthFactory = () =>
+          okAsync({
+            authorizationService,
+            gitHubService: mockDeep<GitHubService>(),
+          });
+        mocks.collectDeploymentEnvironmentPayload.mockResolvedValue({
+          generator: {},
+          payload: sourcePayload,
+        });
+        mocks.runDeploymentEnvironmentActions.mockResolvedValue(actionResult);
+        const program = new Command()
+          .option("--output <mode>", "Output mode", "text")
+          .addCommand(makeAddCommand(requireGitHubAuth, { CI }));
+
+        await program.parseAsync(["node", "dx", ...args, "add", "environment"]);
+
+        expect(parseNdjson(stdout.written)).toStrictEqual([
+          {
+            data: {
+              authorizationPrs,
+              payload: {
+                ...expectedPayload,
+                terraform: {
+                  backend: terraformBackend,
+                  backendKey: "bootstrapper.tfstate",
+                  coreBackend: {
+                    ...terraformBackend,
+                    containerName: "dx-tf-state",
+                    key: "core.tfstate",
+                  },
+                },
+              },
+            },
+            ok: true,
+          },
+        ]);
+        const output = [...stdout.written, ...stderr.written].join("");
+        expect(output).not.toContain("runnerAppCredentials");
+        expect(output).not.toContain(runnerAppCredentials.key);
+        expect(output).not.toContain(initializationCredentials.key);
+        expect(output).not.toContain(actionResult.terraform.backend.accessKey);
+        expect(output).not.toContain(
+          actionResult.terraform.coreBackend.accessKey,
+        );
+        expect(output).not.toContain(actionResult.terraform.privateValue);
+        expect(mocks.runDeploymentEnvironmentActions).toHaveBeenCalledWith(
+          expect.anything(),
+          originalPayload,
+        );
+        expect(sourcePayload).toStrictEqual(originalPayload);
+        expect(actionResult).toStrictEqual(originalActionResult);
+      },
+    );
   });
 });

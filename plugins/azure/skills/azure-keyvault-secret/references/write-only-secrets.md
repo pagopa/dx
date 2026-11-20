@@ -58,10 +58,10 @@ Starting at `1` is the conventional default.
 
 ## Version Requirements
 
-| Requirement | Minimum version |
-|---|---|
-| Terraform | **1.11.0** |
-| azurerm provider | **4.23** |
+| Requirement      | Minimum version |
+| ---------------- | --------------- |
+| Terraform        | **1.11.0**      |
+| azurerm provider | **4.23**        |
 
 Write-only attributes (`value_wo`) are a Terraform 1.11 language feature; the runtime
 must understand them before the provider can use them. The azurerm provider added

@@ -28,7 +28,7 @@ variable "repository" {
     GitHub Repository configuration with:
     - `name`, `description`, `topics`: repository metadata.
     - `default_branch_name`: the main integration branch (default: "main").
-    - `reviewers_teams`: teams required to review and approve PRs.
+    - `reviewers_teams`: up to six distinct teams required to review and approve deployments.
     - `pull_request_bypassers`: users/teams allowed to merge without approval.
     - `*_cd_policy_branches`: enabled branches for continuous deployments.
     - `*_cd_policy_tags`: enabled tags for continuous deployments.
@@ -36,4 +36,9 @@ variable "repository" {
     - `pages_enabled`, `has_issues`, `has_projects`, `has_downloads`, `homepage_url`: GitHub repository feature toggles.
     - `environments`: list of deployment environments (e.g., dev, prod).
   EOT
+
+  validation {
+    condition     = length(toset(var.repository.reviewers_teams)) <= 6
+    error_message = "The reviewers_teams list must contain no more than six distinct team slugs, matching GitHub's environment reviewer limit."
+  }
 }

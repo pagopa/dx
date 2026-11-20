@@ -8,7 +8,7 @@ on:
 
 jobs:
   js_code_review:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Check-out code

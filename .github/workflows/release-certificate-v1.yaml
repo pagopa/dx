@@ -33,7 +33,7 @@ on:
 jobs:
   renew-certificate:
     name: Create or Renew Certificate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: ${{ inputs.environment }}-cd
     steps:
       - name: Renew TLS Certificate

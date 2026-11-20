@@ -85,8 +85,13 @@ resource "azurerm_storage_account" "this" {
 }
 
 resource "azurerm_security_center_storage_defender" "this" {
-  count              = local.force_public_network_access_enabled || local.tier_features.advanced_threat_protection ? 1 : 0
+  count              = local.force_public_network_access_enabled || local.tier_features.advanced_threat_protection || var.malware_scanning_enabled ? 1 : 0
   storage_account_id = azurerm_storage_account.this.id
+
+  override_subscription_settings_enabled      = var.malware_scanning_enabled
+  malware_scanning_on_upload_enabled          = var.malware_scanning_enabled
+  malware_scanning_on_upload_cap_gb_per_month = -1
+  sensitive_data_discovery_enabled            = var.malware_scanning_enabled
 }
 
 # Blob lifecycle management policy for Audit (Hot -> Cool -> Cold -> Delete)
@@ -139,7 +144,7 @@ resource "azurerm_storage_container" "this" {
 resource "azurerm_storage_container_immutability_policy" "this" {
   for_each = local.immutability_policy_enabled ? { for c in var.containers : c.name => c if c.immutability_policy != null } : {}
 
-  storage_container_resource_manager_id = azurerm_storage_container.this[each.key].resource_manager_id
+  storage_container_resource_manager_id = azurerm_storage_container.this[each.key].id
   immutability_period_in_days           = each.value.immutability_policy.period_in_days
   locked                                = each.value.immutability_policy.locked
 
@@ -148,16 +153,16 @@ resource "azurerm_storage_container_immutability_policy" "this" {
 
 # Tables
 resource "azurerm_storage_table" "this" {
-  for_each             = var.subservices_enabled.table ? toset(var.tables) : []
-  name                 = each.value
-  storage_account_name = azurerm_storage_account.this.name
+  for_each           = var.subservices_enabled.table ? toset(var.tables) : []
+  name               = each.value
+  storage_account_id = azurerm_storage_account.this.id
 }
 
 # Queues
 resource "azurerm_storage_queue" "this" {
-  for_each             = var.subservices_enabled.queue ? toset(var.queues) : []
-  name                 = each.value
-  storage_account_name = azurerm_storage_account.this.name
+  for_each           = var.subservices_enabled.queue ? toset(var.queues) : []
+  name               = each.value
+  storage_account_id = azurerm_storage_account.this.id
 
   metadata = { for k, v in local.tags : lower(k) => lower(v) }
 }

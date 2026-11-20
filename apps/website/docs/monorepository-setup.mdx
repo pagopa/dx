@@ -49,21 +49,20 @@ Before applying any infrastructure, you need to organize your team into Azure
 Entra ID groups via Azure
 [authorization repository](https://github.com/orgs/pagopa/repositories?q=eng-azure-au).
 
-Ensure to have the following groups in your configuration, eventually split by
-domains:
+Ensure to have the following groups in your configuration:
 
-| Group                                           | Required roles                                                              |
-| ----------------------------------------------- | --------------------------------------------------------------------------- |
-| `<product>-<env>-adgroup-[<domain>]-admins`     | `Contributor`, `Storage Blob Data Contributor`, `Key Vault Secrets Officer` |
-| `<product>-<env>-adgroup-[<domain>]-developers` | `Reader`, `Monitoring Contributor`, `Support Request Contributor`           |
-| `<product>-<env>-adgroup-[<domain>]-externals`  | `Reader`                                                                    |
+| Group                                | Required roles                                                              |
+| ------------------------------------ | --------------------------------------------------------------------------- |
+| `<product>-<env>-adgroup-admin`      | `Contributor`, `Storage Blob Data Contributor`, `Key Vault Secrets Officer` |
+| `<product>-<env>-adgroup-developers` | `Reader`, `Monitoring Contributor`, `Support Request Contributor`           |
+| `<product>-<env>-adgroup-externals`  | `Reader`                                                                    |
 
 Once defined, assign each team member to one of the following groups based on
 the responsibilities you want to grant them:
 
 | Group        | Who belongs here                                                                      |
 | ------------ | ------------------------------------------------------------------------------------- |
-| `admins`     | Engineers with high privileges. They can also apply `core` and `bootstrapper` modules |
+| `admin`      | Engineers with high privileges. They can also apply `core` and `bootstrapper` modules |
 | `developers` | Engineers with development access on resources defined in the monorepository          |
 | `externals`  | External collaborators with limited access                                            |
 
@@ -174,15 +173,18 @@ Once the GitHub App exists, only **App Administrators** can access its settings.
 Navigate to:
 [https://github.com/organizations/pagopa/settings/apps](https://github.com/organizations/pagopa/settings/apps)
 
-Retrieve the following three values:
+Retrieve the following values:
 
 | Value                 | Where to find it                                                                                                                   |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | **App ID**            | App settings page → **About** section → **App ID**                                                                                 |
+| **Client ID**         | App settings page → **About** section → **Client ID**                                                                              |
 | **Installation ID**   | App settings page → **Install App** → click on the installation → the numeric ID is in the URL (e.g. `.../installations/12345678`) |
 | **Private key (PEM)** | App settings page → **Private keys** section → **Generate a private key** → download the `.pem` file                               |
 
-Keep these three values at hand: `@pagopa/dx-cli` will prompt you for them.
+Keep these values at hand for the initial environment setup. For an existing
+environment, `@pagopa/dx-cli` reuses credentials available in its common Key
+Vault.
 
 ## Run `@pagopa/dx-cli` {#run-@pagopa/dx--cli}
 
@@ -218,6 +220,11 @@ Commit and push to GitHub the working changes.
 After the command completes successfully, work through the following steps in
 order before merging the generated Pull Request.
 
+The generated repository includes the DX Code Review workflow
+(`.github/workflows/validate.yaml`): every Pull Request is formatted, scanned
+with Trivy and planned for the affected environments, and the plan is published
+as a comment on the Pull Request.
+
 ### Step 1 — Migrate `infra/repository` Terraform state to remote storage
 
 The `@pagopa/dx-cli` command initializes the Terraform state for
@@ -250,10 +257,13 @@ please coordinate with them before merging the generated Pull Request.
 
 :::
 
-:::info[Automation under development]
+:::info[Bootstrapper apply workflow]
 
-We are currently developing a pipeline that will automate the step 2,
-eliminating the need for this manual step.
+The generated `_release-terraform-apply-bootstrapper-<env>.yaml` workflow can
+apply the bootstrapper for you: run it with **workflow_dispatch** from the
+default branch, or let the push to `main` that merges the environment files
+trigger it. The job runs under the `bootstrapper-<env>-cd` GitHub environment,
+so its approval rules (and the EL role) still apply.
 
 :::
 
@@ -286,12 +296,20 @@ terraform apply
 
 ### Step 3 — Register the new repository
 
+`dx init` prints this manual authorization step and the exact code owners
+selected with `--code-owner`. It does not open this GitHub authorization PR
+automatically.
+
 Open a Pull Request against the
 [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)
 to do two things:
 
 1. **Add the new repository to the organization census**, including GitHub user
-   permissions
+   permissions. Grant the same teams selected with `dx init --code-owner`
+   repository **Write** access (or higher), and ensure any individual code owners
+   also have Write access. Keep the team associations aligned with
+   the root `CODEOWNERS` file and `repository.reviewers_teams` in
+   `infra/repository/main.tf`.
 2. **Add the new repository to the GitHub App** — update the `repositories`
    array in `authorizations/<your-product>/data/apps.json` of the
    [authorization repository](https://github.com/orgs/pagopa/repositories?type=source&q=eng-github-au)

@@ -10,15 +10,10 @@ const getActions = (templatesPath: string) => [
     type: "fetchGithubRelease",
   },
   {
-    repository: { name: "pre-commit-terraform", owner: "antonbabenko" },
-    resultKey: "preCommitTerraformVersion",
-    type: "fetchGithubRelease",
-  },
-  {
     abortOnFail: true,
     base: templatesPath,
     destination: "{{repoName}}",
-    globOptions: { dot: true },
+    globOptions: { cwd: templatesPath, dot: true },
     templateFiles: path.join(templatesPath),
     type: "addMany",
   },

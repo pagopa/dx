@@ -93,9 +93,11 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
     assert toml["artifacts"] == list(task_shape.HARBOR_ARTIFACTS)
     # verifier image Dockerfile built from tests/
     assert (task_root / "tests" / "Dockerfile").is_file()
+    for dockerfile in ("environment/Dockerfile", "tests/Dockerfile"):
+        assert "FROM ubuntu:26.04\n" in (task_root / dockerfile).read_text()
 
     quality = tomllib.loads((task_root / "tests" / "quality.toml").read_text())
-    assert quality["judge"]["judge"] == "openai/gpt-5.6-luna"
+    assert quality["judge"]["judge"] == "openai/gpt-6-luna"
     assert quality["judge"]["files"] == [task_shape.WORKSPACE_PACKET_MD]
     # expected_output + expectations -> one binary criterion each
     descriptions = [c["description"] for c in quality["criterion"]]
@@ -116,6 +118,44 @@ def test_generate_task_writes_exactly_the_generated_file_set(
         if p.is_file()
     }
     assert generated == set(GENERATED_TASK_FILES)
+
+
+def test_skill_use_check_is_generated_and_wired(skill: Path, tmp_path: Path):
+    """F1 proves skill use on the ATIF trajectory via tests/skill_use.py.
+
+    The raw-stream greps broke when Copilot CLI 1.0.97 changed the
+    ``--output-format json`` shape (no more ``<skill-context>`` messages), so
+    the gate must stay wired to the trajectory artifact Harbor normalizes.
+    """
+    task_root = tmp_path / "task"
+    generate_task(make_spec(skill), task_root)
+
+    assert (task_root / "tests" / "skill_use.py").is_file()
+    test_sh = (task_root / "tests" / "test.sh").read_text()
+    assert f"python3 /tests/skill_use.py {task_shape.TRAJECTORY_JSON}" in test_sh
+    assert "SKILL_EVAL_SKILL_NAME:-test-skill" in test_sh
+    # the raw-stream greps (invalidated by CLI output-format drift) are gone
+    assert "grep -q '<skill-context'" not in test_sh
+    assert "grep -q '\"name\" *: *\"skill\"'" not in test_sh
+    assert "skill_use.py" in (task_root / "tests" / "Dockerfile").read_text()
+
+
+def test_verifier_quarantines_freshly_published_judge_dependencies(
+    skill: Path, tmp_path: Path
+):
+    """The judge deps are resolved by ``uvx`` at runtime, outside the lock.
+
+    RewardKit pins ``litellm`` with a lower bound only, so the verifier needs
+    the same publication cooldown the workspace lock gets from
+    ``[tool.uv] exclude-newer``.
+    """
+    task_root = tmp_path / "task"
+    generate_task(make_spec(skill), task_root)
+
+    test_sh = (task_root / "tests" / "test.sh").read_text()
+    assert 'export UV_EXCLUDE_NEWER="7 days"' in test_sh
+    # the cooldown must be in place before the resolver runs
+    assert test_sh.index("UV_EXCLUDE_NEWER") < test_sh.index("uvx ")
 
 
 def test_instruction_md_is_the_prompt_only(skill: Path, tmp_path: Path):

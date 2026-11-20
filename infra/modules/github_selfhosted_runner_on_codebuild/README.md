@@ -29,9 +29,11 @@ The module supports different tiers to accommodate various workload requirements
 ## Authentication Methods
 
 ### GitHub App (Recommended)
-Use AWS CodeBuild's native GitHub App integration for enhanced security and simplified token management. 
+
+Use AWS CodeBuild's native GitHub App integration for enhanced security and simplified token management.
 
 **Important Notes:**
+
 - Even though the GitHub App connection can be created via Terraform using `aws_codestar_connections_connection`, it requires manual approval in the AWS Console
 - The connection needs to be configured only once per AWS account as it is account-wide
 - To complete the setup:
@@ -41,6 +43,7 @@ Use AWS CodeBuild's native GitHub App integration for enhanced security and simp
   4. The connection status should change from "Pending" to "Available"
 
 ### Personal Access Token
+
 For scenarios where GitHub App integration is not possible, you can use a Personal Access Token:
 
 ```hcl

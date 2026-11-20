@@ -1,15 +1,15 @@
 {
   "name": "sanitize-terraform-apply",
-  "description": "A GitHub action to run and sanitize terraform apply output.",
   "version": "0.0.1",
-  "type": "module",
   "private": true,
+  "description": "A GitHub action to run and sanitize terraform apply output.",
   "keywords": [
-    "github",
     "action",
-    "terraform",
-    "apply"
+    "apply",
+    "github",
+    "terraform"
   ],
+  "type": "module",
   "scripts": {
     "test": "sh test.sh"
   }

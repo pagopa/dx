@@ -11,18 +11,31 @@ resource "azapi_resource" "auth" {
         enabled = true
       }
       globalValidation = {
-        unauthenticatedClientAction = "RedirectToLoginPage"
+        unauthenticatedClientAction = var.authentication.azure_active_directory.unauthenticated_client_action
         redirectToProvider          = "azureactivedirectory"
       }
       identityProviders = {
-        azureActiveDirectory = {
-          enabled = true
-          registration = {
-            clientId                = var.authentication.azure_active_directory.client_id
-            clientSecretSettingName = "entra-id-client-secret"
-            openIdIssuer            = "https://login.microsoftonline.com/${var.authentication.azure_active_directory.tenant_id}/v2.0"
+        azureActiveDirectory = merge(
+          {
+            enabled = true
+            registration = merge(
+              {
+                clientId     = var.authentication.azure_active_directory.client_id
+                openIdIssuer = "https://login.microsoftonline.com/${var.authentication.azure_active_directory.tenant_id}/v2.0"
+              },
+              var.authentication.azure_active_directory.client_secret_key_vault_id == null ? {} : {
+                clientSecretSettingName = "entra-id-client-secret"
+              }
+            )
+          },
+          var.authentication.azure_active_directory.allowed_callers_client_ids == null ? {} : {
+            validation = {
+              defaultAuthorizationPolicy = {
+                allowedApplications = var.authentication.azure_active_directory.allowed_callers_client_ids
+              }
+            }
           }
-        }
+        )
       }
     }
   }

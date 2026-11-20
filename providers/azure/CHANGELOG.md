@@ -1,3 +1,23 @@
+## 0.12.10 (2026-11-02)
+
+### 🩹 Fixes
+
+- Pin the hosted provider release runner to Ubuntu 26.04. Keep the Go version selected from go.mod and CGO disabled; no provider interface changes. ([#2417](https://github.com/pagopa/dx/pull/2417))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.12.9 (2026-10-29)
+
+### 🩹 Fixes
+
+- Update GitHub Actions versions ([#2429](https://github.com/pagopa/dx/pull/2429))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.12.8 (2026-09-09)
 
 ### 🩹 Fixes

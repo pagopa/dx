@@ -76,7 +76,7 @@ module "vpc_endpoints" {
   tags = local.tags
 }
 
-# SSM parameter for personal access token
+# SSM parameter for personal access token
 
 resource "aws_ssm_parameter" "personal_access_token" {
   name        = "/core/github/personal_access_token"

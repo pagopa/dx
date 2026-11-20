@@ -5,6 +5,7 @@ selecting tasks and tuning the agent, speeding up repeated runs, authoring
 skills for the benchmark, and the exact semantics of the comparison reports.
 
 - [harbor-bench: advanced usage](#harbor-bench-advanced-usage)
+  - [Install from git](#install-from-git)
   - [Apple Container](#apple-container)
   - [Running a subset of tasks](#running-a-subset-of-tasks)
   - [Agent model and reasoning effort](#agent-model-and-reasoning-effort)
@@ -25,6 +26,42 @@ skills for the benchmark, and the exact semantics of the comparison reports.
   - [One-command comparison: harbor-bench compare](#one-command-comparison-harbor-bench-compare)
   - [Baseline: with vs without the skill](#baseline-with-vs-without-the-skill)
   - [Gotchas](#gotchas)
+
+## Install from git
+
+The README installs the CLI from `main`:
+
+```bash
+uv tool install "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench"
+```
+
+To pin a **released version** instead, use the release tag
+(`harbor-bench@<version>`); the tag's `@` must be percent-encoded as `%40` in
+the git URL, otherwise `uv` rejects the URL as ambiguous:
+
+```bash
+uv tool install "git+https://github.com/pagopa/dx@harbor-bench%400.1.2#subdirectory=apps/harbor-bench"
+```
+
+To switch to another version, reinstall with `--force` and the new ref;
+`uv tool uninstall harbor-bench` removes the CLI. One-off runs need no install:
+
+```bash
+uvx --from "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench" harbor-bench --help
+```
+
+`harbor-bench` runs Harbor through the `harbor` console script of its own
+environment — the tool venv ships `harbor` together with `harbor-copilot`, and
+`compare` resolves that executable automatically. To invoke Harbor directly,
+use the bundled script too; a separate `harbor` on `PATH` (e.g. `uv tool
+install harbor`) has no `harbor-copilot` and fails to import the agent
+(`ValueError: Failed to import module 'harbor_copilot.agents.copilot_cli_mod':
+No module named 'harbor_copilot'`):
+
+```bash
+"$(uv tool dir)/harbor-bench/bin/harbor" run -c .harbor/config.yaml -y \
+  --ae COPILOT_GITHUB_TOKEN=...
+```
 
 ## Apple Container
 
@@ -54,9 +91,8 @@ Requirements and caveats:
   at environment start. `convert` verifies the CLI is on `PATH`.
 
 - **Native arm64 only**: the CLI runs Linux VMs without x86 emulation; base
-  images must publish arm64 variants (`ubuntu:24.04` does). The generated
-  Dockerfile's `ARG TARGETARCH=amd64` is declared but unused — leave it alone,
-  or the literal value will be wrong on Apple silicon.
+  images must publish arm64 variants (`ubuntu:26.04` does). The generated
+  Dockerfile selects the Node.js binary using the image's architecture.
 - **Resources**: each trial is its own lightweight VM; `--n-concurrent N` means
   N VMs, and `cpus`/`memory_mb` map directly to VM resources.
 - **Network**: `network_mode: public` (the generated default) is ignored by the
@@ -105,7 +141,7 @@ there is no equivalent CLI flag for a `--config`-based run.
 `convert` bakes the **Copilot model** and **reasoning effort** into the
 generated `config.yaml`. The defaults are:
 
-- model: `gpt-5.6-luna` (`harbor_bench.convert.config.DEFAULT_MODEL`)
+- model: `gpt-6-luna` (`harbor_bench.convert.config.DEFAULT_MODEL`)
 - effort: `high` (`harbor_bench.convert.config.DEFAULT_AGENT_KWARGS`)
 
 so the emitted agent entry looks like:
@@ -113,7 +149,7 @@ so the emitted agent entry looks like:
 ```yaml
 agents:
   - import_path: harbor_copilot.agents.copilot_cli_mod:CopilotCliMod
-    model_name: gpt-5.6-luna # -> copilot --model=gpt-5.6-luna
+    model_name: gpt-6-luna # -> copilot --model=gpt-6-luna
     kwargs:
       reasoning_effort: high # -> copilot --effort high
     skills: [...]
@@ -182,7 +218,7 @@ config file, pass them directly to `harbor run`:
 ```bash
 uv run --package harbor-bench harbor \
   --agent harbor_copilot.agents.copilot_cli_mod:CopilotCliMod \
-  --model gpt-5.6-luna --ak reasoning_effort=high ...
+  --model gpt-6-luna --ak reasoning_effort=high ...
 ```
 
 ## Reusing the environment image (faster startup)
@@ -325,6 +361,9 @@ Rules, enforced at plan time (before anything is written):
 
 #### Overriding the environment Dockerfile
 
+The generated Ubuntu environment includes Node.js 24, npm and npx, available
+to both the agent and `prepare.sh`.
+
 ```toml
 # harbor/<generated-task-dir>/task.toml  (per-task only)
 [environment]
@@ -349,8 +388,8 @@ harbor/environment/prepare.sh   (added; the GENERATED Dockerfile also runs it,
 ```
 
 Because replacement is wholesale, a full `environment/Dockerfile` override
-means reproducing the Copilot CLI install, `COPY . /workspace/` and the git
-baseline — or keep the generated file and just add a `prepare.sh`.
+means reproducing the Node.js and Copilot CLI installs, `COPY . /workspace/`
+and the git baseline — or keep the generated file and just add a `prepare.sh`.
 
 ##### Deterministic git baseline
 
@@ -412,8 +451,9 @@ instead of a hand-rolled `judge.py`. `convert` renders a judge header
 `[[criterion]]` per `expected_output` / `expectations` entry, reading the
 agentskills.io rubric from `evals.json` (see the `quality-header.toml`
 template). `tests/test.sh` runs the mechanical checks (F1 skill load + invoke
-proof) and, when a judge token is available, invokes
-`uvx --from harbor-rewardkit==0.2.0 rewardkit /tests` to produce
+proof, evaluated by `tests/skill_use.py` over the ATIF trajectory) and, when a
+judge token is available, invokes
+`uvx --with 'litellm[mcp]' --from harbor-rewardkit==0.2.0 rewardkit /tests` to produce
 `reward.json` → `reward.txt`. Env is injected via `[verifier].env`
 (`OPENAI_API_BASE=https://api.githubcopilot.com`,
 `OPENAI_API_KEY=${COPILOT_GITHUB_TOKEN}`,
@@ -430,14 +470,21 @@ verifier only what is declared in the task-level `artifacts` list:
 ```toml
 artifacts = [
   { source = "/workspace", exclude = [".git"] },  # agent-produced files (judge packet); skip the git baseline
-  "/logs/agent/copilot-cli.jsonl",    # agent transcript (F1 skill proof)
-  "/logs/agent/trajectory.json",      # ATIF trajectory (RewardKit process criteria)
+  "/logs/agent/copilot-cli.jsonl",    # raw Copilot CLI stream (kept for debugging the verifier)
+  "/logs/agent/trajectory.json",      # ATIF trajectory (F1 skill proof + RewardKit process criteria)
 ]
 ```
 
 The verifier image is built from the generated `tests/Dockerfile` (ubuntu +
 uv + python; `tests/` is NOT uploaded at runtime). The converter always emits
 this separate-verifier setup and the generated artifact list.
+
+Judge dependencies (`harbor-rewardkit`) are installed by `uvx` inside the
+verifier at runtime, so they are not covered by the workspace lock. The
+generated `tests/test.sh` applies the same publication cooldown the lock gets
+from `[tool.uv] exclude-newer`: it exports `UV_EXCLUDE_NEWER="7 days"` before
+resolving, so a distribution published minutes earlier cannot reach a
+container that holds the judge credentials.
 
 ## Skill eval data and git sources
 
@@ -446,7 +493,7 @@ Harbor injects the skills listed in the agent's `skills:` (or `--skill`) **as-is
 of every skill directory. For workspace skills the injected directory is the
 **raw workspace skill directory** (`convert` no longer stages or copies them);
 when a skill is loaded from a git source
-(`--skill https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills`), the
+(`--skill https://github.com/pagopa/dx/tree/main/plugins/padef/skills`), the
 downloaded skill always ships `evals/` together with the harness material.
 
 Harbor uploads each injected skill to `/harbor/skills/<name>` as-is, regardless
@@ -477,7 +524,7 @@ uv run --package harbor-bench harbor run \
 uv run --package harbor-bench harbor run \
   -c .harbor/config.yaml -y --ae COPILOT_GITHUB_TOKEN=... \
   --jobs-dir runs --job-name skill-main \
-  --skill https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills \
+  --skill https://github.com/pagopa/dx/tree/main/plugins/padef/skills \
   --skill https://github.com/pagopa/dx/tree/main/plugins/tests/skills
 
 # 3. Delta report (score, tokens, cost, duration)
@@ -488,8 +535,13 @@ uv run --package harbor-bench harbor-bench report \
 The report is rendered as Markdown by default; pass `--format json` for a
 machine-readable document. Its `comparison` object is calculated only from
 tasks present in both runs, while `summary` contains whole-job totals; each
-metric records its population explicitly. Per-task metrics remain keyed by the
-metric registry, and run configuration is included. Write it to stdout or
+metric records its population explicitly. Counts name the two outcome axes
+explicitly: `base_gate_passed`/`head_gate_passed` count trials whose verifier
+reward met its gate, while `base_completed`/`head_completed` count trials that
+finished without an exception. The same formatted key-signal cards shown by
+the HTML and Markdown reports are exposed as `comparison.signals`. Per-task
+metrics remain keyed by the metric registry, and run configuration is
+included. Write it to stdout or
 `--report out.json`:
 
 ```bash
@@ -510,13 +562,22 @@ uv run --package harbor-bench harbor-bench report \
 open comparison.html
 ```
 
-The HTML report presents a plain-language verdict, headline score and
-success-rate changes, task outcome counts, visual metric bars, and expandable
-technical details for each task. Headline comparisons use only tasks present
-in both runs, so newly added or removed tasks remain visible without skewing
-the verdict. Interrupted Harbor trials that have a `trial.log` but no
+The HTML report presents a plain-language verdict, one Key signals grid with
+the verifier-gate and execution cards, and per-task details open by default;
+per-task score rows (including `score.reward`) live in the task table.
+**Completed** counts trials that finished without an exception; **Tasks
+passed** counts trials whose verifier reward met its gate (RewardKit writes
+the already-gated reward). When the verifier recorded per-criterion outcomes
+(`verifier/reward-details.json`), each task shows a criterion table and which
+criteria each side gained, so a tied score that hides a local regression
+reads as `Criteria changed` instead of `Unchanged`; the task's `quality.toml`
+`[scoring]` gate recorded by new runs in `verifier/scoring.json` is shown
+next to a failing score. Headline comparisons use only tasks present in both
+runs, so newly added or removed tasks remain visible without skewing the
+verdict. Interrupted Harbor trials that have a `trial.log` but no
 `result.json` are shown as `Incomplete` instead of disappearing from the
-report. Markdown remains the default for terminal and source-control workflows.
+report. Markdown remains the default for terminal and source-control
+workflows.
 
 Without `--job-name`/`--jobs-dir`, each run lands in `jobs/<timestamp>/`; the
 two `--job-name` flags above give stable, human-readable paths so the `report`
@@ -536,7 +597,7 @@ Notes:
   and, per skill name, last-wins — the git skill replaces the workspace one for
   the same name. Pass **every** plugin you want to compare; plugins not passed
   keep the workspace version. (Git URLs must point at the skills root, e.g.
-  `plugins/aiepdf/skills`, whose immediate children contain `SKILL.md`.)
+  `plugins/padef/skills`, whose immediate children contain `SKILL.md`.)
 - **Delta semantics**: `harbor-bench report <base> <head>` reports
   `head − base`. Each task's `result.json` contributes the verifier rewards
   (`score.<criterion>`), agent input/cache/output tokens, cost (USD), agent,
@@ -580,8 +641,8 @@ under one output directory. The report is `comparison.md` by default; pass
 
 ```bash
 uv run --package harbor-bench harbor-bench compare \
-  plugins/aiepdf/skills/dr-blacksmith \
-  https://github.com/pagopa/dx/tree/main/plugins/aiepdf/skills/dr-blacksmith \
+  plugins/padef/skills/dr-blacksmith \
+  https://github.com/pagopa/dx/tree/main/plugins/padef/skills/dr-blacksmith \
   -t 'dr-blacksmith-*-use-case-*' \
   --format html \
   --token $COPILOT_GITHUB_TOKEN
@@ -599,19 +660,43 @@ generated tasks when no name is derivable.
 
 Flags:
 
-| Flag                         | Meaning                                                                |
-| ---------------------------- | ---------------------------------------------------------------------- |
-| `-t, --task-pattern PATTERN` | run only tasks matching `PATTERN` (glob); repeatable                   |
-| `--scan-root DIR`            | evals.json scan root (default: `plugins`)                              |
-| `--out DIR`                  | convert output dir (default: `.harbor`)                                |
-| `--runs-dir DIR`             | parent dir for the two job runs (default: `runs`)                      |
-| `--run-id ID`                | stable run id (default: a fresh timestamp)                             |
-| `--task-glob GLOBS`          | explicit task globs, space-separated; used only when `-t` is not given |
-| `--model MODEL`              | Copilot model passed to the agent (default: `gpt-5.6-luna`)            |
-| `--environment TYPE`         | `docker` (default) or `apple-container`                                |
-| `--n-concurrent N`           | `n_concurrent_trials` (default: `4`)                                   |
-| `--format FORMAT`            | report format: `markdown` (default), `html`, or `json`                 |
-| `--token TOKEN`              | GitHub token passed to the agent (`--ae COPILOT_GITHUB_TOKEN=...`)     |
+| Flag                         | Meaning                                                                                             |
+| ---------------------------- | --------------------------------------------------------------------------------------------------- |
+| `-t, --task-pattern PATTERN` | run only tasks matching `PATTERN` (glob); repeatable                                                |
+| `--skill SOURCE`             | auxiliary skill injected into both runs (repeatable): local path, root of skill dirs, or git source |
+| `--scan-root DIR`            | evals.json scan root (default: `plugins`)                                                           |
+| `--out DIR`                  | convert output dir (default: `.harbor`)                                                             |
+| `--runs-dir DIR`             | parent dir for the two job runs (default: `runs`)                                                   |
+| `--run-id ID`                | stable run id (default: a fresh timestamp)                                                          |
+| `--task-glob GLOBS`          | explicit task globs, space-separated; used only when `-t` is not given                              |
+| `--model MODEL`              | Copilot model passed to the agent (default: `gpt-6-luna`)                                           |
+| `--environment TYPE`         | `docker` (default) or `apple-container`                                                             |
+| `--n-concurrent N`           | `n_concurrent_trials` (default: `4`)                                                                |
+| `--format FORMAT`            | report format: `markdown` (default), `html`, or `json`                                              |
+| `--token TOKEN`              | GitHub token passed to the agent (`--ae COPILOT_GITHUB_TOKEN=...`)                                  |
+
+**Auxiliary skills.** `convert` already injects every skill that has an
+`evals/evals.json` under the scan root, so an aux skill like `uc-engraver` is
+usually present without any flag. `--skill` covers the remaining cases: a
+dependency **without** evals, a skill from another repo, or a pinned git ref
+for a dependency. Each source is validated in the preflight exactly like
+base/head (local path or git source, same grammar) and passed to **both**
+`harbor run` invocations, so aux skills stay a constant of the comparison.
+They are ordered before the tested skill, so a source that itself contains the
+skill under test (e.g. the `plugins/padef/skills` root) can never clobber the
+base/head version — Harbor resolves duplicate names last-wins. Aux skills
+appear in the report's run-configuration section like every other injected
+skill, `(git: <repo>@<sha>)` when loaded from git.
+
+```bash
+uv run --package harbor-bench harbor-bench compare \
+  plugins/padef/skills/dr-blacksmith \
+  https://github.com/pagopa/dx/tree/main/plugins/padef/skills/dr-blacksmith \
+  -t 'dr-blacksmith-*-intake-*' \
+  --skill plugins/padef/skills/uc-engraver \
+  --format html \
+  --token $COPILOT_GITHUB_TOKEN
+```
 
 ## Baseline: with vs without the skill
 

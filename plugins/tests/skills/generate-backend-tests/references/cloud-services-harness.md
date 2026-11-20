@@ -33,12 +33,12 @@ Parse as dotenv (`KEY=VALUE`, no shell expansion). Group keys by service:
 
 Probe each candidate service before using it.
 
-| Service | Probe |
-| --- | --- |
-| Cosmos DB | official Cosmos SDK with the same connection shape as the app; cheapest account/db operation |
-| Azure Storage Blob/Queue/Table | official Storage SDK; list at most one resource or read service properties |
-| Application Insights | GET ingestion health path; timeout may simply disable telemetry emission |
-| Generic HTTP | `HEAD` or `GET /` |
+| Service                        | Probe                                                                                        |
+| ------------------------------ | -------------------------------------------------------------------------------------------- |
+| Cosmos DB                      | official Cosmos SDK with the same connection shape as the app; cheapest account/db operation |
+| Azure Storage Blob/Queue/Table | official Storage SDK; list at most one resource or read service properties                   |
+| Application Insights           | GET ingestion health path; timeout may simply disable telemetry emission                     |
+| Generic HTTP                   | `HEAD` or `GET /`                                                                            |
 
 Rules:
 
@@ -74,13 +74,13 @@ interface DependencyTopology {
 
 Every write to shared cloud state needs a run-unique token generated once per suite, for example `test-<uuid4-short>-<slug>`.
 
-| Resource | Isolation |
-| --- | --- |
+| Resource            | Isolation                                                                                   |
+| ------------------- | ------------------------------------------------------------------------------------------- |
 | Cosmos DB/container | Prefer existing db/container; create run-scoped containers only when needed and delete them |
-| Documents/items | run-scoped IDs; cleanup by partition key + ID |
-| Blobs | `test-runs/<run-token>/...`; cleanup by prefix |
-| Queues | run-scoped queue names; delete queue |
-| Table rows | run-scoped partition key |
+| Documents/items     | run-scoped IDs; cleanup by partition key + ID                                               |
+| Blobs               | `test-runs/<run-token>/...`; cleanup by prefix                                              |
+| Queues              | run-scoped queue names; delete queue                                                        |
+| Table rows          | run-scoped partition key                                                                    |
 
 Pre-existing reference data is read-only: never mutate, overwrite, or delete it.
 

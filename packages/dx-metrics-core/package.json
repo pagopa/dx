@@ -1,9 +1,9 @@
 {
   "name": "@pagopa/dx-metrics-core",
-  "version": "0.1.7",
-  "type": "module",
+  "version": "0.1.14",
   "private": true,
   "description": "Shared configuration and database contracts for DX Metrics apps.",
+  "type": "module",
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -31,13 +31,10 @@
     "pg": "catalog:"
   },
   "devDependencies": {
-    "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
-    "@types/pg": "^8.20.4",
-    "drizzle-kit": "^0.31.10",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
+    "@types/pg": "^8.23.1",
+    "drizzle-kit": "^0.31.11",
     "tsup": "catalog:",
     "typescript": "catalog:"
   }

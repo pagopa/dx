@@ -1,14 +1,21 @@
 /**
  * Utilities for sanitizing names to comply with Azure resource naming constraints.
- * Azure resource names cannot contain special characters like [], (), {}, etc.
+ * Azure resource names (e.g. Portal dashboards) only allow alphanumeric
+ * characters, hyphens and underscores.
  */
 
 /**
- * Sanitize a name by removing special characters that are invalid in Azure resource names.
- * Handles: braces {}, brackets [], parentheses (), and other common special chars.
+ * Sanitize a name so it is a valid Azure resource name segment.
+ * Replaces every character outside `[A-Za-z0-9_-]` with a single underscore.
+ *
+ * @param name - Raw name coming from the configuration
+ * @returns Sanitized name containing only `[A-Za-z0-9_-]`
+ *
+ * @example
+ * ```ts
+ * sanitizeName("PROD-IO/IO_App.Availability") // "PROD-IO_IO_App_Availability"
+ * ```
  */
 export function sanitizeName(name: string): string {
-  // Replace special characters with empty string
-  // Azure resource names typically allow alphanumerics, hyphens, and underscores
-  return name.replace(/[{}[\]()<>@#$%^&*+=|\\;:'",.?/`~]/g, "");
+  return name.replace(/[^A-Za-z0-9_-]+/g, "_");
 }

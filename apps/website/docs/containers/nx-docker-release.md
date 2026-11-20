@@ -4,7 +4,7 @@ sidebar_position: 2
 
 # Release Docker images with the Nx Docker plugin
 
-This page describes `@pagopa/nx-dx-docker-plugin`, the Nx plugin that infers
+This page describes `@pagopa/nx-docker`, the Nx plugin that infers
 `docker:build`, `docker:push`, and `docker:run` targets for every project with a
 `Dockerfile`, regardless of its language or framework.
 
@@ -22,7 +22,7 @@ Use this guide if your repository:
 
 ## Why use the DX plugin alone
 
-`@pagopa/nx-dx-docker-plugin` owns every inferred Docker target. It adds OCI
+`@pagopa/nx-docker` owns every inferred Docker target. It adds OCI
 labels and annotations, reproducible build flags, multi-platform builds, the DX
 tag strategy, and a local `docker:run` workflow.
 
@@ -39,17 +39,17 @@ pushes the primary semver tag and its aliases.
 Install and configure the plugin with:
 
 ```bash
-pnpm nx add @pagopa/nx-dx-docker-plugin
+pnpm nx add @pagopa/nx-docker
 ```
 
-The generator registers `@pagopa/nx-dx-docker-plugin`. For a manual
+The generator registers `@pagopa/nx-docker`. For a manual
 configuration, use:
 
 ```json
 {
   "plugins": [
     {
-      "plugin": "@pagopa/nx-dx-docker-plugin",
+      "plugin": "@pagopa/nx-docker",
       "options": {
         "imageAuthors": "Custom Team",
         "imageNamePrefix": "custom/repository",
@@ -136,6 +136,28 @@ need the default npm publisher. Projects that publish both an npm package and a
 Docker image should configure `nx.docker.repositoryName` and publish the image
 from a release-tag workflow.
 
+For a JavaScript project released only as a Docker image, set `"private": true`
+in `package.json`. This prevents Nx's JavaScript/package plugin from inferring
+npm publishing, but it does **not** disable the custom Docker
+`nx-release-publish` target inferred from `nx.release.docker.repositoryName`.
+Keep Docker build settings, such as `platform`, under `nx.docker`:
+
+```json
+{
+  "private": true,
+  "nx": {
+    "docker": {
+      "platform": "linux/amd64"
+    },
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/my-image-name"
+      }
+    }
+  }
+}
+```
+
 ### Container-only projects
 
 For a Docker-only project without `package.json`, keep its durable release
@@ -154,7 +176,7 @@ version in `project.json` and use the plugin's VersionActions implementation:
   "release": {
     "version": {
       "currentVersionResolver": "disk",
-      "versionActions": "@pagopa/nx-dx-docker-plugin/release/version-actions"
+      "versionActions": "@pagopa/nx-docker/release/version-actions"
     }
   }
 }
@@ -204,7 +226,7 @@ locally), wire the plugin's `docker-prebuild` script into your `nx.json`:
 {
   "release": {
     "docker": {
-      "preVersionCommand": "node ./node_modules/@pagopa/nx-dx-docker-plugin/dist/docker-prebuild.js",
+      "preVersionCommand": "node ./node_modules/@pagopa/nx-docker/dist/docker-prebuild.js",
     },
   },
 }
@@ -221,7 +243,7 @@ NX_RELEASE_DOCKER_PROJECTS=my-project \
 ## Installing in another repository
 
 ```bash
-pnpm add -D @pagopa/nx-dx-docker-plugin
+pnpm add -D @pagopa/nx-docker
 ```
 
 After installing, register the plugin in your own `nx.json` exactly as shown in

@@ -4,7 +4,7 @@ locals {
     env_short       = "d"
     location        = "italynorth"
     domain          = "modules"
-    app_name        = "test"
+    app_name        = "complete"
     instance_number = "01"
   }
 
@@ -28,10 +28,9 @@ locals {
   }
 
   tags = {
-    CreatedBy   = "Terraform"
+    CostCenter  = "TS720 - DEV EX"
     Environment = "Dev"
     Owner       = "DevEx"
     Source      = "https://github.com/pagopa/dx/modules/azure_api_management/examples/complete"
-    CostCenter  = "TS700 - ENGINEERING"
   }
 }

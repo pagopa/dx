@@ -11,6 +11,7 @@ import type { CommandPresenter } from "../../../domain/command-presenter.js";
 import type { CliEnv } from "../env.js";
 import type { GlobalOptions } from "../global-options.js";
 
+import { codeOwnerSchema } from "../../../domain/code-ownership.js";
 import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import {
   GitHubService,
@@ -18,6 +19,11 @@ import {
   Repository,
 } from "../../../domain/github.js";
 import { tf$ } from "../../execa/terraform.js";
+import { assertGitHubPackagesAccess } from "../../github/packages.js";
+import {
+  initTerraformProjects,
+  REPOSITORY_PROJECT,
+} from "../../plop/actions/init-terraform-projects.js";
 import { Payload as MonorepoPayload } from "../../plop/generators/monorepo/index.js";
 import {
   collectMonorepoPayload,
@@ -41,16 +47,19 @@ type InitResult = {
   repository?: Repository;
 };
 
-type SummaryInput = GitHubRepoCreationSkippedResult | InitResult;
+type SummaryInput = (GitHubRepoCreationSkippedResult | InitResult) & {
+  ownership: ReturnType<typeof getOwnershipGuidance>;
+};
 
 const isGitHubRepoCreationSkipped = (
   input: SummaryInput,
-): input is GitHubRepoCreationSkippedResult =>
+): input is GitHubRepoCreationSkippedResult & SummaryInput =>
   "gitHubRepoCreationSkipped" in input;
 
 type InitActionContext = {
   gitHubService: GitHubService;
   initialAnswers?: InitInitialAnswers;
+  nonInteractive?: boolean;
   presenter: CommandPresenter;
 };
 
@@ -68,6 +77,43 @@ type RepositoryPullRequest = {
   repository: Repository;
 };
 
+export const getOwnershipGuidance = (payload: MonorepoPayload) => {
+  const { namespaceType, owners, reviewerTeams } = payload.ownership;
+  const additionalOwners = owners.filter(
+    (owner) => owner.toLowerCase() !== `@${payload.repoOwner}`.toLowerCase(),
+  );
+  const requiresAuthorization =
+    namespaceType === "Organization" || additionalOwners.length > 0;
+  const repository = `${payload.repoOwner}/${payload.repoName}`;
+  const authorizationRepository =
+    namespaceType === "Organization" &&
+    payload.repoOwner.toLowerCase() === "pagopa"
+      ? "https://github.com/pagopa/eng-github-authorization"
+      : undefined;
+  const instructions = requiresAuthorization
+    ? [
+        authorizationRepository
+          ? `Open a PR in ${authorizationRepository} to register ${repository}, grant ${owners.join(", ")} repository Write access (or higher), and associate the repository with the product GitHub App. Use exactly the same teams as CODEOWNERS and repository.reviewers_teams: ${reviewerTeams.join(", ") || "(no teams selected)"}.`
+          : namespaceType === "Organization"
+            ? `Use ${payload.repoOwner}'s authorization process to grant ${owners.join(", ")} Write access (or higher) to ${repository}. Keep team grants aligned with CODEOWNERS and repository.reviewers_teams: ${reviewerTeams.join(", ") || "(no teams selected)"}.`
+            : `Grant ${additionalOwners.join(", ")} Write access (or higher) to ${repository} and have them accept collaborator invitations.`,
+        "Repository access has not been validated or granted by DX CLI. CODEOWNERS and deployment reviewer settings do not grant access.",
+      ]
+    : [];
+  return {
+    authorizationRepository,
+    instructions: [
+      ...instructions,
+      "Code-owner review requests become effective once access is granted and CODEOWNERS is merged into the pull request's base branch.",
+    ],
+    owners,
+    permissionStatus: requiresAuthorization
+      ? "manual-authorization-required"
+      : "personal-owner",
+    reviewerTeams,
+  };
+};
+
 const trackStep = <T, E>(
   presenter: CommandPresenter,
   name: string,
@@ -77,7 +123,7 @@ const trackStep = <T, E>(
   ResultAsync.fromPromise(presenter.trackStep(name, task), mapError);
 
 const displaySummary = (input: SummaryInput) => {
-  const docsUrl = "https://dx.pagopa.it/getting-started";
+  const docsUrl = "https://dx.pagopa.it/docs/getting-started";
 
   if (isGitHubRepoCreationSkipped(input)) {
     const { payload } = input;
@@ -150,14 +196,43 @@ const trackTerraformCliIsInstalled = (presenter: CommandPresenter) =>
     ),
   );
 
-const checkCorepack = () => tf$`corepack -v`;
+const checkMise = () => tf$`mise --version`;
 
-const trackCorepackIsInstalled = (presenter: CommandPresenter) =>
+const trackMiseIsInstalled = (presenter: CommandPresenter) =>
   trackStep(
     presenter,
-    "Checking Corepack installation...",
-    checkCorepack,
-    asError("Please install Corepack before running this command."),
+    "Checking mise installation...",
+    checkMise,
+    asError(
+      "Please install mise before running this command. See https://mise.jdx.dev/installing-mise.html",
+    ),
+  );
+
+/**
+ * Verifies the GitHub credentials can read the DX packages from GitHub Packages.
+ *
+ * The probe fails with its own actionable message (the `read:packages` scope is
+ * a prerequisite), so the mapper only guards against non-Error rejections.
+ */
+const mapGitHubPackagesError = (cause: unknown): Error =>
+  cause instanceof Error
+    ? cause
+    : new Error(
+        "Failed to verify access to the DX packages on GitHub Packages.",
+        { cause },
+      );
+
+/**
+ * Probes GitHub Packages before the scaffold is generated: without the
+ * `read:packages` scope the bootstrap would only fail after the workspace has
+ * already been scaffolded.
+ */
+const trackGitHubPackagesAccess = (presenter: CommandPresenter) =>
+  trackStep(
+    presenter,
+    "Checking GitHub Packages access...",
+    assertGitHubPackagesAccess,
+    mapGitHubPackagesError,
   );
 
 const azureAccountSchema = z.object({
@@ -219,19 +294,20 @@ const trackAzLogin = (presenter: CommandPresenter) =>
 
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
 export const runInitPreconditions = (presenter: CommandPresenter) =>
-  trackTerraformCliIsInstalled(presenter).andThen(() =>
-    trackCorepackIsInstalled(presenter),
-  );
+  trackGitHubPackagesAccess(presenter)
+    .andThen(() => trackTerraformCliIsInstalled(presenter))
+    .andThen(() => trackMiseIsInstalled(presenter));
 
 // TODO(CES-1810): Make these checks concurrent to speed up the preconditions check phase
 export const runAddEnvironmentPreconditions = (presenter: CommandPresenter) =>
   trackTerraformCliIsInstalled(presenter)
-    .andThen(() => trackAzLogin(presenter))
-    .andThen(() => trackCorepackIsInstalled(presenter));
+    .andThen(() => trackMiseIsInstalled(presenter))
+    .andThen(() => trackAzLogin(presenter));
 
 const DEFAULT_GITHUB_PUBLISH_CONFIRMATION = true;
 
 export const initCommandOptionsSchema = z.object({
+  codeOwners: z.array(codeOwnerSchema).min(1).optional(),
   description: z.string().optional(),
   name: z.string().trim().min(1, "Repository name cannot be empty").optional(),
   owner: z.string().trim().min(1, "GitHub owner cannot be empty").optional(),
@@ -255,6 +331,7 @@ export const parseInitCommandOptions = (input: unknown): InitCommandOptions => {
 };
 
 export const getMonorepoInitialAnswers = ({
+  codeOwners,
   description,
   name,
   owner,
@@ -262,6 +339,9 @@ export const getMonorepoInitialAnswers = ({
 }: InitCommandOptions): InitInitialAnswers => {
   const initialAnswers: InitInitialAnswers = {};
 
+  if (codeOwners !== undefined) {
+    initialAnswers.codeOwners = codeOwners;
+  }
   if (description) {
     initialAnswers.repoDescription = description;
   }
@@ -281,11 +361,7 @@ export const getMonorepoInitialAnswers = ({
   return initialAnswers;
 };
 
-type TerraformRepositoryCreationStep = "apply" | "init";
-
-const formatTerraformRepositoryCreationFailureDetails = (
-  cause: unknown,
-): string => {
+const formatTerraformFailureDetails = (cause: unknown): string => {
   const details =
     cause instanceof ExecaError
       ? [cause.shortMessage, cause.stderr]
@@ -300,19 +376,31 @@ const formatTerraformRepositoryCreationFailureDetails = (
     .join("\n");
 };
 
-const mapTerraformRepositoryCreationError =
-  (step: TerraformRepositoryCreationStep) =>
+const mapTerraformFailure =
+  (message: string) =>
   (cause: unknown): Error => {
-    const details = formatTerraformRepositoryCreationFailureDetails(cause);
-    const message = [
-      `Terraform ${step} failed while creating the GitHub repository.`,
-      details,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const details = formatTerraformFailureDetails(cause);
+    const error = new Error([message, details].filter(Boolean).join("\n"), {
+      cause,
+    });
 
-    return new Error(message, { cause });
+    getLogger(["dx-cli", "init"]).error(error.message);
+    return error;
   };
+
+/**
+ * Initializes the Terraform project of the repository root, so the provider and
+ * module lock files are part of the scaffold commit.
+ *
+ * The initialization is delegated to the Nx `init` target: a plain
+ * `terraform init` would lock the providers of the current platform only, while
+ * the validation workflow initializes the same project with a frozen lockfile.
+ *
+ * Only the repository root is initialized, never the environments already
+ * present in the repository: they need access to their own backend.
+ */
+const initializeRepositoryTerraform = (): Promise<void> =>
+  initTerraformProjects([REPOSITORY_PROJECT]);
 
 const createRemoteRepositoryWithPresenter =
   (presenter: CommandPresenter) =>
@@ -320,43 +408,17 @@ const createRemoteRepositoryWithPresenter =
     repoName,
     repoOwner,
   }: MonorepoPayload): ResultAsync<Repository, Error> => {
-    const logger = getLogger(["dx-cli", "init"]);
     const repo$ = tf$({ cwd: path.resolve("infra", "repository") });
-    const runTerraformRepositoryCreationStep = async (
-      step: TerraformRepositoryCreationStep,
-      executeStep: () => Promise<unknown>,
-    ) => {
-      try {
-        await executeStep();
-      } catch (cause) {
-        const error = mapTerraformRepositoryCreationError(step)(cause);
-        logger.error(error.message);
-        throw error;
-      }
-    };
 
-    const applyTerraform = async () => {
-      const initializeRepositoryTerraform = () => repo$`terraform init`;
-      const applyRepositoryTerraform = () =>
-        repo$`terraform apply -auto-approve`;
+    const applyRepositoryTerraform = () => repo$`terraform apply -auto-approve`;
 
-      await runTerraformRepositoryCreationStep(
-        "init",
-        initializeRepositoryTerraform,
-      );
-      await runTerraformRepositoryCreationStep(
-        "apply",
-        applyRepositoryTerraform,
-      );
-    };
     return trackStep(
       presenter,
       "Creating GitHub repository...",
-      applyTerraform,
-      (cause) =>
-        cause instanceof Error
-          ? cause
-          : asError("Failed to create GitHub repository.")(cause),
+      applyRepositoryTerraform,
+      mapTerraformFailure(
+        "Terraform apply failed while creating the GitHub repository.",
+      ),
     ).map(() => new Repository(repoName, repoOwner));
   };
 /**
@@ -517,7 +579,9 @@ const handleGeneratorError = (err: unknown) => {
   if (err instanceof Error) {
     logger.error(err.message);
   }
-  return new Error("Failed to run the generator", { cause: err });
+  return new Error(`Failed to run the generator: ${toErrorMessage(err)}`, {
+    cause: err,
+  });
 };
 
 /**
@@ -564,6 +628,7 @@ export const confirmGitHubRepoCreation = (
 const runInitAction = ({
   gitHubService,
   initialAnswers = {},
+  nonInteractive = false,
   presenter,
 }: InitActionContext): ResultAsync<SummaryInput, Error> => {
   const { publishToGitHub, ...monorepoInitialAnswers } = initialAnswers;
@@ -578,7 +643,9 @@ const runInitAction = ({
       // The prompt phase must run outside trackStep: in text mode trackStep
       // renders a spinner that occupies the TTY and hides the prompts.
       ResultAsync.fromPromise(
-        collectMonorepoPayload(plop, gitHubService, monorepoInitialAnswers),
+        collectMonorepoPayload(plop, gitHubService, monorepoInitialAnswers, {
+          nonInteractive,
+        }),
         handleGeneratorError,
       ),
     )
@@ -594,17 +661,36 @@ const runInitAction = ({
       process.chdir(payload.repoName);
     })
     .andThen((payload) =>
-      confirmGitHubRepoCreation(payload, publishToGitHub).andThen<
-        SummaryInput,
-        Error
-      >((confirmed) =>
-        confirmed
-          ? handleNewGitHubRepositoryWithPresenter({
-              gitHubService,
-              presenter,
-            })(payload)
-          : okAsync({ gitHubRepoCreationSkipped: true, payload }),
-      ),
+      // The initialization runs before the GitHub publication: a generated
+      // repository without lock files fails its own validation pipeline, so it
+      // must be complete even when the publication is declined.
+      trackStep(
+        presenter,
+        "Initializing Terraform projects...",
+        initializeRepositoryTerraform,
+        mapTerraformFailure(
+          "Terraform init failed while initializing the scaffolded projects.",
+        ),
+      ).map(() => payload),
+    )
+    .andThen((payload) =>
+      confirmGitHubRepoCreation(
+        payload,
+        publishToGitHub ?? (nonInteractive ? false : undefined),
+      )
+        .andThen<GitHubRepoCreationSkippedResult | InitResult, Error>(
+          (confirmed) =>
+            confirmed
+              ? handleNewGitHubRepositoryWithPresenter({
+                  gitHubService,
+                  presenter,
+                })(payload)
+              : okAsync({ gitHubRepoCreationSkipped: true, payload }),
+        )
+        .map((result) => ({
+          ...result,
+          ownership: getOwnershipGuidance(payload),
+        })),
     );
 };
 
@@ -615,6 +701,10 @@ const reportSummary =
       presenter.reportResult(result);
     } else {
       displaySummary(result);
+      console.log(chalk.bold("Code ownership and access:"));
+      for (const instruction of result.ownership.instructions) {
+        console.log(`- ${instruction}`);
+      }
     }
   };
 
@@ -631,6 +721,18 @@ export const makeInitCommand = (
         "--owner <owner>",
         "GitHub organization or user that will own the repository",
       ),
+    )
+    .addOption(
+      Object.assign(
+        new Option(
+          "--code-owner <@user|@org/team>",
+          "Code owner (repeatable); required for organizations, personal repository owner is included automatically",
+        ),
+        { attributeName: () => "codeOwners" },
+      ).argParser((value: string, previous: string[] = []) => [
+        ...previous,
+        value,
+      ]),
     )
     .addOption(
       new Option("--description <description>", "Repository description"),
@@ -660,6 +762,7 @@ export const makeInitCommand = (
               runInitAction({
                 gitHubService: auth.gitHubService,
                 initialAnswers: getMonorepoInitialAnswers(initOptions),
+                nonInteractive: env.CI || !process.stdin.isTTY,
                 presenter,
               }),
             ),

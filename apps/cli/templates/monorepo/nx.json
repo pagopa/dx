@@ -72,7 +72,26 @@
           "watchDepsName": "watch-deps"
         }
       }
+    },
+    {
+      "plugin": "@pagopa/nx-terraform",
+      "include": ["infra/**"],
+      "options": {
+        "additionalEnvironments": [],
+        "initTarget": {
+          "platforms": ["linux_amd64"]
+        }
+      }
+    },
+    {
+      "plugin": "@pagopa/nx-docker"
     }
   ],
-  "analytics": false
+  "pluginsConfig": {
+    "@nx/js": {
+      "projectsAffectedByDependencyUpdates": "auto"
+    }
+  },
+  "analytics": false,
+  "neverConnectToCloud": true
 }

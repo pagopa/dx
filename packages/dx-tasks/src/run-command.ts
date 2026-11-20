@@ -22,12 +22,13 @@ export const runCommand = async (
   args: string[],
   cwd: string,
   env: Record<string, string>,
+  inheritOutput = false,
 ): Promise<ProcessResult> => {
   const { promise, reject, resolve } = Promise.withResolvers<ProcessResult>();
   const child = childProcess.spawn(command, args, {
     cwd,
     env: { ...process.env, ...env },
-    stdio: ["inherit", "pipe", "pipe"],
+    stdio: inheritOutput ? "inherit" : ["inherit", "pipe", "pipe"],
   });
 
   let stderr = "";

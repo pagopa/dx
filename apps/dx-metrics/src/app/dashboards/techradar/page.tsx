@@ -2,12 +2,18 @@
 
 "use client";
 
+import { TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY } from "@pagopa/dx-metrics-core/config";
 import Link from "next/link";
 
-import { DataTable, SimpleBarChart, SimplePieChart } from "@/components/Charts";
+import type { Insight } from "@/lib/insights/types";
+
+import { DataTable, SimpleBarChart } from "@/components/Charts";
 import { DashboardRequestState } from "@/components/DashboardRequestState";
+import { DataFreshness } from "@/components/DataFreshness";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import { MetricCard } from "@/components/MetricCard";
 import TooltipIcon from "@/components/TooltipIcon";
+import { useSeriesColors } from "@/lib/chart-theme";
 import { useDashboardData } from "@/lib/useDashboardData";
 
 import { techradarTooltips as tooltipContent } from "./tooltips";
@@ -24,6 +30,8 @@ interface TechradarDashboardData {
     toolKey: string;
     toolName: string;
   }[];
+  insights: Insight[];
+  meta: { referenceDate: string };
   repositoriesWithoutDetectedTools: string[];
   repositoryCoverage: {
     alignedTools: number;
@@ -49,6 +57,14 @@ interface TechradarDashboardData {
     toolsDetected: number;
     usagesNotInRadar: number;
   };
+  usageTrend: {
+    capturedAt: string;
+    radarRing: null | string;
+    radarStatus: string;
+    repositoryCount: number;
+    toolKey: string;
+    toolName: string;
+  }[];
 }
 
 const statusBadgeClassName = (status: string): string => {
@@ -60,6 +76,7 @@ const statusBadgeClassName = (status: string): string => {
 };
 
 export default function TechradarDashboard() {
+  const colors = useSeriesColors();
   const { data, error, loading, refetch } =
     useDashboardData<TechradarDashboardData>("techradar", {});
 
@@ -68,13 +85,33 @@ export default function TechradarDashboard() {
       adoptionPercentage: tool.adoptionPercentage,
       toolName: tool.toolName,
     })) ?? [];
-  const statusPieData = data?.statusDistribution ?? [];
+  const statusDistribution = data?.statusDistribution ?? [];
+
+  const usageTrendByDate = new Map<string, number>();
+  for (const row of data?.usageTrend ?? []) {
+    const date = row.capturedAt.slice(0, 10);
+    // The zero-adoption marker keeps the trend line continuous: it is not a tool,
+    // so it contributes no usages, but its date must stay in the series so a
+    // snapshot with no detected tools plots a zero point instead of a gap.
+    const repositoryCount =
+      row.toolKey === TECH_RADAR_SNAPSHOT_MARKER_TOOL_KEY
+        ? 0
+        : Number(row.repositoryCount);
+
+    usageTrendByDate.set(
+      date,
+      (usageTrendByDate.get(date) ?? 0) + repositoryCount,
+    );
+  }
+  const usageTrendData = [...usageTrendByDate.entries()]
+    .sort(([left], [right]) => left.localeCompare(right))
+    .map(([date, repositoryCount]) => ({ date, repositoryCount }));
 
   return (
     <div>
       <div className="mb-4 flex items-center gap-2">
-        <h2 className="text-xl font-bold text-white">Techradar Metrics</h2>
-        <TooltipIcon content={tooltipContent.title} />
+        <h2 className="text-xl font-bold text-foreground">Techradar Metrics</h2>
+        <TooltipIcon content={tooltipContent.title} label="Techradar Metrics" />
       </div>
       <DashboardRequestState
         error={error}
@@ -84,6 +121,11 @@ export default function TechradarDashboard() {
 
       {data && (
         <>
+          <DataFreshness
+            className="mb-2"
+            referenceDate={data.meta.referenceDate}
+          />
+          <InsightsPanel className="mb-6" insights={data.insights} />
           <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <MetricCard
               label="Repositories Analyzed"
@@ -107,29 +149,59 @@ export default function TechradarDashboard() {
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <SimpleBarChart
               bars={[
                 {
-                  color: "#2563eb",
+                  color: colors.blue,
                   key: "adoptionPercentage",
                   name: "Adoption %",
                 },
               ]}
               data={adoptionBarData}
               layout="vertical"
+              sortKey="adoptionPercentage"
               title="Tool Adoption by Repository Coverage"
               tooltip={tooltipContent.adoptionByTool}
+              unit="%"
               xKey="toolName"
             />
-            <SimplePieChart
-              data={statusPieData}
+            <SimpleBarChart
+              bars={[
+                {
+                  color: colors.purple,
+                  key: "value",
+                  name: "Detected usages",
+                },
+              ]}
+              data={statusDistribution}
               title="Detected Tool Distribution by Radar Status"
               tooltip={tooltipContent.statusDistribution}
+              unit="usages"
+              xKey="name"
             />
           </div>
 
-          <div className="mt-4 grid grid-cols-2 gap-4">
+          {usageTrendData.length > 1 && (
+            <div className="mt-4">
+              <SimpleBarChart
+                bars={[
+                  {
+                    color: colors.purple,
+                    key: "repositoryCount",
+                    name: "Detected usages",
+                  },
+                ]}
+                data={usageTrendData}
+                title="Detected Tool Usages Over Time"
+                tooltip={tooltipContent.usageTrend}
+                unit="usages"
+                xKey="date"
+              />
+            </div>
+          )}
+
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <DataTable
               columns={[
                 { key: "toolName", label: "Tool" },
@@ -152,7 +224,7 @@ export default function TechradarDashboard() {
                   renderCell: (value, row) =>
                     value ? (
                       <Link
-                        className="text-blue-400 hover:text-blue-300 hover:underline"
+                        className="text-link hover:text-link hover:underline"
                         href={String(value)}
                         rel="noreferrer"
                         target="_blank"
@@ -202,7 +274,7 @@ export default function TechradarDashboard() {
                   renderCell: (value, row) =>
                     value ? (
                       <Link
-                        className="text-blue-400 hover:text-blue-300 hover:underline"
+                        className="text-link hover:text-link hover:underline"
                         href={String(value)}
                         rel="noreferrer"
                         target="_blank"
@@ -222,13 +294,23 @@ export default function TechradarDashboard() {
           </div>
 
           {data.repositoriesWithoutDetectedTools.length > 0 && (
-            <div className="mt-4 rounded-xl border border-[#30363d] bg-[#0d1117] p-6">
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-white">
+            <div className="mt-4 rounded-xl border border-border bg-card p-6">
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wider text-foreground">
                 Repositories without detections
               </h3>
-              <p className="text-sm text-[#8b949e]">
-                {data.repositoriesWithoutDetectedTools.join(", ")}
-              </p>
+              <ul
+                aria-label="Repositories without detections"
+                className="flex flex-wrap gap-2"
+              >
+                {data.repositoriesWithoutDetectedTools.map((repository) => (
+                  <li
+                    className="rounded bg-subtle px-2 py-1 text-xs font-medium text-muted-foreground"
+                    key={repository}
+                  >
+                    {repository}
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
         </>

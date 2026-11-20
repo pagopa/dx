@@ -18,6 +18,6 @@ locals {
     ManagementTeam = "Developer Experience"
     BusinessUnit   = "DevEx"
     Source         = "https://github.com/pagopa/dx/modules/azure_role_assignments/examples/service_bus"
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
   }
 }

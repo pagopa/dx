@@ -3,9 +3,15 @@ terraform {
     dx = {
       source = "pagopa-dx/azure"
     }
+
+    github = {
+      source  = "integrations/github"
+      version = "~> 6.13"
+    }
+
   }
 }
 
 provider "github" {
-  owner = "pagopa"
+  owner = var.repository.owner
 }

@@ -6,14 +6,20 @@ import {
 } from "../../../../domain/cloud-account.js";
 import { GitHubRepo } from "../../../../domain/github-repo.js";
 import { type GitHubService } from "../../../../domain/github.js";
+import setConfigureExistingTerraformRootBackendsAction from "../../actions/configure-existing-terraform-root-backends.js";
+import { setFormatGeneratedCodeAction } from "../../actions/format-generated-code.js";
 import setGetTerraformBackend from "../../actions/get-terraform-backend.js";
 import setInitCloudAccountsAction from "../../actions/init-cloud-accounts.js";
+import { setInitTerraformProjectsAction } from "../../actions/init-terraform-projects.js";
 import setProvisionTerraformBackendAction from "../../actions/provision-terraform-backend.js";
+import { setSetupCloudToolsAction } from "../../actions/setup-cloud-tools.js";
+import setSyncNxAdditionalEnvironments from "../../actions/sync-nx-additional-environments.js";
 import setSyncRepositoryEnvironmentsAction from "../../actions/sync-repository-environments.js";
 import setEnvShortHelper from "../../helpers/env-short.js";
 import setEqHelper from "../../helpers/eq.js";
 import setResourcePrefixHelper from "../../helpers/resource-prefix.js";
-import setTerraformStateKeyHelper from "../../helpers/terraform-state-key.js";
+import setTerraformStateContainerReaderKeyHelper from "../../helpers/terraform-state-container-reader-key.js";
+import setTerraformStringHelper from "../../helpers/terraform-string.js";
 import getActions from "./actions.js";
 import getPrompts, {
   InitialAnswers,
@@ -32,15 +38,22 @@ export default function (
   gitHubService: GitHubService,
   github?: GitHubRepo,
   initialAnswers: InitialAnswers = {},
+  nonInteractive = false,
 ) {
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
-  setTerraformStateKeyHelper(plop);
+  setTerraformStringHelper(plop);
+  setTerraformStateContainerReaderKeyHelper(plop);
 
   setGetTerraformBackend(plop, cloudAccountService);
+  setConfigureExistingTerraformRootBackendsAction(plop);
   setProvisionTerraformBackendAction(plop, cloudAccountService);
+  setSetupCloudToolsAction(plop);
   setInitCloudAccountsAction(plop, cloudAccountService, gitHubService);
+  setFormatGeneratedCodeAction(plop);
+  setInitTerraformProjectsAction(plop);
+  setSyncNxAdditionalEnvironments(plop);
   setSyncRepositoryEnvironmentsAction(plop);
 
   plop.setGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME, {
@@ -50,7 +63,9 @@ export default function (
       cloudAccountRepository,
       cloudAccountService,
       github,
+      gitHubService,
       initialAnswers,
+      nonInteractive,
     }),
   });
 }

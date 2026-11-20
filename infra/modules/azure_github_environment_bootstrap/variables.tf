@@ -12,7 +12,13 @@ variable "environment" {
     instance_number = string
   })
 
-  description = "Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
+  description = "Values used to generate resource names and location short names."
+}
+
+variable "github_environment_prefix_enabled" {
+  type        = bool
+  default     = false
+  description = "Prefix GitHub environment names with environment.prefix."
 }
 
 variable "entraid_groups" {
@@ -34,6 +40,55 @@ variable "terraform_storage_account" {
   description = "Details of the Storage Account (name and resource group) hosting the Terraform state file."
 }
 
+variable "terraform_state_container_access" {
+  type = object({
+    container_name = optional(string)
+    upstream = optional(map(object({
+      identities    = optional(set(string), [])
+      principal_ids = optional(set(string), [])
+    })), {})
+  })
+  default     = null
+  description = "Opt in to container-scoped state permissions and select upstream readers."
+
+  validation {
+    condition = var.terraform_state_container_access == null ? true : (
+      var.terraform_state_container_access.container_name == null ? length(var.environment.domain) <= 15 :
+      (
+        length(var.terraform_state_container_access.container_name) >= 3 &&
+        length(var.terraform_state_container_access.container_name) <= 24 &&
+        can(regex("^[a-z0-9]+(-[a-z0-9]+)*$", var.terraform_state_container_access.container_name))
+      )
+    )
+    error_message = "The state container name must be a valid Azure container name of 3-24 characters."
+  }
+
+  validation {
+    condition = var.terraform_state_container_access == null ? true : alltrue([
+      for container, readers in var.terraform_state_container_access.upstream :
+      length(element(reverse(split("/", lower(container))), 0)) >= 3 &&
+      length(element(reverse(split("/", lower(container))), 0)) <= 63 &&
+      can(regex(
+        "^(/subscriptions/[^/]+/resourcegroups/[^/]+/providers/microsoft\\.storage/storageaccounts/[^/]+/blobservices/default/containers/)?[a-z0-9]+(-[a-z0-9]+)*$",
+        lower(container)
+      )) &&
+      length(setunion(readers.identities, readers.principal_ids)) > 0 &&
+      alltrue([
+        for identity in readers.identities : contains([
+          "infra_ci", "infra_cd", "app_ci", "app_cd", "opex_ci", "opex_cd"
+        ], identity)
+      ]) &&
+      alltrue([
+        for principal_id in readers.principal_ids : can(regex(
+          "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$",
+          lower(principal_id)
+        ))
+      ])
+    ])
+    error_message = "Each upstream must use a valid container reference and select at least one valid reader."
+  }
+}
+
 variable "private_dns_zone_resource_group_id" {
   type        = string
   description = "The ID of the resource group containing private DNS zones."
@@ -46,11 +101,20 @@ variable "opex_resource_group_id" {
 
 variable "repository" {
   type = object({
-    owner = optional(string, "pagopa")
-    name  = string
+    owner    = optional(string, "pagopa")
+    name     = string
+    owner_id = optional(number)
   })
 
-  description = "Details about the GitHub repository, including owner and name."
+  description = "Details about the GitHub repository. `owner` is the GitHub login or organization name; `owner_id` is the positive numeric GitHub owner ID used in immutable OIDC subjects. For personal-account repositories, set `owner_id` to `owner.id` from `GET /repos/{owner}/{repo}`."
+
+  validation {
+    condition = var.repository.owner_id == null ? true : (
+      var.repository.owner_id > 0 &&
+      floor(var.repository.owner_id) == var.repository.owner_id
+    )
+    error_message = "repository.owner_id must be a positive integer when set."
+  }
 }
 
 variable "github_private_runner" {

@@ -5,15 +5,15 @@
     "lint": [
       {
         "filter": {
-          "plugin": "@nx/eslint"
+          "plugin": "@nx/oxlint"
         },
         "dependsOn": ["^build"],
         "options": {
-          "fix": true
+          "args": "--fix"
         },
         "configurations": {
           "ci": {
-            "fix": false
+            "args": ""
           }
         }
       }
@@ -33,6 +33,9 @@
     ],
     "version": {}
   },
+  "sync": {
+    "globalGenerators": ["@pagopa/nx-dx:workflows"]
+  },
   "release": {
     "versionPlans": true,
     "projects": [
@@ -40,6 +43,7 @@
       "packages/*",
       "actions/*",
       "containers/*",
+      "plugins/*",
       "infra/modules/*",
       "providers/*",
       "infra/scripts"
@@ -75,7 +79,7 @@
       }
     },
     {
-      "plugin": "@nx/eslint/plugin",
+      "plugin": "@nx/oxlint",
       "options": {
         "targetName": "lint"
       }
@@ -94,9 +98,12 @@
       }
     },
     {
-      "plugin": "@pagopa/nx-terraform-plugin",
+      "plugin": "@pagopa/nx-terraform",
       "include": ["infra/**"],
       "options": {
+        "initTarget": {
+          "platforms": ["linux_amd64"]
+        },
         "publish": {
           "mode": "github",
           "github": {
@@ -106,7 +113,7 @@
       }
     },
     {
-      "plugin": "@pagopa/nx-dx-docker-plugin",
+      "plugin": "@pagopa/nx-docker",
       "options": {
         "buildTarget": {
           "name": "docker:build",
@@ -124,6 +131,11 @@
           }
         }
       }
+    },
+    "@pagopa/nx-dx",
+    {
+      "plugin": "@pagopa/nx-agent-plugins",
+      "include": ["plugins/**"]
     }
   ],
   "pluginsConfig": {

@@ -1,3 +1,77 @@
+## 5.0.1 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+# 5.0.0 (2026-10-28)
+
+### ⚠️  Breaking Changes
+
+- Raise the AzureRM v4 minimum to 4.81 and Terraform to 1.16. ([#2327](https://github.com/pagopa/dx/pull/2327))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 4.1.2 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 4.1.1 (2026-10-13)
+
+### 🩹 Fixes
+
+- Update internal examples and AzureRM constraints ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 4.1.0 (2026-09-30)
+
+### 🚀 Features
+
+- Allow private endpoints to be created alongside public network access when both subnet_pep_id and private_dns_zone_resource_group_name are set, independently of force_public_network_access_enabled ([#2270](https://github.com/pagopa/dx/pull/2270))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 4.0.5 (2026-09-16)
+
+### 🩹 Fixes
+
+- Add simple Defender protection toggle for malware scanning and data discovery ([#2202](https://github.com/pagopa/dx/pull/2202))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Copilot App @Copilot
+
+## 4.0.4 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 ## 4.0.3 (2026-09-15)
 
 ### 🩹 Fixes

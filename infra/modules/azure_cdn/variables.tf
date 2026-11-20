@@ -23,11 +23,12 @@ variable "tags" {
 variable "origins" {
   type = map(object({
     host_name            = string
+    preserve_host_header = optional(bool, false)
     priority             = optional(number, 1)
     storage_account_id   = optional(string, null)
     use_managed_identity = optional(bool, false)
   }))
-  description = "Map of origin configurations. Key is the origin identifier. Priority determines routing preference (lower values = higher priority). If use_managed_identity is true, the Front Door identity will be granted 'Storage Blob Data Reader' role on the storage_account_id if provided."
+  description = "Map of origin configurations. Key is the origin identifier. If preserve_host_header is true, Front Door forwards the incoming request Host header; if false (default), the origin Host header is set to host_name. Priority determines routing preference (lower values = higher priority). If use_managed_identity is true, the Front Door identity will be granted 'Storage Blob Data Reader' role on the storage_account_id if provided."
 
   # NOTE: Remove this validation block when managed identity support is generally available
   validation {

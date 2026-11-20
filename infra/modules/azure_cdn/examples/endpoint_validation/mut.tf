@@ -12,10 +12,14 @@ module "azure_cdn" {
 
   origins = {
     primary = {
-      host_name = module.storage_account.primary_web_host
+      host_name = azurerm_storage_account.cdn_origin.primary_web_host
       priority  = 1
     }
   }
 
   tags = local.tags
+
+  depends_on = [
+    azurerm_storage_account_static_website.cdn_origin
+  ]
 }

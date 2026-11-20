@@ -24,12 +24,13 @@ const runExecutor: PromiseExecutor<InitExecutorInput> = async (options) => {
     };
   }
 
-  const { args, frozenLockfile, projectRoot } = parseResult.data;
+  const { args, frozenLockfile, platforms, projectRoot } = parseResult.data;
   const dispatcher = createDefaultTaskDispatcher();
   await dispatcher.dispatchTask("terraformInit", {
     args,
     frozenLockfile,
     modulePath: projectRoot,
+    platforms,
   });
 
   return {

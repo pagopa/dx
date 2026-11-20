@@ -20,6 +20,7 @@ locals {
 
   github_app = {
     id              = "placeholder-app-id"
+    client_id       = "placeholder-client-id"
     installation_id = "placeholder-installation-id"
     private_key     = "placeholder-private-key"
   }
@@ -27,7 +28,7 @@ locals {
   runner_label = "e2e-github-selfhosted-runner-app"
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
     Environment    = "Uat"
     Owner          = "DevEx"

@@ -9,7 +9,7 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
     Environment    = "Uat"
     Owner          = "DevEx"
@@ -87,6 +87,11 @@ run "cosmos_account_basics" {
   assert {
     condition     = azurerm_cosmosdb_account.this.automatic_failover_enabled == true
     error_message = "Cosmos DB automatic_failover_enabled must be true"
+  }
+
+  assert {
+    condition     = !azurerm_cosmosdb_account.this.local_authentication_enabled
+    error_message = "Cosmos DB must keep local authentication disabled when using local_authentication_enabled"
   }
 
   assert {

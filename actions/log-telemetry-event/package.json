@@ -1,17 +1,17 @@
 {
   "name": "log-telemetry-event",
-  "description": "Action to log easily OTEL events",
   "version": "0.1.1",
-  "type": "module",
   "private": true,
+  "description": "Action to log easily OTEL events",
   "keywords": [
-    "github",
     "action",
     "dx",
-    "otel",
+    "github",
+    "open-telemetry",
     "opentelemetry",
-    "open-telemetry"
+    "otel"
   ],
+  "type": "module",
   "scripts": {},
   "devDependencies": {}
 }

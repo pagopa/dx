@@ -1,3 +1,140 @@
+## 2.4.0 (2026-11-20)
+
+### 🚀 Features
+
+- Restrict AWS deployment role federation by repository, role scope, delimited environment and CI/CD suffix while preserving both supported repository subject formats. Allow tenant qualifiers before and/or after the environment, but reject names containing conflicting lifecycle tokens. Keep repository-wide trust only on the dedicated token-only ECR Public login role. ([#2543](https://github.com/pagopa/dx/pull/2543))
+
+  ## Migration guide
+
+  Upgrade `pagopa-dx/aws-github-environment-bootstrap/aws` to `~> 2.4`.
+  Module inputs and outputs are unchanged. This minor release tightens OIDC
+  authorization; existing constraints such as `~> 2.3` already permit it, so
+  review the trust-policy changes before applying.
+
+  Jobs assuming infra/app CI/CD roles must declare a GitHub environment matching
+  their role's scope and CI/CD suffix:
+
+  ```text
+  <scope>-<env>-<ci|cd>
+  <scope>-*-<env>-<ci|cd>
+  <scope>-<env>-*-<ci|cd>
+  <scope>-*-<env>-*-<ci|cd>
+  ```
+
+  `<env>` is `dev`, `uat` or `prod`; include `environment.prefix` when
+  `github_environment_prefix_enabled` is true. Qualifiers need not equal that
+  resource prefix. A name containing another lifecycle token, such as
+  `infra-dev-prod-cd`, is rejected rather than matching both lifecycle roles.
+  Rename ambiguous environments before applying. Jobs without an environment,
+  with another scope or outside these patterns no longer match deployment trust.
+
+  When prefixing is enabled, the module rejects resource prefixes containing a
+  conflicting lifecycle token during planning (for example, `prefix = "prod"`
+  with `env_short = "d"`). Renaming only the GitHub environment cannot remove
+  that required prefix. Either disable GitHub environment prefixing and prepare
+  the unprefixed environments and protections, or plan a separate migration of
+  `environment.prefix`. Changing that input can replace AWS resources, including
+  IAM roles; inspect the plan and migrate ARN references and secrets using an
+  authorized principal.
+
+  The generic GitHub bootstrap also creates `automation`, `opex` and `bootstrapper`
+  environments, but this AWS module does not provide deployment roles or aliases
+  for those scopes. Review their existing AWS credentials separately rather than
+  assuming an infra/app role can be reused.
+
+  Qualifiers do not isolate tenants: all environments matching a role need
+  equivalent branch/tag restrictions and reviewers. Deployment secrets remain
+  in the existing base environment names; provide `ROLE_ARN` separately to any
+  additional matching environments.
+
+  Review these protection rules before applying the bootstrapper upgrade with an authorized IAM administration principal. With unchanged resource naming inputs, existing role names, ARNs, permissions, outputs and secrets are preserved; no role replacement or state move is required. ECR Public repository trust and its shared secret remain unchanged. Publishing this module does not update live policies: each consumer must upgrade and apply its bootstrapper configuration.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 2.3.1 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 2.3.0 (2026-10-29)
+
+### 🚀 Features
+
+- Adds `github_environment_prefix_enabled` to the Azure and AWS bootstrap modules. When enabled, GitHub names include the resource prefix—for example, `infra-prod-ci` becomes `infra-ced-prod-ci`. Cloud resource names are unchanged. ([#2371](https://github.com/pagopa/dx/pull/2371))
+
+  The CLI enables this automatically for tenant-qualified environments. Existing configurations remain unchanged by default.
+  The feature is introduced in Azure module version 7.1.0 and AWS module version 2.3.0; consumers enabling the flag must use those versions or later.
+
+  Enabling the flag on an existing deployment changes where secrets are stored and, on Azure, the credentials used by workflows. Existing workflows must use the new environment names before the old configuration is removed.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 2.2.0 (2026-10-22)
+
+### 🚀 Features
+
+- Always create a dedicated token-only OIDC role and the repository-level ECR_PUBLIC_ROLE_ARN secret in the AWS bootstrap. Ignore subsequent secret value changes to avoid ARN churn between environment states. Initial creation can overwrite an existing secret, and destroying an instance can delete the shared secret; coordinate creation, role rotation and retirement across states. ECR Public authentication still requires organization policies to permit us-east-1. Validation uses only the official AWS authentication actions, with optional non-blocking login; it does not clear pre-existing Docker credentials, which must be managed on self-hosted runners. ([#2388](https://github.com/pagopa/dx/pull/2388))
+
+  Grant sts:GetServiceBearerToken without a service-name condition, matching the documented AWS ECR Public policy and avoiding a condition-dependent implicit Deny. The role still grants only the two token actions; bearer-token permission is no longer limited to ECR Public, and no repository write or additional service API permissions are added.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 2.1.2 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 2.1.1 (2026-10-05)
+
+### 🩹 Fixes
+
+- Update the CodeBuild self-hosted runner dependency to version 3. ([#2256](https://github.com/pagopa/dx/pull/2256))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Christian Calabrese
+
+## 2.1.0 (2026-09-22)
+
+### 🚀 Features
+
+- Federate managed identities and IAM roles with GitHub repositories that emit immutable OIDC subject claims (created or renamed after 2026-07-15). The DX CLI and the Azure and AWS Terraform modules now also trust the immutable subject embedding the numeric GitHub owner and repository IDs, keeping the name-based trust for older repositories.  ([#2219](https://github.com/pagopa/dx/pull/2219))
+
+  See https://github.blog/changelog/2026-04-23-immutable-subject-claims-for-github-actions-oidc-tokens/
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 2.0.3 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 ## 2.0.2 (2026-09-15)
 
 ### 🩹 Fixes

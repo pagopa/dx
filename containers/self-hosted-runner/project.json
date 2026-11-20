@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "version": "0.0.10",
+    "version": "0.0.13",
     "docker": {
       "contextPath": "containers/self-hosted-runner",
       "platform": "linux/amd64",
@@ -9,13 +9,11 @@
   },
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "name": "self-hosted-runner",
-  "tags": [
-    "container:public"
-  ],
+  "tags": ["container:public"],
   "release": {
     "version": {
       "currentVersionResolver": "disk",
-      "versionActions": "@pagopa/nx-dx-docker-plugin/release/version-actions"
+      "versionActions": "@pagopa/nx-docker/release/version-actions"
     }
   },
   "targets": {

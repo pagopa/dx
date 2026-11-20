@@ -1,9 +1,9 @@
 {
   "name": "@pagopa-dx/terraform-plan-storage-upload",
-  "version": "0.0.10",
-  "type": "module",
+  "version": "0.0.12",
   "private": true,
   "description": "GitHub Action to bundle and upload a Terraform plan to the state backend storage",
+  "type": "module",
   "main": "dist/main.cjs",
   "scripts": {
     "build": "tsup"
@@ -16,10 +16,8 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@pagopa/eslint-config": "workspace:^",
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
-    "prettier": "catalog:",
     "tsup": "catalog:",
     "typescript": "catalog:"
   }

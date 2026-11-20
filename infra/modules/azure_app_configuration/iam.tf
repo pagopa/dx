@@ -49,7 +49,7 @@ module "appconfig_team_roles" {
   for_each = local.appconfig_role_assignments
 
   source  = "pagopa-dx/azure-role-assignments/azurerm"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   subscription_id = var.subscription_id
   principal_id    = each.value.principal_id

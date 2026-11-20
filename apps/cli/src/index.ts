@@ -5,6 +5,7 @@ import { context, SpanKind, SpanStatusCode, trace } from "@opentelemetry/api";
 import { logs } from "@opentelemetry/api-logs";
 import { execa } from "execa";
 import { errAsync, okAsync, ResultAsync } from "neverthrow";
+import { Console } from "node:console";
 import { Octokit } from "octokit";
 
 import { enableAzureMonitor } from "./adapters/azure-monitor/instrumentation.js";
@@ -72,12 +73,6 @@ const configureLogging = async (verbose: boolean): Promise<void> => {
       // provisioned Azure resources; surfacing them is the main value of
       // `--verbose` when running `dx init` / `dx add environment`.
       { category: ["gen"], lowestLevel: level, sinks: ["console", "otel"] },
-      // `savemoney` already emits structured debug output by default.
-      {
-        category: ["savemoney"],
-        lowestLevel: "debug",
-        sinks: ["console", "otel"],
-      },
       { category: ["json"], lowestLevel: "info", sinks: ["rawJson"] },
       {
         category: ["logtape", "meta"],
@@ -86,7 +81,8 @@ const configureLogging = async (verbose: boolean): Promise<void> => {
       },
     ],
     sinks: {
-      console: getConsoleSink(),
+      // stderr keeps stdout clean for machine-readable output (e.g. --format json).
+      console: getConsoleSink({ console: new Console(process.stderr) }),
       otel: otelSink,
       rawJson(record) {
         console.log(record.rawMessage);

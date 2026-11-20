@@ -25,7 +25,7 @@ locals {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
     Owner          = "DevEx"
     Environment    = "Uat"

@@ -2,6 +2,9 @@
 import { createEnv } from "@t3-oss/env-core";
 import { z } from "zod";
 
+/** The environment as parsed and validated by {@link loadEnv}. */
+export type AzureTracingEnv = ReturnType<typeof loadEnv>;
+
 export const loadEnv = () =>
   createEnv({
     emptyStringAsUndefined: true,
@@ -34,14 +37,17 @@ export const loadEnv = () =>
         .transform((value) => value / 100),
       APPLICATIONINSIGHTS_CONNECTION_STRING: z
         .string()
-        .describe("The connection string for Application Insights."),
-      APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: z
-        .enum(["true", "false"])
         .optional()
-        .transform((value) => value === "true")
         .describe(
-          "When set to 'true', enables Microsoft Entra ID (Managed Identity) authentication for Application Insights. " +
-            "Defaults to false (connection-string-only auth). " +
+          "The connection string for Application Insights. Optional here because it may be provided through the Azure Monitor options override; the resolved configuration still requires it.",
+        ),
+      APPLICATIONINSIGHTS_ENTRA_ID_AUTH_ENABLED: z
+        .string()
+        .optional()
+        .transform((value) => value?.trim().toLowerCase() === "true")
+        .describe(
+          "When set to 'true' (case-insensitive), enables Microsoft Entra ID (Managed Identity) authentication for Application Insights. " +
+            "Any other value keeps connection-string-only auth, which is the default. " +
             "This will become the default in the next major release.",
         ),
     },

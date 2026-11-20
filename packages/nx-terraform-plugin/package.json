@@ -1,7 +1,16 @@
 {
-  "name": "@pagopa/nx-terraform-plugin",
-  "version": "0.5.8",
-  "private": true,
+  "name": "@pagopa/nx-terraform",
+  "version": "0.5.17",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pagopa/dx.git",
+    "directory": "packages/nx-terraform-plugin"
+  },
+  "files": [
+    "dist",
+    "executors.json",
+    "src/executors/*/schema.json"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -11,62 +20,66 @@
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./src/index.ts",
       "default": "./dist/index.js"
-    },
-    "./release/version-actions": {
-      "types": "./dist/release/version-actions.d.ts",
-      "import": "./dist/release/version-actions.js",
-      "require": "./src/release/version-actions.ts",
-      "default": "./dist/release/version-actions.js"
     }
   },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/pagopa/dx.git",
-    "directory": "packages/nx-terraform-plugin"
-  },
-  "scripts": {
-    "build": "tsdown",
-    "generate": "node src/generate-module-schema.ts"
-  },
-  "devDependencies": {
-    "@pagopa/dx-tasks": "workspace:^",
-    "@pagopa/eslint-config": "workspace:^",
-    "@tsconfig/node24": "catalog:",
-    "@types/node": "catalog:",
-    "@types/semver": "catalog:",
-    "@vitest/coverage-v8": "catalog:",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
-    "tsdown": "catalog:",
-    "typescript": "catalog:",
-    "vitest": "catalog:"
-  },
-  "engines": {
-    "node": ">=22.0.0"
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
   },
   "dependencies": {
     "@logtape/logtape": "catalog:",
     "@nx/devkit": "catalog:",
     "@octokit/auth-app": "catalog:",
+    "@pagopa/dx-tasks": "workspace:^",
+    "@pagopa/nx-dx": "workspace:^",
     "execa": "catalog:",
     "octokit": "catalog:",
     "semver": "catalog:",
     "tslib": "catalog:",
     "zod": "catalog:"
   },
+  "devDependencies": {
+    "@tsconfig/node24": "catalog:",
+    "@types/node": "catalog:",
+    "@types/semver": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "executors": "./executors.json",
   "nx": {
     "targets": {
       "build": {
-        "inputs": [
-          "default",
-          "^default"
-        ],
+        "executor": "@nx/js:tsc",
         "outputs": [
-          "{projectRoot}/dist/**"
-        ]
+          "{options.outputPath}"
+        ],
+        "cache": true,
+        "dependsOn": [
+          "^build"
+        ],
+        "options": {
+          "outputPath": "packages/nx-terraform-plugin/dist",
+          "main": "packages/nx-terraform-plugin/src/index.ts",
+          "rootDir": "packages/nx-terraform-plugin/src",
+          "tsConfig": "packages/nx-terraform-plugin/tsconfig.lib.json",
+          "generatePackageJson": false,
+          "assets": [
+            {
+              "input": "packages/nx-terraform-plugin/src/generators",
+              "glob": "**/schema.json",
+              "output": "generators"
+            },
+            {
+              "input": "packages/nx-terraform-plugin/src/generators",
+              "glob": "**/files/**",
+              "output": "generators"
+            }
+          ]
+        }
       }
     }
   }

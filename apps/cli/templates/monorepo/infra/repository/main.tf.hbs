@@ -1,11 +1,11 @@
 module "github_repository" {
   source  = "pagopa-dx/github-environment-bootstrap/github"
-  version = "~> 1.0"
+  version = "~> 3.0"
 
   repository = {
     name                   = "{{ repoName }}"
     description            = "{{ repoDescription }}"
     topics                 = []
-    reviewers_teams        = []
+    reviewers_teams        = [{{#each ownership.reviewerTeams}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}]
   }
 }

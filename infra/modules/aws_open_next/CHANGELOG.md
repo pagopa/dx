@@ -1,3 +1,34 @@
+## 2.1.2 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 2.1.1 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 2.1.0 (2026-10-12)
+
+### 🚀 Features
+
+- Route font requests through the CloudFront assets origin ([#2336](https://github.com/pagopa/dx/pull/2336))
+
+### ❤️ Thank You
+
+- Walter Traspadini @uolter
+
 ## 2.0.1 (2026-09-15)
 
 ### 🩹 Fixes

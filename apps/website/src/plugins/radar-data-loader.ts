@@ -3,7 +3,7 @@ import type { Plugin } from "@docusaurus/types";
 import matter from "gray-matter";
 import fs from "node:fs";
 import path from "node:path";
-import { z } from "zod";
+import * as z from "zod";
 
 import type { RadarEntry } from "../components/TechRadar/types";
 

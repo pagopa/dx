@@ -1,11 +1,12 @@
 {
   "name": "docs",
-  "version": "0.22.6",
+  "version": "0.22.27",
   "private": true,
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "docusaurus start -h 0.0.0.0",
     "build": "docusaurus build",
+    "typecheck": "tsc --noEmit",
     "swizzle": "docusaurus swizzle",
     "deploy": "docusaurus deploy",
     "clear": "docusaurus clear",
@@ -22,7 +23,7 @@
     "@docusaurus/theme-mermaid": "^3.10.2",
     "@easyops-cn/docusaurus-search-local": "^0.55.3",
     "@mdx-js/react": "^3.1.1",
-    "@microsoft/applicationinsights-web": "^3.4.3",
+    "@microsoft/applicationinsights-web": "^3.4.4",
     "@microsoft/docusaurus-plugin-application-insights": "^4.0.1",
     "gray-matter": "^4.0.3",
     "prism-react-renderer": "^2.4.1",
@@ -35,13 +36,10 @@
     "@docusaurus/theme-classic": "^3.10.2",
     "@docusaurus/tsconfig": "^3.10.2",
     "@docusaurus/types": "^3.10.2",
-    "@pagopa/eslint-config": "workspace:*",
     "@types/node": "catalog:",
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
     "docusaurus-plugin-llms": "^0.5.1",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:"
   },
   "browserslist": {

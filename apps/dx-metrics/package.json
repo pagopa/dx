@@ -1,31 +1,27 @@
 {
   "name": "dx-metrics",
-  "version": "0.5.15",
+  "version": "0.5.32",
   "private": true,
   "type": "module",
-  "nx": {
-    "release": {
-      "docker": {
-        "repositoryName": "pagopa/dx-metrics"
-      }
-    }
-  },
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "build": "next build",
+    "scope:link": "tsx scripts/mint-scope-link.ts",
     "start": "next start"
   },
   "dependencies": {
     "@pagopa/dx-metrics-core": "workspace:*",
+    "@radix-ui/react-popover": "^1.1.23",
     "@radix-ui/react-tooltip": "^1.2.16",
     "clsx": "^2.1.1",
+    "cmdk": "^1.1.1",
     "drizzle-orm": "catalog:",
     "lucide-react": "^0.577.0",
-    "next": "^16.3.3",
+    "next": "^16.4.1",
     "react": "catalog:react",
     "react-dom": "catalog:react",
     "recharts": "^3.10.1",
-    "tailwind-merge": "^3.6.0",
+    "tailwind-merge": "^3.7.0",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -34,11 +30,17 @@
     "@types/react": "catalog:react",
     "@types/react-dom": "catalog:react",
     "@vitest/coverage-v8": "catalog:",
-    "eslint": "^9.39.5",
-    "eslint-config-next": "^16.3.0",
-    "postcss": "^8.5.26",
+    "postcss": "^8.5.28",
     "tailwindcss": "^4.3.3",
+    "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "nx": {
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/dx-metrics"
+      }
+    }
   }
 }

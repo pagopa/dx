@@ -6,6 +6,9 @@ describe("parseOptions", () => {
   it("returns default options when options are undefined", () => {
     expect(parseOptions(undefined)).toEqual({
       additionalEnvironments: [],
+      initTarget: {
+        platforms: [],
+      },
       publish: {
         mode: "github",
       },
@@ -19,6 +22,22 @@ describe("parseOptions", () => {
     );
   });
 
+  it("accepts provider lock platforms", () => {
+    expect(
+      parseOptions({
+        initTarget: {
+          platforms: ["linux_amd64"],
+        },
+      }).initTarget.platforms,
+    ).toEqual(["linux_amd64"]);
+  });
+
+  it("defaults nested init target options", () => {
+    expect(parseOptions({ initTarget: {} }).initTarget).toEqual({
+      platforms: [],
+    });
+  });
+
   it("ignores legacy target-name options", () => {
     const options = {
       initTargetName: "legacy-init",
@@ -29,6 +48,9 @@ describe("parseOptions", () => {
 
     expect(parseOptions(options)).toEqual({
       additionalEnvironments: [],
+      initTarget: {
+        platforms: [],
+      },
       publish: {
         mode: "github",
       },

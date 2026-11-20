@@ -12,7 +12,7 @@ terraform {
 
     azuredx = {
       source  = "pagopa-dx/azure"
-      version = "~> 0.0"
+      version = "~> 0.12"
     }
 
     azapi = {
@@ -32,7 +32,7 @@ terraform {
 
     awsdx = {
       source  = "pagopa-dx/aws"
-      version = "~> 0.0"
+      version = "~> 0.1"
     }
 
     random = {
@@ -62,11 +62,19 @@ provider "azapi" {}
 
 provider "aws" {
   region = "eu-south-1"
+
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "aws" {
   alias  = "eu-central-1"
   region = "eu-central-1"
+
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "awscc" {
@@ -77,7 +85,10 @@ provider "awscc" {
 provider "aws" {
   alias  = "us-east-1"
   region = "us-east-1"
+
+  default_tags {
+    tags = local.tags
+  }
 }
 
 provider "awsdx" {}
-

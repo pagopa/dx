@@ -33,7 +33,7 @@ const main = (): void => {
       ]
     : ["nx", "affected", "-t", "docker:build"];
 
-  console.log(`[@pagopa/nx-dx-docker-plugin] Running: pnpm ${args.join(" ")}`);
+  console.log(`[@pagopa/nx-docker] Running: pnpm ${args.join(" ")}`);
   execFileSync("pnpm", args, { stdio: "inherit" });
 };
 

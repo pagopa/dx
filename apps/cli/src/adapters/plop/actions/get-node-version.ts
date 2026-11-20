@@ -6,8 +6,8 @@ import { fetchLatestSemver, FetchSemverFn } from "./semver.js";
 
 const fetchNodeVersion: FetchSemverFn = () =>
   ResultAsync.fromPromise(
-    // Jod is the codename for Node.js 22 LTS
-    getLatestByCodename("Jod"),
+    // Krypton is the codename for Node.js 24 LTS
+    getLatestByCodename("Krypton"),
     (e) => new Error("Failed to fetch Node.js releases", { cause: e }),
   );
 

@@ -26,13 +26,12 @@
         "ms-azuretools.vscode-azureterraform",
         "github.vscode-github-actions",
         "github.vscode-pull-request-github",
-        "esbenp.prettier-vscode",
+        "oxc.oxc-vscode",
         "unifiedjs.vscode-mdx",
         "EditorConfig.EditorConfig",
         "bruno-api-client.bruno",
         "vitest.explorer",
         "redhat.vscode-yaml",
-        "dbaeumer.vscode-eslint",
         "github.copilot",
         "github.copilot-chat",
         "nrwl.angular-console"
@@ -46,8 +45,7 @@
         "dev.nx.console",
         "ru.adelf.idea.dotenv",
         "mobi.hsz.idea.gitignore",
-        "org.editorconfig.editorconfigjetbrains",
-        "intellij.prettierJS"
+        "org.editorconfig.editorconfigjetbrains"
       ]
     }
   }

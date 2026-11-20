@@ -81,6 +81,19 @@ describe("parseArgs", () => {
     expect(args.force).toBe(true);
   });
 
+  it("parses --repo correctly", () => {
+    const args = parseArgs(
+      ["--since", "2024-01-01", "--repo", "io-infra"],
+      "/tmp",
+    );
+    expect(args.repo).toBe("io-infra");
+  });
+
+  it("leaves repo undefined when --repo is omitted", () => {
+    const args = parseArgs(["--since", "2024-01-01"], "/tmp");
+    expect(args.repo).toBeUndefined();
+  });
+
   it("resolves an explicit --config path", () => {
     const args = parseArgs(["--config", "./custom-config.json"], "/tmp");
     expect(args.configPath).toBe("/tmp/custom-config.json");

@@ -1,5 +1,5 @@
 locals {
-  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/module.json")).version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/module.json")).name, basename(path.module)) })
+  tags = merge(var.tags, { ModuleSource = "DX", ModuleVersion = try(jsondecode(file("${path.module}/project.json")).metadata.version, "unknown"), ModuleName = try(jsondecode(file("${path.module}/project.json")).name, "unknown") })
   naming_config = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
@@ -7,11 +7,20 @@ locals {
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  env_name = {
+  base_environment_name = {
     "d" = "dev"
     "u" = "uat"
     "p" = "prod"
   }[var.environment.env_short]
+  env_name          = var.github_environment_prefix_enabled ? "${var.environment.prefix}-${local.base_environment_name}" : local.base_environment_name
+  dx_runner_enabled = startswith(var.environment.prefix, "dx")
+
+  # GitHub emits immutable subject claims that embed the numeric owner and
+  # repository IDs for repositories created or renamed after 2026-07-15, while
+  # older repositories still emit name-based subjects. Credentials are created
+  # for both formats: they are additive, so each repository matches exactly one
+  # of them regardless of when it was created.
+  immutable_repository_slug = "${var.repository.owner}@${var.repository.owner_id != null ? tostring(var.repository.owner_id) : data.github_organization.owner[0].id}/${var.repository.name}@${data.github_repository.this.repo_id}"
 
   resource_group = {
     name = provider::dx::resource_name(merge(local.naming_config, {
@@ -49,7 +58,7 @@ locals {
       resource_type = "managed_identity"
     }))
 
-    # e.g. infra-${local.env_name}-cd
+    # The prefix affects GitHub environment names only, not cloud resource names.
     infra_environment_name      = "infra-${local.env_name}-%s"
     automation_environment_name = "automation-${local.env_name}-%s"
     app_environment_name        = "app-${local.env_name}-%s"
@@ -67,15 +76,50 @@ locals {
     id = provider::azurerm::normalise_resource_id("${data.azurerm_subscription.current.id}/resourceGroups/${var.terraform_storage_account.resource_group_name}/providers/Microsoft.Storage/storageAccounts/${var.terraform_storage_account.name}")
   }
 
+  terraform_state_resource_group_id = provider::azurerm::normalise_resource_id("${data.azurerm_subscription.current.id}/resourceGroups/${var.terraform_storage_account.resource_group_name}")
+  terraform_state_scope             = var.terraform_state_container_access == null ? local.tf_storage_account.id : "${local.tf_storage_account.id}/blobServices/default/containers/${coalesce(try(var.terraform_state_container_access.container_name, null), "${var.environment.domain}-tf-state")}"
+
+  terraform_state_identity_principal_ids = {
+    infra_ci = azurerm_user_assigned_identity.infra_ci.principal_id
+    infra_cd = azurerm_user_assigned_identity.infra_cd.principal_id
+    app_ci   = azurerm_user_assigned_identity.app_ci.principal_id
+    app_cd   = azurerm_user_assigned_identity.app_cd.principal_id
+    opex_ci  = azurerm_user_assigned_identity.opex_ci.principal_id
+    opex_cd  = azurerm_user_assigned_identity.opex_cd.principal_id
+  }
+
+  terraform_state_upstream_reader_assignments = {
+    for assignment in flatten([
+      for container, readers in try(var.terraform_state_container_access.upstream, {}) : concat(
+        [
+          for identity in readers.identities : {
+            key          = jsonencode([container, "identity", identity])
+            container    = container
+            principal_id = local.terraform_state_identity_principal_ids[identity]
+          }
+        ],
+        [
+          for principal_id in readers.principal_ids : {
+            key          = jsonencode([container, "principal", principal_id])
+            container    = container
+            principal_id = principal_id
+          }
+        ]
+      )
+    ]) : assignment.key => assignment
+  }
+
   subscription_role_name_prefix = trimspace(data.azurerm_subscription.current.display_name)
   custom_role_definition_names = {
-    dx_app_cd_resource_groups      = "${local.subscription_role_name_prefix} DX App CD Resource Groups"
-    dx_app_ci_resource_groups      = "${local.subscription_role_name_prefix} DX App CI Resource Groups"
-    dx_infra_cd_private_networking = "${local.subscription_role_name_prefix} DX Infra CD Private Networking"
-    dx_infra_cd_resource_groups    = "${local.subscription_role_name_prefix} DX Infra CD Resource Groups"
-    dx_infra_cd_subscription       = "${local.subscription_role_name_prefix} DX Infra CD Subscription"
-    dx_infra_ci_resource_groups    = "${local.subscription_role_name_prefix} DX Infra CI Resource Groups"
-    dx_infra_ci_subscription       = "${local.subscription_role_name_prefix} DX Infra CI Subscription"
+    dx_app_cd_resource_groups                = "${local.subscription_role_name_prefix} DX App CD Resource Groups"
+    dx_app_ci_resource_groups                = "${local.subscription_role_name_prefix} DX App CI Resource Groups"
+    dx_infra_cd_private_networking           = "${local.subscription_role_name_prefix} DX Infra CD Private Networking"
+    dx_infra_cd_resource_groups              = "${local.subscription_role_name_prefix} DX Infra CD Resource Groups"
+    dx_infra_cd_subscription                 = "${local.subscription_role_name_prefix} DX Infra CD Subscription"
+    dx_infra_cd_subscription_no_rbac_admin   = "${local.subscription_role_name_prefix} DX Infra CD Subscription (No RBAC Admin)"
+    dx_infra_ci_resource_groups              = "${local.subscription_role_name_prefix} DX Infra CI Resource Groups"
+    dx_infra_ci_subscription                 = "${local.subscription_role_name_prefix} DX Infra CI Subscription"
+    dx_infra_ci_subscription_no_storage_keys = "${local.subscription_role_name_prefix} DX Infra CI Subscription (No Storage Key Access)"
   }
 
   repo_secrets = {
@@ -83,6 +127,13 @@ locals {
   }
 
   infra_ci = {
+    secrets = {
+      "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_ci.client_id
+      "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id
+    }
+  }
+
+  automation_ci = {
     secrets = {
       "ARM_CLIENT_ID"       = azurerm_user_assigned_identity.infra_ci.client_id
       "ARM_SUBSCRIPTION_ID" = data.azurerm_subscription.current.subscription_id

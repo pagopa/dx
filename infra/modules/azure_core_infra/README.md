@@ -13,7 +13,7 @@ This Terraform module provisions the core infrastructure required for the initia
 - **Private DNS Zones**: Configures private DNS zones for all resource types.
 - **Log Analytics Workspace**: Creates a Log Analytics Workspace for monitoring and diagnostics.
 - **GitHub Runner**: Provisions a GitHub Runner for CI/CD workflows.
-- **Merged Custom Roles**: Creates subscription-scoped merged custom roles for DX CI/CD identities and Function App storage access.
+- **Merged Custom Roles**: Creates subscription-scoped merged custom roles for DX CI/CD identities and Function App storage access, including opt-in state-safe Infra CI/CD roles.
 
 ## Custom Role Naming
 
@@ -25,7 +25,11 @@ Example role names:
 
 - `<subscription display name> DX App CI Resource Groups`
 - `<subscription display name> DX Infra CD Subscription`
+- `<subscription display name> DX Infra CI Subscription (No Storage Key Access)`
+- `<subscription display name> DX Infra CD Subscription (No RBAC Admin)`
 - `<subscription display name> DX Function Host Storage`
+
+The two additional Infra roles are intended for the bootstrap's opt-in per-container mode; the legacy subscription roles remain unchanged. The CI role omits `Reader and Data Access`, and the CD role omits subscription RBAC administration.
 
 ## Usage Example
 
@@ -39,7 +43,7 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.62 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
 
@@ -47,15 +51,15 @@ For detailed usage examples, refer to the [examples folder](https://github.com/p
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
-| <a name="module_application_insights"></a> [application\_insights](#module\_application\_insights) | ./_modules/application_insights | n/a |
-| <a name="module_common_log_analytics"></a> [common\_log\_analytics](#module\_common\_log\_analytics) | ./_modules/log_analytics | n/a |
+| <a name="module_application_insights"></a> [application\_insights](#module\_application\_insights) | ./modules/application_insights | n/a |
+| <a name="module_common_log_analytics"></a> [common\_log\_analytics](#module\_common\_log\_analytics) | ./modules/log_analytics | n/a |
 | <a name="module_custom_roles"></a> [custom\_roles](#module\_custom\_roles) | ./modules/custom_roles | n/a |
-| <a name="module_dns"></a> [dns](#module\_dns) | ./_modules/dns | n/a |
-| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | ./_modules/github_runner | n/a |
-| <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ./_modules/key_vault | n/a |
-| <a name="module_nat_gateway"></a> [nat\_gateway](#module\_nat\_gateway) | ./_modules/nat_gateway | n/a |
-| <a name="module_network"></a> [network](#module\_network) | ./_modules/networking | n/a |
-| <a name="module_vpn"></a> [vpn](#module\_vpn) | ./_modules/vpn | n/a |
+| <a name="module_dns"></a> [dns](#module\_dns) | ./modules/dns | n/a |
+| <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | ./modules/github_runner | n/a |
+| <a name="module_key_vault"></a> [key\_vault](#module\_key\_vault) | ./modules/key_vault | n/a |
+| <a name="module_nat_gateway"></a> [nat\_gateway](#module\_nat\_gateway) | ./modules/nat_gateway | n/a |
+| <a name="module_network"></a> [network](#module\_network) | ./modules/networking | n/a |
+| <a name="module_vpn"></a> [vpn](#module\_vpn) | ./modules/vpn | n/a |
 
 ## Resources
 

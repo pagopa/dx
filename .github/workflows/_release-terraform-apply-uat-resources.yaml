@@ -2,13 +2,6 @@ name: Terraform apply on uat resources
 
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - main
-    paths:
-      - "infra/resources/uat/**"
-      - "infra/resources/_modules/**"
-      - ".github/workflows/_release-terraform-apply-uat-resources.yaml"
 jobs:
   uat_itn_common_deploy:
     uses: $/.github/workflows/infra_apply.yaml

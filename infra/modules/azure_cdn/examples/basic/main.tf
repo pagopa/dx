@@ -23,9 +23,10 @@ module "storage_account" {
 
   environment = local.environment
 
-  resource_group_name = azurerm_resource_group.example.name
-  use_case            = "default"
-  subnet_pep_id       = data.azurerm_subnet.pep.id
+  resource_group_name                  = azurerm_resource_group.example.name
+  use_case                             = "default"
+  subnet_pep_id                        = data.azurerm_subnet.pep.id
+  private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
 
   force_public_network_access_enabled = true
 

@@ -2,8 +2,17 @@
 
 import { z } from "zod";
 
+import { sqlNumberSchema, sqlTimestampSchema } from "../shared/sql-parsing";
+
 export const getTechRadarDashboardInputSchema = z.object({
   configuredRepositories: z.array(z.string().min(1)),
+  /**
+   * Whether to include the adoption trend. The trend is aggregated per tool
+   * with no repository dimension, so a scope narrower than the portfolio must
+   * not receive it. Required rather than defaulted: a caller that forgets it
+   * must fail to compile, not publish the organisation-wide trend.
+   */
+  includeUsageTrend: z.boolean(),
 });
 
 export const techRadarUsageRowSchema = z.object({
@@ -52,6 +61,15 @@ export const statusDistributionRowSchema = z.object({
   value: z.number().int().nonnegative(),
 });
 
+export const techRadarUsageTrendRowSchema = z.object({
+  capturedAt: sqlTimestampSchema,
+  radarRing: z.string().min(1).nullable(),
+  radarStatus: z.string().min(1),
+  repositoryCount: sqlNumberSchema,
+  toolKey: z.string().min(1),
+  toolName: z.string().min(1),
+});
+
 export const techRadarSummarySchema = z.object({
   alignedUsages: z.number().int().nonnegative(),
   detectedUsages: z.number().int().nonnegative(),
@@ -82,3 +100,6 @@ export type TechRadarDashboardResult = z.infer<
 >;
 export type TechRadarSummary = z.infer<typeof techRadarSummarySchema>;
 export type TechRadarUsageRow = z.infer<typeof techRadarUsageRowSchema>;
+export type TechRadarUsageTrendRow = z.infer<
+  typeof techRadarUsageTrendRowSchema
+>;

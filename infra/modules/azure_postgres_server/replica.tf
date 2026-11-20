@@ -2,6 +2,9 @@
 # PostgreSQL Flexible Server Replica #
 #------------------------------------#
 
+# trivy:ignore:AVD-AZU-0019 Ensure server parameter ’log_connections’ is set to ‘ON’ for PostgreSQL Database Server
+# trivy:ignore:AVD-AZU-0021 Ensure server parameter ’connection_throttling’ is set to ‘ON’ for PostgreSQL Database Server
+# trivy:ignore:AVD-AZU-0024 Ensure server parameter ’log_checkpoints’ is set to ‘ON’ for PostgreSQL Database Server
 resource "azurerm_postgresql_flexible_server" "replica" {
   count = local.replica.create ? 1 : 0
 

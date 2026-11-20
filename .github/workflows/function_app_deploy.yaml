@@ -48,7 +48,7 @@ env:
 jobs:
   build:
     name: Build Artifact
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     env:
       WORKSPACE: ${{ inputs.workspace_name }}
       TURBO_CACHE_DIR: .turbo-cache
@@ -120,8 +120,8 @@ jobs:
     needs: [build]
     # Use inputs.override_labels if set; otherwise, fall back to inputs.environment.
     # When inputs.use_labels and inputs.use_private_agent are true, apply the selected labels.
-    # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-latest' otherwise.
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    # Default to 'self-hosted' if inputs.use_private_agent is true, or 'ubuntu-26.04' otherwise.
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
     environment: ${{ inputs.environment }}-cd
     permissions:
       id-token: write

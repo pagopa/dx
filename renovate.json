@@ -1,8 +1,17 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    "github>pagopa/dx//renovate-presets/default"
   ],
+  "timezone": "Europe/Rome",
+  "dockerfile": {
+    "ignorePaths": [
+      "**/node_modules/**",
+      "**/bower_components/**",
+      "**/vendor/**"
+    ]
+  },
   "packageRules": [
     {
       "matchManagers": ["github-actions"],
@@ -11,9 +20,37 @@
       "schedule": ["* 0-8 * * 1"]
     },
     {
-      "matchManagers": ["terraform", "terraform-version"],
+      "matchManagers": ["github-actions"],
+      "matchPackageNames": ["pagopa/dx"],
+      "pinDigests": false
+    },
+    {
+      "matchManagers": ["dockerfile"],
+      "enabled": true,
+      "groupName": "Docker images",
+      "minimumReleaseAge": "7 days",
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
+      "prCreation": "immediate"
+    },
+    {
+      "description": "Node.js 25+ drops Corepack; keep the images on the 24 line to stay aligned with .node-version and CI",
+      "matchManagers": ["dockerfile"],
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["node", "public.ecr.aws/docker/library/node"],
+      "allowedVersions": "<25"
+    },
+    {
+      "matchManagers": ["terraform"],
+      "matchDatasources": ["terraform-provider"],
+      "matchPackageNames": ["!/^pagopa-dx\\//"],
       "separateMultipleMajor": true,
-      "groupName": "Terraform providers and modules",
+      "groupName": "Terraform providers",
+      "schedule": ["* 0-8 * * 1"]
+    },
+    {
+      "matchManagers": ["terraform-version"],
+      "matchDatasources": ["github-releases"],
+      "groupName": "Terraform CLI",
       "schedule": ["* 0-8 * * 1"]
     }
   ]

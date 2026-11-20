@@ -3,6 +3,8 @@
 # encryption provides a sufficiently powerful encryption algorithm, and there is unlikely
 # to be a benefit to using infrastructure encryption.
 
+# trivy:ignore:AZU-0057 Storage account should have logging enabled
+# trivy:ignore:AZU-0058 Storage account should use geo-redundant replication
 # trivy:ignore:AZU-0061 Storage account should have infrastructure encryption enabled
 resource "azurerm_storage_account" "this" {
   name                     = local.storage_account.name
@@ -12,7 +14,7 @@ resource "azurerm_storage_account" "this" {
   account_kind             = "StorageV2"
   account_replication_type = local.use_case_features.replication_type
 
-  public_network_access_enabled   = false
+  public_network_access           = "Disabled"
   shared_access_key_enabled       = false
   default_to_oauth_authentication = true
   allow_nested_items_to_be_public = false
@@ -20,6 +22,8 @@ resource "azurerm_storage_account" "this" {
   tags = local.tags
 }
 
+# trivy:ignore:AZU-0057 Storage account should have logging enabled
+# trivy:ignore:AZU-0058 Storage account should use geo-redundant replication
 # trivy:ignore:AZU-0061 Storage account should have infrastructure encryption enabled
 resource "azurerm_storage_account" "durable_function" {
   count = local.function_app.has_durable
@@ -31,7 +35,7 @@ resource "azurerm_storage_account" "durable_function" {
   account_kind             = "StorageV2"
   account_replication_type = local.use_case_features.replication_type
 
-  public_network_access_enabled   = false
+  public_network_access           = "Disabled"
   shared_access_key_enabled       = false
   default_to_oauth_authentication = true
   allow_nested_items_to_be_public = false

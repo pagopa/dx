@@ -1,5 +1,5 @@
 // Builds the `docker:build`/`docker:push` Nx targets: thin
-// `TargetConfiguration` wiring for the `@pagopa/nx-dx-docker-plugin:build`/
+// `TargetConfiguration` wiring for the `@pagopa/nx-docker:build`/
 // `:push` executors (see docker-run.ts for the actual logic). Both targets
 // share the exact same options — everything env-dependent (tags, commit
 // sha, build timestamp) is computed inside the executor at task-RUN time,
@@ -24,7 +24,7 @@ import type { DockerRunOptions } from "./docker-run.ts";
 export const buildDockerBuildTarget = (
   options: DockerRunOptions,
 ): TargetConfiguration => ({
-  executor: "@pagopa/nx-dx-docker-plugin:build",
+  executor: "@pagopa/nx-docker:build",
   metadata: {
     description:
       "Build this project's Docker image locally with full OCI labels, computed fresh on every run (RFC-DX-076 feature parity with docker/metadata-action)",
@@ -38,7 +38,7 @@ export const buildDockerPushTarget = (
   buildTargetName: string,
 ): TargetConfiguration => ({
   dependsOn: [buildTargetName],
-  executor: "@pagopa/nx-dx-docker-plugin:push",
+  executor: "@pagopa/nx-docker:push",
   metadata: {
     description:
       "Build and push this project's Docker image with full OCI labels and index+manifest annotations; no-ops when there's nothing CI-computed to publish",

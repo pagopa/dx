@@ -23,14 +23,50 @@ const { mockRoleAssignmentsCreate, mockRoleAssignmentsListForScope } =
   }));
 
 const {
+  mockBlobContainerCreate,
+  mockBlobContainerGet,
+  mockBlobContainerGetProperties,
+  mockStorageAccountCreate,
+  mockStorageAccountGetProperties,
+} = vi.hoisted(() => ({
+  mockBlobContainerCreate: vi.fn().mockResolvedValue({}),
+  mockBlobContainerGet: vi.fn().mockResolvedValue({}),
+  mockBlobContainerGetProperties: vi.fn().mockResolvedValue({}),
+  mockStorageAccountCreate: vi.fn().mockResolvedValue({
+    name: "dxditntfstatest01",
+  }),
+  mockStorageAccountGetProperties: vi.fn().mockResolvedValue({
+    primaryEndpoints: {
+      blob: "https://dxditntfstatest01.blob.core.windows.net/",
+    },
+  }),
+}));
+
+const {
+  mockBlobAcquireLease,
+  mockBlobDelete,
+  mockBlobGetProperties,
+  mockBlobReleaseLease,
+  mockBlobUploadData,
+} = vi.hoisted(() => ({
+  mockBlobAcquireLease: vi.fn().mockResolvedValue({}),
+  mockBlobDelete: vi.fn().mockResolvedValue({ succeeded: true }),
+  mockBlobGetProperties: vi.fn().mockResolvedValue({}),
+  mockBlobReleaseLease: vi.fn().mockResolvedValue({}),
+  mockBlobUploadData: vi.fn().mockResolvedValue({}),
+}));
+
+const {
   mockCreateFederatedIdentityCredential,
   mockCreateIdentity,
   mockCreateKeyVault,
   mockCreateResourceGroup,
   mockDeleteResourceGroup,
   mockGetIdentity,
+  mockGetSecret,
   mockGetSubscription,
   mockKeyVaultNameAvailability,
+  mockSecretClientConstructor,
   mockSetSecret,
 } = vi.hoisted(() => ({
   mockCreateFederatedIdentityCredential: vi.fn().mockResolvedValue({}),
@@ -41,10 +77,12 @@ const {
   mockCreateResourceGroup: vi.fn().mockResolvedValue({}),
   mockDeleteResourceGroup: vi.fn().mockResolvedValue({}),
   mockGetIdentity: vi.fn().mockResolvedValue({ clientId: "client-1" }),
+  mockGetSecret: vi.fn(),
   mockGetSubscription: vi.fn().mockResolvedValue({ tenantId: "tenant-1" }),
   mockKeyVaultNameAvailability: vi.fn().mockResolvedValue({
     nameAvailable: true,
   }),
+  mockSecretClientConstructor: vi.fn(),
   mockSetSecret: vi.fn().mockResolvedValue({}),
 }));
 const { mockLookup } = vi.hoisted(() => ({
@@ -53,6 +91,12 @@ const { mockLookup } = vi.hoisted(() => ({
 const { mockSleep } = vi.hoisted(() => ({
   mockSleep: vi.fn().mockResolvedValue(undefined),
 }));
+
+const roleAssignments = (assignments: object[]) => ({
+  [Symbol.asyncIterator]: async function* () {
+    yield* assignments;
+  },
+});
 
 vi.mock("@azure/arm-authorization", () => ({
   AuthorizationManagementClient: class {
@@ -109,6 +153,20 @@ vi.mock("@azure/arm-resources", () => ({
   },
 }));
 
+vi.mock("@azure/arm-storage", () => ({
+  StorageManagementClient: class {
+    blobContainers = {
+      create: mockBlobContainerCreate,
+      get: mockBlobContainerGet,
+    };
+
+    storageAccounts = {
+      beginCreateAndWait: mockStorageAccountCreate,
+      getProperties: mockStorageAccountGetProperties,
+    };
+  },
+}));
+
 vi.mock("@azure/arm-resources-subscriptions", () => ({
   SubscriptionClient: class {
     subscriptions = {
@@ -117,9 +175,41 @@ vi.mock("@azure/arm-resources-subscriptions", () => ({
   },
 }));
 
+vi.mock("@azure/storage-blob", () => ({
+  BlobServiceClient: class {
+    getContainerClient = vi.fn(() => ({
+      getBlockBlobClient: vi.fn(() => ({
+        deleteIfExists: mockBlobDelete,
+        getBlobLeaseClient: vi.fn(() => ({
+          acquireLease: mockBlobAcquireLease,
+          releaseLease: mockBlobReleaseLease,
+        })),
+        getProperties: mockBlobGetProperties,
+        uploadData: mockBlobUploadData,
+      })),
+      getProperties: mockBlobContainerGetProperties,
+    }));
+  },
+}));
+
+vi.mock("@microsoft/microsoft-graph-client", () => ({
+  Client: {
+    init: vi.fn(() => ({
+      api: (path: string) => ({
+        get: async () => (path === "/me" ? { id: "user-1" } : { value: [] }),
+      }),
+    })),
+  },
+}));
+
 vi.mock("@azure/keyvault-secrets", () => ({
   SecretClient: class {
+    getSecret = mockGetSecret;
+
     setSecret = mockSetSecret;
+    constructor(url: string) {
+      mockSecretClientConstructor(url);
+    }
   },
 }));
 vi.mock("node:dns/promises", () => ({
@@ -148,6 +238,7 @@ beforeEach(() => {
   mockCreateFederatedIdentityCredential.mockClear();
   mockGetIdentity.mockClear();
   mockGetIdentity.mockResolvedValue({ clientId: "client-1" });
+  mockGetSecret.mockReset();
   mockCreateIdentity.mockClear();
   mockCreateIdentity.mockResolvedValue({
     clientId: "client-1",
@@ -165,13 +256,244 @@ beforeEach(() => {
   mockProviderRegister.mockClear();
   mockRoleAssignmentsCreate.mockClear();
   mockRoleAssignmentsListForScope.mockReset();
-  mockSetSecret.mockClear();
+  mockBlobContainerCreate.mockReset();
+  mockBlobContainerCreate.mockResolvedValue({});
+  mockBlobContainerGet.mockReset();
+  mockBlobContainerGet.mockRejectedValue(
+    Object.assign(new Error("Not found"), { statusCode: 404 }),
+  );
+  mockBlobContainerGetProperties.mockReset();
+  mockBlobContainerGetProperties.mockResolvedValue({});
+  mockStorageAccountCreate.mockReset();
+  mockStorageAccountCreate.mockResolvedValue({ name: "dxditntfstatest01" });
+  mockStorageAccountGetProperties.mockReset();
+  mockStorageAccountGetProperties.mockResolvedValue({
+    primaryEndpoints: {
+      blob: "https://dxditntfstatest01.blob.core.windows.net/",
+    },
+  });
+  mockBlobAcquireLease.mockReset();
+  mockBlobAcquireLease.mockResolvedValue({});
+  mockBlobDelete.mockReset();
+  mockBlobDelete.mockResolvedValue({ succeeded: true });
+  mockBlobGetProperties.mockReset();
+  mockBlobGetProperties.mockResolvedValue({});
+  mockBlobReleaseLease.mockReset();
+  mockBlobReleaseLease.mockResolvedValue({});
+  mockBlobUploadData.mockReset();
+  mockBlobUploadData.mockResolvedValue({});
+  mockSecretClientConstructor.mockClear();
+  mockSetSecret.mockReset();
+  mockSetSecret.mockResolvedValue({});
   mockLookup.mockReset();
   mockLookup.mockResolvedValue([{ address: "127.0.0.1", family: 4 }]);
   mockSleep.mockClear();
 });
 
-const expectBootstrapperFederatedCredentials = (repo: string) => {
+describe("Runner App credentials in the common Key Vault", () => {
+  const account = {
+    csp: "azure" as const,
+    defaultLocation: "italynorth",
+    displayName: "DEV-Test",
+    id: "sub-1",
+  };
+  const environment = { name: "dev" as const, prefix: "dx" };
+  const secrets: Record<string, string> = {
+    "github-runner-app-client-id": "client-id",
+    "github-runner-app-id": "app-id",
+    "github-runner-app-installation-id": "installation-id",
+    "github-runner-app-key": "private-key",
+  };
+
+  beforeEach(() => {
+    queryResources.mockResolvedValue({
+      data: [{ name: "dx-d-itn-common-kv-01" }],
+      totalRecords: 1,
+    });
+  });
+
+  test("reads all credentials from the selected account's common vault", async ({
+    cloudAccountService,
+  }) => {
+    mockGetSecret.mockImplementation(async (name: string) => ({
+      value: secrets[name],
+    }));
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).resolves.toEqual({
+      credentials: {
+        clientId: "client-id",
+        id: "app-id",
+        installationId: "installation-id",
+        key: "private-key",
+      },
+      missingClientId: false,
+    });
+    expect(mockSecretClientConstructor).toHaveBeenCalledWith(
+      "https://dx-d-itn-common-kv-01.vault.azure.net/",
+    );
+    expect(mockGetSecret).toHaveBeenCalledTimes(4);
+    expect(queryResources).toHaveBeenCalledWith(
+      expect.objectContaining({
+        query: expect.stringContaining(
+          JSON.stringify("^dx-d-(itn|weu)-common-kv-(0[1-9]|[1-9]\\d)$"),
+        ),
+        subscriptions: [account.id],
+      }),
+    );
+  });
+
+  test("uses the discovered vault even when its region and sequence differ", async ({
+    cloudAccountService,
+  }) => {
+    queryResources.mockResolvedValue({
+      data: [{ name: "dx-d-weu-common-kv-02" }],
+      totalRecords: 1,
+    });
+    mockGetSecret.mockImplementation(async (name: string) => ({
+      value: secrets[name],
+    }));
+
+    await cloudAccountService.getRunnerAppCredentials(account, environment);
+    await cloudAccountService.storeRunnerAppClientId(
+      account,
+      environment,
+      "client-id",
+    );
+
+    expect(mockSecretClientConstructor).toHaveBeenCalledTimes(2);
+    expect(mockSecretClientConstructor).toHaveBeenCalledWith(
+      "https://dx-d-weu-common-kv-02.vault.azure.net/",
+    );
+  });
+
+  test("does not guess a vault when discovery returns no match", async ({
+    cloudAccountService,
+  }) => {
+    queryResources.mockResolvedValue({ data: [], totalRecords: 0 });
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).resolves.toEqual({ credentials: {}, missingClientId: false });
+    expect(mockSecretClientConstructor).not.toHaveBeenCalled();
+  });
+
+  test("rejects ambiguous vault discovery", async ({ cloudAccountService }) => {
+    queryResources.mockResolvedValue({
+      data: [
+        { name: "dx-d-itn-common-kv-01" },
+        { name: "dx-d-weu-common-kv-02" },
+      ],
+      totalRecords: 2,
+    });
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).rejects.toThrow("Multiple common Key Vaults match");
+    expect(mockSecretClientConstructor).not.toHaveBeenCalled();
+  });
+
+  test("returns available credentials when a legacy vault has no client ID", async ({
+    cloudAccountService,
+  }) => {
+    mockGetSecret.mockImplementation(async (name: string) => {
+      if (name === "github-runner-app-client-id") {
+        throw { statusCode: 404 };
+      }
+      return { value: secrets[name] };
+    });
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).resolves.toEqual({
+      credentials: {
+        id: "app-id",
+        installationId: "installation-id",
+        key: "private-key",
+      },
+      missingClientId: true,
+    });
+  });
+
+  test("returns no credentials when secret access is denied", async ({
+    cloudAccountService,
+  }) => {
+    mockGetSecret.mockRejectedValue({ statusCode: 403 });
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).resolves.toEqual({ credentials: {}, missingClientId: false });
+  });
+
+  test("reports unexpected lookup failures", async ({
+    cloudAccountService,
+  }) => {
+    mockGetSecret.mockRejectedValue(new Error("network error"));
+
+    await expect(
+      cloudAccountService.getRunnerAppCredentials(account, environment),
+    ).rejects.toMatchObject({
+      cause: new Error("network error"),
+      message:
+        "Failed to read github-runner-app-client-id from dx-d-itn-common-kv-01.",
+      name: "RunnerAppCredentialsError",
+    });
+  });
+
+  test("reports unexpected client ID backfill failures safely", async ({
+    cloudAccountService,
+  }) => {
+    mockSetSecret.mockRejectedValue(new Error("network error"));
+
+    await expect(
+      cloudAccountService.storeRunnerAppClientId(
+        account,
+        environment,
+        "client-id",
+      ),
+    ).rejects.toMatchObject({
+      cause: new Error("network error"),
+      message:
+        "Failed to save the Runner App Client ID to dx-d-itn-common-kv-01.",
+      name: "RunnerAppCredentialsError",
+    });
+  });
+
+  test("backfills the client ID without changing the existing runner secrets", async ({
+    cloudAccountService,
+  }) => {
+    await cloudAccountService.storeRunnerAppClientId(
+      account,
+      environment,
+      "client-id",
+    );
+
+    expect(mockSetSecret).toHaveBeenCalledExactlyOnceWith(
+      "github-runner-app-client-id",
+      "client-id",
+    );
+  });
+
+  test("allows read-only users to continue when client ID backfill is denied", async ({
+    cloudAccountService,
+  }) => {
+    mockSetSecret.mockRejectedValue({ statusCode: 403 });
+
+    await expect(
+      cloudAccountService.storeRunnerAppClientId(
+        account,
+        environment,
+        "client-id",
+      ),
+    ).resolves.toBeUndefined();
+  });
+});
+
+const expectBootstrapperFederatedCredentials = (
+  repo: string,
+  owner = "pagopa",
+) => {
   [
     { identityName: "dx-d-itn-bootstrap-id-01", stage: "cd" },
     { identityName: "dx-d-itn-bootstrap-ci-id-01", stage: "ci" },
@@ -185,7 +507,32 @@ const expectBootstrapperFederatedCredentials = (repo: string) => {
       {
         audiences: ["api://AzureADTokenExchange"],
         issuer: "https://token.actions.githubusercontent.com",
-        subject: `repo:pagopa/${repo}:environment:${environmentName}`,
+        subject: `repo:${owner}/${repo}:environment:${environmentName}`,
+      },
+    );
+  });
+};
+
+const expectImmutableBootstrapperFederatedCredentials = (
+  repo: string,
+  ownerId: number,
+  repoId: number,
+  owner = "pagopa",
+) => {
+  [
+    { identityName: "dx-d-itn-bootstrap-id-01", stage: "cd" },
+    { identityName: "dx-d-itn-bootstrap-ci-id-01", stage: "ci" },
+  ].forEach(({ identityName, stage }) => {
+    const environmentName = `bootstrapper-dev-${stage}`;
+
+    expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledWith(
+      "dx-d-itn-common-rg-01",
+      identityName,
+      `${repo}-${environmentName}-immutable`,
+      {
+        audiences: ["api://AzureADTokenExchange"],
+        issuer: "https://token.actions.githubusercontent.com",
+        subject: `repo:${owner}@${ownerId}/${repo}@${repoId}:environment:${environmentName}`,
       },
     );
   });
@@ -197,10 +544,12 @@ const expectBootstrapperEnvironmentSecrets = (
     cdClientId = "client-1",
     ciClientId = "client-1",
     includesRunnerSecrets = true,
+    owner = "pagopa",
   }: {
     cdClientId?: string;
     ciClientId?: string;
     includesRunnerSecrets?: boolean;
+    owner?: string;
   } = {},
 ) => {
   const expectedSecrets = [
@@ -209,7 +558,6 @@ const expectBootstrapperEnvironmentSecrets = (
     ["bootstrapper-dev-cd", "ARM_SUBSCRIPTION_ID", "sub-1"],
     ...(includesRunnerSecrets
       ? [
-          ["bootstrapper-dev-cd", "GH_APP_ID", "app-id"],
           ["bootstrapper-dev-cd", "GH_APP_CLIENT_ID", "app-client-id"],
           ["bootstrapper-dev-cd", "GH_APP_INSTALLATION_ID", "installation-id"],
           ["bootstrapper-dev-cd", "GH_APP_KEY", "private-key"],
@@ -226,7 +574,7 @@ const expectBootstrapperEnvironmentSecrets = (
   expectedSecrets.forEach(([environmentName, secretName, secretValue]) => {
     expect(createOrUpdateEnvironmentSecret).toHaveBeenCalledWith({
       environmentName,
-      owner: "pagopa",
+      owner,
       repo: "dx",
       secretName,
       secretValue,
@@ -235,90 +583,343 @@ const expectBootstrapperEnvironmentSecrets = (
 };
 
 describe("getTerraformBackend", () => {
-  test("returns undefined when no matching storage account is found", async ({
-    cloudAccountService,
-  }) => {
-    queryResources.mockResolvedValueOnce({
+  const accounts = {
+    dev: {
+      location: "italynorth",
+      name: "dxditntfstatest01",
+      resourceGroup: "dx-d-itn-tfstate-rg-01",
+      subscriptionId: "sub-1",
+      type: "microsoft.storage/storageaccounts",
+    },
+    latest: {
+      location: "italynorth",
+      name: "dxditntfstatest02",
+      resourceGroup: "dx-d-itn-tfstate-rg-01",
+      subscriptionId: "sub-1",
+      type: "microsoft.storage/storageaccounts",
+    },
+    otherRegion: {
+      location: "westeurope",
+      name: "dxdweutfstatest01",
+      resourceGroup: "dx-d-weu-tfstate-rg-01",
+      subscriptionId: "sub-1",
+      type: "microsoft.storage/storageaccounts",
+    },
+  };
+
+  baseTest.each([
+    {
       data: [],
-      totalRecords: 0,
-    });
-    const result = await cloudAccountService.getTerraformBackend("sub-1", {
-      name: "dev",
-      prefix: "dx",
-    });
-    expect(result).toBeUndefined();
-  });
-
-  test("return the only matching storage account", async ({
-    cloudAccountService,
-  }) => {
-    queryResources.mockResolvedValueOnce({
-      data: [
-        {
-          location: "italynorth",
-          name: "dxditntfstatest01",
-          resourceGroup: "dx-d-itn-tfstate-rg-01",
-          subscriptionId: "sub-1",
-          type: "microsoft.storage/storageaccounts",
-        },
-      ],
-      totalRecords: 1,
-    });
-    const result = await cloudAccountService.getTerraformBackend("sub-1", {
-      name: "dev",
-      prefix: "dx",
-    });
-
-    expect(result).toEqual(
-      expect.objectContaining({
+      expected: undefined,
+      label: "returns undefined when no account matches",
+    },
+    {
+      data: [accounts.dev],
+      expected: expect.objectContaining({
         resourceGroupName: "dx-d-itn-tfstate-rg-01",
         storageAccountName: "dxditntfstatest01",
         type: "azurerm",
       }),
-    );
-  });
-
-  test("returns the best matching storage account among multiple", async ({
-    cloudAccountService,
-  }) => {
-    queryResources.mockResolvedValueOnce({
-      data: [
-        {
-          location: "italynorth",
-          name: "dxditntfstatest01",
-          resourceGroup: "dx-d-itn-tfstate-rg-01",
-          subscriptionId: "sub-1",
-          type: "microsoft.storage/storageaccounts",
-        },
-        {
-          location: "italynorth",
-          name: "dxditntfstatest02",
-          resourceGroup: "dx-d-itn-tfstate-rg-01",
-          subscriptionId: "sub-1",
-          type: "microsoft.storage/storageaccounts",
-        },
-        {
-          location: "westeurope",
-          name: "dxdweutfstatest01",
-          resourceGroup: "dx-d-weu-tfstate-rg-01",
-          subscriptionId: "sub-1",
-          type: "microsoft.storage/storageaccounts",
-        },
-      ],
-      totalRecords: 3,
-    });
-    const result = await cloudAccountService.getTerraformBackend("sub-1", {
-      name: "dev",
-      prefix: "dx",
-    });
-
-    expect(result).toEqual(
-      expect.objectContaining({
+      label: "returns the only matching account",
+    },
+    {
+      data: [accounts.dev, accounts.latest, accounts.otherRegion],
+      expected: expect.objectContaining({
         resourceGroupName: "dx-d-itn-tfstate-rg-01",
         storageAccountName: "dxditntfstatest02",
         type: "azurerm",
       }),
+      label: "selects the latest matching account in the expected region",
+    },
+  ])("$label", async ({ data, expected }) => {
+    queryResources.mockResolvedValueOnce({
+      data,
+      totalRecords: data.length,
+    });
+
+    await expect(
+      new AzureCloudAccountService(
+        new DefaultAzureCredential(),
+      ).getTerraformBackend("sub-1", { name: "dev", prefix: "dx" }, "payments"),
+    ).resolves.toEqual(expected);
+  });
+});
+
+describe("hasUserPermissionToInitialize", () => {
+  test("does not require subscription-scoped Blob Data Contributor", async ({
+    cloudAccountService,
+  }) => {
+    mockRoleAssignmentsListForScope.mockImplementation(() =>
+      roleAssignments([
+        {
+          principalId: "user-1",
+          roleDefinitionId:
+            "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
+        },
+        {
+          principalId: "user-1",
+          roleDefinitionId:
+            "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/b86a8fe4-44ce-4948-aee5-eccb2c155cd7",
+        },
+      ]),
     );
+
+    await expect(
+      cloudAccountService.hasUserPermissionToInitialize("sub-1"),
+    ).resolves.toBe(true);
+  });
+});
+
+describe("provisionTerraformBackend", () => {
+  const account = {
+    csp: "azure" as const,
+    defaultLocation: "italynorth",
+    displayName: "DEV-DX",
+    id: "sub-1",
+  };
+  const environment = { name: "dev" as const, prefix: "dx" };
+
+  test("reuses a discovered storage account without modifying it", async ({
+    cloudAccountService,
+  }) => {
+    queryResources.mockResolvedValue({
+      data: [
+        {
+          location: "italynorth",
+          name: "dxditntfstatest02",
+          resourceGroup: "dx-d-itn-tfstate-rg-01",
+        },
+      ],
+      totalRecords: 1,
+    });
+
+    const result = await cloudAccountService.provisionTerraformBackend(
+      account,
+      environment,
+      "payments",
+    );
+
+    expect(result).toEqual(
+      expect.objectContaining({
+        containerName: "payments-tf-state",
+        resourceGroupName: "dx-d-itn-tfstate-rg-01",
+        storageAccountName: "dxditntfstatest02",
+      }),
+    );
+    expect(mockCreateResourceGroup).not.toHaveBeenCalled();
+    expect(mockStorageAccountCreate).not.toHaveBeenCalled();
+  });
+
+  test("keeps a partially provisioned resource group when account creation fails", async ({
+    cloudAccountService,
+  }) => {
+    mockStorageAccountCreate.mockRejectedValue(
+      new Error("Provisioning failed"),
+    );
+
+    await expect(
+      cloudAccountService.provisionTerraformBackend(
+        account,
+        environment,
+        "payments",
+      ),
+    ).rejects.toThrow("Provisioning failed");
+
+    expect(mockCreateResourceGroup).toHaveBeenCalledWith(
+      "dx-d-itn-tfstate-rg-01",
+      expect.objectContaining({ location: "italynorth" }),
+    );
+    expect(mockDeleteResourceGroup).not.toHaveBeenCalled();
+  });
+});
+
+describe("ensureTerraformBackendAccess", () => {
+  const backend = {
+    containerName: "payments-tf-state",
+    resourceGroupName: "dx-d-itn-tfstate-rg-01",
+    storageAccountName: "dxditntfstatest01",
+    subscriptionId: "sub-1",
+    type: "azurerm" as const,
+  };
+
+  test("creates containers through ARM and grants the user at each container scope", async ({
+    cloudAccountService,
+  }) => {
+    mockRoleAssignmentsListForScope.mockImplementation(() =>
+      roleAssignments([]),
+    );
+
+    await cloudAccountService.ensureTerraformBackendAccess(backend, [
+      { ...backend, containerName: "dx-tf-state" },
+    ]);
+
+    expect(mockBlobContainerCreate).toHaveBeenCalledTimes(2);
+    expect(mockBlobContainerCreate).toHaveBeenCalledWith(
+      backend.resourceGroupName,
+      backend.storageAccountName,
+      "payments-tf-state",
+      { publicAccess: "None" },
+    );
+    expect(mockBlobContainerCreate).toHaveBeenCalledWith(
+      backend.resourceGroupName,
+      backend.storageAccountName,
+      "dx-tf-state",
+      { publicAccess: "None" },
+    );
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledTimes(2);
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
+      expect.stringMatching(/\/containers\/payments-tf-state$/u),
+      expect.any(String),
+      expect.objectContaining({
+        principalId: "user-1",
+        principalType: "User",
+        roleDefinitionId:
+          "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+      }),
+    );
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
+      expect.stringMatching(/\/containers\/dx-tf-state$/u),
+      expect.any(String),
+      expect.objectContaining({ principalId: "user-1" }),
+    );
+    expect(mockBlobUploadData).toHaveBeenCalledTimes(2);
+    expect(mockBlobAcquireLease).toHaveBeenCalledTimes(2);
+    expect(mockBlobReleaseLease).toHaveBeenCalledTimes(2);
+    expect(mockBlobDelete).toHaveBeenCalledTimes(2);
+    expect(mockSleep).not.toHaveBeenCalled();
+  });
+
+  test("reuses existing containers and grants with non-deterministic names", async ({
+    cloudAccountService,
+  }) => {
+    mockBlobContainerGet.mockResolvedValue({});
+    mockRoleAssignmentsListForScope.mockImplementation(() =>
+      roleAssignments([
+        {
+          principalId: "user-1",
+          roleDefinitionId:
+            "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
+        },
+      ]),
+    );
+
+    await cloudAccountService.ensureTerraformBackendAccess(backend, [
+      { ...backend, containerName: "dx-tf-state" },
+    ]);
+
+    expect(mockBlobContainerCreate).not.toHaveBeenCalled();
+    expect(mockRoleAssignmentsCreate).not.toHaveBeenCalled();
+    expect(mockBlobUploadData).toHaveBeenCalledTimes(2);
+  });
+
+  test("waits for role propagation and reports a 403 after the bounded retry", async ({
+    cloudAccountService,
+  }) => {
+    mockRoleAssignmentsListForScope.mockImplementation(() =>
+      roleAssignments([]),
+    );
+    mockBlobUploadData.mockRejectedValue(
+      Object.assign(new Error("Forbidden"), { statusCode: 403 }),
+    );
+
+    await expect(
+      cloudAccountService.ensureTerraformBackendAccess(backend),
+    ).rejects.toThrow(
+      'The current user cannot write and lock state in "payments-tf-state" after waiting for Azure role assignment propagation.',
+    );
+
+    expect(mockBlobUploadData).toHaveBeenCalledTimes(6);
+    expect(mockSleep).toHaveBeenCalledTimes(5);
+    expect(mockBlobAcquireLease).not.toHaveBeenCalled();
+  });
+
+  test("retries a lease 403 without creating another probe blob", async ({
+    cloudAccountService,
+  }) => {
+    mockRoleAssignmentsListForScope.mockImplementation(() =>
+      roleAssignments([]),
+    );
+    mockBlobAcquireLease
+      .mockRejectedValueOnce(
+        Object.assign(new Error("Forbidden"), { statusCode: 403 }),
+      )
+      .mockResolvedValueOnce({});
+
+    await expect(
+      cloudAccountService.ensureTerraformBackendAccess(backend),
+    ).resolves.toBeUndefined();
+
+    expect(mockBlobUploadData).toHaveBeenCalledTimes(1);
+    expect(mockBlobAcquireLease).toHaveBeenCalledTimes(2);
+    expect(mockSleep).toHaveBeenCalledTimes(1);
+    expect(mockBlobDelete).toHaveBeenCalledTimes(1);
+  });
+
+  test("surfaces container provisioning authorization failures without fallback", async ({
+    cloudAccountService,
+  }) => {
+    mockBlobContainerCreate.mockRejectedValue(
+      Object.assign(new Error("Forbidden"), { statusCode: 403 }),
+    );
+
+    await expect(
+      cloudAccountService.ensureTerraformBackendAccess(backend),
+    ).rejects.toThrow(
+      'Failed to create Terraform state container "payments-tf-state".',
+    );
+
+    expect(mockBlobUploadData).not.toHaveBeenCalled();
+  });
+});
+
+describe("verifyTerraformBackendReadAccess", () => {
+  const backend = {
+    containerName: "terraform-state",
+    resourceGroupName: "legacy-rg",
+    storageAccountName: "legacyaccount",
+    subscriptionId: "sub-1",
+    type: "azurerm" as const,
+  };
+
+  test("checks the existing state container and tolerates a not-yet-created state snapshot", async ({
+    cloudAccountService,
+  }) => {
+    mockBlobGetProperties.mockRejectedValue(
+      Object.assign(new Error("Not found"), { statusCode: 404 }),
+    );
+
+    await expect(
+      cloudAccountService.verifyTerraformBackendReadAccess(
+        backend,
+        "dx.core.uat.tfstate",
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(mockBlobContainerGetProperties).toHaveBeenCalledTimes(1);
+    expect(mockBlobGetProperties).toHaveBeenCalledTimes(1);
+    expect(mockBlobUploadData).not.toHaveBeenCalled();
+    expect(mockBlobAcquireLease).not.toHaveBeenCalled();
+    expect(mockBlobDelete).not.toHaveBeenCalled();
+  });
+
+  test("reports the exact upstream scope when read access is denied", async ({
+    cloudAccountService,
+  }) => {
+    mockBlobContainerGetProperties.mockRejectedValue(
+      Object.assign(new Error("Forbidden"), { statusCode: 403 }),
+    );
+
+    await expect(
+      cloudAccountService.verifyTerraformBackendReadAccess(
+        backend,
+        "dx.core.uat.tfstate",
+      ),
+    ).rejects.toThrow(
+      'The current Azure identity cannot read Terraform state container "terraform-state" at "/subscriptions/sub-1/resourceGroups/legacy-rg/providers/Microsoft.Storage/storageAccounts/legacyaccount/blobServices/default/containers/terraform-state". Verify Storage Blob Data Reader access before the first plan.',
+    );
+
+    expect(mockBlobGetProperties).not.toHaveBeenCalled();
+    expect(mockBlobUploadData).not.toHaveBeenCalled();
   });
 });
 
@@ -428,15 +1029,17 @@ describe("initialize", () => {
         key: "private-key\n",
       },
       {
-        owner: "pagopa",
+        owner: "example-org",
         repo: "dx",
       },
       {
         createBranch: vi.fn(),
         createOrUpdateEnvironmentSecret,
         createPullRequest: vi.fn(),
+        getAccount: vi.fn(),
         getFileContent: vi.fn(),
         getRepository: vi.fn(),
+        getTeam: vi.fn(),
         updateFile: vi.fn(),
       },
     );
@@ -502,11 +1105,16 @@ describe("initialize", () => {
           "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
       }),
     );
-    expectBootstrapperFederatedCredentials("dx");
+    expectBootstrapperFederatedCredentials("dx", "example-org");
     expectBootstrapperEnvironmentSecrets(createOrUpdateEnvironmentSecret, {
       cdClientId: "cd-client-1",
       ciClientId: "ci-client-1",
+      owner: "example-org",
     });
+    expect(mockSetSecret).toHaveBeenCalledWith(
+      "github-runner-app-client-id",
+      "app-client-id",
+    );
   });
 
   describe("configureGitHubEnvironment", () => {
@@ -539,9 +1147,17 @@ describe("initialize", () => {
           createBranch: vi.fn(),
           createOrUpdateEnvironmentSecret,
           createPullRequest: vi.fn(),
+          getAccount: vi.fn(),
           getFileContent: vi.fn(),
           getRepository: vi.fn(),
+          getTeam: vi.fn(),
           updateFile: vi.fn(),
+        },
+        {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
         },
       );
 
@@ -559,8 +1175,60 @@ describe("initialize", () => {
       expectBootstrapperEnvironmentSecrets(createOrUpdateEnvironmentSecret, {
         cdClientId: "cd-client-1",
         ciClientId: "ci-client-1",
-        includesRunnerSecrets: false,
       });
+    });
+
+    test("creates immutable federated credentials when numeric GitHub IDs are provided", async ({
+      cloudAccountService,
+    }) => {
+      mockGetIdentity
+        .mockResolvedValueOnce({ clientId: "cd-client-1" })
+        .mockResolvedValueOnce({ clientId: "ci-client-1" });
+
+      await cloudAccountService.configureGitHubEnvironment(
+        {
+          csp: "azure",
+          defaultLocation: "italynorth",
+          displayName: "Test subscription",
+          id: "sub-1",
+        },
+        {
+          name: "dev",
+          prefix: "dx",
+        },
+        {
+          owner: "example-org",
+          ownerId: 57742367,
+          repo: "aiepdf-poc",
+          repoId: 1373623344,
+        },
+        {
+          createBranch: vi.fn(),
+          createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
+          createPullRequest: vi.fn(),
+          getAccount: vi.fn(),
+          getFileContent: vi.fn(),
+          getRepository: vi.fn(),
+          getTeam: vi.fn(),
+          updateFile: vi.fn(),
+        },
+        {
+          clientId: "app-client-id",
+          id: "app-id",
+          installationId: "installation-id",
+          key: "private-key",
+        },
+      );
+
+      // One name-based credential plus one immutable credential per identity.
+      expect(mockCreateFederatedIdentityCredential).toHaveBeenCalledTimes(4);
+      expectBootstrapperFederatedCredentials("aiepdf-poc", "example-org");
+      expectImmutableBootstrapperFederatedCredentials(
+        "aiepdf-poc",
+        57742367,
+        1373623344,
+        "example-org",
+      );
     });
   });
 
@@ -596,8 +1264,10 @@ describe("initialize", () => {
         createBranch: vi.fn(),
         createOrUpdateEnvironmentSecret,
         createPullRequest: vi.fn(),
+        getAccount: vi.fn(),
         getFileContent: vi.fn(),
         getRepository: vi.fn(),
+        getTeam: vi.fn(),
         updateFile: vi.fn(),
       },
     );
@@ -642,8 +1312,10 @@ describe("initialize", () => {
         createBranch: vi.fn(),
         createOrUpdateEnvironmentSecret: vi.fn().mockResolvedValue(undefined),
         createPullRequest: vi.fn(),
+        getAccount: vi.fn(),
         getFileContent: vi.fn(),
         getRepository: vi.fn(),
+        getTeam: vi.fn(),
         updateFile: vi.fn(),
       },
     );
@@ -653,6 +1325,6 @@ describe("initialize", () => {
     );
     expect(mockLookup).toHaveBeenCalledTimes(2);
     expect(mockSleep).toHaveBeenCalledWith(10_000);
-    expect(mockSetSecret).toHaveBeenCalledTimes(3);
+    expect(mockSetSecret).toHaveBeenCalledTimes(4);
   });
 });

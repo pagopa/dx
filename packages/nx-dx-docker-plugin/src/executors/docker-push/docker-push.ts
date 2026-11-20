@@ -16,7 +16,7 @@ const runExecutor: PromiseExecutor<DockerPushExecutorInput> = async (
   const parseResult = dockerPushExecutorSchema.safeParse(options);
   if (!parseResult.success) {
     console.warn(
-      "[@pagopa/nx-dx-docker-plugin] Invalid docker:push options:",
+      "[@pagopa/nx-docker] Invalid docker:push options:",
       parseResult.error.issues,
     );
     return { success: false };

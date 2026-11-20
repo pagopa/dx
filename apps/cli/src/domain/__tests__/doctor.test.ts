@@ -15,7 +15,7 @@ import type { RepositoryReader } from "../repository.js";
 
 import { runDoctor } from "../doctor.js";
 import { checkMonorepoScripts } from "../package-json.js";
-import { checkNxConfig, checkPreCommitConfig } from "../repository.js";
+import { checkNxConfig, checkNxTerraformPlugin } from "../repository.js";
 import { checkWorkspaces } from "../workspace.js";
 
 vi.mock("../package-json.js", () => ({
@@ -23,7 +23,7 @@ vi.mock("../package-json.js", () => ({
 }));
 vi.mock("../repository.js", () => ({
   checkNxConfig: vi.fn(),
-  checkPreCommitConfig: vi.fn(),
+  checkNxTerraformPlugin: vi.fn(),
 }));
 vi.mock("../workspace.js", () => ({
   checkWorkspaces: vi.fn(),
@@ -62,7 +62,7 @@ describe("runDoctor", () => {
   });
 
   it("surfaces a meaningful check when a repository check rejects", async () => {
-    vi.mocked(checkPreCommitConfig).mockRejectedValue(new Error("boom"));
+    vi.mocked(checkNxTerraformPlugin).mockRejectedValue(new Error("boom"));
     vi.mocked(checkNxConfig).mockResolvedValue(
       ok({
         checkName: "Nx Configuration",
@@ -88,7 +88,7 @@ describe("runDoctor", () => {
       {
         checkName: "Repository Checks",
         errorMessage:
-          "Could not complete the repository checks: Error checking pre-commit configuration",
+          "Could not complete the repository checks: Error checking the Nx Terraform plugin configuration",
         isValid: false,
       },
     ]);

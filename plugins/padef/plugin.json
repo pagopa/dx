@@ -1,0 +1,9 @@
+{
+  "name": "padef",
+  "version": "0.6.1",
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "description": "PagoPA Agentic Delivery Framework: a plugin for AI-enabled product development workflows",
+  "author": { "name": "PagoPA DX Team" },
+  "repository": "https://github.com/pagopa/dx",
+  "keywords": ["product development", "plugin"]
+}

@@ -28,6 +28,7 @@ from harbor_copilot.metrics import MetricSpec, derivable_specs, validate_metric_
 from harbor_bench.task_shape import (
     RESULT_JSON,
     REWARD_DETAILS_JSON,
+    SCORING_JSON,
     TRAJECTORY_JSON,
     VERIFIER_USAGE_JSONL,
     trial_relative,
@@ -138,16 +139,63 @@ class JobMeta:
     skills: list[SkillVersion] = field(default_factory=list)
 
 
+@dataclass(frozen=True)
+class CriterionResult:
+    """One verifier criterion outcome from ``verifier/reward-details.json``.
+
+    RewardKit records one entry per judged criterion: ``name`` is its stable
+    slug, ``description`` the full criterion text, ``value`` the 1.0/0.0
+    outcome, and ``reasoning`` the judge's justification. The comparison
+    report joins these across two trials to surface criterion-level changes
+    the aggregate score hides.
+    """
+
+    name: str
+    description: str = ""
+    value: float | None = None
+    weight: float = 1.0
+    reasoning: str = ""
+
+    @property
+    def passed(self) -> bool | None:
+        """Whether the judge marked this criterion passed, or ``None``.
+
+        RewardKit's criterion values are 1.0 (passed) and 0.0 (failed); the
+        ``value > 0`` rule lives here, next to the value it interprets.
+        """
+        if self.value is None:
+            return None
+        return self.value > 0.0
+
+
+@dataclass(frozen=True)
+class ScoringGate:
+    """The verifier's ``[scoring]`` block, when the verifier recorded it.
+
+    RewardKit 0.2.0 does not persist its scoring config; the generated
+    ``test.sh`` copies ``quality.toml``'s ``[scoring]`` into
+    ``verifier/scoring.json``, which Harbor collects with the rest of the
+    verifier directory. Old runs have no file and read as ``None``.
+    """
+
+    aggregation: str | None = None
+    threshold: float | None = None
+
+
 @dataclass
 class TrialMetrics:
     """Metrics extracted from one trial ``result.json``.
 
-    ``rewards`` carries the verifier rewards keyed by criterion; ``status``
-    distinguishes completed, errored, and interrupted trials; the other fields
-    mirror the reportable metrics. Values are read by the metric
-    registry (:data:`harbor_bench.metrics.METRIC_SPECS`) through its
-    :class:`~harbor_bench.metrics.MetricSpec` (a reward key or a field), never
-    through a ``score.``-prefixed string accessor here.
+    ``rewards`` carries the verifier rewards keyed by criterion; ``criteria``
+    and ``scoring`` carry the verifier's per-criterion detail and gate when
+    the run recorded them; ``completed`` is the trial-level flag (finished
+    without an exception) and :meth:`gate_passed` is the verifier's gate
+    (RewardKit writes the already-gated reward; the recorded ``scoring.json``
+    gate is display-only); ``status`` distinguishes completed, errored, and
+    interrupted trials; the other fields mirror the reportable metrics. Values
+    are read by the metric registry (:data:`harbor_bench.metrics.METRIC_SPECS`)
+    through its :class:`~harbor_bench.metrics.MetricSpec` (a reward key or a
+    field), never through a ``score.``-prefixed string accessor here.
     """
 
     task_name: str
@@ -163,9 +211,30 @@ class TrialMetrics:
     agent_duration_sec: float | None = None
     total_duration_sec: float | None = None
     verifier_duration_sec: float | None = None
-    passed: bool = True
+    completed: bool = True
     trial_name: str | None = None
     status: TrialStatus = "completed"
+    criteria: tuple[CriterionResult, ...] = ()
+    scoring: ScoringGate | None = None
+
+    def eval_passed(self, primary: MetricSpec | None) -> bool | None:
+        """Whether the verifier's gate passed for this trial, or ``None``.
+
+        RewardKit applies the task's ``[scoring]`` gate (usually ``threshold``)
+        before writing the reward: 0.0 fails, >0 passes. ``None`` means no
+        primary score was recorded.
+        """
+        if primary is None:
+            return None
+        value = primary.read(self)
+        if value is None:
+            return None
+        return float(value) > 0.0
+
+    def gate_passed(self, primary: MetricSpec | None) -> bool:
+        """Gate pass, falling back to :attr:`completed` when no reward exists."""
+        value = self.eval_passed(primary)
+        return self.completed if value is None else value
 
 
 @dataclass
@@ -184,6 +253,7 @@ class TrialFacts:
     usage: CopilotUsage | None = None
     verifier_usage_total: int | None = None
     reward_details: JSON | None = None
+    scoring: ScoringGate | None = None
     trajectory_steps: int | None = None
 
 
@@ -203,12 +273,13 @@ class TrialArtifacts:
     trajectory: Path
     verifier_usage: Path
     reward_details: Path
+    scoring: Path
     copilot_session_db: Path
     copilot_cli_jsonl: Path
 
     @classmethod
     def for_trial(cls, trial_dir: Path) -> "TrialArtifacts":
-        """Resolve the six artifact locations under one trial directory.
+        """Resolve the seven artifact locations under one trial directory.
 
         The reader-side layout is derived from the container artifact paths
         declared in :mod:`harbor_bench.task_shape` (Harbor drops the ``/logs``
@@ -221,6 +292,7 @@ class TrialArtifacts:
             trajectory=trial_dir / trial_relative(TRAJECTORY_JSON),
             verifier_usage=trial_dir / trial_relative(VERIFIER_USAGE_JSONL),
             reward_details=trial_dir / trial_relative(REWARD_DETAILS_JSON),
+            scoring=trial_dir / trial_relative(SCORING_JSON),
             copilot_session_db=session_db,
             copilot_cli_jsonl=cli_jsonl,
         )
@@ -256,9 +328,10 @@ class Trial:
         The per-artifact readers are the only places that know their files'
         shapes: ``result.json`` (a corrupt file is remembered as ``_data_exc``
         so ``metrics()`` can raise on demand), the Copilot session DB/JSONL
-        usage, ``verifier/usage.jsonl``, ``verifier/reward-details.json``, and
-        the ATIF trajectory. All artifact locations come from
-        :attr:`_artifacts` (:class:`TrialArtifacts` owns the layout).
+        usage, ``verifier/usage.jsonl``, ``verifier/reward-details.json``,
+        ``verifier/scoring.json``, and the ATIF trajectory. All artifact
+        locations come from :attr:`_artifacts` (:class:`TrialArtifacts` owns
+        the layout).
         """
         if self._facts is None:
             data = None
@@ -273,6 +346,7 @@ class Trial:
                 usage=self._artifacts.usage(),
                 verifier_usage_total=self._verifier_usage_total(),
                 reward_details=self._reward_details(),
+                scoring=self._scoring(),
                 trajectory_steps=self._trajectory_steps(),
             )
         return self._facts
@@ -287,7 +361,7 @@ class Trial:
     def metrics(self) -> TrialMetrics:
         """The typed metrics for this trial, derived from the trial facts.
 
-        Reads the reward, token, cost, duration, and pass/fail numbers out of
+        Reads the reward, token, cost, duration, and completion flag out of
         ``result.json`` and backfills the values the file cannot report (steps,
         GPT token/cost) from the trial's raw artifacts. A missing
         ``result.json`` produces an incomplete result with any available
@@ -307,8 +381,10 @@ class Trial:
                     },
                     n_steps=facts.trajectory_steps,
                     verifier_tokens=self._verifier_tokens(facts),
-                    passed=False,
+                    completed=False,
                     status="incomplete",
+                    criteria=self._criteria(facts.reward_details),
+                    scoring=facts.scoring,
                 )
             if self._data_exc is not None:
                 raise self._data_exc
@@ -347,8 +423,10 @@ class Trial:
                 (data.get("verifier") or {}).get("started_at"),
                 (data.get("verifier") or {}).get("finished_at"),
             ),
-            passed=data.get("exception_info") is None,
+            completed=data.get("exception_info") is None,
             status="error" if data.get("exception_info") is not None else "completed",
+            criteria=self._criteria(facts.reward_details),
+            scoring=facts.scoring,
         )
 
     def meta(self) -> JobMeta:
@@ -426,6 +504,65 @@ class Trial:
         except (OSError, json.JSONDecodeError):
             return None
         return reward
+
+    def _scoring(self) -> ScoringGate | None:
+        """The verifier's ``[scoring]`` gate from ``verifier/scoring.json``.
+
+        The generated ``test.sh`` records the task's ``quality.toml`` scoring
+        block here; old runs (or a verifier that never wrote it) yield ``None``.
+        """
+        path = self._artifacts.scoring
+        if not path.is_file():
+            return None
+        try:
+            raw = json.loads(path.read_text(encoding="utf-8")) or {}
+        except (OSError, json.JSONDecodeError):
+            return None
+        aggregation = raw.get("aggregation")
+        threshold = raw.get("threshold")
+        return ScoringGate(
+            aggregation=str(aggregation) if aggregation is not None else None,
+            threshold=float(threshold)
+            if isinstance(threshold, (int, float)) and not isinstance(threshold, bool)
+            else None,
+        )
+
+    @staticmethod
+    def _criteria(reward: JSON | None) -> tuple[CriterionResult, ...]:
+        """Criterion outcomes recorded by RewardKit, or ``()`` when absent.
+
+        RewardKit writes one ``criteria`` entry per judged criterion in the
+        reward details; a malformed entry is skipped rather than failing the
+        whole report.
+        """
+        if not reward:
+            return ()
+        raw = reward.get("criteria")
+        if not isinstance(raw, list):
+            return ()
+        results: list[CriterionResult] = []
+        for item in raw:
+            if not isinstance(item, dict):
+                continue
+            name = item.get("name")
+            if not isinstance(name, str) or not name:
+                continue
+            value = item.get("value")
+            weight = item.get("weight")
+            results.append(
+                CriterionResult(
+                    name=name,
+                    description=str(item.get("description") or ""),
+                    value=float(value)
+                    if isinstance(value, (int, float)) and not isinstance(value, bool)
+                    else None,
+                    weight=float(weight)
+                    if isinstance(weight, (int, float)) and not isinstance(weight, bool)
+                    else 1.0,
+                    reasoning=str(item.get("reasoning") or ""),
+                )
+            )
+        return tuple(results)
 
     def _trajectory_steps(self) -> int | None:
         """Read ``final_metrics.total_steps`` from the ATIF trajectory file."""

@@ -12,6 +12,8 @@ resource "azurerm_dns_cname_record" "acm_validation" {
   resource_group_name = var.dns.resource_group_name
   ttl                 = 300
   record              = each.value.record
+
+  tags = var.tags
 }
 
 # Creates a CNAME record in Azure DNS pointing to API Gateway custom domain.
@@ -21,4 +23,6 @@ resource "azurerm_dns_cname_record" "api_gateway" {
   resource_group_name = var.dns.resource_group_name
   ttl                 = 300
   record              = aws_api_gateway_domain_name.mcp_server.regional_domain_name
+
+  tags = var.tags
 }

@@ -4,6 +4,10 @@
 
 import type { TemplateContext } from "../../core/template/context.schema.js";
 
+import {
+  DEFAULT_AVAILABILITY_THRESHOLD,
+  DEFAULT_RESPONSE_TIME_THRESHOLD,
+} from "../../constants/index.js";
 import * as queries from "../queries/index.js";
 
 /**
@@ -72,6 +76,14 @@ ${Object.entries(context.endpoints)
       ...props,
     });
 
+    const availabilityThreshold =
+      props.availability_threshold ?? DEFAULT_AVAILABILITY_THRESHOLD;
+    const availabilityPercent = Number(
+      (availabilityThreshold * 100).toFixed(2),
+    );
+    const responseTimeThreshold =
+      props.response_time_threshold ?? DEFAULT_RESPONSE_TIME_THRESHOLD;
+
     return `resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_availability_${i}" {
   name                = replace(join("_",split("/", "\${local.name}-availability @ ${fullPath}")), "/\\\\{|\\\\}/", "")
   resource_group_name = data.azurerm_resource_group.this.name
@@ -82,7 +94,7 @@ ${Object.entries(context.endpoints)
   }
 
   data_source_id          = "${dataSourceId}"
-  description             = "Availability for ${fullPath} is less than or equal to 99% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Availability for ${fullPath} is below ${availabilityPercent}% - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 
@@ -114,7 +126,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert" "alarm_time_${i}" {
   }
 
   data_source_id          = "${dataSourceId}"
-  description             = "Response time for ${fullPath} is less than or equal to 1s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
+  description             = "Response time for ${fullPath} is above ${responseTimeThreshold}s - \${local.dashboard_base_addr}\${azurerm_portal_dashboard.this.id}"
   enabled                 = true
   auto_mitigation_enabled = false
 

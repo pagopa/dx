@@ -2,12 +2,12 @@
   "lockFileVersion": 2,
   "modules": {
     "automation_cd_common_key_vault_certificates": {
-      "hash": "1cc63195740ccf7963682106e66c22dc18d538895ba73cb36428d013cb16fe91",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/4.0.0"
+      "hash": "8778f11a8a33006e81dd98a61da10ceb17775d4360c60845cb994bed37cb19e5",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-role-assignments/azurerm/4.0.6"
     },
     "azure_core_values": {
-      "hash": "76f853db68cdac39f66fa579c86ceb61e3512abc6182ae1470ffaf796de34c15",
-      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/2.0.0"
+      "hash": "1d5b6f9e6cf0a6b87bee4bc49c37b5d9345a7c954a059be8d5af924dbddade8f",
+      "source": "https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/2.0.3"
     }
   }
 }

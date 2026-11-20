@@ -1,3 +1,119 @@
+## 0.5.17 (2026-11-18)
+
+### 🚀 Features
+
+- Move Terraform plugin publishing configuration to project.json metadata ([#2435](https://github.com/pagopa/dx/pull/2435))
+
+  The plugin no longer adds project graph dependencies from local Terraform module sources; shared `_modules` changes are tracked through the `default` named input.
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.5.16 (2026-11-04)
+
+### 🩹 Fixes
+
+- Bump dependencies to address security advisories ([#2492](https://github.com/pagopa/dx/pull/2492))
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.15 (2026-10-23)
+
+### 🩹 Fixes
+
+- Build and publish dx-tasks with package exports targeting generated output. ([#2398](https://github.com/pagopa/dx/pull/2398))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.9
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.5.14 (2026-10-21)
+
+### 🩹 Fixes
+
+- Resolve the published entry points from the built output instead of the ([#2376](https://github.com/pagopa/dx/pull/2376))
+  TypeScript sources.
+
+  The `require` condition of the `.` and `./release/version-actions` exports
+  pointed at `src/*.ts`. Node refuses to strip types for files under
+  `node_modules`, so consumers that resolved the package through the CommonJS
+  condition — Nx loading the plugin, or `nx release` resolving `versionActions` —
+  failed with "Stripping types is currently unsupported for files under
+  node_modules". The conditions are removed, so every loader resolves
+  `./dist/*.js`, matching `@pagopa/nx-docker`.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.5.13 (2026-10-09)
+
+### 🩹 Fixes
+
+- Include shared Terraform module files in all application affected inputs ([#2303](https://github.com/pagopa/dx/pull/2303))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.5.12 (2026-10-08)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.1
+- Updated @pagopa/dx-tasks to 0.2.8
+
+## 0.5.11 (2026-10-06)
+
+### 🚀 Features
+
+- Rename the Nx Terraform plugin to `@pagopa/nx-terraform` and publish it to GitHub Packages. Replace the old package dependency, Nx plugin registration, executor prefixes, and release version-actions references with the new name. ([#2301](https://github.com/pagopa/dx/pull/2301))
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
+## 0.5.10 (2026-10-06)
+
+### 🚀 Features
+
+- Use shared output masking for Terraform plans and saved-plan applies through Nx, ([#2286](https://github.com/pagopa/dx/pull/2286))
+  preserving CI initialization and interactive local applies.
+
+  For saved-plan applies, replace positional Terraform arguments with
+  `nx run <project>:apply --configuration=ci --planFile=<file>`.
+  Interactive `nx run <project>:apply` remains available without a plan file.
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/dx-tasks to 0.2.7
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
+## 0.5.9 (2026-09-22)
+
+### 🩹 Fixes
+
+- Add configurable Terraform provider lock platforms to the init task. ([#2203](https://github.com/pagopa/dx/pull/2203))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/eslint-config to 7.0.0
+- Updated @pagopa/dx-tasks to 0.2.6
+
+### ❤️ Thank You
+
+- Luca Cavallaro
+
 ## 0.5.8 (2026-09-08)
 
 ### 🩹 Fixes

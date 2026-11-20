@@ -8,7 +8,8 @@ Usage::
                        [--environment docker|apple-container]
     harbor-bench report <job-base> <job-head> [--format markdown|html|json]
                          [--report out]
-    harbor-bench compare [-t PATTERN]... [--format markdown|html|json]
+    harbor-bench compare [-t PATTERN]... [--skill SOURCE]...
+                         [--format markdown|html|json]
                          <base-skill> <head-skill>
 
 ``convert`` reads the agentskills.io ``evals/evals.json`` files (scanned from
@@ -39,6 +40,7 @@ from .compare.run import (
     DEFAULT_RUNS_DIR,
     CompareError,
     CompareOptions,
+    resolve_harbor,
     run_compare,
 )
 from .diff import build_document, build_report
@@ -106,9 +108,8 @@ def cmd_convert(args: argparse.Namespace) -> int:
     if options.without_skill:
         print(">> without-skill: agent skills omitted (baseline comparison)")
     print(
-        ">> run:   uv run --package harbor-bench harbor run -c %s "
-        "-y --ae COPILOT_GITHUB_TOKEN=..."
-        % result.config_written
+        ">> run:   %s run -c %s -y --ae COPILOT_GITHUB_TOKEN=..."
+        % (resolve_harbor("harbor"), result.config_written)
     )
     return 0
 
@@ -150,15 +151,17 @@ def cmd_compare(args: argparse.Namespace) -> int:
 
     One ``harbor run`` per skill on the same generated config, run in sequence
     (base first, head second) with Harbor's output streamed to the terminal,
-    then the delta report between the two job directories. The orchestration
-    lives in :func:`harbor_bench.compare.run.run_compare`; this function only
-    maps the parsed args into
-    :class:`~harbor_bench.compare.run.CompareOptions`, prints the result, and
-    maps exceptions to exit codes.
+    then the delta report between the two job directories. Auxiliary skills
+    (``--skill``, repeatable) ride along in both runs; the tested skill still
+    wins on name collisions. The orchestration lives in
+    :func:`harbor_bench.compare.run.run_compare`; this function only maps the
+    parsed args into :class:`~harbor_bench.compare.run.CompareOptions`, prints
+    the result, and maps exceptions to exit codes.
     """
     options = CompareOptions(
         base_skill=args.base,
         head_skill=args.head,
+        aux_skills=tuple(args.aux_skills),
         task_patterns=tuple(args.task_patterns),
         scan_root=Path(args.scan_root) if args.scan_root else DEFAULT_SCAN_ROOT,
         out=Path(args.out) if args.out else DEFAULT_OUT,
@@ -183,7 +186,7 @@ def cmd_compare(args: argparse.Namespace) -> int:
     print(f">>   head: {result.head_job}")
     print(f">>   report: {result.report}")
     print(
-        f">>   browse: uv run --package harbor-bench harbor view {result.run_dir}"
+        f">>   browse: {resolve_harbor('harbor')} view {result.run_dir}"
     )
     return 0
 
@@ -269,11 +272,26 @@ def build_parser() -> argparse.ArgumentParser:
             "Both references are validated up front: a local path must exist and be "
             "a skill dir or root of skill dirs, and a git source must resolve to a "
             "real repo/ref whose subdir contains the skill — an invalid reference "
-            "fails immediately instead of after the first run."
+            "fails immediately instead of after the first run. Extra skills can "
+            "ride along in both runs with --skill (repeatable); they are validated "
+            "the same way."
         ),
     )
     cmp.add_argument("base", help="base skill: local path or git source")
     cmp.add_argument("head", help="head skill: local path or git source")
+    cmp.add_argument(
+        "--skill",
+        action="append",
+        default=[],
+        dest="aux_skills",
+        metavar="SOURCE",
+        help=(
+            "auxiliary skill injected into both runs (repeatable), e.g. a "
+            "dependency of the skill under test; same source grammar as the "
+            "base/head arguments (local path, root of skill dirs, or git "
+            "source). The tested skill always wins on name collisions"
+        ),
+    )
     cmp.add_argument(
         "-t",
         "--task-pattern",

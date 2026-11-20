@@ -1,0 +1,8 @@
+{
+  "metadata": {
+    "version": "7.2.0",
+    "description": "Sets up monorepo's settings and required Azure permissions and roles",
+    "provider": "azurerm"
+  },
+  "name": "azure_github_environment_bootstrap"
+}

@@ -1,21 +1,14 @@
 {
   "name": "dx-metrics-import",
-  "version": "0.1.10",
+  "version": "0.1.22",
   "private": true,
-  "type": "module",
-  "nx": {
-    "release": {
-      "docker": {
-        "repositoryName": "pagopa/dx-metrics-import"
-      }
-    }
-  },
   "description": "DX Metrics importer that synchronizes GitHub engineering data into PostgreSQL.",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/pagopa/dx.git",
     "directory": "apps/dx-metrics-import"
   },
+  "type": "module",
   "scripts": {
     "build": "esbuild src/import.ts --bundle --platform=node --format=esm --external:pg --outfile=dist/import.mjs",
     "import": "tsx src/import.ts"
@@ -31,15 +24,19 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@pagopa/eslint-config": "workspace:^",
     "@types/js-yaml": "catalog:",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "esbuild": "^0.28.2",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "nx": {
+    "release": {
+      "docker": {
+        "repositoryName": "pagopa/dx-metrics-import"
+      }
+    }
   }
 }

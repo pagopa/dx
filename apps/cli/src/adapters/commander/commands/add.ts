@@ -26,6 +26,7 @@ import {
   AuthorizationService,
   requestAuthorizationInputSchema,
 } from "../../../domain/authorization.js";
+import { RunnerAppCredentialsError } from "../../../domain/cloud-account.js";
 import { GitHubAuthFactory } from "../../../domain/dependencies.js";
 import {
   environmentSchema,
@@ -37,9 +38,15 @@ import {
   isAzureLocation,
   locationShort,
 } from "../../azure/locations.js";
-import { workspaceSchema } from "../../plop/generators/environment/prompts.js";
+import {
+  costCenterSchema,
+  MissingRunnerAppCredentialsError,
+  ownerSchema,
+  workspaceSchema,
+} from "../../plop/generators/environment/prompts.js";
 import {
   collectDeploymentEnvironmentPayload,
+  type DeploymentEnvironmentOutputPayload,
   getPlopInstance,
   runDeploymentEnvironmentActions,
 } from "../../plop/index.js";
@@ -93,6 +100,7 @@ const addEnvironmentCommandOptionsSchema = z
       .min(1, "Business unit cannot be empty")
       .optional(),
     clientId: z.string().trim().min(1, "Client id cannot be empty").optional(),
+    costCenter: costCenterSchema.optional(),
     domain: workspaceSchema.shape.domain.optional(),
     installationId: z
       .string()
@@ -106,6 +114,7 @@ const addEnvironmentCommandOptionsSchema = z
       .min(1, "Management team cannot be empty")
       .optional(),
     name: environmentSchema.shape.name.optional(),
+    owner: ownerSchema.optional(),
     prefix: environmentSchema.shape.prefix.optional(),
     privateKeyPath: z
       .string()
@@ -184,7 +193,9 @@ const buildBaseEnvironmentInitialAnswers = (
 
   const tags = {
     ...(options.businessUnit && { BusinessUnit: options.businessUnit }),
+    ...(options.costCenter && { CostCenter: options.costCenter }),
     ...(options.managementTeam && { ManagementTeam: options.managementTeam }),
+    ...(options.owner && { Owner: options.owner }),
   };
 
   return {
@@ -319,9 +330,49 @@ export const authorizeCloudAccounts =
     );
   };
 
+const toPublicEnvironmentPayload = ({
+  env,
+  github,
+  init,
+  tags,
+  terraform,
+  workspace,
+}: DeploymentEnvironmentOutputPayload) => ({
+  env,
+  github,
+  ...(init && {
+    init: {
+      cloudAccountsToInitialize: init.cloudAccountsToInitialize,
+      terraformBackend: init.terraformBackend,
+    },
+  }),
+  tags,
+  ...(terraform && {
+    terraform: {
+      backend: terraform.backend && {
+        containerName: terraform.backend.containerName,
+        resourceGroupName: terraform.backend.resourceGroupName,
+        storageAccountName: terraform.backend.storageAccountName,
+        subscriptionId: terraform.backend.subscriptionId,
+        type: terraform.backend.type,
+      },
+      backendKey: terraform.backendKey,
+      coreBackend: terraform.coreBackend && {
+        containerName: terraform.coreBackend.containerName,
+        key: terraform.coreBackend.key,
+        resourceGroupName: terraform.coreBackend.resourceGroupName,
+        storageAccountName: terraform.coreBackend.storageAccountName,
+        subscriptionId: terraform.coreBackend.subscriptionId,
+        type: terraform.coreBackend.type,
+      },
+    },
+  }),
+  workspace,
+});
+
 type AddResult = {
   authorizationPrs: AuthorizationResult[];
-  payload: EnvironmentPayload;
+  payload: ReturnType<typeof toPublicEnvironmentPayload>;
 };
 
 const displaySummary = (result: AddResult) => {
@@ -340,7 +391,7 @@ const displaySummary = (result: AddResult) => {
     }
   }
   console.log(
-    `${step}. Visit ${chalk.underline("https://dx.pagopa.it/getting-started")} to deploy your first project\n`,
+    `${step}. Visit ${chalk.underline("https://dx.pagopa.it/docs/getting-started")} to deploy your first project\n`,
   );
 };
 
@@ -371,6 +422,7 @@ const addEnvironmentAction = (
   gitHubService: GitHubService,
   presenter: CommandPresenter,
   initialAnswers: DeploymentEnvironmentInitialAnswers = {},
+  nonInteractive = false,
 ): ResultAsync<AddResult, Error> =>
   runAddEnvironmentPreconditions(presenter)
     .andThen(() =>
@@ -390,8 +442,15 @@ const addEnvironmentAction = (
           gitHubService,
           undefined,
           initialAnswers,
+          nonInteractive,
         ),
-        asError("Failed to run the deployment environment generator"),
+        (cause) =>
+          cause instanceof MissingRunnerAppCredentialsError ||
+          cause instanceof RunnerAppCredentialsError
+            ? cause
+            : asError("Failed to run the deployment environment generator")(
+                cause,
+              ),
       ),
     )
     .andThen(({ generator, payload }) =>
@@ -406,7 +465,7 @@ const addEnvironmentAction = (
       authorizeCloudAccounts(authorizationService)(payload).map(
         (authorizationPrs) => ({
           authorizationPrs,
-          payload,
+          payload: toPublicEnvironmentPayload(payload),
         }),
       ),
     );
@@ -444,12 +503,14 @@ export const makeAddCommand = (
         .addOption(
           new Option("--business-unit <business-unit>", "Business unit tag"),
         )
+        .addOption(new Option("--cost-center <cost-center>", "Cost center tag"))
         .addOption(
           new Option(
             "--management-team <management-team>",
             "Management team tag",
           ),
         )
+        .addOption(new Option("--owner <owner>", "Owner tag"))
         .addOption(
           new Option(
             "-y, --yes",
@@ -510,6 +571,7 @@ export const makeAddCommand = (
                       gitHubService,
                       presenter,
                       initialAnswers,
+                      env.CI,
                     ),
                 ),
               ),

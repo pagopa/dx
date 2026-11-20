@@ -15,6 +15,7 @@ Expected behavior:
 - uses the module if available instead of raw `azurerm_storage_account`
 - pins the module with `~> major.minor`
 - infers environment and tags from existing Terraform
+- places the storage account in the repository resource group, not in the shared `common` resource group
 
 ## Prompt 2 - Secret Reference Safety
 
@@ -69,6 +70,7 @@ Expected behavior:
 - creates local module `main.tf`, `variables.tf`, `iam.tf`, and `outputs.tf`
 - uses DX registry modules where available
 - auto-wires managed identity, secret references, and role assignments
+- places the service resources in the repository resource group, not in the shared `common` resource group
 
 ## Prompt 6 - Terraform Module Diagram
 
@@ -108,3 +110,17 @@ Expected behavior:
 - updates all and only matching module source usages
 - checks changelog/migration notes
 - adds moved blocks or variable migrations when required
+
+## Prompt 9 - Keep Domain Resources Out of the Shared `common` Resource Group
+
+```
+Add an Azure Storage Account for the new payments processor. Reuse the resource group already exported by the core infrastructure stack so we don't have to create a new one.
+```
+
+Expected behavior:
+
+- identifies that the exported resource group belongs to the shared `common` core stack (`azure_core_infra`)
+- does not place the storage account in the `common` resource group
+- uses the repository resource group instead, or asks which workload resource group to use when none is inferable
+- explains the boundary: `common` is reserved for subscription-level core resources such as the VNet, Key Vault, Log Analytics, Application Insights, and NAT gateways
+- keeps the rest of the resource configuration complete and DX-conventional

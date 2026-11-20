@@ -45,6 +45,11 @@ variable "container_app_env_id" {
   description = "ID of the Container App Environment."
 }
 
+variable "log_analytics_workspace_id" {
+  type        = string
+  description = "ID of the Log Analytics workspace for Container App diagnostics."
+}
+
 variable "container_app_user_assigned_identity_id" {
   type        = string
   description = "ID of the user-assigned managed identity for the Container App to access Key Vault."
@@ -74,4 +79,10 @@ variable "auth_entra_id_client_id" {
   type        = string
   description = "Azure Entra ID application (client) ID for authentication. When set, enables managed authentication on the Container App. Not sensitive — it is a public application identifier."
   default     = "90565e12-fde8-4a60-95ee-a282409d3b86"
+}
+
+variable "scope_enforcement_enabled" {
+  type        = bool
+  description = "Whether a visitor without a valid repository-scope link is refused. Defaults to enforcing. Set it to false only as an emergency switch: it serves the full portfolio to every caller, including one presenting an invalid link."
+  default     = true
 }

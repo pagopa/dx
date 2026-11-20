@@ -2,7 +2,7 @@
 sidebar_position: 5
 ---
 
-# Setting Up Dev Containers
+# Setting Up Dev Containers
 
 ## What are Dev Containers?
 
@@ -228,8 +228,10 @@ You can customize the development container by adding customizations to the
 terminal, the shell, and the environment variables.
 
 One typical customization is to set up extensions and settings for Visual Studio
-Code. Let's configure the `prettier` extension and set it as the default
-formatter.
+Code. Let's configure the `oxc` extension and set it as the default formatter.
+The extension does not ship the Oxc tools, so the container also needs `oxfmt`
+installed as a project dependency (`pnpm add -D oxfmt`); otherwise format on
+save silently does nothing.
 
 ```js title=".devcontainer/devcontainer.json"
 {
@@ -245,11 +247,11 @@ formatter.
   "customizations": {
     "vscode": {
       "extensions": [
-        "esbenp.prettier-vscode"
+        "oxc.oxc-vscode"
       ],
       "settings": {
         "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode"
+        "editor.defaultFormatter": "oxc.oxc-vscode"
       }
     }
   }
@@ -310,11 +312,11 @@ build the development container.
      "customizations": {
        "vscode": {
          "extensions": [
-           "esbenp.prettier-vscode"
+           "oxc.oxc-vscode"
          ],
          "settings": {
            "editor.formatOnSave": true,
-           "editor.defaultFormatter": "esbenp.prettier-vscode"
+           "editor.defaultFormatter": "oxc.oxc-vscode"
          }
        }
      }

@@ -37,6 +37,43 @@ By default, the importer uses the shared DX Metrics defaults from
 pnpm run import -- --config ./config.json --since 2026-01-01
 ```
 
+## Incremental imports
+
+The importer is incremental by default. For each entity and repository it
+records, in `sync_runs.cursor_at`, the time up to which it has imported, and the
+next run resumes from there — minus `IMPORT_OVERLAP_DAYS` (default `2`), a safety
+margin that catches rows updated just after the previous run — instead of
+re-downloading the whole window. `--since` (or `IMPORT_SINCE_DAYS`) is only the
+**floor**, used when an entity/repository has no history yet.
+
+Adding a repository to the config therefore backfills just that repository:
+
+```bash
+pnpm run import -- --since 2024-01-01 --repo new-repo
+```
+
+Repositories already imported resume from their cursor and are not re-downloaded.
+`--force` disables cursors and checkpoints, re-reading the whole `--since` window
+for every entity/repository.
+
+Because organization-wide entities are not repository-scoped, a `--repo` run
+skips them (DX team commits, code search, DX pipelines, terraform registry,
+tracker and the techradar snapshot) instead of touching unrelated datasets.
+
+The cursor only advances when an entity processed its whole window. When an
+importer cannot fetch everything (a recoverable GitHub failure that is not a
+deleted resource), it fails the run instead of silently skipping the item, so the
+cursor stays put and the interval is retried on the next run.
+
+Two entities are not cursor-based:
+
+- `workflow-runs` reconciles the runs stored as still active by re-reading them
+  by id, because a run created before the window can complete after the window
+  has moved past it.
+- `iac-pr` stays on the floor window: it derives a pull request's `targetAuthors`
+  from the commits in the window and replaces the whole array on upsert, so a
+  narrow window would truncate the reviewer set.
+
 ## Entity types
 
 - `all` (default) — import everything
@@ -55,6 +92,26 @@ pnpm run import -- --config ./config.json --since 2026-01-01
 ```bash
 pnpm run import -- --since 2024-01-01 --entity tracker --tracker-csv /path/to/tracker.csv
 ```
+
+## Backfilling a new column
+
+The scheduled import is incremental: it resumes from the per-entity,
+per-repository cursor and only re-fetches what changed since the last successful
+run. It therefore cannot populate a **newly added** column on older rows, which
+then read as blank. When a column the portal charts is added (for example
+`workflow_runs.event` or `workflow_runs.triggering_actor`), apply the schema and
+then run a one-off import with `--force` and a `since` wide enough to cover the
+history you care about:
+
+```bash
+cd apps/dx-metrics-import
+pnpm run import -- --entity workflow-runs --since 2024-01-01 --force
+```
+
+`--force` ignores the cursor and re-reads the whole `--since` window. Without
+`--force`, an entity/repository that already completed within the last 23 hours is
+skipped. Until the backfill runs, the trigger charts on the portal exclude the
+blank rows and report the excluded share in their caption.
 
 ## GitHub authentication
 

@@ -5,20 +5,19 @@ module "container_app" {
   source  = "pagopa-dx/azure-container-app/azurerm"
   version = "~> <MAJOR.MINOR>"
 
-  secrets = [
-    {
-      name                = "database-password"
-      key_vault_secret_id = azurerm_key_vault_secret.database_password.versionless_id
-    }
-  ]
-
   containers = [
     {
       image = var.image
-      app_settings = {
-        FEATURE_FLAG = "enabled"
-      }
-      secret_names = ["database-password"]
+      environment_variables = [
+        {
+          name  = "FEATURE_FLAG"
+          value = "enabled"
+        },
+        {
+          name  = "DATABASE_PASSWORD"
+          value = azurerm_key_vault_secret.database_password.versionless_id
+        }
+      ]
 
       liveness_probe = {
         path = "/health"

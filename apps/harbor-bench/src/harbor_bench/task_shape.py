@@ -52,6 +52,11 @@ VERIFIER_USAGE_JSONL = f"{VERIFIER_LOG_DIR}/usage.jsonl"
 REWARD_JSON = f"{VERIFIER_LOG_DIR}/reward.json"
 REWARD_TXT = f"{VERIFIER_LOG_DIR}/reward.txt"
 REWARD_DETAILS_JSON = f"{VERIFIER_LOG_DIR}/reward-details.json"
+#: The ``quality.toml`` ``[scoring]`` gate, copied by the generated ``test.sh``
+#: (RewardKit does not persist it). Harbor downloads the whole verifier
+#: directory, so a report on a copied run directory can show scores against
+#: their gate without reading the task directory.
+SCORING_JSON = f"{VERIFIER_LOG_DIR}/scoring.json"
 WORKSPACE_PACKET_MD = f"{ARTIFACT_DIR}/workspace-packet.md"
 
 #: Harbor writes the trial's ``result.json`` at the trial root; it is not a
@@ -70,9 +75,9 @@ HARBOR_ARTIFACTS: tuple = (
 
 #: Judge-bridge env written into ``[verifier].env``: route GitHub Copilot
 #: through LiteLLM's ``openai`` provider so the judge can run headless with
-#: COPILOT_GITHUB_TOKEN as the key. gpt-5.x models are Responses-API-only, so
-#: LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES sends all openai/* judge calls
-#: to https://api.githubcopilot.com/responses.
+#: COPILOT_GITHUB_TOKEN as the key. Some models (e.g. gpt-6-luna) are
+#: Responses-API-only, so LITELLM_ROUTE_ALL_CHAT_OPENAI_TO_RESPONSES sends
+#: all openai/* judge calls to https://api.githubcopilot.com/responses.
 JUDGE_BRIDGE_ENV: dict = {
     "OPENAI_API_BASE": "https://api.githubcopilot.com",
     "OPENAI_API_KEY": "${COPILOT_GITHUB_TOKEN}",
@@ -113,6 +118,7 @@ TEMPLATE_PLACEHOLDERS: dict[str, str] = {
     "REWARD_JSON": REWARD_JSON,
     "REWARD_TXT": REWARD_TXT,
     "REWARD_DETAILS_JSON": REWARD_DETAILS_JSON,
+    "SCORING_JSON": SCORING_JSON,
     "WORKSPACE_PACKET_MD": WORKSPACE_PACKET_MD,
 }
 

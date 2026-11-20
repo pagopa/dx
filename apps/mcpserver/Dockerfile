@@ -1,12 +1,19 @@
-FROM public.ecr.aws/docker/library/node:24-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14 AS base
-# 1. Enable pnpm
-RUN corepack enable
+FROM public.ecr.aws/docker/library/node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5 AS base
 
-# 2. Set working directory
+# 1. Set working directory
 WORKDIR /app
 
-# 3. Copy monorepo configuration files
+# 2. Copy monorepo configuration files
 COPY ./pnpm-lock.yaml ./pnpm-workspace.yaml ./package.json ./nx.json ./tsconfig.json ./
+COPY ./.pnpmfile.cjs ./
+COPY ./patches ./patches
+
+# 3. Install pnpm with get-pnpm, which resolves the version pinned in
+# package.json (`packageManager`); Corepack is no longer bundled with Node.js >= 25
+ENV PNPM_HOME=/opt/pnpm
+ENV PATH="$PNPM_HOME/bin:$PATH"
+
+RUN npx --yes get-pnpm@latest --no-modify-path
 
 # 4. Copy source code for apps and packages
 COPY ./apps ./apps
@@ -17,14 +24,15 @@ RUN pnpm install --filter @pagopa/dx-mcpserver...
 # 6. Build the mcpserver app
 RUN pnpm nx build @pagopa/dx-mcpserver
 # 7. Prune development-only dependencies for the final image
-RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod /app/deploy
+# Workspace patches target dev-only packages (e.g. nx), which --prod omits.
+RUN pnpm --filter @pagopa/dx-mcpserver deploy --legacy --prod --config.allow-unused-patches=true /app/deploy
 
 # --- Final Image ---
-FROM public.ecr.aws/docker/library/node:24-alpine@sha256:2bdb65ed1dab192432bc31c95f94155ca5ad7fc1392fb7eb7526ab682fa5bf14
+FROM public.ecr.aws/docker/library/node:24-alpine@sha256:116b800c3754b440ee0aa3ed2f20f5bf3d99a554bfd9adeea09ea8017f6e85f5
 WORKDIR /app
 
 # Copy the AWS Lambda Adapter
-COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:0.9.1@sha256:46d6625e68cbbdd2efab4a20245977664513f13ffef47915b000d431adcea0b4 /lambda-adapter /opt/extensions/lambda-adapter
+COPY --from=public.ecr.aws/awsguru/aws-lambda-adapter:1.1.0@sha256:17cfd08eff1dfea3f6a9a1e9c65fdac80aa4919b6085e746615530f43f57d2f1 /lambda-adapter /opt/extensions/lambda-adapter
 
 # Copy the pruned production-ready files from the build stage
 COPY --from=base /app/deploy .

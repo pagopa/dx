@@ -28,9 +28,20 @@ resource "azurerm_linux_function_app" "this" {
     application_insights_key               = var.application_insights_key
     minimum_tls_version                    = var.tls_version
 
+    container_registry_use_managed_identity = local.container.use_acr
+
     application_stack {
-      node_version = var.stack == "node" ? var.node_version : null
-      java_version = var.stack == "java" ? var.java_version : null
+      node_version = !local.container.enable && var.stack == "node" ? var.node_version : null
+      java_version = !local.container.enable && var.stack == "java" ? var.java_version : null
+
+      dynamic "docker" {
+        for_each = local.container.enable ? [local.container] : []
+        content {
+          registry_url = docker.value.registry_url
+          image_name   = docker.value.image_name
+          image_tag    = docker.value.image_tag
+        }
+      }
     }
   }
 
@@ -38,8 +49,6 @@ resource "azurerm_linux_function_app" "this" {
     {
       # https://github.com/projectkudu/kudu/wiki/Configurable-settings#attempt-to-rename-dlls-if-they-cant-be-copied-during-a-webdeploy-deployment-1
       WEBSITE_ADD_SITENAME_BINDINGS_IN_APPHOST_CONFIG = 1
-      # https://learn.microsoft.com/en-us/azure/azure-functions/run-functions-from-deployment-package#using-website_run_from_package--1
-      WEBSITE_RUN_FROM_PACKAGE = 1
       # https://docs.microsoft.com/en-us/azure/virtual-network/what-is-ip-address-168-63-129-16
       WEBSITE_DNS_SERVER = "168.63.129.16"
       # https://learn.microsoft.com/en-us/azure/azure-functions/functions-reference?tabs=blob&pivots=programming-language-csharp#connecting-to-host-storage-with-an-identity
@@ -51,6 +60,7 @@ resource "azurerm_linux_function_app" "this" {
       WEBSITE_SWAP_WARMUP_PING_STATUSES = "200,204"
       WEBSITE_WARMUP_PATH               = var.health_check_path
     },
+    local.package_app_settings,
     # https://learn.microsoft.com/en-us/azure/azure-functions/errors-diagnostics/diagnostic-events/azfd0004#options-for-addressing-collisions
     length(local.function_app.name) > 32 && !(contains(keys(var.app_settings), "AzureFunctionsWebHost__hostid")) ? { AzureFunctionsWebHost__hostid = "production" } : {},
     var.app_settings,
@@ -110,6 +120,8 @@ resource "azurerm_linux_function_app" "this" {
   lifecycle {
     ignore_changes = [
       site_config[0].health_check_eviction_time_in_min,
+      # The image is not managed by Terraform, but instead updated by CD pipelines
+      site_config[0].application_stack[0].docker,
       app_settings["WEBSITE_HEALTHCHECK_MAXPINGFAILURES"],
       tags["hidden-link: /app-insights-conn-string"],
       tags["hidden-link: /app-insights-instrumentation-key"],

@@ -88,3 +88,9 @@ __pycache__/
 *.pyd
 *.egg-info/
 .pytest_cache/
+
+# Local npm credentials (may carry the GitHub Packages token)
+.npmrc
+
+
+.github/copilot/settings.local.json

@@ -31,6 +31,7 @@ const mocks = vi.hoisted(() => {
   };
 
   return {
+    assertGitHubPackagesAccess: vi.fn(),
     collectMonorepoPayload: vi.fn(),
     createCommandPresenter: vi.fn(() => presenter),
     execa$: vi.fn(),
@@ -56,6 +57,9 @@ vi.mock("../../../plop/index.js", () => ({
   runMonorepoActions: mocks.runMonorepoActions,
 }));
 vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.tf$ }));
+vi.mock("../../../github/packages.js", () => ({
+  assertGitHubPackagesAccess: mocks.assertGitHubPackagesAccess,
+}));
 vi.mock("../../presenters/index.js", () => ({
   createCommandPresenter: mocks.createCommandPresenter,
   resolveOutputMode: mocks.resolveOutputMode,
@@ -83,6 +87,11 @@ const silentOutput = {
 const makePayload = (
   overrides: Partial<MonorepoPayload> = {},
 ): MonorepoPayload => ({
+  ownership: {
+    namespaceType: "Organization",
+    owners: ["@pagopa/devex"],
+    reviewerTeams: ["devex"],
+  },
   repoDescription: "A test repo",
   repoName: "test-repo",
   repoOwner: "pagopa",
@@ -110,7 +119,14 @@ const runInitCommand = async () => {
     .option("--output <mode>", "Output mode", "json")
     .addCommand(initCommand);
 
-  await program.parseAsync(["node", "dx", "--output", "json", "init"]);
+  await program.parseAsync([
+    "node",
+    "dx",
+    "--output",
+    "json",
+    "init",
+    "--publish",
+  ]);
 };
 
 describe("makeInitCommand git identity fallback", () => {
@@ -174,7 +190,10 @@ describe("makeInitCommand git identity fallback", () => {
         : repositoryTerraform,
     );
     mocks.execa$.mockImplementation((options?: { shell?: boolean }) =>
-      options?.shell === true ? gitCommands : Promise.resolve({ stdout: "" }),
+      options?.shell === true
+        ? gitCommands
+        : // The generated Terraform projects are initialized through Nx.
+          () => Promise.resolve({ stdout: "" }),
     );
     vi.mocked(inquirer.prompt).mockResolvedValue({ confirm: true });
     vi.spyOn(process, "chdir").mockImplementation(() => undefined);

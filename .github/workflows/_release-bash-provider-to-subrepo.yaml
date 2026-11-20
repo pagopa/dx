@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   detect-providers:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       providers: ${{ steps.get-all-providers.outputs.resources || steps.get-modified-providers.outputs.resources }}
     steps:
@@ -40,7 +40,7 @@ jobs:
           resource_type: "provider"
 
   push-provider:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [detect-providers]
     if: always()
     permissions:

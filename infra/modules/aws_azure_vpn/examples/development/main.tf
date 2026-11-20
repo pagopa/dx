@@ -27,7 +27,7 @@ module "aws" {
 
 module "vpn" {
   source  = "pagopa-dx/aws-azure-vpn/aws"
-  version = "~> 0.0"
+  version = "~> 2.0"
 
   environment = {
     prefix          = local.azure_environment.prefix

@@ -37,8 +37,8 @@ resource "azurerm_container_app_environment" "runner" {
   location                       = local.environment.location
   internal_load_balancer_enabled = false
   infrastructure_subnet_id       = azurerm_subnet.cae.id
-  log_analytics_workspace_id     = data.azurerm_log_analytics_workspace.e2e.id
   zone_redundancy_enabled        = false
+  logs_destination               = "azure-monitor"
 
   workload_profile {
     name                  = "Consumption"
@@ -53,6 +53,7 @@ resource "azurerm_container_app_environment" "runner" {
 
   timeouts {
     create = "60m"
+    delete = "60m"
   }
 
   tags = local.tags

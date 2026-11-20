@@ -7,6 +7,7 @@ The Azure GitHub Environment Bootstrap module is designed for users who have jus
 The module performs the following actions:
 
 - Creates the **GitHub Private Runner** associated with the repository.
+- Creates a **DX GitHub Private Runner** alongside the legacy runner only when `environment.prefix` starts with `dx`. For other prefixes Terraform removes the DX runner, and the `github_dx_runner` output is `null`.
 - Creates Azure user-assigned **Managed Identities** to let GitHub workflows deploy:
   1. Infrastructure resources (IaC).
   2. Applications.
@@ -62,6 +63,27 @@ module "bootstrap" {
 }
 ```
 
+For repositories owned by a personal GitHub account, set `repository.owner_id`
+to the positive integer owner ID returned by GitHub. To look it up manually, call
+`GET /repos/{owner}/{repo}` and use `owner.id`, or run
+`gh api repos/OWNER/REPO --jq '.owner.id'`; see GitHub's
+[Get a repository](https://docs.github.com/en/rest/repos/repos#get-a-repository)
+REST API documentation. The DX CLI passes this ID into generated bootstrapper
+Terraform automatically. Organization-owned repositories can omit it; the module
+resolves the organization ID from GitHub.
+
+### GitHub environment names
+
+The optional `github_environment_prefix_enabled` flag prefixes GitHub
+environment secrets and Azure federated identity credential names and subjects
+with `environment.prefix`. It defaults to `false`, preserving the existing
+`env_short` mapping (`d`/`u`/`p` to `dev`/`uat`/`prod`). Set it to `true` for
+tenant-qualified GitHub environments; for example, `prefix = "ced"` and
+`env_short = "p"` produce `infra-ced-prod-ci` and `infra-ced-prod-cd`. Cloud
+resource and identity names remain governed by the existing naming inputs.
+This option is available starting with module version 7.1.0; consumers enabling
+it need a 7.1.0-or-later lower bound (for example, `~> 7.1`).
+
 ## Using with Core Values Exporter
 
 Many input values for this module can be automatically retrieved using the companion module [`pagopa-dx/azure-core-values-exporter/azurerm`](https://registry.terraform.io/modules/pagopa-dx/azure-core-values-exporter/azurerm/latest). This module reads core infrastructure values from a shared Terraform state, eliminating the need to hardcode or manually look up resource IDs.
@@ -83,10 +105,10 @@ module "core_values" {
   version = "~> 0.4"
 
   core_state = {
-    resource_group_name  = "dx-d-itn-tfstate-rg-01"
-    storage_account_name = "dxditntfstatest01"
+    resource_group_name  = "dx-u-itn-tfstate-rg-01"
+    storage_account_name = "dxuitntfstatest01"
     container_name       = "terraform-state"
-    key                  = "dx.core.dev.tfstate"
+    key                  = "dx.core.uat.tfstate"
   }
 }
 ```
@@ -145,6 +167,7 @@ For a complete production example using Core Values Exporter, see the [DX bootst
 | `environment`                        | object      |    ✅    | Naming conventions and resource location configuration |
 | `entraid_groups`                     | object      |    ✅    | Azure Entra ID security groups for RBAC                |
 | `terraform_storage_account`          | object      |    ✅    | Storage account for Terraform state files              |
+| `terraform_state_container_access`  | object      |    ❌    | Opt in to container-scoped Terraform state access       |
 | `repository`                         | object      |    ✅    | GitHub repository details                              |
 | `github_private_runner`              | object      |    ✅    | Self-hosted runner configuration                       |
 | `private_dns_zone_resource_group_id` | string      |    ✅    | Resource group with private DNS zones                  |
@@ -191,6 +214,50 @@ terraform_storage_account = {
 }
 ```
 
+#### `terraform_state_container_access`
+
+Requires `azure-core-infra` version 7.1.0 or later.
+
+Use this option when domains share a state storage account, to scope Bootstrap's
+state grants to each domain's container. Leave it unset (`null`) to keep existing
+permissions. Set it to `{}` to give all six CI/CD identities `Storage Blob Data
+Contributor` on `<environment.domain>-tf-state`. Use `container_name` to choose
+another container (3-24 characters, including the suffix when present).
+
+Configure `upstream` if your pipelines read another container's Terraform state,
+for example to obtain shared networking outputs from core. Without it, Bootstrap
+does not assign Reader access to other state containers. The following grants
+Infra CI/CD read access to shared core state in `dx-tf-state`:
+
+```hcl
+terraform_state_container_access = {
+  upstream = {
+    "dx-tf-state" = {
+      identities = ["infra_ci", "infra_cd"]
+    }
+  }
+}
+```
+
+Each `upstream` key is a container name in `terraform_storage_account` or a
+full ARM container ID.
+
+Select readers with `identities` (`infra_ci`, `infra_cd`, `app_ci`, `app_cd`,
+`opex_ci`, `opex_cd`) or `principal_ids` for external users and identities.
+They receive `Storage Blob Data Reader` on that container. Declare each upstream
+once; the six identities do not need Reader on their own container.
+
+Containers must already exist; this module does not create them or move state.
+The identity running Terraform needs write and lock access to its backend before
+`terraform init`, and read access to any upstream state before planning.
+An apply cannot grant access needed by its own plan. Import existing role
+assignments only when this module will manage those same grants.
+
+Keep the state storage account's resource group separate from workload, additional,
+Opex, and private-networking resource groups; Terraform rejects overlaps.
+Other inherited or external permissions remain unchanged, so container-scoped
+grants alone do not guarantee isolation.
+
 #### `repository`
 
 GitHub repository details for configuring federated credentials and GitHub Actions secrets.
@@ -201,6 +268,13 @@ repository = {
   name  = "my-repository"    # Repository name
 }
 ```
+
+The module reads the numeric owner and repository IDs from GitHub and creates
+federated identity credentials for **both** subject formats: the name-based one
+used by repositories created before **2026-07-15** and the immutable one
+(`repo:OWNER@OWNER-ID/REPO@REPO-ID:environment:...`) used by repositories created
+or renamed after that date. The credentials are additive, so each repository
+matches exactly one of them regardless of when it was created.
 
 #### `github_private_runner`
 
@@ -241,6 +315,13 @@ github_private_runner = {
   memory = "3Gi"    # Memory (default: "3Gi")
 }
 ```
+
+The `github_private_runner` configuration is shared by both runners. The
+legacy runner keeps the configured environment label, while the DX runner uses
+the `ghcr.io/pagopa/dx-github-self-hosted-runner:latest` image and appends the
+`dx` label. Workflows can target it with `runs-on: [self-hosted, dx]`. The DX
+runner is provisioned only when `environment.prefix` starts with `dx`; otherwise
+the runner is removed and `github_dx_runner` is `null`.
 
 #### `private_dns_zone_resource_group_id`
 
@@ -426,28 +507,38 @@ This module includes practical examples to help you get started quickly:
 
 | Name | Version |
 | ---- | ------- |
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.15.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.16.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.0, < 6.0.0 |
 | <a name="requirement_dx"></a> [dx](#requirement\_dx) | ~> 0.12 |
-| <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.12 |
+| <a name="requirement_github"></a> [github](#requirement\_github) | ~> 6.13 |
 
 ## Modules
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_github_runner"></a> [github\_runner](#module\_github\_runner) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
+| <a name="module_github_runner_dx"></a> [github\_runner\_dx](#module\_github\_runner\_dx) | pagopa-dx/github-selfhosted-runner-on-container-app-jobs/azurerm | ~> 3.0 |
 
 ## Resources
 
 | Name | Type |
 | ---- | ---- |
 | [azurerm_federated_identity_credential.github_app_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.github_app_cd_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.github_app_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.github_app_ci_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.github_automation_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.github_automation_cd_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.github_automation_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.github_automation_ci_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.github_infra_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.github_infra_cd_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.github_infra_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.github_infra_ci_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.github_opex_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.github_opex_cd_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_federated_identity_credential.github_opex_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.github_opex_ci_immutable](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_resource_group.main](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_role_assignment.admins_group_rgs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.admins_group_rgs_kv_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
@@ -457,6 +548,7 @@ This module includes practical examples to help you get started quickly:
 | [azurerm_role_assignment.app_cd_tf_rg_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.app_ci_rgs_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.app_ci_subscription_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.app_ci_tf_state_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.devs_group_rgs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.devs_group_tf_rgs_kv_secr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.externals_group_rgs](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
@@ -475,6 +567,7 @@ This module includes practical examples to help you get started quickly:
 | [azurerm_role_assignment.opex_ci_subscription_data_access](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.opex_ci_subscription_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.opex_ci_tf_rg_blob_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.terraform_state_upstream_reader](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_user_assigned_identity.app_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
 | [azurerm_user_assigned_identity.app_ci](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
 | [azurerm_user_assigned_identity.infra_cd](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/user_assigned_identity) | resource |
@@ -484,6 +577,7 @@ This module includes practical examples to help you get started quickly:
 | [github_actions_environment_secret.app_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_secret.app_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_secret.automation_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
+| [github_actions_environment_secret.automation_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_secret.infra_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_secret.infra_ci](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_secret.opex_cd](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
@@ -494,9 +588,13 @@ This module includes practical examples to help you get started quickly:
 | [azurerm_role_definition.dx_infra_cd_private_networking](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 | [azurerm_role_definition.dx_infra_cd_resource_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 | [azurerm_role_definition.dx_infra_cd_subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
+| [azurerm_role_definition.dx_infra_cd_subscription_no_rbac_admin](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 | [azurerm_role_definition.dx_infra_ci_resource_groups](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 | [azurerm_role_definition.dx_infra_ci_subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
+| [azurerm_role_definition.dx_infra_ci_subscription_no_storage_keys](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/role_definition) | data source |
 | [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
+| [github_organization.owner](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/organization) | data source |
+| [github_repository.this](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/repository) | data source |
 
 ## Inputs
 
@@ -504,18 +602,21 @@ This module includes practical examples to help you get started quickly:
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_additional_resource_group_ids"></a> [additional\_resource\_group\_ids](#input\_additional\_resource\_group\_ids) | A set of IDs for existing resource groups owned by the domain team. | `set(string)` | `[]` | no |
 | <a name="input_entraid_groups"></a> [entraid\_groups](#input\_entraid\_groups) | The Azure Entra ID groups to give role to. | <pre>object({<br/>    admins_object_id    = string<br/>    devs_object_id      = string<br/>    externals_object_id = optional(string, null)<br/>  })</pre> | n/a | yes |
-| <a name="input_environment"></a> [environment](#input\_environment) | Values which are used to generate resource names and location short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_environment"></a> [environment](#input\_environment) | Values used to generate resource names and location short names. | <pre>object({<br/>    prefix          = string<br/>    env_short       = string<br/>    location        = string<br/>    domain          = string<br/>    instance_number = string<br/>  })</pre> | n/a | yes |
+| <a name="input_github_environment_prefix_enabled"></a> [github\_environment\_prefix\_enabled](#input\_github\_environment\_prefix\_enabled) | Prefix GitHub environment names with environment.prefix. | `bool` | `false` | no |
 | <a name="input_github_private_runner"></a> [github\_private\_runner](#input\_github\_private\_runner) | Configuration for GitHub private runners, including environment details, scaling options, and Key Vault integration. | <pre>object({<br/>    container_app_environment_id = string<br/>    replica_timeout_in_seconds   = optional(number, 1800)<br/>    polling_interval_in_seconds  = optional(number, 30)<br/>    min_instances                = optional(number, 0)<br/>    max_instances                = optional(number, 30)<br/>    labels                       = optional(list(string), [])<br/>    key_vault = object({<br/>      name                = string<br/>      resource_group_name = string<br/>      secret_name         = optional(string, "github-runner-pat")<br/>      use_rbac            = optional(bool, false)<br/>    })<br/>    use_github_app = optional(bool, false)<br/>    cpu            = optional(number, 1.5)<br/>    memory         = optional(string, "3Gi")<br/>  })</pre> | n/a | yes |
 | <a name="input_opex_resource_group_id"></a> [opex\_resource\_group\_id](#input\_opex\_resource\_group\_id) | The ID of the resource group containing Opex dashboards. | `string` | n/a | yes |
 | <a name="input_private_dns_zone_resource_group_id"></a> [private\_dns\_zone\_resource\_group\_id](#input\_private\_dns\_zone\_resource\_group\_id) | The ID of the resource group containing private DNS zones. | `string` | n/a | yes |
-| <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository, including owner and name. | <pre>object({<br/>    owner = optional(string, "pagopa")<br/>    name  = string<br/>  })</pre> | n/a | yes |
+| <a name="input_repository"></a> [repository](#input\_repository) | Details about the GitHub repository. `owner` is the GitHub login or organization name; `owner_id` is the positive numeric GitHub owner ID used in immutable OIDC subjects. For personal-account repositories, set `owner_id` to `owner.id` from `GET /repos/{owner}/{repo}`. | <pre>object({<br/>    owner    = optional(string, "pagopa")<br/>    name     = string<br/>    owner_id = optional(number)<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | A map of tags to assign to the resources. | `map(string)` | n/a | yes |
+| <a name="input_terraform_state_container_access"></a> [terraform\_state\_container\_access](#input\_terraform\_state\_container\_access) | Opt in to container-scoped state permissions and select upstream readers. | <pre>object({<br/>    container_name = optional(string)<br/>    upstream = optional(map(object({<br/>      identities    = optional(set(string), [])<br/>      principal_ids = optional(set(string), [])<br/>    })), {})<br/>  })</pre> | `null` | no |
 | <a name="input_terraform_storage_account"></a> [terraform\_storage\_account](#input\_terraform\_storage\_account) | Details of the Storage Account (name and resource group) hosting the Terraform state file. | <pre>object({<br/>    resource_group_name = string<br/>    name                = string<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 | ---- | ----------- |
+| <a name="output_github_dx_runner"></a> [github\_dx\_runner](#output\_github\_dx\_runner) | Details of the DX GitHub self-hosted runner, or null when environment.prefix does not start with dx. |
 | <a name="output_github_private_runner"></a> [github\_private\_runner](#output\_github\_private\_runner) | Details of the GitHub private runner, including ID, name, and resource group name. |
 | <a name="output_identities"></a> [identities](#output\_identities) | Details of the user-assigned identities for app, infra, and opex, including IDs and names. |
 | <a name="output_repository"></a> [repository](#output\_repository) | GitHub repository name and owner. |

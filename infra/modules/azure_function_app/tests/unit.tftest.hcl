@@ -9,14 +9,12 @@ variables {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    BusinessUnit   = "DevEx"
-    ManagementTeam = "Developer Experience"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
-    Test           = "true"
-    TestName       = "Azure Function App unit tests"
+    CostCenter  = "TS720 - DEV EX"
+    Environment = "Uat"
+    Owner       = "DevEx"
+    Source      = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_function_app/tests"
+    Test        = "true"
+    TestName    = "Azure Function App unit tests"
   }
 
   resource_group_name = "rg-test"
@@ -33,6 +31,17 @@ variables {
 }
 
 mock_provider "azurerm" {}
+
+override_resource {
+  target = azurerm_linux_function_app_slot.this
+  values = {
+    identity = {
+      type         = "SystemAssigned"
+      principal_id = "00000000-0000-0000-0000-000000000002"
+      tenant_id    = "00000000-0000-0000-0000-000000000000"
+    }
+  }
+}
 
 override_data {
   target = data.azurerm_virtual_network.this
@@ -105,6 +114,30 @@ run "azure_function_app_default_configuration" {
     condition     = length(azurerm_storage_account.durable_function) == 0 && length(azurerm_subnet.this) == 1
     error_message = "The default configuration must not create durable storage and must create the integration subnet."
   }
+
+  assert {
+    condition     = length(azurerm_subnet.this[0].service_endpoint) == 0
+    error_message = "The subnet must not have service endpoints unless they are enabled."
+  }
+}
+
+run "azure_function_app_configures_subnet_service_endpoints" {
+  command = plan
+
+  variables {
+    subnet_service_endpoints = {
+      cosmos  = true
+      storage = true
+      web     = true
+    }
+  }
+
+  assert {
+    condition = toset([
+      for endpoint in azurerm_subnet.this[0].service_endpoint : endpoint.service
+    ]) == toset(["Microsoft.AzureCosmosDB", "Microsoft.Storage", "Microsoft.Web"])
+    error_message = "Enabled service endpoints must be configured using AzureRM v5 service_endpoint blocks."
+  }
 }
 
 run "azure_function_app_external_subnet" {
@@ -122,10 +155,51 @@ run "azure_function_app_external_subnet" {
 }
 
 run "azure_function_app_durable_functions" {
-  command = plan
+  command   = apply
+  state_key = "durable-functions"
 
   variables {
     has_durable_functions = true
+  }
+
+  override_resource {
+    target = azurerm_service_plan.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/serverFarms/plan-test"
+    }
+  }
+
+  override_resource {
+    target = azurerm_subnet.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/functions"
+    }
+  }
+
+  override_resource {
+    target = azurerm_storage_account.this
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/sttest"
+    }
+  }
+
+  override_resource {
+    target = azurerm_storage_account.durable_function[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/stdurable"
+    }
+  }
+
+  override_resource {
+    target = azurerm_linux_function_app.this
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/sites/function-test"
+      identity = {
+        type         = "SystemAssigned"
+        principal_id = "00000000-0000-0000-0000-000000000001"
+        tenant_id    = "00000000-0000-0000-0000-000000000000"
+      }
+    }
   }
 
   assert {
@@ -136,6 +210,39 @@ run "azure_function_app_durable_functions" {
   assert {
     condition     = azurerm_linux_function_app.this.app_settings["DfStorageConnectionName__accountname"] == azurerm_storage_account.durable_function[0].name
     error_message = "The Function App must use the dedicated Durable Functions storage account."
+  }
+
+  assert {
+    condition     = azurerm_subnet.this[0].address_prefixes == tolist([var.subnet_cidr]) && azurerm_subnet.this[0].delegation[0].service_delegation[0].name == "Microsoft.Web/serverFarms"
+    error_message = "The Function App subnet must use its allocated CIDR and the Microsoft.Web/serverFarms delegation."
+  }
+
+  assert {
+    condition = alltrue([
+      for endpoint in [
+        azurerm_private_endpoint.st_blob,
+        azurerm_private_endpoint.st_file,
+        azurerm_private_endpoint.st_queue,
+      ] : endpoint.private_service_connection[0].private_connection_resource_id == azurerm_storage_account.this.id
+      ]) && (
+      azurerm_private_endpoint.function_sites.private_service_connection[0].private_connection_resource_id == azurerm_linux_function_app.this.id &&
+      azurerm_private_endpoint.staging_function_sites[0].private_service_connection[0].private_connection_resource_id == azurerm_linux_function_app.this.id &&
+      toset(azurerm_private_endpoint.staging_function_sites[0].private_service_connection[0].subresource_names) == toset(["sites-${azurerm_linux_function_app_slot.this[0].name}"])
+    )
+    error_message = "Private endpoints must target the primary storage account, the Function App, and its staging slot."
+  }
+
+  assert {
+    condition = alltrue([
+      for assignment in [
+        azurerm_role_assignment.function_storage_blob_data_owner,
+        azurerm_role_assignment.staging_function_storage_blob_data_owner[0],
+      ] : assignment.scope == azurerm_storage_account.this.id && assignment.role_definition_name == "Storage Blob Data Owner"
+      ]) && (
+      azurerm_role_assignment.function_storage_blob_data_owner.principal_id == azurerm_linux_function_app.this.identity[0].principal_id &&
+      azurerm_role_assignment.staging_function_storage_blob_data_owner[0].principal_id == azurerm_linux_function_app_slot.this[0].identity[0].principal_id
+    )
+    error_message = "The Function App and staging slot identities must receive Storage Blob Data Owner on the primary storage account."
   }
 }
 
@@ -211,5 +318,163 @@ run "azure_function_app_diagnostics_and_entra_authentication" {
   assert {
     condition     = output.entra_id_authentication.audience_client_id == "00000000-0000-0000-0000-000000000001"
     error_message = "The Entra ID audience client ID must be exposed in the output."
+  }
+}
+
+run "azure_function_app_package_deployment_by_default" {
+  command = plan
+
+  assert {
+    condition     = azurerm_linux_function_app.this.app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1" && azurerm_linux_function_app_slot.this[0].app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1"
+    error_message = "Without a container image, both slots must run from the deployment package."
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app.this.site_config[0].application_stack[0].docker) == 0 && length(azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].docker) == 0
+    error_message = "Without a container image, no docker configuration must be set."
+  }
+
+  assert {
+    condition     = !azurerm_linux_function_app.this.site_config[0].container_registry_use_managed_identity && !azurerm_linux_function_app_slot.this[0].site_config[0].container_registry_use_managed_identity
+    error_message = "Without an Azure Container Registry, managed identity must not be used to pull images."
+  }
+}
+
+run "azure_function_app_container_image_docker_hub" {
+  command = plan
+
+  variables {
+    container_image = "nginx:latest"
+  }
+
+  assert {
+    condition = alltrue([
+      for docker in [azurerm_linux_function_app.this.site_config[0].application_stack[0].docker[0], azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].docker[0]] :
+      docker.registry_url == "https://index.docker.io" && docker.image_name == "nginx" && docker.image_tag == "latest"
+    ])
+    error_message = "Images without a registry must be pulled from Docker Hub."
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].node_version == null && azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].node_version == null
+    error_message = "The language runtime must not be set when running a container image."
+  }
+
+  assert {
+    condition     = !contains(keys(azurerm_linux_function_app.this.app_settings), "WEBSITE_RUN_FROM_PACKAGE") && !contains(keys(azurerm_linux_function_app_slot.this[0].app_settings), "WEBSITE_RUN_FROM_PACKAGE")
+    error_message = "WEBSITE_RUN_FROM_PACKAGE must not be set when running a container image."
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.app_settings["WEBSITES_ENABLE_APP_SERVICE_STORAGE"] == "false" && azurerm_linux_function_app_slot.this[0].app_settings["WEBSITES_ENABLE_APP_SERVICE_STORAGE"] == "false"
+    error_message = "App Service storage must be disabled when running a container image."
+  }
+
+  assert {
+    condition     = !azurerm_linux_function_app.this.site_config[0].container_registry_use_managed_identity
+    error_message = "Managed identity must not be used for non-ACR registries."
+  }
+}
+
+run "azure_function_app_container_image_registry_with_namespace" {
+  command = plan
+
+  variables {
+    container_image = "ghcr.io/pagopa/my-function:1.0.0"
+  }
+
+  assert {
+    condition = alltrue([
+      for docker in [azurerm_linux_function_app.this.site_config[0].application_stack[0].docker[0], azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].docker[0]] :
+      docker.registry_url == "https://ghcr.io" && docker.image_name == "pagopa/my-function" && docker.image_tag == "1.0.0"
+    ])
+    error_message = "The image must be split into registry, name and tag."
+  }
+}
+
+run "azure_function_app_container_image_acr" {
+  command = plan
+
+  variables {
+    container_image = "myacr.azurecr.io/my-function:sha-abc123"
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.site_config[0].container_registry_use_managed_identity && azurerm_linux_function_app_slot.this[0].site_config[0].container_registry_use_managed_identity
+    error_message = "Both slots must pull from Azure Container Registry using managed identity."
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.site_config[0].application_stack[0].docker[0].registry_url == "https://myacr.azurecr.io"
+    error_message = "The registry URL must be derived from the image."
+  }
+}
+
+run "azure_function_app_package_state_for_container_migration" {
+  command   = apply
+  state_key = "package-to-container-migration"
+
+  override_resource {
+    target = azurerm_service_plan.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/serverFarms/plan-test"
+    }
+  }
+
+  override_resource {
+    target = azurerm_subnet.this[0]
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-network/providers/Microsoft.Network/virtualNetworks/vnet-test/subnets/functions"
+    }
+  }
+
+  override_resource {
+    target = azurerm_storage_account.this
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Storage/storageAccounts/sttest"
+    }
+  }
+
+  override_resource {
+    target = azurerm_linux_function_app.this
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.Web/sites/function-test"
+      identity = {
+        type         = "SystemAssigned"
+        principal_id = "00000000-0000-0000-0000-000000000001"
+        tenant_id    = "00000000-0000-0000-0000-000000000000"
+      }
+    }
+  }
+
+  assert {
+    condition     = azurerm_linux_function_app.this.app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1" && azurerm_linux_function_app_slot.this[0].app_settings["WEBSITE_RUN_FROM_PACKAGE"] == "1"
+    error_message = "The migration must start from production and staging resources deployed from packages."
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app.this.site_config[0].application_stack[0].docker) == 0 && length(azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].docker) == 0
+    error_message = "The migration must start from production and staging resources without a configured container image."
+  }
+}
+
+run "azure_function_app_replace_package_state_with_container" {
+  command   = plan
+  state_key = "package-to-container-migration"
+
+  plan_options {
+    replace = [
+      azurerm_linux_function_app.this,
+      azurerm_linux_function_app_slot.this[0]
+    ]
+  }
+
+  variables {
+    container_image = "nginx:1.0.0"
+  }
+
+  assert {
+    condition     = length(azurerm_linux_function_app.this.site_config[0].application_stack[0].docker) == 1 && length(azurerm_linux_function_app_slot.this[0].site_config[0].application_stack[0].docker) == 1
+    error_message = "Replacing package-based production and staging resources must initialize the configured container image."
   }
 }

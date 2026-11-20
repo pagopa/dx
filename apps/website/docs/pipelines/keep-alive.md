@@ -17,10 +17,14 @@ of repository inactivity.
 
 The action performs these steps:
 
-1. Checks out the repository
-2. Configures a local git user as _"Keepalive"_
-3. Creates an empty commit with the message _"Keeping the repository alive"_
+1. Calculates the days since the last commit
+2. Configures a local git user (the one authenticated by `bot_token`)
+3. Creates an empty commit with the message _"Keeping the repository alive"_,
+   only if at least 55 days have passed since the last commit (or if `bypass` is
+   `true`)
 4. Pushes the commit to the repository
+
+The repository must be checked out before invoking the action.
 
 ## Usage
 
@@ -56,7 +60,7 @@ jobs:
 
       # Use the Keep Alive action when needed
       - name: Keep Alive
-        uses: pagopa/dx/.github/actions/keep-alive@main
+        uses: pagopa/dx/actions/keep-alive@main
         with:
           bot_token: ${{ secrets.GITHUB_BOT_TOKEN }}
 ```

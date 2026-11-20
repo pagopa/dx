@@ -1,60 +1,48 @@
 /**
  * Terraform state key helper.
  *
- * Keeps the DX environment generator aligned with the shared
- * prefix/domain/scope.tfstate convention for remote state keys.
+ * The container identifies the domain, while the key identifies the layer and
+ * root path.
  */
-import { type NodePlopAPI } from "node-plop";
 import { z } from "zod";
 
-import { payloadSchema } from "../generators/environment/prompts.js";
-
-const terraformStateContextSchema = payloadSchema.pick({
-  env: true,
-  workspace: true,
-});
-
-const terraformStateNameSchema = z
+const stateSegmentSchema = z
   .string()
   .regex(
-    /^[a-z0-9-]+$/,
-    "Terraform state name may contain only lowercase letters, numbers, and hyphens",
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+    "Terraform state names must use lowercase letters, numbers, and single hyphens",
+  );
+const rootPathSchema = z
+  .string()
+  .refine(
+    (rootPath) =>
+      !rootPath.startsWith("/") &&
+      !/^[a-z]:/i.test(rootPath) &&
+      !rootPath.includes("\\") &&
+      rootPath
+        .split("/")
+        .every(
+          (segment) =>
+            segment.length > 0 &&
+            segment !== "." &&
+            segment !== ".." &&
+            !segment.includes("\0"),
+        ),
+    "Terraform state paths must be relative paths with unambiguous directory separators",
   );
 
-type TerraformStateContext = z.infer<typeof terraformStateContextSchema>;
-
-export const terraformStateKey = (
-  context: TerraformStateContext,
-  name: string,
-): string => {
-  const parsedName = terraformStateNameSchema.safeParse(name);
-
-  if (!parsedName.success) {
+export const terraformStateKey = (layer: string, rootPath?: string): string => {
+  const parsed = z
+    .object({
+      layer: stateSegmentSchema,
+      rootPath: rootPathSchema.optional(),
+    })
+    .safeParse({ layer, rootPath });
+  if (!parsed.success) {
     throw new Error(
-      parsedName.error.issues[0]?.message ?? "Invalid Terraform state name",
-      {
-        cause: parsedName.error,
-      },
+      parsed.error.issues[0]?.message ?? "Invalid Terraform state path",
+      { cause: parsed.error },
     );
   }
-
-  return `${context.env.prefix}/${context.workspace.domain}/${parsedName.data}.tfstate`;
-};
-
-export default (plop: NodePlopAPI) => {
-  plop.setHelper("terraformStateKey", (input, name: string) => {
-    const context = terraformStateContextSchema.safeParse(input);
-
-    if (!context.success) {
-      throw new Error(
-        context.error.issues[0]?.message ??
-          "Invalid Terraform state helper input",
-        {
-          cause: context.error,
-        },
-      );
-    }
-
-    return terraformStateKey(context.data, name);
-  });
+  return rootPath ? `${layer}/${rootPath}.tfstate` : `${layer}.tfstate`;
 };

@@ -1,20 +1,16 @@
 {
   "name": "csp-login",
-  "description": "A GitHub action to log in to cloud providers.",
-  "version": "0.2.0",
-  "type": "module",
+  "version": "0.2.2",
   "private": true,
+  "description": "A GitHub action to log in to cloud providers.",
   "keywords": [
-    "github",
     "action",
-    "terraform",
-    "login"
+    "github",
+    "login",
+    "terraform"
   ],
+  "type": "module",
   "scripts": {
-    "format": "prettier --write .",
-    "format:check": "prettier --check ."
-  },
-  "devDependencies": {
-    "prettier": "catalog:"
+    "test": "bash test.sh"
   }
 }

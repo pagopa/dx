@@ -17,8 +17,8 @@ resource "azurerm_role_assignment" "app_cd_rgs_deploy" {
 }
 
 resource "azurerm_role_assignment" "app_cd_tf_rg_blob_contributor" {
-  scope                = local.tf_storage_account.id
+  scope                = local.terraform_state_scope
   role_definition_name = "Storage Blob Data Contributor"
   principal_id         = azurerm_user_assigned_identity.app_cd.principal_id
-  description          = "Allow ${var.repository.name} App CD identity to apply changes to the Terraform state file Storage Account scope"
+  description          = var.terraform_state_container_access == null ? "Allow ${var.repository.name} App CD identity to apply changes to the Terraform state file Storage Account scope" : "Allow ${var.repository.name} App CD identity to manage Terraform state at ${local.terraform_state_scope} scope"
 }

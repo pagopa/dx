@@ -10,8 +10,8 @@ Guidelines and architectural context for DevEx initiative development.
 
 ## Repository Map
 
-- `apps/` - Applications: [cli](apps/cli/), [mcpserver](apps/mcpserver/), [website](apps/website/).
-- `packages/` - Libraries: [eslint-config](packages/eslint-config/), [azure-tracing](packages/azure-tracing/), [dx-metrics-core](packages/dx-metrics-core/), [dx-tasks](packages/dx-tasks/), [monorepo-generator](packages/monorepo-generator/), [nx-terraform-plugin](packages/nx-terraform-plugin/), [pnpm-plugin-pagopa](packages/pnpm-plugin-pagopa/), [savemoney](packages/savemoney/).
+- `apps/` - Applications: [cli](apps/cli/), [mcpserver](apps/mcpserver/), [savemoney](apps/savemoney/), [website](apps/website/).
+- `packages/` - Libraries: [eslint-config](packages/eslint-config/), [azure-tracing](packages/azure-tracing/), [dx-metrics-core](packages/dx-metrics-core/), [dx-tasks](packages/dx-tasks/), [monorepo-generator](packages/monorepo-generator/), [nx-terraform](packages/nx-terraform-plugin/), [pnpm-plugin-pagopa](packages/pnpm-plugin-pagopa/).
 - `infra/modules/` - Opinionated, reusable Terraform modules for AWS and Azure.
 - `infra/resources/` - Environment-specific infrastructure organized by `<env>/`.
 - `providers/` - Custom Terraform providers in Go (`azure/`, `aws/`).
@@ -34,6 +34,21 @@ Guidelines and architectural context for DevEx initiative development.
 - [DX Documentation site](https://dx.pagopa.it/docs/)
 - [Local Instructions](.github/instructions/): TypeScript, Terraform, PR, and Commit guidelines.
 - [GitHub Conventions skill](.github/skills/github-conventions/SKILL.md): Rules for commit messages, PR titles/descriptions, and branch naming — use this skill whenever committing or opening a pull request.
+- **Package contributor notes**: packages with internal procedures keep them in a `CONTRIBUTING.md` next to their code (e.g. [packages/azure-tracing/CONTRIBUTING.md](packages/azure-tracing/CONTRIBUTING.md)). Read it before changing that package; keep it out of the consumer-facing `README.md`.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and specs live in Jira, project `CES`, accessed through the Atlassian MCP server. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical triage labels (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`) applied as Jira labels. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Multi-context: `GLOSSARY-MAP.md` at the root points to per-context `GLOSSARY.md` files. See `docs/agents/domain.md`.
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

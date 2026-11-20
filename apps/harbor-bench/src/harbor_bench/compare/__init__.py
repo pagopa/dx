@@ -9,6 +9,7 @@ from .run import (
     run_compare,
 )
 from .sources import (
+    SkillInjection,
     SkillSource,
     derive_globs,
     is_git_source,
@@ -17,6 +18,7 @@ from .sources import (
 )
 
 __all__ = [
+    "SkillInjection",
     "SkillSource",
     "derive_globs",
     "is_git_source",

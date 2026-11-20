@@ -1,6 +1,6 @@
 # Nx DX Docker Plugin
 
-`@pagopa/nx-dx-docker-plugin` is an Nx plugin that infers Docker targets with workspace-wide Docker conventions.
+`@pagopa/nx-docker` is an Nx plugin that infers Docker targets with workspace-wide Docker conventions.
 
 It provides the Docker target inference with:
 
@@ -18,14 +18,38 @@ It provides the Docker target inference with:
 
 ## Installation
 
-Install the package as a development dependency in the target monorepo.
+The package is published to GitHub Packages. With pnpm 12+, install through
+the [`gh:` registry prefix](https://pnpm.io/registries#prefix) without
+configuring scope routing. The prefix belongs to the version, so the package
+name comes first:
 
 ```bash
-pnpm add -D @pagopa/nx-dx-docker-plugin
+pnpm add -D @pagopa/nx-docker@gh:latest
+```
+
+All package managers need authentication to download from GitHub Packages.
+Configure the token in the consuming repository's `.npmrc`:
+
+```ini
+//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}
+```
+
+Set `GITHUB_TOKEN` to a token with permission to read packages. In GitHub
+Actions, use a workflow token with `packages: read`.
+
+For npm or Yarn, also configure the `@pagopa` scope in `.npmrc` to route
+package requests to GitHub Packages:
+
+```ini
+@pagopa:registry=https://npm.pkg.github.com
+```
+
+Then install the package as a development dependency in the target monorepo:
+
+```bash
+npm install -D @pagopa/nx-docker
 # or
-npm install -D @pagopa/nx-dx-docker-plugin
-# or
-yarn add -D @pagopa/nx-dx-docker-plugin
+yarn add -D @pagopa/nx-docker
 ```
 
 Then register it in `nx.json`.
@@ -43,7 +67,7 @@ Minimal configuration:
 
 ```json
 {
-  "plugins": ["@pagopa/nx-dx-docker-plugin"]
+  "plugins": ["@pagopa/nx-docker"]
 }
 ```
 
@@ -53,7 +77,7 @@ Optional overrides:
 {
   "plugins": [
     {
-      "plugin": "@pagopa/nx-dx-docker-plugin",
+      "plugin": "@pagopa/nx-docker",
       "options": {
         "buildTarget": {
           "name": "docker:build",
@@ -188,14 +212,14 @@ The plugin does not interpret or expand those values at build time. Their purpos
 
 The package provides one executor:
 
-- `@pagopa/nx-dx-docker-plugin:release-publish`
+- `@pagopa/nx-docker:release-publish`
 
 This executor is reached through the inferred `nx-release-publish` target.
 
 Its behavior is:
 
 1. read the released version from the project's `package.json`, or from
-  `project.json` `metadata.version` for Docker-only projects
+   `project.json` `metadata.version` for Docker-only projects
 2. compute the immutable version, major/minor, and `latest` tags
 3. in dry-run mode, print the tags that would be published and stop
 4. otherwise rebuild the image with Buildx and push every release tag
@@ -246,7 +270,7 @@ Docker-only projects use `project.json` instead:
   "release": {
     "version": {
       "currentVersionResolver": "disk",
-      "versionActions": "@pagopa/nx-dx-docker-plugin/release/version-actions"
+      "versionActions": "@pagopa/nx-docker/release/version-actions"
     }
   }
 }
@@ -260,7 +284,7 @@ value in a later job, without relying on a temporary file.
 Build the package from the workspace root with:
 
 ```bash
-pnpm nx build @pagopa/nx-dx-docker-plugin
+pnpm nx build @pagopa/nx-docker
 ```
 
 The build generates the compiled files under `dist`.

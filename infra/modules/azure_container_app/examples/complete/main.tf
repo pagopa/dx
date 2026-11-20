@@ -44,7 +44,7 @@ module "container_app_environment" {
 
 module "container_app" {
   source  = "pagopa-dx/azure-container-app/azurerm"
-  version = "~> 7.0"
+  version = "~> 8.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name

@@ -1,0 +1,33 @@
+name: "Setup Nx Workspace"
+description: "Prepares the workspace to run Nx commands"
+
+inputs:
+  github-token:
+    default: ${{ github.token }}
+    description: GitHub Token to use to login to GitHub Packages
+
+runs:
+  using: "composite"
+
+  steps:
+    - name: Install root Node.js dependencies
+      shell: bash
+      env:
+        pnpm_config_//npm.pkg.github.com/:_authToken: ${{ inputs.github-token }}
+      run: |
+        pnpm --filter '{.}...' ci
+
+    - name: Build root deps
+      shell: bash
+      run: |
+        pnpm nx run-many --projects . --targets build-deps
+
+    - name: Set Nx base and head
+      shell: bash
+      run: |
+        if [[ -n "${GITHUB_BASE_REF:-}" ]]; then
+          nx_base="origin/${GITHUB_BASE_REF}"
+        else
+          nx_base="HEAD~1"
+        fi
+        printf 'NX_BASE=%s\nNX_HEAD=HEAD\n' "$nx_base" >> "$GITHUB_ENV"

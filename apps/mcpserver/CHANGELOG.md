@@ -1,3 +1,89 @@
+## 0.2.23 (2026-11-18)
+
+### 🩹 Fixes
+
+- Bump dependencies ([#2512](https://github.com/pagopa/dx/pull/2512))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
+## 0.2.22 (2026-11-18)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.13
+
+## 0.2.21 (2026-11-17)
+
+### 🩹 Fixes
+
+- Bump dependencies ([#2511](https://github.com/pagopa/dx/pull/2511))
+- Bump dependencies ([#2533](https://github.com/pagopa/dx/pull/2533))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.12
+
+## 0.2.20 (2026-11-04)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.11
+
+## 0.2.19 (2026-10-08)
+
+### 🩹 Fixes
+
+- Update dependencies ([#2319](https://github.com/pagopa/dx/pull/2319))
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.10
+- Updated @pagopa/eslint-config to 7.0.1
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
+## 0.2.18 (2026-10-01)
+
+### 🩹 Fixes
+
+- Update YAML, Next.js, and Axios dependencies ([#2288](https://github.com/pagopa/dx/pull/2288))
+
+### ❤️ Thank You
+
+- Danilo Spinelli
+
+## 0.2.17 (2026-09-22)
+
+### 🩹 Fixes
+
+- Correct the MCP Docker image registry namespace. ([#2234](https://github.com/pagopa/dx/pull/2234))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.2.16 (2026-09-22)
+
+### 🩹 Fixes
+
+- Route Docker image releases through inferred Nx publishers, including private ([#2225](https://github.com/pagopa/dx/pull/2225))
+  JavaScript projects that must not be published to npm.
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 0.2.15 (2026-09-22)
+
+### 🧱 Updated Dependencies
+
+- Updated @pagopa/azure-tracing to 0.5.9
+- Updated @pagopa/eslint-config to 7.0.0
+
 ## 0.2.14 (2026-09-01)
 
 ### 🩹 Fixes

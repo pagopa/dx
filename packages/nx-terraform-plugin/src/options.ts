@@ -14,8 +14,13 @@ export const publishOptionsSchema = z.object({
 
 export type PublishOptions = z.infer<typeof publishOptionsSchema>;
 
+const initTargetOptionsSchema = z.object({
+  platforms: z.array(z.string()).default([]),
+});
+
 const terraformPluginOptionsSchema = z.object({
   additionalEnvironments: z.array(environmentNameSchema),
+  initTarget: initTargetOptionsSchema.default({ platforms: [] }),
   publish: publishOptionsSchema,
   targetNamePrefix: z.string(),
 });
@@ -24,8 +29,13 @@ export type TerraformPluginOptions = z.infer<
   typeof terraformPluginOptionsSchema
 >;
 
+type TerraformPluginOptionsInput = z.input<typeof terraformPluginOptionsSchema>;
+
 const defaultOptions: TerraformPluginOptions = {
   additionalEnvironments: [],
+  initTarget: {
+    platforms: [],
+  },
   publish: {
     mode: "github",
   },
@@ -33,7 +43,7 @@ const defaultOptions: TerraformPluginOptions = {
 };
 
 export const parseOptions = (
-  options: Partial<TerraformPluginOptions> | undefined,
+  options: Partial<TerraformPluginOptionsInput> | undefined,
 ): TerraformPluginOptions => {
   const parseResult = terraformPluginOptionsSchema
     .partial()
@@ -50,6 +60,10 @@ export const parseOptions = (
   const opts = {
     ...defaultOptions,
     ...parseResult.data,
+    initTarget: {
+      ...defaultOptions.initTarget,
+      ...parseResult.data.initTarget,
+    },
     publish: {
       ...defaultOptions.publish,
       ...parseResult.data.publish,

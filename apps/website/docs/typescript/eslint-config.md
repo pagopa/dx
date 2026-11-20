@@ -1,11 +1,20 @@
 ---
-sidebar_position: 3
+sidebar_position: 4
 ---
 
 # Configuring ESLint
 
 The `@pagopa/eslint-config` package provides a shared ESLint configuration for
 JavaScript and TypeScript projects.
+
+:::warning
+
+This package is **frozen**: it stays installable and keeps working, but it no
+longer receives new rules or fixes. For new projects use
+[`@pagopa/oxlint-config`](./oxlint-config.md) instead, which runs on oxlint and
+lints a workspace roughly 3× faster.
+
+:::
 
 :::note
 

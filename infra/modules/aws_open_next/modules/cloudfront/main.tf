@@ -307,6 +307,20 @@ resource "aws_cloudfront_distribution" "distribution" {
   }
 
   ordered_cache_behavior {
+    path_pattern     = "/fonts/*"
+    allowed_methods  = ["GET", "HEAD"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "${local.app_prefix}-assets-origin-${local.app_suffix}"
+
+    response_headers_policy_id = aws_cloudfront_response_headers_policy.response_headers_policy.id
+    cache_policy_id            = aws_cloudfront_cache_policy.static_assets.id
+    origin_request_policy_id   = aws_cloudfront_origin_request_policy.origin_request_policy.id
+
+    compress               = true
+    viewer_protocol_policy = "redirect-to-https"
+  }
+
+  ordered_cache_behavior {
     path_pattern     = "/favicon.ico"
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]

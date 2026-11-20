@@ -4,6 +4,7 @@ import {
   loadImportConfig,
   normalizeGitHubAppPrivateKey,
   resolveImportSettings,
+  resolveOverlapDays,
 } from "../config.js";
 
 describe("resolveImportSettings", () => {
@@ -143,6 +144,25 @@ describe("normalizeGitHubAppPrivateKey", () => {
     ).toBe(
       "-----BEGIN PRIVATE KEY-----\nprivate-key\n-----END PRIVATE KEY-----",
     );
+  });
+});
+
+describe("resolveOverlapDays", () => {
+  it("defaults to two days", () => {
+    expect(resolveOverlapDays(undefined)).toBe(2);
+  });
+
+  it("uses the configured number of days", () => {
+    expect(resolveOverlapDays("5")).toBe(5);
+  });
+
+  it("accepts zero", () => {
+    expect(resolveOverlapDays("0")).toBe(0);
+  });
+
+  it("falls back to the default for invalid input", () => {
+    expect(resolveOverlapDays("abc")).toBe(2);
+    expect(resolveOverlapDays("-3")).toBe(2);
   });
 });
 

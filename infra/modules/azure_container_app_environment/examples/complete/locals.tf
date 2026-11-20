@@ -22,7 +22,7 @@ locals {
   }
 
   tags = {
-    CostCenter     = "TS000 - Tecnologia e Servizi"
+    CostCenter     = "TS720 - DEV EX"
     CreatedBy      = "Terraform"
     Environment    = "Uat"
     BusinessUnit   = "DevEx"

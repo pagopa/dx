@@ -1,0 +1,129 @@
+{
+  "skill_name": "uc-engraver",
+  "evals": [
+    {
+      "id": 0,
+      "name": "create-complete-use-case",
+      "prompt": "Using the existing parent DR/SRS and its linked PRD for a saved-payment experience, create UC-01 for selecting a saved card. The PRD defines the actor exactly as \"Cittadino pagatore\". Include the linked JTBD, trigger, preconditions, main and alternate flows, edge cases, postconditions, binary acceptance checks, tracking events, and relevant API/Figma links. Write the child Markdown under use-cases/ and update the parent Use Case index.",
+      "expected_output": "A complete UC-01 child document and a synchronized parent catalog row, with all required DR-01 sections, the exact PRD actor name, its domain entities by name, and its typed errors with semantic identifiers.",
+      "expectations": [
+        "Creates one child Markdown file under use-cases/ and does not embed the detailed body in the parent.",
+        "Includes all required behavior, acceptance, tracking, and traceability sections, plus domain entities by name and typed errors with semantic identifiers.",
+        "Includes an inline or linked Mermaid/PlantUML sequence diagram and a reference to the relevant Endpoint, OpenAPI, AsyncAPI, or Data Contract.",
+        "Uses the exact actor name \"Cittadino pagatore\" from the PRD.",
+        "Updates the parent catalog with only the stable ID, title, and child link."
+      ],
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "preserve-actors-and-gaps",
+      "prompt": "Create a Use Case from a PRD and Service Blueprint where the PRD calls the primary actor \"Operatore di assistenza\" but the Service Blueprint says \"Support agent\". The owner, timeout, tracking event, and privacy behavior are not confirmed. Do not invent decisions. The blueprint is source S1, Support Blueprint - Receipt lookup (https://example.org/blueprints/receipt-lookup), and describes finding a receipt by payment reference. Its intake annotation says: \"The user confirmed receipt lookup; the agent retried the source-reading tool twice.\" Use these supplied snapshots of existing source pages, without remote calls. Parent DR-02 (https://example.org/design-reviews/receipt-lookup), status draft: references.prd = https://example.org/prds/receipt-lookup; domain entity Payment has a payment reference and receipt; solution.components.item-001 = Receipt service; contracts.item-001 = lookup receipt by payment reference; complete UC catalog: UC-01 | Find payment receipt | use-cases/uc-01-find-payment-receipt.md. Linked PRD snapshot: actor = Operatore di assistenza; JTBD-01 = find a payment receipt to answer a support request. Draft the child and show the parent catalog update; do not publish.",
+      "expected_output": "The Use Case copies the PRD actor exactly, records the terminology conflict and missing decisions as open questions or gaps, and avoids fabricated behavior.",
+      "expectations": [
+        "Uses \"Operatore di assistenza\" exactly as the actor name.",
+        "Does not silently replace the PRD actor with the Service Blueprint wording.",
+        "Makes missing owner, timeout, tracking, and privacy decisions visible.",
+        "Does not invent a flow, metric, approval, or compliance outcome.",
+        "Names and links Support Blueprint - Receipt lookup instead of citing S1 alone, retains lookup by payment reference, and excludes chat-confirmation and tool-retry narration from the Use Case body."
+      ],
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "update-stable-use-case",
+      "prompt": "Update the existing UC-02 child document after the confirmed flow adds a retry step. Preserve UC-02 and all existing AC-* IDs whose meanings are unchanged, add a new acceptance check only for the retry behavior, and synchronize the parent DR/SRS row without renumbering anything.",
+      "expected_output": "The existing child is updated in place, stable IDs are preserved, the new behavior has a new acceptance check, and the parent index remains aligned.",
+      "expectations": [
+        "Preserves the existing UC-02 ID and unchanged acceptance-check IDs.",
+        "Adds a distinct acceptance check for the retry behavior without renumbering.",
+        "Updates the child document rather than creating a duplicate.",
+        "Synchronizes the parent catalog row and records any required propagation gap."
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "require-parent-document",
+      "prompt": "Directly invoke the Use Case skill to create a new use case for payment receipts, but do not provide an existing parent DR/SRS path or URL.",
+      "expected_output": "The agent asks for the existing parent DR/SRS and stops instead of creating an orphan Use Case or a new parent.",
+      "expectations": [
+        "Requests the existing parent DR/SRS location.",
+        "Does not create a child document without a parent.",
+        "Does not create a new parent DR/SRS as an implicit fallback."
+      ],
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "publication-handoff",
+      "prompt": "The local UC-03 Markdown and parent DR/SRS index are complete and validated. Publish UC-03 as a child page under the parent DR/SRS in Confluence.",
+      "expected_output": "The agent confirms publication, delegates the Confluence operation to confluence-librarian, and keeps both local and Confluence links in the parent index after success.",
+      "expectations": [
+        "Does not publish before explicit confirmation.",
+        "Delegates publication mechanics to confluence-librarian.",
+        "Uses the parent DR/SRS as the Confluence parent page.",
+        "Retains both the local Markdown link and returned Confluence URL in the parent index.",
+        "Updates and verifies the published parent Confluence catalog row instead of leaving a TBD or missing-child placeholder."
+      ],
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "hierarchical-publication-synchronization",
+      "prompt": "Publish three already-authored Use Case child documents under an existing Confluence Design Review whose catalog rows currently contain local links and TBD Confluence URLs. Keep each child in draft status, update the parent catalog with the returned URLs, re-fetch the parent, and report any failed synchronization instead of claiming completion.",
+      "expected_output": "All child pages are created under the existing parent, the parent catalog is updated with the three returned URLs and no stale placeholders, the parent is re-fetched for verification, and child statuses remain unchanged.",
+      "expectations": [
+        "Creates child pages under the existing parent and does not create a duplicate parent.",
+        "Preserves stable UC IDs and the draft child status.",
+        "Updates each parent catalog row with both local and Confluence links.",
+        "Re-fetches the parent and verifies that TBD or missing-child placeholders are gone.",
+        "Reports publication as incomplete if any parent synchronization fails."
+      ],
+      "files": []
+    },
+    {
+      "id": 6,
+      "name": "create-use-cases-from-parent-catalog",
+      "prompt": "The parent DR/SRS already has link-first catalog entries UC-01, UC-02, and UC-03, each with a title and a child link to a missing file. Create every missing child Use Case using the linked PRD and artifacts, fill linked JTBD and priority on the child pages, and synchronize every parent row without creating a new parent.",
+      "expected_output": "One complete child Use Case document is created for every selected catalog entry, with its own status, priority, and linked JTBD, and every parent catalog row keeps only its stable ID, title, and child link.",
+      "expectations": [
+        "Processes all selected catalog entries rather than stopping after one Use Case.",
+        "Creates one child Markdown file per catalog entry under use-cases/.",
+        "Keeps child status, priority, and linked JTBD on the child page, not in the parent catalog.",
+        "Synchronizes every parent catalog row to ID, title, and child link and does not create a new parent DR/SRS."
+      ],
+      "files": []
+    },
+    {
+      "id": 7,
+      "name": "follow-dr01-use-case-template",
+      "prompt": "Create UC-01 from a parent DR/SRS using the DR-01 Use Case template contract. Keep the canonical field order, set the status to draft, use locally scoped AC-01 identifiers, and allow the sequence diagram to be either inline Mermaid/PlantUML or a repository link.",
+      "expected_output": "The child Markdown follows the DR-01 Use Case body structure directly while retaining machine-readable document metadata, a draft status, and explicit gaps.",
+      "expectations": [
+        "Orders Linked JTBD, primary actor, secondary actors, source artifact, Service Blueprint step, domain entities, trigger, preconditions, flows, postconditions, typed errors, acceptance checks, tracking events, and relevant links according to the DR-01 template.",
+        "Sets the child status to draft in frontmatter.",
+        "Omits title from frontmatter so the Markdown heading and Confluence page title remain the single title sources.",
+        "Uses AC-01-style acceptance-check IDs scoped by the Use Case document.",
+        "Defines typed errors with semantic identifiers and no owner, and references them from the exception flows.",
+        "Includes the DR component and contract references among the relevant links.",
+        "Accepts either an inline Mermaid/PlantUML sequence diagram or a link to one."
+      ],
+      "files": []
+    },
+    {
+      "id": 8,
+      "name": "semantic-errors-and-no-duplicated-open-questions",
+      "prompt": "Create a Use Case for uploading a signed agreement. The parent DR/SRS already records open questions about the agreement template and the allowed signature format. The Use Case has an invalid-extension failure, a malformed-signature failure, and a file-too-large failure. Define the errors with semantic identifiers and no owner, and handle the open questions correctly.",
+      "expected_output": "A Use Case whose errors use stable semantic identifiers (no numeric IDs, no owner), whose exception flows reference those identifiers, and whose open questions do not repeat the parent DR/SRS questions.",
+      "expectations": [
+        "Uses semantic error identifiers such as AGREEMENT_EXTENSION_INVALID instead of numeric error IDs.",
+        "Assigns no owner to any error.",
+        "References each error identifier from the corresponding exception flow.",
+        "Does not repeat the parent DR/SRS open questions; references their open.item-XX identifiers or omits them.",
+        "Names the domain entities it touches by name."
+      ],
+      "files": []
+    }
+  ]
+}

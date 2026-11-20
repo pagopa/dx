@@ -8,3 +8,20 @@ variable "environment" {
     instance_number = string
   })
 }
+
+variable "tags" {
+  type        = map(any)
+  default     = {}
+  description = "Tags to apply to setup resources."
+}
+
+variable "test_kind" {
+  type        = string
+  default     = "integration"
+  description = "The shared test infrastructure to use."
+
+  validation {
+    condition     = contains(["integration", "e2e"], var.test_kind)
+    error_message = "The test_kind variable must be either 'integration' or 'e2e'."
+  }
+}

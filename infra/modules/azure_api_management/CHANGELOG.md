@@ -1,3 +1,152 @@
+# 5.0.0 (2026-11-20)
+
+### ⚠️  Breaking Changes
+
+- Set Terraform binary minimum version to 1.16.0. ([#1923](https://github.com/pagopa/dx/pull/1923))
+  Set `azurerm` provider minimum version to 5.0.
+  Simplify the Azure API Management module contract.
+
+  ### Migration guide
+
+  - Update the module version constraint to `~> 5.0`, require Terraform `>= 1.16.0`, and set the caller's AzureRM provider constraint to `~> 5.0`, then run `terraform init -upgrade`.
+  - Networking:
+    - Set `virtual_network` to the full VNet resource ID; remove `subnet_id`, `subnet_pep_id`, `virtual_network_type_internal`, and `public_ip_address_id`.
+    - Remove `private_dns_zone_ids`. Set `private_dns_zone_resource_group_name` if the zones are not in the VNet resource group. 
+  - Monitoring:
+    - Remove `monitoring` input block, as the diagnostic settings are now managed by the module according to the selected use case. Set `log_analytics_workspace_id` for `cost_optimized` and `high_load` use cases.
+    - Remove `management_logger_application_insight_enabled`, `application_insights.enabled`, and `application_insights.connection_string`. Set `application_insights = null` to disable it, or provide its resource `id` to enable it.
+  - Certificates:
+    - Transfer existing APIM client certificates as described below before removing `key_vault_id` and `certificate_names`.
+  - DNS:
+    - Replace `key_vault_id` with `key_vault_certificate_id` for management, portal, developer portal, and SCM hostnames.
+    - Replace the `hostname_configuration.proxy` list with `use_resource_name_as_default = true` if needed. It sets the APIM resource name as default hostname.
+    - Custom proxy hostnames are no longer supported
+  - Miscellaneous:
+    - Remove `notification_sender_email`; use `publisher_email` instead.
+    - Remove `lock_enable`; it is automatically set by the module according to the chosen use case.
+
+  #### Preserve existing APIM client certificates
+
+  Transfer eventual **client** certificates before applying the upgrade to prevent
+  its deletion.
+
+  1. In each workspace, use `terraform state list` and `terraform state show` to record each
+     certificate's address, ID, name, APIM name, resource group, and
+     `key_vault_secret_id`.
+  2. Add caller-managed resources using the same AzureRM provider, APIM name,
+     resource group, and certificate names. Use each exact Key Vault **secret**
+     ID from state, including any trailing slash. Replace the example values and
+     module references:
+
+     ```hcl
+     locals {
+       existing_apim_client_certificates = {
+         "existing-name" = "https://example.vault.azure.net/secrets/example/"
+       }
+     }
+
+     resource "azurerm_api_management_certificate" "client" {
+       for_each = local.existing_apim_client_certificates
+
+       name                = each.key
+       api_management_name = module.apim.name
+       resource_group_name = module.apim.resource_group_name
+       key_vault_secret_id = each.value
+     }
+     ```
+
+  3. Move each certificate to its new state address:
+
+     ```hcl
+     moved {
+        from = "module.apim.azurerm_api_management_certificate.this[0]"
+        to   = "azurerm_api_management_certificate.client[\"existing-name\"]"
+     }
+     ```
+
+     Substitute the actual addresses, including module instance keys, and repeat
+     in every affected workspace. Verify each destination's ID with
+     `terraform state show`; preserve the APIM identity and its Key Vault access.
+  4. Review a fresh plan. Do not apply if it creates, deletes, replaces, or
+     unintentionally updates an existing certificate or replaces APIM.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 4.2.4 (2026-11-03)
+
+### 🩹 Fixes
+
+- Replace department CostCenter with DX specific ([#2478](https://github.com/pagopa/dx/pull/2478))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 4.2.3 (2026-10-15)
+
+### 🩹 Fixes
+
+- Restore the canonical DX ModuleName tag using the name in project.json, shared with Nx, instead of deriving it from the Terraform installation directory. ([#2364](https://github.com/pagopa/dx/pull/2364))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Mario Mupo @mamu0
+
+## 4.2.2 (2026-10-13)
+
+### 🩹 Fixes
+
+- Update internal examples and AzureRM constraints ([#2342](https://github.com/pagopa/dx/pull/2342))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+## 4.2.1 (2026-10-06)
+
+### 🩹 Fixes
+
+- Accept null overrides for built-in APIM alerts across SKUs ([#2305](https://github.com/pagopa/dx/pull/2305))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 4.2.0 (2026-10-06)
+
+### 🚀 Features
+
+- Allow APIM consumers to override built-in metric alert thresholds individually or disable selected alerts by setting their threshold to null, without replacing the complete alert configuration. ([#2299](https://github.com/pagopa/dx/pull/2299))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+
+## 4.1.0 (2026-09-23)
+
+### 🚀 Features
+
+- Add SKU-aware default API Management metric alerts ([#2130](https://github.com/pagopa/dx/pull/2130))
+
+### ❤️ Thank You
+
+- Christian Calabrese
+- Mario Mupo @mamu0
+
+## 4.0.3 (2026-09-16)
+
+### 🩹 Fixes
+
+- Update example Terraform state backends from the DEV environment to UAT. ([#2204](https://github.com/pagopa/dx/pull/2204))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+- Copilot App @Copilot
+
 ## 4.0.2 (2026-09-08)
 
 ### 🩹 Fixes

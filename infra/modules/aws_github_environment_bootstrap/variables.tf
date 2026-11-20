@@ -13,7 +13,21 @@ variable "environment" {
     instance_number = string
   })
 
-  description = "Values which are used to generate resource names and region short names. They are all mandatory except for domain, which should not be used only in the case of a resource used by multiple domains."
+  description = "Values used to generate resource names and region short names."
+}
+
+variable "github_environment_prefix_enabled" {
+  type        = bool
+  default     = false
+  description = "Prefix GitHub environment names with environment.prefix."
+
+  validation {
+    condition = !var.github_environment_prefix_enabled || alltrue([
+      for environment_name in values(local.envs) :
+      environment_name == local.base_environment_name || !contains(split("-", var.environment.prefix), environment_name)
+    ])
+    error_message = "When github_environment_prefix_enabled is true, environment.prefix must not contain a different lifecycle (dev, uat or prod) as a hyphen-delimited token. Disable GitHub environment prefixing or plan a resource-prefix migration before applying."
+  }
 }
 
 variable "repository" {

@@ -18,6 +18,14 @@ A plugin directory under evaluation (`plugins/**/skills/*/`), identified by
 `SKILL.md`; its `evals/evals.json` is the source of truth for the benchmark.
 _Avoid_: plugin
 
+**Skill injection**:
+The ordered set of skills handed to one `harbor run`: the tested skill (base
+or head) plus the auxiliary `--skill` sources that ride along in both runs.
+The tested skill is injected last, matching Harbor's per-name last-wins
+resolution, so an auxiliary source that also contains the skill under test
+can never clobber the tested version (`SkillInjection.references()`).
+_Avoid_: skill list, skill args
+
 **Eval case**:
 One test case in `evals.json`: a prompt, an expected output, and optional
 expectations and fixtures.
@@ -68,8 +76,12 @@ collected artifacts. The `jobs` module encapsulates the trial-directory layout
 and the `result.json` schema via a single `TrialArtifacts` value (the one owner
 of every artifact location): a `Trial` loads its artifacts once into a
 `TrialFacts` value and exposes typed `metrics()` and `meta()` accessors rather
-than the raw dict. `copilot_usage` is a pure adapter: it aggregates whatever
-two files it is handed and never sees a trial path.
+than the raw dict. The typed metrics keep completion and the verifier gate
+apart: `completed` is the finished-without-exception flag, `eval_passed` /
+`gate_passed` read the gate from the primary score, and each
+`CriterionResult.passed` owns the verdict rule of its criterion.
+`copilot_usage` is a pure adapter: it aggregates whatever two files it is
+handed and never sees a trial path.
 _Avoid_: attempt, iteration
 
 **Job**:
@@ -96,9 +108,26 @@ on a live trial. The rows, metric specs, aggregated summary, and
 run-configuration skill diffs are folded into one `ReportDocument` by
 `build_document`. The `comparison_presentation` module is the report's
 interpretation seam: it computes comparable-task-only verdicts and metrics,
-task outcomes, display values, and per-skill source associations once. The
-Markdown, HTML, and JSON adapters serialize that shared presentation through
-the `render_report` interface. Whole-job totals remain separate from
+task outcomes, display values, and per-skill source associations once. Each
+task pair is first evaluated once into a per-task value (both sides' gate
+facts, the criteria join, the outcome); the task cards and the comparable
+aggregates are folds over it, so no rule is derived twice. Counts name the two
+axes explicitly: `gate_passed` counts trials whose verifier reward met its
+gate, `completed` counts trials that finished without an exception. The
+key-signal cards — gate, criteria, completion — are presentation values too
+(`signals`): formatted values, delta, direction, and the comparability note
+are computed once for all three adapters, and the criteria delta is
+suppressed unless every evaluated task has the same criterion names on both
+sides. One `OUTCOMES` table declares the outcome taxonomy once: classification
+and the outcome distribution both read it, and each task's badge prints its
+label. Task
+outcomes distinguish verifier-gate flips, primary-score moves, and
+criterion-level changes (the criteria come from the verifier artifact
+`reward-details.json`; the recorded `scoring.json` gate is display-only,
+because the reward RewardKit writes is already gated), so a tied aggregate
+score cannot hide a local regression. The Markdown, HTML, and JSON
+adapters serialize that shared presentation through the `render_report`
+interface. Whole-job totals remain separate from
 comparable-task statistics, so added or removed tasks cannot skew the verdict.
 Harbor trial directories with a `trial.log` but no `result.json` are retained
 as `incomplete` results; their attempt suffix is removed before joining the two

@@ -45,3 +45,8 @@ output "github_private_runner" {
     }
   }
 }
+
+output "ecr_public_role_arn" {
+  description = "ARN of this instance's dedicated ECR Public login role. The shared repository secret may retain a different instance's ARN because value changes are ignored."
+  value       = aws_iam_role.ecr_public_login.arn
+}

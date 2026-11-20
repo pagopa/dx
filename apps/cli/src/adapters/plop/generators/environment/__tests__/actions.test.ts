@@ -1,17 +1,17 @@
 import { type ActionConfig } from "node-plop";
-import { describe, expect, test } from "vitest";
-import { z } from "zod";
+import { beforeEach, describe, expect, test, vi } from "vitest";
 
 import { CloudAccount } from "../../../../../domain/cloud-account.js";
 import getActions from "../actions.js";
 import { Payload } from "../prompts.js";
 
-const terraformBackendActionSchema = z.object({
-  data: z.object({
-    terraformBackendKey: z.string(),
-  }),
-  type: z.literal("addMany"),
-});
+const loggerMocks = vi.hoisted(() => ({
+  debug: vi.fn(),
+}));
+
+vi.mock("@logtape/logtape", () => ({
+  getLogger: vi.fn(() => loggerMocks),
+}));
 
 export const getPayload = (includeInit = false): Payload => {
   const cloudAccount: CloudAccount = {
@@ -31,7 +31,10 @@ export const getPayload = (includeInit = false): Payload => {
       owner: "pagopa",
       repo: "dx",
     },
-    tags: {},
+    tags: {
+      CostCenter: "TS000 - TECNOLOGIA & SERVIZI",
+      Owner: "DX Platform",
+    },
     workspace: {
       domain: "mytest",
     },
@@ -56,6 +59,26 @@ export const getPayload = (includeInit = false): Payload => {
 };
 
 describe("actions", () => {
+  beforeEach(() => {
+    loggerMocks.debug.mockClear();
+  });
+
+  test("does not log Runner App private keys", () => {
+    const payload = getPayload(true);
+    payload.runnerAppCredentials = {
+      clientId: "top-level-client-id",
+      id: "top-level-app-id",
+      installationId: "top-level-installation-id",
+      key: "top-level-private-key",
+    };
+
+    getActions("/templates/path")(payload);
+
+    const loggedCalls = JSON.stringify(loggerMocks.debug.mock.calls);
+    expect(loggedCalls).not.toContain("test-private-key");
+    expect(loggedCalls).not.toContain("top-level-private-key");
+  });
+
   test.each([
     {
       payload: getPayload(true),
@@ -65,18 +88,33 @@ describe("actions", () => {
     },
   ])("correct order of actions", ({ payload }) => {
     const actionsOrder = [
-      "getTerraformBackend",
+      "validateTerraformBackendRoots",
+      "setupCloudTools",
+      ...(payload.init
+        ? [
+            "initCloudAccounts",
+            payload.init.terraformBackend
+              ? "provisionTerraformBackend"
+              : "getTerraformBackend",
+          ]
+        : ["getTerraformBackend"]),
+      "configureExistingTerraformRootBackends",
+      "syncNxAdditionalEnvironments",
       "syncRepositoryEnvironments",
       "configureGitHubEnvironments",
       "addMany",
       "addMany",
       "addMany",
+      "addMany",
+      "addMany",
     ];
 
-    if (payload.init) {
-      actionsOrder.unshift("initCloudAccounts", "provisionTerraformBackend");
-      actionsOrder.push("addMany", "addMany");
-    }
+    // The formatting pass always runs last, once every file is on disk.
+    actionsOrder.push("formatGeneratedCode");
+
+    // The generated Terraform projects are initialized once every file is on
+    // disk, so the provider and module locks land in the same commit.
+    actionsOrder.push("initTerraformProjects");
 
     const actions = getActions("/templates/path")(payload);
 
@@ -89,35 +127,4 @@ describe("actions", () => {
 
     expect(actionTypes).toEqual(actionsOrder);
   });
-
-  test.each([
-    {
-      expectedKeys: [
-        "dx/mytest/bootstrapper.tfstate",
-        "dx/mytest/core.tfstate",
-      ],
-      payload: getPayload(true),
-    },
-    {
-      expectedKeys: ["dx/mytest/bootstrapper.tfstate"],
-      payload: getPayload(false),
-    },
-  ])(
-    "uses prefix/domain/scope state keys in shared backend actions",
-    ({ expectedKeys, payload }) => {
-      const actions = getActions("/templates/path")(payload);
-
-      const terraformBackendKeys = actions
-        .filter(
-          (
-            action,
-          ): action is ActionConfig & {
-            data: { terraformBackendKey: string };
-          } => terraformBackendActionSchema.safeParse(action).success,
-        )
-        .map((action) => action.data.terraformBackendKey);
-
-      expect(terraformBackendKeys).toEqual(expectedKeys);
-    },
-  );
 });

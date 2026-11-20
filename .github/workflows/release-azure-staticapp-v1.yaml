@@ -49,6 +49,11 @@ on:
         description: Environment where the artifact will be deployed.
         type: string
         required: true
+      cleanup_stale_previews:
+        description: After production deployment, delete closed PR previews belonging to the calling repository. Requires Azure builds read/delete permissions.
+        type: boolean
+        required: false
+        default: false
       use_private_agent:
         description: Use a private agent to deploy the built artifact.
         type: boolean
@@ -83,15 +88,25 @@ jobs:
   build:
     name: Build Artifact
     if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-latest' }}
+    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
     permissions:
       contents: read
+      packages: read
     outputs:
       bundle_name: ${{ env.BUNDLE_NAME }}
 
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # DX packages come from GitHub Packages through pnpm's built-in `gh:`
+      # alias. The action writes a private npmrc in runner.temp with the
+      # expanded credential and exports NPM_CONFIG_USERCONFIG for the rest of
+      # the job, so no step has to resolve a token placeholder.
+      - name: Setup npm registry
+        uses: pagopa/dx/actions/setup-npm-registry@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build Package
         id: build-package
@@ -118,10 +133,11 @@ jobs:
 
   deploy:
     name: Deploy Static Website
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [build]
     # Allow preview cleanup on closed PRs even when the build job was skipped.
-    if: ${{ always() && !github.event.act && ((github.event_name == 'pull_request' && github.event.action == 'closed') || needs.build.result == 'success') }}
+    # Note: !cancelled() blocks superseded runs.
+    if: ${{ always() && !cancelled() && !github.event.act && ((github.event_name == 'pull_request' && github.event.action == 'closed') || needs.build.result == 'success') }}
     environment: ${{ inputs.environment }}-${{ github.event_name == 'pull_request' && 'ci' || 'cd' }}
     permissions:
       id-token: write
@@ -174,6 +190,13 @@ jobs:
           action: "upload"
           app_location: "./${{ env.OUTPUT_DIR }}"
           skip_app_build: true
+
+      - name: Cleanup Stale Preview Environments
+        if: inputs.cleanup_stale_previews && github.event_name != 'pull_request' && steps.deploy.outcome == 'success'
+        uses: pagopa/dx/actions/cleanup-static-web-app-previews@main
+        with:
+          static_web_app_name: ${{ inputs.static_web_app_name }}
+          resource_group_name: ${{ inputs.resource_group_name }}
 
       - name: Preview Comments Cleanup
         if: github.event_name == 'pull_request' && github.event.action != 'closed' && steps.deploy.outcome == 'success'
