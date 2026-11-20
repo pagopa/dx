@@ -71,6 +71,14 @@ jobs:
       contents: read
       packages: read
     steps:
+      - name: Start runtime hardening
+        uses: pagopa/dx/actions/start-runtime-hardening@runtime-hardening-actions
+        with:
+          additional-allowed-domains: |
+            mise-versions.jdx.dev
+            nodejs.org
+            productionresultssa*.blob.core.windows.net
+
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -182,6 +190,10 @@ jobs:
 
               printf 'environments=%s\n' "$environments" | tee -a "$GITHUB_OUTPUT"
 
+      - name: Stop runtime hardening
+        if: ${{ always() }}
+        uses: pagopa/dx/actions/stop-runtime-hardening@runtime-hardening-actions
+
   code-review:
     name: No environment
     runs-on: ubuntu-26.04
@@ -196,6 +208,21 @@ jobs:
     env:
       ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
     steps:
+      - name: Start runtime hardening
+        uses: pagopa/dx/actions/start-runtime-hardening@runtime-hardening-actions
+        with:
+          additional-allowed-domains: |
+            mise-versions.jdx.dev
+            awscli.amazonaws.com
+            dl.google.com
+            nodejs.org
+            releases.hashicorp.com
+            tuf-repo-cdn.sigstore.dev
+            productionresultssa*.blob.core.windows.net
+            sts.us-east-1.amazonaws.com
+            api.ecr-public.us-east-1.amazonaws.com
+            public.ecr.aws
+
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -268,6 +295,7 @@ jobs:
           # This is the authentication region, not the deployment region.
           # https://docs.aws.amazon.com/AmazonECR/latest/public/public-registry-auth.html
           aws-region: us-east-1
+          action-timeout-s: 120
           output-credentials: true
           output-env-credentials: false
           mask-aws-account-id: true
@@ -296,6 +324,10 @@ jobs:
         run: |
           EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
           pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci --outputStyle=static
+
+      - name: Stop runtime hardening
+        if: ${{ always() }}
+        uses: pagopa/dx/actions/stop-runtime-hardening@runtime-hardening-actions
 
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
