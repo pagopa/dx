@@ -30,13 +30,13 @@ before treating the request as an edit.
 
 ## What it does
 
-- **Create** writes the document once as native HTML. Headings, tables, lists,
-  code blocks, and macros survive the conversion; `<details>` becomes a
-  collapsible expand, GitHub-style alerts become callouts, front matter becomes
-  a metadata table, and a Mermaid fence becomes a rendered diagram
-  ([Pele](https://pele.run/)) with the fence kept in an expand below it. It can
-  stop at an unpublished draft when you want to review before publishing.
-- **Edit** reads the published page as native HTML once, then writes only the
+- **Create** writes the document once as native HTML, so headings, tables,
+  lists, code blocks, and macros survive the conversion. Markdown-only
+  constructs are mapped to their Confluence equivalents, and a Mermaid fence
+  becomes a rendered diagram ([Pele](https://pele.run/)) with the fence kept in
+  an expand below it. It can stop at an unpublished draft when you want to
+  review before publishing.
+- **Edit** reads the page's draft as native HTML once, then writes only the
   nodes that change, addressed by their `data-local-id`. The write lands on the
   page's unpublished draft, so the live page changes when you publish it. Ask
   for a working copy to leave the original untouched.
@@ -54,5 +54,8 @@ approved.
 
 ## Maintainers
 
-The Harbor benchmark that measures this skill, its OAuth setup, and its
-troubleshooting live in [CONTRIBUTING.md](./CONTRIBUTING.md).
+Two Harbor benchmark cases measure this skill on real Confluence pages:
+`native-edit-in-place`, which edits a page's draft in place, and
+`small-update-large-file`, which measures a small change to a large page. The
+benchmark, its OAuth setup, and its troubleshooting live in
+[CONTRIBUTING.md](./CONTRIBUTING.md).

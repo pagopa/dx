@@ -10,11 +10,37 @@ user owns the source content and domain rules. When a domain decision is missing
 from the source, surface it to the caller rather than invent one to ease
 publication.
 
+## When to use
+
+Load this skill when the user wants a document in Confluence — a new page or a
+change to an existing one, in any language. Typical requests:
+
+```text
+Publish docs/checkout-prd.md to DevEx under "Product" as "Checkout redesign PRD".
+Change the rollout date on <page URL> to 2026-12-01.
+Translate the "Payments" page to English.
+```
+
+Authoring skills such as `prd-alchemist` and `uc-engraver` hand the write step
+to this one once the content is confirmed. If no existing page is named, ask
+before treating the request as an edit.
+
+## Prerequisites
+
+- The Atlassian MCP server (`mcp.atlassian.com/v2/mcp`) connected with an OAuth
+  session carrying the `read/write:confluence:agent-interface` scopes. An
+  Atlassian API token (`email:token`) authenticates the Confluence REST API, not
+  this server.
+- The source document (create), or the target page URL and the change to apply
+  (edit).
+- For a create: the space, plus the parent page and title.
+
 ## Workflow
 
-Both paths share the same three gates, run in order: **confirm** the write with
-an explicit yes, **summarize** the irreversible action, and **report the URL**
-when done. Each path below ends with its own completion check.
+Both paths run the same three gates in order: **confirm** the write with an
+explicit yes, **summarize** the irreversible action, and **report the URL** when
+done. _Confirm, resolve, and summarize_ covers the first two; each path ends
+with its own completion check and its own URL report.
 
 ### Decide: create or edit
 
@@ -27,7 +53,7 @@ If the request does not name an existing page, ask before assuming edit. If the
 prepared source or the desired change is unavailable, ask for it; report only
 content you actually read, published, or edited.
 
-### Confirm and resolve
+### Confirm, resolve, and summarize
 
 1. Get an explicit affirmative answer before creating or updating. If the user
    only asked to write a document locally, stop there.
@@ -39,11 +65,11 @@ content you actually read, published, or edited.
 Operation: create | edit
 Title: <page title>
 Space: <space>
-Parent: <parent or none>
+Parent: <parent>                       [create only]
 Language: <language>
-Source: <document path or artifact>
-[Edit] Target: <existing page URL>
-[Edit] Change: <the intended difference>
+Source: <document path or artifact>    [create only]
+Target: <existing page URL>            [edit only]
+Change: <the intended difference>      [edit only]
 ```
 
 ### Create — publish a prepared document once
@@ -79,19 +105,20 @@ body, and that write's response `webUrl` is the draft's resume URL
 To edit a **working copy** instead of the original, create it once with the
 copy call shape below and keep the `contentId` it returns.
 
-1. **Fetch the baseline once.** Fetch the published page **as native HTML** —
-   `getConfluenceContent` with `content_format: html`, `detail: full` — for its
-   current body and `snapshotToken`. That single fetch is the baseline for the
-   whole task. A fresh working copy has no draft yet, so the draft's state comes
-   from the write's response or a cheap follow-up read.
-2. **Apply the minimal change.** Express it as granular edits on the node's
-   `data-local-id` (protocol rule 2) and keep every element you are not
-   changing intact (protocol rule 3). When the change is handed over as
-   a document, take only its differing lines (a diff or a targeted match) and
-   change exactly the nodes those lines touch; the rest of the file stays
-   unread.
+1. **Fetch the baseline once.** Fetch the page's **draft as native HTML** —
+   `getConfluenceContent` with `draft: true`, `content_format: html`,
+   `detail: full` — and take its content and `snapshotToken`. That single fetch
+   is the baseline for the whole task; when the token comes back missing, as the
+   published base, or already stale, refetch the draft and reapply the change.
+   A fresh working copy has no draft yet, so its first `draft: true` write
+   creates one from the published body.
+2. **Apply the minimal change.** Express it as granular edits addressed by a
+   node's `data-local-id` and keep every element you are not changing intact.
+   When the change is handed over as a document, take only its differing lines
+   (a diff or a targeted match) and change exactly the nodes those lines touch;
+   the rest of the file stays unread.
 3. **Persist directly, on the draft.** Write with the granular draft edit shape
-   below — `draft: true`, never without it, with the published page's current
+   below — `draft: true`, never without it, with the baseline's
    `snapshotToken`. Treat the write's response as the verification: it echoes
    the applied content and carries the draft's resume URL.
 4. **Done when** the change is staged on the draft and you report the draft's
@@ -126,8 +153,11 @@ HTML. The rules:
 
 ## MCP call shapes
 
-Exact payloads for the two writes this skill drives: call them directly, with no
-`discover` or `getContentFormatGuide` step. Their responses carry the ids and
+Exact payloads for the two writes this skill drives. Follow the server's own
+authoring rules around them: load `getContentFormatGuide` once for the write's
+`toolName` (`createConfluencePage` / `updateConfluencePage`) before choosing a
+`body.format` or authoring an edit, and load `getConfluenceSpace` when the
+content you read reports space instructions. Their responses carry the ids and
 URLs — read them from there.
 
 **Working copy** — `executeWrite`:
@@ -214,6 +244,8 @@ only what was requested.
 - Verify edits by content, not byte equality: Confluence re-normalizes HTML
   cosmetics on import/export, but macros and node structure must survive
   identically.
+- Ignore Markdown soft-wraps in the source: wrapped lines are formatting only,
+  so they must not become new paragraphs, bullets, or hard breaks.
 
 ## Mermaid diagrams
 
@@ -226,10 +258,45 @@ code block:
 - load `https://cdn.jsdelivr.net/npm/pele@1/dist/pele.global.js` and read
   `pele.render(source).svg`.
 
-Put that SVG in the page where the fence was, and keep the fence's lines
-unchanged in a collapsible expand directly below it, titled `Mermaid source`. A
-reader then sees the diagram without the source expanded and can copy the source
-to edit it.
+Save it as `<slug>.svg`. Confluence has no inline `<svg>` node and its HTML
+conversion never uploads files, so the diagram reaches the page as an
+attachment-backed media node:
+
+1. Upload the SVG with `createConfluenceAttachment` — `contentId` of the page
+   plus `localFilePath` of the SVG. It returns a `curl` command; run it to
+   upload the file, and take the media `id` and `collection` the upload returns.
+2. Put the media node where the fence was:
+
+   ```html
+   <figure
+     data-type="media-single"
+     data-layout="center"
+     data-width="80"
+     data-width-type="percentage"
+   >
+     <div
+       data-type="media"
+       data-media-type="file"
+       data-id="<media id>"
+       data-collection="<collection>"
+       data-alt="<diagram title>"
+     ></div>
+   </figure>
+   ```
+
+3. Keep the fence's lines unchanged in a collapsible expand directly below it:
+
+   ```html
+   <details>
+     <summary>Mermaid source</summary>
+     <pre><code>…</code></pre>
+   </details>
+   ```
+
+A create cannot attach to a page that does not exist yet: create the page with
+the expand alone, attach the SVG, then insert the media node above the expand.
+For an edit, both the attachment and the media node are changes on the draft,
+applied with the granular edit shape above.
 
 Done when the diagram renders in the page and the same Mermaid text is in the
 expand.
