@@ -12,8 +12,11 @@ locals {
     "u" = "uat"
     "p" = "prod"
   }[var.environment.env_short]
-  env_name          = var.github_environment_prefix_enabled ? "${var.environment.prefix}-${local.base_environment_name}" : local.base_environment_name
-  dx_runner_enabled = startswith(var.environment.prefix, "dx")
+  env_name = var.github_environment_prefix_enabled ? "${var.environment.prefix}-${local.base_environment_name}" : local.base_environment_name
+
+  dx_runner_enabled = var.github_private_runner.enable_dx_runner || startswith(var.environment.prefix, "dx")
+  dx_runner_label   = var.github_environment_prefix_enabled ? "${local.base_environment_name}-${var.environment.prefix}-dx" : "${local.base_environment_name}-dx"
+  dx_runner_labels  = var.github_private_runner.enable_dx_runner ? [local.dx_runner_label] : concat(var.github_private_runner.labels, ["dx"])
 
   # GitHub emits immutable subject claims that embed the numeric owner and
   # repository IDs for repositories created or renamed after 2026-07-15, while
