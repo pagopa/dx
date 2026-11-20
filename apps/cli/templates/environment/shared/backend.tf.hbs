@@ -1,14 +1,18 @@
 {{#*inline "azurerm"}}
 backend "azurerm" {
-  resource_group_name  = "{{resourceGroupName}}"
-  storage_account_name = "{{storageAccountName}}"
-  container_name       = "terraform-state"
-  key                  = "{{key}}"
-  subscription_id      = "{{subscriptionId}}"
+  resource_group_name  = {{{terraformString resourceGroupName}}}
+  storage_account_name = {{{terraformString storageAccountName}}}
+  container_name       = {{{terraformString containerName}}}
+  key                  = {{{terraformString key}}}
+  subscription_id      = {{{terraformString subscriptionId}}}
   use_azuread_auth     = true
 }
 {{/inline}}
 
 terraform {
-  {{> (lookup terraform.backend 'type') terraform.backend key=terraformBackendKey  }}
+{{#if (eq terraformBackendName "coreBackend")}}
+  {{> azurerm @root.terraform.coreBackend key=@root.terraform.coreBackend.key}}
+{{else}}
+  {{> azurerm @root.terraform.backend key=@root.terraform.backendKey}}
+{{/if}}
 }

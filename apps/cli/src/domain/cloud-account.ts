@@ -27,6 +27,11 @@ export type CloudAccountService = {
     runnerAppCredentials: GitHubAppCredentials,
   ): Promise<void>;
 
+  ensureTerraformBackendAccess(
+    backend: TerraformBackend,
+    additionalBackends?: readonly TerraformBackend[],
+  ): Promise<void>;
+
   getRunnerAppCredentials(
     cloudAccount: CloudAccount,
     environment: EnvironmentId,
@@ -35,6 +40,7 @@ export type CloudAccountService = {
   getTerraformBackend(
     cloudAccountId: CloudAccount["id"],
     environment: EnvironmentId,
+    domain: string,
   ): Promise<TerraformBackend | undefined>;
 
   hasUserPermissionToInitialize(
@@ -58,6 +64,7 @@ export type CloudAccountService = {
   provisionTerraformBackend(
     cloudAccount: CloudAccount,
     environment: EnvironmentId,
+    domain: string,
     tags?: Record<string, string>,
   ): Promise<TerraformBackend>;
 
@@ -65,6 +72,11 @@ export type CloudAccountService = {
     cloudAccount: CloudAccount,
     environment: EnvironmentId,
     clientId: string,
+  ): Promise<void>;
+
+  verifyTerraformBackendReadAccess(
+    backend: TerraformBackend,
+    key: string,
   ): Promise<void>;
 };
 
