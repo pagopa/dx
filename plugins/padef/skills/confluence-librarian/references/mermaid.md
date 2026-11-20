@@ -77,7 +77,8 @@ with diagrams lands in two passes:
 5. Publish only when the user asked for a published page: one more
    `updateConfluenceContent` on the same `contentId` with `draft` omitted and
    `body` set to the assembled native HTML. When the user asked for an
-   unpublished draft, stop at step 4 and report the draft's resume URL.
+   unpublished draft, stop at step 4 and report the draft page URL
+   (`baseUrl` + `webUrl`) labeled as unpublished.
 
 No diagrams means one create call. Existing pages stay draft-only, including
 diagram edits, until the user publishes them.

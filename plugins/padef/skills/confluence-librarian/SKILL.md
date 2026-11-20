@@ -45,6 +45,16 @@ once for the write's `toolName` (`createConfluencePage` / `updateConfluencePage`
 before choosing a `body.format` or authoring an edit, and `getConfluenceSpace`
 when the content you read reports space instructions.
 
+### Operations
+
+| Need                   | Operation                                                     |
+| ---------------------- | ------------------------------------------------------------- |
+| read a page or draft   | `getConfluenceContent` (`detail: "full"`, `draft: true`)      |
+| create a page          | `createConfluenceContent` (`body.format: "html"`)             |
+| change a page or draft | `updateConfluenceContent` (`snapshotToken`, `edits`, `draft`) |
+| copy a page            | `copyConfluenceContent` (through `executeWrite`)              |
+| authoring rules        | `getContentFormatGuide` (`toolName`) · `getConfluenceSpace`   |
+
 ### Decide: create or edit
 
 Choose the path from the target, not the wording of the request:
@@ -79,22 +89,27 @@ Change: <the intended difference>      [edit only]
 
 1. **Validate the source.** Preserve headings, tables, lists, and code blocks
    across conversion, and apply the Structure and traceability rules below. When
-   the source is Markdown and starts with an H1 matching the page title, drop
-   that H1 from the body so the title is not shown twice.
+   the source is Markdown and starts with an H1 that the page title repeats,
+   drop that H1 from the body so the title is not shown twice. A uniqueness
+   suffix on the title (a date, a counter) does not make the H1 its own
+   heading: drop it too.
 2. **Convert once to native HTML.** Build Confluence's native HTML body and map
    Markdown-only rich constructs to their Confluence equivalents:
    `<details>`/`<summary>` → collapsible expand; `> [!NOTE]`, `> [!TIP]`,
    `> [!WARNING]`, `> [!CAUTION]` → info/tip/warning/error callouts; a Mermaid
-   fence → a rendered diagram with its source retained. Front matter is not
-   native metadata: render it as a metadata table.
+   fence → a rendered diagram with its source retained. YAML or TOML front
+   matter is not native metadata: render it as a metadata table. A Markdown HTML
+   comment has no native form: drop it, and never give its value a row, a label,
+   or a sentence.
 3. **Translate if requested.** Apply the Translation rules below.
 4. **Write.** Use one `createConfluenceContent` call with
-   `body.format: html`. A Mermaid fence takes the multipass branch documented in
-   [references/mermaid.md](./references/mermaid.md).
-5. **Done when** the write response returns the requested page or draft URL,
-   and the response content preserves the source's structure, stable IDs, and
-   status values. For Mermaid, also verify that every fence has both its media
-   node and unchanged source expand.
+   `body.format: html`. Only when the source holds a Mermaid fence, follow the
+   multipass branch in [references/mermaid.md](./references/mermaid.md).
+5. **Done when** the write response returns `id`, `status`, `webUrl`, and
+   `baseUrl`, and the response content preserves the source's structure, stable
+   IDs, and status values. Report the page as `baseUrl` + `webUrl`. For Mermaid,
+   also verify that every fence has both its media node and unchanged source
+   expand.
 
 ### Edit — change an existing page in place
 
@@ -107,13 +122,15 @@ the copy, bootstrap, edit, and baseline branches.
 3. **Apply the minimal change** as `data-local-id` edits; leave every other node
    intact.
 4. **Persist on the draft** with the baseline's `snapshotToken`.
-5. **Done when** the write response verifies the requested change and returns
-   the draft's resume URL; the published page remains unchanged until the user
-   publishes that draft.
+5. **Done when** the write response verifies the requested change with
+   `status: "draft"`, and you report the draft as `baseUrl` + `webUrl` labeled
+   unpublished; the published page remains unchanged until someone publishes
+   that draft.
 
 ## Structure and traceability rules
 
-- Preserve every stable ID exactly; IDs are never translated or renumbered.
+- Preserve every stable ID exactly in the element that already carries it; IDs
+  are never translated, renumbered, or promoted into visible content.
 - Preserve every section, including conditional sections marked `N/A — <reason>`.
 - Preserve links to PRDs, RFCs, ADRs, Figma, Service Blueprints, APIs, events,
   data contracts, reviews, dashboards, and Jira.

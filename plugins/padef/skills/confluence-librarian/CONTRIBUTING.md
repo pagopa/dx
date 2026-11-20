@@ -145,6 +145,25 @@ Notes:
 - `--job-name` must change whenever the config/task changes (Harbor refuses to
   resume a job dir with a different config). Results land in `runs/<name>/`.
 
+### Clean up the pages a run created
+
+Every run creates real pages in DevEx Playground: one page per create case, plus
+one working copy of each seed page for the copy cases. Nothing deletes them, so
+the folder grows and Confluence starts appending a counter to the title
+(`… Meeting Guide (8)`). After each run:
+
+1. Read the created content ids from the trial artifacts
+   (`agent/copilot-cli.jsonl` holds the `createConfluenceContent` /
+   `copyConfluenceContent` responses).
+2. Archive each page with `archiveConfluenceContent`. The Atlassian MCP exposes
+   **archive only** — no delete operation — so permanent removal needs the
+   Confluence UI.
+3. Keep the seed pages untouched. Only the copies and the newly created pages
+   are run litter.
+
+Archive, do not reuse: a later run must create its own pages, since the evals
+assert that each run creates a fresh working copy.
+
 ## 5. Report / compare
 
 ```sh
