@@ -19,5 +19,9 @@ atif-trajectory = "{{TRAJECTORY_JSON}}"
 [scoring]
 # threshold=0.8 mirrors the total-score gate (>= 80%). It does NOT reproduce
 # all-or-nothing gates; implement those in test.sh by reading reward-details.json.
+# Weighted mean: `harbor-bench convert` emits the aggregate criterion
+# ("satisfies the expected result") with weight 0 whenever a case also declares
+# expectations, because the aggregate restates them and would charge one miss
+# twice. A case with no expectation scores the aggregate alone, at weight 1.
 aggregation = "threshold"
 threshold = 0.8
