@@ -206,6 +206,33 @@ test("matches a needle spanning inline markup and entities", () => {
   assert.equal(inline.matches[0].tag, "p");
 });
 
+test("matches a needle behind numeric and typographic entities", () => {
+  const html =
+    "<div><p>perch&eacute; il rollout cambia</p>" +
+    "<p>window &#8212; ten days</p>" +
+    "<p>window &#x2014; twenty days</p>" +
+    "<p>&amp;unknown; entity stays</p></div>";
+
+  const named = findElements(html, { text: "perché" });
+  assert.equal(named.matches.length, 1);
+  assert.equal(
+    html.slice(named.matches[0].start, named.matches[0].end),
+    "<p>perch&eacute; il rollout cambia</p>",
+  );
+
+  const decimal = findElements(html, { text: "window — ten days" });
+  assert.equal(decimal.matches.length, 1);
+  assert.match(
+    html.slice(decimal.matches[0].start, decimal.matches[0].end),
+    /&#8212;/,
+  );
+
+  const hexadecimal = findElements(html, { text: "window — twenty days" });
+  assert.equal(hexadecimal.matches.length, 1);
+
+  assert.equal(findElements(html, { text: "&unknown;" }).matches.length, 1);
+});
+
 test("exposes the anchor in machine-readable output", () => {
   const json = spawnSync(
     process.execPath,

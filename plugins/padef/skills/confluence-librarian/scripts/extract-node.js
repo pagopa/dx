@@ -9,20 +9,73 @@ const VOID_ELEMENTS = new Set(
   ),
 );
 const RAW_TEXT_ELEMENTS = new Set(["script", "style", "textarea", "title"]);
-const ENTITIES = {
-  "&amp;": "&",
-  "&lt;": "<",
-  "&gt;": ">",
-  "&quot;": '"',
-  "&#39;": "'",
-  "&apos;": "'",
-  "&nbsp;": "\u00a0",
-};
+// Numeric references cover most of what Confluence emits, so this table only
+// carries the names that survive a round trip: markup, whitespace, the
+// typography that Word pastes leave behind, and accented Latin letters.
+const NAMED_ENTITIES = new Map(
+  Object.entries({
+    amp: "&",
+    lt: "<",
+    gt: ">",
+    quot: '"',
+    apos: "'",
+    nbsp: "\u00a0",
+    ndash: "\u2013",
+    mdash: "\u2014",
+    hellip: "\u2026",
+    lsquo: "\u2018",
+    rsquo: "\u2019",
+    ldquo: "\u201c",
+    rdquo: "\u201d",
+    laquo: "\u00ab",
+    raquo: "\u00bb",
+    bull: "\u2022",
+    middot: "\u00b7",
+    copy: "\u00a9",
+    reg: "\u00ae",
+    trade: "\u2122",
+    deg: "\u00b0",
+    plusmn: "\u00b1",
+    times: "\u00d7",
+    euro: "\u20ac",
+    agrave: "\u00e0",
+    aacute: "\u00e1",
+    egrave: "\u00e8",
+    eacute: "\u00e9",
+    igrave: "\u00ec",
+    iacute: "\u00ed",
+    ograve: "\u00f2",
+    oacute: "\u00f3",
+    ugrave: "\u00f9",
+    uacute: "\u00fa",
+    Agrave: "\u00c0",
+    Egrave: "\u00c8",
+    Eacute: "\u00c9",
+    Igrave: "\u00cc",
+    Ograve: "\u00d2",
+    Ugrave: "\u00d9",
+  }),
+);
 
+// Decoded text is what `--text` is matched against, so a needle typed as it
+// reads on the page has to find `perch&eacute;` and `&#8212;` alike. A single
+// pass keeps `&amp;lt;` at one level, and anything unknown stays untouched.
 function decodeEntities(value) {
-  return value.replaceAll(
-    /&(?:amp|lt|gt|quot|#39|apos|nbsp);/g,
-    (entity) => ENTITIES[entity] ?? entity,
+  return value.replace(
+    /&(?:#(\d+)|#[xX]([0-9a-fA-F]+)|([a-zA-Z][a-zA-Z0-9]*));/g,
+    (entity, decimal, hexadecimal, name) => {
+      if (name) {
+        return NAMED_ENTITIES.get(name) ?? entity;
+      }
+      const codePoint = decimal
+        ? Number(decimal)
+        : Number.parseInt(hexadecimal, 16);
+      const unrepresentable =
+        codePoint === 0 ||
+        codePoint > 0x10ffff ||
+        (codePoint >= 0xd800 && codePoint <= 0xdfff);
+      return unrepresentable ? entity : String.fromCodePoint(codePoint);
+    },
   );
 }
 
