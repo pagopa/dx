@@ -42,7 +42,7 @@ args = [
 
 [task]
 name = "pagopa/confluence-librarian-1-stable-id-preservation"
-description = "The page content is translated only where requested while machine-facing identifiers and document structure remain unchanged."
+description = "Translates only the human-facing prose: machine-facing identifiers, structure, links, and status values stay unchanged. IDs held solely in Markdown HTML comments may be dropped."
 version = "1.0.0"
 
 [metadata]
