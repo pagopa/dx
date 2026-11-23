@@ -1,11 +1,30 @@
-resource "azurerm_subnet" "apim" {
+variable "adopt_existing_apim_subnet" {
+  type        = bool
+  description = "Import the existing APIM subnet CIDR allocation during migration from the Azure API Management v4 module contract."
+  default     = true
+}
+
+data "azurerm_subnet" "existing_apim" {
+  count = var.adopt_existing_apim_subnet ? 1 : 0
+
   name = provider::dx::resource_name(merge({
     resource_type   = "apim_subnet",
     instance_number = 1,
   }, local.naming_config))
   virtual_network_name = module.core.common_vnet.name
   resource_group_name  = module.core.network_resource_group_name
-  address_prefixes     = ["10.60.2.0/24"]
+}
+
+moved {
+  from = azurerm_subnet.apim
+  to   = module.apim.azurerm_subnet.apim
+}
+
+import {
+  for_each = var.adopt_existing_apim_subnet ? { apim = data.azurerm_subnet.existing_apim[0].id } : {}
+
+  to = module.apim.dx_available_subnet_cidr.apim
+  id = each.value
 }
 
 module "apim" {
@@ -19,14 +38,7 @@ module "apim" {
   publisher_email = "common-dx@pagopa.it"
   publisher_name  = "Common DX"
 
-  virtual_network = {
-    name                = module.core.common_vnet.name
-    resource_group_name = module.core.network_resource_group_name
-  }
-
-  subnet_id                     = azurerm_subnet.apim.id
-  virtual_network_type_internal = true
-  enable_public_network_access  = true
+  virtual_network = module.core.common_vnet.id
 
   tags = local.tags
 }

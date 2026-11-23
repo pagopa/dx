@@ -15,7 +15,12 @@ The configuration in this example:
 
 ### API Management
 
-The API Management service is deployed in a dedicated subnet within the core virtual network. It supports internal access via private networking and allows public access when required.
+The API Management v5 module manages its dedicated subnet in the core virtual
+network. The migration blocks move the existing subnet into the module and
+import its CIDR allocation so the subnet keeps its current address. The
+`adopt_existing_apim_subnet` variable defaults to `true` for the existing
+development deployment; set it to `false` only when deploying this example
+into a new environment that has no existing APIM subnet.
 
 For detailed configuration options, refer to the [Terraform module documentation](https://registry.terraform.io/modules/pagopa-dx/azure-api-management/azurerm/latest).
 
