@@ -9,14 +9,15 @@ Working notes for maintainers and coding agents. Consumer documentation lives in
 branch-only bodies sit in `references/`: `edit.md` (edit protocol, call shapes,
 baseline contract) and `mermaid.md` (Mermaid to SVG). `scripts/extract-node.js`
 is the offline node extractor `edit.md` points at for a persisted baseline; it
-is dependency-free ESM and its tests run with `node --test` next to it.
-`scripts/render-mermaid.mjs` is the renderer `mermaid.md` points at: it pins
-Pele in `PELE_VERSION`, installs it into a per-user cache directory on first
-run, and converts in-process. A version bump is that one constant — the cache
-directory name follows it, so a new pin installs beside the old one. The cache
-is imported as code, so the script refuses a directory that is a symlink or
-owned by another account, and honours `CONFLUENCE_LIBRARIAN_CACHE` when a run
-needs a different location. Keep pointers
+is dependency-free ESM. `scripts/render-mermaid.mjs` is the renderer
+`mermaid.md` points at: it pins Pele in `PELE_VERSION`, installs it into a
+per-user cache directory on first run, and converts in-process. A version bump
+is that one constant — the cache directory name follows it, so a new pin
+installs beside the old one. The cache is imported as code, so the script checks
+the cache root and the pinned directory below it, refuses a symlink or another
+account's directory, and forces both to mode `0700` before it installs or
+imports; it honours `CONFLUENCE_LIBRARIAN_CACHE` when a run needs a different
+location. Both scripts keep a `node --test` suite next to them. Keep pointers
 relative and inside this folder — Harbor stages the whole skill directory into
 the container, so the agent can read `references/` and `scripts/` at run time.
 

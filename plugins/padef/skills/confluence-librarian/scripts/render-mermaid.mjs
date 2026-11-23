@@ -3,6 +3,7 @@
 // installed once into a cache directory, so repeat runs render in-process.
 import { execFileSync } from "node:child_process";
 import {
+  chmodSync,
   existsSync,
   lstatSync,
   mkdirSync,
@@ -37,8 +38,14 @@ function privateDir(path) {
     console.error(`error cache directory ${path} is not a private directory`);
     process.exit(1);
   }
+  // An existing directory keeps the mode it already had, and whoever can write
+  // to it can plant the module we are about to import.
+  chmodSync(path, 0o700);
 }
 
+// Every level is checked, not just the leaf: an ancestor we do not own can be
+// renamed out from under us between the check and the import.
+privateDir(cacheRoot);
 privateDir(peleDir);
 
 if (!existsSync(peleEntry)) {
