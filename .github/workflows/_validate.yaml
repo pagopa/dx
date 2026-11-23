@@ -6,6 +6,38 @@ on:
     types: [opened, synchronize]
 
 jobs:
+  falco-diagnostics:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-26.04
+    permissions:
+      actions: read
+      contents: read
+    steps:
+      - name: Start runtime hardening
+        uses: pagopa/dx/actions/start-runtime-hardening@workflow-hardening-pilot
+
+      - name: Exercise Falco monitoring
+        shell: bash
+        run: |
+          if ! docker inspect falco --format '{{.State.Running}}' 2>/dev/null | grep -q '^true$'; then
+            echo "::error::Falco is not running."
+            exit 1
+          fi
+          grep -q 'ghp_' /dev/null || true
+          for attempt in {1..20}; do
+            if [ -r /tmp/falco_events.json ] && jq -e 'select(.rule == "Grep Looking for GitHub Secrets")' /tmp/falco_events.json > /dev/null; then
+              echo "Expected Falco rule observed."
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "::error::Expected Falco rule was not observed."
+          exit 1
+
+      - name: Stop runtime hardening
+        if: ${{ always() }}
+        uses: pagopa/dx/actions/stop-runtime-hardening@workflow-hardening-pilot
+
   validate:
     if: ${{ github.actor != 'dx-pagopa-bot' }}
     permissions:

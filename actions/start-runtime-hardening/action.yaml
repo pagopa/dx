@@ -62,6 +62,19 @@ runs:
         cicd-rules: false
         custom-rule-file: ${{ runner.temp }}/falco_cicd_rules.yaml
 
+    - name: Diagnose Falco startup
+      shell: bash
+      run: |
+        timeout 20s docker logs --follow falco \
+          > "$RUNNER_TEMP/falco-startup-stdout.log" \
+          2> "$RUNNER_TEMP/falco-startup-stderr.log" || true
+        if docker inspect falco --format '{{.State.Running}}' 2>/dev/null | grep -q '^true$'; then
+          echo "Falco remains running after startup."
+        else
+          echo "::warning::Falco stopped during startup."
+          grep -iE 'error|fatal|failed|not supported|permission denied' "$RUNNER_TEMP/falco-startup-stderr.log" || true
+        fi
+
     - name: Mark Falco as started
       shell: bash
       run: touch "$RUNNER_TEMP/dx-runtime-hardening-falco-started"
