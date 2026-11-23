@@ -48,33 +48,21 @@ The workflow performs the following steps:
 
 ```mermaid
 flowchart TD
-    Start([Release workflow called]) --> Build["Build and push image<br/>or reuse supplied image tag"]
+    Start([Trigger]) --> Build["Build and push image<br/>or reuse supplied image tag"]
     Build --> BuildOK{"Build succeeded<br/>or was skipped?"}
     BuildOK -->|No| Failed([Workflow failed])
-    BuildOK -->|Yes| ReleaseGate
-    BuildOK -->|Yes, in parallel| AutoEnabled
-
-    subgraph Approval["Approval handling"]
-        AutoEnabled{"Auto-deploy enabled<br/>and not running under act?"}
-        AutoEnabled -->|Yes| AutoTry["Auto-approval job attempts approval<br/>using configured reviewer token"]
-        AutoTry --> AutoOK{"Approval submitted?"}
-        AutoOK -->|Yes| Approved["Pending deployment approved"]
-        AutoOK -->|No| Manual["Manual approval<br/>if approval is still pending"]
-        AutoEnabled -->|No| Manual
-
-        ReleaseGate["Release job environment gate<br/>Proceed when protection rules are satisfied<br/>No approval needed if none is configured"]
-        Approved -.-> ReleaseGate
-        Manual -.-> ReleaseGate
-    end
+    BuildOK -->|Yes| ReleaseGate{"Manual approval required?"}
+    ReleaseGate -->|Yes| ReleaseApproval["Approve deployment"]
 
     subgraph Revision["Deploy revision - release job"]
-        ReleaseGate --> Prepare["Resolve image, log in to Azure<br/>Read Single or Multiple revision mode"]
-        Prepare --> Current["Select newest ACTIVE revision"]
-        Current --> Copy["Copy its template with the requested image<br/>Azure returns a candidate revision name"]
+        ReleaseGate -->|No| Prepare["Read Single or Multiple revision mode"]
+        ReleaseApproval --> Prepare
+        Prepare --> Current["Get Container App newest ACTIVE revision"]
+        Current --> Copy["Copy its template replacing the image"]
         Copy --> Same{"Candidate equals<br/>current active revision?"}
 
-        Same -->|Yes| NoOp([Successful no-op<br/>Skip readiness and promotion])
-        Same -->|No| Mode{"Revision mode?"}
+        Same -->|Yes| NoOp([Successful no-op])
+        Same -->|No| Mode{"Container App revision mode?"}
 
         Mode -->|Multiple| Inspect{"Is the candidate inactive?"}
         Inspect -->|Yes| Activate["Explicitly activate the existing revision"]
@@ -82,23 +70,25 @@ flowchart TD
         Activate --> Traffic["Keep current revision at 100% traffic<br/>Candidate at 0%"]
 
         Mode -->|Single| Wait
-        Traffic --> Wait["Wait for candidate to become Healthy<br/>Currently: 30 polls with 3-second sleeps"]
+        Traffic --> Wait["Wait for candidate to become Healthy"]
         Wait --> Healthy{"Healthy before timeout?"}
         Healthy -->|No| ReleaseFailure
         Healthy -->|Yes| ReadyMode{"Revision mode?"}
 
-        ReadyMode -->|Single| SingleDone([Complete<br/>Azure manages the traffic switch<br/>No separate swap job])
+        ReadyMode -->|Single| SingleDone([Complete])
         ReadyMode -->|Multiple| Label["Assign staging label to candidate"]
     end
 
-    subgraph Promotion["Promote revision - swap job, Multiple mode only"]
-        Label --> Act{"Running under act?"}
-        Act -->|Yes| Staged([Candidate staged<br/>Swap job skipped])
-        Act -->|No| SwapGate["Same environment gate: environment-cd<br/>Satisfy any outstanding protection rules"]
-        Manual -.-> SwapGate
+    subgraph Promotion["Promote revision - swap job, (multiple mode only)"]
+        Label -->|No| SwapGate{"Manual approval required?"}
+        SwapGate -->|Yes| SwapApproval["Approve promotion"]
 
-        SwapGate --> Rollout["Log in to Azure and promote traffic<br/>Canary script: incremental rollout<br/>No script: directly set latest to 100%"]
-        Rollout --> RolloutOK{"Rollout succeeded?"}
+        SwapGate -->|No| Canary{"Canary script available?"}
+        SwapApproval --> Canary
+        Canary -->|Yes| Incremental["Promote traffic incrementally"]
+        Canary -->|No| Direct["Set latest revision traffic to 100%"]
+        Incremental --> RolloutOK{"Rollout succeeded?"}
+        Direct --> RolloutOK
         RolloutOK -->|No| SwapFailure
         RolloutOK -->|Yes| Finish["Remove staging label<br/>Deactivate old revision"]
         Finish --> Done([Deployment complete])
@@ -113,7 +103,7 @@ flowchart TD
 
         SwapFailure["Swap job failure"] --> Restore
 
-        Restore["Restore current revision traffic to 100%<br/>Avoid traffic operations on an inactive candidate"]
+        Restore["Restore current revision traffic to 100%"]
         Restore --> Active{"Is candidate still active?"}
         Active -->|Yes| Deactivate["Deactivate candidate"]
         Active -->|No| Failed
@@ -127,10 +117,10 @@ flowchart TD
 
 ### Manual Deployment Approval
 
-When the `${environment}-cd` GitHub environment is configured with protection
-rules, deployments are approved automatically by default through the
-`GH_TOKEN_DEPLOYMENT_APPROVAL` repository secret. Set `enable_auto_deploy` to
-`false` to require a manual approval before the new revision receives traffic.
+When the `${environment}-cd` GitHub environment requires approval, the workflow
+attempts automatic approval by default using the `GH_TOKEN_DEPLOYMENT_APPROVAL`
+repository secret. If automatic approval fails or `enable_auto_deploy` is
+`false`, a pending approval must be granted manually.
 
 ### Staging URL
 
@@ -192,9 +182,3 @@ jobs:
       enable_auto_deploy: false
       docker_image_description: "<image-description>"
 ```
-
-## Notes
-
-- Ensure the following secrets are set in your repository:
-  `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`, `ARM_CLIENT_ID`, `GITHUB_TOKEN`, and
-  `GH_TOKEN_DEPLOYMENT_APPROVAL`.
