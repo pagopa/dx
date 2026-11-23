@@ -27,5 +27,5 @@ if [ -s "$output" ]; then
 fi
 
 bash "$script_dir/telemetry/test.sh"
-pnpm exec vitest run "$script_dir/telemetry/timeline.test.js"
+(cd "$script_dir" && pnpm exec vitest run telemetry/timeline.test.js)
 bash "$script_dir/test-start-falco.sh"
