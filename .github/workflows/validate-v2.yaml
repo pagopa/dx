@@ -92,7 +92,7 @@ jobs:
           # needs persisted git credentials.
           persist-credentials: false
 
-      - name: Setup Node.js
+      - name: Setup Node
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           install_args: "node pnpm"
@@ -261,7 +261,7 @@ jobs:
       - name: Setup Nx Workspace
         uses: pagopa/dx/actions/setup-nx-workspace@main
 
-      - name: Install Node.js dependencies
+      - name: Install Node dependencies
         shell: bash
         env:
           pnpm_config_//npm.pkg.github.com/:_authToken: ${{ github.token }}
@@ -321,7 +321,7 @@ jobs:
       # because they require a dedicated environment to be initialized.
       # Their static checks (lint, test) run in the
       # "code-review-with-environment" job.
-      - name: Run code quality checks on affected projects
+      - name: Code quality checks on affected projects
         run: |
           EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
           pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci --outputStyle=static
