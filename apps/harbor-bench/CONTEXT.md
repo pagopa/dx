@@ -4,12 +4,13 @@ harbor-bench turns a skill's evals (`evals.json`) into runnable Harbor benchmark
 tasks, runs a Copilot CLI agent on them, and compares trial metrics across
 benchmark runs.
 
-The implementation is split across two uv workspace members: **this app** —
+The implementation is one uv workspace member: **this app** —
 `apps/harbor-bench` (`harbor_bench`), which owns the CLI, the convert/compare
-commands, and the job-reading/report stack — and **`packages/harbor-copilot`**
-(`harbor_copilot`), which owns the `CopilotCliMod` agent plus the shared metric
-registry and Copilot usage parser the agent writes and this app reads back.
-Cross-package imports go one way only: `harbor_bench` → `harbor_copilot`.
+commands, and the job-reading/report stack. The agent under test is Harbor's
+own built-in `copilot-cli` agent (`harbor==0.26.0`); this app does not ship an
+agent. The metric registry and the Copilot usage parser
+(`harbor_bench.metrics`, `harbor_bench.copilot_usage`) read back the
+`copilot-usage.json` snapshot that upstream agent writes.
 
 ## Language
 
@@ -61,8 +62,9 @@ defaults own the generated task, verifier, and config settings.
 _Avoid_: configuration file, metadata block
 
 **Agent**:
-The Copilot CLI session under evaluation. The custom `CopilotCliMod` agent is
-the harness that runs it.
+The Copilot CLI session under evaluation, run by Harbor's built-in
+`copilot-cli` agent (`name: copilot-cli` in the generated config), configured
+with declared `CopilotCliOptions` kwargs only.
 _Avoid_: model, copilot
 
 **Verifier**:
@@ -135,11 +137,10 @@ jobs, so interrupted runs remain visible instead of producing an empty report.
 _Avoid_: delta sheet
 
 **Package version**:
-The release version lives in a private `package.json` manifest at each member's
-root (`harbor-bench` in `apps/`, `harbor-copilot` in `packages/`), bumped by
-Nx Release like any other package — the same convention used by the Go
-providers (`providers/*`). It is decoupled from the Python distribution
-version in `pyproject.toml` (`[project].version`, still `0.1.0`), which
-releases do not touch. At runtime, `harbor_bench.__version__` /
-`harbor_copilot.__version__` read the installed Python distribution metadata.
+The release version lives in a private `package.json` manifest at the member's
+root (`harbor-bench` in `apps/`), bumped by Nx Release like any other package —
+the same convention used by the Go providers (`providers/*`). It is decoupled
+from the Python distribution version in `pyproject.toml`
+(`[project].version`, still `0.1.0`), which releases do not touch. At runtime,
+`harbor_bench.__version__` reads the installed Python distribution metadata.
 _Avoid_: duplicate version

@@ -1318,8 +1318,6 @@ importers:
         specifier: ^10.12.0
         version: 10.12.0(jiti@2.7.0)(supports-color@8.1.1)
 
-  packages/harbor-copilot: {}
-
   packages/nx-agent-plugins-plugin:
     dependencies:
       '@nx/devkit':
