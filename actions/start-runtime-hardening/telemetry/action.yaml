@@ -1,0 +1,7 @@
+name: Collect Runtime Hardening Telemetry
+description: Queue sanitized Falco and Bullfrog findings after the job.
+
+runs:
+  using: node24
+  main: register.js
+  post: post.js

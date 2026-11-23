@@ -25,3 +25,6 @@ if [ -s "$output" ]; then
   echo "Invalid domain produced an output" >&2
   exit 1
 fi
+
+bash "$script_dir/telemetry/test.sh"
+bash "$script_dir/test-start-falco.sh"
