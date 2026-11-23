@@ -408,8 +408,12 @@ describe("module entries", () => {
   it("anchors the plugin specifiers so consumer hoisting does not matter", async () => {
     const { jsPlugins } = await loadModule(BASE_MODULE_PATH);
 
-    expect(jsPlugins).toHaveLength(1);
-    expect(isAbsolute(jsPlugins[0]?.specifier ?? "")).toBe(true);
+    expect(jsPlugins.map(({ name }) => name)).toEqual(
+      config.jsPlugins.map(({ name }) => name),
+    );
+    expect(jsPlugins.every(({ specifier }) => isAbsolute(specifier))).toBe(
+      true,
+    );
   });
 
   it("lints a clean TypeScript file without findings", () => {

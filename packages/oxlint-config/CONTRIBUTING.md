@@ -31,12 +31,15 @@ and cannot remove the parent's plugin. So `core.json` holds no test-runner rule
 
 A TypeScript config cannot reuse that composition: oxlint's `extends` takes
 configuration objects there, never paths, and `core.json` is not exported, so
-`flatten.js` inlines it instead of nesting it. Flattening drops `$schema` and
-`extends`, which have no meaning once inlined, and `ignorePatterns`, which
-oxlint resolves against the declaring file — inlined they would start ignoring
-paths in the consumer workspace. It also anchors the `jsPlugins` specifiers with
-`createRequire(import.meta.url)`, so plugin resolution does not depend on how
-the consumer's package manager lays out `node_modules`.
+`flatten.js` inlines it instead of nesting it. Flattening merges `categories`
+key by key and concatenates `jsPlugins`, `plugins`, `overrides` and `rules`, the
+way oxlint's `extends` does, so a module consumer lints the same files as a JSON
+one. Flattening drops `$schema` and `extends`, which have no meaning once
+inlined, and `ignorePatterns`, which oxlint resolves against the declaring
+file — inlined they would start ignoring paths in the consumer workspace. It
+also anchors the `jsPlugins` specifiers with `createRequire(import.meta.url)`,
+so plugin resolution does not depend on how the consumer's package manager lays
+out `node_modules`.
 
 oxlint cannot share an override between files either, so each overlay repeats
 the test-file globs and the `no-empty-function: "off"` override verbatim; the

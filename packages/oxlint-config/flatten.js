@@ -28,10 +28,17 @@ const anchorPlugins = (plugins = []) =>
  *   but inlined they would start ignoring the consumer's own paths.
  */
 export const flatten = (overlay) => {
+  // `extends` merges additively, so the flattened object has to as well:
+  // `categories` is a map and merges key by key, where a spread would hide the
+  // parent entries, and `jsPlugins` is a list that concatenates.
   const merged = {
     ...coreConfig,
     ...overlay,
-    jsPlugins: anchorPlugins(overlay.jsPlugins ?? coreConfig.jsPlugins),
+    categories: { ...coreConfig.categories, ...overlay.categories },
+    jsPlugins: anchorPlugins([
+      ...(coreConfig.jsPlugins ?? []),
+      ...(overlay.jsPlugins ?? []),
+    ]),
     overrides: [...(coreConfig.overrides ?? []), ...(overlay.overrides ?? [])],
     plugins: [...(coreConfig.plugins ?? []), ...(overlay.plugins ?? [])],
     rules: { ...coreConfig.rules, ...overlay.rules },
