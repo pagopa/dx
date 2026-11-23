@@ -3,7 +3,7 @@
 
 module "azure_storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 4.0"
+  version = "~> 6.0"
 
   environment         = local.environment
   use_case            = "audit"

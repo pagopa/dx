@@ -69,8 +69,8 @@ run "apply_default" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == false
-    error_message = "public_network_access_enabled must be false for default use case"
+    condition     = azurerm_storage_account.this.public_network_access == "Disabled"
+    error_message = "public_network_access must be Disabled for default use case"
   }
 
   assert {
@@ -97,8 +97,8 @@ run "apply_development" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
-    error_message = "public_network_access_enabled must be true for development use case with force_public=true"
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
+    error_message = "public_network_access must be Enabled for development use case with force_public=true"
   }
 
   assert {
@@ -124,8 +124,8 @@ run "apply_delegated_access" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
-    error_message = "public_network_access_enabled must be true for delegated_access use case"
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
+    error_message = "public_network_access must be Enabled for delegated_access use case"
   }
 
   assert {
@@ -147,8 +147,8 @@ run "apply_public_network" {
   }
 
   assert {
-    condition     = azurerm_storage_account.this.public_network_access_enabled == true
-    error_message = "public_network_access_enabled must be true when force_public=true"
+    condition     = azurerm_storage_account.this.public_network_access == "Enabled"
+    error_message = "public_network_access must be Enabled when force_public=true"
   }
 
   assert {
@@ -159,5 +159,38 @@ run "apply_public_network" {
   assert {
     condition     = length(azurerm_security_center_storage_defender.this) == 1
     error_message = "Defender must be enabled when public network is forced"
+  }
+}
+
+# Scenario 5: Static website hosting
+run "apply_static_website" {
+  command = apply
+
+  variables {
+    environment                         = merge(var.environment, { app_name = "sast" })
+    tags                                = var.tags
+    resource_group_name                 = run.setup.resource_group_name
+    use_case                            = "development"
+    force_public_network_access_enabled = true
+    static_website = {
+      enabled            = true
+      index_document     = "index.html"
+      error_404_document = "404.html"
+    }
+  }
+
+  assert {
+    condition     = length(azurerm_storage_account_static_website.this) == 1
+    error_message = "A static website resource must be created when static website hosting is enabled"
+  }
+
+  assert {
+    condition     = azurerm_storage_account_static_website.this[0].storage_account_id == azurerm_storage_account.this.id
+    error_message = "The static website must be associated with the storage account"
+  }
+
+  assert {
+    condition     = azurerm_storage_account_static_website.this[0].index_document == "index.html" && azurerm_storage_account_static_website.this[0].error_404_document == "404.html"
+    error_message = "The static website must use the configured index and 404 documents"
   }
 }

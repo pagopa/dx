@@ -1,9 +1,6 @@
-# Module Under Test — the azure_storage_account module being demonstrated.
-# Supporting infrastructure is defined in fixtures.tf.
-
 module "azure_storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 4.0"
+  version = "~> 6.0"
 
   environment         = local.environment
   use_case            = "default"
@@ -11,12 +8,6 @@ module "azure_storage_account" {
 
   subnet_pep_id                        = data.azurerm_subnet.pep.id
   private_dns_zone_resource_group_name = local.virtual_network.resource_group_name
-
-  customer_managed_key = {
-    enabled = true
-    # type         = "kv"
-    # key_vault_id = "your-kv-id"
-  }
 
   blob_features = {
     immutability_policy = {

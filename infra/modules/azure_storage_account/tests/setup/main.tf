@@ -1,13 +1,4 @@
 locals {
-  naming_config = {
-    prefix          = var.environment.prefix,
-    environment     = var.environment.env_short,
-    location        = var.environment.location,
-    domain          = var.environment.domain,
-    name            = var.environment.app_name,
-    instance_number = tonumber(var.environment.instance_number),
-  }
-
   # Resolves names of shared pre-provisioned test infrastructure
   existing_resources = {
     prefix          = var.environment.prefix,
@@ -42,7 +33,7 @@ data "azurerm_subnet" "pep" {
 
 # Resource group created for the System Under Test (SUT).
 resource "azurerm_resource_group" "sut" {
-  name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
+  name     = provider::dx::resource_name(merge(var.environment, { resource_type = "resource_group" }))
   location = var.environment.location
   tags     = var.tags
 }
