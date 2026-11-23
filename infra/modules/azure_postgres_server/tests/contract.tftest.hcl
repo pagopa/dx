@@ -49,9 +49,18 @@ run "postgres_server_rejects_unknown_use_case" {
   expect_failures = [var.use_case]
 }
 
+run "postgres_server_accepts_low_load_use_case" {
+  command = plan
+  variables { use_case = "low_load" }
+}
+
 run "postgres_server_requires_a_replica_in_a_different_location" {
   command = plan
-  variables { replica_location = "italynorth" }
+  variables {
+    use_case         = "default"
+    create_replica   = true
+    replica_location = "italynorth"
+  }
   expect_failures = [var.replica_location]
 }
 
