@@ -17,7 +17,7 @@ out loud.
   `@pagopa/nx-docker` for `Dockerfile` projects. No `package.json` script
   mirrors them, so `pnpm nx show projects` and `pnpm nx <target> --help` are
   the source of truth for what a project can do.
-- **oxlint** is the linter, configured by the root `.oxlintrc.json` on top of
+- **oxlint** is the linter, configured by the root `oxlint.config.ts` on top of
   the `@pagopa/oxlint-config` preset; `nx format:*` runs **oxfmt**.
 
 `pnpm install` authenticates a local, git-ignored `.npmrc`; `README.md` has

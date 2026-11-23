@@ -40,8 +40,8 @@ export const NX_TERRAFORM_DEPENDENCY = `${NX_TERRAFORM_PACKAGE}@${GITHUB_PACKAGE
 export const NX_DOCKER_DEPENDENCY = `${NX_DOCKER_PACKAGE}@${GITHUB_PACKAGES_RANGE}`;
 
 /**
- * Oxlint preset shipped by PagoPA DX: the generated `.oxlintrc.json` extends
- * `base.json` from this package.
+ * Oxlint preset shipped by PagoPA DX: the generated `oxlint.config.ts` extends
+ * `base` from this package.
  */
 export const OXLINT_CONFIG_PACKAGE = "@pagopa/oxlint-config";
 

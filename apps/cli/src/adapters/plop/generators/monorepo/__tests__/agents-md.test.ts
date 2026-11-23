@@ -23,7 +23,7 @@ const TOOLCHAIN: readonly ToolchainEntry[] = [
   { config: "mise.toml", name: "mise" },
   { config: "pnpm-workspace.yaml", name: "pnpm" },
   { config: "nx.json", name: "Nx" },
-  { config: ".oxlintrc.json", name: "oxlint" },
+  { config: "oxlint.config.ts", name: "oxlint" },
   { config: "oxfmt.config.ts", name: "oxfmt" },
 ];
 
