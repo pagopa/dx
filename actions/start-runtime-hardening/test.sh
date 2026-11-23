@@ -27,3 +27,4 @@ if [ -s "$output" ]; then
 fi
 
 bash "$script_dir/telemetry/test.sh"
+bash "$script_dir/test-start-falco.sh"

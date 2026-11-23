@@ -55,25 +55,10 @@ runs:
         touch "$RUNNER_TEMP/dx-runtime-hardening-falco-attempted"
 
     - name: Start Falco
-      uses: falcosecurity/falco-actions/start@558a3ceeee9403e1c875ffbeb704c34c93e24752
-      with:
-        mode: live
-        falco-version: sha256:ba05dfb209cc1c2e912ce116d230b5f59c4542e7286f05b663c499066d5d6a42
-        cicd-rules: false
-        custom-rule-file: ${{ runner.temp }}/falco_cicd_rules.yaml
-
-    - name: Diagnose Falco startup
       shell: bash
-      run: |
-        timeout 20s docker logs --follow falco \
-          > "$RUNNER_TEMP/falco-startup-stdout.log" \
-          2> "$RUNNER_TEMP/falco-startup-stderr.log" || true
-        if docker inspect falco --format '{{.State.Running}}' 2>/dev/null | grep -q '^true$'; then
-          echo "Falco remains running after startup."
-        else
-          echo "::warning::Falco stopped during startup."
-          grep -iE 'error|fatal|failed|not supported|permission denied' "$RUNNER_TEMP/falco-startup-stderr.log" || true
-        fi
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+      run: bash "$ACTION_PATH/start-falco.sh"
 
     - name: Mark Falco as started
       shell: bash

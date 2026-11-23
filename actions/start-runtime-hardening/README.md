@@ -21,6 +21,9 @@ steps:
     uses: pagopa/dx/actions/stop-runtime-hardening@main
 ```
 
+The action waits for Falco's capture readiness before starting the workload
+and fails if the monitor exits or does not become ready.
+
 `allowed-domains` is an optional newline-separated allowlist. It replaces the
 default list in `action.yaml`; include the domains required by your workload,
 GitHub, and Falco's report dependencies (`pypi.org` and
