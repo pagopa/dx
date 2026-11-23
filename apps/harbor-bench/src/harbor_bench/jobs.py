@@ -56,6 +56,15 @@ def _first(*values: Any) -> Any:
     return None
 
 
+def _nested(value: Any, path: tuple[str, ...]) -> Any:
+    """The value at ``path`` through nested dicts, or ``None`` when absent."""
+    for key in path:
+        if not isinstance(value, dict):
+            return None
+        value = value.get(key)
+    return value
+
+
 def _parse_timestamp(value: str | None) -> datetime | None:
     if not value:
         return None
@@ -394,9 +403,9 @@ class Trial:
         rewards = (data.get("verifier_result") or {}).get("rewards") or {}
         agent_execution = data.get("agent_execution") or {}
         # One precedence rule per usage-backed metric, declared once in the
-        # metric registry (result_key/metadata_path/usage_attr): the persisted
-        # value wins, and the artifact backfill fills when the file cannot
-        # report the number.
+        # metric registry (result_key/metadata_path/legacy_metadata_key/
+        # usage_attr): the preferred persisted value wins, the pre-0.26
+        # metadata alias fills next, and the artifact backfill fills last.
         derived = {
             spec.key: _first(
                 self._reported_value(agent_result, spec),
@@ -607,15 +616,24 @@ class Trial:
         baseline-corrected on a resumed trial). Reading the persisted value
         first is what makes the artifact backfill a true fallback, and it is
         what keeps a resume from re-reporting the pre-resume segment.
+
+        The forked ``copilot-cli`` agent this bench used before Harbor 0.26
+        wrote the metrics ``AgentContext`` had no field for to
+        ``agent_result.metadata[<key>]``; ``legacy_metadata_key`` names that
+        alias, so those trials keep reporting them. It is read last, so a stale
+        pre-0.26 value never shadows the preferred location.
         """
         if spec.metadata_path is not None:
-            value: Any = agent_result
-            for key in spec.metadata_path:
-                if not isinstance(value, dict):
-                    return None
-                value = value.get(key)
-            return value
-        return agent_result.get(spec.result_key)
+            value = _nested(agent_result, spec.metadata_path)
+            if value is not None:
+                return value
+        if spec.result_key is not None:
+            value = agent_result.get(spec.result_key)
+            if value is not None:
+                return value
+        if spec.legacy_metadata_key is not None:
+            return _nested(agent_result, ("metadata", spec.legacy_metadata_key))
+        return None
 
     @staticmethod
     def _usage_value(facts: TrialFacts, attr: str) -> Any:

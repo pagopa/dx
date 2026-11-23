@@ -1,11 +1,14 @@
 """One declaration of each reportable trial metric.
 
 A metric's identity is one :class:`MetricSpec`. The derivation half
-(``result_key``, ``usage_attr``) names where the value comes from: a
-``result.json`` ``agent_result`` key whose value wins, and the aggregated
-:class:`~harbor_bench.copilot_usage.CopilotUsage` attribute that backfills
-when the file cannot report the number. The reporting half (``kind``,
-``label``, ``integer``) names how the value is aggregated and displayed.
+(``result_key``, ``metadata_path``, ``legacy_metadata_key``, ``usage_attr``)
+names where the value comes from, in precedence order: a ``result.json``
+``agent_result`` key, the key path through it where Harbor stores a metric
+``AgentContext`` has no field for, the pre-0.26 ``metadata`` alias that only
+fills when neither preferred location reports a value, and finally the
+aggregated :class:`~harbor_bench.copilot_usage.CopilotUsage` attribute. The
+reporting half (``kind``, ``label``, ``integer``) names how the value is
+aggregated and displayed.
 
 :data:`METRIC_SPECS` declares the static metrics once. The app-side reader
 (``harbor_bench.jobs.Trial.metrics``) reads the derivation half to build a
@@ -32,9 +35,12 @@ from harbor_bench.copilot_usage import CopilotUsage
 class MetricSpec:
     """One reportable metric: its source, label, and summary aggregation.
 
-    ``result_key``, ``metadata_path`` and ``usage_attr`` are the derivation
-    half: the ``result.json`` ``agent_result`` key, or the key path through it
-    (``metadata_path``), whose value wins, and the
+    ``result_key``, ``metadata_path``, ``legacy_metadata_key`` and
+    ``usage_attr`` are the derivation half: the ``result.json``
+    ``agent_result`` key, or the key path through it (``metadata_path``), whose
+    value wins; the ``agent_result.metadata`` key the pre-0.26 agent wrote
+    instead (``legacy_metadata_key``), consulted only when neither preferred
+    location reports a value; and the
     :class:`~harbor_bench.copilot_usage.CopilotUsage` attribute that backfills
     when the file cannot report the number. ``kind`` selects how the summary
     aggregates the metric across tasks: ``"score"`` for verifier rewards
@@ -59,6 +65,7 @@ class MetricSpec:
     source: str = "field"  # "field" | "reward"
     result_key: str | None = None
     metadata_path: tuple[str, ...] | None = None
+    legacy_metadata_key: str | None = None
     usage_attr: str | None = None
     preference: str = "higher"  # "higher" | "lower" | "neutral"
     headline_group: str | None = None
@@ -136,6 +143,7 @@ METRIC_SPECS: tuple[MetricSpec, ...] = (
         "reasoning tokens",
         integer=True,
         metadata_path=("metadata", "copilot_usage", "reasoning_tokens"),
+        legacy_metadata_key="n_reasoning_tokens",
         usage_attr="reasoning_tokens",
         preference="lower",
     ),
@@ -143,11 +151,13 @@ METRIC_SPECS: tuple[MetricSpec, ...] = (
         # Harbor persists no request count: its usage metadata carries
         # ``premium_requests`` (a premium-request *cost*, not ``requests.count``)
         # and ``AgentContext`` has no request field, so the usage artifact is
-        # the only source.
+        # the only current source. Trials from before Harbor 0.26 recorded the
+        # count themselves under ``metadata["n_requests"]``.
         "n_requests",
         "total",
         "model requests",
         integer=True,
+        legacy_metadata_key="n_requests",
         usage_attr="n_requests",
         preference="lower",
     ),
@@ -202,7 +212,9 @@ def derivable_specs() -> tuple[MetricSpec, ...]:
 
     These are the metrics the bench reader (``harbor_bench.jobs.Trial``)
     derives from the trial's artifacts: a ``result.json`` value wins, the
-    aggregated usage attribute fills when the file cannot report the number.
+    pre-0.26 metadata alias (``legacy_metadata_key``) fills next, and the
+    aggregated usage attribute fills last, when the file cannot report the
+    number.
     """
     return tuple(spec for spec in METRIC_SPECS if spec.usage_attr is not None)
 
@@ -221,6 +233,11 @@ def validate_metric_specs(
     ``TypeError`` or a silent ``None`` on a live trial. Dynamic ``score.<key>``
     specs (``source="reward"``) are added by ``diff`` from a job's actual
     reward keys and are never checked against a dataclass.
+
+    It also holds each derivation declaration to one shape: a spec names one
+    preferred persisted location (``result_key`` or ``metadata_path``), and a
+    ``legacy_metadata_key`` names a distinct fallback for a spec the reader
+    actually derives (``usage_attr`` set).
     """
     usage_fields = {field.name for field in dataclasses.fields(CopilotUsage)}
     for spec in METRIC_SPECS:
@@ -250,6 +267,24 @@ def validate_metric_specs(
                 f"metric spec {spec.key!r} metadata_path must be a non-empty "
                 "tuple of non-empty strings"
             )
+        if spec.legacy_metadata_key is not None:
+            if not (
+                isinstance(spec.legacy_metadata_key, str) and spec.legacy_metadata_key
+            ):
+                raise TypeError(
+                    f"metric spec {spec.key!r} legacy_metadata_key must be a "
+                    "non-empty string"
+                )
+            if spec.usage_attr is None:
+                raise TypeError(
+                    f"metric spec {spec.key!r} declares legacy_metadata_key "
+                    "but no usage_attr, so the reader never consults it"
+                )
+            if spec.metadata_path == ("metadata", spec.legacy_metadata_key):
+                raise TypeError(
+                    f"metric spec {spec.key!r} legacy_metadata_key repeats its "
+                    "metadata_path; name the fallback location"
+                )
         if spec.usage_attr is not None and spec.usage_attr not in usage_fields:
             raise TypeError(
                 f"metric spec {spec.key!r} names usage attribute "

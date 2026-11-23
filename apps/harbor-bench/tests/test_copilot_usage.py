@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from harbor_bench.copilot_usage import (
     copilot_artifact_paths,
     extract_usage,
@@ -18,6 +20,47 @@ from tests.conftest import (
     write_copilot_jsonl,
     write_copilot_usage,
 )
+
+# Matches the ``sessionStartTime`` that ``write_copilot_usage`` writes.
+SESSION_START = "2026-11-23T10:00:00.000Z"
+
+# A resumed trial's snapshot: the earlier segment's requests (5) plus the two
+# the resumed segment made, with every token count and the nano-AIU price
+# scaled the same way (57,000 = 50,000 + 7,000 and so on).
+RESUMED_MODEL = {
+    "requests": {"count": 7, "cost": 7},
+    "usage": {
+        "inputTokens": 57_000,
+        "outputTokens": 400,
+        "cacheReadTokens": 31_000,
+        "cacheWriteTokens": 24_000,
+        "reasoningTokens": 300,
+    },
+    "totalNanoAiu": 700_000_000,
+}
+BASELINE_MODEL = {
+    "requests": {"count": 5, "cost": 5},
+    "usage": {
+        "inputTokens": 50_000,
+        "outputTokens": 300,
+        "cacheReadTokens": 30_000,
+        "cacheWriteTokens": 20_000,
+        "reasoningTokens": 200,
+    },
+    "totalNanoAiu": 500_000_000,
+}
+
+
+def write_copilot_baseline(
+    usage_path: Path,
+    models: dict,
+    session_start_time: str = SESSION_START,
+) -> Path:
+    """Write the pre-resume snapshot Harbor leaves beside a resumed usage file."""
+    path = usage_path.with_name("copilot-usage-baseline.json")
+    data = {"sessionStartTime": session_start_time, "modelMetrics": models}
+    path.write_text(json.dumps(data), encoding="utf-8")
+    return path
 
 
 def test_extract_from_usage_file_aggregates_every_model(tmp_path):
@@ -104,6 +147,82 @@ def test_model_without_nano_aiu_reports_no_cost(tmp_path):
 
     assert usage is not None
     assert usage.cost_usd is None
+
+
+def test_resumed_trial_subtracts_the_same_session_baseline(tmp_path):
+    path = tmp_path / "copilot-usage.json"
+    write_copilot_usage(path, {"gpt-6-luna": RESUMED_MODEL})
+    # A model the resumed segment never used stays out of the totals.
+    write_copilot_baseline(
+        path, {"gpt-6-luna": BASELINE_MODEL, "claude-sonnet-5.5": SECOND_USAGE_MODEL}
+    )
+
+    usage = extract_usage_from_usage_file(path)
+
+    assert usage is not None
+    assert usage.n_requests == 2  # 7 - 5
+    assert usage.input_tokens == 7_000  # 57_000 - 50_000
+    assert usage.cache_read_tokens == 1_000  # 31_000 - 30_000
+    assert usage.cache_write_tokens == 4_000  # 24_000 - 20_000
+    assert usage.output_tokens == 100  # 400 - 300
+    assert usage.reasoning_tokens == 100  # 300 - 200
+    assert usage.cost_usd == pytest.approx(0.002)  # 200,000,000 nano-AIU
+    assert usage.source == "copilot-usage.json"
+
+
+def test_baseline_from_a_different_session_is_ignored(tmp_path):
+    path = tmp_path / "copilot-usage.json"
+    write_copilot_usage(path, {"gpt-6-luna": RESUMED_MODEL})
+    write_copilot_baseline(
+        path,
+        {"gpt-6-luna": BASELINE_MODEL},
+        session_start_time="2026-11-23T11:00:00.000Z",
+    )
+
+    usage = extract_usage_from_usage_file(path)
+
+    assert usage is not None
+    assert usage.n_requests == 7
+    assert usage.input_tokens == 57_000
+    assert usage.cost_usd == pytest.approx(0.007)
+
+
+def test_missing_or_corrupt_baseline_leaves_usage_unchanged(tmp_path):
+    path = tmp_path / "copilot-usage.json"
+    write_copilot_usage(path, {"gpt-6-luna": RESUMED_MODEL})
+    baseline = path.with_name("copilot-usage-baseline.json")
+
+    before = extract_usage_from_usage_file(path)
+    assert before is not None
+    assert before.input_tokens == 57_000
+
+    baseline.write_text("not json", encoding="utf-8")
+    corrupt = extract_usage_from_usage_file(path)
+    assert corrupt is not None
+    assert corrupt.input_tokens == 57_000
+
+    baseline.unlink()
+    missing = extract_usage_from_usage_file(path)
+    assert missing is not None
+    assert missing.input_tokens == 57_000
+
+
+def test_baseline_larger_than_the_snapshot_clamps_at_zero(tmp_path):
+    path = tmp_path / "copilot-usage.json"
+    current = {
+        "requests": {"count": 1, "cost": 1},
+        "usage": {"inputTokens": 10},
+        "totalNanoAiu": 50_000_000,
+    }
+    write_copilot_usage(path, {"gpt-6-luna": current})
+    write_copilot_baseline(path, {"gpt-6-luna": BASELINE_MODEL})
+
+    usage = extract_usage_from_usage_file(path)
+
+    assert usage is not None
+    assert usage.n_requests == 0
+    assert usage.input_tokens is None  # 10 - 50,000 clamps to zero
+    assert usage.cost_usd == 0.0
 
 
 def test_extract_from_jsonl_fallback(tmp_path):

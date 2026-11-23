@@ -82,6 +82,19 @@ def _make_job(tmp_path: Path, name: str) -> Path:
     return job
 
 
+def _write_agent_result(job_dir: Path, task: str, agent_result: dict) -> None:
+    """Write a result.json carrying only a raw ``agent_result`` and no artifacts."""
+    trial = job_dir / task
+    trial.mkdir(parents=True, exist_ok=True)
+    data = {
+        "task_name": task,
+        "trial_name": f"{task}__abc1234",
+        "agent_result": agent_result,
+        "verifier_result": {"rewards": {}},
+    }
+    (trial / "result.json").write_text(json.dumps(data))
+
+
 def test_job_metrics_parses_metrics(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(
@@ -320,6 +333,62 @@ def test_job_metrics_uses_agent_persisted_usage_metadata(tmp_path):
     assert m.n_requests == 1  # Harbor persists no request count; the file wins
     assert m.input_tokens == 20_474  # not persisted; backfilled from the usage file
     assert m.cache_tokens == 7_000  # not persisted; backfilled from the usage file
+
+
+def test_job_metrics_reads_legacy_reasoning_tokens_without_usage_artifacts(tmp_path):
+    """A pre-0.26 trial reports reasoning tokens from its legacy metadata key.
+
+    The forked ``copilot-cli`` agent wrote the metrics ``AgentContext`` has no
+    field for to ``agent_result.metadata[<key>]``. Those trials carry no
+    ``copilot-usage.json`` and their JSONL stream has no reasoning count, so
+    the metadata alias is the only source left.
+    """
+    job = _make_job(tmp_path, "run-a")
+    _write_agent_result(job, "task-a", {"metadata": {"n_reasoning_tokens": 7}})
+
+    m = Job(job).metrics()["task-a"]
+
+    assert m.reasoning_tokens == 7
+
+
+def test_job_metrics_reads_legacy_n_requests_without_usage_artifacts(tmp_path):
+    """The legacy request-count key backfills what the artifacts cannot."""
+    job = _make_job(tmp_path, "run-a")
+    _write_agent_result(job, "task-a", {"metadata": {"n_requests": 3}})
+
+    m = Job(job).metrics()["task-a"]
+
+    assert m.n_requests == 3
+
+
+def test_job_metrics_prefers_current_usage_metadata_over_legacy(tmp_path):
+    """A legacy alias never shadows the Harbor 0.26 location."""
+    job = _make_job(tmp_path, "run-a")
+    _write_agent_result(
+        job,
+        "task-a",
+        {
+            "metadata": {
+                "n_reasoning_tokens": 7,
+                "copilot_usage": {"reasoning_tokens": 120},
+            }
+        },
+    )
+
+    m = Job(job).metrics()["task-a"]
+
+    assert m.reasoning_tokens == 120
+
+
+def test_job_metrics_artifact_only_metric_without_agent_result_key(tmp_path):
+    """A metric with no ``result.json`` key is absent, not an error."""
+    job = _make_job(tmp_path, "run-a")
+    _write_agent_result(job, "task-a", {"metadata": {"usage_source": "jsonl"}})
+
+    m = Job(job).metrics()["task-a"]
+
+    assert m.n_requests is None
+    assert m.reasoning_tokens is None
 
 
 def test_trial_task_name_falls_back_to_dir_name(tmp_path):
@@ -566,6 +635,12 @@ def test_metric_registry_owns_derivation_and_reporting():
     assert by_key["n_requests"].result_key is None
     assert by_key["n_requests"].metadata_path is None
     assert by_key["n_requests"].usage_attr == "n_requests"
+    # the pre-0.26 agent wrote those two under agent_result.metadata[<key>]
+    assert by_key["reasoning_tokens"].legacy_metadata_key == "n_reasoning_tokens"
+    assert by_key["n_requests"].legacy_metadata_key == "n_requests"
+    # the AgentContext-backed metrics never needed that alias
+    assert by_key["input_tokens"].legacy_metadata_key is None
+    assert by_key["cost_usd"].legacy_metadata_key is None
     assert [s.key for s in derivable_specs()] == [
         "input_tokens",
         "cache_tokens",

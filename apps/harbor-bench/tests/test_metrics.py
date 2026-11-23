@@ -126,3 +126,54 @@ def test_copilot_usage_has_measurement_fields():
         if spec.usage_attr is None:
             continue
         assert hasattr(CopilotUsage, spec.usage_attr)
+
+
+def test_empty_legacy_metadata_key_raises(monkeypatch):
+    import harbor_bench.metrics as metrics_mod
+
+    monkeypatch.setattr(
+        metrics_mod,
+        "METRIC_SPECS",
+        (
+            MetricSpec(
+                "n_requests",
+                usage_attr="n_requests",
+                legacy_metadata_key="",
+            ),
+        ),
+    )
+    with pytest.raises(TypeError, match="legacy_metadata_key must be a non-empty"):
+        validate_metric_specs(trial_metric_fields={"n_requests"})
+
+
+def test_legacy_metadata_key_requires_a_derivation(monkeypatch):
+    """An alias the reader never consults is a declaration bug."""
+    import harbor_bench.metrics as metrics_mod
+
+    monkeypatch.setattr(
+        metrics_mod,
+        "METRIC_SPECS",
+        (MetricSpec("n_steps", legacy_metadata_key="n_steps"),),
+    )
+    with pytest.raises(TypeError, match="no usage_attr"):
+        validate_metric_specs(trial_metric_fields={"n_steps"})
+
+
+def test_legacy_metadata_key_repeating_metadata_path_raises(monkeypatch):
+    """The alias names the fallback, so it must not be the preferred location."""
+    import harbor_bench.metrics as metrics_mod
+
+    monkeypatch.setattr(
+        metrics_mod,
+        "METRIC_SPECS",
+        (
+            MetricSpec(
+                "n_requests",
+                metadata_path=("metadata", "n_requests"),
+                legacy_metadata_key="n_requests",
+                usage_attr="n_requests",
+            ),
+        ),
+    )
+    with pytest.raises(TypeError, match="repeats its metadata_path"):
+        validate_metric_specs(trial_metric_fields={"n_requests"})

@@ -12,9 +12,16 @@ when it finishes. The snapshot is session-cumulative and keyed by model::
                                      "totalNanoAiu": 724569000}}}
 
 This module aggregates those per-model entries into the usage metrics the
-report reads. The JSONL stream is the fallback for a trial whose usage file is
-missing (an interrupted run): it carries output tokens and a cost checkpoint
-but no input/cache counts.
+report reads. On a resumed session the snapshot still covers the earlier
+segment: Harbor moves the pre-resume snapshot to
+``copilot-usage-baseline.json`` before the CLI writes a new one, so the trial's
+``copilot-usage.json`` carries both segments' requests and tokens. The reader
+subtracts that baseline when it belongs to the same session (same
+``sessionStartTime``), so a resumed trial reports only the usage it added.
+
+The JSONL stream is the fallback for a trial whose usage file is missing (an
+interrupted run): it carries output tokens and a cost checkpoint but no
+input/cache counts.
 
 ``inputTokens`` includes cached tokens (matching AgentContext's "input
 including cache"). Copilot meters cost in nano-AIU: one AI credit is 1e9
@@ -31,6 +38,9 @@ from typing import Any
 #: The Copilot artifacts, relative to an agent log dir. The same names hold
 #: whether the log dir is a container's ``/logs/agent`` or a trial's ``agent/``.
 COPILOT_USAGE_REL = "copilot-usage.json"
+#: Harbor moves the pre-resume snapshot here, so a resumed trial's log dir
+#: holds both the session's cumulative usage and the segment already reported.
+COPILOT_USAGE_BASELINE_REL = "copilot-usage-baseline.json"
 COPILOT_CLI_JSONL_REL = "copilot-cli.jsonl"
 
 NANO_AIU_PER_AI_CREDIT = 1_000_000_000
@@ -38,6 +48,15 @@ USD_PER_AI_CREDIT = 0.01
 
 #: Statuses under which the CLI's metering is not a complete price.
 _UNPRICED_AI_CREDITS_STATUSES = frozenset({"partial", "unavailable"})
+
+#: The snapshot's ``usage`` fields: on-disk name and aggregated field name.
+_USAGE_FIELDS = (
+    ("inputTokens", "input_tokens"),
+    ("cacheReadTokens", "cache_read_tokens"),
+    ("cacheWriteTokens", "cache_write_tokens"),
+    ("outputTokens", "output_tokens"),
+    ("reasoningTokens", "reasoning_tokens"),
+)
 
 
 def _nano_aiu_to_usd(value: int | float) -> float:
@@ -90,15 +109,71 @@ def _read_json_snapshot(path: Path) -> dict[str, Any] | None:
 
 
 def _model_usage(entry: dict[str, Any]) -> dict[str, int]:
-    """One model's token counts, keyed by snapshot field name."""
+    """One model's token counts, keyed by aggregated field name."""
     usage = entry.get("usage") or {}
-    return {
-        "input_tokens": int(usage.get("inputTokens") or 0),
-        "cache_read_tokens": int(usage.get("cacheReadTokens") or 0),
-        "cache_write_tokens": int(usage.get("cacheWriteTokens") or 0),
-        "output_tokens": int(usage.get("outputTokens") or 0),
-        "reasoning_tokens": int(usage.get("reasoningTokens") or 0),
+    return {field: int(usage.get(alias) or 0) for alias, field in _USAGE_FIELDS}
+
+
+def _entry_since(entry: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
+    """One model's metrics with ``baseline``'s contribution removed.
+
+    Mirrors Harbor's own snapshot subtraction: token counts, request count, and
+    the nano-AIU price are differences, while a price missing on either side
+    stays missing so a partial price is never reported as a total. Every
+    subtracted value is clamped at zero, because a baseline that exceeds the
+    snapshot (an interrupted resume) cannot report negative usage.
+    """
+    current_usage = entry.get("usage") or {}
+    base_usage = baseline.get("usage") or {}
+    usage = {
+        alias: max(
+            0, int(current_usage.get(alias) or 0) - int(base_usage.get(alias) or 0)
+        )
+        for alias, _ in _USAGE_FIELDS
     }
+    adjusted = {**entry, "usage": usage}
+
+    current_requests = (entry.get("requests") or {}).get("count")
+    if current_requests is not None:
+        base_requests = (baseline.get("requests") or {}).get("count") or 0
+        adjusted["requests"] = {
+            **(entry.get("requests") or {}),
+            "count": max(0, int(current_requests) - int(base_requests)),
+        }
+
+    current_nano_aiu = entry.get("totalNanoAiu")
+    base_nano_aiu = baseline.get("totalNanoAiu")
+    if current_nano_aiu is None or base_nano_aiu is None:
+        adjusted.pop("totalNanoAiu", None)
+    else:
+        adjusted["totalNanoAiu"] = max(0, current_nano_aiu - base_nano_aiu)
+    return adjusted
+
+
+def _models_since(
+    snapshot: dict[str, Any], baseline: dict[str, Any] | None
+) -> dict[str, Any]:
+    """The snapshot's ``modelMetrics`` net of a same-session ``baseline``.
+
+    A baseline that is absent, or recorded for a different
+    ``sessionStartTime`` (a resume that found no session to continue), is
+    ignored: the snapshot is then reported unchanged, as Harbor's ``since``
+    does. Models only the baseline knows about are dropped, since nothing in
+    the current segment used them.
+    """
+    models = snapshot.get("modelMetrics") or {}
+    if baseline is None:
+        return models
+    if baseline.get("sessionStartTime") != snapshot.get("sessionStartTime"):
+        return models
+    baseline_models = baseline.get("modelMetrics") or {}
+    adjusted: dict[str, Any] = {}
+    for name, entry in models.items():
+        prior = baseline_models.get(name)
+        if isinstance(entry, dict) and isinstance(prior, dict):
+            entry = _entry_since(entry, prior)
+        adjusted[name] = entry
+    return adjusted
 
 
 def _model_cost(entry: dict[str, Any]) -> float | None:
@@ -115,6 +190,11 @@ def _model_cost(entry: dict[str, Any]) -> float | None:
 def extract_usage_from_usage_file(usage_path: Path) -> CopilotUsage | None:
     """Aggregate ``copilot-usage.json`` across every model it reports.
 
+    When Harbor wrote a ``copilot-usage-baseline.json`` beside the snapshot for
+    the same session, the baseline's contribution is subtracted first: the
+    artifact is session-cumulative, so on a resumed trial it covers the earlier
+    segment too. A missing, unreadable, or other-session baseline is ignored.
+
     Returns ``None`` when the file is missing, unreadable, or reports no model
     metrics. Token sums that are absent everywhere stay ``None``; the cost is
     ``None`` when any model's price is missing, so a partial price is never
@@ -125,7 +205,8 @@ def extract_usage_from_usage_file(usage_path: Path) -> CopilotUsage | None:
     snapshot = _read_json_snapshot(usage_path)
     if snapshot is None:
         return None
-    models = snapshot.get("modelMetrics") or {}
+    baseline = _read_json_snapshot(usage_path.with_name(COPILOT_USAGE_BASELINE_REL))
+    models = _models_since(snapshot, baseline)
     if not models:
         return None
 
