@@ -32,8 +32,11 @@ same Application Insights instance used by Terraform workflows. Falco findings
 are grouped per job by rule, priority and possible matching steps, with an
 occurrence count. Events include the workflow run URL and possible step names
 inferred from timestamps; overlapping steps may be ambiguous. Allowed connections
-remain in the job summary. Command lines, filenames and raw output are not
-exported; Bullfrog events include destination domains.
+remain in the job summary. Generated command names and path-like step names
+are omitted, but other step names are exported as displayed by GitHub and
+should not contain sensitive information. Command lines, filenames and raw
+output from the findings are not exported; Bullfrog events include destination
+domains.
 
 ### 📦 Release & Versioning
 

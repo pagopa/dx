@@ -88,6 +88,13 @@ function stepInterval(step, now) {
   ) {
     throw new Error("GitHub jobs API returned an invalid step");
   }
+  // Generated "Run ..." names may contain commands; path-like names may contain files.
+  if (
+    /^(?:Post )?Run(?:\s|$)/i.test(step.name) ||
+    /[/.\\\r\n`$;&|<>]/.test(step.name)
+  ) {
+    return [];
+  }
   return [
     {
       end: Math.floor(end / 1000),

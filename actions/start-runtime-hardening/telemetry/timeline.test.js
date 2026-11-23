@@ -67,6 +67,24 @@ test("finds the current job on a later page", async () => {
   assert.deepEqual(timeline, []);
 });
 
+test("omits generated command names and path-like names", async () => {
+  const steps = [
+    "Run cat private-file",
+    "Post Run npm test",
+    "Inspect src/config",
+    "Test settings.json",
+    "Deploy $SECRET",
+    "Build",
+  ].map((name) => ({ name, started_at: "2026-01-01T10:00:00Z" }));
+  const timeline = await fetchTimeline(config, async () =>
+    response([{ runner_name: "runner-1", status: "in_progress", steps }]),
+  );
+  assert.deepEqual(
+    timeline.map((step) => step.name),
+    ["Build"],
+  );
+});
+
 test("rejects inaccessible, ambiguous or malformed job data", async () => {
   await assert.rejects(
     fetchTimeline(config, async () => response([], 403)),
