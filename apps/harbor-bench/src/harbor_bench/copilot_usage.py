@@ -68,8 +68,10 @@ def _nano_aiu_to_usd(value: int | float) -> float:
 class CopilotUsage:
     """Aggregated token/cost usage for one Copilot CLI session.
 
-    Fields that are unknown stay ``None`` so callers can distinguish "absent"
-    from a measured zero. ``n_requests`` is ``None`` when the artifact does not
+    A token counter is ``None`` only when no model entry carries it, so callers
+    can distinguish "absent" from a measured zero: a counter the artifact
+    records as ``0`` — or one whose baseline subtraction nets to ``0`` — is
+    reported as ``0``. ``n_requests`` is ``None`` when the artifact does not
     carry a request count; ``cost_usd`` is ``None`` when the metering reports no
     price (no nano-AIU recorded, or AI credits only partially priced).
     """
@@ -108,10 +110,51 @@ def _read_json_snapshot(path: Path) -> dict[str, Any] | None:
     return data if isinstance(data, dict) else None
 
 
+def _has_valid_metrics(snapshot: dict[str, Any]) -> bool:
+    """True when the snapshot's nested metrics have the shape aggregation expects.
+
+    Aggregation reads ``modelMetrics`` per model, so a parseable snapshot whose
+    metric fields are strings or lists would raise instead of degrading.
+    Absent keys are valid; unknown extra keys are not inspected.
+    """
+    models = snapshot.get("modelMetrics")
+    if models is None:
+        return True
+    if not isinstance(models, dict):
+        return False
+    for entry in models.values():
+        if not isinstance(entry, dict):
+            return False
+        usage = entry.get("usage")
+        if usage is None:
+            usage = {}
+        if not isinstance(usage, dict) or not all(
+            isinstance(usage[alias], int)
+            for alias, _ in _USAGE_FIELDS
+            if alias in usage
+        ):
+            return False
+        requests = entry.get("requests")
+        if requests is None:
+            requests = {}
+        if not isinstance(requests, dict) or not isinstance(
+            requests.get("count", 0), int
+        ):
+            return False
+        total_nano_aiu = entry.get("totalNanoAiu")
+        if total_nano_aiu is not None and not isinstance(total_nano_aiu, (int, float)):
+            return False
+    return True
+
+
 def _model_usage(entry: dict[str, Any]) -> dict[str, int]:
-    """One model's token counts, keyed by aggregated field name."""
+    """One model's recorded token counts, keyed by aggregated field name."""
     usage = entry.get("usage") or {}
-    return {field: int(usage.get(alias) or 0) for alias, field in _USAGE_FIELDS}
+    return {
+        field: int(usage[alias])
+        for alias, field in _USAGE_FIELDS
+        if usage.get(alias) is not None
+    }
 
 
 def _entry_since(entry: dict[str, Any], baseline: dict[str, Any]) -> dict[str, Any]:
@@ -121,15 +164,16 @@ def _entry_since(entry: dict[str, Any], baseline: dict[str, Any]) -> dict[str, A
     the nano-AIU price are differences, while a price missing on either side
     stays missing so a partial price is never reported as a total. Every
     subtracted value is clamped at zero, because a baseline that exceeds the
-    snapshot (an interrupted resume) cannot report negative usage.
+    snapshot (an interrupted resume) cannot report negative usage. A counter the
+    current entry omits is dropped rather than recorded as ``0``, so the caller
+    can still tell an unmeasured counter from a measured zero.
     """
     current_usage = entry.get("usage") or {}
     base_usage = baseline.get("usage") or {}
     usage = {
-        alias: max(
-            0, int(current_usage.get(alias) or 0) - int(base_usage.get(alias) or 0)
-        )
+        alias: max(0, int(current_usage[alias]) - int(base_usage.get(alias) or 0))
         for alias, _ in _USAGE_FIELDS
+        if current_usage.get(alias) is not None
     }
     adjusted = {**entry, "usage": usage}
 
@@ -195,23 +239,29 @@ def extract_usage_from_usage_file(usage_path: Path) -> CopilotUsage | None:
     artifact is session-cumulative, so on a resumed trial it covers the earlier
     segment too. A missing, unreadable, or other-session baseline is ignored.
 
-    Returns ``None`` when the file is missing, unreadable, or reports no model
-    metrics. Token sums that are absent everywhere stay ``None``; the cost is
-    ``None`` when any model's price is missing, so a partial price is never
-    reported as a total.
+    Returns ``None`` when the file is missing, unreadable, not shaped like a
+    usage snapshot (``modelMetrics`` not an object of objects, a token or
+    request count that is not an integer, a nano-AIU price that is not a
+    number), or reports no model metrics. A baseline with that same defect is
+    ignored, as a missing one is. Token sums that are absent everywhere stay
+    ``None``; a recorded ``0`` is reported as ``0``. The cost is ``None`` when
+    any model's price is missing, so a partial price is never reported as a
+    total.
     """
     if not usage_path.is_file():
         return None
     snapshot = _read_json_snapshot(usage_path)
-    if snapshot is None:
+    if snapshot is None or not _has_valid_metrics(snapshot):
         return None
     baseline = _read_json_snapshot(usage_path.with_name(COPILOT_USAGE_BASELINE_REL))
+    if baseline is not None and not _has_valid_metrics(baseline):
+        baseline = None
     models = _models_since(snapshot, baseline)
     if not models:
         return None
 
-    totals = {"input_tokens": 0, "cache_read_tokens": 0, "cache_write_tokens": 0,
-              "output_tokens": 0, "reasoning_tokens": 0}
+    totals = {field: 0 for _, field in _USAGE_FIELDS}
+    present = {field: False for _, field in _USAGE_FIELDS}
     n_requests = 0
     saw_requests = False
     cost: float | None = 0.0
@@ -221,6 +271,7 @@ def extract_usage_from_usage_file(usage_path: Path) -> CopilotUsage | None:
             continue
         for key, value in _model_usage(entry).items():
             totals[key] += value
+            present[key] = True
         requests = (entry.get("requests") or {}).get("count")
         if requests is not None:
             n_requests += int(requests)
@@ -229,7 +280,7 @@ def extract_usage_from_usage_file(usage_path: Path) -> CopilotUsage | None:
         cost = None if cost is None or model_cost is None else cost + model_cost
 
     return CopilotUsage(
-        **{key: value or None for key, value in totals.items()},
+        **{key: value if present[key] else None for key, value in totals.items()},
         n_requests=n_requests if saw_requests else None,
         cost_usd=cost,
         source=COPILOT_USAGE_REL,

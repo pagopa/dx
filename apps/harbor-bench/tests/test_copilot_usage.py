@@ -115,6 +115,38 @@ def test_extract_from_usage_file_with_no_model_metrics_returns_none(tmp_path):
     assert extract_usage_from_usage_file(path) is None
 
 
+def test_usage_file_with_non_object_model_metrics_returns_none(tmp_path):
+    path = tmp_path / "copilot-usage.json"
+    path.write_text(
+        json.dumps({"sessionStartTime": SESSION_START, "modelMetrics": [1]}),
+        encoding="utf-8",
+    )
+
+    assert extract_usage_from_usage_file(path) is None
+
+
+def test_usage_file_with_a_string_token_counter_returns_none(tmp_path):
+    path = tmp_path / "copilot-usage.json"
+    model = {**DEFAULT_USAGE_MODEL, "usage": {"inputTokens": "unknown"}}
+    write_copilot_usage(path, {"gpt-6-luna": model})
+
+    assert extract_usage_from_usage_file(path) is None
+
+
+def test_malformed_usage_file_falls_back_to_jsonl(tmp_path):
+    usage_file = tmp_path / "copilot-usage.json"
+    model = {**DEFAULT_USAGE_MODEL, "usage": {"inputTokens": "unknown"}}
+    write_copilot_usage(usage_file, {"gpt-6-luna": model})
+    jsonl = tmp_path / "copilot-cli.jsonl"
+    write_copilot_jsonl(jsonl, output_tokens=[41])
+
+    usage = extract_usage(usage_file, jsonl)
+
+    assert usage is not None
+    assert usage.source == "copilot-cli.jsonl"
+    assert usage.output_tokens == 41
+
+
 def test_usage_file_without_requests_reports_no_request_count(tmp_path):
     path = tmp_path / "copilot-usage.json"
     model = {key: value for key, value in DEFAULT_USAGE_MODEL.items() if key != "requests"}
@@ -125,6 +157,50 @@ def test_usage_file_without_requests_reports_no_request_count(tmp_path):
     assert usage is not None
     assert usage.n_requests is None
     assert usage.input_tokens == 55_664
+
+
+def test_recorded_zero_is_reported_as_zero_and_omitted_counter_as_none(tmp_path):
+    path = tmp_path / "copilot-usage.json"
+    model = {
+        "requests": {"count": 1, "cost": 1},
+        "usage": {"inputTokens": 100, "cacheReadTokens": 0},
+        "totalNanoAiu": 10_000_000,
+    }
+    write_copilot_usage(path, {"gpt-6-luna": model})
+
+    usage = extract_usage_from_usage_file(path)
+
+    assert usage is not None
+    assert usage.input_tokens == 100
+    assert usage.cache_read_tokens == 0  # recorded zero, not unknown
+    assert usage.cache_write_tokens is None  # omitted by the snapshot
+
+
+def test_resumed_segment_with_a_zero_token_delta_reports_zero(tmp_path):
+    path = tmp_path / "copilot-usage.json"
+    write_copilot_usage(path, {"gpt-6-luna": RESUMED_MODEL})
+    write_copilot_baseline(path, {"gpt-6-luna": RESUMED_MODEL})
+
+    usage = extract_usage_from_usage_file(path)
+
+    assert usage is not None
+    assert usage.input_tokens == 0  # 57,000 - 57,000
+    assert usage.cache_read_tokens == 0  # 31,000 - 31,000
+    assert usage.reasoning_tokens == 0  # 300 - 300
+    assert usage.n_requests == 0  # 7 - 7
+
+
+def test_baseline_without_a_counter_subtracts_zero(tmp_path):
+    path = tmp_path / "copilot-usage.json"
+    write_copilot_usage(path, {"gpt-6-luna": RESUMED_MODEL})
+    baseline = {**BASELINE_MODEL, "usage": {"inputTokens": 50_000}}
+    write_copilot_baseline(path, {"gpt-6-luna": baseline})
+
+    usage = extract_usage_from_usage_file(path)
+
+    assert usage is not None
+    assert usage.input_tokens == 7_000  # 57,000 - 50,000
+    assert usage.cache_read_tokens == 31_000  # baseline carries none: subtract 0
 
 
 def test_unpriced_ai_credits_report_no_cost(tmp_path):
@@ -207,6 +283,22 @@ def test_missing_or_corrupt_baseline_leaves_usage_unchanged(tmp_path):
     assert missing.input_tokens == 57_000
 
 
+def test_malformed_baseline_is_ignored(tmp_path):
+    path = tmp_path / "copilot-usage.json"
+    write_copilot_usage(path, {"gpt-6-luna": RESUMED_MODEL})
+    baseline = write_copilot_baseline(path, {"gpt-6-luna": BASELINE_MODEL})
+    data = json.loads(baseline.read_text(encoding="utf-8"))
+    data["modelMetrics"]["gpt-6-luna"]["usage"]["inputTokens"] = "unknown"
+    baseline.write_text(json.dumps(data), encoding="utf-8")
+
+    usage = extract_usage_from_usage_file(path)
+
+    assert usage is not None
+    assert usage.input_tokens == 57_000  # baseline ignored: nothing subtracted
+    assert usage.n_requests == 7
+    assert usage.cost_usd == pytest.approx(0.007)
+
+
 def test_baseline_larger_than_the_snapshot_clamps_at_zero(tmp_path):
     path = tmp_path / "copilot-usage.json"
     current = {
@@ -221,7 +313,7 @@ def test_baseline_larger_than_the_snapshot_clamps_at_zero(tmp_path):
 
     assert usage is not None
     assert usage.n_requests == 0
-    assert usage.input_tokens is None  # 10 - 50,000 clamps to zero
+    assert usage.input_tokens == 0  # 10 - 50,000 clamps to zero, still measured
     assert usage.cost_usd == 0.0
 
 
