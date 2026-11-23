@@ -10,7 +10,7 @@ description = "PagoPA Harbor CLI: convert evals.json to Harbor tasks, report and
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-  "harbor==0.22.0",
+  "harbor==0.26.0",
   "harbor-copilot>=0.1.0",
   "jinja2>=3.1",
   "tomli-w>=1.0",
