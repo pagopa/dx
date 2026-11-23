@@ -26,8 +26,7 @@ and fails if the monitor exits or does not become ready.
 
 `allowed-domains` is an optional newline-separated allowlist. It replaces the
 default list in `action.yaml`; include the domains required by your workload,
-GitHub, and Falco's report dependencies (`pypi.org` and
-`files.pythonhosted.org`). To retain the defaults and add workload-specific
+and GitHub. To retain the defaults and add workload-specific
 domains, use `additional-allowed-domains`. Blocked connections appear in the
 job summary. An incomplete list can make the job fail.
 

@@ -4,19 +4,9 @@ description: Stop Falco and write its runtime findings to the job summary.
 runs:
   using: composite
   steps:
-    - name: Check whether Falco startup was attempted
-      id: check
+    - name: Stop Falco and summarize findings
       if: ${{ always() }}
       shell: bash
-      run: |
-        if [ -f "$RUNNER_TEMP/dx-runtime-hardening-falco-attempted" ]; then
-          echo "attempted=true" >> "$GITHUB_OUTPUT"
-        else
-          echo "Falco startup was not attempted; skipping cleanup."
-        fi
-
-    - name: Stop Falco and generate report
-      if: ${{ always() && steps.check.outputs.attempted == 'true' }}
-      uses: falcosecurity/falco-actions/stop@558a3ceeee9403e1c875ffbeb704c34c93e24752
-      with:
-        mode: live
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+      run: bash "$ACTION_PATH/stop.sh" /tmp/falco_events.json
