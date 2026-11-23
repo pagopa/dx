@@ -34,11 +34,19 @@ The action initializes `setup-telemetry` unless the job already has a
 telemetry session. Its collector runs after Bullfrog's post step and queues
 sanitized Falco findings and blocked Bullfrog connections for the telemetry
 action's post step. Falco findings are grouped per job by rule and priority;
-each event contains the count and the last observed timestamp. Bullfrog
-events contain domain, port, protocol, decision, reason and timestamp. Allowed
+each event contains the count and the last observed timestamp. Events include
+the workflow run URL and possible step names, inferred from event and GitHub
+Actions step timestamps. Falco events are also grouped by the matching set of
+steps. Concurrent steps or timestamps rounded to seconds can make attribution
+ambiguous. Step correlation requires `actions: read`; failures are reported as
+warnings and events remain available without step attribution. Generated
+`Run ...` names and names containing path-like or shell characters are omitted.
+Other step names are exported as displayed by GitHub; do not put sensitive
+information in step names. Bullfrog events contain domain, port, protocol,
+decision, reason and timestamp. Allowed
 connections remain in Bullfrog's job summary but are not exported. Command
-lines, raw output, executable paths and IP addresses are not exported. The
-telemetry export itself happens after collection and is not included in the
+lines, filenames, raw output, executable paths and IP addresses from findings
+are not exported. The telemetry export itself happens after collection and is not included in the
 Bullfrog results. An existing telemetry session must remain available until
 the post phase; in particular, a later checkout must not remove its event file.
 

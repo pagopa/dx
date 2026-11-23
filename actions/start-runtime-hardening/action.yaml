@@ -41,6 +41,8 @@ runs:
     - name: Register runtime hardening telemetry
       if: ${{ env.OTEL_EVENT_FILE != '' && (steps.telemetry.outcome == 'skipped' || steps.telemetry-file.outcome == 'success') }}
       uses: pagopa/dx/actions/start-runtime-hardening/telemetry@runtime-hardening-actions
+      env:
+        DX_RUNTIME_HARDENING_TOKEN: ${{ github.token }}
 
     # The action's default CI rules path points inside start/, but the rules
     # are stored at the root of the pinned action repository.
