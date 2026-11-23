@@ -14,7 +14,7 @@ docker run --rm --detach \
   -o "file_output.keep_alive=false" -o "file_output.filename=/tmp/falco_events.json" \
   -o "engine.kind=modern_ebpf" -o "webserver.listen_address=127.0.0.1"
 
-for attempt in {1..60}; do
+for ((attempt = 1; attempt <= 60; attempt++)); do
   if ! docker inspect falco --format '{{.State.Running}}' 2>/dev/null | grep -qx true; then
     echo "::error::Falco stopped before monitoring was ready."
     exit 1

@@ -23,9 +23,11 @@ jobs:
             echo "::error::Falco is not running."
             exit 1
           fi
-          grep -q 'ghp_' /dev/null || true
+          for attempt in {1..3}; do
+            grep -q 'ghp_' /dev/null || true
+          done
           for attempt in {1..20}; do
-            if [ -r /tmp/falco_events.json ] && jq -e 'select(.rule == "Grep Looking for GitHub Secrets")' /tmp/falco_events.json > /dev/null; then
+            if [ -r /tmp/falco_events.json ] && jq -se '[.[] | select(.rule == "Grep Looking for GitHub Secrets")] | length >= 3' /tmp/falco_events.json > /dev/null; then
               echo "Expected Falco rule observed."
               exit 0
             fi
@@ -38,8 +40,21 @@ jobs:
         if: ${{ always() }}
         uses: pagopa/dx/actions/stop-runtime-hardening@workflow-hardening-pilot
 
+      - name: Check out the telemetry collector
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Verify Falco aggregation
+        shell: bash
+        run: |
+          output="$(mktemp)"
+          trap 'rm -f -- "$output"' EXIT
+          OTEL_EVENT_FILE="$output" bash actions/start-runtime-hardening/telemetry/collect.sh /tmp/falco_events.json /dev/null
+          jq -se '[.[] | select(.name == "runtime-hardening.falco" and .attributes["falco.rule"] == "Grep Looking for GitHub Secrets" and (.attributes["falco.count"] | tonumber) >= 3)] | length == 1' "$output" > /dev/null
+
   validate:
-    if: ${{ github.actor != 'dx-pagopa-bot' }}
+    if: ${{ github.actor != 'dx-pagopa-bot' && github.event_name != 'workflow_dispatch' }}
     permissions:
       contents: read
       actions: read

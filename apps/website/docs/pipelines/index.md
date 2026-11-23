@@ -28,7 +28,8 @@ including self-hosted environment jobs, are not protected. Falco and Bullfrog
 findings appear in the job summary, not as PR comments. Sudo remains enabled
 for Docker, so privileged code can bypass Bullfrog's egress filtering.
 Sanitized Falco findings and blocked Bullfrog connections are also sent to the
-same Application Insights instance used by Terraform workflows. Allowed
+same Application Insights instance used by Terraform workflows. Falco findings
+are grouped per job by rule and priority, with an occurrence count. Allowed
 connections remain in the job summary. Command lines and raw output are not
 exported; Bullfrog events include destination domains.
 

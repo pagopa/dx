@@ -34,7 +34,8 @@ job summary. An incomplete list can make the job fail.
 The action initializes `setup-telemetry` unless the job already has a
 telemetry session. Its collector runs after Bullfrog's post step and queues
 sanitized Falco findings and blocked Bullfrog connections for the telemetry
-action's post step. Falco events contain rule, priority and timestamp; Bullfrog
+action's post step. Falco findings are grouped per job by rule and priority;
+each event contains the count and the last observed timestamp. Bullfrog
 events contain domain, port, protocol, decision, reason and timestamp. Allowed
 connections remain in Bullfrog's job summary but are not exported. Command
 lines, raw output, executable paths and IP addresses are not exported. The

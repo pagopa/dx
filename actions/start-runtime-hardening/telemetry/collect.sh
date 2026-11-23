@@ -16,33 +16,49 @@ collect() {
       if type == "string" and length > 0 and length <= 512 then . else "" end;
     def attributes:
       { "cicd.job.id": $job };
+    def invalid_record:
+      {type: "event", name: "runtime-hardening.invalid-record",
+       body: ("Invalid " + $source + " record"), exception: false,
+       attributes: (attributes + {"security.source": $source})};
 
-    inputs | select(length > 0) |
-    (try fromjson catch null) as $entry |
-    if ($entry | type) != "object" then
-      {type: "event", name: "runtime-hardening.invalid-record",
-       body: ("Invalid " + $source + " record"), exception: false,
-       attributes: (attributes + {"security.source": $source})}
-    elif ($source == "falco" and
-          (($entry.rule | safe_string) == "" or
-           ($entry.priority | safe_string) == "")) or
-         ($source == "bullfrog" and
-          ($entry.decision != "allowed" and $entry.decision != "blocked")) then
-      {type: "event", name: "runtime-hardening.invalid-record",
-       body: ("Invalid " + $source + " record"), exception: false,
-       attributes: (attributes + {"security.source": $source})}
-    elif $source == "bullfrog" and $entry.decision == "allowed" then
-      empty
-    elif $source == "falco" then
-      {type: "event", name: "runtime-hardening.falco",
-       body: "Falco rule triggered", exception: false,
-       attributes: (attributes + {
-         "security.source": "falco",
-         "falco.rule": ($entry.rule | safe_string),
-         "falco.priority": ($entry.priority | safe_string),
-         "security.event.time": ($entry.time | safe_string)
-       })}
+    if $source == "falco" then
+      reduce (inputs | select(length > 0)) as $line
+        ({groups: {}, invalid: 0};
+         (try ($line | fromjson) catch null) as $entry |
+         if ($entry | type) != "object" then
+           .invalid += 1
+         elif ($entry.rule | safe_string) == "" or
+              ($entry.priority | safe_string) == "" then
+           .invalid += 1
+         else
+           ($entry.rule | safe_string) as $rule |
+           ($entry.priority | safe_string) as $priority |
+           ([$rule, $priority] | tojson) as $key |
+           .groups[$key] //= {rule: $rule, priority: $priority, count: 0} |
+           .groups[$key].count += 1 |
+           .groups[$key].time = ($entry.time | safe_string)
+         end) |
+      (.groups[] |
+       {type: "event", name: "runtime-hardening.falco",
+        body: "Falco rule triggered", exception: false,
+        attributes: (attributes + {
+          "security.source": "falco",
+          "falco.rule": .rule,
+          "falco.priority": .priority,
+          "falco.count": (.count | tostring),
+          "security.event.time": .time
+        })}),
+      (range(0; .invalid) | invalid_record)
     else
+      inputs | select(length > 0) |
+      (try fromjson catch null) as $entry |
+      if ($entry | type) != "object" then
+        invalid_record
+      elif $entry.decision != "allowed" and $entry.decision != "blocked" then
+        invalid_record
+      elif $entry.decision == "allowed" then
+        empty
+      else
       {type: "event", name: "runtime-hardening.bullfrog",
        body: "Bullfrog connection decision", exception: false,
        attributes: (attributes + {
@@ -56,6 +72,7 @@ collect() {
          "security.event.time": (if ($entry.timestamp | type) == "number"
            then ($entry.timestamp | tostring) else ($entry.timestamp | safe_string) end)
        })}
+      end
     end
   ' < "$file" >> "$OTEL_EVENT_FILE"
 }

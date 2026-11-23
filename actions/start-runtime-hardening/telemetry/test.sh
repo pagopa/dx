@@ -10,6 +10,8 @@ trap 'rm -f -- "$falco" "$bullfrog" "$events" "$messages"' EXIT
 
 cat > "$falco" <<'EOF'
 {"time":"2026-01-01T10:00:00Z","rule":"Sensitive action","priority":"Warning","output":"secret-falco-command","output_fields":{"proc.cmdline":"secret-falco-command"}}
+{"time":"2026-01-01T10:01:00Z","rule":"Sensitive action","priority":"Warning","output":"secret-second-command"}
+{"time":"2026-01-01T10:02:00Z","rule":"Sensitive action","priority":"Critical"}
 not-json secret-invalid
 EOF
 cat > "$bullfrog" <<'EOF'
@@ -22,17 +24,21 @@ OTEL_EVENT_FILE="$events" GITHUB_JOB=workspace \
   bash "$script_dir/collect.sh" "$falco" "$bullfrog"
 
 jq -se '
-  length == 4 and
-  .[0].name == "runtime-hardening.falco" and
-  .[0].attributes["falco.rule"] == "Sensitive action" and
-  .[0].attributes["falco.priority"] == "Warning" and
-  .[0].attributes["cicd.job.id"] == "workspace" and
-  .[1].name == "runtime-hardening.invalid-record" and
-  .[2].name == "runtime-hardening.bullfrog" and
-  .[2].attributes["network.destination.domain"] == "example.com" and
-  .[2].attributes["network.destination.port"] == "443" and
-  .[2].attributes["bullfrog.decision"] == "blocked" and
-  .[3].name == "runtime-hardening.invalid-record"
+  length == 5 and
+  ([.[] | select(.name == "runtime-hardening.falco" and
+                  .attributes["falco.priority"] == "Warning") |
+    select(.attributes["falco.rule"] == "Sensitive action" and
+           .attributes["falco.count"] == "2" and
+           .attributes["security.event.time"] == "2026-01-01T10:01:00Z" and
+           .attributes["cicd.job.id"] == "workspace")] | length) == 1 and
+  ([.[] | select(.name == "runtime-hardening.falco" and
+                  .attributes["falco.priority"] == "Critical" and
+                  .attributes["falco.count"] == "1")] | length) == 1 and
+  ([.[] | select(.name == "runtime-hardening.bullfrog" and
+                  .attributes["network.destination.domain"] == "example.com" and
+                  .attributes["network.destination.port"] == "443" and
+                  .attributes["bullfrog.decision"] == "blocked")] | length) == 1 and
+  ([.[] | select(.name == "runtime-hardening.invalid-record")] | length) == 2
 ' "$events" > /dev/null
 
 if grep -Eq 'secret|192\.0\.2\.1|registry\.npmjs\.org' "$events"; then
