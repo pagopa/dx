@@ -2,7 +2,7 @@
 # that the module under test (mut.tf) depends on.
 
 data "azurerm_subnet" "pep" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
+  name = provider::dx::resource_name(merge(local.environment, {
     domain        = null,
     name          = "pep",
     resource_type = "subnet"
@@ -12,7 +12,7 @@ data "azurerm_subnet" "pep" {
 }
 
 resource "azurerm_resource_group" "example" {
-  name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
+  name     = provider::dx::resource_name(merge(local.environment, { resource_type = "resource_group" }))
   location = local.environment.location
 }
 
