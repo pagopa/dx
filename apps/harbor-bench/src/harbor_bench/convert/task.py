@@ -143,6 +143,11 @@ def build_quality_toml(case: EvalCase, judge_model: str) -> str:
         JUDGE_MODEL=judge_model,
     )
 
+    expectations = [
+        expectation.strip()
+        for expectation in case.expectations
+        if expectation.strip()
+    ]
     criteria: list[dict] = [
         {
             "description": (
@@ -150,12 +155,16 @@ def build_quality_toml(case: EvalCase, judge_model: str) -> str:
                 f"{case.expected_output.strip()}"
             ),
             "type": "binary",
+            # Informational when the case also declares expectations: the
+            # aggregate restates them, so scoring it too would charge one miss
+            # twice. It stays the only scored criterion when no expectation
+            # exists, since a sole weight-0 criterion aggregates to 0.0.
+            "weight": 0.0 if expectations else 1.0,
         }
     ]
     criteria += [
-        {"description": expectation.strip(), "type": "binary"}
-        for expectation in case.expectations
-        if expectation.strip()
+        {"description": expectation, "type": "binary"}
+        for expectation in expectations
     ]
     return header + "\n" + tomli_w.dumps({"criterion": criteria})
 

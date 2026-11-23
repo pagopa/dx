@@ -10,10 +10,11 @@ import pytest
 
 from harbor_bench import task_shape
 from harbor_bench.convert.discover import load_evals_file
-from harbor_bench.convert.schema import resolve_eval_paths
+from harbor_bench.convert.schema import EvalCase, resolve_eval_paths
 from harbor_bench.convert.task import (
     GENERATED_TASK_FILES,
     TaskSpec,
+    build_quality_toml,
     generate_task,
     generate_task_atomic,
     task_dir_name,
@@ -105,6 +106,19 @@ def test_generate_task_structure(skill: Path, tmp_path: Path):
     assert "the thing done" in descriptions[0]
     assert descriptions[1] == "inspects repo"
     assert all(c["type"] == "binary" for c in quality["criterion"])
+    # the aggregate restates the expectation, so it scores nothing
+    assert [c.get("weight", 1.0) for c in quality["criterion"]] == [0.0, 1.0]
+
+
+def test_quality_aggregate_scores_only_without_expectations():
+    """A case with no expectation has nothing else to score, so the aggregate counts."""
+    quality = tomllib.loads(
+        build_quality_toml(
+            EvalCase(id=1, prompt="do the thing", expected_output="the thing done"),
+            "openai/gpt-6-luna",
+        )
+    )
+    assert [c.get("weight", 1.0) for c in quality["criterion"]] == [1.0]
 
 
 def test_generate_task_writes_exactly_the_generated_file_set(
