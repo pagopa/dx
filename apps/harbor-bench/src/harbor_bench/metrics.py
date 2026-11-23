@@ -3,7 +3,7 @@
 A metric's identity is one :class:`MetricSpec`. The derivation half
 (``result_key``, ``usage_attr``) names where the value comes from: a
 ``result.json`` ``agent_result`` key whose value wins, and the aggregated
-:class:`~harbor_copilot.copilot_usage.CopilotUsage` attribute that backfills
+:class:`~harbor_bench.copilot_usage.CopilotUsage` attribute that backfills
 when the file cannot report the number. The reporting half (``kind``,
 ``label``, ``integer``) names how the value is aggregated and displayed.
 
@@ -14,26 +14,28 @@ per-task table and the summary. Verifier reward metrics are the exception:
 only a job's actual rewards know their keys, so ``diff`` adds them dynamically
 as ``score.<key>`` specs instead of declaring them here.
 
-The registry is the single declaration shared by the agent (writer) and the
-bench reader: the agent imports this module to backfill an ``AgentContext``,
-``harbor_bench.jobs`` imports it to read a trial back. Neither side imports
-the other — the reader passes its ``TrialMetrics`` field set into
+The registry is the single declaration: ``harbor_bench.jobs`` imports it to
+read a trial back and passes its ``TrialMetrics`` field set into
 :func:`validate_metric_specs` at import.
 """
 
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 from typing import Any
+
+from harbor_bench.copilot_usage import CopilotUsage
 
 
 @dataclass(frozen=True)
 class MetricSpec:
     """One reportable metric: its source, label, and summary aggregation.
 
-    ``result_key`` and ``usage_attr`` are the derivation half: the
-    ``result.json`` ``agent_result`` key whose value wins, and the
-    :class:`~harbor_copilot.copilot_usage.CopilotUsage` attribute that backfills
+    ``result_key``, ``metadata_path`` and ``usage_attr`` are the derivation
+    half: the ``result.json`` ``agent_result`` key, or the key path through it
+    (``metadata_path``), whose value wins, and the
+    :class:`~harbor_bench.copilot_usage.CopilotUsage` attribute that backfills
     when the file cannot report the number. ``kind`` selects how the summary
     aggregates the metric across tasks: ``"score"`` for verifier rewards
     (mean), ``"total"`` for summed metrics (tokens, requests, steps, cost),
@@ -56,6 +58,7 @@ class MetricSpec:
     integer: bool = False
     source: str = "field"  # "field" | "reward"
     result_key: str | None = None
+    metadata_path: tuple[str, ...] | None = None
     usage_attr: str | None = None
     preference: str = "higher"  # "higher" | "lower" | "neutral"
     headline_group: str | None = None
@@ -132,16 +135,19 @@ METRIC_SPECS: tuple[MetricSpec, ...] = (
         "total",
         "reasoning tokens",
         integer=True,
-        result_key="n_reasoning_tokens",
+        metadata_path=("metadata", "copilot_usage", "reasoning_tokens"),
         usage_attr="reasoning_tokens",
         preference="lower",
     ),
     MetricSpec(
+        # Harbor persists no request count: its usage metadata carries
+        # ``premium_requests`` (a premium-request *cost*, not ``requests.count``)
+        # and ``AgentContext`` has no request field, so the usage artifact is
+        # the only source.
         "n_requests",
         "total",
         "model requests",
         integer=True,
-        result_key="n_requests",
         usage_attr="n_requests",
         preference="lower",
     ),
@@ -192,32 +198,31 @@ METRIC_SPECS: tuple[MetricSpec, ...] = (
 
 
 def derivable_specs() -> tuple[MetricSpec, ...]:
-    """The registry specs with a derivation (``result_key`` set), in order.
+    """The registry specs with a derivation (``usage_attr`` set), in order.
 
     These are the metrics the bench reader (``harbor_bench.jobs.Trial``)
-    backfills from the trial's artifacts: a ``result.json`` value wins, the
+    derives from the trial's artifacts: a ``result.json`` value wins, the
     aggregated usage attribute fills when the file cannot report the number.
     """
-    return tuple(spec for spec in METRIC_SPECS if spec.result_key is not None)
+    return tuple(spec for spec in METRIC_SPECS if spec.usage_attr is not None)
 
 
 def validate_metric_specs(
     *,
     trial_metric_fields: set[str] | None = None,
-    copilot_usage_fields: set[str] | None = None,
 ) -> None:
     """Raise when a registry key or usage attribute names no real field.
 
     The registry is the single declaration of each metric's identity; the
-    reader's ``TrialMetrics`` (in the harbor-bench app) and the writer's
-    :class:`~harbor_copilot.copilot_usage.CopilotUsage` re-express those names
-    as dataclass fields. Each consumer calls this once at import with the
-    field sets it knows, so a renamed field or a new metric fails at import
-    instead of surfacing as a ``TypeError`` or a silent ``None`` on a live
-    trial. Dynamic ``score.<key>`` specs (``source="reward"``) are added by
-    ``diff`` from a job's actual reward keys and are never checked against
-    either dataclass.
+    reader's ``TrialMetrics`` (in ``harbor_bench.jobs``) and
+    :class:`~harbor_bench.copilot_usage.CopilotUsage` re-express those names as
+    dataclass fields. The reader passes the field set it knows, so a renamed
+    field or a new metric fails at import instead of surfacing as a
+    ``TypeError`` or a silent ``None`` on a live trial. Dynamic ``score.<key>``
+    specs (``source="reward"``) are added by ``diff`` from a job's actual
+    reward keys and are never checked against a dataclass.
     """
+    usage_fields = {field.name for field in dataclasses.fields(CopilotUsage)}
     for spec in METRIC_SPECS:
         if spec.preference not in {"higher", "lower", "neutral"}:
             raise TypeError(
@@ -231,11 +236,21 @@ def validate_metric_specs(
                 f"metric spec key {spec.key!r} has no TrialMetrics field "
                 "(add the field to jobs.TrialMetrics)"
             )
-        if (
-            spec.usage_attr is not None
-            and copilot_usage_fields is not None
-            and spec.usage_attr not in copilot_usage_fields
+        if spec.result_key is not None and spec.metadata_path is not None:
+            raise TypeError(
+                f"metric spec {spec.key!r} declares both result_key and "
+                "metadata_path; name the one persisted location"
+            )
+        if spec.metadata_path is not None and not (
+            isinstance(spec.metadata_path, tuple)
+            and spec.metadata_path
+            and all(isinstance(part, str) and part for part in spec.metadata_path)
         ):
+            raise TypeError(
+                f"metric spec {spec.key!r} metadata_path must be a non-empty "
+                "tuple of non-empty strings"
+            )
+        if spec.usage_attr is not None and spec.usage_attr not in usage_fields:
             raise TypeError(
                 f"metric spec {spec.key!r} names usage attribute "
                 f"{spec.usage_attr!r}, which is not a CopilotUsage field"

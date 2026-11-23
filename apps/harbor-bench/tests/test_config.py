@@ -2,18 +2,24 @@
 
 from __future__ import annotations
 
+import pathlib
+import re
 from pathlib import Path
 
 import pytest
 import yaml
+from harbor.agents.installed.copilot_cli import CopilotCliOptions
 
 from harbor_bench.convert.config import (
+    AGENT_NAME,
     DEFAULT_AGENT_KWARGS,
     DEFAULT_MODEL,
     DEFAULT_ENVIRONMENT_TYPE,
     build_config,
     write_config,
 )
+
+DOCS = pathlib.Path(__file__).resolve().parents[1] / "docs" / "advanced-usage.md"
 
 
 def test_default_model_and_effort(tmp_path: Path):
@@ -28,18 +34,22 @@ def test_kwargs_override_default(tmp_path: Path):
         skill_dirs=[],
         kwargs={"reasoning_effort": "low"},
     )
-    assert config["agents"][0]["kwargs"] == {"reasoning_effort": "low"}
+    assert config["agents"][0]["kwargs"] == {
+        "reasoning_effort": "low",
+        "skip_install": True,
+    }
 
 
 def test_kwargs_merge_with_default(tmp_path: Path):
     config = build_config(
         tasks_dir=tmp_path / "tasks",
         skill_dirs=[],
-        kwargs={"max_ai_credits": 50},
+        kwargs={"disable_web_search": True},
     )
     assert config["agents"][0]["kwargs"] == {
         "reasoning_effort": "high",
-        "max_ai_credits": 50,
+        "skip_install": True,
+        "disable_web_search": True,
     }
 
 
@@ -47,11 +57,16 @@ def test_build_config_with_skills(tmp_path: Path):
     config = build_config(
         tasks_dir=tmp_path / "tasks",
         skill_dirs=[tmp_path / "skills" / "test-skill"],
-        kwargs={"max_ai_credits": 30, "reasoning_effort": "high"},
+        kwargs={"version": "1.2.3", "reasoning_effort": "high"},
     )
-    assert config["agents"][0]["import_path"] == "harbor_copilot.agents.copilot_cli_mod:CopilotCliMod"
+    assert config["agents"][0]["name"] == "copilot-cli"
+    assert "import_path" not in config["agents"][0]
     assert config["agents"][0]["skills"] == [str(tmp_path / "skills" / "test-skill")]
-    assert config["agents"][0]["kwargs"] == {"max_ai_credits": 30, "reasoning_effort": "high"}
+    assert config["agents"][0]["kwargs"] == {
+        "reasoning_effort": "high",
+        "skip_install": True,
+        "version": "1.2.3",
+    }
     assert config["datasets"] == [{"path": str(tmp_path / "tasks")}]
     assert config["n_concurrent_trials"] == 4
 
@@ -115,3 +130,23 @@ def test_unsupported_environment_type_raises(tmp_path: Path):
             skill_dirs=[],
             environment_type="podman",
         )
+
+
+def test_default_agent_kwargs_are_agent_options_fields():
+    """Unknown kwargs are a Harbor config error, so the defaults must be declared."""
+    fields = set(CopilotCliOptions.model_fields)
+    assert set(DEFAULT_AGENT_KWARGS) <= fields
+
+
+def test_documented_ak_examples_are_agent_options_fields():
+    """Every ``--ak KEY=...`` in the docs must be a declared agent option."""
+    fields = set(CopilotCliOptions.model_fields)
+    documented = set(
+        re.findall(r"--ak\s+([A-Za-z_][A-Za-z0-9_]*)=", DOCS.read_text())
+    ) - {"KEY"}  # --ak KEY=VALUE is the documented placeholder
+    assert documented, "expected documented --ak examples"
+    assert documented <= fields
+
+
+def test_agent_name_is_the_harbor_builtin():
+    assert AGENT_NAME == "copilot-cli"

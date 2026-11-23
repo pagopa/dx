@@ -13,7 +13,7 @@ from harbor_bench.diff import (
     primary_score_spec,
 )
 from harbor_bench.jobs import CriterionResult, SkillVersion, TrialMetrics
-from harbor_copilot.metrics import MetricSpec
+from harbor_bench.metrics import MetricSpec
 
 
 @dataclass(frozen=True)

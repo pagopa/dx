@@ -2,7 +2,7 @@
 
 Each ``harbor run -c config.yaml`` writes its trials under ``jobs/<run>``: one
 subdirectory per trial holding a ``result.json`` plus collected artifacts
-(``agent/trajectory.json``, ``agent/copilot/session-store.db``,
+(``agent/trajectory.json``, ``agent/copilot-usage.json``,
 ``agent/copilot-cli.jsonl``, ``verifier/reward-details.json``,
 ``verifier/usage.jsonl``).
 
@@ -23,8 +23,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, Iterator, Literal
 
-from harbor_copilot.copilot_usage import CopilotUsage, copilot_artifact_paths, extract_usage
-from harbor_copilot.metrics import MetricSpec, derivable_specs, validate_metric_specs
+from harbor_bench.copilot_usage import CopilotUsage, copilot_artifact_paths, extract_usage
+from harbor_bench.metrics import MetricSpec, derivable_specs, validate_metric_specs
 from harbor_bench.task_shape import (
     RESULT_JSON,
     REWARD_DETAILS_JSON,
@@ -262,8 +262,8 @@ class TrialArtifacts:
     """Every artifact location of one trial directory, resolved from its root.
 
     The one owner of the trial-directory layout: ``result.json``, the ATIF
-    trajectory, the verifier usage/reward files, and the Copilot session
-    artifacts (session DB + JSONL stream). :class:`Trial` reads every file
+    trajectory, the verifier usage/reward files, and the Copilot usage
+    artifacts (usage snapshot + JSONL stream). :class:`Trial` reads every file
     through this value, so the layout lives in exactly one place and
     :mod:`harbor_bench.copilot_usage` never sees a trial path (it aggregates
     whatever two files it is handed).
@@ -274,7 +274,7 @@ class TrialArtifacts:
     verifier_usage: Path
     reward_details: Path
     scoring: Path
-    copilot_session_db: Path
+    copilot_usage: Path
     copilot_cli_jsonl: Path
 
     @classmethod
@@ -286,20 +286,20 @@ class TrialArtifacts:
         prefix when re-materializing collected artifacts), so the writer's
         ``task.toml`` ``[artifacts]`` and this reader can never drift apart.
         """
-        session_db, cli_jsonl = copilot_artifact_paths(trial_dir / "agent")
+        usage_file, cli_jsonl = copilot_artifact_paths(trial_dir / "agent")
         return cls(
             result=trial_dir / RESULT_JSON,
             trajectory=trial_dir / trial_relative(TRAJECTORY_JSON),
             verifier_usage=trial_dir / trial_relative(VERIFIER_USAGE_JSONL),
             reward_details=trial_dir / trial_relative(REWARD_DETAILS_JSON),
             scoring=trial_dir / trial_relative(SCORING_JSON),
-            copilot_session_db=session_db,
+            copilot_usage=usage_file,
             copilot_cli_jsonl=cli_jsonl,
         )
 
     def usage(self) -> CopilotUsage | None:
-        """Aggregated Copilot usage for this trial (session DB, JSONL fallback)."""
-        return extract_usage(self.copilot_session_db, self.copilot_cli_jsonl)
+        """Aggregated Copilot usage for this trial (usage snapshot, JSONL fallback)."""
+        return extract_usage(self.copilot_usage, self.copilot_cli_jsonl)
 
 
 class Trial:
@@ -394,9 +394,9 @@ class Trial:
         rewards = (data.get("verifier_result") or {}).get("rewards") or {}
         agent_execution = data.get("agent_execution") or {}
         # One precedence rule per usage-backed metric, declared once in the
-        # metric registry (result_key/usage_attr): the mod agent's persisted
-        # value wins (top-level agent_result field, then metadata), and the
-        # artifact backfill fills when the file cannot report the number.
+        # metric registry (result_key/metadata_path/usage_attr): the persisted
+        # value wins, and the artifact backfill fills when the file cannot
+        # report the number.
         derived = {
             spec.key: _first(
                 self._reported_value(agent_result, spec),
@@ -596,20 +596,26 @@ class Trial:
 
     @staticmethod
     def _reported_value(agent_result: JSON, spec: MetricSpec) -> Any:
-        """The value the mod agent persisted for ``spec``, or ``None``.
+        """The value the agent persisted for ``spec``, or ``None``.
 
-        The agent writes each usage-backed metric under its registry
-        ``result_key``: as a top-level ``agent_result`` field where
-        :class:`~harbor.models.agent.context.AgentContext` has the attribute
-        (input/cache/output tokens, cost), otherwise under
-        ``agent_result.metadata`` (request/reasoning counts). Reading the
-        persisted value first is what makes the artifact backfill a true
-        fallback for runs the mod agent did not produce.
+        Harbor's installed agent writes each usage-backed metric where its
+        registry derivation points: a top-level ``agent_result`` field for
+        what :class:`~harbor.models.agent.context.AgentContext` has an
+        attribute for (input/cache/output tokens, cost), and the key path in
+        ``agent_result.metadata`` for what it does not (``reasoning_tokens``
+        under ``metadata["copilot_usage"]``, which Harbor reports
+        baseline-corrected on a resumed trial). Reading the persisted value
+        first is what makes the artifact backfill a true fallback, and it is
+        what keeps a resume from re-reporting the pre-resume segment.
         """
-        value = agent_result.get(spec.result_key)
-        if value is not None:
+        if spec.metadata_path is not None:
+            value: Any = agent_result
+            for key in spec.metadata_path:
+                if not isinstance(value, dict):
+                    return None
+                value = value.get(key)
             return value
-        return (agent_result.get("metadata") or {}).get(spec.result_key)
+        return agent_result.get(spec.result_key)
 
     @staticmethod
     def _usage_value(facts: TrialFacts, attr: str) -> Any:
@@ -716,7 +722,4 @@ class Job:
 #: The reader is a consumer of the metric registry: fail at import when a
 #: registry key or usage attribute no longer names a real dataclass field,
 #: instead of a ``TypeError`` or a silent ``None`` when a live trial is read.
-validate_metric_specs(
-    trial_metric_fields=set(TrialMetrics.__dataclass_fields__),
-    copilot_usage_fields=set(CopilotUsage.__dataclass_fields__),
-)
+validate_metric_specs(trial_metric_fields=set(TrialMetrics.__dataclass_fields__))

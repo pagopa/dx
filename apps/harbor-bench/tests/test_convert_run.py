@@ -205,10 +205,14 @@ def test_cli_kwargs_land_in_config_and_override_defaults(tmp_path: Path):
     plan_and_apply(
         out,
         [evals_path],
-        agent_kwargs={"max_ai_credits": 50, "reasoning_effort": "low"},
+        agent_kwargs={"version": "1.2.3", "reasoning_effort": "low"},
     )
     kwargs = load_config(out)["agents"][0]["kwargs"]
-    assert kwargs == {"max_ai_credits": 50, "reasoning_effort": "low"}
+    assert kwargs == {
+        "version": "1.2.3",
+        "reasoning_effort": "low",
+        "skip_install": True,
+    }
 
 
 def test_apply_is_deterministic_across_runs(tmp_path: Path):
