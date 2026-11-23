@@ -6,15 +6,20 @@ from pathlib import Path
 
 import yaml
 
-from harbor_copilot.agents.copilot_cli_mod import AGENT_IMPORT_PATH
+#: The Harbor built-in agent the generated config selects. Harbor 0.26 ships
+#: ``copilot-cli`` as an installed agent, so the bench no longer registers a
+#: forked agent class by import path.
+AGENT_NAME = "copilot-cli"
 
 #: Default Copilot model used to run the agent tasks. Overridable at convert
 #: time with ``harbor-bench convert --model ...``.
 DEFAULT_MODEL = "gpt-6-luna"
 
-#: Default agent kwargs (the ``--ak``/``AgentConfig.kwargs`` contract) merged
-#: into the generated config. User-supplied kwargs win over these defaults.
-DEFAULT_AGENT_KWARGS: dict = {"reasoning_effort": "high"}
+#: Default agent kwargs (the ``CopilotCliOptions``/``AgentConfig.kwargs``
+#: contract) merged into the generated config. Every key must be a field of the
+#: agent's options model: unknown keys are a config error. User-supplied kwargs
+#: win over these defaults.
+DEFAULT_AGENT_KWARGS: dict = {"reasoning_effort": "high", "skip_install": True}
 
 #: Built-in Harbor ``EnvironmentType`` values accepted by
 #: ``harbor-bench convert --environment`` and written into ``[environment].type``.
@@ -57,7 +62,7 @@ def build_config(
         )
 
     agent: dict = {
-        "import_path": AGENT_IMPORT_PATH,
+        "name": AGENT_NAME,
     }
     if not without_skill and skill_dirs:
         agent["skills"] = [str(d) for d in skill_dirs]
