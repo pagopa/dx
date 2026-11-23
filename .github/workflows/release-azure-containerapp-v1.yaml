@@ -191,7 +191,6 @@ jobs:
         env:
           CURRENT_REVISION: ${{ steps.get_current_revision.outputs.current_revision_name }}
           IMAGE_REF: ${{ steps.image.outputs.image_ref }}
-          REVISION_MODE: ${{ steps.get_revision_mode.outputs.revision_mode }}
         run: |
           set -euo
 
@@ -214,12 +213,46 @@ jobs:
           echo "new_revision_name=$new_revision" >> $GITHUB_OUTPUT
           echo "skip_remaining_steps=false" >> $GITHUB_OUTPUT
 
-          if [[ "$REVISION_MODE" == "Multiple" ]]; then
-            az containerapp ingress traffic set \
-              --name "$CONTAINER_APP_NAME" \
-              --revision-weight "$CURRENT_REVISION"=100 "$new_revision"=0 \
-              --output table
+      - name: Prepare Candidate Revision
+        if: ${{ steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
+          steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
+        env:
+          CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
+          NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$CURRENT_REVISION_NAME" || -z "$NEW_REVISION_NAME" || "$CURRENT_REVISION_NAME" == "$NEW_REVISION_NAME" ]]; then
+            echo "::error::Current and candidate revisions must be non-empty and distinct."
+            exit 1
           fi
+
+          app_args=(--name "$CONTAINER_APP_NAME" --resource-group "$RESOURCE_GROUP_NAME")
+          candidate_active=$(az containerapp revision show \
+            "${app_args[@]}" \
+            --revision "$NEW_REVISION_NAME" \
+            --query properties.active \
+            --output json)
+
+          case "$candidate_active" in
+            false)
+              echo "::notice::Activating existing candidate revision: $NEW_REVISION_NAME"
+              az containerapp revision activate \
+                "${app_args[@]}" \
+                --revision "$NEW_REVISION_NAME" \
+                --output none
+              ;;
+            true) ;;
+            *)
+              echo "::error::Unable to determine whether candidate revision $NEW_REVISION_NAME is active."
+              exit 1
+              ;;
+          esac
+
+          az containerapp ingress traffic set \
+            "${app_args[@]}" \
+            --revision-weight "$CURRENT_REVISION_NAME"=100 "$NEW_REVISION_NAME"=0 \
+            --output table
 
       - name: Wait for the New Revision to be Ready
         if: ${{ steps.create_new_revision.outputs.skip_remaining_steps == 'false' }}
@@ -272,20 +305,49 @@ jobs:
 
       - name: Deactivate New Revision
         if:
-          ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple'
-          }}
+          ${{ failure() && steps.get_revision_mode.outputs.revision_mode == 'Multiple' &&
+          steps.get_current_revision.outputs.current_revision_name != '' &&
+          steps.create_new_revision.outputs.new_revision_name != '' &&
+          steps.get_current_revision.outputs.current_revision_name != steps.create_new_revision.outputs.new_revision_name }}
         env:
           CURRENT_REVISION_NAME: ${{ steps.get_current_revision.outputs.current_revision_name }}
           NEW_REVISION_NAME: ${{ steps.create_new_revision.outputs.new_revision_name }}
         run: |
+          set -euo pipefail
+
+          if [[ -z "$CURRENT_REVISION_NAME" || -z "$NEW_REVISION_NAME" || "$CURRENT_REVISION_NAME" == "$NEW_REVISION_NAME" ]]; then
+            echo "::error::Current and candidate revisions must be non-empty and distinct."
+            exit 1
+          fi
+
+          app_args=(--name "$CONTAINER_APP_NAME" --resource-group "$RESOURCE_GROUP_NAME")
+          candidate_active=$(az containerapp revision show \
+            "${app_args[@]}" \
+            --revision "$NEW_REVISION_NAME" \
+            --query properties.active \
+            --output json)
+
+          revision_weights=("$CURRENT_REVISION_NAME=100")
+          case "$candidate_active" in
+            true) revision_weights+=("$NEW_REVISION_NAME=0") ;;
+            false) echo "::notice::Candidate revision is already inactive; restoring current revision traffic only." ;;
+            *)
+              echo "::error::Unable to determine whether candidate revision $NEW_REVISION_NAME is active."
+              exit 1
+              ;;
+          esac
+
           az containerapp ingress traffic set \
-            --name "$CONTAINER_APP_NAME" \
-            --revision-weight "$CURRENT_REVISION_NAME"=100 "$NEW_REVISION_NAME"=0 \
+            "${app_args[@]}" \
+            --revision-weight "${revision_weights[@]}" \
             --output table
 
-          az containerapp revision deactivate \
-            --name "$CONTAINER_APP_NAME" \
-            --revision "$NEW_REVISION_NAME"
+          if [[ "$candidate_active" == "true" ]]; then
+            az containerapp revision deactivate \
+              "${app_args[@]}" \
+              --revision "$NEW_REVISION_NAME" \
+              --output none
+          fi
 
   auto_approve_deploy:
     name: Approve Deployment
@@ -386,13 +448,42 @@ jobs:
             --revision "$CURRENT_REVISION_NAME"
 
       - name: Deactivate New Revision
-        if: ${{ failure() }}
+        if: ${{ failure() && env.CURRENT_REVISION_NAME != '' &&
+          env.NEW_REVISION_NAME != '' &&
+          env.CURRENT_REVISION_NAME != env.NEW_REVISION_NAME }}
         run: |
+          set -euo pipefail
+
+          if [[ -z "$CURRENT_REVISION_NAME" || -z "$NEW_REVISION_NAME" || "$CURRENT_REVISION_NAME" == "$NEW_REVISION_NAME" ]]; then
+            echo "::error::Current and candidate revisions must be non-empty and distinct."
+            exit 1
+          fi
+
+          app_args=(--name "$CONTAINER_APP_NAME" --resource-group "$RESOURCE_GROUP_NAME")
+          candidate_active=$(az containerapp revision show \
+            "${app_args[@]}" \
+            --revision "$NEW_REVISION_NAME" \
+            --query properties.active \
+            --output json)
+
+          revision_weights=("$CURRENT_REVISION_NAME=100")
+          case "$candidate_active" in
+            true) revision_weights+=("$NEW_REVISION_NAME=0") ;;
+            false) echo "::notice::Candidate revision is already inactive; restoring current revision traffic only." ;;
+            *)
+              echo "::error::Unable to determine whether candidate revision $NEW_REVISION_NAME is active."
+              exit 1
+              ;;
+          esac
+
           az containerapp ingress traffic set \
-            --name "$CONTAINER_APP_NAME" \
-            --revision-weight "$CURRENT_REVISION_NAME"=100 "$NEW_REVISION_NAME"=0 \
+            "${app_args[@]}" \
+            --revision-weight "${revision_weights[@]}" \
             --output table
 
-          az containerapp revision deactivate \
-            --name "$CONTAINER_APP_NAME" \
-            --revision "$NEW_REVISION_NAME"
+          if [[ "$candidate_active" == "true" ]]; then
+            az containerapp revision deactivate \
+              "${app_args[@]}" \
+              --revision "$NEW_REVISION_NAME" \
+              --output none
+          fi

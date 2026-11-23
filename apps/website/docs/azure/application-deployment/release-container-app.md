@@ -27,7 +27,10 @@ The workflow performs the following steps:
 3. In **Single** mode, deploy the new image; Azure automatically routes 100% of
    traffic to the new revision when it is ready
 4. In **Multiple** mode (canary rollout):
-   1. Create a new revision with the updated image
+   1. Copy the current active revision with the updated image. If Azure returns
+      an existing inactive candidate from a previous attempt, reactivate it
+      before waiting for readiness. Keep current revision traffic at 100% and
+      candidate traffic at 0%
    2. Wait until the new revision reports **Healthy** status for the app
       (according to configured probes)
    3. Assign the stable `staging` revision label for testing the candidate
@@ -39,15 +42,85 @@ The workflow performs the following steps:
       - Use `nextPercentage` and `afterMs` to schedule gradual rollouts
    5. If no script is provided, perform a full switch (100% to new revision)
 5. After successful switch, deactivate the old revision and remove `staging`
-6. In case of failure, the new revision is deactivated, while the old revision
-   remains active
+6. In **Multiple** mode, failures restore traffic to the current revision and
+   deactivate the candidate only if it is still active. Cleanup is skipped if no
+   distinct candidate was identified
+
+```mermaid
+flowchart TD
+    Start([Trigger]) --> Build["Build and push image<br/>or reuse supplied image tag"]
+    Build --> BuildOK{"Build succeeded<br/>or was skipped?"}
+    BuildOK -->|No| Failed([Workflow failed])
+    BuildOK -->|Yes| ReleaseGate{"Manual approval required?"}
+    ReleaseGate -->|Yes| ReleaseApproval["Approve deployment"]
+
+    subgraph Revision["Deploy revision - release job"]
+        ReleaseGate -->|No| Prepare["Read Single or Multiple revision mode"]
+        ReleaseApproval --> Prepare
+        Prepare --> Current["Get Container App newest ACTIVE revision"]
+        Current --> Copy["Copy its template replacing the image"]
+        Copy --> Same{"Candidate equals<br/>current active revision?"}
+
+        Same -->|Yes| NoOp([Successful no-op])
+        Same -->|No| Mode{"Container App revision mode?"}
+
+        Mode -->|Multiple| Inspect{"Is the candidate inactive?"}
+        Inspect -->|Yes| Activate["Explicitly activate the existing revision"]
+        Inspect -->|No| Traffic
+        Activate --> Traffic["Keep current revision at 100% traffic<br/>Candidate at 0%"]
+
+        Mode -->|Single| Wait
+        Traffic --> Wait["Wait for candidate to become Healthy"]
+        Wait --> Healthy{"Healthy before timeout?"}
+        Healthy -->|No| ReleaseFailure
+        Healthy -->|Yes| ReadyMode{"Revision mode?"}
+
+        ReadyMode -->|Single| SingleDone([Complete])
+        ReadyMode -->|Multiple| Label["Assign staging label to candidate"]
+    end
+
+    subgraph Promotion["Promote revision - swap job, (multiple mode only)"]
+        Label -->|No| SwapGate{"Manual approval required?"}
+        SwapGate -->|Yes| SwapApproval["Approve promotion"]
+
+        SwapGate -->|No| Canary{"Canary script available?"}
+        SwapApproval --> Canary
+        Canary -->|Yes| Incremental["Promote traffic incrementally"]
+        Canary -->|No| Direct["Set latest revision traffic to 100%"]
+        Incremental --> RolloutOK{"Rollout succeeded?"}
+        Direct --> RolloutOK
+        RolloutOK -->|No| SwapFailure
+        RolloutOK -->|Yes| Finish["Remove staging label<br/>Deactivate old revision"]
+        Finish --> Done([Deployment complete])
+        Finish -.->|Command failure| SwapFailure
+    end
+
+    subgraph Recovery["Failure handling"]
+        ReleaseFailure["Release timeout or command failure"]
+        ReleaseFailure --> CanClean{"Multiple mode and<br/>valid, distinct candidate identified?"}
+        CanClean -->|No| Failed
+        CanClean -->|Yes| Restore
+
+        SwapFailure["Swap job failure"] --> Restore
+
+        Restore["Restore current revision traffic to 100%"]
+        Restore --> Active{"Is candidate still active?"}
+        Active -->|Yes| Deactivate["Deactivate candidate"]
+        Active -->|No| Failed
+        Deactivate --> Failed
+    end
+
+    Copy -.->|Command failure| ReleaseFailure
+    Activate -.->|Command failure| ReleaseFailure
+    Label -.->|Command failure| ReleaseFailure
+```
 
 ### Manual Deployment Approval
 
-When the `${environment}-cd` GitHub environment is configured with protection
-rules, deployments are approved automatically by default through the
-`GH_TOKEN_DEPLOYMENT_APPROVAL` repository secret. Set `enable_auto_deploy` to
-`false` to require a manual approval before the new revision receives traffic.
+When the `${environment}-cd` GitHub environment requires approval, the workflow
+attempts automatic approval by default using the `GH_TOKEN_DEPLOYMENT_APPROVAL`
+repository secret. If automatic approval fails or `enable_auto_deploy` is
+`false`, a pending approval must be granted manually.
 
 ### Staging URL
 
@@ -109,9 +182,3 @@ jobs:
       enable_auto_deploy: false
       docker_image_description: "<image-description>"
 ```
-
-## Notes
-
-- Ensure the following secrets are set in your repository:
-  `ARM_SUBSCRIPTION_ID`, `ARM_TENANT_ID`, `ARM_CLIENT_ID`, `GITHUB_TOKEN`, and
-  `GH_TOKEN_DEPLOYMENT_APPROVAL`.
