@@ -1,3 +1,13 @@
+## 0.22.28 (2026-11-23)
+
+### 🩹 Fixes
+
+- Document inactive Container App revision recovery and guarded rollback behavior. ([#2538](https://github.com/pagopa/dx/pull/2538))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.22.27 (2026-11-20)
 
 ### 🩹 Fixes

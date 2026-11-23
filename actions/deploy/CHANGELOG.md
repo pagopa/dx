@@ -1,3 +1,13 @@
+## 0.0.4 (2026-11-23)
+
+### 🩹 Fixes
+
+- Reactivate inactive Container App candidates on deployment retries and safely roll back failures. ([#2538](https://github.com/pagopa/dx/pull/2538))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.0.3 (2026-11-03)
 
 ### 🩹 Fixes
