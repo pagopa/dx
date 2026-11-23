@@ -167,10 +167,11 @@ run "apply_static_website" {
   command = apply
 
   variables {
-    environment         = merge(var.environment, { app_name = "sast" })
-    tags                = var.tags
-    resource_group_name = run.setup.resource_group_name
-    use_case            = "development"
+    environment                         = merge(var.environment, { app_name = "sast" })
+    tags                                = var.tags
+    resource_group_name                 = run.setup.resource_group_name
+    use_case                            = "development"
+    force_public_network_access_enabled = true
     static_website = {
       enabled            = true
       index_document     = "index.html"
