@@ -13,6 +13,10 @@ Working notes for maintainers and coding agents. Consumer documentation lives in
   `plugins: ["vitest"]`, the `vitest/*` rules.
 - `base-jest.json` — the Jest overlay: `extends: ["./core.json"]`,
   `plugins: ["jest"]`, the `jest/*` rules.
+- `base.js` / `base-jest.js` — the overlay above, flattened into a single
+  object and exported for `oxlint.config.ts`, with `base.d.ts` /
+  `base-jest.d.ts` typing it as `OxlintConfig`.
+- `flatten.js` — merges `core.json` into an overlay for those entries.
 
 Keeping the shared rules in `core.json` is what stops the two overlays from
 drifting apart. oxlint's `extends` takes file paths only, so the overlay points
@@ -24,6 +28,15 @@ reach it through the overlay.
 oxlint merges `extends` additively: a child adds plugins, rules and overrides,
 and cannot remove the parent's plugin. So `core.json` holds no test-runner rule
 — anything there would reach both variants.
+
+A TypeScript config cannot reuse that composition: oxlint's `extends` takes
+configuration objects there, never paths, and `core.json` is not exported, so
+`flatten.js` inlines it instead of nesting it. Flattening drops `$schema` and
+`extends`, which have no meaning once inlined, and `ignorePatterns`, which
+oxlint resolves against the declaring file — inlined they would start ignoring
+paths in the consumer workspace. It also anchors the `jsPlugins` specifiers with
+`createRequire(import.meta.url)`, so plugin resolution does not depend on how
+the consumer's package manager lays out `node_modules`.
 
 oxlint cannot share an override between files either, so each overlay repeats
 the test-file globs and the `no-empty-function: "off"` override verbatim; the
@@ -69,9 +82,13 @@ path is breaking and needs a migration note in the version plan.
 ## How the package is verified
 
 `src/__tests__` drives the real oxlint binary from a scratch directory whose
-`.oxlintrc.json` extends each shipped variant, then lints a clean file. A
-configuration oxlint cannot load — a typo, an absent rule, a broken plugin
-reference — fails there, so a green suite means the variants load and run.
+`.oxlintrc.json` extends each shipped variant, then lints a clean file. The
+module entries get the same treatment through a second scratch directory whose
+`oxlint.config.ts` imports them via a `node_modules` symlink, which is what
+proves the `exports` map, the flattening and the plugin resolution all work for
+a consumer. A configuration oxlint cannot load — a typo, an absent rule, a
+broken plugin reference — fails there, so a green suite means the variants load
+and run.
 
 oxlint ignores unrecognised rule options silently, so the one option set here is
 proven by linting a Jest test file whose only assertion is a local `assert`

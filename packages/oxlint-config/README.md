@@ -25,8 +25,53 @@ is nothing else to install.
 
 ## Usage
 
-Create an `.oxlintrc.json` file at the root of your workspace, picking the
-variant that matches your test runner:
+Pick the variant that matches your test runner and load it from an
+`oxlint.config.ts` at the root of your workspace:
+
+```ts
+import preset from "@pagopa/oxlint-config/base";
+
+export default {
+  ...preset,
+  ignorePatterns: ["**/generated/*", "**/dist/**", "**/bin/**"],
+};
+```
+
+`base` enables the `vitest/*` rules on test files. If your workspace tests with
+Jest instead — React Native projects, for instance — import `base-jest`:
+everything else is identical, and only the test overlay changes to the `jest/*`
+rules. It mirrors the Vitest rules one for one, except for the three that
+oxlint only ships for Vitest: `no-import-node-test`,
+`prefer-called-exactly-once-with` and
+`require-local-test-context-for-concurrent-snapshots`.
+
+```ts
+import preset from "@pagopa/oxlint-config/base-jest";
+
+export default {
+  ...preset,
+  ignorePatterns: ["**/generated/*", "**/dist/**", "**/bin/**"],
+};
+```
+
+Neither variant loads the other's plugin, so a Jest workspace never sees
+`vitest/*` findings, and vice versa. Pick one per workspace; extending both
+would enable both rule sets.
+
+The `base` and `base-jest` entries are already flattened: `core.json` is inlined,
+so there is nothing to `extends`, and they carry no `ignorePatterns` of their
+own. oxlint's TypeScript config accepts configuration objects in `extends`,
+never paths, which is why the module form exists. `oxlint.config.ts` is loaded
+through Node's type stripping, so it needs Node `>= 22.18` — Node 24, the
+current LTS. `perfectionist` comes from the package's own dependencies, so no
+plugin path is resolved from your workspace.
+
+`ignorePatterns` in your own config keeps `oxlint --fix` from rewriting
+generated code and build output. oxlint resolves each pattern against the
+directory of the configuration file that declares it, so the package declares
+none: the line in your config is the one that counts.
+
+If you prefer a JSON config, extend the JSON variant by path instead:
 
 ```json
 {
@@ -35,34 +80,9 @@ variant that matches your test runner:
 }
 ```
 
-`base.json` enables the `vitest/*` rules on test files. If your workspace tests
-with Jest instead — React Native projects, for instance — extend
-`base-jest.json`: everything else is identical, and only the test overlay
-changes to the `jest/*` rules. It mirrors the Vitest rules one for one, except
-for the three that oxlint only ships for Vitest: `no-import-node-test`,
-`prefer-called-exactly-once-with` and
-`require-local-test-context-for-concurrent-snapshots`.
-
-```json
-{
-  "extends": ["./node_modules/@pagopa/oxlint-config/base-jest.json"],
-  "ignorePatterns": ["**/generated/*", "**/dist/**", "**/bin/**"]
-}
-```
-
-Neither variant loads the other's plugin, so a Jest workspace never sees
-`vitest/*` findings, and vice versa. Pick one per workspace; extending both
-would enable both rule sets.
-
-`ignorePatterns` in your own file keeps `oxlint --fix` from rewriting
-generated code and build output. oxlint resolves each pattern against the
-directory of the configuration file that declares it, so the list shipped with
-the package never matches your files: the line in your `.oxlintrc.json` is the
-one that counts.
-
 > [!IMPORTANT]  
-> oxlint only accepts **file paths** in `extends`, not package specifiers, so
-> `"@pagopa/oxlint-config"` is rejected with
+> JSON configs only accept **file paths** in `extends`, not package specifiers,
+> so `"@pagopa/oxlint-config"` is rejected with
 > `Unsupported named config ... in extends`. Use the path form above. If your
 > package manager does not hoist dependencies to the workspace root, point the
 > path to where `@pagopa/oxlint-config` is actually installed.
@@ -85,7 +105,7 @@ rules or fixes. To move a workspace over:
 
 1. `pnpm remove @pagopa/eslint-config eslint` — keep ESLint if you still need
    the [type-aware rules](#what-is-not-covered).
-2. `pnpm add -D oxlint @pagopa/oxlint-config` and add the `.oxlintrc.json`
+2. `pnpm add -D oxlint @pagopa/oxlint-config` and add the `oxlint.config.ts`
    shown above.
 3. Point the `lint` scripts at `oxlint` and delete `eslint.config.js`.
 4. Review the first run: the handful of rules oxlint cannot express are listed

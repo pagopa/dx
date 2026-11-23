@@ -8,13 +8,26 @@
     "directory": "packages/oxlint-config"
   },
   "files": [
+    "base-jest.d.ts",
+    "base-jest.js",
     "base-jest.json",
+    "base.d.ts",
+    "base.js",
     "base.json",
-    "core.json"
+    "core.json",
+    "flatten.js"
   ],
   "type": "module",
   "exports": {
     ".": "./base.json",
+    "./base": {
+      "types": "./base.d.ts",
+      "default": "./base.js"
+    },
+    "./base-jest": {
+      "types": "./base-jest.d.ts",
+      "default": "./base-jest.js"
+    },
     "./base-jest.json": "./base-jest.json",
     "./base.json": "./base.json"
   },

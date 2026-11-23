@@ -1,12 +1,22 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, isAbsolute, join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
   BASE_CONFIG_PATH,
   BASE_JEST_CONFIG_PATH,
+  BASE_JEST_MODULE_PATH,
+  BASE_MODULE_PATH,
   CORE_CONFIG_PATH,
   loadConfig,
   type OxlintConfig,
@@ -68,6 +78,8 @@ test("uses the fixture", async ({ service }) => {
   expect(service).toBe("service");
 });
 `;
+
+const UNSORTED_OBJECT = "export const pair = {\n  b: 2,\n  a: 1,\n};\n";
 
 const STANDALONE_EXPECT = `import { expect } from "vitest";
 
@@ -133,6 +145,52 @@ const lintAsConsumer = ({
   } finally {
     rmSync(directory, { force: true, recursive: true });
   }
+};
+
+interface ModuleConsumerOptions {
+  files?: Record<string, string>;
+  subpath?: string;
+}
+
+/**
+ * Lints files from a scratch directory whose `oxlint.config.ts` imports the
+ * package subpath, the way a TypeScript consumer config loads it.
+ */
+const lintAsModuleConsumer = ({
+  files = { "clean.ts": CLEAN_TYPESCRIPT },
+  subpath = "@pagopa/oxlint-config/base",
+}: ModuleConsumerOptions = {}) => {
+  const directory = mkdtempSync(join(tmpdir(), "oxlint-config-module-"));
+
+  try {
+    mkdirSync(join(directory, "node_modules", "@pagopa"), { recursive: true });
+    symlinkSync(
+      PACKAGE_ROOT,
+      join(directory, "node_modules", "@pagopa", "oxlint-config"),
+      "dir",
+    );
+    writeFileSync(
+      join(directory, "oxlint.config.ts"),
+      `import preset from "${subpath}";\n\nexport default preset;\n`,
+    );
+    for (const [name, contents] of Object.entries(files)) {
+      writeFileSync(join(directory, name), contents);
+    }
+    return runOxlint(directory, ["--format=json", ...Object.keys(files)]);
+  } finally {
+    rmSync(directory, { force: true, recursive: true });
+  }
+};
+
+/** The variants carry no `ignorePatterns`: those belong to the consumer. */
+type ModuleConfig = Omit<OxlintConfig, "ignorePatterns">;
+
+const loadModule = async (path: string): Promise<ModuleConfig> => {
+  const module: { default: ModuleConfig } = await import(
+    pathToFileURL(path).href
+  );
+
+  return module.default;
 };
 
 describe("base config", () => {
@@ -285,7 +343,7 @@ describe("jest config", () => {
     );
   });
 
-  it("publishes every file the variants extend", () => {
+  it("publishes every file the variants are made of", () => {
     const { files } = JSON.parse(
       readFileSync(join(PACKAGE_ROOT, "package.json"), "utf8"),
     ) as { files: string[] };
@@ -300,9 +358,86 @@ describe("jest config", () => {
       return (parents ?? []).map((parent) => basename(parent));
     });
 
-    const required = [...shipped, ...extended].map((path) => basename(path));
+    const modules = [
+      BASE_MODULE_PATH,
+      BASE_JEST_MODULE_PATH,
+      join(PACKAGE_ROOT, "base.d.ts"),
+      join(PACKAGE_ROOT, "base-jest.d.ts"),
+      join(PACKAGE_ROOT, "flatten.js"),
+    ];
+
+    const required = [...shipped, ...extended, ...modules].map((path) =>
+      basename(path),
+    );
 
     expect([...files].sort()).toEqual([...new Set(required)].sort());
+  });
+});
+
+describe("module entries", () => {
+  it("exposes the flattened variants through their own exports", () => {
+    expect(require.resolve("@pagopa/oxlint-config/base")).toBe(
+      BASE_MODULE_PATH,
+    );
+    expect(require.resolve("@pagopa/oxlint-config/base-jest")).toBe(
+      BASE_JEST_MODULE_PATH,
+    );
+  });
+
+  it("carries the rules of the variant it flattens", async () => {
+    const moduleConfig = await loadModule(BASE_MODULE_PATH);
+
+    expect(moduleConfig.rules).toEqual(config.rules);
+    expect(moduleConfig.overrides).toEqual(config.overrides);
+    expect(moduleConfig.plugins).toEqual(config.plugins);
+    expect(moduleConfig.categories).toEqual(config.categories);
+  });
+
+  it("leaves out the keys only the declaring file can resolve", async () => {
+    const moduleConfig = await loadModule(BASE_MODULE_PATH);
+
+    expect(Object.keys(moduleConfig).sort()).toEqual([
+      "categories",
+      "jsPlugins",
+      "overrides",
+      "plugins",
+      "rules",
+    ]);
+  });
+
+  it("anchors the plugin specifiers so consumer hoisting does not matter", async () => {
+    const { jsPlugins } = await loadModule(BASE_MODULE_PATH);
+
+    expect(jsPlugins).toHaveLength(1);
+    expect(isAbsolute(jsPlugins[0]?.specifier ?? "")).toBe(true);
+  });
+
+  it("lints a clean TypeScript file without findings", () => {
+    const { status, stdout } = lintAsModuleConsumer();
+
+    expect(
+      (JSON.parse(stdout) as { diagnostics: unknown[] }).diagnostics,
+    ).toEqual([]);
+    expect(status).toBe(0);
+  });
+
+  it("resolves the plugin dependency from the package", () => {
+    const { status, stdout } = lintAsModuleConsumer({
+      files: { "unsorted.ts": UNSORTED_OBJECT },
+    });
+
+    expect(status).toBe(1);
+    expect(stdout).toContain("perfectionist(sort-objects)");
+  });
+
+  it("applies the Jest flavour of the same file", () => {
+    const { status, stdout } = lintAsModuleConsumer({
+      files: { "focused.test.js": FOCUSED_JEST },
+      subpath: "@pagopa/oxlint-config/base-jest",
+    });
+
+    expect(status).toBe(1);
+    expect(stdout).toContain("jest(no-focused-tests)");
   });
 });
 

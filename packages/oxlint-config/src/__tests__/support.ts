@@ -35,6 +35,10 @@ export const BASE_CONFIG_PATH = join(PACKAGE_ROOT, "base.json");
 
 export const BASE_JEST_CONFIG_PATH = join(PACKAGE_ROOT, "base-jest.json");
 
+export const BASE_MODULE_PATH = join(PACKAGE_ROOT, "base.js");
+
+export const BASE_JEST_MODULE_PATH = join(PACKAGE_ROOT, "base-jest.js");
+
 export const CORE_CONFIG_PATH = join(PACKAGE_ROOT, "core.json");
 
 const OXLINT_BIN_PATH = join(
