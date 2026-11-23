@@ -88,13 +88,37 @@ fi
 grep -q 'Failed to write the Falco job summary' "$test_dir/output"
 
 : > "$GITHUB_STEP_SUMMARY"
-rm -f -- "$log"
+rm -f -- "$log" "$test_dir/stopped"
 touch "$test_dir/dx-runtime-hardening-falco-started"
-if FALCO_RUNNING=false bash "$script_dir/stop.sh" "$log" > "$test_dir/output" 2>&1; then
-  echo "Missing Falco event log was ignored" >&2
+FALCO_RUNNING=true bash "$script_dir/stop.sh" "$log" > "$test_dir/output" 2>&1
+test -f "$test_dir/stopped"
+test ! -s "$GITHUB_STEP_SUMMARY"
+grep -q 'No Falco events' "$test_dir/output"
+
+if FALCO_RUNNING=true DOCKER_STOP_FAIL=true bash "$script_dir/stop.sh" "$log" > "$test_dir/output" 2>&1; then
+  echo "Docker stop failure was ignored when no event file exists" >&2
   exit 1
 fi
-grep -q 'Falco event log' "$test_dir/output"
+grep -q 'Failed to stop Falco' "$test_dir/output"
+
+touch "$log"
+chmod 000 "$log"
+if [[ ! -r "$log" ]]; then
+  if FALCO_RUNNING=false bash "$script_dir/stop.sh" "$log" > "$test_dir/output" 2>&1; then
+    echo "Unreadable Falco event log was ignored" >&2
+    exit 1
+  fi
+  grep -q 'Falco event log is unavailable or unreadable' "$test_dir/output"
+fi
+chmod 600 "$log"
+rm -f -- "$log"
+ln -s "$test_dir/missing-events" "$log"
+if FALCO_RUNNING=false bash "$script_dir/stop.sh" "$log" > "$test_dir/output" 2>&1; then
+  echo "Broken Falco event log symlink was ignored" >&2
+  exit 1
+fi
+grep -q 'Falco event log is unavailable or unreadable' "$test_dir/output"
+rm -f -- "$log"
 
 rm -f -- "$test_dir/dx-runtime-hardening-falco-started"
 FALCO_RUNNING=true bash "$script_dir/stop.sh" "$log"

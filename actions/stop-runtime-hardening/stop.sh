@@ -18,9 +18,11 @@ elif [[ "$running" == "falco" ]] && ! docker stop falco > /dev/null; then
 fi
 
 if [[ ! -r "$falco_log" ]]; then
-  if [[ -e "$falco_log" || -f "$RUNNER_TEMP/dx-runtime-hardening-falco-started" ]]; then
+  if [[ -e "$falco_log" || -L "$falco_log" ]]; then
     echo "::error::Falco event log is unavailable or unreadable."
     status=1
+  elif [[ -f "$RUNNER_TEMP/dx-runtime-hardening-falco-started" ]]; then
+    echo "No Falco events were recorded."
   else
     echo "::warning::Falco did not start; no event log was created."
   fi
