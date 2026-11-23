@@ -98,6 +98,39 @@ test("surfaces ambiguity instead of truncating a match", () => {
   assert.match(output, /match 2\/2 — <strong>/);
 });
 
+test("keeps an ancestor that holds a separate occurrence of the needle", () => {
+  const html =
+    '<p data-local-id="p1">rollout date (current); previous ' +
+    '<strong data-local-id="s1">rollout date</strong></p>';
+  const { matches } = findElements(html, { text: "rollout date" });
+  assert.equal(matches.length, 2);
+  assert.deepEqual(matches.map((element) => element.localId).sort(), [
+    "p1",
+    "s1",
+  ]);
+
+  const covered = findElements("<p><strong>rollout date</strong> tail</p>", {
+    text: "rollout date",
+  });
+  assert.equal(covered.matches.length, 1);
+  assert.equal(covered.matches[0].tag, "strong");
+});
+
+test("exits with ambiguity when an ancestor has its own occurrence", () => {
+  const html =
+    '<p data-local-id="p1">rollout date (current); previous ' +
+    '<strong data-local-id="s1">rollout date</strong></p>';
+  const run = spawnSync(
+    process.execPath,
+    [script, "-", "--text", "rollout date"],
+    { input: html, encoding: "utf8" },
+  );
+  assert.equal(run.status, 2);
+  assert.match(run.stdout, /Ambiguous: 2 elements match/);
+  assert.match(run.stdout, /p\[local-id=p1\]/);
+  assert.match(run.stdout, /strong\[local-id=s1\]/);
+});
+
 test("reports the nearest addressable ancestor for a text hit", () => {
   const { matches } = findElements(baseline, { text: "Rollout window" });
   assert.equal(matches.length, 1);

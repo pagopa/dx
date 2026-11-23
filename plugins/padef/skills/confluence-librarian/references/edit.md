@@ -107,9 +107,9 @@ node <skill-dir>/scripts/extract-node.js confluence/<content-id>.html \
 ```
 
 `--local-id` prints the whole element carrying that id: that output is the value
-`replaceNode` takes. `--text` finds the innermost element whose visible text
-contains the needle — case-sensitive, across inline markup — which is how you
-discover an id from what the page says. Exit `2` means several matches; the
+`replaceNode` takes. `--text` finds the innermost element holding each
+occurrence of the needle — case-sensitive, across inline markup — which is how
+you discover an id from what the page says. Exit `2` means several matches; the
 candidates are listed.
 
 The input may be raw HTML or the whole MCP tool-output envelope saved from the

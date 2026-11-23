@@ -271,10 +271,22 @@ function isWithin(element, ancestor) {
   return false;
 }
 
+function countOccurrences(haystack, needle) {
+  let count = 0;
+  let at = haystack.indexOf(needle);
+  while (at !== -1) {
+    count += 1;
+    at = haystack.indexOf(needle, at + needle.length);
+  }
+  return count;
+}
+
 // Visible text runs across inline markup and entities, so a needle is matched
 // against each element's decoded descendant text, then narrowed to the
 // smallest hit: "rollout date" in `<p>rollout <strong>date</strong></p>`
-// selects the paragraph.
+// selects the paragraph. An ancestor is dropped only when descendants account
+// for all of its occurrences, because it may hold a separate one of its own:
+// `<p>rollout date; previous <strong>rollout date</strong></p>` keeps both.
 function smallestTextHits(texts, needle) {
   const byElement = new Map();
   for (const segment of texts) {
@@ -283,18 +295,25 @@ function smallestTextHits(texts, needle) {
       byElement.set(node, (byElement.get(node) ?? "") + decoded);
     }
   }
-  const hits = new Set(
-    [...byElement]
-      .filter(([, value]) => value.includes(needle))
-      .map(([element]) => element),
-  );
-  const enclosing = new Set();
-  for (const hit of hits) {
-    for (let node = hit.parent; node; node = node.parent) {
-      enclosing.add(node);
+  const counts = new Map();
+  for (const [element, value] of byElement) {
+    const count = countOccurrences(value, needle);
+    if (count > 0) {
+      counts.set(element, count);
     }
   }
-  return [...hits].filter((hit) => !enclosing.has(hit));
+  const covered = new Map();
+  for (const [element, count] of counts) {
+    for (let node = element.parent; node; node = node.parent) {
+      if (counts.has(node)) {
+        covered.set(node, (covered.get(node) ?? 0) + count);
+        break;
+      }
+    }
+  }
+  return [...counts.keys()].filter(
+    (element) => counts.get(element) > (covered.get(element) ?? 0),
+  );
 }
 
 export function findElements(html, { localId, text } = {}) {
