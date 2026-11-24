@@ -1083,6 +1083,28 @@ describe("environment generator — tenant-qualified bootstrap configuration", (
       'Environment "cgn-prod" must be "dx-prod" to match prefix "dx".',
     );
   });
+
+  it("omits the unused PROD-IO resource group data source", async () => {
+    const tenantPayload: Payload = {
+      ...payload,
+      env: {
+        ...payload.env,
+        cloudAccounts: azureAccounts,
+      },
+    };
+
+    await withGeneratedEnvironment({ payload: tenantPayload }, async (tmpDir) => {
+      const data = await fs.readFile(
+        path.join(tmpDir, "infra/bootstrapper/dev/data.tf"),
+        "utf8",
+      );
+
+      expect(data).toContain(
+        'data "azurerm_resource_group" "common_weu"',
+      );
+      expect(data).not.toContain("common_itn_01");
+    });
+  });
 });
 
 describe("environment generator — file generation (with init)", () => {
