@@ -17,6 +17,12 @@ import { TextDecoder } from "node:util";
 import { tf$, validateTerraformSource } from "../../execa/terraform.js";
 import { updateRepositoryEnvironmentsHcl } from "../../terraform/hcl-repository-environments.js";
 import {
+  clearPendingRepositorySync,
+  isPendingRepositorySync,
+  recordPendingRepositorySync,
+  resumeRepositorySync,
+} from "../../terraform/repository-sync-retry.js";
+import {
   type Payload,
   payloadSchema,
 } from "../generators/environment/prompts.js";
@@ -123,12 +129,45 @@ export const syncRepositoryEnvironments = async (
       updatedRepositoryConfig,
       path.relative(process.cwd(), repositoryMainPath),
     );
+  }
+  const destination = payload.repositoryStateDestination;
+  const repositoryId = payload.github.repoId;
+  const target =
+    destination && repositoryId !== undefined
+      ? { destination, environmentName: payload.env.name, repositoryId }
+      : undefined;
+  const resuming =
+    target !== undefined &&
+    (await isPendingRepositorySync(repositoryPath, target));
+  if (target) {
+    await recordPendingRepositorySync(
+      repositoryPath,
+      target,
+      updatedRepositoryConfig,
+    );
+  }
+  if (updatedRepositoryConfig !== repositoryConfig) {
     await replaceRepositoryConfig(repositoryMainPath, updatedRepositoryConfig);
   }
 
   const repositoryTerraform = tf$({ cwd: repositoryPath });
   await repositoryTerraform`terraform init`;
-  await repositoryTerraform`terraform apply -auto-approve`;
+  if (resuming) {
+    const retryTerraform = tf$({ cwd: repositoryPath, reject: false });
+    await resumeRepositorySync(
+      repositoryPath,
+      payload.env.name,
+      async (args) => {
+        const { exitCode, stdout } = await retryTerraform`terraform ${args}`;
+        return { exitCode: exitCode ?? 1, stdout: String(stdout) };
+      },
+    );
+  } else {
+    await repositoryTerraform`terraform apply -auto-approve`;
+  }
+  if (target) {
+    await clearPendingRepositorySync(repositoryPath);
+  }
 };
 
 export default function (plop: NodePlopAPI): void {

@@ -56,6 +56,7 @@ const registerEnvironmentSetup = (
   mockCloudAccountService: CloudAccountService,
   mockGitHubService: GitHubService,
   initializeTerraformProjects: () => Promise<string>,
+  prepareRepositoryState: () => Promise<string>,
 ) => {
   plop.setActionType(
     "setupCloudTools",
@@ -73,10 +74,7 @@ const registerEnvironmentSetup = (
   plop.setActionType("initTerraformProjects", initializeTerraformProjects);
   // Repository state migration needs Azure and Terraform; covered by its own
   // test of the repository-state module.
-  plop.setActionType(
-    "prepareRepositoryState",
-    async () => "Repository state prepared",
-  );
+  plop.setActionType("prepareRepositoryState", prepareRepositoryState);
   setEnvShortHelper(plop);
   setResourcePrefixHelper(plop);
   setEqHelper(plop);
@@ -154,6 +152,7 @@ const runEnvironmentGenerator = async ({
   mockGitHubService = createMockGitHubService(),
   payload: environmentPayload = payload,
   prepareRepository,
+  prepareRepositoryState = async () => "Repository state prepared",
   tmpDirPrefix = "dx-cli-env-test-",
   workspacePath,
 }: {
@@ -163,6 +162,7 @@ const runEnvironmentGenerator = async ({
   mockGitHubService?: GitHubService;
   payload?: Payload;
   prepareRepository?: (tmpDir: string) => Promise<void>;
+  prepareRepositoryState?: () => Promise<string>;
   tmpDirPrefix?: string;
   workspacePath?: string;
 }): Promise<{
@@ -207,6 +207,7 @@ const runEnvironmentGenerator = async ({
     mockCloudAccountService,
     mockGitHubService,
     initializeTerraformProjects,
+    prepareRepositoryState,
   );
 
   plop.setGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME, {
@@ -1099,12 +1100,14 @@ describe("environment generator — file generation (with init)", () => {
     false,
   );
   const mockGitHubService = createMockGitHubService();
+  const prepareRepositoryState = vi.fn(async () => "Repository state prepared");
 
   beforeAll(async () => {
     ({ originalCwd, tmpDir } = await runEnvironmentGenerator({
       mockCloudAccountService,
       mockGitHubService,
       payload,
+      prepareRepositoryState,
       tmpDirPrefix: "dx-cli-env-init-test-",
     }));
   });
@@ -1133,6 +1136,18 @@ describe("environment generator — file generation (with init)", () => {
       payload.tags,
     );
     expect(mockCloudAccountService.getTerraformBackend).not.toHaveBeenCalled();
+  });
+
+  it("prepares repository state after backend provisioning and before GitHub setup", () => {
+    expect(
+      mockCloudAccountService.provisionTerraformBackend,
+    ).toHaveBeenCalledBefore(prepareRepositoryState);
+    expect(prepareRepositoryState).toHaveBeenCalledBefore(
+      vi.mocked(mockCloudAccountService.initialize),
+    );
+    expect(prepareRepositoryState).toHaveBeenCalledBefore(
+      vi.mocked(mockCloudAccountService.configureGitHubEnvironment),
+    );
   });
 
   it("materializes init-specific infrastructure files", async () => {

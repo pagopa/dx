@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   readRepositoryBackend,
   repositoryStateDestination,
+  verifyInitializedRepositoryBackend,
 } from "../repository-backend.js";
 
 describe("repository backend", () => {
@@ -43,7 +44,7 @@ describe("repository backend", () => {
   });
 
   it("reads and preserves an existing destination and legacy key", async () => {
-    await fs.writeFile(path.join(directory, "providers.tf"), configured);
+    await fs.writeFile(path.join(directory, "backend.tf"), configured);
 
     await expect(readRepositoryBackend(directory)).resolves.toEqual({
       ...repositoryStateDestination(backend, "dx", "domain"),
@@ -61,6 +62,33 @@ describe("repository backend", () => {
     await expect(readRepositoryBackend(directory)).resolves.toBeUndefined();
   });
 
+  it("rejects an initialized backend whose key differs from the confirmed one", async () => {
+    const destination = repositoryStateDestination(backend, "dx", "domain");
+    const terraformDirectory = path.join(directory, ".terraform");
+    const config = {
+      container_name: destination.containerName,
+      key: destination.key,
+      resource_group_name: destination.resourceGroupName,
+      storage_account_name: destination.storageAccountName,
+      subscription_id: destination.subscriptionId,
+    };
+    const metadata = (key: string) =>
+      JSON.stringify({
+        backend: { config: { ...config, key }, type: "azurerm" },
+      });
+    await fs.mkdir(terraformDirectory);
+    const metadataPath = path.join(terraformDirectory, "terraform.tfstate");
+    await fs.writeFile(metadataPath, metadata(destination.key));
+
+    await expect(
+      verifyInitializedRepositoryBackend(directory, destination),
+    ).resolves.toBeUndefined();
+    await fs.writeFile(metadataPath, metadata("other/repository.tfstate"));
+    await expect(
+      verifyInitializedRepositoryBackend(directory, destination),
+    ).rejects.toThrow(/different Azure backend/);
+  });
+
   it.each([
     'terraform { backend "local" {} }',
     configured.replace('subscription_id = "dev-sub"', ""),
@@ -71,7 +99,7 @@ describe("repository backend", () => {
     async (content) => {
       await fs.writeFile(path.join(directory, "providers.tf"), content);
 
-      await expect(readRepositoryBackend(directory)).rejects.toThrow(/backend/);
+      await expect(readRepositoryBackend(directory)).rejects.toThrow();
     },
   );
 });

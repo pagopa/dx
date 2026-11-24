@@ -147,9 +147,11 @@ not delete it or apply it from another device until you run `add environment`:
 the first run moves that state to the shared Azure backend
 (`<prefix>/<domain>/repository.tfstate`), verifies it with a clean
 `terraform plan`, and then removes the local copy. If it fails, fix the reported
-problem and re-run the same command. When no local state exists (for example on
-a new device), the GitHub repository objects are imported into the backend
-instead.
+problem and re-run the same command. When neither local nor remote state
+exists, the CLI attempts to import existing GitHub repository objects. It
+stops if Terraform would replace objects or create environments or deployment
+policies that it cannot safely import. In that case, recover the original
+state or complete the imports manually before adding environments.
 
 Before first placement, the CLI asks you to confirm the environment,
 subscription, Resource Group, Storage Account, container, and key. Use `--yes`
@@ -157,9 +159,19 @@ to accept this placement non-interactively. The destination is permanent for the
 repository: adding another environment keeps and reports the configured backend,
 including existing keys created by earlier CLI versions.
 
+The `validate-v2` workflow plans `infra/repository` as `bootstrapper-prod-ci`.
+If repository state is stored in a different subscription, the CLI does not
+grant that identity cross-subscription access. Before relying on that workflow,
+ask the destination subscription owner to grant the identity access to the
+repository's state container, including permission to lock the state blob.
+Verify access by running a CI plan; a successful migration with your own Azure
+credentials does not verify CI access.
+
 Migration rejects any existing destination blob, even an empty one, rather than
 overwriting it. Concurrent CLI migrations are serialized; a rejected or failed
-plan blocks GitHub environment updates. Import applies the exact inspected plan.
+plan blocks GitHub environment updates. Import applies the exact inspected plan
+and keeps the import configuration if apply or verification fails, so a retry
+can finish the import.
 Keep local state and backups until verification succeeds. If both local and
 remote state exist, reconcile them manually before retrying; do not delete a
 remote blob merely to bypass this safeguard.

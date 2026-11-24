@@ -38,7 +38,7 @@ describe("prepare repository state action", () => {
 
   beforeEach(async () => {
     directory = await fs.mkdtemp(path.join(os.tmpdir(), "prepare-state-"));
-    await fs.mkdir(path.join(directory, "infra", "repository"), {
+    await fs.mkdir(path.join(directory, "infra", "repository", ".terraform"), {
       recursive: true,
     });
     await fs.writeFile(
@@ -54,6 +54,27 @@ describe("prepare repository state action", () => {
         }
       }
     `,
+    );
+    await fs.writeFile(
+      path.join(
+        directory,
+        "infra",
+        "repository",
+        ".terraform",
+        "terraform.tfstate",
+      ),
+      JSON.stringify({
+        backend: {
+          config: {
+            container_name: originalDestination.containerName,
+            key: originalDestination.key,
+            resource_group_name: originalDestination.resourceGroupName,
+            storage_account_name: originalDestination.storageAccountName,
+            subscription_id: originalDestination.subscriptionId,
+          },
+          type: "azurerm",
+        },
+      }),
     );
     vi.spyOn(process, "cwd").mockReturnValue(directory);
     mocks.terraform.mockResolvedValue({ exitCode: 0, stdout: "" });

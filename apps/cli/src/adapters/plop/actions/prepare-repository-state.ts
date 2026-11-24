@@ -14,6 +14,7 @@ import { tf$ } from "../../execa/terraform.js";
 import {
   readRepositoryBackend,
   repositoryStateDestination,
+  verifyInitializedRepositoryBackend,
 } from "../../terraform/repository-backend.js";
 import { ensureRemoteRepositoryState } from "../../terraform/repository-state.js";
 import { payloadSchema } from "../generators/environment/prompts.js";
@@ -57,13 +58,22 @@ export default function (plop: NodePlopAPI, credential: TokenCredential): void {
       return ensureRemoteRepositoryState({
         destination,
         destinationExists: storage.exists,
+        environmentName: payload.env.name,
+        repositoryId: payload.github.repoId,
         repositoryName: payload.github.repo,
         repositoryPath,
         terraform: async (args) => {
           cancelSignal.throwIfAborted();
-          const { exitCode, stdout } = await terraform`terraform ${args}`;
-          return { exitCode: exitCode ?? 1, stdout: String(stdout) };
+          const { exitCode, stderr, stdout } =
+            await terraform`terraform ${args}`;
+          return {
+            exitCode: exitCode ?? 1,
+            stderr: String(stderr),
+            stdout: String(stdout),
+          };
         },
+        verifyBackend: () =>
+          verifyInitializedRepositoryBackend(repositoryPath, destination),
       });
     });
     data.repositoryState = { destination, status };

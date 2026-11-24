@@ -691,6 +691,12 @@ export class AzureCloudAccountService implements CloudAccountService {
     );
     const { resourceGroupName } = backend;
 
+    const storageProvider =
+      await resourceManagementClient.providers.get("Microsoft.Storage");
+    if (storageProvider.registrationState !== "Registered") {
+      await resourceManagementClient.providers.register("Microsoft.Storage");
+    }
+
     await resourceManagementClient.resourceGroups.createOrUpdate(
       resourceGroupName,
       parameters,

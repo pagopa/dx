@@ -138,14 +138,11 @@ export default function getActions(
     ];
 
     if (init) {
-      actions.push(
-        { type: "initCloudAccounts" },
-        {
-          type: init.terraformBackend
-            ? "provisionTerraformBackend"
-            : "getTerraformBackend",
-        },
-      );
+      actions.push({
+        type: init.terraformBackend
+          ? "provisionTerraformBackend"
+          : "getTerraformBackend",
+      });
     } else {
       actions.push({ type: "getTerraformBackend" });
     }
@@ -155,6 +152,7 @@ export default function getActions(
       { type: "syncNxAdditionalEnvironments" },
       { type: "prepareRepositoryState" },
       { type: "syncRepositoryEnvironments" },
+      ...(init ? [{ type: "initCloudAccounts" }] : []),
       {
         type: "configureGitHubEnvironments",
       },

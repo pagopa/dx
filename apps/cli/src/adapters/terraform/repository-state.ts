@@ -23,21 +23,25 @@ import {
   readRepositoryBackend,
   type RepositoryStateDestination,
 } from "./repository-backend.js";
+import { isPendingRepositorySync } from "./repository-sync-retry.js";
 
 export type RepositoryStateStatus = "already-remote" | "imported" | "migrated";
 
 export type TerraformRunner = (
   args: string[],
-) => Promise<{ exitCode: number; stdout: string }>;
+) => Promise<{ exitCode: number; stderr?: string; stdout: string }>;
 
 type Dependencies = {
   destination: RepositoryStateDestination;
   destinationExists: (
     destination: RepositoryStateDestination,
   ) => Promise<boolean>;
+  environmentName?: string;
+  repositoryId?: number;
   repositoryName: string;
   repositoryPath: string;
   terraform: TerraformRunner;
+  verifyBackend?: () => Promise<void>;
 };
 
 const IMPORT_FILE = "dx-import.tf";
@@ -103,10 +107,46 @@ const removeLocalState = async (repositoryPath: string): Promise<void> => {
   );
 };
 
-const hasLocalState = async (
-  repositoryPath: string,
+const validateRepositoryState = (
+  content: string,
   repositoryName: string,
-): Promise<boolean> => {
+  repositoryId?: number,
+): boolean => {
+  const { resources } = localStateSchema.parse(JSON.parse(content));
+  if (resources.length === 0) {
+    return false;
+  }
+  const managed = resources.filter(
+    (resource) =>
+      resource.module === "module.github_repository" &&
+      resource.mode === "managed" &&
+      resource.instances.length > 0,
+  );
+  const repository = managed.find(
+    (resource) =>
+      resource.type === "github_repository" && resource.name === "this",
+  )?.instances[0]?.attributes;
+  if (
+    repository?.name !== repositoryName ||
+    (repositoryId !== undefined &&
+      String(repository.repo_id) !== String(repositoryId)) ||
+    repositoryResources.some(
+      ([type, name]) =>
+        !managed.some(
+          (resource) => resource.type === type && resource.name === name,
+        ),
+    )
+  ) {
+    throw new Error("State does not contain the expected repository resources");
+  }
+  return true;
+};
+
+const hasLocalState = async ({
+  repositoryId,
+  repositoryName,
+  repositoryPath,
+}: Dependencies): Promise<boolean> => {
   const content = await readIfExists(
     path.join(repositoryPath, "terraform.tfstate"),
   );
@@ -114,46 +154,10 @@ const hasLocalState = async (
     return false;
   }
   try {
-    const parsed = localStateSchema.safeParse(JSON.parse(content));
-    if (!parsed.success) {
-      throw new Error("Cannot identify the expected repository resources", {
-        cause: parsed.error,
-      });
-    }
-    if (parsed.data.resources.length === 0) {
-      return false;
-    }
-    const resources = parsed.data.resources;
-    const missing = repositoryResources.filter(
-      ([type, name]) =>
-        !resources.some(
-          (resource) =>
-            resource.module === "module.github_repository" &&
-            resource.mode === "managed" &&
-            resource.type === type &&
-            resource.name === name &&
-            resource.instances.length > 0,
-        ),
-    );
-    const repository = resources.find(
-      (resource) =>
-        resource.module === "module.github_repository" &&
-        resource.type === "github_repository" &&
-        resource.name === "this",
-    );
-    if (
-      missing.length > 0 ||
-      repository?.instances[0]?.attributes.name !== repositoryName
-    ) {
-      throw new Error(
-        "Local state does not contain the expected repository resources",
-      );
-    }
-    return true;
-  } catch (cause) {
+    return validateRepositoryState(content, repositoryName, repositoryId);
+  } catch {
     throw new Error(
       "infra/repository/terraform.tfstate does not contain valid expected repository resources; recover the correct state and re-run the same `dx add environment` command.",
-      { cause },
     );
   }
 };
@@ -187,26 +191,72 @@ const importBlocks = (repositoryName: string): string =>
 const run = async (
   terraform: TerraformRunner,
   args: string[],
-  expectedExitCodes = [0],
 ): Promise<string> => {
-  const { exitCode, stdout } = await terraform(args);
-  if (!expectedExitCodes.includes(exitCode)) {
+  const { exitCode, stderr, stdout } = await terraform(args);
+  if (exitCode !== 0) {
     throw new Error(
-      `terraform ${args[0]} failed in infra/repository (exit code ${exitCode})\n${stdout}`.trim(),
+      `terraform ${args[0]} failed in infra/repository (exit code ${exitCode})\n${stderr ?? ""}`.trim(),
     );
   }
   return stdout;
 };
 
 const verifyCleanPlan = async (terraform: TerraformRunner): Promise<void> => {
-  const exitCode = (
-    await terraform(["plan", "-detailed-exitcode", "-input=false"])
-  ).exitCode;
-  if (exitCode !== 0) {
+  const { exitCode, stderr, stdout } = await terraform([
+    "plan",
+    "-detailed-exitcode",
+    "-input=false",
+    "-no-color",
+  ]);
+  if (exitCode === 2) {
+    const summary = /^Plan: \d+ to add, \d+ to change, \d+ to destroy\.$/m.exec(
+      stdout,
+    )?.[0];
     throw new Error(
-      "The repository state in the backend does not match the infrastructure (terraform plan is not clean). Fix the problem and re-run the same `dx add environment` command.",
+      `The repository Terraform plan is not clean. ${summary ? `${summary} ` : ""}Review the plan and re-run the same \`dx add environment\` command.`,
     );
   }
+  if (exitCode !== 0) {
+    throw new Error(
+      `terraform plan failed in infra/repository (exit code ${exitCode})\n${stderr ?? ""}`.trim(),
+    );
+  }
+};
+
+const verifyRemoteIdentity = async ({
+  destination,
+  destinationExists,
+  repositoryId,
+  repositoryName,
+  terraform,
+  verifyBackend,
+}: Dependencies): Promise<void> => {
+  await verifyBackend?.();
+  if (repositoryId === undefined) {
+    return;
+  }
+  if (!(await destinationExists(destination))) {
+    throw new Error(
+      "The confirmed Azure repository state blob does not exist.",
+    );
+  }
+  const { exitCode, stdout } = await terraform(["state", "pull"]);
+  if (exitCode !== 0) {
+    throw new Error(
+      "Cannot read the initialized repository state from Terraform.",
+    );
+  }
+  // Never attach parser diagnostics: they can contain values from the state.
+  try {
+    if (validateRepositoryState(stdout, repositoryName, repositoryId)) {
+      return;
+    }
+  } catch {
+    throw new Error(
+      "Remote state does not contain the expected GitHub repository and resources.",
+    );
+  }
+  throw new Error("Remote repository state is empty.");
 };
 
 const verifyImportPlan = async (
@@ -220,6 +270,7 @@ const verifyImportPlan = async (
     `-out=${planPath}`,
   ]);
   const destructive: string[] = [];
+  const unexpectedCreates: string[] = [];
   let hasSummary = false;
   for (const line of stdout.split("\n").filter((line) => line.trim())) {
     let value: unknown;
@@ -257,10 +308,23 @@ const verifyImportPlan = async (
     if (action === "delete" || action === "replace") {
       destructive.push(`${action} ${resource.addr}`);
     }
+    if (
+      action === "create" &&
+      /\bgithub_repository_environment(?:_deployment_policy)?\./.test(
+        resource.addr,
+      )
+    ) {
+      unexpectedCreates.push(resource.addr);
+    }
   }
   if (destructive.length > 0) {
     throw new Error(
       `Importing the repository would destroy or replace GitHub objects (${destructive.join(", ")}); no changes were applied`,
+    );
+  }
+  if (unexpectedCreates.length > 0) {
+    throw new Error(
+      `The recovery plan would create GitHub environments or deployment policies instead of importing them (${unexpectedCreates.join(", ")}). Import the existing objects before retrying.`,
     );
   }
   if (!hasSummary) {
@@ -271,10 +335,12 @@ const verifyImportPlan = async (
 };
 
 const migrate = async (
-  { destination, destinationExists, repositoryPath, terraform }: Dependencies,
+  dependencies: Dependencies,
   providersPath: string,
   hasBackend: boolean,
 ): Promise<void> => {
+  const { destination, destinationExists, repositoryPath, terraform } =
+    dependencies;
   if (await destinationExists(destination)) {
     throw new Error(
       `The destination blob ${destination.storageAccountName}/${destination.containerName}/${destination.key} already exists while infra/repository has its own local state; resolve this manually without overwriting either state, then re-run the same \`dx add environment\` command.`,
@@ -290,14 +356,18 @@ const migrate = async (
     "-force-copy",
     "-input=false",
   ]);
+  await verifyRemoteIdentity(dependencies);
   await verifyCleanPlan(terraform);
   await removeLocalState(repositoryPath);
 };
 
 const importExisting = async (
-  { destination, repositoryName, repositoryPath, terraform }: Dependencies,
+  dependencies: Dependencies,
   providersPath: string,
+  resume = false,
 ): Promise<void> => {
+  const { destination, repositoryName, repositoryPath, terraform } =
+    dependencies;
   const main = (await readIfExists(path.join(repositoryPath, "main.tf"))) ?? "";
   if (/\benvironments\s*=\s*\[\s*[^\]\s]/.test(main)) {
     throw new Error(
@@ -311,24 +381,37 @@ const importExisting = async (
   );
   const planPath = path.join(planDirectory, "repository.tfplan");
   let importCreated = false;
+  let applyStarted = false;
+  let completed = false;
   try {
-    await fs.writeFile(importPath, importBlocks(repositoryName), {
-      flag: "wx",
-    });
-    importCreated = true;
-    await fs.writeFile(
-      providersPath,
-      originalProviders + backendBlock(destination),
-    );
+    if (!resume) {
+      await fs.writeFile(importPath, importBlocks(repositoryName), {
+        flag: "wx",
+      });
+      importCreated = true;
+      await fs.writeFile(
+        providersPath,
+        originalProviders + backendBlock(destination),
+      );
+    }
     await run(terraform, ["init", "-input=false"]);
+    await dependencies.verifyBackend?.();
     await verifyImportPlan(terraform, planPath);
+    applyStarted = true;
     await run(terraform, ["apply", "-input=false", planPath]);
+    await verifyRemoteIdentity(dependencies);
+    await verifyCleanPlan(terraform);
+    completed = true;
   } catch (cause) {
-    await fs.writeFile(providersPath, originalProviders);
+    if (importCreated && !applyStarted) {
+      await fs.writeFile(providersPath, originalProviders);
+    }
     throw cause;
   } finally {
     await Promise.all([
-      ...(importCreated ? [fs.rm(importPath)] : []),
+      ...(completed || (importCreated && !applyStarted)
+        ? [fs.rm(importPath)]
+        : []),
       fs.rm(planDirectory, { force: true, recursive: true }),
     ]);
   }
@@ -343,15 +426,43 @@ export const ensureRemoteRepositoryState = async (
   const hasBackend = configured !== undefined;
   const destination = configured ?? dependencies.destination;
   const resolved = { ...dependencies, destination };
-  const hasLocal = await hasLocalState(
-    repositoryPath,
-    dependencies.repositoryName,
+  const hasLocal = await hasLocalState(dependencies);
+  const pendingImport = await readIfExists(
+    path.join(repositoryPath, IMPORT_FILE),
   );
+  if (pendingImport !== undefined) {
+    if (
+      !hasBackend ||
+      hasLocal ||
+      pendingImport !== importBlocks(dependencies.repositoryName)
+    ) {
+      throw new Error(
+        "Unexpected dx-import.tf; review it before retrying repository state preparation.",
+      );
+    }
+    await importExisting(resolved, providersPath, true);
+    return "imported";
+  }
 
   if (hasBackend && !hasLocal) {
     // Migration can empty local state before verification succeeds.
     await run(terraform, ["init", "-input=false"]);
-    await verifyCleanPlan(terraform);
+    await verifyRemoteIdentity(resolved);
+    const { environmentName, repositoryId } = resolved;
+    const resumingSync =
+      environmentName !== undefined &&
+      repositoryId !== undefined &&
+      (await readIfExists(
+        path.join(repositoryPath, "terraform.tfstate.backup"),
+      )) === undefined &&
+      (await isPendingRepositorySync(repositoryPath, {
+        destination,
+        environmentName,
+        repositoryId,
+      }));
+    if (!resumingSync) {
+      await verifyCleanPlan(terraform);
+    }
     await removeLocalState(repositoryPath);
     return "already-remote";
   }
@@ -363,6 +474,7 @@ export const ensureRemoteRepositoryState = async (
     const providers = (await readIfExists(providersPath)) ?? "";
     await fs.writeFile(providersPath, providers + backendBlock(destination));
     await run(terraform, ["init", "-input=false"]);
+    await verifyRemoteIdentity(resolved);
     await verifyCleanPlan(terraform);
     return "already-remote";
   }
