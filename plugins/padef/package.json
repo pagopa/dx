@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsdown",
     "lint": "oxlint --config ../../.oxlintrc.json src tsdown.config.ts",
-    "test": "node --test src/render-mermaid.test.ts",
+    "test": "node --test src/render-mermaid.test.ts skills/*/scripts/*.test.js",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
