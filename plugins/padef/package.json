@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "test": "node --test src/render-mermaid.test.ts"
+    "lint": "oxlint --config ../../.oxlintrc.json src tsdown.config.ts",
+    "test": "node --test src/render-mermaid.test.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
     "pele": "1.13.0"
@@ -27,18 +29,6 @@
         "dependsOn": [
           "build"
         ]
-      },
-      "lint": {
-        "command": "oxlint --config ../../.oxlintrc.json src tsdown.config.ts",
-        "options": {
-          "cwd": "{projectRoot}"
-        }
-      },
-      "typecheck": {
-        "command": "tsc --noEmit -p tsconfig.json",
-        "options": {
-          "cwd": "{projectRoot}"
-        }
       },
       "build:check": {
         "command": "pnpm run build && git diff --exit-code -- skills/confluence-librarian/scripts/render-mermaid.mjs",
