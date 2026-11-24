@@ -1,30 +1,7 @@
-# Contributing to confluence-librarian
-
-Working notes for maintainers and coding agents. Consumer documentation lives in
-[README.md](./README.md); keep the readme free of internal procedures.
-
-## Skill layout
-
-`SKILL.md` holds the workflow and the rules both paths share. The two
-branch-only bodies sit in `references/`: `edit.md` (edit protocol, call shapes,
-baseline contract) and `mermaid.md` (Mermaid to SVG). `scripts/extract-node.js`
-is the offline node extractor `edit.md` points at for a persisted baseline; it
-is dependency-free ESM. `scripts/render-mermaid.mjs` is the renderer
-`mermaid.md` points at: it pins Pele in `PELE_VERSION`, installs it into a
-per-user cache directory on first run, and converts in-process. A version bump
-is that one constant — the cache directory name follows it, so a new pin
-installs beside the old one. The cache is imported as code, so the script checks
-the cache root and the pinned directory below it, refuses a symlink or another
-account's directory, and forces both to mode `0700` before it installs or
-imports; it honours `CONFLUENCE_LIBRARIAN_CACHE` when a run needs a different
-location. Both scripts keep a `node --test` suite next to them. Keep pointers
-relative and inside this folder — Harbor stages the whole skill directory into
-the container, so the agent can read `references/` and `scripts/` at run time.
-
-## The Harbor benchmark
+# Harbor benchmark for confluence-librarian
 
 The `evals/` benchmark publishes and updates **real Confluence pages**.
-[harbor-bench](../../../../apps/harbor-bench/README.md) converts
+[harbor-bench](../../../../../apps/harbor-bench/README.md) converts
 `evals/evals.json` into Harbor tasks, runs a Copilot CLI agent on them, and
 grades each trial with RewardKit.
 
@@ -62,9 +39,9 @@ Approve the Atlassian consent screen (it requests the
 the refresh + access tokens under `~/.mcp-auth-atlassian/`
 (`mcp-remote-v1/…_tokens.json`) and refreshes them automatically afterwards.
 
-The version is pinned (here and in `harbor/environment/prepare.sh`) so
-identical benchmark commits build the same task image and use the same OAuth
-client; bump both together when you upgrade.
+The version is pinned (here and in `environment/prepare.sh`) so identical
+benchmark commits build the same task image and use the same OAuth client; bump
+both together when you upgrade.
 
 ## 2. Requirements
 
@@ -75,9 +52,8 @@ client; bump both together when you upgrade.
 - The OAuth store from step 1 (`~/.mcp-auth-atlassian`).
 
 The generated task environment includes Node.js 24. This skill's
-[`harbor/environment/prepare.sh`](harbor/environment/prepare.sh) bakes
-`mcp-remote` into the image, so the agent container does not need the npm
-registry at run time.
+[`environment/prepare.sh`](environment/prepare.sh) bakes `mcp-remote` into the
+image, so the agent container does not need the npm registry at run time.
 
 ## 3. Convert the evals to Harbor tasks
 
@@ -88,12 +64,11 @@ uv run --project apps/harbor-bench --package harbor-bench harbor-bench convert \
 ```
 
 This generates one task per eval case (the `.harbor/` directory is gitignored).
-The skill customizes those tasks through its `harbor/` overlay:
-[`harbor/environment/prepare.sh`](harbor/environment/prepare.sh) is added to
-every task's environment (the generated Dockerfile runs it at image build time,
-before the git baseline), and each per-task
-`harbor/<generated-task-dir>/task.toml` carries the Atlassian MCP server + env
-wiring in its `[environment]` table.
+The skill customizes those tasks through this `harbor/` overlay:
+[`environment/prepare.sh`](environment/prepare.sh) is added to every task's
+environment (the generated Dockerfile runs it at image build time, before the git
+baseline), and each per-task `<generated-task-dir>/task.toml` carries the
+Atlassian MCP server + env wiring in its `[environment]` table.
 
 ## 4. Run the eval tasks
 
@@ -194,8 +169,9 @@ uv run --project apps/harbor-bench --package harbor-bench harbor-bench compare \
 `compare` defaults to `--n-concurrent 4`, so pass `--n-concurrent 1` every time.
 Results land in `runs/<run-id>/base/` and `runs/<run-id>/head/`, and the delta
 report is `runs/<run-id>/comparison.md`. Archive the pages both runs created
-(see above). See the [harbor-bench README](../../../../apps/harbor-bench/README.md)
-and [advanced usage](../../../../apps/harbor-bench/docs/advanced-usage.md) for
+(see above). See the
+[harbor-bench README](../../../../../apps/harbor-bench/README.md) and
+[advanced usage](../../../../../apps/harbor-bench/docs/advanced-usage.md) for
 the other flags.
 
 ## Troubleshooting
@@ -207,7 +183,7 @@ Confluence`** — the session is authenticated with an API token (Basic), not
 - **MCP server `failed to initialize` with
   `MCP_AUTH_B64 … is required`** — the env var did not reach the container.
   Export it on the host (see step 4); the template lives in
-  each per-task `harbor/<generated-task-dir>/task.toml` `[environment].env`.
+  each per-task `<generated-task-dir>/task.toml` `[environment].env`.
 - **MCP server exits before the initialize handshake with a Node stack trace** —
   `mcp-remote` needs Node ≥ 20.18; the generated image includes Node.js 24.
   Regenerate the tasks and rebuild the task image (or delete cached images).

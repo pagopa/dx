@@ -10,20 +10,6 @@ user owns the source content and domain rules. When a domain decision is missing
 from the source, surface it to the caller rather than invent one to ease
 publication.
 
-## When to use
-
-Load this skill when the user wants a document in Confluence — a new page or a
-change to an existing one, in any language. Typical requests:
-
-```text
-Publish docs/checkout-prd.md to DevEx under "Product" as "Checkout redesign PRD".
-Change the rollout date on <page URL> to 2026-12-01.
-Translate the "Payments" page to English.
-```
-
-A calling skill may hand the write step to this one once the content is
-confirmed.
-
 ## Prerequisites
 
 - The Atlassian MCP server (`mcp.atlassian.com/v2/mcp`) connected with an OAuth
@@ -33,6 +19,17 @@ confirmed.
 - The source document (create), or the target page URL and the change to apply
   (edit).
 - For a create: the space, plus the parent page and title.
+
+## Files
+
+| File                                                     | Read it when                     |
+| -------------------------------------------------------- | -------------------------------- |
+| [references/edit.md](./references/edit.md)               | the target is an existing page   |
+| [references/mermaid.md](./references/mermaid.md)         | the source holds a Mermaid fence |
+| [references/translation.md](./references/translation.md) | a language is requested          |
+
+`scripts/` holds the helpers those files call: `extract-node.js` (offline node
+extractor) and `render-mermaid.mjs` (Mermaid fence to SVG).
 
 ## Workflow
 
@@ -53,7 +50,6 @@ when the content you read reports space instructions.
 | create a page          | `createConfluenceContent` (`body.format: "html"`)             |
 | change a page or draft | `updateConfluenceContent` (`snapshotToken`, `edits`, `draft`) |
 | copy a page            | `copyConfluenceContent` (through `executeWrite`)              |
-| authoring rules        | `getContentFormatGuide` (`toolName`) · `getConfluenceSpace`   |
 
 ### Decide: create or edit
 
@@ -101,10 +97,11 @@ Change: <the intended difference>      [edit only]
    matter is not native metadata: render it as a metadata table. A Markdown HTML
    comment has no native form: drop it, and never give its value a row, a label,
    or a sentence.
-3. **Translate if requested.** Apply the Translation rules below.
-4. **Write.** Use one `createConfluenceContent` call with
-   `body.format: html`. Only when the source holds a Mermaid fence, follow the
-   multipass branch in [references/mermaid.md](./references/mermaid.md).
+3. **Translate if requested.** Follow
+   [references/translation.md](./references/translation.md).
+4. **Write.** One `createConfluenceContent` call with `body.format: "html"`.
+   Only when the source holds a Mermaid fence, follow the multipass branch in
+   [references/mermaid.md](./references/mermaid.md).
 5. **Done when** the write response returns `id`, `status`, `webUrl`, and
    `baseUrl`, and the response content preserves the source's structure, stable
    IDs, and status values. Report the page as `baseUrl` + `webUrl`. For Mermaid,
@@ -113,8 +110,7 @@ Change: <the intended difference>      [edit only]
 
 ### Edit — change an existing page in place
 
-Read [references/edit.md](./references/edit.md) before the first write. It owns
-the copy, bootstrap, edit, and baseline branches.
+Full protocol: [references/edit.md](./references/edit.md).
 
 1. **Fetch the draft baseline once** as native HTML.
 2. **Bootstrap a draft** only when the read returns published content with no
@@ -144,17 +140,6 @@ the copy, bootstrap, edit, and baseline branches.
   identically.
 - Ignore Markdown soft-wraps in the source: wrapped lines are formatting only,
   so they must not become new paragraphs, bullets, or hard breaks.
-
-## Translation rules
-
-When a language is requested:
-
-- translate human-facing text, headings, table labels, and explanatory prose;
-- preserve stable IDs, code, endpoint names, URLs, status enum values, metric
-  identifiers, and document references;
-- keep hierarchy and field order unchanged;
-- for an in-place edit, translate only the text nodes requested and leave every
-  other node identical.
 
 ## Failure handling
 

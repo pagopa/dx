@@ -45,4 +45,5 @@ Two Harbor benchmark cases measure this skill on real Confluence pages:
 `native-edit-in-place`, which edits a page's draft in place, and
 `small-update-large-file`, which measures a small change to a large page. The
 benchmark, its OAuth setup, and its troubleshooting live in
-[CONTRIBUTING.md](./CONTRIBUTING.md).
+[harbor/README.md](./harbor/README.md). Skill layout and the renderer build are
+in [AGENTS.md](./AGENTS.md).
