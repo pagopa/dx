@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "lint": "oxlint --config ../../.oxlintrc.json src tsdown.config.ts",
-    "test": "node --test src/render-mermaid.test.ts skills/*/scripts/*.test.js",
+    "lint": "oxlint --config ../../.oxlintrc.json src tsdown.config.ts vitest.config.js",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
@@ -15,8 +14,10 @@
   "devDependencies": {
     "@tsconfig/node24": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
     "tsdown": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   },
   "nx": {
     "targets": {

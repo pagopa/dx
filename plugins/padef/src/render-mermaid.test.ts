@@ -3,11 +3,8 @@ import { spawnSync } from "node:child_process";
 import { mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-// The skill ships this bundle on its own, so its sources stay off a JS build
-// stack: the Node runner covers them.
-// oxlint-disable-next-line vitest/no-import-node-test
-import test from "node:test";
 import { fileURLToPath } from "node:url";
+import { test } from "vitest";
 
 import { renderFence, usage } from "./render-mermaid.ts";
 

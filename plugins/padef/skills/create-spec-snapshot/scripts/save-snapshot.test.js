@@ -15,7 +15,7 @@ import {
 import { tmpdir } from "node:os";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import test from "node:test";
+import { test } from "vitest";
 
 import {
   filterIssue,

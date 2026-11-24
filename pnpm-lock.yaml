@@ -1504,12 +1504,18 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 22.20.5
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 4.1.11(@types/node@22.20.5)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))(vitest@4.1.11)
       tsdown:
         specifier: 'catalog:'
         version: 0.22.14(oxc-resolver@11.24.2)(tsx@4.23.15)(typescript@5.9.3)
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vitest:
+        specifier: 'catalog:'
+        version: 4.1.11(@opentelemetry/api@1.9.1)(@types/node@22.20.5)(@vitest/coverage-v8@4.1.11)(vite@7.3.5(@types/node@22.20.5)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.15)(yaml@2.9.1))
 
   providers/aws: {}
 
