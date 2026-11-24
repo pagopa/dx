@@ -26,7 +26,11 @@ from harbor_bench.jobs import (
 )
 from harbor_bench.report import render_html, render_json, render_markdown
 
-from tests.conftest import DEFAULT_USAGE_ROW, write_copilot_jsonl, write_session_db
+from tests.conftest import (
+    DEFAULT_USAGE_MODEL,
+    write_copilot_jsonl,
+    write_copilot_usage,
+)
 
 AGENT_TIMES = ("2026-08-27T10:00:00+00:00", "2026-08-27T10:05:00+00:00")
 TOTAL_TIMES = ("2026-08-27T10:00:00+00:00", "2026-08-27T10:07:00+00:00")
@@ -76,6 +80,19 @@ def _make_job(tmp_path: Path, name: str) -> Path:
     job = tmp_path / name
     job.mkdir(parents=True, exist_ok=True)
     return job
+
+
+def _write_agent_result(job_dir: Path, task: str, agent_result: dict) -> None:
+    """Write a result.json carrying only a raw ``agent_result`` and no artifacts."""
+    trial = job_dir / task
+    trial.mkdir(parents=True, exist_ok=True)
+    data = {
+        "task_name": task,
+        "trial_name": f"{task}__abc1234",
+        "agent_result": agent_result,
+        "verifier_result": {"rewards": {}},
+    }
+    (trial / "result.json").write_text(json.dumps(data))
 
 
 def test_job_metrics_parses_metrics(tmp_path):
@@ -259,17 +276,19 @@ def test_trial_artifacts_owns_the_trial_layout(tmp_path):
     assert artifacts.trajectory == trial_dir / "agent" / "trajectory.json"
     assert artifacts.verifier_usage == trial_dir / "verifier" / "usage.jsonl"
     assert artifacts.reward_details == trial_dir / "verifier" / "reward-details.json"
-    assert artifacts.copilot_session_db == trial_dir / "agent" / "copilot" / "session-store.db"
+    assert artifacts.copilot_usage == trial_dir / "agent" / "copilot-usage.json"
     assert artifacts.copilot_cli_jsonl == trial_dir / "agent" / "copilot-cli.jsonl"
 
 
-def test_job_metrics_uses_agent_persisted_metadata(tmp_path):
-    """The mod agent's persisted values win; artifacts only backfill the rest.
+def test_job_metrics_uses_agent_persisted_usage_metadata(tmp_path):
+    """The agent's persisted values win; artifacts only backfill the rest.
 
-    The agent writes n_requests/n_reasoning_tokens under
-    agent_result.metadata (see CopilotCliMod.populate_context_post_run), so a
-    trial produced by the mod agent is read from result.json without touching
-    the artifacts. The artifacts backfill only what the file cannot report.
+    Harbor's ``copilot-cli`` agent nests its usage summary under
+    ``agent_result.metadata["copilot_usage"]`` and reports
+    ``reasoning_tokens`` there, baseline-corrected on a resumed trial, so a
+    trial it produced is read from result.json for that metric without
+    touching the artifacts. The artifacts backfill what the file cannot
+    report.
     """
     job = _make_job(tmp_path, "run-a")
     trial = job / "task-a"
@@ -279,23 +298,97 @@ def test_job_metrics_uses_agent_persisted_metadata(tmp_path):
         "trial_name": "task-a__abc1234",
         "agent_result": {
             "metadata": {
-                "n_requests": 4,
-                "n_reasoning_tokens": 120,
+                "copilot_usage": {
+                    "source": "usage-output-file",
+                    "premium_requests": 1,
+                    "ai_credits_status": "priced",
+                    "nano_aiu": 516_755_000,
+                    "cache_write_tokens": 13_474,
+                    "reasoning_tokens": 120,
+                }
             }
         },
     }
     (trial / "result.json").write_text(json.dumps(data))
     # artifacts that would claim different numbers, but must NOT win for the
-    # persisted fields; they only backfill the ones result.json cannot report.
-    write_session_db(
-        trial / "agent" / "copilot" / "session-store.db",
-        rows=[(20_474, 7_000, 20_471, 41, 20, 516_755_000)],
+    # persisted field; they only backfill the ones result.json cannot report.
+    write_copilot_usage(
+        trial / "agent" / "copilot-usage.json",
+        {
+            "gpt-6-luna": {
+                "requests": {"count": 1, "cost": 1},
+                "usage": {
+                    "inputTokens": 20_474,
+                    "outputTokens": 41,
+                    "cacheReadTokens": 7_000,
+                    "cacheWriteTokens": 13_474,
+                    "reasoningTokens": 20,
+                },
+                "totalNanoAiu": 516_755_000,
+            }
+        },
     )
     m = Job(job).metrics()["task-a"]
-    assert m.n_requests == 4  # persisted metadata beats the DB's 1
-    assert m.reasoning_tokens == 120  # persisted metadata beats the DB's 20
-    assert m.input_tokens == 20_474  # not persisted; backfilled from the DB
-    assert m.cache_tokens == 7_000  # not persisted; backfilled from the DB
+    assert m.reasoning_tokens == 120  # persisted metadata beats the usage file's 20
+    assert m.n_requests == 1  # Harbor persists no request count; the file wins
+    assert m.input_tokens == 20_474  # not persisted; backfilled from the usage file
+    assert m.cache_tokens == 7_000  # not persisted; backfilled from the usage file
+
+
+def test_job_metrics_reads_legacy_reasoning_tokens_without_usage_artifacts(tmp_path):
+    """A pre-0.26 trial reports reasoning tokens from its legacy metadata key.
+
+    The forked ``copilot-cli`` agent wrote the metrics ``AgentContext`` has no
+    field for to ``agent_result.metadata[<key>]``. Those trials carry no
+    ``copilot-usage.json`` and their JSONL stream has no reasoning count, so
+    the metadata alias is the only source left.
+    """
+    job = _make_job(tmp_path, "run-a")
+    _write_agent_result(job, "task-a", {"metadata": {"n_reasoning_tokens": 7}})
+
+    m = Job(job).metrics()["task-a"]
+
+    assert m.reasoning_tokens == 7
+
+
+def test_job_metrics_reads_legacy_n_requests_without_usage_artifacts(tmp_path):
+    """The legacy request-count key backfills what the artifacts cannot."""
+    job = _make_job(tmp_path, "run-a")
+    _write_agent_result(job, "task-a", {"metadata": {"n_requests": 3}})
+
+    m = Job(job).metrics()["task-a"]
+
+    assert m.n_requests == 3
+
+
+def test_job_metrics_prefers_current_usage_metadata_over_legacy(tmp_path):
+    """A legacy alias never shadows the Harbor 0.26 location."""
+    job = _make_job(tmp_path, "run-a")
+    _write_agent_result(
+        job,
+        "task-a",
+        {
+            "metadata": {
+                "n_reasoning_tokens": 7,
+                "copilot_usage": {"reasoning_tokens": 120},
+            }
+        },
+    )
+
+    m = Job(job).metrics()["task-a"]
+
+    assert m.reasoning_tokens == 120
+
+
+def test_job_metrics_artifact_only_metric_without_agent_result_key(tmp_path):
+    """A metric with no ``result.json`` key is absent, not an error."""
+    job = _make_job(tmp_path, "run-a")
+    _write_agent_result(job, "task-a", {"metadata": {"usage_source": "jsonl"}})
+
+    m = Job(job).metrics()["task-a"]
+
+    assert m.n_requests is None
+    assert m.reasoning_tokens is None
 
 
 def test_trial_task_name_falls_back_to_dir_name(tmp_path):
@@ -523,14 +616,31 @@ def test_metric_specs_orders_scores_before_static_metrics(tmp_path):
 
 def test_metric_registry_owns_derivation_and_reporting():
     """One registry carries both halves: what jobs backfills and what is reported."""
-    from harbor_copilot.metrics import METRIC_SPECS, derivable_specs
+    from harbor_bench.metrics import METRIC_SPECS, derivable_specs
 
     by_key = {spec.key: spec for spec in METRIC_SPECS}
-    # derivation half: result.json key wins, usage attribute backfills
+    # derivation half: result.json value wins, usage attribute backfills
     assert by_key["input_tokens"].result_key == "n_input_tokens"
     assert by_key["input_tokens"].usage_attr == "input_tokens"
     assert by_key["cache_tokens"].usage_attr == "cache_read_tokens"
     assert by_key["cost_usd"].result_key == "cost_usd"
+    # Harbor nests what AgentContext has no field for (reasoning tokens) under
+    # metadata["copilot_usage"], and persists no request count at all.
+    assert by_key["reasoning_tokens"].metadata_path == (
+        "metadata",
+        "copilot_usage",
+        "reasoning_tokens",
+    )
+    assert by_key["reasoning_tokens"].usage_attr == "reasoning_tokens"
+    assert by_key["n_requests"].result_key is None
+    assert by_key["n_requests"].metadata_path is None
+    assert by_key["n_requests"].usage_attr == "n_requests"
+    # the pre-0.26 agent wrote those two under agent_result.metadata[<key>]
+    assert by_key["reasoning_tokens"].legacy_metadata_key == "n_reasoning_tokens"
+    assert by_key["n_requests"].legacy_metadata_key == "n_requests"
+    # the AgentContext-backed metrics never needed that alias
+    assert by_key["input_tokens"].legacy_metadata_key is None
+    assert by_key["cost_usd"].legacy_metadata_key is None
     assert [s.key for s in derivable_specs()] == [
         "input_tokens",
         "cache_tokens",
@@ -701,15 +811,15 @@ def test_render_html_links_each_git_skill_without_local_file_urls(tmp_path):
 def _write_artifacts(
     trial: Path,
     *,
-    session_db_rows: list[tuple] | None = None,
+    usage_models: dict | None = None,
     jsonl_output_tokens: list[int] | None = None,
     jsonl_nano_aiu: int = 1_665_217_000,
     steps: int | None = None,
 ) -> None:
     """Write raw trial artifacts that load_job can backfill from."""
     trial.mkdir(parents=True, exist_ok=True)
-    if session_db_rows is not None:
-        write_session_db(trial / "agent" / "copilot" / "session-store.db", rows=session_db_rows)
+    if usage_models is not None:
+        write_copilot_usage(trial / "agent" / "copilot-usage.json", usage_models)
     if jsonl_output_tokens is not None:
         write_copilot_jsonl(
             trial / "agent" / "copilot-cli.jsonl",
@@ -724,13 +834,13 @@ def _write_artifacts(
         )
 
 
-def test_job_metrics_backfills_missing_tokens_from_session_db(tmp_path):
-    """GPT runs leave input/cache/cost unset; the session DB fills them."""
+def test_job_metrics_backfills_missing_tokens_from_usage_file(tmp_path):
+    """GPT runs leave input/cache/cost unset; the usage file fills them."""
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", tokens=(None, None, 4870), cost=None)
     _write_artifacts(
         job / "task-a",
-        session_db_rows=[DEFAULT_USAGE_ROW, (35_190, 31_087, 4_100, 359, 290, 207_814_000)],
+        usage_models={"gpt-6-luna": DEFAULT_USAGE_MODEL},
     )
     m = Job(job).metrics()["task-a"]
     assert m.input_tokens == 55_664
@@ -741,7 +851,7 @@ def test_job_metrics_backfills_missing_tokens_from_session_db(tmp_path):
     assert m.reasoning_tokens == 310
 
 
-def test_job_metrics_falls_back_to_jsonl_without_session_db(tmp_path):
+def test_job_metrics_falls_back_to_jsonl_without_usage_file(tmp_path):
     job = _make_job(tmp_path, "run-a")
     _write_trial(job, "task-a", tokens=(None, None, None), cost=None)
     _write_artifacts(job / "task-a", jsonl_output_tokens=[41, 196], jsonl_nano_aiu=1_665_217_000)

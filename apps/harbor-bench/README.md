@@ -26,8 +26,8 @@ performance, skill authoring and report internals live in
 ### From git (outside the repo)
 
 The public repo ships `harbor-bench` as an installable CLI. `uv` fetches the
-latest source, resolves the sibling `harbor-copilot` package from the same
-commit, and installs the executable — no clone needed:
+latest source, installs it with its pinned `harbor` dependency, and puts the
+executable on `PATH` — no clone needed:
 
 ```bash
 uv tool install "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench"
@@ -50,8 +50,11 @@ uv run --package harbor-bench harbor-bench --help
 The examples below use the workspace prefix `uv run --package harbor-bench`;
 with an external install, drop it for `harbor-bench` commands (`harbor-bench
 ...`). Commands that run Harbor itself (`harbor run`, `harbor view`) must use
-the `harbor` bundled with `harbor-bench`: another `harbor` on `PATH` can lack
-`harbor-copilot` and fail with `No module named 'harbor_copilot'` — see
+the `harbor` bundled with `harbor-bench`: another `harbor` on `PATH` may be a
+different release whose agent options and config schema do not match the
+pinned one, and then rejects the generated config (e.g.
+`ValueError: Unknown agent type: ...` or a pydantic validation error on an
+agent option) — see
 [Install from git](docs/advanced-usage.md#install-from-git).
 
 ## Quick start: compare two skill versions

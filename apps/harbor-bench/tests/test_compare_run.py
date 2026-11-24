@@ -501,7 +501,7 @@ def test_run_compare_runs_bundled_harbor(tmp_path: Path, monkeypatch):
     """The harbor resolved from harbor-bench's environment is the one executed.
 
     Regression guard: resolving via PATH alone can pick a standalone harbor
-    install without ``harbor-copilot`` (``No module named 'harbor_copilot'``).
+    install whose agent plugins are missing.
     """
     monkeypatch.setattr(
         "harbor_bench.compare.run.check_harbor_cli", lambda harbor: None

@@ -51,12 +51,14 @@ uvx --from "git+https://github.com/pagopa/dx@main#subdirectory=apps/harbor-bench
 ```
 
 `harbor-bench` runs Harbor through the `harbor` console script of its own
-environment — the tool venv ships `harbor` together with `harbor-copilot`, and
-`compare` resolves that executable automatically. To invoke Harbor directly,
-use the bundled script too; a separate `harbor` on `PATH` (e.g. `uv tool
-install harbor`) has no `harbor-copilot` and fails to import the agent
-(`ValueError: Failed to import module 'harbor_copilot.agents.copilot_cli_mod':
-No module named 'harbor_copilot'`):
+environment — the tool venv ships the `harbor` version this package is tested
+against, and `compare` resolves that executable automatically. To invoke
+Harbor directly, use the bundled script too; a separate `harbor` on `PATH`
+(e.g. `uv tool install harbor`) may be a different release whose agent
+options and config schema do not match the pinned one, and then rejects the
+generated config — an agent this release does not register fails with
+`ValueError: Unknown agent type: <name>`, and an option its
+`CopilotCliOptions` model does not declare fails pydantic validation:
 
 ```bash
 "$(uv tool dir)/harbor-bench/bin/harbor" run -c .harbor/config.yaml -y \
@@ -148,24 +150,26 @@ so the emitted agent entry looks like:
 
 ```yaml
 agents:
-  - import_path: harbor_copilot.agents.copilot_cli_mod:CopilotCliMod
+  - name: copilot-cli # Harbor's built-in agent (harbor==0.26.0)
     model_name: gpt-6-luna # -> copilot --model=gpt-6-luna
     kwargs:
       reasoning_effort: high # -> copilot --effort high
+      skip_install: true # Copilot CLI is baked into the image
     skills: [...]
 ```
 
-`reasoning_effort` is a declared `CLI_FLAGS` of Harbor's Copilot CLI agent
-(`--effort`, choices `low|medium|high|xhigh|max`), so it is rendered by
-`build_cli_flags()` and never goes through the generic passthrough. Extra
-kwargs (`max_ai_credits`, ...) follow the `--ak` contract.
+`skip_install: true` is a declared option of Harbor's Copilot CLI agent: the
+generated `environment/Dockerfile` already bakes the CLI into the image, so the
+agent does not re-run `curl -fsSL https://gh.io/copilot-install | bash` inside
+the container.
 
 ### Kwarg sources and precedence
 
 Agent kwargs come from two sources, merged in this precedence order (later
 wins):
 
-1. **`DEFAULT_AGENT_KWARGS`** (`reasoning_effort: high`) — the built-in default.
+1. **`DEFAULT_AGENT_KWARGS`** (`reasoning_effort: high`, `skip_install: true`) —
+   the built-in default.
 2. **`--ak KEY=VALUE`** at convert time — overrides the default.
 
 ```python
@@ -175,22 +179,33 @@ final = {**DEFAULT_AGENT_KWARGS, **cli_kwargs}
 All suites emitted into a single `config.yaml` share the same default and the
 same convert-time `--ak` values.
 
-### Kwarg naming: underscores become dashes
+### Kwarg names are agent options, not CLI flags
 
-Kwargs use **snake_case** (underscores) everywhere in `config.yaml` / `--ak
-KEY=VALUE` because Python identifiers and YAML keys cannot contain dashes.
-The conversion to Copilot CLI flags is automatic:
+Harbor's `copilot-cli` builds its command line from a **closed** set of
+declared options (`CopilotCliOptions`, `extra="forbid"`). Every kwarg in
+`config.yaml` / `--ak KEY=VALUE` must be one of them; a declared option may
+map to a differently named flag (`reasoning_effort` → `--effort`), and unknown
+kwargs are a loud validation error rather than a passthrough:
 
-- **Generic passthrough** — any kwarg not declared by Harbor is rendered as
-  `--kebab-case value` by `CopilotCliMod.build_cli_flags()`
-  (`key.replace("_", "-")`): `max_ai_credits=30` → `--max-ai-credits 30`,
-  boolean values become a bare flag (`--enable-memory`).
-- **Declared flags** — Harbor's `CliFlag`/`EnvVar` descriptors map a kwarg to
-  an explicit CLI name, which may differ from the kwarg (`reasoning_effort` →
-  `--effort`).
+```
+1 validation error for CopilotCliOptions
+<KEY>
+  Extra inputs are not permitted
+```
 
-The mapping is one-way (`_` → `-`); there is no reverse lookup from a CLI flag
-name to its kwarg.
+Discover the accepted names with:
+
+```bash
+uv run --package harbor-bench python -c \
+  "from harbor.agents.installed.copilot_cli import CopilotCliOptions as O; print(*sorted(O.model_fields), sep='\n')"
+```
+
+There is no escape hatch upstream (`config` is declared but not consumed by
+`CopilotCli`). Flags the previous fork accepted therefore no longer work:
+`max_ai_credits`, `enable_memory`, `available_tools`, `allow_tool` and
+`deny_tool` — drop them, or set the equivalent option on the agent in
+`config.yaml` / `task.toml`. See harbor-framework/harbor#3990 for the upstream
+agent these options come from.
 
 ### Configuring it
 
@@ -217,7 +232,7 @@ config file, pass them directly to `harbor run`:
 
 ```bash
 uv run --package harbor-bench harbor \
-  --agent harbor_copilot.agents.copilot_cli_mod:CopilotCliMod \
+  --agent copilot-cli \
   --model gpt-6-luna --ak reasoning_effort=high ...
 ```
 
@@ -232,7 +247,7 @@ task `environment/` it is a ~0.4s cache hit. The historical ~40s setup cost
 came mostly from the **Copilot CLI install**
 (`curl -fsSL https://gh.io/copilot-install | bash`) inside the fresh container;
 the generated `environment/Dockerfile` now bakes the CLI into the image and
-`CopilotCliMod` skips the reinstall when `copilot` is already on PATH, so that
+the default `skip_install: true` tells the agent not to reinstall it, so that
 step is a no-op for regenerated tasks.
 
 The generated `delete: false` keeps the container and image between runs.
@@ -271,10 +286,10 @@ docker_image = "hb__dr-blacksmith-3-use-case-boundary"
   workspace updates need no rebuild.
 
 > The generated `environment/Dockerfile` already bakes the Copilot CLI into the
-> image (`RUN curl -fsSL https://gh.io/copilot-install | bash`), and
-> `CopilotCliMod` skips the `curl ... | bash` reinstall when `copilot` is on
-> PATH — so regenerated tasks have a no-op install step even without
-> `docker_image`.
+> image (`RUN curl -fsSL https://gh.io/copilot-install | bash`), and the
+> generated config sets `skip_install: true` so the agent never re-runs the
+> `curl ... | bash` reinstall — regenerated tasks have a no-op install step
+> even without `docker_image`.
 
 ## Authoring skills for the benchmark
 
@@ -615,9 +630,11 @@ Notes:
 - **Token/cost backfill**: GPT runs leave input/cache tokens and cost unset in
   `result.json` (the JSONL stream reports only output tokens). `report`
   backfills them from the trial's raw artifacts when present:
-  `agent/copilot/session-store.db` (authoritative per-request usage: input,
-  cache read/write, output, reasoning tokens, cost metered via
-  `total_nano_aiu` and converted from nano-AIU to USD), falling back to
+  `agent/copilot-usage.json` (authoritative per-model usage: input, cache
+  read/write, output, reasoning tokens, request count, cost metered via
+  `totalNanoAiu` and converted from nano-AIU to USD; on a resumed trial the
+  cumulative snapshot is reported net of `agent/copilot-usage-baseline.json`,
+  the pre-resume one Harbor moves aside), falling back to
   `agent/copilot-cli.jsonl` (cost from the `session.usage_checkpoint` event).
   One billion nano-AIU equals one AI credit, and one AI credit is $0.01 USD.
   Step count comes from `agent/trajectory.json`. So the report also shows `reasoning tokens`, `model

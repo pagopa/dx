@@ -21,8 +21,8 @@ the run produced:
 
 Token/cost values that ``result.json`` cannot report (GPT runs leave input/cache
 tokens and cost unset) are backfilled from the trial's raw artifacts when they
-are available: ``agent/copilot/session-store.db`` (authoritative per-request
-usage) with a fallback to ``agent/copilot-cli.jsonl``. Step counts come from
+are available: ``agent/copilot-usage.json`` (the CLI's own per-model usage
+snapshot) with a fallback to ``agent/copilot-cli.jsonl``. Step counts come from
 ``agent/trajectory.json``.
 
 Besides the per-task deltas, a **run configuration** section reports the agent
@@ -50,7 +50,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from harbor_bench.jobs import JobMeta, SkillVersion, TrialMetrics
-from harbor_copilot.metrics import METRIC_SPECS, MetricSpec
+from harbor_bench.metrics import METRIC_SPECS, MetricSpec
 
 
 @dataclass(frozen=True)

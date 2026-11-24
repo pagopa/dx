@@ -137,10 +137,10 @@ def _log(message: str) -> None:
 def default_harbor() -> str:
     """The Harbor console script bundled in harbor-bench's own environment.
 
-    ``harbor-bench`` depends on ``harbor`` and ``harbor-copilot``, so the
-    ``harbor`` script next to the running interpreter runs Harbor from the same
-    venv where ``harbor_copilot`` is importable. A bare ``harbor`` name is kept
-    as a fallback for installs where the interpreter has no sibling script.
+    ``harbor-bench`` depends on ``harbor``, so the ``harbor`` script next to
+    the running interpreter runs Harbor from the same venv that provides this
+    CLI. A bare ``harbor`` name is kept as a fallback for installs where the
+    interpreter has no sibling script.
     """
     for name in ("harbor", "harbor.exe"):
         candidate = Path(sys.executable).with_name(name)
@@ -289,7 +289,7 @@ def run_compare(options: CompareOptions) -> CompareResult:
     """
     opts = _normalize_options(options)
     # Run Harbor from harbor-bench's own environment: that is the venv where
-    # `harbor-copilot` (the agent the generated config imports) is installed.
+    # the Harbor version the bench pins (and its agents) is installed.
     opts = replace(opts, harbor=resolve_harbor(opts.harbor))
 
     if error := check_harbor_cli(opts.harbor):

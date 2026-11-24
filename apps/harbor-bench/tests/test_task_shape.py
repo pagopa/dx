@@ -16,10 +16,6 @@ def test_trial_relative_derives_reader_layout():
         == "verifier/reward-details.json"
     )
     assert (
-        task_shape.trial_relative(task_shape.COPILOT_SESSION_DB)
-        == "agent/copilot/session-store.db"
-    )
-    assert (
         task_shape.trial_relative(task_shape.COPILOT_CLI_JSONL)
         == "agent/copilot-cli.jsonl"
     )
@@ -30,14 +26,17 @@ def test_trial_relative_rejects_non_logs_paths():
         task_shape.trial_relative("/workspace")
 
 
+def test_the_session_store_db_path_is_gone():
+    """Harbor 0.26 writes ``copilot-usage.json``; the SQLite reader was removed."""
+    assert not hasattr(task_shape, "COPILOT_SESSION_DB")
+    assert not hasattr(task_shape, "COPILOT_SESSION_DB_REL")
+    assert "COPILOT_SESSION_DB" not in task_shape.TEMPLATE_PLACEHOLDERS
+
+
 def test_copilot_artifact_paths_are_agent_log_relative():
     """The agent-log-dir coordinates are what copilot_artifact_paths joins to a root."""
-    assert task_shape.COPILOT_SESSION_DB_REL == "copilot/session-store.db"
     assert task_shape.COPILOT_CLI_JSONL_REL == "copilot-cli.jsonl"
     # container and trial coordinates derive from the same declaration
-    assert task_shape.COPILOT_SESSION_DB == (
-        task_shape.AGENT_LOG_DIR + "/" + task_shape.COPILOT_SESSION_DB_REL
-    )
     assert task_shape.COPILOT_CLI_JSONL == (
         task_shape.AGENT_LOG_DIR + "/" + task_shape.COPILOT_CLI_JSONL_REL
     )

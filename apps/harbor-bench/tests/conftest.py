@@ -3,14 +3,35 @@
 from __future__ import annotations
 
 import json
-import sqlite3
 from pathlib import Path
 
 import pytest
 
-# A realistic per-request usage row for the assistant_usage_events table:
-# (input_tokens, cache_read, cache_write, output, reasoning, total_nano_aiu).
-DEFAULT_USAGE_ROW = (20_474, 0, 20_471, 41, 20, 516_755_000)
+# One realistic ``copilot-usage.json`` model entry: two requests that consumed
+# 55,664 input tokens (31,087 of them cache reads, 24,571 cache writes), 400
+# output tokens of which 310 were reasoning, and 724,569,000 nano-AIU.
+DEFAULT_USAGE_MODEL = {
+    "requests": {"count": 2, "cost": 2},
+    "usage": {
+        "inputTokens": 55_664,
+        "outputTokens": 400,
+        "cacheReadTokens": 31_087,
+        "cacheWriteTokens": 24_571,
+        "reasoningTokens": 310,
+    },
+    "totalNanoAiu": 724_569_000,
+}
+SECOND_USAGE_MODEL = {
+    "requests": {"count": 1, "cost": 1},
+    "usage": {
+        "inputTokens": 1_000,
+        "outputTokens": 50,
+        "cacheReadTokens": 200,
+        "cacheWriteTokens": 300,
+        "reasoningTokens": 10,
+    },
+    "totalNanoAiu": 100_000_000,
+}
 
 CASE_ONE = {
     "id": 1,
@@ -45,34 +66,25 @@ def write_evals(
     return path
 
 
-def write_session_db(db_path: Path, rows: list[tuple] | None = None) -> None:
-    """Write a ``session-store.db`` with an ``assistant_usage_events`` table."""
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-    con = sqlite3.connect(db_path)
-    try:
-        con.execute(
-            """
-            CREATE TABLE assistant_usage_events (
-                session_id TEXT,
-                turn_index INTEGER,
-                model TEXT,
-                input_tokens INTEGER,
-                cache_read_tokens INTEGER,
-                cache_write_tokens INTEGER,
-                output_tokens INTEGER,
-                reasoning_tokens INTEGER,
-                total_nano_aiu INTEGER
-            )
-            """
-        )
-        for row in (rows if rows is not None else [DEFAULT_USAGE_ROW]):
-            con.execute(
-                "INSERT INTO assistant_usage_events VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                ("s1", 0, "gpt-6-luna", *row),
-            )
-        con.commit()
-    finally:
-        con.close()
+def write_copilot_usage(
+    usage_path: Path,
+    models: dict | None = None,
+    ai_credits_status: str | None = "ok",
+) -> None:
+    """Write a ``copilot-usage.json`` as the Copilot CLI ``--usage-output-file`` does."""
+    usage_path.parent.mkdir(parents=True, exist_ok=True)
+    data = {
+        "sessionStartTime": "2026-11-23T10:00:00.000Z",
+        "totalPremiumRequestCost": sum(
+            (model.get("requests") or {}).get("count", 0)
+            for model in (models or {"gpt-6-luna": DEFAULT_USAGE_MODEL}).values()
+        ),
+        "aiCreditsStatus": ai_credits_status,
+        "modelMetrics": models
+        if models is not None
+        else {"gpt-6-luna": DEFAULT_USAGE_MODEL},
+    }
+    usage_path.write_text(json.dumps(data), encoding="utf-8")
 
 
 def write_copilot_jsonl(
@@ -92,11 +104,16 @@ def write_copilot_jsonl(
 
 
 @pytest.fixture
-def session_db_factory():
-    """Factory fixture writing a session-store.db, returns the path."""
-    def _factory(tmp_path: Path, rows: list[tuple] | None = None) -> Path:
-        path = tmp_path / "session-store.db"
-        write_session_db(path, rows)
+def usage_factory():
+    """Factory fixture writing a copilot-usage.json, returns the path."""
+
+    def _factory(
+        tmp_path: Path,
+        models: dict | None = None,
+        ai_credits_status: str | None = "ok",
+    ) -> Path:
+        path = tmp_path / "copilot-usage.json"
+        write_copilot_usage(path, models, ai_credits_status)
         return path
 
     return _factory

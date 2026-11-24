@@ -19,11 +19,11 @@ silently yielding ``None``.
 
 from __future__ import annotations
 
-#: The two Copilot CLI artifact relative names are owned by the agent-side
-#: package (they describe what a Copilot CLI session writes under its log
-#: dir); re-exported here so the full container paths and template
-#: placeholders below stay derived from a single declaration.
-from harbor_copilot.copilot_usage import COPILOT_CLI_JSONL_REL, COPILOT_SESSION_DB_REL
+#: The Copilot CLI artifact relative name is owned by
+#: :mod:`harbor_bench.copilot_usage` (it describes what a Copilot CLI session
+#: writes under its log dir); re-exported here so the full container path and
+#: template placeholder below stay derived from a single declaration.
+from harbor_bench.copilot_usage import COPILOT_CLI_JSONL_REL
 
 #: The prefix Harbor drops when re-materializing collected artifacts under each
 #: trial subdirectory: ``/logs/agent/copilot-cli.jsonl`` lands at
@@ -45,7 +45,6 @@ AGENT_LOG_DIR = "/logs/agent"
 VERIFIER_LOG_DIR = "/logs/verifier"
 ARTIFACT_DIR = "/logs/artifacts"
 
-COPILOT_SESSION_DB = f"{AGENT_LOG_DIR}/{COPILOT_SESSION_DB_REL}"
 COPILOT_CLI_JSONL = f"{AGENT_LOG_DIR}/{COPILOT_CLI_JSONL_REL}"
 TRAJECTORY_JSON = f"{AGENT_LOG_DIR}/trajectory.json"
 VERIFIER_USAGE_JSONL = f"{VERIFIER_LOG_DIR}/usage.jsonl"
@@ -111,7 +110,6 @@ TEMPLATE_PLACEHOLDERS: dict[str, str] = {
     "AGENT_LOG_DIR": AGENT_LOG_DIR,
     "VERIFIER_LOG_DIR": VERIFIER_LOG_DIR,
     "ARTIFACT_DIR": ARTIFACT_DIR,
-    "COPILOT_SESSION_DB": COPILOT_SESSION_DB,
     "COPILOT_CLI_JSONL": COPILOT_CLI_JSONL,
     "TRAJECTORY_JSON": TRAJECTORY_JSON,
     "VERIFIER_USAGE_JSONL": VERIFIER_USAGE_JSONL,
