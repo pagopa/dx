@@ -1,0 +1,2 @@
+# Generated artifacts are excluded from formatting.
+plugins/padef/skills/confluence-librarian/scripts/render-mermaid.mjs

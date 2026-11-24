@@ -17,7 +17,9 @@ export function run(argv: string[]): number {
   let source: string;
   try {
     source =
-      fenceArg === "-" ? readFileSync(0, "utf8") : readFileSync(fenceArg, "utf8");
+      fenceArg === "-"
+        ? readFileSync(0, "utf8")
+        : readFileSync(fenceArg, "utf8");
   } catch (error) {
     console.error(`error ${(error as Error).message}`);
     return 1;
