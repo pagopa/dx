@@ -10,6 +10,7 @@ packages:
   - infra/scripts
   - providers/*
   - actions/*
+  - plugins/padef
 
 registries:
   https://npm.pkg.github.com/:

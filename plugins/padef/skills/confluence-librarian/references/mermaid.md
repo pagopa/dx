@@ -6,8 +6,8 @@ and retain its unchanged source beside it.
 ## Render the fence to SVG
 
 [scripts/render-mermaid.mjs](../scripts/render-mermaid.mjs) turns a fence into
-an SVG with [Pele](https://pele.run/): the script pins the renderer, installs it
-into a cache directory on first run, and converts in-process.
+an SVG with [Pele](https://pele.run/), bundled into that one file: Node runs it
+offline, with no install step and no cache to warm.
 
 1. Pipe the fence's lines in on stdin (`-`), or name a file that holds them, and
    name the SVG:
@@ -19,9 +19,8 @@ into a cache directory on first run, and converts in-process.
    ```
 
 2. Read the status line: `rendered <type> <W>x<H> -> <path>`, or an `error`
-   line with a non-zero exit. `No diagram type detected` means the fence is not
-   Mermaid; `pele install failed` means the renderer did not download — retry
-   that run once.
+   line with a non-zero exit. `No diagram type detected` means the fence holds
+   no diagram: correct the fence, or drop the render and keep the fence as text.
 
 ## Place the diagram on the page
 
