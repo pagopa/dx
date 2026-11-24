@@ -1,5 +1,5 @@
 {
-  "name": "@pagopa/padef",
+  "name": "padef",
   "private": true,
   "description": "PagoPA Agentic Delivery Framework plugin, plus the runtime helpers its skills ship",
   "type": "module",

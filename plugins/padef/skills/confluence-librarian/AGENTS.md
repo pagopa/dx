@@ -26,9 +26,9 @@ run time.
 ## Rebuild the renderer bundle
 
 ```sh
-pnpm nx run @pagopa/padef:build
-pnpm nx run @pagopa/padef:test
-pnpm nx run @pagopa/padef:build:check   # rebuilds, then fails when the commit is stale
+pnpm nx run padef:build
+pnpm nx run padef:test
+pnpm nx run padef:build:check   # rebuilds, then fails when the commit is stale
 ```
 
 Commit the regenerated `scripts/render-mermaid.mjs` alongside the source change
