@@ -32,12 +32,14 @@ resource "azurerm_subnet" "allowed" {
   resource_group_name  = local.virtual_network.resource_group_name
   address_prefixes     = [dx_available_subnet_cidr.allowed.cidr_block]
 
-  service_endpoints = ["Microsoft.EventHub"]
+  service_endpoint {
+    service = "Microsoft.EventHub"
+  }
 }
 
 module "azure_event_hub" {
   source  = "pagopa-dx/azure-event-hub/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   environment         = local.environment
   resource_group_name = azurerm_resource_group.example.name
