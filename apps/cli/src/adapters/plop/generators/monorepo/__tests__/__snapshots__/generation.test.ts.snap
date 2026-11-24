@@ -312,6 +312,7 @@ terraform.rc
 # Local npm configuration: it carries the GitHub Packages token written by
 # \`dx init\` and must never be committed.
 .npmrc
+.tflint.d/
 # Terraform lock files for modules
 **/modules/**/.terraform.lock.hcl
 **/_modules/**/.terraform.lock.hcl

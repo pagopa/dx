@@ -1,4 +1,6 @@
 terraform {
+  required_version = ">= {{terraformVersion}}"
+
   required_providers {
     {{#with cloudAccountsByCsp.azure}}
     azurerm = {

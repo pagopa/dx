@@ -130,6 +130,9 @@ export default function getActions(
 
     const actions: ActionType[] = [
       {
+        type: "getTerraformVersion",
+      },
+      {
         type: "validateTerraformBackendRoots",
       },
       {

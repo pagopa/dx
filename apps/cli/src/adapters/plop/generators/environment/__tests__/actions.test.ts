@@ -88,6 +88,7 @@ describe("actions", () => {
     },
   ])("correct order of actions", ({ payload }) => {
     const actionsOrder = [
+      "getTerraformVersion",
       "validateTerraformBackendRoots",
       "setupCloudTools",
       ...(payload.init
