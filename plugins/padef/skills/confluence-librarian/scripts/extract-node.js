@@ -1,4 +1,5 @@
 // Extracts one complete element from a persisted Confluence HTML baseline.
+import { realpathSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -526,10 +527,11 @@ async function main() {
   }
 }
 
-if (
-  process.argv[1] &&
-  resolve(process.argv[1]) === fileURLToPath(import.meta.url)
-) {
+// Compare real paths: a skill is often reached through a symlinked directory
+// (a staged plugin copy, /tmp on macOS), and a mismatch skips main() silently.
+const entryPoint = realpathSync(fileURLToPath(import.meta.url));
+
+if (process.argv[1] && realpathSync(process.argv[1]) === entryPoint) {
   try {
     await main();
   } catch (error) {

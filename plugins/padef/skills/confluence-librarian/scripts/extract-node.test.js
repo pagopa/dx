@@ -1,7 +1,7 @@
 // Exercises extraction of complete nodes from a Confluence HTML baseline.
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -322,6 +322,23 @@ test("selects a node inside a tool-output envelope", async () => {
       run.stdout.trim(),
       /^1\/1 div\[local-id=panel-1\] — bytes \d+-\d+ — anchor=self$/,
     );
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
+
+test("runs when the script is reached through a symlinked path", async () => {
+  const dir = await mkdtemp(join(tmpdir(), "extract-node-link-"));
+  try {
+    const linked = join(dir, "extract-node.js");
+    await symlink(script, linked);
+    const run = spawnSync(
+      process.execPath,
+      [linked, "-", "--local-id", "sec-2", "--list"],
+      { input: baseline, encoding: "utf8" },
+    );
+    assert.equal(run.status, 0);
+    assert.match(run.stdout.trim(), /^1\/1 section\[local-id=sec-2\]/);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }
