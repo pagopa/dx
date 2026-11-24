@@ -1,3 +1,13 @@
+## 6.1.0 (2026-11-24)
+
+### 🚀 Features
+
+- Add low_load use case for Azure PostgreSQL flexible server ([#2579](https://github.com/pagopa/dx/pull/2579))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 6.0.1 (2026-11-03)
 
 ### 🩹 Fixes

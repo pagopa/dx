@@ -1,8 +1,8 @@
 {
-  "name": "azure_postgres_server",
   "metadata": {
+    "version": "6.1.0",
     "description": "Deploys and configures Azure PostgreSQL Flexible Server with monitoring and networking capabilities",
-    "provider": "azurerm",
-    "version": "6.0.1"
-  }
+    "provider": "azurerm"
+  },
+  "name": "azure_postgres_server"
 }
