@@ -1,3 +1,49 @@
+## 0.1.10 (2026-11-24)
+
+### 🚀 Features
+
+- Adopt Harbor 0.26's built-in `copilot-cli` agent and drop the `harbor-copilot` package. ([#2580](https://github.com/pagopa/dx/pull/2580))
+
+  The `harbor_copilot` agent fork (`CopilotCliMod`) is gone: `harbor` moves from
+  `0.22.0` to `0.26.0`, which ships the same CLI wrapper upstream, so the
+  workspace now has a single `harbor` pin and one fewer member. The usage reader
+  moved into `harbor_bench.copilot_usage`.
+
+  ### Migration guide
+
+  1. Configs produced by `harbor-bench convert` before this change still point at
+     the deleted module: their `config.yaml` carries
+     `agents[].import_path: harbor_copilot.agents.copilot_cli_mod:CopilotCliMod`
+     instead of an agent name, and that import now fails. Regenerate the task and
+     config with the current `harbor-bench convert`, which writes
+     `agent.name: copilot-cli`, or edit the `config.yaml` so the entry carries
+     `name: copilot-cli` in place of `import_path`. Merely removing
+     `import_path` is not enough: an agent entry with neither `name` nor
+     `import_path` falls back to Harbor's default `oracle` agent, which is not
+     Copilot and rejects Copilot kwargs. Hand-written `harbor.yaml` files and
+     eval cases that pinned `agent.name: copilot-cli-mod` need
+     `agent.name: copilot-cli`.
+  2. Move `agent.kwargs` to Harbor's `CopilotCliOptions` fields. Payloads that
+     named `max_ai_credits`, `enable_memory`, `available_tools`, `allow_tool`, or
+     `deny_tool` are now rejected (`extra="forbid"`); set
+     `agent.kwargs.skip_install: true` to reuse a Copilot CLI already baked into
+     the image, and keep `reasoning_effort` as before.
+  3. Metrics now come from Harbor's `agent/copilot-usage.json` (and the
+     `copilot-cli.jsonl` trajectory) instead of the Copilot CLI session SQLite
+     database. `report`, `diff`, and `compare` show the same columns; the
+     `reasoning_tokens` is read from the value Harbor persists in
+     `agent_result.metadata.copilot_usage` (so a resumed trial is not
+     double-counted) and falls back to the usage file; `n_requests` comes from
+     the usage file, because Harbor persists no request count. Jobs recorded
+     before this change keep reporting both, from the `metadata.n_reasoning_tokens`
+     and `metadata.n_requests` keys the old agent wrote.
+  4. Reinstalling is enough: `packages/harbor-copilot` is deleted, so drop it from
+     any local script that imported the `harbor_copilot` module.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.1.9 (2026-11-17)
 
 ### 🚀 Features

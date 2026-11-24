@@ -1,3 +1,32 @@
+# 6.0.0 (2026-11-24)
+
+### ⚠️  Breaking Changes
+
+- Update AzureRM minimum version constrating to `~> 5.8`. Terraform `>= 1.16.0` is ([#2474](https://github.com/pagopa/dx/pull/2474))
+  required.
+
+  ### Migration guide
+
+  1. Update the module source version and run `terraform init -upgrade`.
+  2. The `static_website` module input is unchanged, but AzureRM v5 manages it
+     with a separate resource. If static website hosting was already enabled,
+     keep `static_website.enabled = true` and import the existing website to
+     the new address:
+
+     ```hcl
+     import {
+       to = module.<module_name>.azurerm_storage_account_static_website.this[0]
+       id = "/subscriptions/<subscription_id>/resourceGroups/<resource_group>/providers/Microsoft.Storage/storageAccounts/<storage_account>"
+      }
+     ```
+
+  4. When static website hosting is enabled, at least one of `index_document` or
+     `error_404_document` must be a non-empty value.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 5.0.1 (2026-11-03)
 
 ### 🩹 Fixes
