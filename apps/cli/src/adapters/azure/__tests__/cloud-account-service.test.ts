@@ -1054,7 +1054,6 @@ describe("initialize", () => {
       "dx-d-itn-bootstrap-ci-id-01",
       expect.any(Object),
     );
-    expect(mockRoleAssignmentsCreate).toHaveBeenCalledTimes(5);
     expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
       "/subscriptions/sub-1",
       expect.any(String),
@@ -1105,6 +1104,17 @@ describe("initialize", () => {
           "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/ba92f5b4-2d11-453d-a403-e96b0029c9fe",
       }),
     );
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledWith(
+      "/subscriptions/sub-1",
+      expect.any(String),
+      expect.objectContaining({
+        principalId: "ci-principal-1",
+        principalType: "ServicePrincipal",
+        roleDefinitionId:
+          "/subscriptions/sub-1/providers/Microsoft.Authorization/roleDefinitions/b9a307c4-5aa3-4b52-ba60-2b17c136cd7b",
+      }),
+    );
+    expect(mockRoleAssignmentsCreate).toHaveBeenCalledTimes(6);
     expectBootstrapperFederatedCredentials("dx", "example-org");
     expectBootstrapperEnvironmentSecrets(createOrUpdateEnvironmentSecret, {
       cdClientId: "cd-client-1",

@@ -68,6 +68,7 @@ const graphGroupMembershipResponseSchema = z.object({
 });
 
 const builtInRoleDefinitionIds = {
+  containerAppsJobsOperator: "b9a307c4-5aa3-4b52-ba60-2b17c136cd7b",
   contributor: "b24988ac-6180-42a0-ab88-20f7382dd24c",
   keyVaultSecretsOfficer: "b86a8fe4-44ce-4948-aee5-eccb2c155cd7",
   owner: "8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
@@ -95,7 +96,7 @@ const isStatusCode = (error: unknown, statusCode: number): boolean =>
   error.statusCode === statusCode;
 
 const bootstrapCiIdentityRoleDefinitionIds = [
-  // Plan needs read access for refresh and blob access for Terraform backend locks/state.
+  builtInRoleDefinitionIds.containerAppsJobsOperator,
   builtInRoleDefinitionIds.reader,
   builtInRoleDefinitionIds.storageBlobDataContributor,
 ] as const;
