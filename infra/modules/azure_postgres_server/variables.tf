@@ -67,12 +67,12 @@ variable "delegated_subnet_id" {
 
 variable "use_case" {
   type        = string
-  description = "Specifies the use case for the PostgreSQL Server. Allowed value are 'default'."
+  description = "Specifies the use case for the PostgreSQL Server. Allowed values are 'default' and 'low_load'."
   default     = "default"
 
   validation {
-    condition     = contains(["default"], var.use_case)
-    error_message = "Allowed value for \"use_case\" are \"default\"."
+    condition     = contains(["default", "low_load"], var.use_case)
+    error_message = "Allowed values for \"use_case\" are \"default\" and \"low_load\"."
   }
 }
 
@@ -134,8 +134,8 @@ variable "replica_zone" {
 
 variable "create_replica" {
   type        = bool
-  description = "Indicates whether a replica PostgreSQL Flexible Server should be created. Defaults to true."
-  default     = true
+  description = "Indicates whether a replica PostgreSQL Flexible Server should be created. When null, the selected use case determines the default."
+  default     = null
 }
 
 variable "replica_location" {
@@ -144,7 +144,7 @@ variable "replica_location" {
   default     = null
 
   validation {
-    condition     = ((var.replica_location != var.environment.location) && var.create_replica == true) || var.create_replica == false
+    condition     = var.replica_location == null || var.replica_location != var.environment.location || !(var.create_replica != null ? var.create_replica : var.use_case != "low_load")
     error_message = "'replica_location' must be different from 'environment.location' to improve Disaster Recovery."
   }
 }

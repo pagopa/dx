@@ -1,14 +1,14 @@
 terraform {
-  required_version = ">= 1.17.0"
+  required_version = ">= 1.16.0"
 
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 4.23, < 6.0"
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
+      version = "~> 0.12"
     }
   }
 }
@@ -17,58 +17,59 @@ locals {
   naming_config = {
     prefix          = var.environment.prefix,
     environment     = var.environment.env_short,
-    location        = var.environment.location
+    location        = var.environment.location,
+    domain          = var.environment.domain,
     name            = var.environment.app_name,
     instance_number = tonumber(var.environment.instance_number),
   }
 
-  tags = {
-    CostCenter     = "TS720 - DEV EX"
-    CreatedBy      = "Terraform"
-    Environment    = "Uat"
-    Owner          = "DevEx"
-    Source         = "https://github.com/pagopa/dx/blob/main/infra/modules/azure_postgres_server/tests"
-    ManagementTeam = "Developer Experience"
-    Test           = "true"
-    TestName       = "Create PostgreSQL for test"
-  }
-
-  virtual_network = {
-    name = provider::dx::resource_name(merge(local.naming_config, {
-      name          = "common",
-      resource_type = "virtual_network"
-    }))
-    resource_group_name = provider::dx::resource_name(merge(local.naming_config, {
-      name          = "network",
-      resource_type = "resource_group"
-    }))
+  existing_resources = {
+    prefix          = var.environment.prefix,
+    environment     = var.environment.env_short,
+    location        = var.environment.location,
+    domain          = "",
+    name            = var.test_kind,
+    instance_number = tonumber(var.environment.instance_number),
   }
 }
 
-data "azurerm_resource_group" "rg" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "test",
-    resource_type = "resource_group"
-  }))
+data "azurerm_resource_group" "test" {
+  name = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "resource_group" }))
+}
+
+data "azurerm_resource_group" "network" {
+  name = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "resource_group", name = "network" }))
+}
+
+data "azurerm_virtual_network" "vnet" {
+  name                = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "virtual_network" }))
+  resource_group_name = data.azurerm_resource_group.test.name
 }
 
 data "azurerm_subnet" "pep" {
-  name = provider::dx::resource_name(merge(local.naming_config, {
-    name          = "pep",
-    resource_type = "subnet"
-  }))
-  virtual_network_name = local.virtual_network.name
-  resource_group_name  = local.virtual_network.resource_group_name
+  name                 = provider::dx::resource_name(merge(local.existing_resources, { resource_type = "subnet", name = "pep" }))
+  resource_group_name  = data.azurerm_resource_group.network.name
+  virtual_network_name = data.azurerm_virtual_network.vnet.name
 }
 
-output "pep_id" {
-  value = data.azurerm_subnet.pep.id
+resource "azurerm_resource_group" "sut" {
+  name     = provider::dx::resource_name(merge(local.naming_config, { resource_type = "resource_group" }))
+  location = var.environment.location
+  tags     = var.tags
 }
 
 output "resource_group_name" {
-  value = data.azurerm_resource_group.rg.name
+  value = azurerm_resource_group.sut.name
+}
+
+output "subnet_pep_id" {
+  value = data.azurerm_subnet.pep.id
+}
+
+output "private_dns_zone_resource_group_name" {
+  value = data.azurerm_resource_group.network.name
 }
 
 output "tags" {
-  value = local.tags
+  value = var.tags
 }

@@ -57,6 +57,41 @@ run "postgres_server_supports_delegated_subnet" {
   }
 }
 
+run "postgres_server_supports_low_load_use_case" {
+  command = plan
+  variables {
+    use_case = "low_load"
+  }
+
+  assert {
+    condition     = azurerm_postgresql_flexible_server.this.sku_name == "B_Standard_B1ms"
+    error_message = "The low_load use case must use the B_Standard_B1ms SKU."
+  }
+
+  assert {
+    condition     = length(azurerm_postgresql_flexible_server.this.high_availability) == 0
+    error_message = "The low_load use case must not create high availability by default."
+  }
+
+  assert {
+    condition     = length(azurerm_postgresql_flexible_server.replica) == 0
+    error_message = "The low_load use case must not create a replica by default."
+  }
+}
+
+run "postgres_server_can_explicitly_create_low_load_replica" {
+  command = plan
+  variables {
+    use_case       = "low_load"
+    create_replica = true
+  }
+
+  assert {
+    condition     = length(azurerm_postgresql_flexible_server.replica) == 1
+    error_message = "The low_load use case must allow an explicitly requested replica."
+  }
+}
+
 run "postgres_server_skips_replica_when_disabled" {
   command = plan
   variables {

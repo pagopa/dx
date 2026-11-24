@@ -20,13 +20,22 @@ locals {
       auto_grow             = true
       replica_metric_alerts = true
       high_availability     = true
+      create_replica        = true
+    }
+    low_load = {
+      sku_name              = "B_Standard_B1ms"
+      geo_redundant_backup  = false
+      auto_grow             = false
+      replica_metric_alerts = false
+      high_availability     = false
+      create_replica        = false
     }
   }
 
   use_case_features = local.use_cases[var.use_case]
 
   replica = {
-    create = var.create_replica == true
+    create = var.create_replica != null ? var.create_replica : local.use_case_features.create_replica
     name   = provider::dx::resource_name(merge(local.naming_config, { resource_type = "postgresql_replica" }))
   }
 
