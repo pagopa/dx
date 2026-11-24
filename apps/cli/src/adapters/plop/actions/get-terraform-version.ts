@@ -4,10 +4,7 @@ import path from "node:path";
 
 export default function setGetTerraformVersion(plop: NodePlopAPI) {
   plop.setActionType("getTerraformVersion", async (data) => {
-    const terraformVersionPath = path.join(
-      process.cwd(),
-      ".terraform-version",
-    );
+    const terraformVersionPath = path.join(process.cwd(), ".terraform-version");
     const terraformVersion = (
       await fs.readFile(terraformVersionPath, "utf8")
     ).trim();

@@ -215,12 +215,10 @@ const runEnvironmentGenerator = async ({
   });
 
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
-  const result = await generator.runActions(
-    {
-      ...structuredClone(environmentPayload),
-      ...(generateCore ? { terraform: { generateCore: true } } : {}),
-    },
-  );
+  const result = await generator.runActions({
+    ...structuredClone(environmentPayload),
+    ...(generateCore ? { terraform: { generateCore: true } } : {}),
+  });
 
   const realFailures = result.failures.filter(
     (f) => f.error !== "Aborted due to previous action failure",
@@ -1093,17 +1091,18 @@ describe("environment generator — tenant-qualified bootstrap configuration", (
       },
     };
 
-    await withGeneratedEnvironment({ payload: tenantPayload }, async (tmpDir) => {
-      const data = await fs.readFile(
-        path.join(tmpDir, "infra/bootstrapper/dev/data.tf"),
-        "utf8",
-      );
+    await withGeneratedEnvironment(
+      { payload: tenantPayload },
+      async (tmpDir) => {
+        const data = await fs.readFile(
+          path.join(tmpDir, "infra/bootstrapper/dev/data.tf"),
+          "utf8",
+        );
 
-      expect(data).toContain(
-        'data "azurerm_resource_group" "common_weu"',
-      );
-      expect(data).not.toContain("common_itn_01");
-    });
+        expect(data).toContain('data "azurerm_resource_group" "common_weu"');
+        expect(data).not.toContain("common_itn_01");
+      },
+    );
   });
 });
 
