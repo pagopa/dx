@@ -88,3 +88,19 @@ run "github_environment_bootstrap_branch_protection_defaults" {
   }
 }
 
+run "github_environment_bootstrap_private_repository" {
+  command = plan
+  variables {
+    repository = {
+      name            = "dx-test-monorepo-starter-pack"
+      description     = "Devex repository for shared tools and pipelines."
+      topics          = ["developer-experience"]
+      reviewers_teams = ["engineering-team-devex"]
+      visibility      = "private"
+    }
+  }
+  assert {
+    condition     = github_repository.this.visibility == "private"
+    error_message = "The repository visibility must be private when explicitly configured"
+  }
+}
