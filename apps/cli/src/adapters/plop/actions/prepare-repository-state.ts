@@ -16,6 +16,10 @@ import {
   repositoryStateDestination,
   verifyInitializedRepositoryBackend,
 } from "../../terraform/repository-backend.js";
+import {
+  repositoryGitHubEnvironment,
+  verifyRepositoryIdentity,
+} from "../../terraform/repository-identity.js";
 import { ensureRemoteRepositoryState } from "../../terraform/repository-state.js";
 import { payloadSchema } from "../generators/environment/prompts.js";
 
@@ -28,6 +32,7 @@ export default function (plop: NodePlopAPI, credential: TokenCredential): void {
       throw new Error("Terraform backend is not available");
     }
     const repositoryPath = path.join(process.cwd(), "infra", "repository");
+    await verifyRepositoryIdentity(repositoryPath, payload.github);
     const destination =
       (await readRepositoryBackend(repositoryPath)) ??
       repositoryStateDestination(
@@ -53,6 +58,7 @@ export default function (plop: NodePlopAPI, credential: TokenCredential): void {
       const terraform = tf$({
         cancelSignal,
         cwd: repositoryPath,
+        env: repositoryGitHubEnvironment(payload.github),
         reject: false,
       });
       return ensureRemoteRepositoryState({

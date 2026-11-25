@@ -159,6 +159,11 @@ to accept this placement non-interactively. The destination is permanent for the
 repository: adding another environment keeps and reports the configured backend,
 including existing keys created by earlier CLI versions.
 
+The CLI checks that the repository Terraform configuration matches the GitHub
+remote before preparing state. Keep the literal repository name in `main.tf`
+and the literal owner on the default `github` provider. JSON configuration,
+override files, and custom provider mappings are not supported for this check.
+
 The `validate-v2` workflow plans `infra/repository` as `bootstrapper-prod-ci`.
 If repository state is stored in a different subscription, the CLI does not
 grant that identity cross-subscription access. Before relying on that workflow,

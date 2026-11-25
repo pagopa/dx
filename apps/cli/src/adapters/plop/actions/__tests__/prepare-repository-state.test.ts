@@ -10,6 +10,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   exists: vi.fn(),
   terraform: vi.fn(),
+  terraformRunner: vi.fn(),
   withLock: vi.fn(),
 }));
 vi.mock("../../../azure/repository-state-storage.js", () => ({
@@ -18,7 +19,7 @@ vi.mock("../../../azure/repository-state-storage.js", () => ({
     withLock: mocks.withLock,
   }),
 }));
-vi.mock("../../../execa/terraform.js", () => ({ tf$: () => mocks.terraform }));
+vi.mock("../../../execa/terraform.js", () => ({ tf$: mocks.terraformRunner }));
 
 import type { DeploymentEnvironmentOutputPayload } from "../../index.js";
 
@@ -56,6 +57,14 @@ describe("prepare repository state action", () => {
     `,
     );
     await fs.writeFile(
+      path.join(directory, "infra", "repository", "github.tf"),
+      'provider "github" { owner = "PagoPA" }\n',
+    );
+    await fs.writeFile(
+      path.join(directory, "infra", "repository", "main.tf"),
+      'module "github_repository" { repository = { name = "repo" } }\n',
+    );
+    await fs.writeFile(
       path.join(
         directory,
         "infra",
@@ -78,6 +87,7 @@ describe("prepare repository state action", () => {
     );
     vi.spyOn(process, "cwd").mockReturnValue(directory);
     mocks.terraform.mockResolvedValue({ exitCode: 0, stdout: "" });
+    mocks.terraformRunner.mockReturnValue(mocks.terraform);
     mocks.withLock.mockImplementation(async (_destination, task) =>
       task(new AbortController().signal),
     );
@@ -137,6 +147,74 @@ describe("prepare repository state action", () => {
       status: "already-remote",
     });
     expect(mocks.terraform).toHaveBeenCalledTimes(2);
+    expect(mocks.terraformRunner).toHaveBeenCalledWith(
+      expect.objectContaining({
+        env: {
+          GITHUB_BASE_URL: "https://api.github.com/",
+          GITHUB_ORGANIZATION: "",
+          GITHUB_OWNER: "pagopa",
+        },
+      }),
+    );
+  });
+
+  it.each([
+    ["same name under a different owner", { owner: "other-org", repo: "repo" }],
+    ["different repository name", { owner: "pagopa", repo: "other-repo" }],
+  ])(
+    "rejects %s before acquiring the lock or touching Terraform",
+    async (_, github) => {
+      payload.github = github;
+
+      await expect(run()).resolves.toMatchObject({
+        failures: [
+          expect.objectContaining({
+            error: expect.stringContaining(
+              `does not target ${github.owner}/${github.repo}`,
+            ),
+          }),
+        ],
+      });
+      expect(mocks.withLock).not.toHaveBeenCalled();
+      expect(mocks.terraform).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects a module wired to a different GitHub provider", async () => {
+    await fs.writeFile(
+      path.join(directory, "infra", "repository", "main.tf"),
+      `module "github_repository" {
+        repository = { name = "repo" }
+        providers = { github = github.other }
+      }`,
+    );
+
+    await expect(run()).resolves.toMatchObject({
+      failures: [
+        expect.objectContaining({
+          error: expect.stringContaining("use the default GitHub provider"),
+        }),
+      ],
+    });
+    expect(mocks.withLock).not.toHaveBeenCalled();
+    expect(mocks.terraform).not.toHaveBeenCalled();
+  });
+
+  it("rejects an override that could redirect the GitHub provider", async () => {
+    await fs.writeFile(
+      path.join(directory, "infra", "repository", "github_override.tf"),
+      'provider "github" { owner = "other-org" }\n',
+    );
+
+    await expect(run()).resolves.toMatchObject({
+      failures: [
+        expect.objectContaining({
+          error: expect.stringContaining("override Terraform configuration"),
+        }),
+      ],
+    });
+    expect(mocks.withLock).not.toHaveBeenCalled();
+    expect(mocks.terraform).not.toHaveBeenCalled();
   });
 
   it("rejects a changed or unconfirmed destination before running Terraform", async () => {
@@ -153,6 +231,5 @@ describe("prepare repository state action", () => {
       ],
     });
     expect(mocks.terraform).not.toHaveBeenCalled();
-    expect(mocks.withLock).not.toHaveBeenCalled();
   });
 });

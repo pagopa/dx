@@ -16,6 +16,7 @@ import { TextDecoder } from "node:util";
 
 import { tf$, validateTerraformSource } from "../../execa/terraform.js";
 import { updateRepositoryEnvironmentsHcl } from "../../terraform/hcl-repository-environments.js";
+import { repositoryGitHubEnvironment } from "../../terraform/repository-identity.js";
 import {
   clearPendingRepositorySync,
   isPendingRepositorySync,
@@ -150,10 +151,14 @@ export const syncRepositoryEnvironments = async (
     await replaceRepositoryConfig(repositoryMainPath, updatedRepositoryConfig);
   }
 
-  const repositoryTerraform = tf$({ cwd: repositoryPath });
+  const terraformOptions = {
+    cwd: repositoryPath,
+    env: repositoryGitHubEnvironment(payload.github),
+  };
+  const repositoryTerraform = tf$(terraformOptions);
   await repositoryTerraform`terraform init`;
   if (resuming) {
-    const retryTerraform = tf$({ cwd: repositoryPath, reject: false });
+    const retryTerraform = tf$({ ...terraformOptions, reject: false });
     await resumeRepositorySync(
       repositoryPath,
       payload.env.name,
