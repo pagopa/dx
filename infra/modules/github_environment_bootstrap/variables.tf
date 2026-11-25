@@ -43,4 +43,9 @@ variable "repository" {
     condition     = length(toset(var.repository.reviewers_teams)) <= 6
     error_message = "The reviewers_teams list must contain no more than six distinct team slugs, matching GitHub's environment reviewer limit."
   }
+
+  validation {
+    condition     = contains(["public", "private"], var.repository.visibility)
+    error_message = "repository.visibility must be either \"public\" or \"private\"."
+  }
 }
