@@ -14,8 +14,8 @@
     "base.d.ts",
     "base.js",
     "base.json",
-    "core.json",
-    "flatten.js"
+    "compose.js",
+    "core.json"
   ],
   "type": "module",
   "exports": {

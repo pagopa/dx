@@ -13,10 +13,11 @@ Working notes for maintainers and coding agents. Consumer documentation lives in
   `plugins: ["vitest"]`, the `vitest/*` rules.
 - `base-jest.json` — the Jest overlay: `extends: ["./core.json"]`,
   `plugins: ["jest"]`, the `jest/*` rules.
-- `base.js` / `base-jest.js` — the overlay above, flattened into a single
-  object and exported for `oxlint.config.ts`, with `base.d.ts` /
-  `base-jest.d.ts` typing it as `OxlintConfig`.
-- `flatten.js` — merges `core.json` into an overlay for those entries.
+- `base.js` / `base-jest.js` — the overlay above composed with `core.json` and
+  exported for `oxlint.config.ts`, with `base.d.ts` / `base-jest.d.ts` typing it
+  as `OxlintConfig`.
+- `compose.js` — turns `core.json` and an overlay into the layers a module entry
+  hands to oxlint.
 
 Keeping the shared rules in `core.json` is what stops the two overlays from
 drifting apart. oxlint's `extends` takes file paths only, so the overlay points
@@ -29,17 +30,20 @@ oxlint merges `extends` additively: a child adds plugins, rules and overrides,
 and cannot remove the parent's plugin. So `core.json` holds no test-runner rule
 — anything there would reach both variants.
 
-A TypeScript config cannot reuse that composition: oxlint's `extends` takes
-configuration objects there, never paths, and `core.json` is not exported, so
-`flatten.js` inlines it instead of nesting it. Flattening merges `categories`
-key by key and concatenates `jsPlugins`, `plugins`, `overrides` and `rules`, the
-way oxlint's `extends` does, so a module consumer lints the same files as a JSON
-one. Flattening drops `$schema` and `extends`, which have no meaning once
-inlined, and `ignorePatterns`, which oxlint resolves against the declaring
-file — inlined they would start ignoring paths in the consumer workspace. It
-also anchors the `jsPlugins` specifiers with `createRequire(import.meta.url)`,
-so plugin resolution does not depend on how the consumer's package manager lays
-out `node_modules`.
+A TypeScript config cannot reuse that chain: oxlint's `extends` takes
+configuration objects there, never paths, and `core.json` is not exported.
+`compose.js` folds both files into `extends: [core, overlay]` instead, so oxlint
+performs the merge itself with the same additive semantics a JSON consumer gets.
+A layer drops `$schema` and `extends`, which have no meaning in an object, and
+keeps `ignorePatterns`: oxlint roots the patterns of an extended configuration
+at the file that declares them, so the ones in `core.json` never match a
+consumer path. It also anchors the `jsPlugins` specifiers with
+`createRequire(import.meta.url)`, so plugin resolution does not depend on how the
+consumer's package manager lays out `node_modules`.
+
+The trade-off is introspection: `oxlint --print-config` prints only the root
+layer of a module config, so the effective rule set of a `base` consumer is not
+visible that way.
 
 oxlint cannot share an override between files either, so each overlay repeats
 the test-file globs and the `no-empty-function: "off"` override verbatim; the
@@ -88,7 +92,7 @@ path is breaking and needs a migration note in the version plan.
 `.oxlintrc.json` extends each shipped variant, then lints a clean file. The
 module entries get the same treatment through a second scratch directory whose
 `oxlint.config.ts` imports them via a `node_modules` symlink, which is what
-proves the `exports` map, the flattening and the plugin resolution all work for
+proves the `exports` map, the composition and the plugin resolution all work for
 a consumer. A configuration oxlint cannot load — a typo, an absent rule, a
 broken plugin reference — fails there, so a green suite means the variants load
 and run.

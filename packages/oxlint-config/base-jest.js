@@ -1,5 +1,5 @@
 import baseJestVariant from "./base-jest.json" with { type: "json" };
-import { flatten } from "./flatten.js";
+import { compose } from "./compose.js";
 
 /** @type {import("oxlint").OxlintConfig} */
-export default flatten(baseJestVariant);
+export default compose(baseJestVariant);

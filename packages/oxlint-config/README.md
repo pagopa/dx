@@ -58,18 +58,19 @@ Neither variant loads the other's plugin, so a Jest workspace never sees
 `vitest/*` findings, and vice versa. Pick one per workspace; extending both
 would enable both rule sets.
 
-The `base` and `base-jest` entries are already flattened: `core.json` is inlined,
-so there is nothing to `extends`, and they carry no `ignorePatterns` of their
-own. oxlint's TypeScript config accepts configuration objects in `extends`,
-never paths, which is why the module form exists. `oxlint.config.ts` is loaded
-through Node's type stripping, so it needs Node `>= 22.18` — Node 24, the
-current LTS. `perfectionist` comes from the package's own dependencies, so no
-plugin path is resolved from your workspace.
+The `base` and `base-jest` entries nest `core.json` instead of inlining it:
+each one exports `{ extends: [core, overlay] }`, because oxlint's TypeScript
+config accepts configuration objects in `extends`, never paths. oxlint performs
+the merge, so a module consumer lints the same files as a JSON one.
+`oxlint.config.ts` is loaded through Node's type stripping, so it needs Node
+`>= 22.18` — Node 24, the current LTS. `perfectionist` comes from the package's
+own dependencies, so no plugin path is resolved from your workspace.
 
 `ignorePatterns` in your own config keeps `oxlint --fix` from rewriting
 generated code and build output. oxlint resolves each pattern against the
-directory of the configuration file that declares it, so the package declares
-none: the line in your config is the one that counts.
+directory of the configuration file that declares it, so the patterns the
+package ships never match a path in your workspace: the line in your config is
+the one that counts.
 
 If you prefer a JSON config, extend the JSON variant by path instead:
 

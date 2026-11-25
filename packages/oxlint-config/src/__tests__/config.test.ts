@@ -8,7 +8,7 @@ import {
 } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { basename, isAbsolute, join } from "node:path";
+import { basename, dirname, isAbsolute, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 
@@ -176,6 +176,7 @@ const lintAsModuleConsumer = async ({
       `import preset from "${subpath}";\n\nexport default preset;\n`,
     );
     for (const [name, contents] of Object.entries(files)) {
+      await mkdir(dirname(join(directory, name)), { recursive: true });
       await writeFile(join(directory, name), contents);
     }
     return await runOxlint(directory, ["--format=json", ...Object.keys(files)]);
@@ -184,11 +185,15 @@ const lintAsModuleConsumer = async ({
   }
 };
 
-/** The variants carry no `ignorePatterns`: those belong to the consumer. */
-type ModuleConfig = Omit<OxlintConfig, "ignorePatterns">;
+interface ComposedConfig {
+  extends: ConfigLayer[];
+}
 
-const loadModule = async (path: string): Promise<ModuleConfig> => {
-  const module: { default: ModuleConfig } = await import(
+/** One of the layers a module entry hands to oxlint. */
+type ConfigLayer = Partial<OxlintConfig>;
+
+const loadModule = async (path: string): Promise<ComposedConfig> => {
+  const module: { default: ComposedConfig } = await import(
     pathToFileURL(path).href
   );
 
@@ -371,7 +376,7 @@ describe("jest config", () => {
       BASE_JEST_MODULE_PATH,
       join(PACKAGE_ROOT, "base.d.ts"),
       join(PACKAGE_ROOT, "base-jest.d.ts"),
-      join(PACKAGE_ROOT, "flatten.js"),
+      join(PACKAGE_ROOT, "compose.js"),
     ];
 
     const required = [...shipped, ...extended, ...modules].map((path) =>
@@ -383,7 +388,7 @@ describe("jest config", () => {
 });
 
 describe("module entries", () => {
-  it("exposes the flattened variants through their own exports", () => {
+  it("exposes the variants through their own exports", () => {
     expect(require.resolve("@pagopa/oxlint-config/base")).toBe(
       BASE_MODULE_PATH,
     );
@@ -392,36 +397,60 @@ describe("module entries", () => {
     );
   });
 
-  it("carries the rules of the variant it flattens", async () => {
-    const moduleConfig = await loadModule(BASE_MODULE_PATH);
+  it("nests core.json and the overlay instead of merging them", async () => {
+    const core = await loadConfig(CORE_CONFIG_PATH);
+    const variant = JSON.parse(
+      await readFile(BASE_CONFIG_PATH, "utf8"),
+    ) as OxlintConfig;
+    const [coreLayer, variantLayer] = (await loadModule(BASE_MODULE_PATH))
+      .extends;
 
-    expect(moduleConfig.rules).toEqual(config.rules);
-    expect(moduleConfig.overrides).toEqual(config.overrides);
-    expect(moduleConfig.plugins).toEqual(config.plugins);
-    expect(moduleConfig.categories).toEqual(config.categories);
+    expect(coreLayer?.rules).toEqual(core.rules);
+    expect(coreLayer?.categories).toEqual(core.categories);
+    expect(coreLayer?.plugins).toEqual(core.plugins);
+    expect(coreLayer?.ignorePatterns).toEqual(core.ignorePatterns);
+    expect(variantLayer).toEqual({
+      overrides: variant.overrides,
+      plugins: variant.plugins,
+    });
   });
 
   it("leaves out the keys only the declaring file can resolve", async () => {
-    const moduleConfig = await loadModule(BASE_MODULE_PATH);
+    const [coreLayer, variantLayer] = (await loadModule(BASE_MODULE_PATH))
+      .extends;
 
-    expect(Object.keys(moduleConfig).sort()).toEqual([
+    expect(Object.keys(coreLayer ?? {}).sort()).toEqual([
       "categories",
+      "ignorePatterns",
       "jsPlugins",
       "overrides",
       "plugins",
       "rules",
     ]);
+    expect(Object.keys(variantLayer ?? {}).sort()).toEqual([
+      "overrides",
+      "plugins",
+    ]);
   });
 
   it("anchors the plugin specifiers so consumer hoisting does not matter", async () => {
-    const { jsPlugins } = await loadModule(BASE_MODULE_PATH);
+    const [coreLayer] = (await loadModule(BASE_MODULE_PATH)).extends;
 
-    expect(jsPlugins.map(({ name }) => name)).toEqual(
+    expect(coreLayer?.jsPlugins?.map(({ name }) => name)).toEqual(
       config.jsPlugins.map(({ name }) => name),
     );
-    expect(jsPlugins.every(({ specifier }) => isAbsolute(specifier))).toBe(
-      true,
-    );
+    expect(
+      coreLayer?.jsPlugins?.every(({ specifier }) => isAbsolute(specifier)),
+    ).toBe(true);
+  });
+
+  it("keeps the core ignorePatterns out of the consumer workspace", async () => {
+    const { status, stdout } = await lintAsModuleConsumer({
+      files: { "dist/generated.ts": UNSORTED_OBJECT },
+    });
+
+    expect(status).toBe(1);
+    expect(stdout).toContain("perfectionist(sort-objects)");
   });
 
   it("lints a clean TypeScript file without findings", async () => {
