@@ -13,8 +13,8 @@ const anchorPlugins = (plugins) =>
     specifier: require.resolve(plugin.specifier),
   }));
 
-/** Keys that describe a JSON file rather than a configuration object. */
-const FILE_ONLY_KEYS = new Set(["$schema", "extends"]);
+/** Keys that only make sense in a JSON config file, not in a config object. */
+const JSON_CONFIG_ONLY_KEYS = new Set(["$schema", "extends"]);
 
 /**
  * Turns a JSON variant into a configuration object.
@@ -31,7 +31,7 @@ const FILE_ONLY_KEYS = new Set(["$schema", "extends"]);
  */
 const toConfigObject = ({ jsPlugins, ...variant }) => {
   const config = Object.fromEntries(
-    Object.entries(variant).filter(([key]) => !FILE_ONLY_KEYS.has(key)),
+    Object.entries(variant).filter(([key]) => !JSON_CONFIG_ONLY_KEYS.has(key)),
   );
 
   return jsPlugins

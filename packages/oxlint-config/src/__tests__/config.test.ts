@@ -81,6 +81,8 @@ test("uses the fixture", async ({ service }) => {
 
 const UNSORTED_OBJECT = "export const pair = {\n  b: 2,\n  a: 1,\n};\n";
 
+const PARSE_INT_WITHOUT_RADIX = 'export const parsed = parseInt("42");\n';
+
 const STANDALONE_EXPECT = `import { expect } from "vitest";
 
 expect(1).toBe(1);
@@ -148,6 +150,7 @@ const lintAsConsumer = async ({
 };
 
 interface ModuleConsumerOptions {
+  config?: string;
   files?: Record<string, string>;
   subpath?: string;
 }
@@ -157,8 +160,9 @@ interface ModuleConsumerOptions {
  * package subpath, the way a TypeScript consumer config loads it.
  */
 const lintAsModuleConsumer = async ({
-  files = { "clean.ts": CLEAN_TYPESCRIPT },
   subpath = "@pagopa/oxlint-config/base",
+  config = `import preset from "${subpath}";\n\nexport default preset;\n`,
+  files = { "clean.ts": CLEAN_TYPESCRIPT },
 }: ModuleConsumerOptions = {}) => {
   const directory = await mkdtemp(join(tmpdir(), "oxlint-config-module-"));
 
@@ -171,10 +175,7 @@ const lintAsModuleConsumer = async ({
       join(directory, "node_modules", "@pagopa", "oxlint-config"),
       "dir",
     );
-    await writeFile(
-      join(directory, "oxlint.config.ts"),
-      `import preset from "${subpath}";\n\nexport default preset;\n`,
-    );
+    await writeFile(join(directory, "oxlint.config.ts"), config);
     for (const [name, contents] of Object.entries(files)) {
       await mkdir(dirname(join(directory, name)), { recursive: true });
       await writeFile(join(directory, name), contents);
@@ -469,6 +470,33 @@ describe("module entries", () => {
 
     expect(status).toBe(1);
     expect(stdout).toContain("perfectionist(sort-objects)");
+  });
+
+  it("lints a consumer that extends the preset and overrides a rule", async () => {
+    const { status, stdout } = await lintAsModuleConsumer({
+      config: `import preset from "@pagopa/oxlint-config/base";
+
+export default {
+  extends: [preset],
+  ignorePatterns: ["**/dist/**"],
+  rules: { radix: "off" },
+};
+`,
+      files: {
+        "dist/generated.ts": UNSORTED_OBJECT,
+        "radix.ts": PARSE_INT_WITHOUT_RADIX,
+        "unsorted.ts": UNSORTED_OBJECT,
+      },
+    });
+
+    const { diagnostics } = JSON.parse(stdout) as {
+      diagnostics: { code: string; filename: string }[];
+    };
+
+    expect(status).toBe(1);
+    expect(
+      diagnostics.map(({ code, filename }) => [basename(filename), code]),
+    ).toEqual([["unsorted.ts", "perfectionist(sort-objects)"]]);
   });
 
   it("applies the Jest flavour of the same file", async () => {

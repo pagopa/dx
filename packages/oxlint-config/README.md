@@ -32,7 +32,7 @@ Pick the variant that matches your test runner and load it from an
 import preset from "@pagopa/oxlint-config/base";
 
 export default {
-  ...preset,
+  extends: [preset],
   ignorePatterns: ["**/generated/*", "**/dist/**", "**/bin/**"],
 };
 ```
@@ -49,7 +49,7 @@ oxlint only ships for Vitest: `no-import-node-test`,
 import preset from "@pagopa/oxlint-config/base-jest";
 
 export default {
-  ...preset,
+  extends: [preset],
   ignorePatterns: ["**/generated/*", "**/dist/**", "**/bin/**"],
 };
 ```
@@ -60,8 +60,10 @@ would enable both rule sets.
 
 The `base` and `base-jest` entries nest `core.json` instead of inlining it:
 each one exports `{ extends: [core, overlay] }`, because oxlint's TypeScript
-config accepts configuration objects in `extends`, never paths. oxlint performs
-the merge, so a module consumer lints the same files as a JSON one.
+config accepts configuration objects in `extends`, never paths. Put that object
+in the `extends` array of your own config: oxlint merges nested layers, so each
+one still applies, and your root `rules` win over the extended preset. oxlint
+performs the merge, so a module consumer lints the same files as a JSON one.
 `oxlint.config.ts` is loaded through Node's type stripping, so it needs Node
 `>= 22.18` — Node 24, the current LTS. `perfectionist` comes from the package's
 own dependencies, so no plugin path is resolved from your workspace.
