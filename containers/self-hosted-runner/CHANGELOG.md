@@ -1,3 +1,13 @@
+## 0.0.14 (2026-11-25)
+
+### 🚀 Features
+
+- Let the DX runner register only its assigned label so it cannot accept legacy jobs ([#2574](https://github.com/pagopa/dx/pull/2574))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.0.13 (2026-11-17)
 
 ### 🚀 Features

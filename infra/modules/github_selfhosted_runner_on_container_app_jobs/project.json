@@ -1,8 +1,8 @@
 {
-  "name": "github_selfhosted_runner_on_container_app_jobs",
   "metadata": {
+    "version": "5.1.0",
     "description": "Deploys GitHub self-hosted runners using Azure Container Apps jobs for scalable CI/CD workflows",
-    "provider": "azurerm",
-    "version": "5.0.0"
-  }
+    "provider": "azurerm"
+  },
+  "name": "github_selfhosted_runner_on_container_app_jobs"
 }
