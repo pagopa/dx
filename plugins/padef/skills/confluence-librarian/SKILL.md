@@ -42,15 +42,6 @@ once for the write's `toolName` (`createConfluencePage` / `updateConfluencePage`
 before choosing a `body.format` or authoring an edit, and `getConfluenceSpace`
 when the content you read reports space instructions.
 
-### Operations
-
-| Need                   | Operation                                                     |
-| ---------------------- | ------------------------------------------------------------- |
-| read a page or draft   | `getConfluenceContent` (`detail: "full"`, `draft: true`)      |
-| create a page          | `createConfluenceContent` (`body.format: "html"`)             |
-| change a page or draft | `updateConfluenceContent` (`snapshotToken`, `edits`, `draft`) |
-| copy a page            | `copyConfluenceContent` (through `executeWrite`)              |
-
 ### Decide: create or edit
 
 Choose the path from the target, not the wording of the request:
@@ -112,7 +103,8 @@ Change: <the intended difference>      [edit only]
 
 Full protocol: [references/edit.md](./references/edit.md).
 
-1. **Fetch the draft baseline once** as native HTML.
+1. **Fetch the draft baseline once** as native HTML: `getConfluenceContent`
+   with `detail: "full"` and `draft: true`.
 2. **Bootstrap a draft** only when the read returns published content with no
    token; use the response as the draft baseline.
 3. **Apply the minimal change** as `data-local-id` edits; leave every other node
