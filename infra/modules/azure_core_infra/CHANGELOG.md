@@ -1,3 +1,13 @@
+## 8.0.1 (2026-11-25)
+
+### 🩹 Fixes
+
+- Ignore Log Analytics workspace SKU changes after creation, allowing workspaces to be linked to a dedicated cluster. ([#2591](https://github.com/pagopa/dx/pull/2591))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 # 8.0.0 (2026-11-25)
 
 ### ⚠️  Breaking Changes
