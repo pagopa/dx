@@ -4,7 +4,7 @@ resource "github_repository" "this" {
   description = var.repository.description
   topics      = var.repository.topics
 
-  visibility = "public"
+  visibility = var.repository.visibility
 
   homepage_url = var.repository.homepage_url
 
