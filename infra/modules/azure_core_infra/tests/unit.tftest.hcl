@@ -44,3 +44,46 @@ run "core_infra_preserves_private_dns_zone_outputs" {
     error_message = "The private DNS zone output must continue to include the Key Vault zone."
   }
 }
+
+run "linked_log_analytics_workspace" {
+  command   = apply
+  state_key = "log_analytics"
+
+  module {
+    source = "./tests/fixtures/linked_log_analytics"
+  }
+
+  variables {
+    naming_config = {
+      prefix      = "dx"
+      environment = "u"
+      location    = "italynorth"
+    }
+    resource_group_name = "rg-test"
+    location            = "italynorth"
+  }
+}
+
+run "core_infra_preserves_linked_log_analytics_sku" {
+  command   = plan
+  state_key = "log_analytics"
+
+  module {
+    source = "./modules/log_analytics"
+  }
+
+  variables {
+    naming_config = {
+      prefix      = "dx"
+      environment = "u"
+      location    = "italynorth"
+    }
+    resource_group_name = "rg-test"
+    location            = "italynorth"
+  }
+
+  assert {
+    condition     = azurerm_log_analytics_workspace.this.sku == "LACluster"
+    error_message = "A linked workspace must retain its LACluster SKU in the plan."
+  }
+}
