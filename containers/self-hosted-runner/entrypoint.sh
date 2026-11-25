@@ -127,6 +127,22 @@ if [ -z "${LABELS:-}" ]; then
   export LABELS=""
 fi
 
+runner_config_args=()
+case "${RUNNER_NO_DEFAULT_LABELS:-false}" in
+  true)
+    if [[ -z "$LABELS" ]]; then
+      echo "ERROR: LABELS is required when RUNNER_NO_DEFAULT_LABELS=true" >&2
+      exit 1
+    fi
+    runner_config_args+=(--no-default-labels)
+    ;;
+  false) ;;
+  *)
+    echo "ERROR: RUNNER_NO_DEFAULT_LABELS must be 'true' or 'false'" >&2
+    exit 1
+    ;;
+esac
+
 printf "ℹ️ Configuring GitHub Runner for %s\n\t" "$REPO_URL"
 printf "ℹ️ Runner Name: %s\n\t" "$RUNNER_NAME"
 printf "ℹ️ Working Directory: %s\n\t" "$WORK_DIR"
@@ -141,6 +157,7 @@ if [ ! -f ".runner" ]; then
     --name "$RUNNER_NAME" \
     --work "$WORK_DIR" \
     --labels "$LABELS" \
+    "${runner_config_args[@]}" \
     --unattended \
     --replace \
     --ephemeral \

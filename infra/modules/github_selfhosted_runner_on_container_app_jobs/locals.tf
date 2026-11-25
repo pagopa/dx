@@ -25,7 +25,11 @@ locals {
   runner_env_vars = merge(var.container_app_environment.env_vars, {
     REPO_URL                   = "https://github.com/${var.repository.owner}/${var.repository.name}"
     REGISTRATION_TOKEN_API_URL = "https://api.github.com/repos/${var.repository.owner}/${var.repository.name}/actions/runners/registration-token"
-  })
+    },
+    var.container_app_environment.no_default_labels ? {
+      RUNNER_NO_DEFAULT_LABELS = "true"
+    } : {}
+  )
 
   secrets = var.use_github_app ? {
     GITHUB_APP_KEY             = "github-runner-app-key"

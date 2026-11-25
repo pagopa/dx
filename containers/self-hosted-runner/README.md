@@ -41,6 +41,7 @@ The Docker image includes an entrypoint script (`entrypoint.sh`) that is respons
 | `RUNNER_NAME`                | No       | Container hostname | Friendly name shown in the GitHub UI.                                                                                                                                    |
 | `WORK_DIR`                   | No       | `_work`            | Directory where each job’s workspace is placed. Must be **writeable**.                                                                                                   |
 | `LABELS`                     | No       | None               | Comma‑separated list of runner labels.                                                                                                                                   |
+| `RUNNER_NO_DEFAULT_LABELS`   | No       | `false`            | Set to `true` to skip default labels registration (e.g. `self-hosted`); requires at least one label.                                                                     |
 
 \* **Cond.** – Provide one authentication method: `RUNNER_TOKEN`;
 `GITHUB_PAT` with `REGISTRATION_TOKEN_API_URL`; or all three GitHub App

@@ -257,6 +257,34 @@ run "github_runner_override_labels" {
   }
 }
 
+run "github_runner_no_default_labels" {
+  command = plan
+
+  variables {
+    container_app_environment = {
+      id                = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-test/providers/Microsoft.App/managedEnvironments/cae-test"
+      location          = "italynorth"
+      use_labels        = true
+      override_labels   = ["prod-io-growth-dx"]
+      no_default_labels = true
+      image             = "ghcr.io/pagopa/dx-github-self-hosted-runner:latest"
+    }
+  }
+
+  assert {
+    condition     = azurerm_container_app_job.github_runner.event_trigger_config[0].scale[0].rules[0].metadata["noDefaultLabels"] == "true"
+    error_message = "KEDA must use noDefaultLabels when the runner disables default labels"
+  }
+
+  assert {
+    condition = anytrue([
+      for env in azurerm_container_app_job.github_runner.template[0].container[0].env :
+      env.name == "RUNNER_NO_DEFAULT_LABELS" && env.value == "true"
+    ])
+    error_message = "The runner container must disable default labels when requested"
+  }
+}
+
 run "github_runner_key_vault_access_policy" {
   command = plan
 
