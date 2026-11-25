@@ -19,4 +19,8 @@ resource "azurerm_log_analytics_workspace" "this" {
   retention_in_days   = 30
 
   tags = var.tags
+
+  lifecycle {
+    ignore_changes = [sku]
+  }
 }

@@ -44,3 +44,26 @@ run "core_infra_preserves_private_dns_zone_outputs" {
     error_message = "The private DNS zone output must continue to include the Key Vault zone."
   }
 }
+
+run "core_infra_new_log_analytics_workspace_sku" {
+  command = plan
+
+  module {
+    source = "./modules/log_analytics"
+  }
+
+  variables {
+    naming_config = {
+      prefix      = "dx"
+      environment = "u"
+      location    = "italynorth"
+    }
+    resource_group_name = "rg-test"
+    location            = "italynorth"
+  }
+
+  assert {
+    condition     = azurerm_log_analytics_workspace.this.sku == "PerGB2018"
+    error_message = "New Log Analytics workspaces must use the PerGB2018 SKU."
+  }
+}
