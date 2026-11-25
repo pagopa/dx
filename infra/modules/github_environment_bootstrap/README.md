@@ -70,6 +70,12 @@ module "github_environment_bootstrap" {
 
 This example demonstrates how to use the module to create a GitHub repository with a custom name, description, topics, and Jira board integrations.
 
+Repositories are public by default. Set `repository.visibility = "private"` to
+create a private repository. Changing an existing private repository to public
+makes its contents publicly accessible. GitHub plan and organization settings
+may limit the availability of branch protection and deployment protection
+rules for private repositories.
+
 For additional support, refer to the [GitHub Provider Documentation](https://registry.terraform.io/providers/integrations/github/latest/docs).
 
 ## Gotchas
