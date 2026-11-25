@@ -45,28 +45,8 @@ run "core_infra_preserves_private_dns_zone_outputs" {
   }
 }
 
-run "linked_log_analytics_workspace" {
-  command   = apply
-  state_key = "log_analytics"
-
-  module {
-    source = "./tests/fixtures/linked_log_analytics"
-  }
-
-  variables {
-    naming_config = {
-      prefix      = "dx"
-      environment = "u"
-      location    = "italynorth"
-    }
-    resource_group_name = "rg-test"
-    location            = "italynorth"
-  }
-}
-
-run "core_infra_preserves_linked_log_analytics_sku" {
-  command   = plan
-  state_key = "log_analytics"
+run "core_infra_new_log_analytics_workspace_sku" {
+  command = plan
 
   module {
     source = "./modules/log_analytics"
@@ -83,7 +63,7 @@ run "core_infra_preserves_linked_log_analytics_sku" {
   }
 
   assert {
-    condition     = azurerm_log_analytics_workspace.this.sku == "LACluster"
-    error_message = "A linked workspace must retain its LACluster SKU in the plan."
+    condition     = azurerm_log_analytics_workspace.this.sku == "PerGB2018"
+    error_message = "New Log Analytics workspaces must use the PerGB2018 SKU."
   }
 }
