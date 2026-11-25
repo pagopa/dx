@@ -1,4 +1,5 @@
 terraform {
+  required_version = ">= 1.16.0"
 
   backend "azurerm" {
     resource_group_name  = "dx-u-itn-tfstate-rg-01"
@@ -10,11 +11,11 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = "~> 5.8"
     }
     dx = {
       source  = "pagopa-dx/azure"
-      version = ">= 0.0.6, < 1.0.0"
+      version = "~> 0.12"
     }
   }
 }
