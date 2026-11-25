@@ -66,6 +66,20 @@ run "github_environment_bootstrap_default_branch_override" {
   }
 }
 
+run "github_environment_bootstrap_rejects_invalid_visibility" {
+  command = plan
+  variables {
+    repository = {
+      name            = "dx-test-monorepo-starter-pack"
+      description     = "Devex repository for shared tools and pipelines."
+      topics          = ["developer-experience"]
+      reviewers_teams = ["engineering-team-devex"]
+      visibility      = "internal"
+    }
+  }
+  expect_failures = [var.repository]
+}
+
 run "github_environment_bootstrap_optional_repository_features" {
   command = plan
 

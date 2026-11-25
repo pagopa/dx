@@ -2,6 +2,7 @@ variable "repository" {
   type = object({
     name                            = string
     description                     = string
+    visibility                      = optional(string, "public")
     topics                          = list(string)
     default_branch_name             = optional(string, "main")
     reviewers_teams                 = list(string)
@@ -28,6 +29,7 @@ variable "repository" {
     GitHub Repository configuration with:
     - `name`, `description`, `topics`: repository metadata.
     - `default_branch_name`: the main integration branch (default: "main").
+    - `visibility`: repository visibility, either "public" or "private" (default: "public").
     - `reviewers_teams`: up to six distinct teams required to review and approve deployments.
     - `pull_request_bypassers`: users/teams allowed to merge without approval.
     - `*_cd_policy_branches`: enabled branches for continuous deployments.
@@ -40,5 +42,10 @@ variable "repository" {
   validation {
     condition     = length(toset(var.repository.reviewers_teams)) <= 6
     error_message = "The reviewers_teams list must contain no more than six distinct team slugs, matching GitHub's environment reviewer limit."
+  }
+
+  validation {
+    condition     = contains(["public", "private"], var.repository.visibility)
+    error_message = "repository.visibility must be either \"public\" or \"private\"."
   }
 }
