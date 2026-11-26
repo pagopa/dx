@@ -1,6 +1,6 @@
 ---
 name: jira-magister
-description: Project approved DR/SRS and Use Case contracts into a reviewable Jira backlog, and format or persist a single already-specified Jira item. Use whenever a user asks to create, decompose, refine, synchronize, or update Jira Epics, User Stories, or technical Tasks — from a PRD, DR/SRS, Use Case, JTBD, acceptance check, RFC, or requirements document, or from one item the user has already specified. Propose multiple cohesive Epics that fit a few sprints, write actor-facing Stories sized for one two-week sprint, separate enabling work into Tasks, preserve source traceability, and require explicit confirmation before Jira mutations.
+description: Project approved DR/SRS and Use Case contracts into a reviewable Jira backlog, and format or persist a single already-specified Jira item. Use whenever a user asks to create, decompose, refine, synchronize, or update Jira Epics, User Stories, Tasks, Bugs, or Sub-tasks, or assess requirements readiness for Jira — from a PRD, DR/SRS, Use Case, JTBD, acceptance check, RFC, requirements document, or a specified item. Propose cohesive, sprint-sized work, preserve source traceability, and require explicit confirmation before Jira mutations.
 ---
 
 # Jira Magister
@@ -8,19 +8,6 @@ description: Project approved DR/SRS and Use Case contracts into a reviewable Ji
 Turn validated Use Cases into a Jira execution projection, or format and persist
 a single prepared Jira item, without replacing the PRD or DR/SRS as the source
 of truth.
-
-## When to use this skill
-
-Use this skill when the user asks to:
-
-- generate Jira Epics, User Stories, Tasks, or a backlog from a DR/SRS or Use Case;
-- split a large DR/SRS into several delivery Epics;
-- refine a Jira projection after a Use Case, acceptance check, contract, or
-  readiness decision changes;
-- synchronize existing Jira items with stable PRD, JTBD, UC, or AC identifiers;
-- prepare Jira work for a sprint or ask whether requirements are ready for Jira;
-- format and create or update one Jira item the user has already specified,
-  without generating a full backlog.
 
 Do not use it to author detailed Use Cases, rewrite the PRD or DR/SRS, decide
 unapproved product behavior, or publish Confluence pages. Hand those operations
@@ -34,51 +21,21 @@ request is ambiguous.
 - **Backlog mode** — the user has requirements or source documents and needs a
   full projection. Run the [Backlog workflow](#backlog-workflow): slice Epics,
   draft Stories and Tasks, review, then persist. Requires a source of truth and
-  passes the Definition of Ready gate.
+  passes the Definition of Ready gate in
+  [issue-contract.md](./references/issue-contract.md).
 - **Single-item mode** — the user has already specified one Jira item and wants
   it formatted and created or updated. Run the
   [Single-item workflow](#single-item-workflow). Skip Epic slicing and
-  decomposition. The full Definition of Ready gate does not apply; validate
-  instead that the item is well formed and that no missing value is invented.
+  decomposition; use the single-item readiness gate in
+  [issue-contract.md](./references/issue-contract.md).
 
 ## Source-of-truth and readiness rules
 
-1. Read the parent DR/SRS, its Use Case catalog, each selected Use Case child,
-   and the linked PRD/JTBD evidence before drafting Jira items.
-2. Treat the DR/SRS as the current operational source of truth. An accepted RFC
-   does not guide Jira until its decision is propagated into the DR/SRS.
-3. Preserve stable `JTBD-XX`, `UC-XX`, `AC-UC-XX-YY`, `RFC-XX`, and `CR-YYYY-NNN`
-   identifiers. Never renumber or reuse an identifier for a different meaning.
-   Preserve DR/SRS `open.item-XX` and Use Case `uc-open-XX` question IDs, and the
-   semantic error identifiers (`UPPER_SNAKE_CASE`) defined by each Use Case. The
-   same semantic error identifier may legitimately appear in several Use Cases
-   for the same condition: match by identifier and never duplicate it.
-4. Check Definition of Ready evidence: PRD owner, outcome, JTBD, KPI, and
-   qualitative guardrail; complete `Always` sections; stable Use Case IDs and
-   binary acceptance checks; relevant design, contract, privacy, security,
-   accessibility, tracking, support, and readiness links or justified `N/A`.
-   For each selected Use Case, require status `ready` on its child page and read
-   its `solution.components.*` and `contracts.*` references, its domain entities,
-   and its typed errors there. Consume ready children without requiring the
-   document review gate.
-5. If a material criterion is missing, contradictory, or unpropagated, stop Jira
-   creation and report the gap, impact, owner if known, and required resolution.
-   Do not infer a value to make an item appear ready.
-6. Follow [issue-template.md](./references/issue-template.md) for each item's
-   Source, AC Coverage, and execution requirements. Block persistence when
-   required details are missing.
-7. Treat open questions as projection input. A question flagged `Blocking: yes`
-   becomes an independent spike Task that the dependent Story or Task
-   `is blocked by`; a non-blocking question is recorded as a gap with its owner
-   and creates no blocking edge. Never invent the answer to an open question.
-8. Use the DR/SRS `references.repository` link as the target codebase for
-   concrete Tasks. When it is missing, record the gap and flag the Tasks that
-   cannot be routed instead of guessing a repository.
-
-In single-item mode, rules 1-2 and 4-5 apply to the supplied item: preserve its
-supplied stable IDs and traceability, reject a material omission rather than
-invent a value, and do not require an upstream DR/SRS when the item's source is
-self-contained unless required by the issue type.
+Treat the DR/SRS as the current operational source of truth. Apply readiness,
+stable-ID, question, error, and repository-routing rules in
+[issue-contract.md](./references/issue-contract.md). Use
+[issue-template.md](./references/issue-template.md) for the execution contract,
+source selection, and description structure.
 
 ## Backlog workflow
 
@@ -94,79 +51,44 @@ Require:
 - the domain entities and typed errors named by each selected Use Case;
 - Jira project key and target board/context, unless already unambiguous.
 
-Ask one focused clarification at a time when any required context is missing.
-Collect canonical page-ID URLs, the source repository and default branch for
-local documents, and directly applicable contract, Figma and Blueprint URLs.
-Report missing locators instead of using bare basenames or inventing links.
+Read these sources before drafting. Ask one focused clarification at a time
+when required context is missing. Collect the locators needed by
+[issue-template.md](./references/issue-template.md).
 
 ### 2. Propose Epic slices
 
 Propose more than one Epic when the DR/SRS contains separate cohesive outcomes.
 Each Epic proposal must:
 
-- represent one outcome or independently valuable capability;
-- be completable in a few two-week sprints, not an entire broad initiative;
+- follow the outcome and sizing rules in
+  [issue-contract.md](./references/issue-contract.md);
 - list its included `UC-XX` entries, JTBD, KPI outcome, and at least one
   qualitative guardrail;
+- link the DR, PRD and included UCs in the review context so grouping evidence
+  stays traceable;
 - state exclusions, dependencies, readiness gaps, and likely delivery risk.
 
 Show the proposed grouping and ask for explicit approval before drafting the
 final Stories and Tasks. Do not create or update Jira during this phase.
-Keep this grouping evidence, with links to the DR, PRD and included UCs, in the
-review proposal. The persisted Epic is non-dispatchable: outcome-oriented
-summary and concise outcome body, not copied UC, KPI, design or readiness
-detail from the DR.
+Keep grouping evidence in the review proposal; use the template's minimal
+Epic format for persistence.
 
 ### 3. Draft Stories and Tasks
 
-Create actor-facing Stories only for observable user value. Use this exact
-structure:
+Draft actor-facing Stories and enabling Tasks from the approved sources. Apply
+[issue-contract.md](./references/issue-contract.md) for issue content, sizing,
+decomposition, dependencies, readiness, and routing; use
+[issue-template.md](./references/issue-template.md) for the execution contract
+and source formatting. For each drafted item:
 
-> As a [exact Actor name from the Use Case], I want to [observable action], so
-> that [user or business gain].
-
-Every Story must be independently deliverable within one two-week sprint. Split
-Stories that combine multiple outcomes, actors, or independently testable flows.
-Describe an observable Output, binary Checks of that slice's deliverable, and
-explicit Scope/non-goals. Keep canonical acceptance checks in the UC; reference
-only their IDs in AC Coverage. Do not copy or relabel canonical AC prose as
-slice Checks, or claim a partial slice proves the whole UC.
-
-Create a technical Task for smaller enabling work such as repository setup,
-API/AsyncAPI/Data Contract wiring, migrations, instrumentation, test fixtures,
-security controls, deployment, or readiness actions. Route concrete Tasks to the
-repository named by `references.repository`. A Task may support a Story or Epic
-but must not masquerade as actor value. A task that cannot fit one sprint must be
-split or flagged.
-Select sources independently for each Task: enabling or contract-only work
-does not inherit the sources of every Story it supports.
-
-Turn blocking open questions into independent spike Tasks. A spike states the
-decision to be taken, its owner, its source `open.item-XX`, and the outcome that
-unblocks dependents; the dependent Story or Task `is blocked by` the spike. A
-non-blocking open question is recorded in the draft as a gap with its owner and
-creates no blocking edge. Do not invent the answer to an open question.
-Nest the question ID under the `dr` document in `Source`.
-
-Use Case errors may repeat across Use Cases with the same semantic identifier.
-Define the error-handling Task once per semantic identifier, not once per Use
-Case, keep the identifier in its traceability, and link the affected Stories;
-never create duplicate tasks for the same error condition.
-Nest the error ID under each owning `uc` document in the shared Task's `Source`.
-
-Keep hierarchy and dependencies distinct:
-
-- Use the Epic parent relationship for Epic membership, not `blocks`.
-- Use a Sub-task for tightly coupled work that does not need independent
-  prioritization.
-- Use `blocks` from an independent enabling Task to the Story or Task that
-  cannot proceed without it; the dependent issue is `is blocked by` the Task.
-- Use Story-to-Story or Task-to-Task links only for explicit sequencing or
-  delivery dependencies. Do not create speculative or informational links.
-
-Read [issue-contract.md](./references/issue-contract.md) for required content,
-traceability, and sizing, and
-[issue-template.md](./references/issue-template.md) before drafting descriptions.
+- give every Story and Task a parent from the approved Epic slices; when an
+  enabling Task serves several Epics, propose the most closely related one and
+  flag the choice for confirmation instead of leaving the parent unresolved;
+- write Output, Checks and Scope for this slice only. Checks name the supplied
+  implementation boundary and the interaction or result mapping they verify,
+  including for retry behavior, rather than restating the canonical AC;
+- add `blocks` only where the source shows the dependent item cannot proceed
+  without the blocking one.
 
 ### 4. Review the projection
 
@@ -179,60 +101,49 @@ Show a complete human-readable draft before any Jira mutation:
 - complete `Source` blocks for items other than Sub-tasks, parent references
   for Sub-tasks, nested IDs, and AC Coverage where applicable;
 - missing locators and whether Confluence ID anchors are known to exist;
-- explicit Output, binary Checks, Scope/non-goals, optional supplied Slice Scope
-  ID, and IDs-only coverage for dispatchable items; KPI, guardrail and readiness
-  evidence in the grouping proposal;
-- spike Tasks derived from blocking open questions, with their `open.item-XX`
-  source and the dependents they block;
-- the semantic error identifiers and the Stories they affect;
+- execution details required by the template for dispatchable items;
+- KPI, guardrail and readiness evidence in the grouping proposal;
+- spike and error-handling Tasks with their affected items;
 - the repository target and any Task that cannot be routed;
 - proposed creates, updates, splits, and unchanged items.
 
-Ask for explicit confirmation. A request to “prepare”, “draft”, or “show” the
-backlog is not confirmation to create or update Jira.
+Run [draft validation](#draft-validation) before saving or presenting it, then
+use the confirmation protocol in [persistence.md](./references/persistence.md).
 
 ### 5. Create or synchronize after confirmation
 
-Read [persistence.md](./references/persistence.md) for persistence requirements:
-integration selection, project metadata discovery, creation order, native and
-remote links, synchronization matching, field-level updates, and failure
-handling. Match existing issues before creating new ones, and create parents
-before children.
+Read [persistence.md](./references/persistence.md) for integration selection,
+project metadata discovery, creation order, links, synchronization matching,
+field-level updates, and failure handling.
 
 ### 6. Verify and report
 
-Re-fetch every created or updated item and verify it against the checklist in
-[persistence.md](./references/persistence.md). Report partial failures
-explicitly. Never claim the backlog is synchronized if a parent, child, link, or
-verification step failed.
+Follow the verification and failure-handling requirements in
+[persistence.md](./references/persistence.md), then return the
+[handoff contract](#handoff-contract).
 
 ## Single-item workflow
 
 Use this mode when the user supplies the item content directly instead of a body
 of requirements.
 
-1. **Normalize the item.** Follow the
-   [issue contract](./references/issue-contract.md) and
-   [issue template](./references/issue-template.md). If source evidence
-   conflicts with a supplied missing-locator statement, report the candidate
-   and conflict as a gap; do not make it authoritative before clarification.
+1. **Normalize the item.** Extract the supplied issue fields: type, summary,
+   project, parent, execution information and source evidence. Validate against
+   [issue-contract.md](./references/issue-contract.md) and
+   [issue-template.md](./references/issue-template.md). Ask one focused question
+   at a time for any missing field. If evidence conflicts with a supplied
+   missing-locator statement, report the candidate and conflict as a gap; do not
+   promote the candidate into the authoritative Source before clarification.
 2. **Review the item.** Show the complete item — type, summary, description,
-   project, parent, links, labels, sources and execution contract — and ask
-   for explicit confirmation. A request to "prepare", "draft", or "show" is not
-   confirmation.
-   Run [draft validation](#draft-validation) on this item only, including when
-   required information is missing.
-   State post-mutation verification is pending even for a small diff or blocked
-   proposal; no mutation means no persistence verification has occurred.
+   project, parent, links, labels, sources and execution contract. Run
+   [draft validation](#draft-validation) on this item only, including when
+   required information is missing, then use the confirmation protocol in
+   [persistence.md](./references/persistence.md).
 3. **Persist.** After confirmation, create or update the one item following
-   [persistence.md](./references/persistence.md), and attach its source remote
-   links.
-4. **Verify and report.** Re-fetch the item, verify it against
-   [persistence.md](./references/persistence.md), and report its key, URL, and
-   any failed step.
-
-The Definition of Ready gate is reduced in this mode: validate that the item is
-well formed and that no value is invented.
+   [persistence.md](./references/persistence.md).
+4. **Verify and report.** Follow the verification and failure-handling
+   requirements in [persistence.md](./references/persistence.md), then return
+   the [handoff contract](#handoff-contract).
 
 ## Draft validation
 
@@ -242,17 +153,20 @@ it. Missing execution information blocks persistence, not this comparison:
 - Match each Task/Bug/Sub-task summary, project, parent and supplied execution
   field to the input. Preserve an explicit work summary verbatim; source titles
   label Source documents and do not replace issue summaries.
-- For a Story, check the literal `As a [Actor], I want to [action], so that [Gain]`
-  structure and the exact actor name separately.
+- For a Story, check the literal summary structure in the contract and the
+  exact actor name separately.
 - Compare every source locator with its evidence: hostname, page ID,
   repository/branch and Figma node. Apply only the template's canonicalization,
   never reconstruct a URL from memory. Check each nested ID's rendering against
-  its parent locator: Confluence section link or repository-file code text.
-- Check that Output, Checks and Scope describe the same local deliverable.
-  Keep missing required fields visible as gaps and canonical AC prose in the UC.
+  its parent locator.
+- Check that execution details satisfy the template and describe the same local
+  deliverable. Keep missing required fields visible as gaps.
 
 Correct discrepancies before requesting confirmation. Apply the same checks to
 saved proposals; a conversational disclaimer does not repair the saved draft.
+For review-only work, state explicitly in both the saved proposal and the
+conversational handoff that no Jira mutation has occurred and that confirmation,
+persistence, and post-mutation verification are still pending.
 When required information is missing, name it in the saved status and state that
 persistence is blocked until it is supplied. "Not persisted" or "pending" alone
 describes what has happened, not the condition preventing the next operation.
@@ -265,30 +179,18 @@ status is not itself a confirmation request.
 
 - Ask rather than infer actor names, user gains, product outcomes, KPI targets,
   guardrails, ownership, priority, estimates, dependencies, or issue mappings.
-- In single-item mode, ask for any missing field rather than inferring it, and
-  do not require upstream documents the item does not depend on.
 - Preserve the exact actor wording from the Use Case's PRD actor catalog.
 - Use `N/A — <confirmed reason>` only when the source or user confirms it.
-- Record unresolved assumptions and open questions in the draft; do not convert
-  them into acceptance criteria. A blocking question becomes a spike, not a
-  guessed value.
-- Preserve semantic error identifiers exactly. Deduplicate only identical
-  identifiers; never merge two different error conditions into one Task.
-- Do not invent a repository, a spike outcome, or the answer to an open question.
 - Keep Jira as the execution projection. Do not duplicate or rewrite the full
   DR/SRS or Use Case body in every issue.
 
 ## Handoff contract
 
 When invoked by `uc-engraver` or `dr-blacksmith`, return the proposed and
-confirmed Epic/Story/Task mapping, including spike Tasks derived from blocking
-open questions and deduplicated error-handling Tasks, the repository used,
-source IDs, Jira keys and URLs, unresolved readiness gaps, synchronization
-results, and any failed verification. In single-item mode, return the created or
-updated item, its key and URL, its `Source` and AC Coverage blocks, and any failed step;
-no backlog mapping is produced. Do not publish Confluence or edit source
-documents outside this skill's ownership.
-Include the dispatchable item's Output, Checks, Scope and supplied correlation
-ID in the handoff so the execution boundary remains visible.
-For a review-only draft, state that it is not persisted and that confirmation,
-persistence, and post-mutation verification are still pending.
+confirmed Epic/Story/Task mapping, repository, source IDs, Jira keys and URLs,
+readiness gaps, synchronization results, and any failed verification. In
+single-item mode, return the created or updated item, its key and URL, its
+`Source` and AC Coverage blocks where applicable, its parent for a Sub-task,
+and any failed step; no backlog mapping is produced. Include the dispatchable
+item's execution details and supplied correlation ID so its execution boundary
+remains visible.
