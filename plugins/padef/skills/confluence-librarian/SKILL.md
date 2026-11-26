@@ -37,11 +37,6 @@ Both paths follow this pipeline:
 
 **confirm → resolve → summarize → write → report the URL**.
 
-Both paths follow the server's authoring rules: load `getContentFormatGuide`
-once for the write's `toolName` (`createConfluencePage` / `updateConfluencePage`)
-before choosing a `body.format` or authoring an edit, and `getConfluenceSpace`
-when the content you read reports space instructions.
-
 ### Decide: create or edit
 
 Choose the path from the target, not the wording of the request:
