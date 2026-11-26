@@ -1,6 +1,6 @@
 module "dx_app_cd_resource_group_deploy" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 3.0"
+  version = "~> 3.1"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX App CD Resource Groups"
@@ -16,7 +16,7 @@ module "dx_app_cd_resource_group_deploy" {
 
 module "dx_app_ci_resource_group_reader" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 3.0"
+  version = "~> 3.1"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX App CI Resource Groups"
@@ -29,7 +29,7 @@ module "dx_app_ci_resource_group_reader" {
 
 module "dx_infra_cd_private_networking" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 3.0"
+  version = "~> 3.1"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CD Private Networking"
@@ -42,7 +42,7 @@ module "dx_infra_cd_private_networking" {
 
 module "dx_infra_cd_resource_group_deploy" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 3.0"
+  version = "~> 3.1"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CD Resource Groups"
@@ -62,7 +62,7 @@ module "dx_infra_cd_resource_group_deploy" {
 
 module "dx_infra_cd_subscription_admin" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 3.0"
+  version = "~> 3.1"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CD Subscription"
@@ -79,24 +79,25 @@ module "dx_infra_cd_subscription_admin" {
 
 module "dx_infra_cd_subscription_no_rbac_admin" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 3.0"
+  version = "~> 3.1"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CD Subscription (No RBAC Admin)"
   reason    = "Use for Infra CD deployments with Bootstrap's container-scoped state mode; Bootstrap assigns state access separately. Does not grant subscription-wide RBAC administration."
   source_roles = [
     "Reader",
-    # Storage listKeys comes from Log Analytics Contributor; exclude it when merge-roles supports exclusions.
     "Log Analytics Contributor",
     "Azure Service Bus Data Owner",
     "API Management Service Contributor",
   ]
   additional_actions = local.infra_cd_subscription_additional_actions
+  # Log Analytics Contributor grants Storage listKeys; exclude it from this role.
+  excluded_actions = ["Microsoft.Storage/storageAccounts/listKeys/action"]
 }
 
 module "dx_infra_ci_resource_group_reader" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 3.0"
+  version = "~> 3.1"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CI Resource Groups"
@@ -121,7 +122,7 @@ module "dx_infra_ci_resource_group_reader" {
 
 module "dx_infra_ci_subscription_reader" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 3.0"
+  version = "~> 3.1"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CI Subscription"
@@ -136,7 +137,7 @@ module "dx_infra_ci_subscription_reader" {
 
 module "dx_infra_ci_subscription_reader_no_storage_keys" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 3.0"
+  version = "~> 3.1"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Infra CI Subscription (No Storage Key Access)"
@@ -150,7 +151,7 @@ module "dx_infra_ci_subscription_reader_no_storage_keys" {
 
 module "dx_function_host_storage" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 3.0"
+  version = "~> 3.1"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Function Host Storage"
@@ -164,7 +165,7 @@ module "dx_function_host_storage" {
 
 module "dx_function_durable_storage" {
   source  = "pagopa-dx/azure-merge-roles/azurerm"
-  version = "~> 3.0"
+  version = "~> 3.1"
 
   scope     = local.subscription_id
   role_name = "${local.subscription_role_name_prefix} DX Function Durable Storage"
