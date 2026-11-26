@@ -40,27 +40,4 @@ describe("ownership authorization guidance", () => {
       "eng-github-authorization",
     );
   });
-
-  it("does not require an authorization PR for the inferred personal owner", () => {
-    const result = guidance("alice", {
-      namespaceType: "User",
-      owners: ["@alice"],
-      reviewerTeams: [],
-    });
-    expect(result.permissionStatus).toBe("personal-owner");
-    expect(result.instructions.join("\n")).not.toContain("Open a PR");
-  });
-
-  it("explains how to grant additional personal collaborators access", () => {
-    const result = guidance("alice", {
-      namespaceType: "User",
-      owners: ["@alice", "@bob"],
-      reviewerTeams: [],
-    });
-    expect(result.instructions.join("\n")).toContain("Grant @bob Write access");
-    expect(result.instructions.join("\n")).toContain(
-      "accept collaborator invitations",
-    );
-    expect(result.authorizationRepository).toBeUndefined();
-  });
 });

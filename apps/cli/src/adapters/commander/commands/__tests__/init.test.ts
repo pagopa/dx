@@ -369,9 +369,10 @@ describe("makeInitCommand options", () => {
         }),
       { CI: false },
     );
-    expect(command.helpInformation().replace(/\s+/g, " ")).toContain(
-      "required for organizations",
-    );
+    const help = command.helpInformation().replace(/\s+/g, " ");
+    expect(help).toContain("GitHub organization that will own the repository");
+    expect(help).toContain("required for organizations");
+    expect(help).not.toContain("personal repository owner");
     const spec = extractCliSpec(new Command().addCommand(command), "0.0.0");
     expect(spec.commands[0]?.options).toContainEqual(
       expect.objectContaining({

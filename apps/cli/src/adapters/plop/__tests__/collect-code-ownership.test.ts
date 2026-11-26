@@ -50,18 +50,6 @@ describe("collectCodeOwnership", () => {
     ).rejects.toThrow("require at least one");
   });
 
-  it("allows an empty interactive answer for the inferred personal owner", async () => {
-    vi.mocked(inquirer.prompt).mockResolvedValue({ codeOwners: "" });
-    await expect(
-      collectCodeOwnership(
-        { login: "alice", type: "User" },
-        undefined,
-        mock<GitHubService>(),
-        false,
-      ),
-    ).resolves.toMatchObject({ owners: ["@alice"] });
-  });
-
   it("rejects missing organization owners without prompting in noninteractive mode", async () => {
     await expect(
       collectCodeOwnership(
@@ -149,25 +137,6 @@ describe("collectMonorepoPayload", () => {
     expect(inquirer.prompt).not.toHaveBeenCalled();
   });
 
-  it("infers a personal owner in noninteractive mode", async () => {
-    const github = mock<GitHubService>();
-    github.getAccount.mockResolvedValue({ login: "alice", type: "User" });
-    github.getRepository.mockRejectedValue(
-      new RepositoryNotFoundError("alice", "new-repository"),
-    );
-    const { payload } = await collectMonorepoPayload(
-      await nodePlop(),
-      github,
-      {
-        repoName: "new-repository",
-        repoOwner: "alice",
-      },
-      { nonInteractive: true },
-    );
-    expect(payload.ownership.owners).toEqual(["@alice"]);
-    expect(inquirer.prompt).not.toHaveBeenCalled();
-  });
-
   it("propagates namespace validation failures before repository creation", async () => {
     const github = mock<GitHubService>();
     github.getAccount.mockRejectedValue(
@@ -183,6 +152,26 @@ describe("collectMonorepoPayload", () => {
         { nonInteractive: true },
       ),
     ).rejects.toThrow("HTTP 403");
+    expect(github.getRepository).not.toHaveBeenCalled();
+  });
+
+  it("rejects personal repository owners before validating the repository", async () => {
+    const github = mock<GitHubService>();
+    github.getAccount.mockResolvedValue({ login: "alice", type: "User" });
+
+    await expect(
+      collectMonorepoPayload(
+        await nodePlop(),
+        github,
+        {
+          repoName: "new-repository",
+          repoOwner: "alice",
+        },
+        { nonInteractive: true },
+      ),
+    ).rejects.toThrow(
+      "GitHub account @alice is a personal account. Use a GitHub organization as --owner for dx init.",
+    );
     expect(github.getRepository).not.toHaveBeenCalled();
   });
 });

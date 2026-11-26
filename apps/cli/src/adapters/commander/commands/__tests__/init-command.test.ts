@@ -76,6 +76,7 @@ const makeRoot = (command: Command, outputMessages: string[] = []) => {
       /* silence stdout in tests */
     },
   };
+  command.exitOverride();
   command.configureOutput(output);
   return new Command()
     .exitOverride()
@@ -155,5 +156,44 @@ describe("makeInitCommand", () => {
     );
     expect(message).toContain("Error: failed to load backend");
     expect(message).not.toContain("Failed to create GitHub repository.");
+  });
+
+  it("rejects personal GitHub owners with organization guidance and a non-zero exit", async () => {
+    const outputMessages: string[] = [];
+    const plopModule = await vi.importActual<
+      typeof import("../../../plop/index.js")
+    >("../../../plop/index.js");
+    const github = mock<GitHubService>();
+    github.getAccount.mockResolvedValue({ login: "alice", type: "User" });
+    getPlopInstance.mockResolvedValue(await plopModule.getPlopInstance());
+    collectMonorepoPayload.mockImplementation(
+      plopModule.collectMonorepoPayload,
+    );
+    assertGitHubPackagesAccess.mockResolvedValue(undefined);
+    tfMock
+      .mockResolvedValueOnce({ stdout: "Terraform v1.0.0" })
+      .mockResolvedValueOnce({ stdout: "0.0.0" });
+
+    const requireGitHubAuth: GitHubAuthFactory = () =>
+      okAsync({
+        authorizationService: mock<AuthorizationService>(),
+        gitHubService: github,
+      });
+    const root = makeRoot(
+      makeInitCommand(requireGitHubAuth, { CI: false }),
+      outputMessages,
+    );
+
+    await expect(
+      root.parseAsync(
+        ["init", "--owner", "alice", "--name", "new-repository", "--publish"],
+        { from: "user" },
+      ),
+    ).rejects.toMatchObject({ exitCode: 1 });
+
+    expect(outputMessages.join("")).toContain(
+      "Use a GitHub organization as --owner for dx init.",
+    );
+    expect(github.getRepository).not.toHaveBeenCalled();
   });
 });
