@@ -30,7 +30,7 @@
         "Uses the supplied parent mapping: all new technical Tasks are under PAY-11 and PAY-20 remains under PAY-10; contract-only Tasks cite their DR contract IDs rather than inventing UC coverage.",
         "Both Story sources cite NFR-01 under DR-01 because their authorization checks prevent exposing another user's receipt; unrelated NFRs are not added.",
         "Story Source lists follow the fixed document-key order and put AC IDs linked to the owning UC in AC Coverage, without duplicating them among Source children.",
-        "PAY-20's retry Check preserves the operator as initiator and verifies the retry interaction and result mapping at the handler/retrieval boundary, rather than only restating AC-UC-02-03.",
+        "PAY-20's retry Check preserves the operator as initiator and verifies the retry interaction and result mapping at the handler/retrieval boundary, rather than only restating UC-02's AC-03.",
         "Each Story and Task has separate, nonempty Output, Checks and Scope sections; no optional Slice Scope ID is invented. Check semantics are graded by the task-specific criteria.",
         "Saves the proposal without Jira mutations and asks for explicit confirmation before persistence."
       ],
@@ -52,11 +52,11 @@
     {
       "id": 3,
       "name": "synchronize-existing-backlog",
-      "prompt": "Read backlog-context.md as offline evidence, including existing PAY-20 and the distinct PAY-21 slice. Synchronize PAY-20 after UC-02 gains its confirmed retry flow. Include conversion of PAY-20's source description to the current template in the proposed diff. Preserve the existing Epic, UC-02 link, unchanged AC-UC-02-* identifiers and unrelated manual content. Add only the new retry behavior/traceability and the confirmed source-format change. Show the complete proposed Source, AC Coverage and native remote-link set, identifying only missing remote links. Avoid duplicate issues and duplicate remote links. Save proposal.md and wait for explicit confirmation without mutating Jira.",
+      "prompt": "Read backlog-context.md as offline evidence, including existing PAY-20 and the distinct PAY-21 slice. Synchronize PAY-20 after UC-02 gains its confirmed retry flow. Include conversion of PAY-20's source description to the current template in the proposed diff. Preserve the existing Epic, UC-02 link, unchanged AC-01 and AC-02 identifiers belonging to UC-02, and unrelated manual content. Add only the new retry behavior/traceability and the confirmed source-format change. Show the complete proposed Source, AC Coverage and native remote-link set, identifying only missing remote links. Avoid duplicate issues and duplicate remote links. Save proposal.md and wait for explicit confirmation without mutating Jira.",
       "expected_output": "A non-destructive synchronization proposal that matches existing issues by stable source identifiers, preserves unchanged data, and requires confirmation before updating.",
       "expectations": [
         "Matches existing Jira items using stable source links or IDs and does not create duplicates.",
-        "Preserves the existing Epic, UC-02 identity, and unchanged acceptance-check IDs.",
+        "Preserves the existing Epic and UC-02 identity; keeps its AC-01 and AC-02 linked to page 105 rather than confusing them with UC-01's same-named checks on page 101.",
         "Adds only the new retry behavior and its new traceability.",
         "Shows a human-readable proposed diff and asks for explicit confirmation before mutation.",
         "Does not merge PAY-21 into PAY-20 just because they share UC-02; preserves unrelated manual content.",
@@ -89,7 +89,7 @@
         "Adds no Task and no link for a non-blocking question, and does not invent the answer to a spike.",
         "Uses Epic parent relationships for Epic membership; every proposed blocks link represents an evidenced delivery dependency, and the spike blocks signature verification only.",
         "The spike Source starts with dr and nests open.item-007; the shared error Task nests AGREEMENT_SIGNATURE_INVALID under both owning UC documents.",
-        "PAY-20's retry Check preserves the operator as initiator and verifies the retry interaction and result mapping at the handler/retrieval boundary, rather than only restating AC-UC-02-03.",
+        "PAY-20's retry Check preserves the operator as initiator and verifies the retry interaction and result mapping at the handler/retrieval boundary, rather than only restating UC-02's AC-03.",
         "Each Story and Task has separate, nonempty Output, Checks and Scope sections; no optional Slice Scope ID is invented. Check semantics are graded by the task-specific criteria.",
         "Saves the proposal without Jira mutations and asks for explicit confirmation before persistence."
       ],
@@ -333,6 +333,46 @@
         "Keeps the supplied DR and identifies the missing PRD as a source gap.",
         "Asks for the PRD and blocks persistence until the required source is supplied, rather than inventing a PRD or its locator.",
         "Does not invent a UC or make Jira calls."
+      ],
+      "files": []
+    },
+    {
+      "id": 24,
+      "name": "same-local-ac-id-distinct-use-cases",
+      "prompt": "Prepare two independent Stories in PAY under PAY-11, without Jira calls. Story A is for UC-01 - Download receipt at https://example.atlassian.net/wiki/spaces/PAY/pages/101 and covers its AC-01; Story B is for UC-02 - Assisted receipt recovery at https://example.atlassian.net/wiki/spaces/PAY/pages/105 and covers its AC-01. These are different checks in different Use Cases, and both pages publish the exact #AC-01 anchor. The actor, action and gain for Story A are Cittadino pagatore, download a receipt, retain proof of payment; for Story B they are Operatore di assistenza, retrieve a receipt, help the customer retain proof of payment. Both fit one sprint. Story A Output: the download handler returns the receipt PDF. Check: a handler test verifies the PDF response. Scope: the handler and its test only. Story B Output: the support retrieval flow returns the receipt. Check: a retrieval test verifies the authorized support path. Scope: that retrieval flow and its test only. Show complete Source and AC Coverage blocks and ask for confirmation.",
+      "expected_output": "Two Stories retain the identical local AC-01 spelling while linking coverage separately to the owning UC page.",
+      "expectations": [
+        "Preserves AC-01 exactly for both Stories and does not convert it to AC-UC-01-01 or AC-UC-02-01.",
+        "Story A's AC Coverage links to UC-01 page 101#AC-01 and Story B's links to UC-02 page 105#AC-01.",
+        "Keeps each Source and AC Coverage owner association specific to its own UC.",
+        "Does not copy acceptance-check prose into either issue body or claim unrelated coverage.",
+        "Requests confirmation without Jira calls or mutations."
+      ],
+      "files": []
+    },
+    {
+      "id": 25,
+      "name": "ambiguous-embedded-ac-anchor",
+      "prompt": "Prepare one PAY Story for UC-02, which is embedded in the same Confluence page titled DR-04 - Receipt delivery as UC-01: https://example.atlassian.net/wiki/spaces/PAY/pages/240. Both embedded UCs define a different acceptance check named AC-01. Only the shared page URL is available; there are no published anchors that distinguish the UC sections or either AC-01 target. The Story covers UC-02 AC-01; its actor, action and gain are Operatore di assistenza, retrieve a receipt, help the customer retain proof of payment. It fits one sprint. Output: the support retrieval flow returns the receipt. Check: a retrieval test verifies the authorized support path. Scope: that retrieval flow and its test only. Work offline and show the draft without Jira calls.",
+      "expected_output": "A blocked draft that reports the ambiguous AC target and asks for its published, unambiguous locator.",
+      "expectations": [
+        "Identifies that the shared page ID and repeated AC-01 label do not identify the owning check's target unambiguously.",
+        "Asks for a published unambiguous AC target before persistence.",
+        "Does not invent a qualified ID such as AC-UC-02-01 or fabricate a fragment.",
+        "Preserves the local AC-01 identifier and makes no Jira calls or mutations."
+      ],
+      "files": []
+    },
+    {
+      "id": 26,
+      "name": "nonconforming-ac-id-blocks-persistence",
+      "prompt": "Work offline. Prepare one PAY Story under PAY-11 from UC-02 - Assisted receipt recovery at https://example.atlassian.net/wiki/spaces/PAY/pages/105. Its acceptance check is named AC-UC-02-01, and the page publishes that exact anchor; no AC-01 check exists. Actor: Operatore di assistenza. Action: retrieve a receipt. Gain: help the customer retain proof of payment. Output: support retrieval returns the receipt. Check: a retrieval test verifies the authorized support path. Scope: that retrieval flow and its test only. It fits one sprint. Apply the PADEF acceptance-ID contract, show the draft and any blocker, and do not call Jira or modify the source.",
+      "expected_output": "A blocked proposal identifies the nonconforming acceptance-check ID without silently renaming it or treating it as a supported legacy format.",
+      "expectations": [
+        "Identifies that AC-UC-02-01 violates the sole AC-XX convention and blocks persistence until the source contract is corrected.",
+        "Does not accept the alternate format for backward compatibility.",
+        "Does not invent an AC-01 source check or link to a nonexistent #AC-01 anchor.",
+        "Asks for the corrected source contract and makes no live mutations."
       ],
       "files": []
     }

@@ -15,6 +15,9 @@ setup produces the TypeScript skeleton checked by a repository review. A spike
 produces an owner-confirmed decision record, checked for that confirmation.
 Each item uses only the applicable boundary, not the whole backlog scope.
 
+All acceptance-check IDs use `AC-XX`, local to their owning Use Case.
+The same label can identify different checks in different Use Cases.
+
 ## Documents
 
 - DR-01 - Receipt delivery:
@@ -61,9 +64,9 @@ Each item uses only the applicable boundary, not the whole backlog scope.
   Ready, Must; primary actor exactly "Operatore di assistenza". JTBD-02.
   Trigger: authorized support agent locates a customer's confirmed payment.
   Main flow: verify support access and retrieve the receipt for the customer.
-  AC-UC-02-01: authorized support can retrieve the receipt.
-  AC-UC-02-02: unauthorized support access is denied.
-  Confirmed new retry flow, AC-UC-02-03: a transient retrieval error can be
+  AC-01: authorized support can retrieve the receipt.
+  AC-02: unauthorized support access is denied.
+  Confirmed new retry flow, AC-03: a transient retrieval error can be
   retried once by the operator, with no duplicate receipt.
   Components: solution.components.item-001; contract: contracts.item-001.
   Error: AGREEMENT_SIGNATURE_INVALID, exactly the same condition as UC-01.
@@ -91,8 +94,8 @@ Confluence pages publish anchors matching each cited stable ID.
 - PAY-20: Story realizing UC-02. Existing actor/summary:
   "As a Operatore di assistenza, I want to recover a payment receipt, so that
   I can help the customer retain proof of payment."
-  Existing coverage: AC-UC-02-01 and AC-UC-02-02 (UC-02). Status In Progress.
-  No retry behavior or AC-UC-02-03 yet.
+  Existing coverage: AC-01 and AC-02 (UC-02). Status In Progress.
+  No retry behavior or AC-03 yet.
   Source inventory: UC-02 page 105; DR-01 page 102; PRD-01 page 103 with JTBD-02;
   contract artifact api/openapi.yaml with contracts.item-001 under DR.
   Existing native remote link: UC-02 at

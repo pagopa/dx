@@ -90,10 +90,11 @@
       "id": 6,
       "name": "stable-identifiers-and-change-propagation",
       "prompt": "Normalize identifiers and handle two change situations. Two source documents both label different behaviors as UC-03 in the DR/SRS. The linked PRD is \"PRD-pagamenti\" and defines JTBD-01; note that PRD and JTBD are optional and may be absent entirely. (A) Pre-baseline, two sources contradict each other on the retention period. (B) The baseline is approved and a new decision materially changes the API response contract. Add a cross-cutting availability target and an API acceptance check for UC-05. Record outcomes in the open questions/decisions area.",
-      "expected_output": "The duplicate UC-03 is flagged as possible-duplicate/gap without renumbering; identifiers follow the canonical namespaces (PRD-pagamenti/JTBD-01, NFR-XX, AC-UC-05-YY); the pre-baseline contradiction becomes an open question/gap, not a Change Request; the post-baseline material change becomes a Change Request with propagation to contracts, Use Cases, and tests, without implementing it.",
+      "expected_output": "The duplicate UC-03 is flagged as possible-duplicate/gap without renumbering; identifiers follow the canonical namespaces (PRD-pagamenti/JTBD-01 and NFR-XX), and the new UC-05 acceptance check uses the Use Case template's local AC-XX form without requiring a globally qualified AC ID; the pre-baseline contradiction becomes an open question/gap, not a Change Request; the post-baseline material change becomes a Change Request with propagation to contracts, Use Cases, and tests, without implementing it.",
       "expectations": [
         "Flags the duplicate UC-03 as possible-duplicate/gap and never renumbers or reuses an ID.",
-        "Uses canonical ID namespaces (NFR-XX, AC-UC-XX-YY, PRD-xxx/JTBD-yy) and tolerates absent PRD/JTBD (N/A).",
+        "Uses canonical ID namespaces (NFR-XX, local AC-XX for the new check, PRD-xxx/JTBD-yy) and tolerates absent PRD/JTBD (N/A).",
+        "Keeps acceptance-check IDs local to their owning Use Case and does not add an AC-UC prefix to create global uniqueness.",
         "Pre-baseline contradiction produces an open question/gap, not a Change Request.",
         "Post-baseline material change to the API contract produces a Change Request with propagation to contracts, Use Cases, and tests, without implementing it."
       ],

@@ -11,8 +11,9 @@ criterion, the model wins.
 - [ ] The document follows `templates/design-review.md` and its section labels.
 - [ ] Every stable section and field ID is present and unchanged.
 - [ ] `metadata.canonical-outcome-id` is present and stable.
-- [ ] Content entities use the canonical namespaces (`UC-XX`, `AC-UC-XX-YY`,
-      `NFR-XX`, `JTBD-XX`, `RFC-XX`, `CR-YYYY-NNN`).
+- [ ] Content entities use the canonical namespaces (`UC-XX`, `AC-XX`,
+      `NFR-XX`, `JTBD-XX`, `RFC-XX`, `CR-YYYY-NNN`). All acceptance-check IDs
+      use `AC-XX` and are scoped to their owning Use Case.
 - [ ] Confirmed statements cite or name their source.
 - [ ] Confirmed facts, proposed design, assumptions, open questions, and
       decisions are separated.
