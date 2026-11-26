@@ -1,0 +1,45 @@
+# Brownfield documentation canvas
+
+A project-shared Copilot canvas for managing actors in persistent repository state.
+
+Ask Copilot to open the **Brownfield documentation** canvas (`brownfield-docs`). GitHub repositories are editable in the global controls on both pages; Domain model contains Actors and Use cases.
+
+**Sync from source code** submits an investigation prompt using only configured repositories for actor and use-case discovery, including documentation within them. Each sync asks which parts to investigate; select one or more parts or all source code in the conversation. The agent records the exact commits it inspected for each supported finding. It reads fresh state before saving and retries revision conflicts after reconciling changes, without overwriting concurrent edits. It can append evidence-backed findings, fill in missing actor roles, and reword existing active use cases for confirmed actor renames using a revision-checked canvas action. Existing actor confirmations remain unchanged when missing roles are filled; reworded use cases become unconfirmed for review. Existing roles and archived findings remain unchanged. New actors and use cases are unconfirmed. It identifies use cases only for already confirmed actors, ignoring unconfirmed actors without blocking discovery for confirmed ones. If no actors are confirmed, it adds no use cases. The canvas refreshes saved changes when there are no local edits. Save or fix incomplete rows before starting a sync.
+
+**Find use cases from confirmed actors** is available in Actors when at least one actor is confirmed. It infers the relevant repository scope from confirmed actors instead of asking for a scope, and follows the same evidence, use-case modeling, provenance, reconciliation, and conflict-handling rules as sync. It does not discover or change actors; it preserves existing findings and adds new use cases as unconfirmed. Save or resolve unsaved edits first.
+
+Each newly inferred use case describes one functional requirement and its evidence-supported flow in plain language, without implementation details or use-case document headings. Inferred descriptions must be nonempty and contain at most five sentences. Existing descriptions and manual edits are not restricted by this limit.
+
+**Generate brownfield document** writes `docs/brownfield/brownfield.md` from the saved state, including only confirmed active actors and use cases in their saved order. It describes them as reviewed findings, not proposals, and lists source repositories and recorded commits. Older findings without recorded commits are flagged; configured repositories without recorded commits are not presented as inspected. It includes actor roles, or **Unspecified** when the role is not known. It replaces any existing file at that path. Generation is deterministic and does not change the state; save or resolve conflicting edits first.
+
+## Repository state
+
+The tables load `docs/brownfield/state.json` in the current checkout automatically when the canvas opens. Rows are listed read-only until you choose **Edit**; select **Done** or move focus or click outside the row to return to the list. Newly added repository rows open in edit mode. Changes to all lists are saved together automatically after a short pause. Actors and use cases need a nonempty name or title and repositories must be valid before changes can be saved. The canvas shows the resolved storage path and save status; if saving fails, edits remain in the table and **Retry save** is available.
+
+Legacy documentation URLs in the `sources` field are preserved in existing state files but are no longer displayed or used by sync.
+
+The optional `repositories` array contains objects with a GitHub `fullName` in `owner/repository` format. Up to 500 unique repositories are supported. If the property is missing, the canvas seeds it with the current `GITHUB_REPOSITORY` or the repository parsed from the local `origin` remote; an explicitly empty array remains empty.
+
+Use **Confirm** in each actor's or use case's actions to confirm it; select **Confirmed** to undo confirmation. Unconfirmed rows are highlighted in yellow. Confirmed actors and use cases cannot be edited or deleted until their confirmation is undone. Existing items without an `accepted` flag are treated as unconfirmed and receive an explicit flag on the next save.
+
+An actor's role appears below its name: **Primary** when it initiates a goal using the system, or **Supporting** when it provides a service to the system. Roles can be edited on unconfirmed rows. Existing actors with no role remain **Unspecified** until edited or classified by sync; ambiguous roles are left unset for review. To edit a confirmed actor linked to a use case, unlink it first.
+
+Use-case descriptions highlight linked confirmed actors; select a mention to go to its actor. When editing an unconfirmed use case, choose a confirmed actor already named in the description and select **Link actor**, or use **Unlink** to remove a link without removing its text. A linked actor cannot be unconfirmed or removed until it is unlinked from every active and archived use case. To unlink an archived use case, restore it first. Editing away the linked text also removes its link. Links store stable actor IDs and the original text, so a linked name follows the actor if it changes in the state.
+
+For older use cases without link metadata, the canvas links exact, unambiguous confirmed actor names it finds in descriptions, preferring longer overlapping names, and saves those links. Duplicate actor names are not linked automatically. Once links have been explicitly edited, the canvas does not recreate removed links. Sync associates new use cases with the confirmed actors named by the agent.
+
+**Remove** moves an unconfirmed actor or use case to the **Archive** page; **Restore** returns it to the active table. The archive is saved with the repository state and sync excludes its findings. Previous names and titles are retained as aliases when edited, so exact matches to renamed or removed findings cannot be added by sync. Possible semantic matches require review; matching differently worded findings is not guaranteed. Findings deleted before the archive existed cannot be restored from it.
+
+The `useCases` array contains objects with `title` and `description` strings and a boolean `accepted` flag. Each row displays the title and description, with edit, delete, and confirmation actions. Sync can add use cases based on sources; the canvas does not offer manual creation. Titles must be nonempty and at most 200 characters; descriptions may be empty and at most 10,000 characters. Up to 500 use cases are supported. Existing state files without `useCases` load as an empty list; saving after adding use cases persists the new array without changing the schema version.
+
+Legacy `entities` and `archivedEntities` remain in state but are not shown or discovered by sync. They are read as confirmed even if an older file contains an unconfirmed flag; their confirmed status is persisted on the next save.
+
+The file has `schemaVersion: 1` and an `actors` array containing `name` and `description` strings, a boolean `accepted` flag, and an optional `role` of `Primary` or `Supporting`. Findings can also have a stable `id` and `aliases`; older findings receive an ID when edited or removed. Removed findings live in optional `archivedActors` and `archivedUseCases` arrays, each supporting up to 5,000 entries. Other state fields are retained. An absent file starts with an empty table and is created when changes are saved; invalid JSON or unsupported data produces an error without replacing the file. Names must be nonempty and at most 200 characters; descriptions may be empty and at most 10,000 characters. Up to 500 actors are supported.
+
+This state belongs to the repository file, not a conversation or canvas panel. Commit and synchronize it to reuse changes in other worktrees, branches, or teammates' checkouts; independent worktrees do not share live state. No commit is performed automatically. Do not store secrets or personal information in this file.
+
+Saves use atomic replacement, content revisions, and an exclusive lock to reject conflicting canvas writes to the same file. On a conflict, unsaved table edits remain visible: copy them before reopening the canvas, then reapply them to the latest state. External editors do not participate in the lock; avoid editing the file during a canvas save. If a process crashes during saving, verify no save is running before removing the displayed `state.json.lock` file.
+
+The extension uses the bundled Copilot SDK; no package installation is required. After editing the extension, reload extensions. The loopback server accepts state mutations only from its own canvas origin. Existing session prompt draft files are left untouched but are no longer used.
+
+Run its standalone checks with `node --test .github/extensions/brownfield-docs/canvas.test.mjs`. They use temporary files and do not change repository actor state.
