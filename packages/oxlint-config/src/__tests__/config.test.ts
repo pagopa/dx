@@ -1,12 +1,22 @@
-import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  symlink,
+  writeFile,
+} from "node:fs/promises";
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
-import { basename, join } from "node:path";
+import { basename, dirname, isAbsolute, join } from "node:path";
+import { pathToFileURL } from "node:url";
 import { describe, expect, it } from "vitest";
 
 import {
   BASE_CONFIG_PATH,
   BASE_JEST_CONFIG_PATH,
+  BASE_JEST_MODULE_PATH,
+  BASE_MODULE_PATH,
   CORE_CONFIG_PATH,
   loadConfig,
   type OxlintConfig,
@@ -16,9 +26,9 @@ import {
 
 const require = createRequire(import.meta.url);
 
-const config = loadConfig(BASE_CONFIG_PATH);
+const config = await loadConfig(BASE_CONFIG_PATH);
 
-const jestConfig = loadConfig(BASE_JEST_CONFIG_PATH);
+const jestConfig = await loadConfig(BASE_JEST_CONFIG_PATH);
 
 const CLEAN_TYPESCRIPT =
   "const value = 1;\nexport const doubled = value * 2;\n";
@@ -69,6 +79,10 @@ test("uses the fixture", async ({ service }) => {
 });
 `;
 
+const UNSORTED_OBJECT = "export const pair = {\n  b: 2,\n  a: 1,\n};\n";
+
+const PARSE_INT_WITHOUT_RADIX = 'export const parsed = parseInt("42");\n';
+
 const STANDALONE_EXPECT = `import { expect } from "vitest";
 
 expect(1).toBe(1);
@@ -114,30 +128,82 @@ interface ConsumerOptions {
  * Lints files from a scratch directory whose `.oxlintrc.json` extends the
  * published config, the way a consumer project loads it.
  */
-const lintAsConsumer = ({
+const lintAsConsumer = async ({
   configPath = BASE_CONFIG_PATH,
   files = { "clean.ts": CLEAN_TYPESCRIPT },
   rules = {},
 }: ConsumerOptions = {}) => {
-  const directory = mkdtempSync(join(tmpdir(), "oxlint-config-"));
+  const directory = await mkdtemp(join(tmpdir(), "oxlint-config-"));
 
   try {
     for (const [name, contents] of Object.entries(files)) {
-      writeFileSync(join(directory, name), contents);
+      await writeFile(join(directory, name), contents);
     }
-    writeFileSync(
+    await writeFile(
       join(directory, ".oxlintrc.json"),
       JSON.stringify({ extends: [configPath], rules }),
     );
-    return runOxlint(directory, ["--format=json", ...Object.keys(files)]);
+    return await runOxlint(directory, ["--format=json", ...Object.keys(files)]);
   } finally {
-    rmSync(directory, { force: true, recursive: true });
+    await rm(directory, { force: true, recursive: true });
   }
 };
 
+interface ModuleConsumerOptions {
+  config?: string;
+  files?: Record<string, string>;
+  subpath?: string;
+}
+
+/**
+ * Lints files from a scratch directory whose `oxlint.config.ts` imports the
+ * package subpath, the way a TypeScript consumer config loads it.
+ */
+const lintAsModuleConsumer = async ({
+  subpath = "@pagopa/oxlint-config/base",
+  config = `import preset from "${subpath}";\n\nexport default preset;\n`,
+  files = { "clean.ts": CLEAN_TYPESCRIPT },
+}: ModuleConsumerOptions = {}) => {
+  const directory = await mkdtemp(join(tmpdir(), "oxlint-config-module-"));
+
+  try {
+    await mkdir(join(directory, "node_modules", "@pagopa"), {
+      recursive: true,
+    });
+    await symlink(
+      PACKAGE_ROOT,
+      join(directory, "node_modules", "@pagopa", "oxlint-config"),
+      "dir",
+    );
+    await writeFile(join(directory, "oxlint.config.ts"), config);
+    for (const [name, contents] of Object.entries(files)) {
+      await mkdir(dirname(join(directory, name)), { recursive: true });
+      await writeFile(join(directory, name), contents);
+    }
+    return await runOxlint(directory, ["--format=json", ...Object.keys(files)]);
+  } finally {
+    await rm(directory, { force: true, recursive: true });
+  }
+};
+
+interface ComposedConfig {
+  extends: ConfigLayer[];
+}
+
+/** One of the layers a module entry hands to oxlint. */
+type ConfigLayer = Partial<OxlintConfig>;
+
+const loadModule = async (path: string): Promise<ComposedConfig> => {
+  const module: { default: ComposedConfig } = await import(
+    pathToFileURL(path).href
+  );
+
+  return module.default;
+};
+
 describe("base config", () => {
-  it("lints a clean TypeScript file without findings", () => {
-    const { status, stdout } = lintAsConsumer();
+  it("lints a clean TypeScript file without findings", async () => {
+    const { status, stdout } = await lintAsConsumer();
 
     expect(status).toBe(0);
     expect(
@@ -145,8 +211,8 @@ describe("base config", () => {
     ).toEqual([]);
   });
 
-  it("fails on a rule oxlint does not know about", () => {
-    const { status, stdout } = lintAsConsumer({
+  it("fails on a rule oxlint does not know about", async () => {
+    const { status, stdout } = await lintAsConsumer({
       rules: { "no-debugger-typo": "error" },
     });
 
@@ -205,8 +271,8 @@ describe("base config", () => {
 });
 
 describe("jest config", () => {
-  it("lints a clean Jest file without findings", () => {
-    const { status, stdout } = lintAsConsumer({
+  it("lints a clean Jest file without findings", async () => {
+    const { status, stdout } = await lintAsConsumer({
       configPath: BASE_JEST_CONFIG_PATH,
       files: { "clean.test.js": CLEAN_JEST },
     });
@@ -217,8 +283,8 @@ describe("jest config", () => {
     ).toEqual([]);
   });
 
-  it("reports a finding through the Jest rules", () => {
-    const { status, stdout } = lintAsConsumer({
+  it("reports a finding through the Jest rules", async () => {
+    const { status, stdout } = await lintAsConsumer({
       configPath: BASE_JEST_CONFIG_PATH,
       files: { "focused.test.js": FOCUSED_JEST },
     });
@@ -268,8 +334,8 @@ describe("jest config", () => {
     );
   });
 
-  it("keeps the core rules in a config the variants share", () => {
-    const core = loadConfig(CORE_CONFIG_PATH);
+  it("keeps the core rules in a config the variants share", async () => {
+    const core = await loadConfig(CORE_CONFIG_PATH);
 
     expect(core.rules).toEqual(config.rules);
     expect(core.plugins).not.toContain("vitest");
@@ -285,24 +351,162 @@ describe("jest config", () => {
     );
   });
 
-  it("publishes every file the variants extend", () => {
+  it("publishes every file the variants are made of", async () => {
     const { files } = JSON.parse(
-      readFileSync(join(PACKAGE_ROOT, "package.json"), "utf8"),
+      await readFile(join(PACKAGE_ROOT, "package.json"), "utf8"),
     ) as { files: string[] };
 
     const shipped = [BASE_CONFIG_PATH, BASE_JEST_CONFIG_PATH];
 
-    const extended = shipped.flatMap((path) => {
-      const { extends: parents } = JSON.parse(readFileSync(path, "utf8")) as {
-        extends?: string[];
-      };
+    const extended = (
+      await Promise.all(
+        shipped.map(async (path) => {
+          const { extends: parents } = JSON.parse(
+            await readFile(path, "utf8"),
+          ) as {
+            extends?: string[];
+          };
 
-      return (parents ?? []).map((parent) => basename(parent));
-    });
+          return (parents ?? []).map((parent) => basename(parent));
+        }),
+      )
+    ).flat();
 
-    const required = [...shipped, ...extended].map((path) => basename(path));
+    const modules = [
+      BASE_MODULE_PATH,
+      BASE_JEST_MODULE_PATH,
+      join(PACKAGE_ROOT, "base.d.ts"),
+      join(PACKAGE_ROOT, "base-jest.d.ts"),
+      join(PACKAGE_ROOT, "compose.js"),
+    ];
+
+    const required = [...shipped, ...extended, ...modules].map((path) =>
+      basename(path),
+    );
 
     expect([...files].sort()).toEqual([...new Set(required)].sort());
+  });
+});
+
+describe("module entries", () => {
+  it("exposes the variants through their own exports", () => {
+    expect(require.resolve("@pagopa/oxlint-config/base")).toBe(
+      BASE_MODULE_PATH,
+    );
+    expect(require.resolve("@pagopa/oxlint-config/base-jest")).toBe(
+      BASE_JEST_MODULE_PATH,
+    );
+  });
+
+  it("nests core.json and the overlay instead of merging them", async () => {
+    const core = await loadConfig(CORE_CONFIG_PATH);
+    const variant = JSON.parse(
+      await readFile(BASE_CONFIG_PATH, "utf8"),
+    ) as OxlintConfig;
+    const [coreLayer, variantLayer] = (await loadModule(BASE_MODULE_PATH))
+      .extends;
+
+    expect(coreLayer?.rules).toEqual(core.rules);
+    expect(coreLayer?.categories).toEqual(core.categories);
+    expect(coreLayer?.plugins).toEqual(core.plugins);
+    expect(coreLayer?.ignorePatterns).toEqual(core.ignorePatterns);
+    expect(variantLayer).toEqual({
+      overrides: variant.overrides,
+      plugins: variant.plugins,
+    });
+  });
+
+  it("leaves out the keys only the declaring file can resolve", async () => {
+    const [coreLayer, variantLayer] = (await loadModule(BASE_MODULE_PATH))
+      .extends;
+
+    expect(Object.keys(coreLayer ?? {}).sort()).toEqual([
+      "categories",
+      "ignorePatterns",
+      "jsPlugins",
+      "overrides",
+      "plugins",
+      "rules",
+    ]);
+    expect(Object.keys(variantLayer ?? {}).sort()).toEqual([
+      "overrides",
+      "plugins",
+    ]);
+  });
+
+  it("anchors the plugin specifiers so consumer hoisting does not matter", async () => {
+    const [coreLayer] = (await loadModule(BASE_MODULE_PATH)).extends;
+
+    expect(coreLayer?.jsPlugins?.map(({ name }) => name)).toEqual(
+      config.jsPlugins.map(({ name }) => name),
+    );
+    expect(
+      coreLayer?.jsPlugins?.every(({ specifier }) => isAbsolute(specifier)),
+    ).toBe(true);
+  });
+
+  it("keeps the core ignorePatterns out of the consumer workspace", async () => {
+    const { status, stdout } = await lintAsModuleConsumer({
+      files: { "dist/generated.ts": UNSORTED_OBJECT },
+    });
+
+    expect(status).toBe(1);
+    expect(stdout).toContain("perfectionist(sort-objects)");
+  });
+
+  it("lints a clean TypeScript file without findings", async () => {
+    const { status, stdout } = await lintAsModuleConsumer();
+
+    expect(
+      (JSON.parse(stdout) as { diagnostics: unknown[] }).diagnostics,
+    ).toEqual([]);
+    expect(status).toBe(0);
+  });
+
+  it("resolves the plugin dependency from the package", async () => {
+    const { status, stdout } = await lintAsModuleConsumer({
+      files: { "unsorted.ts": UNSORTED_OBJECT },
+    });
+
+    expect(status).toBe(1);
+    expect(stdout).toContain("perfectionist(sort-objects)");
+  });
+
+  it("lints a consumer that extends the preset and overrides a rule", async () => {
+    const { status, stdout } = await lintAsModuleConsumer({
+      config: `import preset from "@pagopa/oxlint-config/base";
+
+export default {
+  extends: [preset],
+  ignorePatterns: ["**/dist/**"],
+  rules: { radix: "off" },
+};
+`,
+      files: {
+        "dist/generated.ts": UNSORTED_OBJECT,
+        "radix.ts": PARSE_INT_WITHOUT_RADIX,
+        "unsorted.ts": UNSORTED_OBJECT,
+      },
+    });
+
+    const { diagnostics } = JSON.parse(stdout) as {
+      diagnostics: { code: string; filename: string }[];
+    };
+
+    expect(status).toBe(1);
+    expect(
+      diagnostics.map(({ code, filename }) => [basename(filename), code]),
+    ).toEqual([["unsorted.ts", "perfectionist(sort-objects)"]]);
+  });
+
+  it("applies the Jest flavour of the same file", async () => {
+    const { status, stdout } = await lintAsModuleConsumer({
+      files: { "focused.test.js": FOCUSED_JEST },
+      subpath: "@pagopa/oxlint-config/base-jest",
+    });
+
+    expect(status).toBe(1);
+    expect(stdout).toContain("jest(no-focused-tests)");
   });
 });
 
@@ -311,8 +515,8 @@ describe("jest config", () => {
 // Vitest default already accepts an `assert` helper, so only the Jest variant
 // distinguishes a working payload from a dropped one.
 describe("test-runner rule options", () => {
-  it("reads assertFunctionNames from the Jest rules", () => {
-    const { status, stdout } = lintAsConsumer({
+  it("reads assertFunctionNames from the Jest rules", async () => {
+    const { status, stdout } = await lintAsConsumer({
       configPath: BASE_JEST_CONFIG_PATH,
       files: { "assert-only.test.js": ASSERT_ONLY_TEST },
     });
@@ -323,8 +527,8 @@ describe("test-runner rule options", () => {
     expect(status).toBe(0);
   });
 
-  it("reads the blocks of a test that extends the runner", () => {
-    const { status, stdout } = lintAsConsumer({
+  it("reads the blocks of a test that extends the runner", async () => {
+    const { status, stdout } = await lintAsConsumer({
       configPath: BASE_CONFIG_PATH,
       files: {
         "fixture.test.ts": EXTENDED_TEST,
