@@ -97,6 +97,60 @@ run "merge_roles_appends_additional_actions_to_control_plane_permissions" {
   }
 }
 
+run "merge_roles_applies_explicit_exclusions_after_source_and_additional_grants" {
+  command = plan
+
+  variables {
+    additional_actions = ["Microsoft.Storage/storageAccounts/*"]
+    excluded_actions   = ["Microsoft.Storage/storageAccounts/listKeys/action"]
+  }
+
+  override_data {
+    target = data.azurerm_role_definition.source["0"]
+    values = {
+      permissions = [
+        {
+          actions = [
+            "Microsoft.Storage/storageAccounts/listKeys/action",
+            "Microsoft.OperationalInsights/workspaces/*",
+          ]
+          data_actions     = []
+          not_actions      = []
+          not_data_actions = []
+        },
+      ]
+    }
+  }
+
+  override_data {
+    target = data.azurerm_role_definition.source["1"]
+    values = {
+      permissions = [
+        {
+          actions          = ["Microsoft.Insights/alertRules/*"]
+          data_actions     = []
+          not_actions      = []
+          not_data_actions = []
+        },
+      ]
+    }
+  }
+
+  assert {
+    condition     = contains(local.merged_permissions.not_actions, "Microsoft.Storage/storageAccounts/listKeys/action")
+    error_message = "explicit exclusions must remain in not_actions even when the action is granted directly by a source role and by an additional wildcard"
+  }
+
+  assert {
+    condition = alltrue([
+      contains(local.merged_permissions.actions, "Microsoft.Storage/storageAccounts/listKeys/action"),
+      contains(local.merged_permissions.actions, "Microsoft.OperationalInsights/workspaces/*"),
+      contains(local.merged_permissions.actions, "Microsoft.Insights/alertRules/*"),
+    ])
+    error_message = "excluding listKeys must preserve the source role's other Log Analytics and monitoring capabilities"
+  }
+}
+
 run "merge_roles_filters_legacy_classic_provider_operations_from_source_roles" {
   command = plan
 

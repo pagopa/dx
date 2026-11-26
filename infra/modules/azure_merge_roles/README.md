@@ -14,6 +14,7 @@ It is designed for the RBAC reduction strategy: define a smaller set of reusable
 - Supports roles that include `not_actions` and `not_data_actions`.
 - Deduplicates merged permissions so the generated role definition remains stable.
 - Supports caller-provided `additional_actions` when the merged role must grant extra control-plane permissions beyond the permissions granted by the sum of the source roles.
+- Supports caller-provided `excluded_actions` when specific control-plane permissions must remain excluded even if a source role or `additional_actions` grants them.
 - Supports caller-provided `additional_data_actions` when the merged role must grant extra data-plane permissions beyond the data permissions granted by the sum of the source roles.
 - Drops legacy `Microsoft.Classic*` provider operations copied from built-in roles because Azure custom roles reject them with `InvalidActionOrNotAction`.
 - Requires an explicit `scope` and always uses that same scope as the role's only assignable scope.
@@ -28,6 +29,8 @@ Use `additional_actions` only when the merged role still misses Azure management
 Use `additional_data_actions` only when the merged role still misses permissions on the resource contents themselves, such as reading, writing, or deleting blob data.
 
 In this module, `additional` means permissions that are not already granted by the selected `source_roles`, but that you still want in the final merged custom role.
+
+Use `excluded_actions` to keep specific control-plane actions out of the merged role, even when a source role or `additional_actions` grants the same action directly or through a wildcard. The exclusions are emitted as Azure `NotActions` on this role; they do not deny permissions granted by other role assignments.
 
 ## Merge Strategy
 
@@ -49,7 +52,7 @@ The current implementation preserves the permission fields exposed by `azurerm_r
 
 Source roles are resolved at the same `scope` used to create the merged role definition. This allows the module to merge built-in roles together with custom roles already defined at that scope.
 
-Some built-in roles still expose legacy `Microsoft.Classic*` operations. Azure Resource Manager does not accept those operations inside custom role definitions, so this module removes them from merged source permissions and rejects them in `additional_actions` and `additional_data_actions`.
+Some built-in roles still expose legacy `Microsoft.Classic*` operations. Azure Resource Manager does not accept those operations inside custom role definitions, so this module removes them from merged source permissions and rejects them in `additional_actions`, `excluded_actions`, and `additional_data_actions`.
 
 The AzureRM provider does not expose role definition `condition` and `condition_version`, so conditional built-in roles cannot currently be reproduced bit-for-bit through this module. If that scenario becomes relevant, the module should move from `azurerm_role_definition` to an ARM-level implementation such as `azapi_resource` or a dedicated provider.
 
@@ -95,7 +98,7 @@ Use `additional_actions` only for extra control-plane grants that are not alread
 
 Use `additional_data_actions` only for extra data-plane grants that are not already included in `source_roles`. The module deduplicates them against the merged source data actions and applies the same permissive overlap policy used for `not_data_actions`.
 
-Both inputs accept only Azure RBAC action characters: letters, digits, `/`, `.`, and `*`.
+Action entries accept only Azure RBAC action characters: letters, digits, `/`, `.`, and `*`.
 
 ## Assigning The Generated Role
 
@@ -145,6 +148,7 @@ No modules.
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_additional_actions"></a> [additional\_actions](#input\_additional\_actions) | Optional list of extra control-plane actions to add when the merged source roles still miss specific management-plane permissions. | `list(string)` | `[]` | no |
 | <a name="input_additional_data_actions"></a> [additional\_data\_actions](#input\_additional\_data\_actions) | Optional list of extra data-plane actions to add when the merged source roles still miss specific permissions on resource contents. | `list(string)` | `[]` | no |
+| <a name="input_excluded_actions"></a> [excluded\_actions](#input\_excluded\_actions) | Optional list of control-plane actions to exclude from the merged role, including actions granted by source roles or additional\_actions. | `list(string)` | `[]` | no |
 | <a name="input_reason"></a> [reason](#input\_reason) | Short explanation of why this merged role exists. Used to build the custom role description together with the merged source role names. | `string` | n/a | yes |
 | <a name="input_role_name"></a> [role\_name](#input\_role\_name) | Name of the custom role definition to create. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | ARM scope where the custom role definition is created. Use a management group, subscription, resource group, or resource scope ID. | `string` | n/a | yes |

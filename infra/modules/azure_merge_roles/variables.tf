@@ -57,6 +57,27 @@ variable "additional_actions" {
   }
 }
 
+variable "excluded_actions" {
+  description = "Optional list of control-plane actions to exclude from the merged role, including actions granted by source roles or additional_actions."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for action in var.excluded_actions : trimspace(action) != ""])
+    error_message = "excluded_actions must not contain blank actions."
+  }
+
+  validation {
+    condition     = alltrue([for action in var.excluded_actions : can(regex("^[0-9A-Za-z./*]+$", trimspace(action)))])
+    error_message = "excluded_actions entries may contain only Azure RBAC action characters: letters, digits, '/', '.', and '*'."
+  }
+
+  validation {
+    condition     = alltrue([for action in var.excluded_actions : !startswith(lower(trimspace(action)), "microsoft.classic")])
+    error_message = "excluded_actions must not contain legacy Microsoft.Classic* provider operations because Azure custom roles reject them."
+  }
+}
+
 variable "additional_data_actions" {
   description = "Optional list of extra data-plane actions to add when the merged source roles still miss specific permissions on resource contents."
   type        = list(string)
