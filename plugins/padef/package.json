@@ -5,7 +5,6 @@
   "type": "module",
   "scripts": {
     "build": "tsdown",
-    "lint": "oxlint --config ../../.oxlintrc.json src tsdown.config.ts vitest.config.js",
     "typecheck": "tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
