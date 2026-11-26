@@ -15,9 +15,9 @@ a persisted baseline: hand-written, dependency-free ESM, with a `node --test`
 suite beside it.
 
 `scripts/render-mermaid.mjs` is a build artifact. Its source and tests live in
-[`plugins/padef/src`](../../src), and `plugins/padef` bundles them with tsdown
-into that one file, Pele included, so Node runs it offline with no install step
-and no cache to warm.
+[`src/`](./src), and `plugins/padef` bundles them with tsdown into that one
+file, Pele included, so Node runs it offline with no install step and no cache
+to warm.
 
 Keep pointers relative and inside this folder — Harbor stages the whole skill
 directory into the container, so the agent reads `references/` and `scripts/` at

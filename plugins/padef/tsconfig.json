@@ -7,5 +7,5 @@
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": true
   },
-  "include": ["./src/**/*", "./tsdown.config.ts"]
+  "include": ["./skills/confluence-librarian/src/**/*", "./tsdown.config.ts"]
 }

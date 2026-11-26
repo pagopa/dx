@@ -11,7 +11,7 @@ export default defineConfig({
     onlyBundle: ["pele"],
   },
   dts: false,
-  entry: { "render-mermaid": "src/cli.ts" },
+  entry: { "render-mermaid": "skills/confluence-librarian/src/cli.ts" },
   minify: true,
   nodeProtocol: true,
   outDir: "skills/confluence-librarian/scripts",

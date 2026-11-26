@@ -9,10 +9,7 @@ import { test } from "vitest";
 import { renderFence, usage } from "./render-mermaid.ts";
 
 const bundle = fileURLToPath(
-  new URL(
-    "../skills/confluence-librarian/scripts/render-mermaid.mjs",
-    import.meta.url,
-  ),
+  new URL("../scripts/render-mermaid.mjs", import.meta.url),
 );
 
 const fence = "graph TD;A[Start]-->B{OK?};B-->|yes|C[Ship];B-->|no|D[Fix]";
