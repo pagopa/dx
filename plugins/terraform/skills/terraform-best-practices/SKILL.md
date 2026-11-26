@@ -41,6 +41,7 @@ Local KB paths to inspect, relative to the selected knowledge-base root (`DX_KB_
 - Pin DX registry module versions with `~> major.minor`, using the module's
   `project.json` `metadata.version` as the source for the current version.
 - Never create `variables.tf` in root environment folders. Root environment configuration belongs in `locals.tf`; local modules own their own `variables.tf`.
+- Preserve existing state backends unless migration is requested. For backend or state-access changes, read [State Backends](./references/state-backends.md).
 
 ## Workflow
 
@@ -73,5 +74,3 @@ Follow [Question Policy](./references/question-policy.md) whenever user input is
 - [Question Policy](./references/question-policy.md)
 - [Terraform Best Practices Checklist](./references/checklist.md)
 - [Terraform Troubleshooting](./references/troubleshooting.md)
-- [Eval Test Prompts](./references/eval-prompts.md)
-- [Eval Rubric](./references/eval-rubric.md)

@@ -26,7 +26,7 @@ Common values to infer before asking:
 - `BusinessUnit`
 - `ManagementTeam`
 - `CostCenter`
-- backend state configuration
+- existing backend coordinates
 
 ## Ask One Question at a Time
 
