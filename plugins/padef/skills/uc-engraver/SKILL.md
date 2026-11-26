@@ -37,6 +37,8 @@ bundled template.
 - Preserve existing Use Case-local `AC-XX` IDs when their meaning remains
   unchanged. Add a new ID only for new acceptance meaning; do not renumber
   existing checks.
+- Use the template's `AC-XX` form for every acceptance check. IDs are local
+  to the owning Use Case; do not include the UC ID in the check ID.
 - Write visible content in English unless another language is requested.
   Stable IDs, status values, endpoint names, metric identifiers, and URLs are
   machine-facing and remain unchanged.
@@ -123,9 +125,11 @@ readiness, and change propagation.
 5. **Validate each child.** Check that flows are coherent, acceptance checks are
    binary and traceable, tracking is explicit or justified `N/A`, a sequence
    diagram is supplied inline or by link, links and IDs are consistent, errors
-   use semantic identifiers and each exception flow references one, open
-   questions do not repeat a parent `open.item-XX`, and no unsupported decision
-   was invented.
+   use semantic identifiers, every in-scope failure appears in exception flows
+   and references its typed error, open questions do not repeat a parent
+   `open.item-XX`, and no unsupported decision was invented. Reserve alternate
+   flows for non-error outcomes; do not mark exception flows `N/A` when an
+   in-scope failure exists.
 6. **Synchronize the parent.** Update every selected row in the existing parent
    DR/SRS Use Case index in the same workflow. The parent row is only the stable
    ID, the title, and the child-document link; keep those aligned and keep
