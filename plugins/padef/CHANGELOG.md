@@ -1,3 +1,13 @@
+## 0.6.2 (2026-11-26)
+
+### 🩹 Fixes
+
+- Consolidate Jira Magister guidance into canonical workflow, issue-contract, execution-template, and persistence references. ([#2525](https://github.com/pagopa/dx/pull/2525))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 0.6.1 (2026-11-17)
 
 ### 🚀 Features
