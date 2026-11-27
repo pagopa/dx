@@ -1,10 +1,12 @@
 // Exercises actor persistence, table edits, and the loopback boundary.
 import assert from "node:assert/strict";
+import { execFile } from "node:child_process";
 import { randomUUID } from "node:crypto";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
+import { promisify } from "node:util";
 import { runInNewContext } from "node:vm";
 
 import { createActorState } from "./actor-state.mjs";
@@ -23,12 +25,44 @@ import {
 } from "./github-repository.mjs";
 import { startServer } from "./server.mjs";
 import { findUseCasesPrompt, syncPrompt } from "./sync-prompt.mjs";
+import { createWorkspaceContext } from "./workspace-context.mjs";
+
+const executeFile = promisify(execFile);
 
 async function workspace(t) {
   const directory = await mkdtemp(join(tmpdir(), "brownfield-docs-"));
   t.after(() => rm(directory, { force: true, recursive: true }));
   return directory;
 }
+
+test("resolves repository identity and state path from the host workspace", async (t) => {
+  const directory = await workspace(t);
+  await executeFile("git", ["init", "--quiet"], { cwd: directory });
+  await executeFile(
+    "git",
+    ["remote", "add", "origin", "https://github.com/pagopa/dx.git"],
+    { cwd: directory },
+  );
+
+  const context = await createWorkspaceContext(directory);
+
+  assert.equal(context.currentRepository, "pagopa/dx");
+  assert.equal(
+    (await context.actorState.read()).path,
+    join(directory, "docs/brownfield/state.json"),
+  );
+});
+
+test("requires an absolute host workspace path", async () => {
+  await assert.rejects(
+    createWorkspaceContext(undefined),
+    /Copilot host did not provide an absolute checkout directory/,
+  );
+  await assert.rejects(
+    createWorkspaceContext("relative/path"),
+    /Copilot host did not provide an absolute checkout directory/,
+  );
+});
 
 test("autosave serializes edits, waits for valid rows, and preserves conflicts", async () => {
   class Element {
@@ -828,6 +862,7 @@ test("sync links confirmed actors and validates links across active and archived
       schemaVersion: 1,
       actors: [
         { name: "Operator", description: "", accepted: true },
+        { name: "Senior Operator", description: "", accepted: true },
         { name: "Guest", description: "", accepted: false },
       ],
       useCases: [],
@@ -877,26 +912,47 @@ test("sync links confirmed actors and validates links across active and archived
     { actorId: actor.id, label: "Operator" },
   ]);
   assert.equal(Object.hasOwn(added.state.useCases[0], "actorNames"), false);
+  const overlapping = await store.addFindings({
+    revision: added.revision,
+    actors: [],
+    useCases: [
+      {
+        title: "Meet",
+        description: "Senior Operator meets Operator.",
+        actorNames: ["Operator", "Senior Operator"],
+      },
+    ],
+  });
+  assert.deepEqual(
+    overlapping.state.useCases[1].actorMentions,
+    [
+      {
+        actorId: overlapping.state.actors[1].id,
+        label: "Senior Operator",
+      },
+      { actorId: overlapping.state.actors[0].id, label: "Operator" },
+    ],
+  );
   await assert.rejects(
     store.addFindings({ revision: initial.revision, actors: [], useCases: [] }),
     { status: 409 },
   );
   await assert.rejects(
     store.save({
-      revision: added.revision,
+      revision: overlapping.revision,
       state: {
-        ...added.state,
-        actors: [{ ...actor, accepted: false }, added.state.actors[1]],
+        ...overlapping.state,
+        actors: [{ ...actor, accepted: false }, overlapping.state.actors[1]],
       },
     }),
     { status: 422 },
   );
   const archived = await store.save({
-    revision: added.revision,
+    revision: overlapping.revision,
     state: {
-      ...added.state,
+      ...overlapping.state,
       useCases: [],
-      archivedUseCases: added.state.useCases,
+      archivedUseCases: overlapping.state.useCases,
     },
   });
   await assert.rejects(
@@ -904,7 +960,7 @@ test("sync links confirmed actors and validates links across active and archived
       revision: archived.revision,
       state: {
         ...archived.state,
-        actors: [{ ...actor, accepted: false }, added.state.actors[1]],
+        actors: [{ ...actor, accepted: false }, overlapping.state.actors[1]],
       },
     }),
     { status: 422 },
@@ -913,7 +969,7 @@ test("sync links confirmed actors and validates links across active and archived
     revision: archived.revision,
     state: {
       ...archived.state,
-      actors: [{ ...actor, name: "Maintainer" }, added.state.actors[1]],
+      actors: [{ ...actor, name: "Maintainer" }, overlapping.state.actors[1]],
     },
   });
   assert.equal(
@@ -1022,10 +1078,21 @@ test("sync rewords existing use cases for confirmed actor renames atomically", a
     actors: [],
     useCases: [],
     useCaseUpdates: [update],
+    sourceUpdates: [
+      {
+        kind: "useCase",
+        id: "review",
+        name: update.originalTitle,
+        sourceRevisions: [{ fullName: "pagopa/dx", sha: "a".repeat(40) }],
+      },
+    ],
   });
   assert.equal(result.state.useCases[0].accepted, false);
   assert.equal(result.state.useCases[0].title, update.title);
   assert.equal(result.state.useCases[0].description, update.description);
+  assert.deepEqual(result.state.useCases[0].sourceRevisions, [
+    { fullName: "pagopa/dx", sha: "a".repeat(40) },
+  ]);
   assert.equal(result.state.useCases[0].custom, "preserved");
   assert.deepEqual(result.state.useCases[0].aliases, [
     "Review Microsoft Azure",
@@ -1138,9 +1205,12 @@ test("GitHub repository sources remain empty unless explicitly added", () => {
     isValidGitHubRepositories([
       { fullName: "pagopa/dx" },
       { fullName: "microsoft/vscode" },
+      { fullName: "pagopa/.github" },
     ]),
     true,
   );
+  assert.equal(isValidGitHubRepository("pagopa/."), false);
+  assert.equal(isValidGitHubRepository("pagopa/.."), false);
   assert.equal(
     isValidGitHubRepositories([
       { fullName: "pagopa/dx" },
@@ -1153,6 +1223,10 @@ test("GitHub repository sources remain empty unless explicitly added", () => {
     "pagopa/dx",
   );
   assert.equal(parseGitHubRemote("git@github.com:pagopa/dx.git"), "pagopa/dx");
+  assert.equal(
+    parseGitHubRemote("https://github.com/pagopa/.github.git"),
+    "pagopa/.github",
+  );
   assert.equal(parseGitHubRemote("https://example.com/pagopa/dx.git"), null);
 });
 

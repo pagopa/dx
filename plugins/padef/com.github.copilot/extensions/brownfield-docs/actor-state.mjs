@@ -439,17 +439,17 @@ export function createActorState(statePath) {
           "Source updates must identify an actor or use case.",
         );
       }
+      const originalEntries =
+        update.kind === "actor"
+          ? current.state.actors
+          : (current.state.useCases ?? []);
       const entries = update.kind === "actor" ? mergedActors : updatedCases;
-      const limit =
-        update.kind === "actor" ? current.state.actors.length : entries.length;
       const field = update.kind === "actor" ? "name" : "title";
-      const candidates = entries
-        .slice(0, limit)
-        .flatMap((item, index) =>
-          item[field] === update.name && (!update.id || item.id === update.id)
-            ? [index]
-            : [],
-        );
+      const candidates = originalEntries.flatMap((item, index) =>
+        item[field] === update.name && (!update.id || item.id === update.id)
+          ? [index]
+          : [],
+      );
       const key = `${update.kind}:${candidates[0]}`;
       if (candidates.length !== 1 || updatedSourceKeys.has(key)) {
         throw new RequestError(
@@ -623,11 +623,13 @@ function buildActorMentions(description, actorNames, actors) {
       "Each linked use case needs distinct confirmed actors.",
     );
   }
+  if (actorNames.some((name) => typeof name !== "string" || !name.trim())) {
+    throw new RequestError(422, "Actor names must be nonempty strings.");
+  }
   const mentions = [];
-  for (const name of actorNames) {
-    if (typeof name !== "string" || !name.trim()) {
-      throw new RequestError(422, "Actor names must be nonempty strings.");
-    }
+  for (const name of [...actorNames].sort(
+    (first, second) => second.length - first.length,
+  )) {
     const matches = actors.filter(
       (actor) => actor.accepted === true && actor.name === name,
     );

@@ -1,22 +1,11 @@
 import { createCanvas, joinSession } from "@github/copilot-sdk/extension";
 // Registers the brownfield documentation canvas with the current Copilot session.
-import { fileURLToPath } from "node:url";
 
-import { createActorState } from "./actor-state.mjs";
-import { readCurrentGitHubRepository } from "./current-repository.mjs";
 import { startServer } from "./server.mjs";
 import { findUseCasesPrompt, syncPrompt } from "./sync-prompt.mjs";
+import { createWorkspaceContext } from "./workspace-context.mjs";
 
-const servers = new Map();
-const repositoryRoot = fileURLToPath(
-  new URL("../../../../../", import.meta.url),
-);
-const currentRepository = await readCurrentGitHubRepository(repositoryRoot);
-const actorState = createActorState(
-  fileURLToPath(
-    new URL("../../../../../docs/brownfield/state.json", import.meta.url),
-  ),
-);
+const instances = new Map();
 const session = await joinSession({
   canvases: [
     createCanvas({
@@ -24,10 +13,13 @@ const session = await joinSession({
         {
           description:
             "Read saved repositories, active and archived actors, use cases and entities, and storage path.",
-          handler: async () => ({
-            ...(await actorState.read()),
-            currentRepository,
-          }),
+          handler: async ({ instanceId }) => {
+            const instance = await getInstance(instanceId);
+            return {
+              ...(await instance.actorState.read()),
+              currentRepository: instance.currentRepository,
+            };
+          },
           name: "read_actors",
         },
         {
@@ -169,7 +161,10 @@ const session = await joinSession({
               },
             },
           },
-          handler: async ({ input }) => actorState.addFindings(input),
+          handler: async ({ input, instanceId }) => {
+            const instance = await getInstance(instanceId);
+            return instance.actorState.addFindings(input);
+          },
           name: "add_findings",
         },
       ],
@@ -183,28 +178,39 @@ const session = await joinSession({
         type: "object",
       },
       onClose: async (ctx) => {
-        const pending = servers.get(ctx.instanceId);
-        servers.delete(ctx.instanceId);
-        if (pending) await (await pending).close();
+        const pending = instances.get(ctx.instanceId);
+        instances.delete(ctx.instanceId);
+        if (pending) await (await pending).server.close();
       },
       open: async (ctx) => {
-        // Cache the promise as well, so concurrent opens share one server.
-        if (!servers.has(ctx.instanceId)) {
-          const pending = startServer(
-            actorState,
-            currentRepository,
-            () => session.send({ prompt: syncPrompt(ctx.instanceId) }),
-            () => session.send({ prompt: findUseCasesPrompt(ctx.instanceId) }),
-          );
-          servers.set(ctx.instanceId, pending);
-          pending.catch(() => servers.delete(ctx.instanceId));
+        if (!instances.has(ctx.instanceId)) {
+          const pending = createWorkspaceContext(
+            ctx.session?.workingDirectory,
+          ).then(async (workspace) => ({
+            ...workspace,
+            server: await startServer(
+              workspace.actorState,
+              workspace.currentRepository,
+              () => session.send({ prompt: syncPrompt(ctx.instanceId) }),
+              () =>
+                session.send({ prompt: findUseCasesPrompt(ctx.instanceId) }),
+            ),
+          }));
+          instances.set(ctx.instanceId, pending);
+          pending.catch(() => instances.delete(ctx.instanceId));
         }
-        const entry = await servers.get(ctx.instanceId);
+        const entry = await instances.get(ctx.instanceId);
         return {
           title: "Brownfield documentation",
-          url: entry.url,
+          url: entry.server.url,
         };
       },
     }),
   ],
 });
+
+async function getInstance(instanceId) {
+  const instance = instances.get(instanceId);
+  if (!instance) throw new Error("Open the canvas before using its actions.");
+  return instance;
+}
