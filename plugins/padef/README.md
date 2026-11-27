@@ -4,6 +4,9 @@ PADEF (PagoPA Agentic Delivery Framework) is the PagoPA plugin for AI-enabled
 product development workflows. It bundles the skills that carry an initiative
 from a PRD to a design review, its use cases, and the Jira backlog.
 
+The plugin also contributes the [Brownfield documentation canvas](./com.github.copilot/extensions/brownfield-docs/README.md)
+for managing repository actors and use cases.
+
 Use [`assess-jira-implementation-readiness`](./skills/assess-jira-implementation-readiness/SKILL.md)
 to check whether an existing Jira issue is eligible for implementation. This
 read-only gate checks metadata, blockers, and required description sections; it

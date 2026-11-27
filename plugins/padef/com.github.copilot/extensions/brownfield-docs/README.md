@@ -1,6 +1,6 @@
 # Brownfield documentation canvas
 
-A project-shared Copilot canvas for managing actors in persistent repository state.
+A Copilot canvas contributed by the PADEF plugin for managing actors in persistent repository state.
 
 Ask Copilot to open the **Brownfield documentation** canvas (`brownfield-docs`). GitHub repositories are editable in the global controls on both pages; Domain model contains Actors and Use cases.
 
@@ -42,4 +42,4 @@ Saves use atomic replacement, content revisions, and an exclusive lock to reject
 
 The extension uses the bundled Copilot SDK; no package installation is required. After editing the extension, reload extensions. The loopback server accepts state mutations only from its own canvas origin. Existing session prompt draft files are left untouched but are no longer used.
 
-Run its standalone checks with `node --test .github/extensions/brownfield-docs/canvas.test.mjs`. They use temporary files and do not change repository actor state.
+Run its standalone checks with `node --test plugins/padef/com.github.copilot/extensions/brownfield-docs/canvas.test.mjs`. They use temporary files and do not change repository actor state.

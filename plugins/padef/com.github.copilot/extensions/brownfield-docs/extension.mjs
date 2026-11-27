@@ -8,11 +8,11 @@ import { startServer } from "./server.mjs";
 import { findUseCasesPrompt, syncPrompt } from "./sync-prompt.mjs";
 
 const servers = new Map();
-const repositoryRoot = fileURLToPath(new URL("../../../", import.meta.url));
+const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
 const currentRepository = await readCurrentGitHubRepository(repositoryRoot);
 const actorState = createActorState(
   fileURLToPath(
-    new URL("../../../docs/brownfield/state.json", import.meta.url),
+    new URL("../../../../../docs/brownfield/state.json", import.meta.url),
   ),
 );
 const session = await joinSession({
