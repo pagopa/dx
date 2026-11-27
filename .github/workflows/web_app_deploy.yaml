@@ -57,12 +57,16 @@ jobs:
   build:
     name: Build Artifact
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
     env:
       WORKSPACE: ${{ inputs.workspace_name }}
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         name: Checkout
+        with:
+          persist-credentials: false
 
       - name: Prune
         env:
@@ -197,6 +201,7 @@ jobs:
   approve_staging:
     name: Auto-Approve Staging Slot Deployment
     runs-on: ubuntu-26.04
+    permissions: {}
     needs: [build]
     if: ${{ !github.event.act && inputs.use_staging_slot && inputs.auto_deploy_to_staging }}
 

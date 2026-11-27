@@ -32,8 +32,7 @@ on:
         type: boolean
         required: false
 
-permissions:
-  pull-requests: write
+permissions: {}
 
 concurrency:
   group: tf-static-analysis-${{ github.head_ref }}-${{inputs.folder || 'all-files'}}-${{ inputs.check_to_run || 'all-checks' }}
@@ -43,6 +42,8 @@ jobs:
   get-versions:
     name: Get Terraform and pre-commit Version
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
     if: ${{ inputs.terraform_version == '' || inputs.pre_commit_tf_tag == '' }}
     outputs:
       terraform_version: ${{ steps.get-terraform-version.outputs.terraform_version }}
@@ -67,6 +68,9 @@ jobs:
   tf_analysis:
     name: Terraform Validation
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      pull-requests: write # pr-comment steps
     needs: [get-versions]
     if: ${{ !cancelled() && (needs.get-versions.result == 'success' || needs.get-versions.result == 'skipped') }}
     env:
@@ -83,6 +87,7 @@ jobs:
         with:
           fetch-depth: 0
           ref: ${{ github.sha }}
+          persist-credentials: false
 
       - name: Checkout DX Trivy policies
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -90,6 +95,7 @@ jobs:
           repository: pagopa/dx
           ref: main
           path: .dx-security
+          persist-credentials: false
           sparse-checkout: |
             .trivy/checks/terraform
           sparse-checkout-cone-mode: false

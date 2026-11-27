@@ -5,6 +5,10 @@ on:
 jobs:
   dev_itn_common_deploy:
     uses: $/.github/workflows/infra_apply.yaml
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
     name: Dev - Deploy
     secrets: inherit
     with:
