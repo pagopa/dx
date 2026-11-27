@@ -144,7 +144,7 @@ export const parseTerraformBackendConfiguration = async (
     };
   });
 
-const readTerraformBackendFromRoot = async (
+export const readTerraformBackendFromRoot = async (
   projectRoot: string,
   root: string,
 ): Promise<TerraformBackendConfiguration | undefined> => {

@@ -33,7 +33,9 @@ import {
   githubAppCredentialsSchema,
   type GitHubService,
 } from "../../../../domain/github.js";
+import { terraformBackendSchema } from "../../../../domain/remote-backend.js";
 import { getGithubRepo } from "../../../github/github-repo.js";
+import { repositoryStateDestinationSchema } from "../../../terraform/repository-backend.js";
 import { validatePrompt } from "../../helpers/validate-prompt.js";
 
 const initSchema = z.object({
@@ -92,8 +94,12 @@ export const payloadSchema = z.object({
   env: environmentSchema,
   github: githubRepoSchema,
   init: initSchema.optional(),
+  repositoryStateDestination: repositoryStateDestinationSchema.optional(),
   runnerAppCredentials: githubAppCredentialsSchema.optional(),
   tags: tagsSchema,
+  terraform: z
+    .object({ backend: terraformBackendSchema.optional() })
+    .optional(),
   workspace: workspaceSchema,
 });
 
@@ -844,6 +850,7 @@ export const formatInitializationDetails = (
         chalk.bold.cyan(`  Terraform remote backend:`),
         `    • Azure resource group and Storage Account for the Terraform state`,
         `    • Domain and core state containers with user access on each container`,
+        `    • The Terraform state of infra/repository is moved from this device to the remote backend`,
       ].join("\n"),
     );
   }

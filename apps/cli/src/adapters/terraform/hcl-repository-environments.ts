@@ -103,7 +103,7 @@ const literalEnvironment = (expression: Node): string => {
   return parsed.data;
 };
 
-const findRepositoryTarget = (root: Node): RepositoryTarget => {
+const findRepositoryObject = (root: Node): Node => {
   const rootBody = nodeOfType(root, "body");
   const modules =
     rootBody?.namedChildren.filter((node) => {
@@ -147,7 +147,29 @@ const findRepositoryTarget = (root: Node): RepositoryTarget => {
       `Unsupported repository value in ${REPOSITORY_MAIN}; expected a literal object`,
     );
   }
+  return object;
+};
 
+export const readRepositoryName = (root: Node): string => {
+  const object = findRepositoryObject(root);
+  const name = onlyNode(
+    object.namedChildren.filter(
+      (node) => node.type === "object_elem" && repositoryKey(node) === "name",
+    ),
+    "repository name",
+  );
+  const value = name.childForFieldName("val");
+  const string = value && stringLiteralNode(value);
+  if (!string) {
+    throw new Error(
+      `Unsupported repository name in ${REPOSITORY_MAIN}; expected a literal string`,
+    );
+  }
+  return parseStringLiteral(string, "repository name");
+};
+
+const findRepositoryTarget = (root: Node): RepositoryTarget => {
+  const object = findRepositoryObject(root);
   const objectElements = object.namedChildren.filter(
     (node) => node.type === "object_elem",
   );
