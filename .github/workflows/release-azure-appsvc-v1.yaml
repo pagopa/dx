@@ -229,6 +229,7 @@ jobs:
   auto_approve_staging_deploy:
     name: Approve Staging Deployment
     runs-on: ubuntu-26.04
+    permissions: {}
     needs: [validate]
     # If auto approve fails, the approval can be retried manually
     continue-on-error: true

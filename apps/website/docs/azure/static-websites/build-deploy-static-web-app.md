@@ -42,7 +42,7 @@ roles for the static web app.
 
 - **Azure Identity Role**: Assign `PagoPA Static Web Apps List Secrets` role
 - **Workflow Permissions**: Ensure `id-token: write`, `contents: read`,
-  `pull-requests: write`
+  `packages: read`, `pull-requests: write` on the calling job
 - **Secrets**: Use `secrets: inherit` or configure Azure authentication secrets
 
 ## Step 1: Infrastructure Setup with Terraform
@@ -125,6 +125,15 @@ dependencies hosted on GitHub Packages. A reusable workflow can only downgrade
 the permissions granted by its caller: a `permissions` block without `packages`
 sets the scope to `none`, and the install fails later with `401` when the
 registry refuses the token.
+
+:::
+
+:::info[Pull requests from forks]
+
+Fork pull requests always build on a GitHub-hosted runner, even when
+`use_private_agent` is enabled. Same-repository pull requests and other events
+keep the configured runner selection. Checkout does not persist Git credentials;
+steps that need registry access use the explicitly configured package token.
 
 :::
 

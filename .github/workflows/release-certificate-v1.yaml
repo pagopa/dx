@@ -35,6 +35,8 @@ jobs:
     name: Create or Renew Certificate
     runs-on: ubuntu-24.04
     environment: ${{ inputs.environment }}-cd
+    permissions:
+      id-token: write
     steps:
       - name: Renew TLS Certificate
         uses: pagopa/dx/actions/renew-tls-certificate@main

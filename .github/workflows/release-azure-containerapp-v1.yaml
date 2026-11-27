@@ -352,6 +352,7 @@ jobs:
   auto_approve_deploy:
     name: Approve Deployment
     runs-on: ubuntu-26.04
+    permissions: {}
     needs: build
     # If auto approval fails, the deployment can be approved manually.
     continue-on-error: true
