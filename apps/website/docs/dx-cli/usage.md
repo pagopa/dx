@@ -22,6 +22,11 @@ Before generating anything, the command checks that Terraform and mise are
 installed and that the GitHub token can read the DX packages from GitHub
 Packages (see [Installation](./requirements.md)).
 
+If you publish the repository, keep the Terraform state in `infra/repository`
+on this machine. Do not delete it or run `terraform apply` for `infra/repository`
+from another device until the first [`dx add environment`](#environment) moves
+the state to Azure.
+
 ### Prompt Reference
 
 The `init` command is interactive. The tables below explain what each prompt
@@ -142,16 +147,11 @@ command.
 
 :::note[Repository Terraform state]
 
-`dx init` leaves the Terraform state of `infra/repository` on your machine. Do
-not delete it or apply it from another device until you run `add environment`:
-the first run moves that state to the shared Azure backend
-(`<prefix>/<domain>/repository.tfstate`), verifies it with a clean
-`terraform plan`, and then removes the local copy. If it fails, fix the reported
-problem and re-run the same command. When neither local nor remote state
-exists, the CLI attempts to import existing GitHub repository objects. It
-stops if Terraform would replace objects or create environments or deployment
-policies that it cannot safely import. In that case, recover the original
-state or complete the imports manually before adding environments.
+The first `dx add environment` moves local repository state to Azure
+(`<prefix>/<domain>/repository.tfstate`) and removes the local copy after a
+clean `terraform plan`. If neither local nor remote state exists and automatic
+import fails, recover the original state or complete the imports manually
+before retrying.
 
 Before first placement, the CLI asks you to confirm the environment,
 subscription, Resource Group, Storage Account, container, and key. Use `--yes`
@@ -159,10 +159,9 @@ to accept this placement non-interactively. The destination is permanent for the
 repository: adding another environment keeps and reports the configured backend,
 including existing keys created by earlier CLI versions.
 
-The CLI checks that the repository Terraform configuration matches the GitHub
-remote before preparing state. Keep the literal repository name in `main.tf`
-and the literal owner on the default `github` provider. JSON configuration,
-override files, and custom provider mappings are not supported for this check.
+Use the GitHub remote's repository name as a literal in `main.tf` and its owner
+as a literal on the default `github` provider. The CLI rejects JSON
+configuration, override files, and custom provider mappings.
 
 The `validate-v2` workflow plans `infra/repository` as `bootstrapper-prod-ci`.
 If repository state is stored in a different subscription, the CLI does not
@@ -172,14 +171,9 @@ repository's state container, including permission to lock the state blob.
 Verify access by running a CI plan; a successful migration with your own Azure
 credentials does not verify CI access.
 
-Migration rejects any existing destination blob, even an empty one, rather than
-overwriting it. Concurrent CLI migrations are serialized; a rejected or failed
-plan blocks GitHub environment updates. Import applies the exact inspected plan
-and keeps the import configuration if apply or verification fails, so a retry
-can finish the import.
-Keep local state and backups until verification succeeds. If both local and
-remote state exist, reconcile them manually before retrying; do not delete a
-remote blob merely to bypass this safeguard.
+If local state and a destination blob both exist, reconcile them manually
+before retrying, even if the blob is empty. Do not delete or overwrite either
+copy to bypass the check.
 
 :::
 
