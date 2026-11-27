@@ -50,7 +50,7 @@ jobs:
           minimum_release_age: 7d
 
       - name: Setup Nx Workspace
-        uses: pagopa/dx/actions/setup-nx-workspace@main
+        uses: pagopa/dx/actions/setup-nx-workspace@test/actions-hardening
 
       - name: Install Node.js dependencies
         env:
@@ -58,7 +58,7 @@ jobs:
         run: pnpm ci
 
       - name: Nx Publish
-        uses: pagopa/dx/actions/nx-release@main
+        uses: pagopa/dx/actions/nx-release@test/actions-hardening
         with:
           app-slug: ${{ steps.generate-token.outputs.app-slug }}
           github-token: ${{ steps.generate-token.outputs.token }}

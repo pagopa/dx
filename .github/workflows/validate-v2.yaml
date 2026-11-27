@@ -93,7 +93,7 @@ jobs:
           minimum_release_age: 7d
 
       - name: Setup Nx Workspace
-        uses: pagopa/dx/actions/setup-nx-workspace@main
+        uses: pagopa/dx/actions/setup-nx-workspace@test/actions-hardening
 
       - parallel:
           - name: Nx Sync
@@ -233,7 +233,7 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
       - name: Setup Nx Workspace
-        uses: pagopa/dx/actions/setup-nx-workspace@main
+        uses: pagopa/dx/actions/setup-nx-workspace@test/actions-hardening
 
       - name: Install Node.js dependencies
         shell: bash
@@ -370,7 +370,7 @@ jobs:
           key: ${{ runner.os }}-${{ runner.arch }}-tflint-plugins-${{ github.workflow }}-${{ hashFiles('mise.toml', '.tflint.hcl') }}
 
       - name: Setup Nx Workspace
-        uses: pagopa/dx/actions/setup-nx-workspace@main
+        uses: pagopa/dx/actions/setup-nx-workspace@test/actions-hardening
 
       - name: Install dependencies
         env:
@@ -458,7 +458,7 @@ jobs:
       # cloud and GitHub App secrets are scoped to the steps that need them.
       - name: Cloud Login
         id: cloud-login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@test/actions-hardening
         with:
           export-github-token: "false"
         env:
@@ -521,7 +521,7 @@ jobs:
           merge-multiple: true
 
       - name: Post Code Review Report
-        uses: pagopa/dx/actions/run-dx-task@main
+        uses: pagopa/dx/actions/run-dx-task@test/actions-hardening
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:

@@ -35,13 +35,13 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        uses: pagopa/dx/.github/actions/get-terraform-version@test/actions-hardening
 
       - name: Setup Telemetry Session
-        uses: pagopa/dx/actions/setup-telemetry@main
+        uses: pagopa/dx/actions/setup-telemetry@test/actions-hardening
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@test/actions-hardening
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -50,7 +50,7 @@ jobs:
           GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
 
       - name: Terraform Setup
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@test/actions-hardening
         with:
           terraform_version: ${{ steps.get-version.outputs.terraform_version }}
 
@@ -59,7 +59,7 @@ jobs:
         run: terraform init -input=false
 
       - name: Start Terraform Apply telemetry span
-        uses: pagopa/dx/actions/log-telemetry-event@main
+        uses: pagopa/dx/actions/log-telemetry-event@test/actions-hardening
         with:
           name: terraform-apply
           span_phase: start
@@ -72,7 +72,7 @@ jobs:
 
       - name: End Terraform Apply telemetry span
         if: always()
-        uses: pagopa/dx/actions/log-telemetry-event@main
+        uses: pagopa/dx/actions/log-telemetry-event@test/actions-hardening
         with:
           name: terraform-apply
           span_phase: end

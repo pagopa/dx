@@ -167,7 +167,7 @@ runs:
     # The workflow token needs packages:write to publish to GitHub Packages.
     - name: Setup npm registry
       if: steps.release-mode.outputs.mode == 'publish' || steps.release-mode.outputs.mode == 'publish-all'
-      uses: pagopa/dx/actions/setup-npm-registry@main
+      uses: pagopa/dx/actions/setup-npm-registry@test/actions-hardening
       with:
         token: ${{ github.token }}
 

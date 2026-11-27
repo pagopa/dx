@@ -44,7 +44,7 @@ jobs:
           minimum_release_age: 7d
 
       - name: Setup Nx Workspace
-        uses: pagopa/dx/actions/setup-nx-workspace@main
+        uses: pagopa/dx/actions/setup-nx-workspace@test/actions-hardening
 
       - name: Assess affected projects and environments
         id: detect
@@ -179,7 +179,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
 
       - name: Setup Nx Workspace
-        uses: pagopa/dx/actions/setup-nx-workspace@main
+        uses: pagopa/dx/actions/setup-nx-workspace@test/actions-hardening
 
       - name: Install dependencies
         env:
@@ -188,7 +188,7 @@ jobs:
           mise deps --skip pnpm
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@test/actions-hardening
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
@@ -203,7 +203,7 @@ jobs:
       # Outputs (provider, plan-path, credentials) are passed to release-apply.
       - name: Upload Terraform Plan
         id: upload_plan
-        uses: pagopa/dx/actions/terraform-plan-storage-upload@main
+        uses: pagopa/dx/actions/terraform-plan-storage-upload@test/actions-hardening
         with:
           plan-file: ${{ env.TFPLAN_FILE }}
           working-directory: ${{ matrix.target.root }}
@@ -229,7 +229,7 @@ jobs:
             > plan-outputs.json
 
       - name: Upload plan outputs artifact
-        uses: pagopa/dx/.github/actions/upload-artifact@main
+        uses: pagopa/dx/.github/actions/upload-artifact@test/actions-hardening
         with:
           bundle_name: tfplan-${{ matrix.target.project }}-outputs
           file_path: plan-outputs.json
@@ -273,7 +273,7 @@ jobs:
             ${{ runner.os }}-pnpm-store-${{ github.workflow }}-
 
       - name: Setup Nx Workspace
-        uses: pagopa/dx/actions/setup-nx-workspace@main
+        uses: pagopa/dx/actions/setup-nx-workspace@test/actions-hardening
 
       - name: Install dependencies
         env:
@@ -282,14 +282,14 @@ jobs:
           mise deps --skip pnpm
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@test/actions-hardening
         env:
           ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
           ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
 
       # Download plan outputs artifact from release-plan
       - name: Download plan outputs artifact
-        uses: pagopa/dx/.github/actions/download-artifact@main
+        uses: pagopa/dx/.github/actions/download-artifact@test/actions-hardening
         with:
           bundle_name: tfplan-${{ matrix.target.project }}-outputs
           file_path: /tmp/plan-outputs
@@ -304,7 +304,7 @@ jobs:
       # Download the exact plan bundle uploaded by release-plan and apply it,
       # instead of recomputing a new plan.
       - name: Download Terraform Plan
-        uses: pagopa/dx/actions/terraform-plan-storage-download@main
+        uses: pagopa/dx/actions/terraform-plan-storage-download@test/actions-hardening
         with:
           provider: ${{ fromJSON(steps.plan_outputs.outputs.plan).provider }}
           plan-path: ${{ fromJSON(steps.plan_outputs.outputs.plan).plan_path }}

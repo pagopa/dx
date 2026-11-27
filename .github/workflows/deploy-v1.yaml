@@ -57,7 +57,7 @@ jobs:
           minimum_release_age: 7d
 
       - name: Setup Nx Workspace
-        uses: pagopa/dx/actions/setup-nx-workspace@main
+        uses: pagopa/dx/actions/setup-nx-workspace@test/actions-hardening
 
       - name: Get Project Info
         id: project-info
@@ -180,10 +180,10 @@ jobs:
           minimum_release_age: 7d
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@test/actions-hardening
 
       - name: Stage deployment
-        uses: pagopa/dx/actions/deploy@main
+        uses: pagopa/dx/actions/deploy@test/actions-hardening
         with:
           phase: stage
           resource_type: ${{ matrix.targetResource.type }}
@@ -223,10 +223,10 @@ jobs:
           minimum_release_age: 7d
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@test/actions-hardening
 
       - name: Roll out deployment
-        uses: pagopa/dx/actions/deploy@main
+        uses: pagopa/dx/actions/deploy@test/actions-hardening
         with:
           phase: rollout
           resource_type: ${{ matrix.targetResource.type }}

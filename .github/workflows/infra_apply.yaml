@@ -66,7 +66,7 @@ jobs:
 
       - name: Get terraform version from .terraform-version file
         id: get-version
-        uses: pagopa/dx/.github/actions/get-terraform-version@main
+        uses: pagopa/dx/.github/actions/get-terraform-version@test/actions-hardening
 
   detect-projects:
     name: Detect Terraform Projects
@@ -135,7 +135,7 @@ jobs:
           echo "Detected matrix: $MATRIX"
 
   tf-modules-check:
-    uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
+    uses: pagopa/dx/.github/workflows/static_analysis.yaml@test/actions-hardening
     name: Check terraform registry modules hashes
     permissions:
       contents: read
@@ -225,10 +225,10 @@ jobs:
           done <<< "$ENV_VARS"
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@test/actions-hardening
 
       - name: Terraform Setup
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@test/actions-hardening
         id: set-terraform-version
         with:
           terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
@@ -240,12 +240,12 @@ jobs:
 
       - name: Check Terraform provider support
         continue-on-error: true
-        uses: pagopa/dx/actions/terraform-provider-lifecycle@main
+        uses: pagopa/dx/actions/terraform-provider-lifecycle@test/actions-hardening
         with:
           working-directory: ${{ matrix.dir }}
 
       - name: Terraform Plan
-        uses: pagopa/dx/actions/sanitize-terraform-plan@main
+        uses: pagopa/dx/actions/sanitize-terraform-plan@test/actions-hardening
         with:
           base-path: ${{ steps.directory.outputs.dir }}
           sensitive-keys: hidden-link,APPINSIGHTS_INSTRUMENTATIONKEY
@@ -257,7 +257,7 @@ jobs:
       # Outputs (provider, plan-path, credentials) are passed to the apply job.
       - name: Upload Terraform Plan
         id: upload_plan
-        uses: pagopa/dx/actions/terraform-plan-storage-upload@main
+        uses: pagopa/dx/actions/terraform-plan-storage-upload@test/actions-hardening
         with:
           plan-file: ${{ env.TFPLAN_FILE }}
           working-directory: ${{ steps.directory.outputs.dir }}
@@ -283,7 +283,7 @@ jobs:
             > plan-outputs.json
 
       - name: Upload plan outputs artifact
-        uses: pagopa/dx/.github/actions/upload-artifact@main
+        uses: pagopa/dx/.github/actions/upload-artifact@test/actions-hardening
         with:
           bundle_name: ${{ steps.artifact.outputs.name }}-outputs
           file_path: plan-outputs.json
@@ -324,19 +324,19 @@ jobs:
           echo "name=terraform-bundle-${SLUG}" >> "$GITHUB_OUTPUT"
 
       - name: Setup Telemetry Session
-        uses: pagopa/dx/actions/setup-telemetry@main
+        uses: pagopa/dx/actions/setup-telemetry@test/actions-hardening
 
       - name: Cloud Login
-        uses: pagopa/dx/actions/csp-login@main
+        uses: pagopa/dx/actions/csp-login@test/actions-hardening
 
       - name: Terraform Setup
-        uses: pagopa/dx/.github/actions/terraform-setup@main
+        uses: pagopa/dx/.github/actions/terraform-setup@test/actions-hardening
         with:
           terraform_version: ${{ needs.get-terraform-version.outputs.terraform_version }}
 
       # Download plan outputs artifact from tf_plan
       - name: Download plan outputs artifact
-        uses: pagopa/dx/.github/actions/download-artifact@main
+        uses: pagopa/dx/.github/actions/download-artifact@test/actions-hardening
         with:
           bundle_name: ${{ steps.artifact.outputs.name }}-outputs
           file_path: /tmp/plan-outputs
@@ -356,7 +356,7 @@ jobs:
       # Download and extract the plan bundle (plan file + .terraform.lock.hcl + .terraform/modules/).
       # Storage coordinates come from the plan outputs artifact.
       - name: Download Terraform Plan
-        uses: pagopa/dx/actions/terraform-plan-storage-download@main
+        uses: pagopa/dx/actions/terraform-plan-storage-download@test/actions-hardening
         with:
           provider: ${{ steps.plan_outputs.outputs.provider }}
           plan-path: ${{ steps.plan_outputs.outputs.plan_path }}
@@ -372,13 +372,13 @@ jobs:
           terraform init -input=false
 
       - name: Start Terraform Apply telemetry span
-        uses: pagopa/dx/actions/log-telemetry-event@main
+        uses: pagopa/dx/actions/log-telemetry-event@test/actions-hardening
         with:
           name: terraform-apply
           span_phase: start
 
       - name: Terraform Apply
-        uses: pagopa/dx/actions/sanitize-terraform-apply@main
+        uses: pagopa/dx/actions/sanitize-terraform-apply@test/actions-hardening
         with:
           base-path: ${{ matrix.dir }}
           plan-file: ${{ env.TFPLAN_FILE }}
@@ -386,7 +386,7 @@ jobs:
 
       - name: End Terraform Apply telemetry span
         if: always()
-        uses: pagopa/dx/actions/log-telemetry-event@main
+        uses: pagopa/dx/actions/log-telemetry-event@test/actions-hardening
         with:
           name: terraform-apply
           span_phase: end
