@@ -46,6 +46,7 @@ These variables can be set at the workflow or job level, or in `env:` on the ste
 ## Scoped GitHub App tokens
 
 The `export-github-token` input defaults to `"true"` to preserve existing callers.
+While the default is `"true"`, the action emits a warning because the token becomes visible to every later step; the default will change in the next major.
 Set it to `"false"` to leave the job's `GITHUB_TOKEN` unchanged, and pass the
 `github-token` output only to the steps that need App permissions. The output is
 empty when GitHub login is not configured. `CSP_LIST` is still exported in both modes.

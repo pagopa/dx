@@ -55,6 +55,7 @@ jobs:
     # since it runs on self-hosted runners that may have access to sensitive data
     name: Fork PR Gate
     runs-on: ubuntu-26.04
+    permissions: {}
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
     steps:
@@ -66,7 +67,8 @@ jobs:
           CURRENT_REPO: ${{ github.repository }}
         run: |
           # Only block forked PRs; allow all other events
-          if [ "$EVENT_NAME" = "pull_request" ] && [ -n "$PR_HEAD_REPO" ] && [ "$PR_HEAD_REPO" != "$CURRENT_REPO" ]; then
+          if { [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "pull_request_target" ]; } \
+            && [ -n "$PR_HEAD_REPO" ] && [ "$PR_HEAD_REPO" != "$CURRENT_REPO" ]; then
             echo "Blocking forked PR from $PR_HEAD_REPO"
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
@@ -76,6 +78,8 @@ jobs:
   get-terraform-version:
     name: Get Terraform Version
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
     needs: gate
     if: ${{ needs.gate.outputs.run == 'true' }}
     outputs:
@@ -91,6 +95,8 @@ jobs:
   detect-projects:
     name: Detect Terraform Projects
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
     needs: [gate, get-terraform-version]
     if: ${{ needs.gate.outputs.run == 'true' }}
     outputs:
@@ -156,6 +162,9 @@ jobs:
   tf-modules-check:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
+    permissions:
+      contents: read
+      pull-requests: write # static_analysis posts PR comments
     needs: [gate, get-terraform-version, detect-projects]
     if: ${{ needs.gate.outputs.run == 'true' && needs.detect-projects.outputs.matrix != '[]' }}
     secrets: inherit

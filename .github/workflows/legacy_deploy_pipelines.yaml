@@ -211,9 +211,12 @@ jobs:
 
       - name: Swap Staging and Production Slots
         if: ${{ inputs.use_staging_slot == true }}
+        env:
+          RESOURCE_GROUP_NAME: ${{ inputs.resource_group_name }}
+          APP_NAME: ${{ inputs.app_name }}
         run: |
           az webapp deployment slot swap \
-            -g ${{ inputs.resource_group_name }} \
-            -n ${{ inputs.app_name }} \
+            -g "$RESOURCE_GROUP_NAME" \
+            -n "$APP_NAME" \
             --slot staging \
             --target-slot production

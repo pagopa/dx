@@ -27,8 +27,10 @@ jobs:
 
     steps:
       - name: Verify runner execution
+        env:
+          TEST_ID: ${{ inputs.test_id }}
         run: |
           set -euo pipefail
-          echo "test_id=${{ inputs.test_id }}"
+          echo "test_id=${TEST_ID}"
           echo "runner_name=${RUNNER_NAME}"
           echo "runner_os=${RUNNER_OS}"
