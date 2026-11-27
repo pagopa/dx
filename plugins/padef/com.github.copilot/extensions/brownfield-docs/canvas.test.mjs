@@ -923,16 +923,13 @@ test("sync links confirmed actors and validates links across active and archived
       },
     ],
   });
-  assert.deepEqual(
-    overlapping.state.useCases[1].actorMentions,
-    [
-      {
-        actorId: overlapping.state.actors[1].id,
-        label: "Senior Operator",
-      },
-      { actorId: overlapping.state.actors[0].id, label: "Operator" },
-    ],
-  );
+  assert.deepEqual(overlapping.state.useCases[1].actorMentions, [
+    {
+      actorId: overlapping.state.actors[1].id,
+      label: "Senior Operator",
+    },
+    { actorId: overlapping.state.actors[0].id, label: "Operator" },
+  ]);
   await assert.rejects(
     store.addFindings({ revision: initial.revision, actors: [], useCases: [] }),
     { status: 409 },
