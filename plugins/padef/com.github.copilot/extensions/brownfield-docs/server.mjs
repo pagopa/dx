@@ -8,12 +8,23 @@ import { RequestError } from "./request-error.mjs";
 const assets = new Map([
   ["", ["index.html", "text/html; charset=utf-8"]],
   ["actors.mjs", ["actors.mjs", "text/javascript; charset=utf-8"]],
-  ["actor-mentions.mjs", ["actor-mentions.mjs", "text/javascript; charset=utf-8"]],
-  ["github-repository.mjs", ["github-repository.mjs", "text/javascript; charset=utf-8"]],
+  [
+    "actor-mentions.mjs",
+    ["actor-mentions.mjs", "text/javascript; charset=utf-8"],
+  ],
+  [
+    "github-repository.mjs",
+    ["github-repository.mjs", "text/javascript; charset=utf-8"],
+  ],
   ["style.css", ["style.css", "text/css; charset=utf-8"]],
 ]);
 
-export async function startServer(actorState, currentRepository, syncFromCode, findUseCases) {
+export async function startServer(
+  actorState,
+  currentRepository,
+  syncFromCode,
+  findUseCases,
+) {
   const prefix = `/${randomBytes(24).toString("hex")}/`;
   const server = createServer((request, response) => {
     void handle(request, response).catch((error) => {
@@ -49,8 +60,13 @@ export async function startServer(actorState, currentRepository, syncFromCode, f
     let result;
     if (request.method === "GET" && path === "actors") {
       result = { ...(await actorState.read()), currentRepository };
-    } else if (request.method === "POST" &&
-      (path === "save-actors" || path === "sync-code" || path === "find-use-cases" || path === "generate-document")) {
+    } else if (
+      request.method === "POST" &&
+      (path === "save-actors" ||
+        path === "sync-code" ||
+        path === "find-use-cases" ||
+        path === "generate-document")
+    ) {
       if (
         request.headers.origin !== origin ||
         request.headers["x-canvas-request"] !== "1"
@@ -67,8 +83,12 @@ export async function startServer(actorState, currentRepository, syncFromCode, f
         result = await actorState.generateDocument(input);
       } else {
         const submit = path === "sync-code" ? syncFromCode : findUseCases;
-        if (!submit) throw new RequestError(503, "Investigation is unavailable.");
-        if (!input || !(input.revision === null || typeof input.revision === "string")) {
+        if (!submit)
+          throw new RequestError(503, "Investigation is unavailable.");
+        if (
+          !input ||
+          !(input.revision === null || typeof input.revision === "string")
+        ) {
           throw new RequestError(400, "A loaded state revision is required.");
         }
         result = { messageId: await submit() };

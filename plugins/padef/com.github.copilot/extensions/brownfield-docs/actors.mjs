@@ -4,7 +4,13 @@ import {
   isValidGitHubRepository,
   isValidGitHubRepositories,
 } from "./github-repository.mjs";
-import { actorIsReferenced, availableActorRanges, labelRanges, linkMatchingActors, mentionRanges } from "./actor-mentions.mjs";
+import {
+  actorIsReferenced,
+  availableActorRanges,
+  labelRanges,
+  linkMatchingActors,
+  mentionRanges,
+} from "./actor-mentions.mjs";
 
 const rows = document.querySelector("#actor-rows");
 const status = document.querySelector("#actor-status");
@@ -106,9 +112,21 @@ async function saveChanges() {
   const version = changeVersion;
   const savedFindings = [
     ...snapshot.state.actors.map((item) => [item, "name", item.name]),
-    ...(snapshot.state.useCases ?? []).map((item) => [item, "title", item.title]),
-    ...(snapshot.state.archivedActors ?? []).map((item) => [item, "name", item.name]),
-    ...(snapshot.state.archivedUseCases ?? []).map((item) => [item, "title", item.title]),
+    ...(snapshot.state.useCases ?? []).map((item) => [
+      item,
+      "title",
+      item.title,
+    ]),
+    ...(snapshot.state.archivedActors ?? []).map((item) => [
+      item,
+      "name",
+      item.name,
+    ]),
+    ...(snapshot.state.archivedUseCases ?? []).map((item) => [
+      item,
+      "title",
+      item.title,
+    ]),
   ];
   controls();
   status.textContent = "Saving changes...";
@@ -141,17 +159,23 @@ function controls() {
     busy || !snapshot || snapshot.state.repositories.length >= 500;
   retry.hidden = !saveBlocked;
   retry.disabled = busy || saving;
-  sync.disabled = !snapshot || busy || saving || dirty || saveBlocked || submittingSync;
-  const hasConfirmedActors = snapshot?.state.actors.some((actor) => actor.accepted === true) ?? false;
+  sync.disabled =
+    !snapshot || busy || saving || dirty || saveBlocked || submittingSync;
+  const hasConfirmedActors =
+    snapshot?.state.actors.some((actor) => actor.accepted === true) ?? false;
   findUseCases.disabled = sync.disabled || !hasConfirmedActors;
   findUseCasesHint.hidden = !snapshot || hasConfirmedActors;
   generateDocument.disabled = sync.disabled;
-  rows.querySelectorAll("input, textarea, select, button").forEach((control) => {
-    control.disabled = busy;
-  });
-  useCaseRows.querySelectorAll("input, textarea, select, button").forEach((control) => {
-    control.disabled = busy;
-  });
+  rows
+    .querySelectorAll("input, textarea, select, button")
+    .forEach((control) => {
+      control.disabled = busy;
+    });
+  useCaseRows
+    .querySelectorAll("input, textarea, select, button")
+    .forEach((control) => {
+      control.disabled = busy;
+    });
   for (const archiveRows of [archivedActorRows, archivedUseCaseRows]) {
     archiveRows.querySelectorAll("button").forEach((control) => {
       control.disabled = busy;
@@ -161,28 +185,44 @@ function controls() {
     control.disabled = busy;
   });
   actorChecks.forEach(({ actor, button, edit, remove, editors }) => {
-    const referenced = actor.accepted && actorIsReferenced(snapshot.state, actor.id);
+    const referenced =
+      actor.accepted && actorIsReferenced(snapshot.state, actor.id);
     button.disabled = busy || !actor.name.trim() || referenced;
     button.title = referenced
       ? "Unlink this actor from active and archived use cases before undoing confirmation."
       : "";
-    button.setAttribute("aria-label", referenced
-      ? `${actor.name} is referenced. Unlink it from active and archived use cases before undoing confirmation.`
-      : `${actor.accepted ? "Undo confirmation of" : "Confirm"} actor ${actor.name}`);
+    button.setAttribute(
+      "aria-label",
+      referenced
+        ? `${actor.name} is referenced. Unlink it from active and archived use cases before undoing confirmation.`
+        : `${actor.accepted ? "Undo confirmation of" : "Confirm"} actor ${actor.name}`,
+    );
     edit.disabled = busy || actor.accepted;
-    remove.disabled = busy || actor.accepted || !actor.name.trim() ||
+    remove.disabled =
+      busy ||
+      actor.accepted ||
+      !actor.name.trim() ||
       (snapshot.state.archivedActors?.length ?? 0) >= 5000;
-    remove.title = (snapshot.state.archivedActors?.length ?? 0) >= 5000
-      ? "The actor archive has reached its limit." : "";
-    editors.forEach((editor) => { editor.disabled = busy || actor.accepted; });
+    remove.title =
+      (snapshot.state.archivedActors?.length ?? 0) >= 5000
+        ? "The actor archive has reached its limit."
+        : "";
+    editors.forEach((editor) => {
+      editor.disabled = busy || actor.accepted;
+    });
   });
   useCaseChecks.forEach(({ useCase, button, edit, remove, editors }) => {
     button.disabled = busy || !useCase.title.trim();
     edit.disabled = busy || useCase.accepted;
-    remove.disabled = busy || useCase.accepted || !useCase.title.trim() ||
+    remove.disabled =
+      busy ||
+      useCase.accepted ||
+      !useCase.title.trim() ||
       (snapshot.state.archivedUseCases?.length ?? 0) >= 5000;
-    remove.title = (snapshot.state.archivedUseCases?.length ?? 0) >= 5000
-      ? "The use case archive has reached its limit." : "";
+    remove.title =
+      (snapshot.state.archivedUseCases?.length ?? 0) >= 5000
+        ? "The use case archive has reached its limit."
+        : "";
     editors.forEach((editor) => {
       editor.disabled = busy || useCase.accepted;
     });
@@ -199,10 +239,16 @@ async function load() {
       snapshot.state.repositories,
     );
     for (const actor of snapshot.state.actors) actor.accepted ??= false;
-    for (const useCase of snapshot.state.useCases ?? []) useCase.accepted ??= false;
-    const linkedLegacy = linkMatchingActors(snapshot.state,
-      [...(snapshot.state.useCases ?? []), ...(snapshot.state.archivedUseCases ?? [])],
-      () => crypto.randomUUID());
+    for (const useCase of snapshot.state.useCases ?? [])
+      useCase.accepted ??= false;
+    const linkedLegacy = linkMatchingActors(
+      snapshot.state,
+      [
+        ...(snapshot.state.useCases ?? []),
+        ...(snapshot.state.archivedUseCases ?? []),
+      ],
+      () => crypto.randomUUID(),
+    );
     dirty = false;
     saveBlocked = false;
     path.textContent = snapshot.path;
@@ -225,18 +271,29 @@ async function refreshSavedState() {
   try {
     const updated = await request("actors");
     if (
-      dirty || saving || busy || editingRow ||
-      snapshot.revision !== revision || updated.revision === revision
-    ) return;
+      dirty ||
+      saving ||
+      busy ||
+      editingRow ||
+      snapshot.revision !== revision ||
+      updated.revision === revision
+    )
+      return;
     snapshot = updated;
     snapshot.state.repositories = initialGitHubRepositories(
       snapshot.state.repositories,
     );
     for (const actor of snapshot.state.actors) actor.accepted ??= false;
-    for (const useCase of snapshot.state.useCases ?? []) useCase.accepted ??= false;
-    const linkedLegacy = linkMatchingActors(snapshot.state,
-      [...(snapshot.state.useCases ?? []), ...(snapshot.state.archivedUseCases ?? [])],
-      () => crypto.randomUUID());
+    for (const useCase of snapshot.state.useCases ?? [])
+      useCase.accepted ??= false;
+    const linkedLegacy = linkMatchingActors(
+      snapshot.state,
+      [
+        ...(snapshot.state.useCases ?? []),
+        ...(snapshot.state.archivedUseCases ?? []),
+      ],
+      () => crypto.randomUUID(),
+    );
     path.textContent = snapshot.path;
     render();
     renderRepositories();
@@ -271,14 +328,19 @@ function renderRepositories() {
     error.className = "source-error";
     const validate = () => {
       const validFormat = isValidGitHubRepository(repository.fullName);
-      const duplicate = validFormat && snapshot.state.repositories.some(
-        (other) => other !== repository &&
-          other.fullName.toLowerCase() === repository.fullName.toLowerCase(),
-      );
+      const duplicate =
+        validFormat &&
+        snapshot.state.repositories.some(
+          (other) =>
+            other !== repository &&
+            other.fullName.toLowerCase() === repository.fullName.toLowerCase(),
+        );
       input.setAttribute("aria-invalid", String(!validFormat || duplicate));
       error.textContent = !validFormat
         ? "Enter a GitHub repository as owner/repository."
-        : duplicate ? "This repository is listed more than once." : "";
+        : duplicate
+          ? "This repository is listed more than once."
+          : "";
     };
     repositoryChecks.push(validate);
     input.addEventListener("input", () => {
@@ -347,7 +409,10 @@ function renderNamedFindings(container, activeKey, archiveKey, label) {
     const row = document.createElement("tr");
     row.setAttribute("tabindex", "-1");
     row.addEventListener("animationend", (event) => {
-      if (event.target === row && event.animationName === "actor-row-highlight") {
+      if (
+        event.target === row &&
+        event.animationName === "actor-row-highlight"
+      ) {
         delete row.dataset.highlighted;
       }
     });
@@ -364,15 +429,24 @@ function renderNamedFindings(container, activeKey, archiveKey, label) {
     updateAcceptance();
     accept.addEventListener("click", () => {
       if (actor.accepted && actorIsReferenced(snapshot.state, actor.id)) {
-        status.textContent = "Unlink this actor from active and archived use cases before undoing confirmation.";
+        status.textContent =
+          "Unlink this actor from active and archived use cases before undoing confirmation.";
         return;
       }
       actor.accepted = !actor.accepted;
       if (actor.accepted && editingRow === row) finishEditing();
       updateAcceptance();
-      if (actor.accepted && linkMatchingActors(snapshot.state,
-        [...(snapshot.state.useCases ?? []), ...(snapshot.state.archivedUseCases ?? [])],
-        () => crypto.randomUUID())) {
+      if (
+        actor.accepted &&
+        linkMatchingActors(
+          snapshot.state,
+          [
+            ...(snapshot.state.useCases ?? []),
+            ...(snapshot.state.archivedUseCases ?? []),
+          ],
+          () => crypto.randomUUID(),
+        )
+      ) {
         renderUseCases();
         renderArchive();
       } else {
@@ -385,7 +459,8 @@ function renderNamedFindings(container, activeKey, archiveKey, label) {
       const cell = document.createElement("td");
       const value = document.createElement("span");
       value.className = `row-value actor-${field}`;
-      value.textContent = actor[field] || (field === "name" ? `Unnamed ${label}` : "—");
+      value.textContent =
+        actor[field] || (field === "name" ? `Unnamed ${label}` : "—");
       const input = document.createElement(
         field === "name" ? "input" : "textarea",
       );
@@ -393,12 +468,21 @@ function renderNamedFindings(container, activeKey, archiveKey, label) {
       editors.push(input);
       input.value = actor[field];
       input.maxLength = field === "name" ? 200 : 10000;
-      input.setAttribute("aria-label", `${label === "actor" ? "Actor" : "Entity"} ${index + 1} ${field}`);
+      input.setAttribute(
+        "aria-label",
+        `${label === "actor" ? "Actor" : "Entity"} ${index + 1} ${field}`,
+      );
       input.addEventListener("input", () => {
         actor.id ??= crypto.randomUUID();
-        if (field === "name") rememberAlias(actor, savedNames.get(actor) ?? originalName, input.value);
+        if (field === "name")
+          rememberAlias(
+            actor,
+            savedNames.get(actor) ?? originalName,
+            input.value,
+          );
         actor[field] = input.value;
-        value.textContent = input.value || (field === "name" ? `Unnamed ${label}` : "—");
+        value.textContent =
+          input.value || (field === "name" ? `Unnamed ${label}` : "—");
         actor.accepted = false;
         updateAcceptance();
         changed();
@@ -413,7 +497,11 @@ function renderNamedFindings(container, activeKey, archiveKey, label) {
     const roleEditor = document.createElement("select");
     roleEditor.className = "row-editor actor-role-editor";
     roleEditor.setAttribute("aria-label", `Actor ${index + 1} role`);
-    for (const [value, text] of [["", "Unspecified"], ["Primary", "Primary"], ["Supporting", "Supporting"]]) {
+    for (const [value, text] of [
+      ["", "Unspecified"],
+      ["Primary", "Primary"],
+      ["Supporting", "Supporting"],
+    ]) {
       const option = document.createElement("option");
       option.value = value;
       option.textContent = text;
@@ -464,13 +552,22 @@ function renderNamedFindings(container, activeKey, archiveKey, label) {
     cell.append(actions);
     row.append(cell);
     container.append(row);
-    checks.push({ actor, row, button: accept, edit, remove, editors, updateAcceptance });
+    checks.push({
+      actor,
+      row,
+      button: accept,
+      edit,
+      remove,
+      editors,
+      updateAcceptance,
+    });
   });
   if (!findings.length) {
     const row = document.createElement("tr");
     const cell = document.createElement("td");
     cell.colSpan = 3;
-    cell.textContent = "No actors yet. Sync from source code to identify actors.";
+    cell.textContent =
+      "No actors yet. Sync from source code to identify actors.";
     row.append(cell);
     container.append(row);
   }
@@ -519,17 +616,26 @@ function renderUseCases() {
       let renderMentionControls;
       input.addEventListener("input", () => {
         useCase.id ??= crypto.randomUUID();
-        if (field === "title") rememberAlias(useCase, savedNames.get(useCase) ?? originalTitle, input.value);
+        if (field === "title")
+          rememberAlias(
+            useCase,
+            savedNames.get(useCase) ?? originalTitle,
+            input.value,
+          );
         useCase[field] = input.value;
         if (field === "description") {
           if (useCase.actorMentions) {
-            useCase.actorMentions = useCase.actorMentions.filter((mention) =>
-              labelRanges(input.value, mention.label, { caseSensitive: true }).length);
+            useCase.actorMentions = useCase.actorMentions.filter(
+              (mention) =>
+                labelRanges(input.value, mention.label, { caseSensitive: true })
+                  .length,
+            );
           }
           renderMentionDescription(value, useCase);
           renderMentionControls();
         } else {
-          value.textContent = input.value || (field === "title" ? "Untitled use case" : "—");
+          value.textContent =
+            input.value || (field === "title" ? "Untitled use case" : "—");
         }
         useCase.accepted = false;
         updateAcceptance();
@@ -543,27 +649,41 @@ function renderUseCases() {
         renderMentionControls = () => {
           mentionControls.replaceChildren();
           const linked = useCase.actorMentions ?? [];
-          for (const actor of snapshot.state.actors.filter((item) =>
-            item.id && linked.some((mention) => mention.actorId === item.id))) {
+          for (const actor of snapshot.state.actors.filter(
+            (item) =>
+              item.id && linked.some((mention) => mention.actorId === item.id),
+          )) {
             const unlink = document.createElement("button");
             unlink.type = "button";
             unlink.className = "secondary";
             unlink.textContent = `Unlink ${actor.name}`;
             unlink.addEventListener("click", () => {
-              useCase.actorMentions = linked.filter((mention) => mention.actorId !== actor.id);
+              useCase.actorMentions = linked.filter(
+                (mention) => mention.actorId !== actor.id,
+              );
               renderMentionDescription(value, useCase);
               renderMentionControls();
               changed();
             });
             mentionControls.append(unlink);
           }
-          const candidates = snapshot.state.actors.filter((actor) =>
-            actor.accepted === true &&
-            availableActorRanges(useCase.description, actor, linked, snapshot.state.actors).length &&
-            !linked.some((mention) => mention.actorId === actor.id));
+          const candidates = snapshot.state.actors.filter(
+            (actor) =>
+              actor.accepted === true &&
+              availableActorRanges(
+                useCase.description,
+                actor,
+                linked,
+                snapshot.state.actors,
+              ).length &&
+              !linked.some((mention) => mention.actorId === actor.id),
+          );
           if (!candidates.length) return;
           const select = document.createElement("select");
-          select.setAttribute("aria-label", `Confirmed actor to link in use case ${index + 1}`);
+          select.setAttribute(
+            "aria-label",
+            `Confirmed actor to link in use case ${index + 1}`,
+          );
           const placeholder = document.createElement("option");
           placeholder.value = "";
           placeholder.textContent = "Choose a confirmed actor";
@@ -571,10 +691,14 @@ function renderUseCases() {
           for (const actor of candidates) {
             const option = document.createElement("option");
             option.value = String(snapshot.state.actors.indexOf(actor));
-            option.textContent = candidates.filter((item) =>
-              item.name.trim().toLowerCase() === actor.name.trim().toLowerCase()).length > 1
-              ? `${actor.name} (${snapshot.state.actors.indexOf(actor) + 1})`
-              : actor.name;
+            option.textContent =
+              candidates.filter(
+                (item) =>
+                  item.name.trim().toLowerCase() ===
+                  actor.name.trim().toLowerCase(),
+              ).length > 1
+                ? `${actor.name} (${snapshot.state.actors.indexOf(actor) + 1})`
+                : actor.name;
             select.append(option);
           }
           const link = document.createElement("button");
@@ -590,8 +714,18 @@ function renderUseCases() {
             if (!actor || actor.accepted !== true) return;
             actor.id ??= crypto.randomUUID();
             useCase.actorMentions ??= [];
-            for (const { label } of availableActorRanges(useCase.description, actor, useCase.actorMentions, snapshot.state.actors)) {
-              if (!useCase.actorMentions.some((mention) => mention.actorId === actor.id && mention.label === label)) {
+            for (const { label } of availableActorRanges(
+              useCase.description,
+              actor,
+              useCase.actorMentions,
+              snapshot.state.actors,
+            )) {
+              if (
+                !useCase.actorMentions.some(
+                  (mention) =>
+                    mention.actorId === actor.id && mention.label === label,
+                )
+              ) {
                 useCase.actorMentions.push({ actorId: actor.id, label });
               }
             }
@@ -644,14 +778,22 @@ function renderUseCases() {
     actions.append(accept);
     actionsCell.append(actions);
     row.append(actionsCell);
-    useCaseChecks.push({ useCase, button: accept, edit, remove, editors, refreshMentions });
+    useCaseChecks.push({
+      useCase,
+      button: accept,
+      edit,
+      remove,
+      editors,
+      refreshMentions,
+    });
     useCaseRows.append(row);
   });
   if (!snapshot.state.useCases?.length) {
     const row = document.createElement("tr");
     const cell = document.createElement("td");
     cell.colSpan = 3;
-    cell.textContent = "No use cases yet. Sync from source code to identify use cases.";
+    cell.textContent =
+      "No use cases yet. Sync from source code to identify use cases.";
     row.append(cell);
     useCaseRows.append(row);
   }
@@ -659,7 +801,11 @@ function renderUseCases() {
 
 function renderMentionDescription(container, useCase) {
   const description = useCase.description || "";
-  const ranges = mentionRanges(description, useCase.actorMentions, snapshot.state.actors);
+  const ranges = mentionRanges(
+    description,
+    useCase.actorMentions,
+    snapshot.state.actors,
+  );
   if (!ranges.length) {
     container.textContent = description || "—";
     return;
@@ -677,7 +823,9 @@ function renderMentionDescription(container, useCase) {
     link.setAttribute("aria-label", `Go to actor ${range.actor.name}`);
     link.addEventListener("click", () => {
       showPage(false);
-      const target = actorChecks.find((entry) => entry.actor === range.actor)?.row;
+      const target = actorChecks.find(
+        (entry) => entry.actor === range.actor,
+      )?.row;
       if (!target) return;
       target.scrollIntoView?.({ block: "center" });
       target.focus({ preventScroll: true });
@@ -697,7 +845,9 @@ function rememberAlias(item, original, current) {
   const normalized = original.trim().toLowerCase();
   if (!normalized || normalized === current.trim().toLowerCase()) return;
   item.aliases ??= [];
-  if (!item.aliases.some((alias) => alias.trim().toLowerCase() === normalized)) {
+  if (
+    !item.aliases.some((alias) => alias.trim().toLowerCase() === normalized)
+  ) {
     item.aliases.push(original);
   }
 }
@@ -718,7 +868,10 @@ function renderArchive() {
         const cell = document.createElement("td");
         const text = document.createElement("span");
         text.className = `row-value ${className}`;
-        if (archiveKey === "archivedUseCases" && className === "actor-description") {
+        if (
+          archiveKey === "archivedUseCases" &&
+          className === "actor-description"
+        ) {
           renderMentionDescription(text, item);
         } else {
           text.textContent = value;
@@ -746,9 +899,13 @@ function renderArchive() {
           status.textContent = `Cannot restore: the ${label} list has reached its limit.`;
           return;
         }
-        if (active.some((existing) =>
-          existing[field].trim().toLowerCase() === item[field].trim().toLowerCase()
-        )) {
+        if (
+          active.some(
+            (existing) =>
+              existing[field].trim().toLowerCase() ===
+              item[field].trim().toLowerCase(),
+          )
+        ) {
           status.textContent = `Cannot restore: an active ${label} already has this ${field}.`;
           return;
         }
@@ -829,16 +986,25 @@ async function submitInvestigation(endpoint, targetStatus, label) {
     controls();
   }
 }
-sync.addEventListener("click", () => submitInvestigation("sync-code", syncStatus, "sync"));
+sync.addEventListener("click", () =>
+  submitInvestigation("sync-code", syncStatus, "sync"),
+);
 findUseCases.addEventListener("click", () =>
-  submitInvestigation("find-use-cases", findUseCasesStatus, "use-case discovery"));
+  submitInvestigation(
+    "find-use-cases",
+    findUseCasesStatus,
+    "use-case discovery",
+  ),
+);
 generateDocument.addEventListener("click", async () => {
   documentStatus.hidden = false;
   busy = true;
   controls();
   documentStatus.textContent = "Generating brownfield document...";
   try {
-    const result = await request("generate-document", { revision: snapshot.revision });
+    const result = await request("generate-document", {
+      revision: snapshot.revision,
+    });
     documentStatus.textContent = `Generated ${result.path}.`;
   } catch (error) {
     documentStatus.textContent = `Could not generate document: ${error.message}`;

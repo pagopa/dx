@@ -10,8 +10,16 @@
   --use-case-color: #865500;
   --accepted-color: #176b55;
   --accent-soft: color-mix(in srgb, var(--surface) 88%, var(--accent) 12%);
-  --canvas-ground: color-mix(in srgb, var(--surface) 96%, var(--text-color-default, #1f2328) 4%);
-  --canvas-tint: color-mix(in srgb, var(--surface) 92%, var(--text-color-default, #1f2328) 8%);
+  --canvas-ground: color-mix(
+    in srgb,
+    var(--surface) 96%,
+    var(--text-color-default, #1f2328) 4%
+  );
+  --canvas-tint: color-mix(
+    in srgb,
+    var(--surface) 92%,
+    var(--text-color-default, #1f2328) 8%
+  );
 }
 
 :root[data-theme-tone="dark"] {
@@ -136,7 +144,8 @@ main {
   border: 1px solid var(--border);
   border-radius: 14px;
   background: var(--surface);
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--text-color-default, #1f2328) 5%, transparent);
+  box-shadow: 0 4px 16px
+    color-mix(in srgb, var(--text-color-default, #1f2328) 5%, transparent);
 }
 
 .workflow-group {
@@ -294,8 +303,13 @@ main {
 }
 
 @keyframes actor-row-highlight {
-  0%, 35% {
-    background-color: color-mix(in srgb, var(--surface) 80%, var(--actor-color) 20%);
+  0%,
+  35% {
+    background-color: color-mix(
+      in srgb,
+      var(--surface) 80%,
+      var(--actor-color) 20%
+    );
   }
   100% {
     background-color: transparent;

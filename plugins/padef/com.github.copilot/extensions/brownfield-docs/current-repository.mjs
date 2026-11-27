@@ -2,7 +2,10 @@
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 
-import { parseGitHubRemote, isValidGitHubRepository } from "./github-repository.mjs";
+import {
+  parseGitHubRemote,
+  isValidGitHubRepository,
+} from "./github-repository.mjs";
 
 const executeFile = promisify(execFile);
 

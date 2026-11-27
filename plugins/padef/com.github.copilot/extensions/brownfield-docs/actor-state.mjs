@@ -12,7 +12,10 @@ import {
 import { dirname, join } from "node:path";
 
 import { RequestError } from "./request-error.mjs";
-import { isValidGitHubRepository, isValidGitHubRepositories } from "./github-repository.mjs";
+import {
+  isValidGitHubRepository,
+  isValidGitHubRepositories,
+} from "./github-repository.mjs";
 import { availableActorRanges, labelRanges } from "./actor-mentions.mjs";
 
 export function createActorState(statePath) {
@@ -39,7 +42,11 @@ export function createActorState(statePath) {
       );
     }
     validateState(state);
-    return { path: statePath, revision: digest(content), state: confirmEntities(state) };
+    return {
+      path: statePath,
+      revision: digest(content),
+      state: confirmEntities(state),
+    };
   }
 
   async function read() {
@@ -48,7 +55,11 @@ export function createActorState(statePath) {
 
     await mkdir(dirname(statePath), { recursive: true });
     const temporaryPath = `${statePath}.${randomUUID()}.tmp`;
-    await writeFile(temporaryPath, `${JSON.stringify(current.state, null, 2)}\n`, { flag: "wx" });
+    await writeFile(
+      temporaryPath,
+      `${JSON.stringify(current.state, null, 2)}\n`,
+      { flag: "wx" },
+    );
     try {
       try {
         await link(temporaryPath, statePath);
@@ -125,7 +136,10 @@ export function createActorState(statePath) {
   }
 
   async function generateDocument(input) {
-    if (!input || !(input.revision === null || typeof input.revision === "string")) {
+    if (
+      !input ||
+      !(input.revision === null || typeof input.revision === "string")
+    ) {
       throw new RequestError(400, "A loaded state revision is required.");
     }
     return withStateLock(async () => {
@@ -137,36 +151,69 @@ export function createActorState(statePath) {
         );
       }
       const path = join(dirname(statePath), "brownfield.md");
-      await writeAtomically(path, renderBrownfieldDocument(current.state), input.revision);
+      await writeAtomically(
+        path,
+        renderBrownfieldDocument(current.state),
+        input.revision,
+      );
       return { path };
     });
   }
 
   async function addFindings(input) {
-    if (!input || !(input.revision === null ||
-      (typeof input.revision === "string" && /^[0-9a-f]{64}$/.test(input.revision)))) {
-      throw new RequestError(400, "A complete state revision is required. Read the current state and retry.");
+    if (
+      !input ||
+      !(
+        input.revision === null ||
+        (typeof input.revision === "string" &&
+          /^[0-9a-f]{64}$/.test(input.revision))
+      )
+    ) {
+      throw new RequestError(
+        400,
+        "A complete state revision is required. Read the current state and retry.",
+      );
     }
     const current = await readExisting();
     if (current.revision !== input.revision) {
-      throw new RequestError(409, "State changed since it was read. Read the current state, reconcile findings, and retry with its exact revision.");
+      throw new RequestError(
+        409,
+        "State changed since it was read. Read the current state, reconcile findings, and retry with its exact revision.",
+      );
     }
     if (Object.hasOwn(input, "entities")) {
       throw new RequestError(422, "Entity discovery is no longer supported.");
     }
     const sourcesForSync = (revisions) => {
-      if (!validSourceRevisions(revisions) ||
-          revisions.some(({ fullName }) => !(current.state.repositories ?? [])
-            .some((repository) => repository.fullName.toLowerCase() === fullName.toLowerCase()))) {
-        throw new RequestError(422, "Source revisions must identify configured GitHub repositories and full commit SHAs.");
+      if (
+        !validSourceRevisions(revisions) ||
+        revisions.some(
+          ({ fullName }) =>
+            !(current.state.repositories ?? []).some(
+              (repository) =>
+                repository.fullName.toLowerCase() === fullName.toLowerCase(),
+            ),
+        )
+      ) {
+        throw new RequestError(
+          422,
+          "Source revisions must identify configured GitHub repositories and full commit SHAs.",
+        );
       }
       return revisions.map(({ fullName, sha }) => ({ fullName, sha }));
     };
-    const actors = input.actors.map(({ name, description, role, sourceRevisions }) => ({
-      id: randomUUID(), name, description, accepted: false,
-      ...(role === undefined ? {} : { role }),
-      ...(sourceRevisions === undefined ? {} : { sourceRevisions: sourcesForSync(sourceRevisions) }),
-    }));
+    const actors = input.actors.map(
+      ({ name, description, role, sourceRevisions }) => ({
+        id: randomUUID(),
+        name,
+        description,
+        accepted: false,
+        ...(role === undefined ? {} : { role }),
+        ...(sourceRevisions === undefined
+          ? {}
+          : { sourceRevisions: sourcesForSync(sourceRevisions) }),
+      }),
+    );
     const roleUpdates = input.actorRoleUpdates ?? [];
     if (!Array.isArray(roleUpdates)) {
       throw new RequestError(422, "Actor role updates must be an array.");
@@ -174,36 +221,71 @@ export function createActorState(statePath) {
     const updatedActors = [...current.state.actors];
     const updatedActorIndexes = new Set();
     for (const update of roleUpdates) {
-      if (!update || typeof update !== "object" || !validActorRole(update.role)) {
-        throw new RequestError(422, "Actor role updates require a Primary or Supporting role.");
+      if (
+        !update ||
+        typeof update !== "object" ||
+        !validActorRole(update.role)
+      ) {
+        throw new RequestError(
+          422,
+          "Actor role updates require a Primary or Supporting role.",
+        );
       }
       const candidates = updatedActors.flatMap((actor, index) =>
-        actor.name === update.actorName && (!update.actorId || actor.id === update.actorId)
-          ? [index] : [],
+        actor.name === update.actorName &&
+        (!update.actorId || actor.id === update.actorId)
+          ? [index]
+          : [],
       );
-      if (candidates.length !== 1 || updatedActorIndexes.has(candidates[0]) ||
-          updatedActors[candidates[0]].role !== undefined) {
-        throw new RequestError(422, "Actor role update must identify one active actor without a role exactly once.");
+      if (
+        candidates.length !== 1 ||
+        updatedActorIndexes.has(candidates[0]) ||
+        updatedActors[candidates[0]].role !== undefined
+      ) {
+        throw new RequestError(
+          422,
+          "Actor role update must identify one active actor without a role exactly once.",
+        );
       }
       const index = candidates[0];
       updatedActorIndexes.add(index);
       updatedActors[index] = { ...updatedActors[index], role: update.role };
     }
-    const useCases = input.useCases.map(({ title, description, actorNames, sourceRevisions }) => {
-      if (typeof description !== "string" || !description.trim()) {
-        throw new RequestError(422, "An inferred use case needs a nonempty description.");
-      }
-      const sentences = new Intl.Segmenter(undefined, { granularity: "sentence" }).segment(description);
-      if (Array.from(sentences).length > 5) {
-        throw new RequestError(422, "An inferred use-case description must contain at most five sentences.");
-      }
-      const finding = { id: randomUUID(), title, description, accepted: false };
-      if (sourceRevisions !== undefined) finding.sourceRevisions = sourcesForSync(sourceRevisions);
-      if (actorNames !== undefined) {
-        finding.actorMentions = buildActorMentions(description, actorNames, current.state.actors);
-      }
-      return finding;
-    });
+    const useCases = input.useCases.map(
+      ({ title, description, actorNames, sourceRevisions }) => {
+        if (typeof description !== "string" || !description.trim()) {
+          throw new RequestError(
+            422,
+            "An inferred use case needs a nonempty description.",
+          );
+        }
+        const sentences = new Intl.Segmenter(undefined, {
+          granularity: "sentence",
+        }).segment(description);
+        if (Array.from(sentences).length > 5) {
+          throw new RequestError(
+            422,
+            "An inferred use-case description must contain at most five sentences.",
+          );
+        }
+        const finding = {
+          id: randomUUID(),
+          title,
+          description,
+          accepted: false,
+        };
+        if (sourceRevisions !== undefined)
+          finding.sourceRevisions = sourcesForSync(sourceRevisions);
+        if (actorNames !== undefined) {
+          finding.actorMentions = buildActorMentions(
+            description,
+            actorNames,
+            current.state.actors,
+          );
+        }
+        return finding;
+      },
+    );
     const updates = input.useCaseUpdates ?? [];
     if (!Array.isArray(updates)) {
       throw new RequestError(422, "Use-case updates must be an array.");
@@ -217,40 +299,93 @@ export function createActorState(statePath) {
       }
       const candidates = updatedCases.flatMap((item, index) =>
         item.title === update.originalTitle &&
-        (update.useCaseId ? item.id === update.useCaseId : !item.id) ? [index] : [],
+        (update.useCaseId ? item.id === update.useCaseId : !item.id)
+          ? [index]
+          : [],
       );
       if (candidates.length !== 1 || updatedIndexes.has(candidates[0])) {
-        throw new RequestError(422, "Use-case update must identify one active use case exactly once.");
+        throw new RequestError(
+          422,
+          "Use-case update must identify one active use case exactly once.",
+        );
       }
       const index = candidates[0];
       updatedIndexes.add(index);
       const existing = updatedCases[index];
-      const renamedActors = current.state.actors.filter((actor) =>
-        actor.accepted === true && actor.name === update.renamedActorName,
+      const renamedActors = current.state.actors.filter(
+        (actor) =>
+          actor.accepted === true && actor.name === update.renamedActorName,
       );
-      if (renamedActors.length !== 1 ||
-          !(renamedActors[0].aliases?.length ||
-            existing.actorMentions?.some((mention) =>
-              mention.actorId === renamedActors[0].id && mention.label !== renamedActors[0].name))) {
-        throw new RequestError(422, "A use-case update must identify one renamed, confirmed actor.");
+      if (
+        renamedActors.length !== 1 ||
+        !(
+          renamedActors[0].aliases?.length ||
+          existing.actorMentions?.some(
+            (mention) =>
+              mention.actorId === renamedActors[0].id &&
+              mention.label !== renamedActors[0].name,
+          )
+        )
+      ) {
+        throw new RequestError(
+          422,
+          "A use-case update must identify one renamed, confirmed actor.",
+        );
       }
-      if (typeof update.title !== "string" || !update.title.trim() ||
-          typeof update.description !== "string" || !update.description.trim() ||
-          !Array.isArray(update.actorNames) || !update.actorNames.includes(update.renamedActorName)) {
-        throw new RequestError(422, "A use-case update needs a title, description, and the renamed actor.");
+      if (
+        typeof update.title !== "string" ||
+        !update.title.trim() ||
+        typeof update.description !== "string" ||
+        !update.description.trim() ||
+        !Array.isArray(update.actorNames) ||
+        !update.actorNames.includes(update.renamedActorName)
+      ) {
+        throw new RequestError(
+          422,
+          "A use-case update needs a title, description, and the renamed actor.",
+        );
       }
-      if (existing.title === update.title && existing.description === update.description) continue;
-      const actorMentions = buildActorMentions(update.description, update.actorNames, current.state.actors);
-      if (update.actorNames.some((name) => !actorMentions.some((mention) => mention.label === name))) {
-        throw new RequestError(422, "Updated descriptions must use each actor's exact current name.");
+      if (
+        existing.title === update.title &&
+        existing.description === update.description
+      )
+        continue;
+      const actorMentions = buildActorMentions(
+        update.description,
+        update.actorNames,
+        current.state.actors,
+      );
+      if (
+        update.actorNames.some(
+          (name) => !actorMentions.some((mention) => mention.label === name),
+        )
+      ) {
+        throw new RequestError(
+          422,
+          "Updated descriptions must use each actor's exact current name.",
+        );
       }
-      if (existing.actorMentions?.some((mention) =>
-        !actorMentions.some((updated) => updated.actorId === mention.actorId))) {
-        throw new RequestError(422, "A use-case update must preserve existing actor links.");
+      if (
+        existing.actorMentions?.some(
+          (mention) =>
+            !actorMentions.some(
+              (updated) => updated.actorId === mention.actorId,
+            ),
+        )
+      ) {
+        throw new RequestError(
+          422,
+          "A use-case update must preserve existing actor links.",
+        );
       }
       const aliases = [...(existing.aliases ?? [])];
-      if (existing.title !== update.title &&
-          !aliases.some((alias) => alias.trim().toLowerCase() === existing.title.trim().toLowerCase())) {
+      if (
+        existing.title !== update.title &&
+        !aliases.some(
+          (alias) =>
+            alias.trim().toLowerCase() === existing.title.trim().toLowerCase(),
+        )
+      ) {
         aliases.push(existing.title);
       }
       updatedCases[index] = {
@@ -266,16 +401,29 @@ export function createActorState(statePath) {
     }
     for (const index of updatedIndexes) {
       const name = updatedCases[index].title.trim().toLowerCase();
-      const others = [...updatedCases.filter((_, otherIndex) => otherIndex !== index),
-        ...(current.state.archivedUseCases ?? [])];
-      if (others.some((item) => [item.title, ...(item.aliases ?? [])]
-        .some((value) => value.trim().toLowerCase() === name))) {
-        throw new RequestError(422, "Updated use-case title matches another active or archived finding.");
+      const others = [
+        ...updatedCases.filter((_, otherIndex) => otherIndex !== index),
+        ...(current.state.archivedUseCases ?? []),
+      ];
+      if (
+        others.some((item) =>
+          [item.title, ...(item.aliases ?? [])].some(
+            (value) => value.trim().toLowerCase() === name,
+          ),
+        )
+      ) {
+        throw new RequestError(
+          422,
+          "Updated use-case title matches another active or archived finding.",
+        );
       }
     }
     const mergedActors = [
       ...current.state.actors.map((actor, index) =>
-        updatedActorIndexes.has(index) ? { ...actor, role: updatedActors[index].role } : actor),
+        updatedActorIndexes.has(index)
+          ? { ...actor, role: updatedActors[index].role }
+          : actor,
+      ),
       ...actors,
     ];
     const sourceUpdates = input.sourceUpdates ?? [];
@@ -286,23 +434,41 @@ export function createActorState(statePath) {
     const updatedSourceKeys = new Set();
     for (const update of sourceUpdates) {
       if (!update || !["actor", "useCase"].includes(update.kind)) {
-        throw new RequestError(422, "Source updates must identify an actor or use case.");
+        throw new RequestError(
+          422,
+          "Source updates must identify an actor or use case.",
+        );
       }
       const entries = update.kind === "actor" ? mergedActors : updatedCases;
-      const limit = update.kind === "actor" ? current.state.actors.length : entries.length;
+      const limit =
+        update.kind === "actor" ? current.state.actors.length : entries.length;
       const field = update.kind === "actor" ? "name" : "title";
-      const candidates = entries.slice(0, limit).flatMap((item, index) =>
-        item[field] === update.name && (!update.id || item.id === update.id) ? [index] : []);
+      const candidates = entries
+        .slice(0, limit)
+        .flatMap((item, index) =>
+          item[field] === update.name && (!update.id || item.id === update.id)
+            ? [index]
+            : [],
+        );
       const key = `${update.kind}:${candidates[0]}`;
       if (candidates.length !== 1 || updatedSourceKeys.has(key)) {
-        throw new RequestError(422, "Source update must identify one active finding exactly once.");
+        throw new RequestError(
+          422,
+          "Source update must identify one active finding exactly once.",
+        );
       }
       updatedSourceKeys.add(key);
       const index = candidates[0];
       const existing = entries[index].sourceRevisions ?? [];
       const sources = [...existing];
       for (const source of sourcesForSync(update.sourceRevisions)) {
-        if (!sources.some((item) => item.fullName.toLowerCase() === source.fullName.toLowerCase() && item.sha === source.sha)) {
+        if (
+          !sources.some(
+            (item) =>
+              item.fullName.toLowerCase() === source.fullName.toLowerCase() &&
+              item.sha === source.sha,
+          )
+        ) {
           sources.push(source);
         }
       }
@@ -312,22 +478,41 @@ export function createActorState(statePath) {
       }
     }
     for (const [existing, additions, field] of [
-      [[...current.state.actors, ...(current.state.archivedActors ?? [])], actors, "name"],
-      [[...updatedCases, ...(current.state.archivedUseCases ?? [])], useCases, "title"],
+      [
+        [...current.state.actors, ...(current.state.archivedActors ?? [])],
+        actors,
+        "name",
+      ],
+      [
+        [...updatedCases, ...(current.state.archivedUseCases ?? [])],
+        useCases,
+        "title",
+      ],
     ]) {
       const names = new Set(
-        existing.flatMap((item) => [item[field], ...(item.aliases ?? [])])
+        existing
+          .flatMap((item) => [item[field], ...(item.aliases ?? [])])
           .map((name) => name.trim().toLowerCase()),
       );
       for (const item of additions) {
         const name = item[field].trim().toLowerCase();
         if (names.has(name)) {
-          throw new RequestError(422, `Duplicate or archived ${field} values are not allowed.`);
+          throw new RequestError(
+            422,
+            `Duplicate or archived ${field} values are not allowed.`,
+          );
         }
         names.add(name);
       }
     }
-    if (!actors.length && !useCases.length && !hasUpdates && !updatedActorIndexes.size && !hasSourceUpdates) return current;
+    if (
+      !actors.length &&
+      !useCases.length &&
+      !hasUpdates &&
+      !updatedActorIndexes.size &&
+      !hasSourceUpdates
+    )
+      return current;
     return save({
       revision: current.revision,
       state: {
@@ -343,42 +528,71 @@ export function createActorState(statePath) {
 
 function renderBrownfieldDocument(state) {
   const actors = state.actors.filter((item) => item.accepted === true);
-  const useCases = (state.useCases ?? []).filter((item) => item.accepted === true);
+  const useCases = (state.useCases ?? []).filter(
+    (item) => item.accepted === true,
+  );
   const findings = [...actors, ...useCases];
   const sources = new Map();
   for (const repository of state.repositories ?? []) {
-    sources.set(repository.fullName.toLowerCase(), { name: repository.fullName, shas: new Set() });
+    sources.set(repository.fullName.toLowerCase(), {
+      name: repository.fullName,
+      shas: new Set(),
+    });
   }
   for (const finding of findings) {
     for (const source of finding.sourceRevisions ?? []) {
       const key = source.fullName.toLowerCase();
-      if (!sources.has(key)) sources.set(key, { name: source.fullName, shas: new Set() });
+      if (!sources.has(key))
+        sources.set(key, { name: source.fullName, shas: new Set() });
       sources.get(key).shas.add(source.sha);
     }
   }
   const lines = [
-    "# Brownfield documentation", "",
-    "The actors and use cases below were inferred from source code and reviewed; they are not proposals. They may have been edited during review.", "",
-    "## Source repositories", "",
+    "# Brownfield documentation",
+    "",
+    "The actors and use cases below were inferred from source code and reviewed; they are not proposals. They may have been edited during review.",
+    "",
+    "## Source repositories",
+    "",
     "Recorded commits are the revisions inspected for confirmed findings. Configured repositories are also listed when no commit has been recorded.",
   ];
-  if (!sources.size) lines.push("", "No repositories or source commits recorded.");
+  if (!sources.size)
+    lines.push("", "No repositories or source commits recorded.");
   for (const { name, shas } of sources.values()) {
-    lines.push("", `- ${escapeMarkdown(name)}: ${shas.size ? [...shas].sort().map((sha) => `\`${sha}\``).join(", ") : "commit not recorded"}`);
+    lines.push(
+      "",
+      `- ${escapeMarkdown(name)}: ${
+        shas.size
+          ? [...shas]
+              .sort()
+              .map((sha) => `\`${sha}\``)
+              .join(", ")
+          : "commit not recorded"
+      }`,
+    );
   }
   if (findings.some((item) => !item.sourceRevisions?.length)) {
     lines.push("", "Some confirmed findings have no recorded source commit.");
   }
   lines.push("", "## Actors");
   for (const actor of state.actors.filter((item) => item.accepted === true)) {
-    lines.push("", `### ${escapeMarkdown(actor.name).replace(/\n/g, "<br>")}`, "",
-      `**Role:** ${actor.role ?? "Unspecified"}`, "",
-      escapeMarkdown(actor.description).replace(/\n/g, "<br>\n"));
+    lines.push(
+      "",
+      `### ${escapeMarkdown(actor.name).replace(/\n/g, "<br>")}`,
+      "",
+      `**Role:** ${actor.role ?? "Unspecified"}`,
+      "",
+      escapeMarkdown(actor.description).replace(/\n/g, "<br>\n"),
+    );
   }
   lines.push("", "## Use cases");
   for (const useCase of useCases) {
-    lines.push("", `### ${escapeMarkdown(useCase.title).replace(/\n/g, "<br>")}`, "",
-      escapeMarkdown(useCase.description).replace(/\n/g, "<br>\n"));
+    lines.push(
+      "",
+      `### ${escapeMarkdown(useCase.title).replace(/\n/g, "<br>")}`,
+      "",
+      escapeMarkdown(useCase.description).replace(/\n/g, "<br>\n"),
+    );
   }
   return `${lines.join("\n")}\n`;
 }
@@ -386,35 +600,58 @@ function renderBrownfieldDocument(state) {
 function escapeMarkdown(value) {
   return value
     .replace(/\r\n?/g, "\n")
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
     .replace(/[\\`*_[\]{}()#+!|~]/g, "\\$&")
     .replace(/^([ \t]*)([-+])/gm, "$1\\$2")
     .replace(/^([ \t]*\d+)([.)])(?=\s)/gm, "$1\\$2")
-    .replace(/^[ \t]+/gm, (indent) => indent.replace(/ /g, "&#32;").replace(/\t/g, "&#9;"));
+    .replace(/^[ \t]+/gm, (indent) =>
+      indent.replace(/ /g, "&#32;").replace(/\t/g, "&#9;"),
+    );
 }
 
 function buildActorMentions(description, actorNames, actors) {
-  if (!Array.isArray(actorNames) || !actorNames.length || actorNames.length > 500 ||
-      new Set(actorNames).size !== actorNames.length) {
-    throw new RequestError(422, "Each linked use case needs distinct confirmed actors.");
+  if (
+    !Array.isArray(actorNames) ||
+    !actorNames.length ||
+    actorNames.length > 500 ||
+    new Set(actorNames).size !== actorNames.length
+  ) {
+    throw new RequestError(
+      422,
+      "Each linked use case needs distinct confirmed actors.",
+    );
   }
   const mentions = [];
   for (const name of actorNames) {
     if (typeof name !== "string" || !name.trim()) {
       throw new RequestError(422, "Actor names must be nonempty strings.");
     }
-    const matches = actors.filter((actor) => actor.accepted === true && actor.name === name);
+    const matches = actors.filter(
+      (actor) => actor.accepted === true && actor.name === name,
+    );
     if (matches.length !== 1) {
-      throw new RequestError(422, `Actor "${name}" must identify one active confirmed actor.`);
+      throw new RequestError(
+        422,
+        `Actor "${name}" must identify one active confirmed actor.`,
+      );
     }
     const actor = matches[0];
     const ranges = availableActorRanges(description, actor, mentions, actors);
     if (!ranges.length) {
-      throw new RequestError(422, `Use-case description must contain a distinct, unlinked occurrence of actor "${name}".`);
+      throw new RequestError(
+        422,
+        `Use-case description must contain a distinct, unlinked occurrence of actor "${name}".`,
+      );
     }
     actor.id ??= randomUUID();
     for (const { label } of ranges) {
-      if (!mentions.some((mention) => mention.actorId === actor.id && mention.label === label)) {
+      if (
+        !mentions.some(
+          (mention) => mention.actorId === actor.id && mention.label === label,
+        )
+      ) {
         mentions.push({ actorId: actor.id, label });
       }
     }
@@ -425,8 +662,22 @@ function buildActorMentions(description, actorNames, actors) {
 function confirmEntities(state) {
   return {
     ...state,
-    ...(state.entities ? { entities: state.entities.map((entity) => ({ ...entity, accepted: true })) } : {}),
-    ...(state.archivedEntities ? { archivedEntities: state.archivedEntities.map((entity) => ({ ...entity, accepted: true })) } : {}),
+    ...(state.entities
+      ? {
+          entities: state.entities.map((entity) => ({
+            ...entity,
+            accepted: true,
+          })),
+        }
+      : {}),
+    ...(state.archivedEntities
+      ? {
+          archivedEntities: state.archivedEntities.map((entity) => ({
+            ...entity,
+            accepted: true,
+          })),
+        }
+      : {}),
   };
 }
 
@@ -435,26 +686,50 @@ function digest(content) {
 }
 
 function validFinding(item, field) {
-  return item && typeof item === "object" && !Array.isArray(item) &&
-    typeof item[field] === "string" && item[field].trim() && item[field].length <= 200 &&
-    typeof item.description === "string" && item.description.length <= 10000 &&
+  return (
+    item &&
+    typeof item === "object" &&
+    !Array.isArray(item) &&
+    typeof item[field] === "string" &&
+    item[field].trim() &&
+    item[field].length <= 200 &&
+    typeof item.description === "string" &&
+    item.description.length <= 10000 &&
     (!Object.hasOwn(item, "accepted") || typeof item.accepted === "boolean") &&
-    (!Object.hasOwn(item, "sourceRevisions") || validSourceRevisions(item.sourceRevisions)) &&
+    (!Object.hasOwn(item, "sourceRevisions") ||
+      validSourceRevisions(item.sourceRevisions)) &&
     (!Object.hasOwn(item, "id") ||
-      (typeof item.id === "string" && item.id.trim() && item.id.length <= 128)) &&
+      (typeof item.id === "string" &&
+        item.id.trim() &&
+        item.id.length <= 128)) &&
     (!Object.hasOwn(item, "aliases") ||
-      (Array.isArray(item.aliases) && item.aliases.length <= 500 &&
-        item.aliases.every((alias) =>
-          typeof alias === "string" && alias.trim() && alias.length <= 200)));
+      (Array.isArray(item.aliases) &&
+        item.aliases.length <= 500 &&
+        item.aliases.every(
+          (alias) =>
+            typeof alias === "string" && alias.trim() && alias.length <= 200,
+        )))
+  );
 }
 
 function validSourceRevisions(revisions) {
-  if (!Array.isArray(revisions) || revisions.length < 1 || revisions.length > 500) return false;
+  if (
+    !Array.isArray(revisions) ||
+    revisions.length < 1 ||
+    revisions.length > 500
+  )
+    return false;
   const seen = new Set();
   return revisions.every((source) => {
-    if (!source || typeof source !== "object" || Array.isArray(source) ||
-        !isValidGitHubRepository(source.fullName) ||
-        typeof source.sha !== "string" || !/^[0-9a-f]{40}$/.test(source.sha)) return false;
+    if (
+      !source ||
+      typeof source !== "object" ||
+      Array.isArray(source) ||
+      !isValidGitHubRepository(source.fullName) ||
+      typeof source.sha !== "string" ||
+      !/^[0-9a-f]{40}$/.test(source.sha)
+    )
+      return false;
     const key = `${source.fullName.toLowerCase()}:${source.sha}`;
     if (seen.has(key)) return false;
     seen.add(key);
@@ -467,8 +742,10 @@ function validActorRole(role) {
 }
 
 function validActor(actor) {
-  return validFinding(actor, "name") &&
-    (!Object.hasOwn(actor, "role") || validActorRole(actor.role));
+  return (
+    validFinding(actor, "name") &&
+    (!Object.hasOwn(actor, "role") || validActorRole(actor.role))
+  );
 }
 
 function validateState(state) {
@@ -529,7 +806,11 @@ function validateState(state) {
     if (
       (Object.hasOwn(state, archiveKey) && !Array.isArray(state[archiveKey])) ||
       archived.length > 5000 ||
-      archived.some((item) => archiveKey === "archivedActors" ? !validActor(item) : !validFinding(item, field))
+      archived.some((item) =>
+        archiveKey === "archivedActors"
+          ? !validActor(item)
+          : !validFinding(item, field),
+      )
     ) {
       throw new RequestError(422, `Invalid ${archiveKey} state.`);
     }
@@ -540,25 +821,50 @@ function validateState(state) {
       }
       if (item.id) ids.add(item.id);
     }
-    const activeActors = new Map(state.actors.filter((actor) => actor.id).map((actor) => [actor.id, actor]));
-    for (const useCase of [...(state.useCases ?? []), ...(state.archivedUseCases ?? [])]) {
+    const activeActors = new Map(
+      state.actors
+        .filter((actor) => actor.id)
+        .map((actor) => [actor.id, actor]),
+    );
+    for (const useCase of [
+      ...(state.useCases ?? []),
+      ...(state.archivedUseCases ?? []),
+    ]) {
       if (!Object.hasOwn(useCase, "actorMentions")) continue;
-      if (!Array.isArray(useCase.actorMentions) || useCase.actorMentions.length > 500) {
+      if (
+        !Array.isArray(useCase.actorMentions) ||
+        useCase.actorMentions.length > 500
+      ) {
         throw new RequestError(422, "Invalid use-case actor mentions.");
       }
       const seen = new Set();
       for (const mention of useCase.actorMentions) {
-        if (!mention || typeof mention !== "object" || typeof mention.actorId !== "string" ||
-            typeof mention.label !== "string" || !mention.label.trim() || mention.label.length > 200 ||
-            !labelRanges(useCase.description, mention.label, { caseSensitive: true }).length) {
-          throw new RequestError(422, "Actor mentions must refer to text in the use-case description.");
+        if (
+          !mention ||
+          typeof mention !== "object" ||
+          typeof mention.actorId !== "string" ||
+          typeof mention.label !== "string" ||
+          !mention.label.trim() ||
+          mention.label.length > 200 ||
+          !labelRanges(useCase.description, mention.label, {
+            caseSensitive: true,
+          }).length
+        ) {
+          throw new RequestError(
+            422,
+            "Actor mentions must refer to text in the use-case description.",
+          );
         }
         const actor = activeActors.get(mention.actorId);
         if (!actor || actor.accepted !== true) {
-          throw new RequestError(422, "Referenced actors must remain active and confirmed. Unlink them from active and archived use cases first.");
+          throw new RequestError(
+            422,
+            "Referenced actors must remain active and confirmed. Unlink them from active and archived use cases first.",
+          );
         }
         const key = JSON.stringify([mention.actorId, mention.label]);
-        if (seen.has(key)) throw new RequestError(422, "Duplicate actor mention.");
+        if (seen.has(key))
+          throw new RequestError(422, "Duplicate actor mention.");
         seen.add(key);
       }
     }

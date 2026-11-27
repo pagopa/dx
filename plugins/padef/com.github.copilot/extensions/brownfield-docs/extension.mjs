@@ -8,7 +8,9 @@ import { startServer } from "./server.mjs";
 import { findUseCasesPrompt, syncPrompt } from "./sync-prompt.mjs";
 
 const servers = new Map();
-const repositoryRoot = fileURLToPath(new URL("../../../../../", import.meta.url));
+const repositoryRoot = fileURLToPath(
+  new URL("../../../../../", import.meta.url),
+);
 const currentRepository = await readCurrentGitHubRepository(repositoryRoot);
 const actorState = createActorState(
   fileURLToPath(
@@ -29,7 +31,8 @@ const session = await joinSession({
           name: "read_actors",
         },
         {
-          description: "Append findings, classify existing actors, and reword active use cases using a state revision.",
+          description:
+            "Append findings, classify existing actors, and reword active use cases using a state revision.",
           inputSchema: {
             type: "object",
             additionalProperties: false,
@@ -47,10 +50,16 @@ const session = await joinSession({
                     description: { type: "string" },
                     role: { type: "string", enum: ["Primary", "Supporting"] },
                     sourceRevisions: {
-                      type: "array", minItems: 1,
+                      type: "array",
+                      minItems: 1,
                       items: {
-                        type: "object", additionalProperties: false, required: ["fullName", "sha"],
-                        properties: { fullName: { type: "string" }, sha: { type: "string", pattern: "^[0-9a-f]{40}$" } },
+                        type: "object",
+                        additionalProperties: false,
+                        required: ["fullName", "sha"],
+                        properties: {
+                          fullName: { type: "string" },
+                          sha: { type: "string", pattern: "^[0-9a-f]{40}$" },
+                        },
                       },
                     },
                   },
@@ -77,13 +86,29 @@ const session = await joinSession({
                   required: ["title", "description", "actorNames"],
                   properties: {
                     title: { type: "string" },
-                    description: { type: "string", minLength: 1, description: "Functional flow in at most five sentences, without implementation details." },
-                    actorNames: { type: "array", items: { type: "string" }, minItems: 1, uniqueItems: true },
+                    description: {
+                      type: "string",
+                      minLength: 1,
+                      description:
+                        "Functional flow in at most five sentences, without implementation details.",
+                    },
+                    actorNames: {
+                      type: "array",
+                      items: { type: "string" },
+                      minItems: 1,
+                      uniqueItems: true,
+                    },
                     sourceRevisions: {
-                      type: "array", minItems: 1,
+                      type: "array",
+                      minItems: 1,
                       items: {
-                        type: "object", additionalProperties: false, required: ["fullName", "sha"],
-                        properties: { fullName: { type: "string" }, sha: { type: "string", pattern: "^[0-9a-f]{40}$" } },
+                        type: "object",
+                        additionalProperties: false,
+                        required: ["fullName", "sha"],
+                        properties: {
+                          fullName: { type: "string" },
+                          sha: { type: "string", pattern: "^[0-9a-f]{40}$" },
+                        },
                       },
                     },
                   },
@@ -92,17 +117,24 @@ const session = await joinSession({
               sourceUpdates: {
                 type: "array",
                 items: {
-                  type: "object", additionalProperties: false,
+                  type: "object",
+                  additionalProperties: false,
                   required: ["kind", "name", "sourceRevisions"],
                   properties: {
                     kind: { type: "string", enum: ["actor", "useCase"] },
                     id: { type: "string", minLength: 1 },
                     name: { type: "string", minLength: 1 },
                     sourceRevisions: {
-                      type: "array", minItems: 1,
+                      type: "array",
+                      minItems: 1,
                       items: {
-                        type: "object", additionalProperties: false, required: ["fullName", "sha"],
-                        properties: { fullName: { type: "string" }, sha: { type: "string", pattern: "^[0-9a-f]{40}$" } },
+                        type: "object",
+                        additionalProperties: false,
+                        required: ["fullName", "sha"],
+                        properties: {
+                          fullName: { type: "string" },
+                          sha: { type: "string", pattern: "^[0-9a-f]{40}$" },
+                        },
                       },
                     },
                   },
@@ -113,14 +145,25 @@ const session = await joinSession({
                 items: {
                   type: "object",
                   additionalProperties: false,
-                  required: ["originalTitle", "title", "description", "renamedActorName", "actorNames"],
+                  required: [
+                    "originalTitle",
+                    "title",
+                    "description",
+                    "renamedActorName",
+                    "actorNames",
+                  ],
                   properties: {
                     useCaseId: { type: "string", minLength: 1 },
                     originalTitle: { type: "string", minLength: 1 },
                     title: { type: "string", minLength: 1 },
                     description: { type: "string", minLength: 1 },
                     renamedActorName: { type: "string", minLength: 1 },
-                    actorNames: { type: "array", items: { type: "string" }, minItems: 1, uniqueItems: true },
+                    actorNames: {
+                      type: "array",
+                      items: { type: "string" },
+                      minItems: 1,
+                      uniqueItems: true,
+                    },
                   },
                 },
               },
@@ -147,7 +190,9 @@ const session = await joinSession({
       open: async (ctx) => {
         // Cache the promise as well, so concurrent opens share one server.
         if (!servers.has(ctx.instanceId)) {
-          const pending = startServer(actorState, currentRepository,
+          const pending = startServer(
+            actorState,
+            currentRepository,
             () => session.send({ prompt: syncPrompt(ctx.instanceId) }),
             () => session.send({ prompt: findUseCasesPrompt(ctx.instanceId) }),
           );
