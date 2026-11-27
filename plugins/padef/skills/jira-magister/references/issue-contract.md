@@ -27,6 +27,12 @@ Preserve supplied JTBD, UC, AC, RFC, CR, DR/SRS `open.item-XX`, Use Case
 `uc-open-XX`, and semantic error (`UPPER_SNAKE_CASE`) identifiers. Never renumber
 or reuse an identifier for a different meaning.
 
+Acceptance-check IDs must use `AC-XX`, local to their owning Use Case.
+Identify an external reference by its owning document, Use Case, and exact
+AC ID. If a source uses another naming convention, report a source-contract
+gap before persistence; do not silently rename its IDs or accept an alternate
+form.
+
 ## Sizing and decomposition
 
 - An Epic groups related Stories and Tasks for one cohesive outcome and should

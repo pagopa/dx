@@ -98,18 +98,24 @@
     {
       "id": 7,
       "name": "follow-dr01-use-case-template",
-      "prompt": "Create UC-01 from a parent DR/SRS using the DR-01 Use Case template contract. Keep the canonical field order, set the status to draft, use locally scoped AC-01 identifiers, and allow the sequence diagram to be either inline Mermaid/PlantUML or a repository link.",
-      "expected_output": "The child Markdown follows the DR-01 Use Case body structure directly while retaining machine-readable document metadata, a draft status, and explicit gaps.",
+      "prompt": "Create UC-01, Retrieve a payment receipt, from the existing parent receipt-dr-srs.md and its linked receipt-prd.md in the workspace. These local snapshots contain the complete catalog and confirmed behavior; use them without remote calls. Write use-cases/uc-01-retrieve-payment-receipt.md using the DR-01 Use Case template contract and replace UC-01's TBD child link in the existing parent catalog with that path. Keep the canonical field order, set the child status to draft, and use locally scoped AC-01-style identifiers. Include either an inline Mermaid/PlantUML sequence diagram or a link to an existing repository diagram. Record the unexecuted validation evidence as an explicit gap; do not claim tests passed. Do not publish.",
+      "expected_output": "Creates use-cases/uc-01-retrieve-payment-receipt.md from the supplied sources and synchronizes UC-01's link in receipt-dr-srs.md. The child follows the DR-01 field order, has draft metadata and UC-local AC-XX checks, and exposes the validation gap. Grade the actual workspace files, not promises in the final response; no child artifact means none of the child-document criteria are satisfied.",
       "expectations": [
-        "Orders Linked JTBD, primary actor, secondary actors, source artifact, Service Blueprint step, domain entities, trigger, preconditions, flows, postconditions, typed errors, acceptance checks, tracking events, and relevant links according to the DR-01 template.",
-        "Sets the child status to draft in frontmatter.",
-        "Omits title from frontmatter so the Markdown heading and Confluence page title remain the single title sources.",
-        "Uses AC-01-style acceptance-check IDs scoped by the Use Case document.",
-        "Defines typed errors with semantic identifiers and no owner, and references them from the exception flows.",
-        "Includes the DR component and contract references among the relevant links.",
-        "Accepts either an inline Mermaid/PlantUML sequence diagram or a link to one."
+        "The created child file orders Linked JTBD, primary actor, secondary actors, source artifact, Service Blueprint step, domain entities, trigger, preconditions, flows, postconditions, typed errors, acceptance checks, tracking events, and relevant links according to the DR-01 template.",
+        "The created child file has status draft in frontmatter.",
+        "The created child file omits title from frontmatter and uses a Markdown heading for the title.",
+        "The created child file uses AC-XX as the only acceptance-check ID form, scoped by the Use Case document, with binary checks covering available, pending, and unknown-payment outcomes.",
+        "The created child file does not qualify local acceptance-check IDs with a UC prefix for global uniqueness.",
+        "The created child file defines typed errors with semantic identifiers and no owner, and references them from the exception flows.",
+        "The created child file includes solution.components.item-001 and contracts.item-001 from the parent among its relevant links.",
+        "The created child file contains either an inline Mermaid/PlantUML sequence diagram or a link to an existing repository diagram; a promise to add one does not satisfy this criterion.",
+        "The existing parent catalog replaces UC-01's TBD child link with use-cases/uc-01-retrieve-payment-receipt.md, retaining only the stable ID, title, and child link without embedding the child body.",
+        "The created child file preserves the exact PRD actor name Support operator, names Payment and Receipt, and records the unexecuted validation evidence as a gap without claiming successful tests."
       ],
-      "files": []
+      "files": [
+        "evals/fixtures/receipt-dr-srs.md",
+        "evals/fixtures/receipt-prd.md"
+      ]
     },
     {
       "id": 8,

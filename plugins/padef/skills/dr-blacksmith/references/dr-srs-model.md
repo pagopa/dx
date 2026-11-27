@@ -131,7 +131,9 @@ those details in the child pages and link them from the DR/SRS.
 Use the canonical stable identifiers:
 
 - `UC-XX` for Use Cases;
-- `AC-XX` or `AC-UC-XX-YY` for acceptance checks, local to one Use Case;
+- `AC-XX` for all acceptance checks, local to the owning Use Case; identify
+  external references by the owning document, Use Case, and exact AC ID,
+  not by adding a UC prefix to the check ID;
 - `JTBD-XX`, with the `PRD-xxx/JTBD-yy` namespace in cross-document reports;
 - `NFR-XX` for cross-cutting non-functional requirements in the
   `Non-functional requirements and compliance` section;

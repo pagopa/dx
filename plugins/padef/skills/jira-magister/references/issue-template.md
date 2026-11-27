@@ -141,12 +141,16 @@ ADR/RFC/CR IDs. Preserve the source's actual spelling; these examples do not
 define or migrate an ID naming convention.
 
 The UC identity is in its document label (and a nested section reference for
-an embedded UC). Put acceptance-check IDs in
-`## AC Coverage`, not among the nested Source IDs. Link each AC to its owning
-UC, including when several UCs use the same local `AC-01`. Coverage contains
-IDs only, not copied AC prose. Omit the section when no AC is covered; do not
-invent coverage. Do not copy canonical acceptance-check prose elsewhere in the
-issue body either.
+an embedded UC). Acceptance-check IDs must use `AC-XX`, local to their owning
+UC. Link the exact ID (for example, `AC-01`); do not add a UC prefix to make
+it globally unique. Report nonconforming source IDs as a source-contract gap
+before persistence rather than silently renaming them. Put
+acceptance-check IDs in `## AC Coverage`, not among the nested Source IDs, and
+link each one to its owning UC. The same label may appear more than once when
+different UCs use the same local ID; each link must target its own UC.
+Coverage contains IDs only, not copied AC prose. Omit the section when no AC is
+covered; do not invent coverage. Do not copy canonical acceptance-check prose
+elsewhere in the issue body either.
 
 ## Select documents: one hop, no recursive collection
 

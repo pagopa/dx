@@ -57,11 +57,11 @@ match:
 4. no match: propose creation;
 5. multiple matches: stop and ask the user to choose.
 
-Compare page IDs/canonical file locators and document-scoped IDs, not bare
-`AC-01` across UCs or the shared DR alone. Several legitimate slices may share
-the same source documents or UC: use confirmed scope/coverage or a supplied
-correlation key to disambiguate; never merge slices just because their
-references overlap.
+Compare page IDs/canonical file locators and document-scoped IDs, including
+the owning UC locator plus the exact AC ID, not bare `AC-01` across UCs or the
+shared DR alone. Several legitimate slices may share the same source documents
+or UC: use confirmed scope/coverage or a supplied correlation key to
+disambiguate; never merge slices just because their references overlap.
 For legacy Source lines, require an unambiguous mapping rather than silently
 rewriting or duplicating the issue. Spike matching includes `open.item-XX`.
 Error Tasks are shared by semantic error identifier within the projection;
