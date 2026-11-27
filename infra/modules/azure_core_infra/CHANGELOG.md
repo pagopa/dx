@@ -1,3 +1,29 @@
+## 8.0.1 (2026-11-25)
+
+### 🩹 Fixes
+
+- Ignore Log Analytics workspace SKU changes after creation, allowing workspaces to be linked to a dedicated cluster. ([#2591](https://github.com/pagopa/dx/pull/2591))
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
+# 8.0.0 (2026-11-25)
+
+### ⚠️  Breaking Changes
+
+- Support AzureRM v5 in Core Infra ([#2473](https://github.com/pagopa/dx/pull/2473))
+
+  ## Migration guide
+
+  1. Update the A zureRM provider constraint to `~> 5.0`, and use Terraform `>= 1.16.0`.
+  2. Run `terraform init -upgrade` in the consuming root module.
+  3. Review the complete plan before applying, no changes are expected.
+
+### ❤️ Thank You
+
+- Andrea Grillo
+
 ## 7.1.0 (2026-11-18)
 
 ### 🚀 Features

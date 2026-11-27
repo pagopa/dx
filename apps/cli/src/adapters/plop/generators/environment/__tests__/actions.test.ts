@@ -92,7 +92,6 @@ describe("actions", () => {
       "setupCloudTools",
       ...(payload.init
         ? [
-            "initCloudAccounts",
             payload.init.terraformBackend
               ? "provisionTerraformBackend"
               : "getTerraformBackend",
@@ -100,7 +99,9 @@ describe("actions", () => {
         : ["getTerraformBackend"]),
       "configureExistingTerraformRootBackends",
       "syncNxAdditionalEnvironments",
+      "prepareRepositoryState",
       "syncRepositoryEnvironments",
+      ...(payload.init ? ["initCloudAccounts"] : []),
       "configureGitHubEnvironments",
       "addMany",
       "addMany",

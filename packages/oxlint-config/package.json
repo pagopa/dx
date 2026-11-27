@@ -1,6 +1,6 @@
 {
   "name": "@pagopa/oxlint-config",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Oxlint configuration for PagoPA DX projects",
   "repository": {
     "type": "git",
@@ -8,13 +8,26 @@
     "directory": "packages/oxlint-config"
   },
   "files": [
+    "base-jest.d.ts",
+    "base-jest.js",
     "base-jest.json",
+    "base.d.ts",
+    "base.js",
     "base.json",
+    "compose.js",
     "core.json"
   ],
   "type": "module",
   "exports": {
     ".": "./base.json",
+    "./base": {
+      "types": "./base.d.ts",
+      "default": "./base.js"
+    },
+    "./base-jest": {
+      "types": "./base-jest.d.ts",
+      "default": "./base-jest.js"
+    },
     "./base-jest.json": "./base-jest.json",
     "./base.json": "./base.json"
   },

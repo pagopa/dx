@@ -1,3 +1,13 @@
+## 5.1.0 (2026-11-25)
+
+### 🚀 Features
+
+- Add support for runners that use only their configured labels ([#2574](https://github.com/pagopa/dx/pull/2574))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 # 5.0.0 (2026-11-17)
 
 ### ⚠️  Breaking Changes

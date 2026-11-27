@@ -1,7 +1,7 @@
 # Jira source template
 
-Use this structure in each proposed or confirmed issue description. The
-top-level document bullets are the complete **source document inventory**.
+Use this example alongside the issue-type rules below. The top-level document
+bullets are the complete **source document inventory** when `Source` is present.
 
 ```markdown
 ## Source
@@ -40,9 +40,11 @@ execution contract below alongside the issue-type content requirements in
 
 For new Stories, Tasks, Bugs and Sub-tasks, default to `Source`, optional
 `Slice Scope ID`, `Output`, `Checks`, `Scope`, optional `AC Coverage`, in that
-order. These headings are a readable default, not a universal Jira schema.
-Respect an explicitly supplied approved project mapping if the same information
-is explicit, nonempty and verifiable.
+order. A Sub-task omits `Source` and refers to its parent for source context.
+Epics are non-dispatchable: use a concise outcome body without forcing
+`Output`, `Checks`, `Scope` or `AC Coverage`. These headings are a readable
+default, not a universal Jira schema. Respect an explicitly supplied approved
+project mapping if the same information is explicit, nonempty and verifiable.
 
 - **Output:** the observable result of this item, distinct from its source
   locator or an instruction to "implement the UC".
@@ -62,8 +64,8 @@ is explicit, nonempty and verifiable.
   exclusions or use "TBD" to make a missing boundary appear complete.
 - **Slice Scope ID:** optional; include and preserve it only when supplied or
   already present. Never generate one.
-- **AC Coverage:** optional links to canonical AC IDs. Keep AC prose in the UC;
-  coverage does not claim that a partial slice satisfies the full AC.
+- **AC Coverage:** optional links to canonical AC IDs. Coverage does not claim
+  that a partial slice satisfies the full AC.
 
 If required Output, Checks or Scope cannot be established from approved input,
 show the gap, ask a focused question and block persistence. This applies even
@@ -86,9 +88,8 @@ keys in this fixed order for every item:
 - `incident`: incident supplying a Bug without a relevant UC.
 - `intake`: self-contained intake or pending-spec source.
 
-Use the fixed key order above for every item, regardless of issue type or source
-relationships. Keep multiple documents with the same key in their source
-order. Do not invent documents to fill the catalog.
+Keep multiple documents with the same key in their source order. Do not invent
+documents to fill the catalog.
 
 Keys describe a document's role in this item, not a requirement for separate
 pages. If the selected UC is a section of the DR, list the shared page once
@@ -126,10 +127,9 @@ checks that NFR. A shared constraint may apply to multiple items; establish
 applicability from each item's own scope and checks rather than copying every
 DR/SRS NFR onto related items.
 
-For non-Epic items, single-item mode accepts a self-contained source without
-requiring an unrelated DR. If a necessary source or locator is missing, ask for
-it; in a review draft show `key: title - locator missing (gap)`. Do not invent
-a URL or present an unresolved item as ready to persist.
+If a necessary source or locator is missing, ask for it; in a review draft show
+`key: title - locator missing (gap)`. Do not invent a URL or present an
+unresolved item as ready to persist.
 
 ## IDs and acceptance coverage
 
@@ -158,7 +158,8 @@ documents. Keep those delivery relationships in dependency links instead.
 
 1. Include the associated DR/SRS. In backlog mode a missing DR is a readiness
    gap; self-contained incident/intake/single-item work need not have one
-   unless required by its issue type.
+   unless required by its issue type. Sub-tasks use their parent for source
+   context as described above, instead of selecting their own documents.
 2. Include every document owning a cited ID: selected UCs, PRD for JTBD, and
    ADR/RFC/CR only when explicitly cited.
 3. Include the concrete artifact linked by each cited `contracts.item-*`,
@@ -225,12 +226,10 @@ Contract-only Task:
 ```
 
 Spike: use the same `dr` bullet with an `open.item-007` child naming the
-decision; include only its directly required source documents. State the owner,
-decision outcome, and blocked items in the issue body.
+decision; include only its directly required source documents.
 
 Error Task or UC-backed Bug: use the Story example's `uc` bullet and semantic
-error child, with the associated `dr`. Add other affected UC documents for a
-shared error, without creating another error Task.
+error child, with the associated `dr`.
 
 Incident-backed Bug:
 
@@ -239,5 +238,3 @@ Incident-backed Bug:
 
 - incident: [INC-12 - Upload outage](https://example.org/incidents/12)
 ```
-
-Sub-task: identify the parent and refer to it for source context; omit `Source`.

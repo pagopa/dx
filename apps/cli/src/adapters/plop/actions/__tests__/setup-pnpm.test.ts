@@ -12,6 +12,8 @@ const mocks = vi.hoisted(() => {
     env?: NodeJS.ProcessEnv;
     npmrcExistsAt: boolean;
   }[] = [];
+  // Lets a test fail one specific bootstrap command.
+  const state = { failDependencyInstall: false };
   const execa$ = vi.fn(
     (options: { cwd?: string; env?: NodeJS.ProcessEnv } = {}) =>
       (
@@ -23,6 +25,12 @@ const mocks = vi.hoisted(() => {
             `${fullCommand}${string}${values[index] ?? ""}`,
           "",
         );
+        if (
+          state.failDependencyInstall &&
+          command.startsWith("mise exec -- pnpm -w add")
+        ) {
+          return Promise.reject(new Error("install failed"));
+        }
         const nodeFs = process.getBuiltinModule("node:fs");
         const nodePath = process.getBuiltinModule("node:path");
         commands.push({
@@ -36,7 +44,7 @@ const mocks = vi.hoisted(() => {
       },
   );
 
-  return { commands, execa$ };
+  return { commands, execa$, state };
 });
 
 vi.mock("execa", () => ({ $: mocks.execa$ }));
@@ -47,19 +55,49 @@ import path from "node:path";
 
 import setSetupPnpmAction, {
   NX_DOCKER_DEPENDENCY,
+  NX_DOCKER_PACKAGE,
   NX_TERRAFORM_DEPENDENCY,
+  NX_TERRAFORM_PACKAGE,
   OXFMT_DEPENDENCY,
+  OXLINT_CONFIG_DEPENDENCY,
+  OXLINT_CONFIG_PACKAGE,
+  OXLINT_DEPENDENCY,
 } from "../setup-pnpm.js";
 
-describe("setupPnpm", () => {
-  const originalCwd = process.cwd();
-  const originalGitHubToken = process.env.GITHUB_TOKEN;
-  const originalGhToken = process.env.GH_TOKEN;
-  let tmpDir: string;
+const originalCwd = process.cwd();
+const originalGitHubToken = process.env.GITHUB_TOKEN;
+const originalGhToken = process.env.GH_TOKEN;
 
+let tmpDir: string;
+
+const repositoryNpmrc = () => path.join(tmpDir, "generated-repo", ".npmrc");
+
+const commandIndex = (expected: string) =>
+  mocks.commands.findIndex(({ command }) => command === expected);
+
+const runGenerator = async () => {
+  const plop = await nodePlop();
+  setSetupPnpmAction(plop);
+  plop.setGenerator("test", {
+    actions: [{ type: "setupPnpm" }],
+    prompts: [],
+  });
+
+  return await plop.getGenerator("test").runActions({
+    ownership: {
+      namespaceType: "Organization",
+      owners: ["@pagopa/devex"],
+      reviewerTeams: ["devex"],
+    },
+    repoName: "generated-repo",
+  });
+};
+
+describe("setupPnpm", () => {
   beforeEach(async () => {
     mocks.commands.length = 0;
     mocks.execa$.mockClear();
+    mocks.state.failDependencyInstall = false;
     // Pin a token so the action never shells out to `gh auth token`.
     process.env.GITHUB_TOKEN = "test-github-token";
     delete process.env.GH_TOKEN;
@@ -84,34 +122,11 @@ describe("setupPnpm", () => {
     }
   });
 
-  const repositoryNpmrc = () => path.join(tmpDir, "generated-repo", ".npmrc");
-
-  const commandIndex = (expected: string) =>
-    mocks.commands.findIndex(({ command }) => command === expected);
-
-  const runGenerator = async () => {
-    const plop = await nodePlop();
-    setSetupPnpmAction(plop);
-    plop.setGenerator("test", {
-      actions: [{ type: "setupPnpm" }],
-      prompts: [],
-    });
-
-    return await plop.getGenerator("test").runActions({
-      ownership: {
-        namespaceType: "Organization",
-        owners: ["@pagopa/devex"],
-        reviewerTeams: ["devex"],
-      },
-      repoName: "generated-repo",
-    });
-  };
-
   it("installs the DX dependencies from the GitHub Packages registry", async () => {
     await runGenerator();
 
     const dependenciesCommand = commandIndex(
-      `mise exec -- pnpm -w add -D @nx/js @nx/eslint @nx/vitest ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXFMT_DEPENDENCY}`,
+      `mise exec -- pnpm -w add -D @nx/js @nx/oxlint @nx/vitest ${OXLINT_DEPENDENCY} ${OXFMT_DEPENDENCY} ${NX_TERRAFORM_DEPENDENCY} ${NX_DOCKER_DEPENDENCY} ${OXLINT_CONFIG_DEPENDENCY}`,
     );
     const installCommand = commandIndex("mise exec -- pnpm install");
 
@@ -119,6 +134,37 @@ describe("setupPnpm", () => {
     expect(installCommand).toBeGreaterThan(dependenciesCommand);
     // The registry credentials must be in place before the first install.
     expect(mocks.commands[dependenciesCommand].npmrcExistsAt).toBe(true);
+    // ESLint is gone: the lint target and its packages come from Oxlint.
+    expect(mocks.commands[dependenciesCommand].command).not.toContain(
+      "@nx/eslint",
+    );
+  });
+
+  it("does not install any ESLint or Prettier artifact", async () => {
+    await runGenerator();
+
+    const installed = mocks.commands
+      .filter(({ command }) => command.startsWith("mise exec -- pnpm -w add"))
+      .map(({ command }) => command)
+      .join(" ");
+
+    for (const removed of ["eslint", "prettier"]) {
+      expect(installed.toLowerCase()).not.toContain(removed);
+    }
+  });
+
+  it("names every GitHub Packages dependency when the install fails", async () => {
+    mocks.state.failDependencyInstall = true;
+
+    const { failures } = await runGenerator();
+
+    expect(failures).toEqual([
+      expect.objectContaining({
+        error: expect.stringContaining(
+          `(${NX_TERRAFORM_PACKAGE}, ${NX_DOCKER_PACKAGE}, ${OXLINT_CONFIG_PACKAGE})`,
+        ),
+      }),
+    ]);
   });
 
   it("passes the DX packages with the gh alias in the version slot", async () => {

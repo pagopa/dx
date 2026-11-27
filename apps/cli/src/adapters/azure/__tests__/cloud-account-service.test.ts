@@ -731,6 +731,25 @@ describe("provisionTerraformBackend", () => {
     );
     expect(mockDeleteResourceGroup).not.toHaveBeenCalled();
   });
+
+  test("registers Azure Storage before provisioning in a new subscription", async ({
+    cloudAccountService,
+  }) => {
+    mockProviderGet.mockResolvedValueOnce({
+      registrationState: "NotRegistered",
+    });
+
+    await cloudAccountService.provisionTerraformBackend(
+      account,
+      environment,
+      "payments",
+    );
+
+    expect(mockProviderRegister).toHaveBeenCalledWith("Microsoft.Storage");
+    expect(mockProviderRegister).toHaveBeenCalledBefore(
+      mockStorageAccountCreate,
+    );
+  });
 });
 
 describe("ensureTerraformBackendAccess", () => {

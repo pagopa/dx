@@ -1,3 +1,15 @@
+## 0.22.29 (2026-11-26)
+
+### 🩹 Fixes
+
+- Summarize Terraform state backend conventions and direct users to ([#2519](https://github.com/pagopa/dx/pull/2519))
+  `dx add environment` or the `terraform-best-practices` skill for setup guidance.
+  Preserve existing backends unless migration is requested.
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 0.22.28 (2026-11-23)
 
 ### 🩹 Fixes

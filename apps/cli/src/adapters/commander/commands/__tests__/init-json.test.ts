@@ -179,6 +179,9 @@ describe("init command json output", () => {
           gitHubRepoCreationSkipped: true,
           ownership: getOwnershipGuidance(payload),
           payload,
+          warnings: [
+            expect.objectContaining({ code: "REPOSITORY_STATE_LOCAL" }),
+          ],
         },
         ok: true,
       },

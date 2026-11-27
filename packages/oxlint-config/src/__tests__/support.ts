@@ -1,5 +1,5 @@
-import { spawnSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { spawn } from "node:child_process";
+import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 
@@ -35,6 +35,10 @@ export const BASE_CONFIG_PATH = join(PACKAGE_ROOT, "base.json");
 
 export const BASE_JEST_CONFIG_PATH = join(PACKAGE_ROOT, "base-jest.json");
 
+export const BASE_MODULE_PATH = join(PACKAGE_ROOT, "base.js");
+
+export const BASE_JEST_MODULE_PATH = join(PACKAGE_ROOT, "base-jest.js");
+
 export const CORE_CONFIG_PATH = join(PACKAGE_ROOT, "core.json");
 
 const OXLINT_BIN_PATH = join(
@@ -50,14 +54,16 @@ const unique = <T>(values: readonly T[]): T[] => [...new Set(values)];
  * file that declares them, and the merge is additive, so a child config can
  * only add plugins, rules and overrides.
  */
-export const loadConfig = (path: string): OxlintConfig => {
+export const loadConfig = async (path: string): Promise<OxlintConfig> => {
   const raw = JSON.parse(
-    readFileSync(path, "utf8"),
+    await readFile(path, "utf8"),
   ) as Partial<OxlintConfig> & {
     extends?: string[];
   };
-  const parents = (raw.extends ?? []).map((parent) =>
-    loadConfig(join(dirname(path), parent)),
+  const parents = await Promise.all(
+    (raw.extends ?? []).map((parent) =>
+      loadConfig(join(dirname(path), parent)),
+    ),
   );
 
   return {
@@ -92,16 +98,23 @@ export const loadConfig = (path: string): OxlintConfig => {
 
 // A single thread keeps the run cheap, because the tests of a project run in
 // parallel with the tasks of the other projects on the same CI runner.
-export const runOxlint = (cwd: string, args: string[]): LintResult => {
-  const { error, status, stderr, stdout } = spawnSync(
-    OXLINT_BIN_PATH,
-    ["--threads=1", ...args],
-    { cwd, encoding: "utf8" },
-  );
+export const runOxlint = (cwd: string, args: string[]): Promise<LintResult> =>
+  new Promise((resolve, reject) => {
+    const child = spawn(OXLINT_BIN_PATH, ["--threads=1", ...args], { cwd });
 
-  if (error) {
-    throw error;
-  }
+    let stderr = "";
+    let stdout = "";
 
-  return { status, stderr, stdout };
-};
+    child.stdout.setEncoding("utf8");
+    child.stderr.setEncoding("utf8");
+    child.stdout.on("data", (chunk: string) => {
+      stdout += chunk;
+    });
+    child.stderr.on("data", (chunk: string) => {
+      stderr += chunk;
+    });
+    child.on("close", (status) => {
+      resolve({ status, stderr, stdout });
+    });
+    child.on("error", reject);
+  });

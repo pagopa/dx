@@ -22,6 +22,11 @@ Before generating anything, the command checks that Terraform and mise are
 installed and that the GitHub token can read the DX packages from GitHub
 Packages (see [Installation](./requirements.md)).
 
+If you publish the repository, keep the Terraform state in `infra/repository`
+on this machine. Do not delete it or run `terraform apply` for `infra/repository`
+from another device until the first [`dx add environment`](#environment) moves
+the state to Azure.
+
 ### Prompt Reference
 
 The `init` command is interactive. The tables below explain what each prompt
@@ -140,6 +145,38 @@ command.
 
 :::
 
+:::note[Repository Terraform state]
+
+The first `dx add environment` moves local repository state to Azure
+(`<prefix>/<domain>/repository.tfstate`) and removes the local copy after a
+clean `terraform plan`. If neither local nor remote state exists and automatic
+import fails, recover the original state or complete the imports manually
+before retrying.
+
+Before first placement, the CLI asks you to confirm the environment,
+subscription, Resource Group, Storage Account, container, and key. Use `--yes`
+to accept this placement non-interactively. The destination is permanent for the
+repository: adding another environment keeps and reports the configured backend,
+including existing keys created by earlier CLI versions.
+
+Use the GitHub remote's repository name as a literal in `main.tf` and its owner
+as a literal on the default `github` provider. The CLI rejects JSON
+configuration, override files, and custom provider mappings.
+
+The `validate-v2` workflow plans `infra/repository` as `bootstrapper-prod-ci`.
+If repository state is stored in a different subscription, the CLI does not
+grant that identity cross-subscription access. Before relying on that workflow,
+ask the destination subscription owner to grant the identity access to the
+repository's state container, including permission to lock the state blob.
+Verify access by running a CI plan; a successful migration with your own Azure
+credentials does not verify CI access.
+
+If local state and a destination blob both exist, reconcile them manually
+before retrying, even if the blob is empty. Do not delete or overwrite either
+copy to bypass the check.
+
+:::
+
 #### Prompt Reference
 
 The `add environment` command is interactive. The tables below explain what each
@@ -206,27 +243,28 @@ adding another environment also makes `prod` explicit. The command preserves
 other HCL settings and requires a single repository module with a literal
 repository object and a list of unique, literal environment names.
 
-Existing lists are normalized only when an environment needs to be added.
-Lists containing comments are left unchanged when the requested environment and
-`prod` already exist. Otherwise, the command refuses to edit them: move the
-comments outside the list or add both names manually before retrying. Comments
-outside the list are preserved.
+Existing lists are normalized only when an environment needs to be added. Lists
+containing comments are left unchanged when the requested environment and `prod`
+already exist. Otherwise, the command refuses to edit them: move the comments
+outside the list or add both names manually before retrying. Comments outside
+the list are preserved.
 
 If customized HCL is rejected, restore the generated module/object layout,
 replace dynamic `environments` expressions with a literal list, remove duplicate
-names, and run `terraform fmt infra/repository/main.tf`. Formatting alone does not
-remove comments or convert dynamic expressions.
+names, and run `terraform fmt infra/repository/main.tf`. Formatting alone does
+not remove comments or convert dynamic expressions.
 
 Unsupported target shapes are rejected before writing. Changed candidates must
-also pass `terraform fmt -` before replacing `main.tf` or running `terraform init`
-and `terraform apply`. Terraform diagnostics are included in validation errors,
-but its formatted output is not written over unrelated source.
+also pass `terraform fmt -` before replacing `main.tf` or running
+`terraform init` and `terraform apply`. Terraform diagnostics are included in
+validation errors, but its formatted output is not written over unrelated
+source.
 
-Updates require a regular UTF-8 `main.tf` file, preserve its permissions, and use
-atomic replacement. Run commands sequentially and do not edit the file during
-synchronization: concurrent writers in the same working copy are not supported.
-After a valid edit, a later `terraform init` or `terraform apply` failure does not
-roll back the edited file or any remote changes.
+Updates require a regular UTF-8 `main.tf` file, preserve its permissions, and
+use atomic replacement. Run commands sequentially and do not edit the file
+during synchronization: concurrent writers in the same working copy are not
+supported. After a valid edit, a later `terraform init` or `terraform apply`
+failure does not roll back the edited file or any remote changes.
 
 **Initialization and Runner App credentials**
 

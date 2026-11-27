@@ -1,3 +1,15 @@
+## 0.0.5 (2026-11-26)
+
+### 🚀 Features
+
+- The preset ships composable TypeScript config entries ([#2581](https://github.com/pagopa/dx/pull/2581))
+
+  `@pagopa/oxlint-config/base` and `@pagopa/oxlint-config/base-jest` export configuration objects that `oxlint.config.ts` can import directly. Each one nests `core.json` and its overlay in `extends`, the way the JSON entries chain them, instead of shipping a merged copy: oxlint's TypeScript config accepts objects in `extends`, never paths. The JSON entries, their contents and their semantics are unchanged.
+
+### ❤️ Thank You
+
+- Danilo Spinelli @gunzip
+
 ## 0.0.4 (2026-11-20)
 
 ### 🩹 Fixes

@@ -197,7 +197,7 @@ Bootstrapper/core state is protected even when `main.tf` is missing. Once backen
 coordinates are resolved, derived locations are also checked against each other
 and bootstrapper/core before writing backend files. Shared
 `_modules`, `modules`, and `.terraform` directories are not discovered as roots.
-Existing remote state is never migrated; reruns refresh generated access
+Existing remote state for deployment roots is never migrated; reruns refresh generated access
 configuration but preserve backend files and coordinates, including an entire
 `main.tf` or `providers.tf` when it contains the backend.
 If cloud setup completed before an interrupted run, rerunning also generates a
@@ -219,6 +219,18 @@ tracked by #2509 and coordinated with #2508. This version is not yet published
 or verified; before merging or releasing the CLI, confirm the Registry version
 and update the pin if needed. Registry-based Terraform validation and planning
 remain gated until then.
+
+After `dx init`, keep the temporary local state in `infra/repository`. On the
+first environment addition, confirm its permanent Azure destination (environment,
+subscription, Resource Group, Storage Account, container, and key). New placements
+use `<prefix>/<domain>/repository.tfstate`; subsequent environments retain the
+configured backend and key. `--yes` accepts the placement non-interactively.
+
+The CLI validates local repository resources and refuses to overwrite an existing
+destination blob, including empty blobs. A clean plan is required before local
+state and backups are removed or GitHub environments are updated. On failure,
+resolve the reported issue and re-run the same command; conflicting local and
+remote states require manual reconciliation.
 
 #### `spec`
 

@@ -653,8 +653,8 @@ terraform {
   backend "azurerm" {
     resource_group_name  = "<tfstate-rg>"
     storage_account_name = "<tfstate-storage>"
-    container_name       = "terraform-state"
-    key                  = "<project>.<layer>.<env>.tfstate"
+    container_name       = "<domain>-tf-state"
+    key                  = "<layer>.tfstate"
     use_azuread_auth     = true
   }
 }
@@ -667,11 +667,10 @@ provider "azurerm" {
 provider "dx" {}
 ```
 
-:::tip State key naming convention
+:::tip State backend naming
 
-Use the format `<project>.<layer>.<env>.tfstate` for the backend key:
+For new environments in DX-compliant projects, use [`dx add environment`](../dx-cli/usage.md#environment) to configure the backend. For agent-assisted changes, use the [`terraform-best-practices` skill](../coding-with-ai/plugin-marketplace.md#terraformpagopa-dx).
 
-- `io.resources.prod.tfstate`
-- `cgn.bootstrapper.dev.tfstate`
+New backends use `<domain>-tf-state` for workspace state and `<prefix>-tf-state` for shared core state. Keep existing backend coordinates and keys, including legacy `terraform-state` containers, unless a migration is planned.
 
 :::

@@ -14,6 +14,8 @@ applyTo: "**/*.test.ts, **/*.spec.ts"
 - **Descriptive names**: Test names should describe expected behavior (e.g., "returns 400 when email is invalid").
 - **Avoid implementation coupling**: Tests should verify observable behavior, not internal implementation details.
 - **Deterministic tests**: Avoid time-sensitive, flaky, or network-dependent tests. When needed, mock timers and external calls.
+- **No synchronous I/O**: Never use synchronous filesystem or child-process APIs, that is any `*Sync` variant. Use `node:fs/promises` with `await`, and async `spawn`/`exec` when a subprocess is needed.
+- **Justifying a sync call**: If a specific use case genuinely requires a synchronous call, add an inline comment explaining why.
 
 ## Mocks and Isolation
 

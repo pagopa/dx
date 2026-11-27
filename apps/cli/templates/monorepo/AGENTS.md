@@ -12,12 +12,13 @@ out loud.
 - **pnpm** workspaces: every folder under `apps/` and `packages/` is one.
   Internal dependencies use `workspace:^`; a version that more than one project
   needs belongs in the `catalog:` section of `pnpm-workspace.yaml`.
-- **Nx** infers each project's targets: `@nx/js/typescript`, `@nx/eslint/plugin`
+- **Nx** infers each project's targets: `@nx/js/typescript`, `@nx/oxlint`
   and `@nx/vitest` for code, `@pagopa/nx-terraform` for `infra/**`,
   `@pagopa/nx-docker` for `Dockerfile` projects. No `package.json` script
   mirrors them, so `pnpm nx show projects` and `pnpm nx <target> --help` are
   the source of truth for what a project can do.
-- **oxfmt** is the formatter behind `nx format:*`.
+- **oxlint** is the linter, configured by the root `oxlint.config.ts` on top of
+  the `@pagopa/oxlint-config` preset; `nx format:*` runs **oxfmt**.
 
 `pnpm install` authenticates a local, git-ignored `.npmrc`; `README.md` has
 the command that writes it.

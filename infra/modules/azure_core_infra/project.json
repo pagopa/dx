@@ -1,6 +1,6 @@
 {
   "metadata": {
-    "version": "7.1.0",
+    "version": "8.0.1",
     "description": "Sets up the core Azure infrastructure including VNet, DNS zones, and Key Vault. Useful to bootstrap production or development environments.",
     "provider": "azurerm"
   },

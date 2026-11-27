@@ -1,37 +1,35 @@
-#------------#
-# Core Infra #
-#------------#
-
-module "core" {
-  source  = "pagopa-dx/azure-core-infra/azurerm"
-  version = "~> 6.0"
-
-  test_enabled = true
-
-  environment = local.environment
-
-  virtual_network_cidr = "10.60.0.0/16"
-
-  tags = local.tags
+variable "adopt_existing_apim_subnet" {
+  type        = bool
+  description = "Import the existing APIM subnet CIDR allocation during migration from the Azure API Management v4 module contract."
+  default     = true
 }
 
-#----------------#
-# API Management #
-#----------------#
+data "azurerm_subnet" "existing_apim" {
+  count = var.adopt_existing_apim_subnet ? 1 : 0
 
-resource "azurerm_subnet" "apim" {
   name = provider::dx::resource_name(merge({
     resource_type   = "apim_subnet",
     instance_number = 1,
   }, local.naming_config))
   virtual_network_name = module.core.common_vnet.name
   resource_group_name  = module.core.network_resource_group_name
-  address_prefixes     = ["10.60.2.0/24"]
+}
+
+moved {
+  from = azurerm_subnet.apim
+  to   = module.apim.azurerm_subnet.apim
+}
+
+import {
+  for_each = var.adopt_existing_apim_subnet ? { apim = data.azurerm_subnet.existing_apim[0].id } : {}
+
+  to = module.apim.dx_available_subnet_cidr.apim
+  id = each.value
 }
 
 module "apim" {
   source  = "pagopa-dx/azure-api-management/azurerm"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
@@ -40,26 +38,15 @@ module "apim" {
   publisher_email = "common-dx@pagopa.it"
   publisher_name  = "Common DX"
 
-  virtual_network = {
-    name                = module.core.common_vnet.name
-    resource_group_name = module.core.network_resource_group_name
-  }
-
-  subnet_id                     = azurerm_subnet.apim.id
-  virtual_network_type_internal = true
-  enable_public_network_access  = true
+  virtual_network = module.core.common_vnet.id
 
   tags = local.tags
 }
 
-#-----------#
-# Cosmos DB #
-#-----------#
-
 ## Cosmos Account
 module "cosmos" {
   source  = "pagopa-dx/azure-cosmos-account/azurerm"
-  version = "~> 2.0"
+  version = "~> 3.0"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
@@ -89,13 +76,10 @@ resource "azurerm_cosmosdb_sql_database" "db" {
   account_name        = module.cosmos.name
 }
 
-#-----------------#
-# Storage Account #
-#-----------------#
-
+## Storage Account
 module "storage_account" {
   source  = "pagopa-dx/azure-storage-account/azurerm"
-  version = "~> 4.0"
+  version = "~> 6.0"
 
   environment         = local.environment
   resource_group_name = module.core.test_resource_group_name
