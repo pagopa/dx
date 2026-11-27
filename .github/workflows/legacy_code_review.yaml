@@ -9,6 +9,8 @@ on:
 jobs:
   js_code_review:
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
 
     steps:
       - name: Check-out code

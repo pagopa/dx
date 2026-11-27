@@ -105,7 +105,7 @@ jobs:
           # Remove trailing slash from BASE_PATH if present
           BASE_PATH="${BASE_PATH%/}"
           # The directory is expected to be in the format
-          #  infra/resources/${{ inputs.environment }}
+          #  infra/resources/<environment>
           # Example: infra/resources/prod
           printf "dir=%q/%q" "$BASE_PATH" "$ENVIRONMENT" >> "$GITHUB_OUTPUT"
 

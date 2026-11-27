@@ -5,6 +5,10 @@ on:
 jobs:
   deploy:
     uses: $/.github/workflows/infra_apply.yaml
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
     name: Prod - Deploy
     secrets: inherit
     with:

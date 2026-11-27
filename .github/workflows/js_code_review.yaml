@@ -3,12 +3,14 @@ name: "Code Review"
 on:
   workflow_call: {}
 
-permissions:
-  pull-requests: write
+permissions: {}
 
 jobs:
   js_code_review:
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      pull-requests: write # step "Post Plan on PR" (pr-comment)
 
     env:
       TURBO_CACHE_DIR: .turbo-cache
@@ -16,6 +18,8 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Node Setup
         id: node-setup
@@ -51,7 +55,11 @@ jobs:
       # See https://github.com/pagopa/io-fims/pull/41
       - name: Run code-review script
         if: steps.node-setup.outputs.package-manager != ''
-        run: ${{ steps.node-setup.outputs.package-manager }} run code-review
+        env:
+          PACKAGE_MANAGER: ${{ steps.node-setup.outputs.package-manager }}
+        run: |
+          case "$PACKAGE_MANAGER" in npm|yarn|pnpm) ;; *) echo "::error::Unsupported package manager"; exit 1 ;; esac
+          "$PACKAGE_MANAGER" run code-review
 
       # Codecov provides reports and metrics about test coverage data.
       # To enable set CODECOV_TOKEN secret at repo level

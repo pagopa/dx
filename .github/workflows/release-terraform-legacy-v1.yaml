@@ -59,6 +59,8 @@ jobs:
   get-terraform-version:
     name: Get Terraform Version
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
     outputs:
       terraform_version: ${{ steps.get-version.outputs.terraform_version }}
     steps:
@@ -72,6 +74,9 @@ jobs:
   tf-modules-check:
     uses: pagopa/dx/.github/workflows/static_analysis.yaml@main
     name: Check terraform registry modules hashes
+    permissions:
+      contents: read
+      pull-requests: write # static_analysis posts PR comments
     needs: [get-terraform-version]
     secrets: inherit
     with:

@@ -88,7 +88,8 @@ jobs:
   build:
     name: Build Artifact
     if: ${{ github.event_name != 'pull_request' || github.event.action != 'closed' }}
-    runs-on: ${{ inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04' }}
+    # Fork PRs never run on private agents: their code is untrusted.
+    runs-on: ${{ (startsWith(github.event_name, 'pull_request') && github.event.pull_request.head.repo.full_name != github.repository) && 'ubuntu-26.04' || (inputs.use_labels && inputs.use_private_agent && (inputs.override_labels != '' && inputs.override_labels || inputs.environment) || inputs.use_private_agent && 'self-hosted' || 'ubuntu-26.04') }}
     permissions:
       contents: read
       packages: read
@@ -98,6 +99,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # DX packages come from GitHub Packages through pnpm's built-in `gh:`
       # alias. The action writes a private npmrc in runner.temp with the

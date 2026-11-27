@@ -5,6 +5,10 @@ on:
 jobs:
   uat_itn_common_deploy:
     uses: $/.github/workflows/infra_apply.yaml
+    permissions:
+      contents: read
+      id-token: write
+      pull-requests: write
     name: Uat - Deploy
     secrets: inherit
     with:

@@ -26,5 +26,6 @@ printf -v csp_list_joined '%s,' "${csp_list[@]:-}"
 csp_list_joined="${csp_list_joined%,}"
 printf 'CSP_LIST=%s\n' "$csp_list_joined" >> "$GITHUB_ENV"
 if [ "$EXPORT_GITHUB_TOKEN" = "true" ] && [ -n "${GH_APP_TOKEN:-}" ]; then
+  echo "::warning::csp-login exports the GitHub App token to every later step via GITHUB_ENV. Set 'export-github-token: false' and pass steps.<id>.outputs.github-token only to the steps that need it. The default will change in the next major."
   printf 'GITHUB_TOKEN=%s\n' "$GH_APP_TOKEN" >> "$GITHUB_ENV"
 fi

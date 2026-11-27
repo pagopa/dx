@@ -41,6 +41,7 @@ jobs:
   gate:
     name: Fork PR Gate
     runs-on: ubuntu-26.04
+    permissions: {}
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
     steps:
@@ -51,7 +52,8 @@ jobs:
           EVENT_NAME: ${{ github.event_name }}
           PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
         run: |
-          if [ "$EVENT_NAME" = "pull_request" ] && [ -n "$PR_HEAD_REPO" ] && [ "$PR_HEAD_REPO" != "$CURRENT_REPO" ]; then
+          if { [ "$EVENT_NAME" = "pull_request" ] || [ "$EVENT_NAME" = "pull_request_target" ]; } \
+            && [ -n "$PR_HEAD_REPO" ] && [ "$PR_HEAD_REPO" != "$CURRENT_REPO" ]; then
             echo "Blocking forked PR from $PR_HEAD_REPO"
             echo "run=false" >> "$GITHUB_OUTPUT"
           else
@@ -321,14 +323,9 @@ jobs:
       id-token: write
       packages: read
     env:
-      ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
-      ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
-      ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
       ARM_USE_OIDC: true
       ARM_USE_AZUREAD: true
       ARM_STORAGE_USE_AZUREAD: true
-      ROLE_ARN: ${{ secrets.ROLE_ARN }}
-      AWS_REGION: ${{ secrets.AWS_REGION }}
       ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
     steps:
       - name: Check out repository
@@ -419,19 +416,6 @@ jobs:
             echo "$(date)" > "$MARKER_FILE"
           fi
 
-      # Log in only after tools and dependencies are installed, so their
-      # lifecycle scripts don't run with an active cloud session. The GitHub
-      # App secrets are scoped to this step for the same reason.
-      - name: Cloud Login
-        id: cloud-login
-        uses: pagopa/dx/actions/csp-login@main
-        with:
-          export-github-token: "false"
-        env:
-          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
-          GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
-          GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
-
       # Keep the pull role and us-east-1 scoped to registry login, without
       # replacing the AWS credentials or region used by Terraform plans.
       - name: Assume ECR Public pull role
@@ -469,10 +453,31 @@ jobs:
           EXCLUDE: ${{ matrix.target.exclude }}
         run: pnpm nx affected -t fmt,lint,test,trivy -c ci --exclude="$EXCLUDE" --outputStyle=static
 
+      # Log in only after tools, dependencies and PR-defined quality targets
+      # have run, so none of them executes with an active cloud session. The
+      # cloud and GitHub App secrets are scoped to the steps that need them.
+      - name: Cloud Login
+        id: cloud-login
+        uses: pagopa/dx/actions/csp-login@main
+        with:
+          export-github-token: "false"
+        env:
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
+          ROLE_ARN: ${{ secrets.ROLE_ARN }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          GH_APP_CLIENT_ID: ${{ secrets.GH_APP_CLIENT_ID }}
+          GH_APP_KEY: ${{ secrets.GH_APP_KEY }}
+          GH_APP_INSTALLATION_ID: ${{ secrets.GH_APP_INSTALLATION_ID }}
+
       # Only Terraform plans (including init and the GitHub provider) need the
       # App token. Do not expose it to quality checks or artifact uploads.
       - name: Run Terraform plan on affected environment projects
         env:
+          ARM_TENANT_ID: ${{ secrets.ARM_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.ARM_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.ARM_CLIENT_ID }}
           EXCLUDE: ${{ matrix.target.exclude }}
           GITHUB_TOKEN: ${{ steps.cloud-login.outputs.github-token }}
           REFRESH: ${{ steps.set-refresh-flag.outputs.refresh }}

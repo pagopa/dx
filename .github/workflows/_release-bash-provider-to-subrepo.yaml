@@ -16,6 +16,8 @@ concurrency:
 jobs:
   detect-providers:
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
     outputs:
       providers: ${{ steps.get-all-providers.outputs.resources || steps.get-modified-providers.outputs.resources }}
     steps:
