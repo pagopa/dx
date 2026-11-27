@@ -18,7 +18,7 @@ The tables load `docs/brownfield/state.json` in the current checkout automatical
 
 Legacy documentation URLs in the `sources` field are preserved in existing state files but are no longer displayed or used by sync.
 
-The optional `repositories` array contains objects with a GitHub `fullName` in `owner/repository` format. Up to 500 unique repositories are supported. If the property is missing, the canvas seeds it with the current `GITHUB_REPOSITORY` or the repository parsed from the local `origin` remote; an explicitly empty array remains empty.
+The optional `repositories` array contains objects with a GitHub `fullName` in `owner/repository` format. Up to 500 unique repositories are supported. Missing or empty repository lists remain empty until repositories are explicitly added.
 
 Use **Confirm** in each actor's or use case's actions to confirm it; select **Confirmed** to undo confirmation. Unconfirmed rows are highlighted in yellow. Confirmed actors and use cases cannot be edited or deleted until their confirmation is undone. Existing items without an `accepted` flag are treated as unconfirmed and receive an explicit flag on the next save.
 
@@ -34,7 +34,7 @@ The `useCases` array contains objects with `title` and `description` strings and
 
 Legacy `entities` and `archivedEntities` remain in state but are not shown or discovered by sync. They are read as confirmed even if an older file contains an unconfirmed flag; their confirmed status is persisted on the next save.
 
-The file has `schemaVersion: 1` and an `actors` array containing `name` and `description` strings, a boolean `accepted` flag, and an optional `role` of `Primary` or `Supporting`. Findings can also have a stable `id` and `aliases`; older findings receive an ID when edited or removed. Removed findings live in optional `archivedActors` and `archivedUseCases` arrays, each supporting up to 5,000 entries. Other state fields are retained. An absent file starts with an empty table and is created when changes are saved; invalid JSON or unsupported data produces an error without replacing the file. Names must be nonempty and at most 200 characters; descriptions may be empty and at most 10,000 characters. Up to 500 actors are supported.
+The file has `schemaVersion: 1` and an `actors` array containing `name` and `description` strings, a boolean `accepted` flag, and an optional `role` of `Primary` or `Supporting`. Findings can also have a stable `id` and `aliases`; older findings receive an ID when edited or removed. Removed findings live in optional `archivedActors` and `archivedUseCases` arrays, each supporting up to 5,000 entries. Other state fields are retained. An absent file is created on load with empty repositories, actors, and use cases; invalid JSON or unsupported data produces an error without replacing the file. Names must be nonempty and at most 200 characters; descriptions may be empty and at most 10,000 characters. Up to 500 actors are supported.
 
 This state belongs to the repository file, not a conversation or canvas panel. Commit and synchronize it to reuse changes in other worktrees, branches, or teammates' checkouts; independent worktrees do not share live state. No commit is performed automatically. Do not store secrets or personal information in this file.
 

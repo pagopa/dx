@@ -28,11 +28,8 @@ export function isValidGitHubRepositories(repositories) {
   });
 }
 
-export function initialGitHubRepositories(saved, currentRepository) {
-  if (saved !== undefined) return saved;
-  return isValidGitHubRepository(currentRepository)
-    ? [{ fullName: currentRepository }]
-    : [];
+export function initialGitHubRepositories(saved) {
+  return saved ?? [];
 }
 
 export function parseGitHubRemote(remote) {

@@ -100,11 +100,11 @@ test("autosave serializes edits, waits for valid rows, and preserves conflicts",
     ].map((id) => [`#${id}`, new Element()]),
   );
   const initial = {
+    currentRepository: "pagopa/dx",
     path: "docs/brownfield/state.json",
     revision: "initial",
     state: {
       actors: [{ description: "Original", name: "Operator" }],
-      repositories: [],
       schemaVersion: 1,
       sources: [{ url: "https://example.com/legacy" }],
       useCases: [
@@ -227,6 +227,10 @@ test("autosave serializes edits, waits for valid rows, and preserves conflicts",
     nameInput().handlers.input();
   };
   assert.equal(nameInput().value, "Operator");
+  assert.equal(elements.get("#repository-rows").children.length, 1);
+  assert.equal(elements.get("#repository-rows").children[0].children[0].textContent,
+    "No GitHub repositories yet. Add one to include its code as a source.");
+  assert.equal(timer, undefined);
   assert.equal(elements.get("#find-use-cases").disabled, true);
   assert.equal(elements.get("#find-use-cases-hint").hidden, false);
   deferDocument = true;
@@ -811,10 +815,8 @@ test("sync rejects ambiguous legacy use case titles without changing state", asy
   assert.deepEqual(await store.read(), initial);
 });
 
-test("GitHub repository sources prefill once and validate canonical identities", () => {
-  assert.deepEqual(initialGitHubRepositories(undefined, "pagopa/dx"), [
-    { fullName: "pagopa/dx" },
-  ]);
+test("GitHub repository sources remain empty unless explicitly added", () => {
+  assert.deepEqual(initialGitHubRepositories(undefined, "pagopa/dx"), []);
   assert.deepEqual(initialGitHubRepositories([], "pagopa/dx"), []);
   assert.deepEqual(initialGitHubRepositories(undefined, null), []);
   assert.equal(
@@ -840,15 +842,19 @@ test("GitHub repository sources prefill once and validate canonical identities",
 });
 
 test("actor state survives a new session store and preserves other state fields", async (t) => {
-  const statePath = join(await workspace(t), "state.json");
+  const statePath = join(await workspace(t), "nested", "state.json");
   const first = createActorState(statePath);
-  const initial = await first.read();
-  assert.equal(initial.revision, null);
+  const reopened = createActorState(statePath);
+  const [initial, concurrent] = await Promise.all([first.read(), reopened.read()]);
+  assert.deepEqual(concurrent, initial);
+  assert.match(initial.revision, /^[0-9a-f]{64}$/);
   assert.deepEqual(initial.state, {
     actors: [],
+    repositories: [],
     schemaVersion: 1,
     useCases: [],
   });
+  assert.deepEqual(JSON.parse(await readFile(statePath, "utf8")), initial.state);
   const state = {
     actors: [{ accepted: true, description: "Handles incidents.", name: "Operator" }],
     notes: { scope: "API" },
@@ -857,7 +863,6 @@ test("actor state survives a new session store and preserves other state fields"
     useCases: [{ accepted: false, description: "Build and release.", title: "Deploy" }],
   };
   const saved = await first.save({ revision: initial.revision, state });
-  const reopened = createActorState(statePath);
   assert.deepEqual(await reopened.read(), saved);
   const edited = {
     ...state,
@@ -1343,7 +1348,7 @@ test("document generation enforces origin and revision without touching state", 
   });
   assert.equal((await post(null, "https://example.com")).status, 403);
   assert.equal((await post("stale")).status, 409);
-  assert.equal((await post(null)).status, 200);
+  assert.equal((await post(initial.revision)).status, 200);
   assert.deepEqual(await store.read(), initial);
   assert.equal(await readFile(join(directory, "brownfield.md"), "utf8"),
     "# Brownfield documentation\n\nThe actors and use cases below were inferred from source code and reviewed; they are not proposals. They may have been edited during review.\n\n## Source repositories\n\nRecorded commits are the revisions inspected for confirmed findings. Configured repositories are also listed when no commit has been recorded.\n\nNo repositories or source commits recorded.\n\n## Actors\n\n## Use cases\n");

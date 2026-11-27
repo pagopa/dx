@@ -2,6 +2,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import {
   mkdir,
+  link,
   open,
   readFile,
   rename,
@@ -15,7 +16,7 @@ import { isValidGitHubRepository, isValidGitHubRepositories } from "./github-rep
 import { availableActorRanges, labelRanges } from "./actor-mentions.mjs";
 
 export function createActorState(statePath) {
-  async function read() {
+  async function readExisting() {
     let content;
     try {
       content = await readFile(statePath, "utf8");
@@ -24,7 +25,7 @@ export function createActorState(statePath) {
       return {
         path: statePath,
         revision: null,
-        state: { actors: [], schemaVersion: 1, useCases: [] },
+        state: { actors: [], repositories: [], schemaVersion: 1, useCases: [] },
       };
     }
     let state;
@@ -39,6 +40,25 @@ export function createActorState(statePath) {
     }
     validateState(state);
     return { path: statePath, revision: digest(content), state: confirmEntities(state) };
+  }
+
+  async function read() {
+    const current = await readExisting();
+    if (current.revision !== null) return current;
+
+    await mkdir(dirname(statePath), { recursive: true });
+    const temporaryPath = `${statePath}.${randomUUID()}.tmp`;
+    await writeFile(temporaryPath, `${JSON.stringify(current.state, null, 2)}\n`, { flag: "wx" });
+    try {
+      try {
+        await link(temporaryPath, statePath);
+      } catch (error) {
+        if (error.code !== "EEXIST") throw error;
+      }
+    } finally {
+      await unlink(temporaryPath);
+    }
+    return readExisting();
   }
 
   async function withStateLock(action) {
@@ -68,7 +88,7 @@ export function createActorState(statePath) {
     try {
       await writeFile(temporaryPath, content, { flag: "wx" });
       temporaryExists = true;
-      if ((await read()).revision !== revision) {
+      if ((await readExisting()).revision !== revision) {
         throw new RequestError(
           409,
           "State changed during saving. Reload the saved state and reapply your edits.",
@@ -91,7 +111,7 @@ export function createActorState(statePath) {
     validateState(input.state);
     const state = confirmEntities(input.state);
     return withStateLock(async () => {
-      const current = await read();
+      const current = await readExisting();
       if (current.revision !== input.revision) {
         throw new RequestError(
           409,
@@ -109,7 +129,7 @@ export function createActorState(statePath) {
       throw new RequestError(400, "A loaded state revision is required.");
     }
     return withStateLock(async () => {
-      const current = await read();
+      const current = await readExisting();
       if (current.revision !== input.revision) {
         throw new RequestError(
           409,
@@ -127,7 +147,7 @@ export function createActorState(statePath) {
       (typeof input.revision === "string" && /^[0-9a-f]{64}$/.test(input.revision)))) {
       throw new RequestError(400, "A complete state revision is required. Read the current state and retry.");
     }
-    const current = await read();
+    const current = await readExisting();
     if (current.revision !== input.revision) {
       throw new RequestError(409, "State changed since it was read. Read the current state, reconcile findings, and retry with its exact revision.");
     }

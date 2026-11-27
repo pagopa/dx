@@ -195,11 +195,8 @@ async function load() {
   controls();
   try {
     snapshot = await request("actors");
-    const repositoriesWereUninitialized =
-      snapshot.state.repositories === undefined;
     snapshot.state.repositories = initialGitHubRepositories(
       snapshot.state.repositories,
-      snapshot.currentRepository,
     );
     for (const actor of snapshot.state.actors) actor.accepted ??= false;
     for (const useCase of snapshot.state.useCases ?? []) useCase.accepted ??= false;
@@ -211,13 +208,8 @@ async function load() {
     path.textContent = snapshot.path;
     render();
     renderRepositories();
-    status.textContent =
-      snapshot.revision === null
-        ? "No state file yet. Changes will create it automatically."
-        : "Repository state loaded.";
-    if (linkedLegacy || (repositoriesWereUninitialized && snapshot.state.repositories.length)) {
-      changed();
-    }
+    status.textContent = "Repository state loaded.";
+    if (linkedLegacy) changed();
   } catch (error) {
     status.textContent = `Could not load state: ${error.message}`;
     if (dirty) saveBlocked = true;
@@ -239,7 +231,6 @@ async function refreshSavedState() {
     snapshot = updated;
     snapshot.state.repositories = initialGitHubRepositories(
       snapshot.state.repositories,
-      snapshot.currentRepository,
     );
     for (const actor of snapshot.state.actors) actor.accepted ??= false;
     for (const useCase of snapshot.state.useCases ?? []) useCase.accepted ??= false;
