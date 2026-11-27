@@ -1,3 +1,17 @@
+## 7.3.0 (2026-11-27)
+
+### 🚀 Features
+
+- Add a DX runner alongside your existing runner so you can move workflows one at a time. The runner uses the existing tenant prefix when GitHub environments are scoped by tenant. ([#2572](https://github.com/pagopa/dx/pull/2572))
+
+### 🩹 Fixes
+
+- Bump dependencies ([#2593](https://github.com/pagopa/dx/pull/2593))
+
+### ❤️ Thank You
+
+- Mario Mupo @mamu0
+
 ## 7.2.0 (2026-11-20)
 
 ### 🚀 Features

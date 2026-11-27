@@ -1,3 +1,9 @@
+## 6.1.1 (2026-11-27)
+
+### 🩹 Fixes
+
+- Bump dependencies ([#2593](https://github.com/pagopa/dx/pull/2593))
+
 ## 6.1.0 (2026-11-24)
 
 ### 🚀 Features

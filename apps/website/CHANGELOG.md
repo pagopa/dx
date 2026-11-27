@@ -1,3 +1,15 @@
+## 0.22.30 (2026-11-27)
+
+### 🩹 Fixes
+
+- Explain how to add the DX runner and move workflows to it one at a time ([#2572](https://github.com/pagopa/dx/pull/2572))
+- Document repository Terraform state migration, recovery safeguards, and CI access requirements ([#2341](https://github.com/pagopa/dx/pull/2341))
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+- Mario Mupo @mamu0
+
 ## 0.22.29 (2026-11-26)
 
 ### 🩹 Fixes

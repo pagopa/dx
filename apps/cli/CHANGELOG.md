@@ -1,3 +1,26 @@
+## 0.27.35 (2026-11-27)
+
+### 🚀 Features
+
+- Add the DX runner to generated Azure bootstrappers while keeping existing workflows on their current runner ([#2572](https://github.com/pagopa/dx/pull/2572))
+
+### 🩹 Fixes
+
+- Migrate the Terraform state of `infra/repository` to the Azure backend during ([#2341](https://github.com/pagopa/dx/pull/2341))
+  the first `dx add environment`, and warn at the end of `dx init` that it is
+  temporary and local
+
+  Confirm the exact permanent destination before placement, validate repository
+  resources before copying, reject existing destination blobs, and serialize
+  concurrent migrations. Inspect and apply the same import plan. New state keys
+  include the prefix; existing backends and keys remain unchanged and are reported
+  accurately when adding later environments.
+
+### ❤️ Thank You
+
+- Marco Comi @kin0992
+- Mario Mupo @mamu0
+
 ## 0.27.34 (2026-11-26)
 
 ### 🚀 Features
