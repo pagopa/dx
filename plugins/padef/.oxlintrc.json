@@ -1,0 +1,8 @@
+{
+  "extends": ["../../.oxlintrc.json"],
+  "ignorePatterns": [
+    "skills/*/scripts/render-mermaid.mjs",
+    "skills/*/scripts/*.js",
+    "skills/*/evals/fixtures/*.mjs"
+  ]
+}

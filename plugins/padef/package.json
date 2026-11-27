@@ -1,0 +1,41 @@
+{
+  "name": "padef",
+  "private": true,
+  "description": "PagoPA Agentic Delivery Framework plugin, plus the runtime helpers its skills ship",
+  "type": "module",
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "pele": "1.13.0"
+  },
+  "devDependencies": {
+    "@tsconfig/node24": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "tsdown": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  },
+  "nx": {
+    "targets": {
+      "build": {
+        "outputs": [
+          "{projectRoot}/skills/confluence-librarian/scripts/render-mermaid.mjs"
+        ]
+      },
+      "test": {
+        "dependsOn": [
+          "build"
+        ]
+      },
+      "build:check": {
+        "command": "pnpm run build && git diff --exit-code -- skills/confluence-librarian/scripts/render-mermaid.mjs",
+        "options": {
+          "cwd": "{projectRoot}"
+        }
+      }
+    }
+  }
+}
