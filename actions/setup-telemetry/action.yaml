@@ -2,6 +2,12 @@ name: "Setup Telemetry"
 description: "Initialize telemetry session and flush queued events in post"
 
 inputs:
+  operation_id:
+    description: "Shared operation key for jobs in one trace; hashed to a 32-character OpenTelemetry trace ID. Omit for an independent trace."
+    required: false
+  span_name:
+    description: "Name of the job span. Defaults to the workflow name."
+    required: false
   connection_string:
     description: "Azure Application Insights connection string"
     required: false

@@ -18,7 +18,16 @@ const envSchema = z.object({
   GITHUB_ENV: z.string().min(1),
   GITHUB_WORKSPACE: z.string().min(1),
   INPUT_CONNECTION_STRING: z.string().min(1),
+  INPUT_OPERATION_ID: z
+    .string()
+    .regex(/^[^\r\n]*$/)
+    .default(""),
+  INPUT_SPAN_NAME: z
+    .string()
+    .regex(/^[^\r\n]*$/)
+    .default(""),
   OTEL_EVENT_FILE: z.string().optional(),
+  RUNNER_TEMP: z.string().min(1).optional(),
 });
 
 async function exportEnv(
@@ -36,13 +45,20 @@ async function exportEnv(
     throw new Error("Environment validation failed");
   }
 
-  const { GITHUB_ENV, INPUT_CONNECTION_STRING } = envResult.data;
+  const {
+    GITHUB_ENV,
+    INPUT_CONNECTION_STRING,
+    INPUT_OPERATION_ID,
+    INPUT_SPAN_NAME,
+  } = envResult.data;
 
   const envVars =
     [
       `OTEL_EVENT_FILE=${eventsFile}`,
       `OTEL_SESSION_START=${start}`,
       `OTEL_CORRELATION_ID=${correlationId}`,
+      `OTEL_OPERATION_ID=${INPUT_OPERATION_ID}`,
+      `OTEL_SPAN_NAME=${INPUT_SPAN_NAME}`,
       `APPLICATIONINSIGHTS_CONNECTION_STRING=${INPUT_CONNECTION_STRING}`,
     ].join("\n") + "\n";
 
@@ -68,7 +84,7 @@ async function run(): Promise<void> {
     }
 
     const { correlationId, eventsFile, start } = await startSession(
-      envResult.data.GITHUB_WORKSPACE,
+      envResult.data.RUNNER_TEMP ?? envResult.data.GITHUB_WORKSPACE,
     );
     await exportEnv(eventsFile, start, correlationId);
     console.log(

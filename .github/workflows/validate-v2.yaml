@@ -44,6 +44,12 @@ jobs:
     outputs:
       run: ${{ steps.evaluate.outputs.run }}
     steps:
+      - name: Setup Telemetry Session
+        uses: pagopa/dx/actions/setup-telemetry@main
+        with:
+          operation_id: ${{ github.repository }}:${{ github.run_id }}:${{ github.run_attempt }}
+          span_name: Fork PR Gate
+
       - name: Evaluate fork PR
         id: evaluate
         env:
@@ -58,6 +64,12 @@ jobs:
             echo "run=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Set Telemetry Result
+        if: ${{ always() }}
+        env:
+          RESULT: ${{ job.status == 'cancelled' && 'cancellation' || job.status }}
+        run: echo "PIPELINE_RESULT=$RESULT" >> "$GITHUB_ENV"
+
   workspace:
     name: Workspace
     needs: gate
@@ -71,6 +83,12 @@ jobs:
       contents: read
       packages: read
     steps:
+      - name: Setup Telemetry Session
+        uses: pagopa/dx/actions/setup-telemetry@main
+        with:
+          operation_id: ${{ github.repository }}:${{ github.run_id }}:${{ github.run_attempt }}
+          span_name: Workspace
+
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -182,6 +200,12 @@ jobs:
 
               printf 'environments=%s\n' "$environments" | tee -a "$GITHUB_OUTPUT"
 
+      - name: Set Telemetry Result
+        if: ${{ always() }}
+        env:
+          RESULT: ${{ job.status == 'cancelled' && 'cancellation' || job.status }}
+        run: echo "PIPELINE_RESULT=$RESULT" >> "$GITHUB_ENV"
+
   code-review:
     name: No environment
     runs-on: ubuntu-26.04
@@ -196,6 +220,12 @@ jobs:
     env:
       ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
     steps:
+      - name: Setup Telemetry Session
+        uses: pagopa/dx/actions/setup-telemetry@main
+        with:
+          operation_id: ${{ github.repository }}:${{ github.run_id }}:${{ github.run_attempt }}
+          span_name: No environment
+
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -297,6 +327,12 @@ jobs:
           EXCLUDE=$(pnpm nx show projects --affected --type=app --sep=, -p=tag:terraform)
           pnpm nx affected --exclude=$EXCLUDE -t=build,test,lint,shellcheck,typecheck,docker:build,fmt,validate,trivy,docs -c=ci --outputStyle=static
 
+      - name: Set Telemetry Result
+        if: ${{ always() }}
+        env:
+          RESULT: ${{ job.status == 'cancelled' && 'cancellation' || job.status }}
+        run: echo "PIPELINE_RESULT=$RESULT" >> "$GITHUB_ENV"
+
   code-review-with-environment:
     name: ${{ matrix.target.github-environment }}
     needs: workspace
@@ -331,6 +367,12 @@ jobs:
       AWS_REGION: ${{ secrets.AWS_REGION }}
       ECR_PUBLIC_ROLE_ARN: ${{ secrets.ECR_PUBLIC_ROLE_ARN }}
     steps:
+      - name: Setup Telemetry Session
+        uses: pagopa/dx/actions/setup-telemetry@main
+        with:
+          operation_id: ${{ github.repository }}:${{ github.run_id }}:${{ github.run_attempt }}
+          span_name: ${{ matrix.target.github-environment }}
+
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -489,6 +531,12 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
+      - name: Set Telemetry Result
+        if: ${{ always() }}
+        env:
+          RESULT: ${{ job.status == 'cancelled' && 'cancellation' || job.status }}
+        run: echo "PIPELINE_RESULT=$RESULT" >> "$GITHUB_ENV"
+
   report:
     name: Report
     needs: code-review-with-environment
@@ -499,6 +547,12 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - name: Setup Telemetry Session
+        uses: pagopa/dx/actions/setup-telemetry@main
+        with:
+          operation_id: ${{ github.repository }}:${{ github.run_id }}:${{ github.run_attempt }}
+          span_name: Report
+
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -531,3 +585,9 @@ jobs:
               "sourceUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
               "title": "Code Review Report"
             }
+
+      - name: Set Telemetry Result
+        if: ${{ always() }}
+        env:
+          RESULT: ${{ job.status == 'cancelled' && 'cancellation' || job.status }}
+        run: echo "PIPELINE_RESULT=$RESULT" >> "$GITHUB_ENV"
