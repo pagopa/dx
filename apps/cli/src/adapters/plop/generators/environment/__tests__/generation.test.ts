@@ -1031,7 +1031,7 @@ describe("environment generator — tenant-qualified bootstrap configuration", (
             ),
           ]).toHaveLength(2);
           expect([
-            ...bootstrapperFile.matchAll(/version = "~> 7\.2"/g),
+            ...bootstrapperFile.matchAll(/version = "~> 7\.3"/g),
           ]).toHaveLength(2);
           expect([
             ...bootstrapperFile.matchAll(
