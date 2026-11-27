@@ -9,6 +9,7 @@ import { type GitHubService } from "../../../../domain/github.js";
 import setConfigureExistingTerraformRootBackendsAction from "../../actions/configure-existing-terraform-root-backends.js";
 import { setFormatGeneratedCodeAction } from "../../actions/format-generated-code.js";
 import setGetTerraformBackend from "../../actions/get-terraform-backend.js";
+import setGetTerraformVersion from "../../actions/get-terraform-version.js";
 import setInitCloudAccountsAction from "../../actions/init-cloud-accounts.js";
 import { setInitTerraformProjectsAction } from "../../actions/init-terraform-projects.js";
 import setProvisionTerraformBackendAction from "../../actions/provision-terraform-backend.js";
@@ -47,6 +48,7 @@ export default function (
   setTerraformStateContainerReaderKeyHelper(plop);
 
   setGetTerraformBackend(plop, cloudAccountService);
+  setGetTerraformVersion(plop);
   setConfigureExistingTerraformRootBackendsAction(plop);
   setProvisionTerraformBackendAction(plop, cloudAccountService);
   setSetupCloudToolsAction(plop);

@@ -360,5 +360,6 @@ describe("monorepo generator — file generation", () => {
     );
 
     expect(generatedFiles).toMatchSnapshot();
+    expect(generatedFiles[".gitignore"]).toContain(".tflint.d/");
   });
 });

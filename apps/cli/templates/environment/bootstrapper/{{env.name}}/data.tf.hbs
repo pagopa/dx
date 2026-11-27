@@ -13,11 +13,6 @@ data "azuread_group" "externals" {
 {{/with}}
 
 {{#with includesProdIO}}
-data "azurerm_resource_group" "common_itn_01" {
-  provider = azurerm.PROD-IO
-  name     = "io-p-itn-common-rg-01"
-}
-
 data "azurerm_resource_group" "common_weu" {
   provider = azurerm.PROD-IO
   name     = "io-p-rg-common"

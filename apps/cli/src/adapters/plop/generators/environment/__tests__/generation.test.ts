@@ -21,6 +21,7 @@ import type { TerraformBackend } from "../../../../../domain/remote-backend.js";
 import setConfigureExistingTerraformRootBackendsAction from "../../../actions/configure-existing-terraform-root-backends.js";
 import setConfigureGitHubEnvironmentsAction from "../../../actions/configure-github-environments.js";
 import setGetTerraformBackend from "../../../actions/get-terraform-backend.js";
+import setGetTerraformVersion from "../../../actions/get-terraform-version.js";
 import setInitCloudAccountsAction from "../../../actions/init-cloud-accounts.js";
 import setProvisionTerraformBackendAction from "../../../actions/provision-terraform-backend.js";
 import setSyncNxAdditionalEnvironments from "../../../actions/sync-nx-additional-environments.js";
@@ -82,6 +83,7 @@ const registerEnvironmentSetup = (
   setTerraformStateContainerReaderKeyHelper(plop);
 
   setGetTerraformBackend(plop, mockCloudAccountService);
+  setGetTerraformVersion(plop);
   setConfigureExistingTerraformRootBackendsAction(plop);
   setProvisionTerraformBackendAction(plop, mockCloudAccountService);
   setInitCloudAccountsAction(plop, mockCloudAccountService, mockGitHubService);
@@ -143,6 +145,7 @@ const expectNoExternalCalls = (...services: object[]) => {
 
 const runEnvironmentGenerator = async ({
   files = {},
+  generateCore = false,
   initializeTerraformProjects = async () =>
     "Generated Terraform projects initialized",
   mockCloudAccountService = createMockCloudAccountService(
@@ -157,6 +160,7 @@ const runEnvironmentGenerator = async ({
   workspacePath,
 }: {
   files?: Record<string, string>;
+  generateCore?: boolean;
   initializeTerraformProjects?: () => Promise<string>;
   mockCloudAccountService?: CloudAccountService;
   mockGitHubService?: GitHubService;
@@ -173,6 +177,7 @@ const runEnvironmentGenerator = async ({
   const tmpDir =
     workspacePath ?? (await fs.mkdtemp(path.join(os.tmpdir(), tmpDirPrefix)));
   process.chdir(tmpDir);
+  await fs.writeFile(path.join(tmpDir, ".terraform-version"), "1.17.1\n");
   await fs.mkdir(path.join(tmpDir, "infra", "repository"), {
     recursive: true,
   });
@@ -217,9 +222,10 @@ const runEnvironmentGenerator = async ({
   });
 
   const generator = plop.getGenerator(PLOP_ENVIRONMENT_GENERATOR_NAME);
-  const result = await generator.runActions(
-    structuredClone(environmentPayload),
-  );
+  const result = await generator.runActions({
+    ...structuredClone(environmentPayload),
+    ...(generateCore ? { terraform: { generateCore: true } } : {}),
+  });
 
   const realFailures = result.failures.filter(
     (f) => f.error !== "Aborted due to previous action failure",
@@ -795,6 +801,31 @@ describe("environment generator — file generation (no init)", () => {
     expect(generatedContent).not.toContain("github_environment_prefix_enabled");
   });
 
+  it("uses the repository Terraform version for generated roots", async () => {
+    await withGeneratedEnvironment(
+      {
+        files: { ".terraform-version": "1.16.0\n" },
+        generateCore: true,
+        mockCloudAccountService: createMockCloudAccountService(
+          mockTerraformBackend,
+          true,
+        ),
+        mockGitHubService: createMockGitHubService(),
+        payload,
+      },
+      async (root) => {
+        const generatedFiles = await readGeneratedFiles(root, [
+          `infra/bootstrapper/${payload.env.name}/providers.tf`,
+          `infra/core/${payload.env.name}/providers.tf`,
+        ]);
+
+        for (const content of Object.values(generatedFiles)) {
+          expect(content).toContain('required_version = ">= 1.16.0"');
+        }
+      },
+    );
+  });
+
   it("uses the selected GitHub organization in generated bootstrapper files", async () => {
     const customPayload: Payload = {
       ...payload,
@@ -1055,6 +1086,29 @@ describe("environment generator — tenant-qualified bootstrap configuration", (
 
     expect(() => actions(mismatchPayload)).toThrow(
       'Environment "cgn-prod" must be "dx-prod" to match prefix "dx".',
+    );
+  });
+
+  it("omits the unused PROD-IO resource group data source", async () => {
+    const tenantPayload: Payload = {
+      ...payload,
+      env: {
+        ...payload.env,
+        cloudAccounts: azureAccounts,
+      },
+    };
+
+    await withGeneratedEnvironment(
+      { payload: tenantPayload },
+      async (tmpDir) => {
+        const data = await fs.readFile(
+          path.join(tmpDir, "infra/bootstrapper/dev/data.tf"),
+          "utf8",
+        );
+
+        expect(data).toContain('data "azurerm_resource_group" "common_weu"');
+        expect(data).not.toContain("common_itn_01");
+      },
     );
   });
 });
