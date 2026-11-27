@@ -7,6 +7,40 @@ Sets up OpenTelemetry instrumentation for a workflow run, queues events locally 
 - Exceptions (on the root span)
 - Child spans reconstructed from markers
 
+## Multi-job Workflows
+
+Call the action once at the start of each job. Set `span_name` to the job name
+(include the matrix environment for matrix jobs) and pass the same `operation_id`
+to every job:
+
+```yaml
+- name: Setup Telemetry Session
+  uses: pagopa/dx/actions/setup-telemetry@VERSION
+  with:
+    operation_id: ${{ github.repository }}:${{ github.run_id }}:${{ github.run_attempt }}
+    span_name: Workspace
+
+# Job steps...
+
+- name: Set Telemetry Result
+  if: ${{ always() }}
+  env:
+    RESULT: ${{ job.status == 'cancelled' && 'cancellation' || job.status }}
+  run: echo "PIPELINE_RESULT=$RESULT" >> "$GITHUB_ENV"
+```
+
+The operation key is hashed with SHA-256 and truncated to 32 hexadecimal
+characters to produce the OpenTelemetry trace ID (Application Insights
+`operation_Id`). Each job generates a unique span ID, so independently exported
+job spans appear in one trace. Including the repository, run ID, and attempt
+keeps different runs and reruns separate. Child spans keep their job as parent.
+Jobs skipped before starting do not emit spans.
+
+Both inputs are optional: without `operation_id`, traces remain independent;
+without `span_name`, the span keeps the workflow name.
+Session files live in `RUNNER_TEMP` when available, so checkout cleanup does not
+remove telemetry initialized before checkout.
+
 ## Lifecycle
 
 1. Main step: creates a session file & exports environment variables.
@@ -20,6 +54,8 @@ Sets up OpenTelemetry instrumentation for a workflow run, queues events locally 
 | `OTEL_EVENT_FILE`                       | Absolute path to NDJSON file for queued lines                                 |
 | `OTEL_SESSION_START`                    | ISO/start timestamp (ms epoch) used for root span start & duration derivation |
 | `OTEL_CORRELATION_ID`                   | Correlation id (trace continuity fallback)                                    |
+| `OTEL_OPERATION_ID`                     | Shared operation key used to derive the trace ID                              |
+| `OTEL_SPAN_NAME`                        | Optional job span name; defaults to the workflow name                         |
 | `APPLICATIONINSIGHTS_CONNECTION_STRING` | Connection string used by Azure Monitor exporter                              |
 
 ## Consumed Optional Environment Variables (Enhance Root Span Attributes)
@@ -45,6 +81,7 @@ Source actions currently exporting these:
 | Attribute                    | Source                                     |
 | ---------------------------- | ------------------------------------------ |
 | `cicd.pipeline.action.name`  | `GITHUB_WORKFLOW`                          |
+| `cicd.pipeline.task.name`    | `GITHUB_JOB` (when available)              |
 | `cicd.pipeline.run.id`       | `GITHUB_RUN_ID`                            |
 | `cicd.pipeline.attempt`      | `GITHUB_RUN_ATTEMPT`                       |
 | `cicd.pipeline.trigger`      | `GITHUB_EVENT_NAME`                        |

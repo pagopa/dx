@@ -29,6 +29,8 @@ import {
 import { existsSync, readFileSync } from "node:fs";
 import { z } from "zod";
 
+import { OperationIdGenerator } from "./operation-id-generator.js";
+
 // Debug logging helper
 const DEBUG = process.env.DEBUG === "true";
 function debug(...args: unknown[]): void {
@@ -44,6 +46,7 @@ const postEnvSchema = z.object({
   GITHUB_ACTION_PATH: z.string().default(""),
   GITHUB_ACTOR: z.string().default(""),
   GITHUB_EVENT_NAME: z.string().default(""),
+  GITHUB_JOB: z.string().default(""),
   GITHUB_REPOSITORY: z.string().default(""),
   GITHUB_RUN_ATTEMPT: z.string().default(""),
   GITHUB_RUN_ID: z.string().default(""),
@@ -52,7 +55,9 @@ const postEnvSchema = z.object({
   GITHUB_WORKFLOW_REF: z.string().default(""),
   NODE_PACKAGE_MANAGER: z.string().default(""),
   OTEL_EVENT_FILE: z.string().optional(),
+  OTEL_OPERATION_ID: z.string().default(""),
   OTEL_SESSION_START: z.string().default("0"),
+  OTEL_SPAN_NAME: z.string().default(""),
   PIPELINE_RESULT: z
     .enum(["cancellation", "error", "failure", "skip", "success", "timeout"])
     .default("success"),
@@ -214,6 +219,7 @@ async function post(): Promise<void> {
     disableOfflineStorage: true,
   };
   const tracerProvider = new BasicTracerProvider({
+    idGenerator: new OperationIdGenerator(env.OTEL_OPERATION_ID),
     resource,
     spanProcessors: [
       new SimpleSpanProcessor(new AzureMonitorTraceExporter(exporterOptions)),
@@ -234,8 +240,9 @@ async function post(): Promise<void> {
   const logger = logs.getLoggerProvider().getLogger("workflow-logger", "1.0.0");
   const tracer = trace.getTracer("workflow-tracer");
 
-  const span = tracer.startSpan(env.GITHUB_WORKFLOW, {
+  const span = tracer.startSpan(env.OTEL_SPAN_NAME || env.GITHUB_WORKFLOW, {
     attributes: {
+      ...(env.GITHUB_JOB ? { "cicd.pipeline.task.name": env.GITHUB_JOB } : {}),
       "cicd.pipeline.action.name": env.GITHUB_WORKFLOW,
       "cicd.pipeline.attempt": env.GITHUB_RUN_ATTEMPT,
       "cicd.pipeline.author": env.GITHUB_ACTOR,
@@ -256,6 +263,17 @@ async function post(): Promise<void> {
     kind: SpanKind.SERVER,
     startTime: new Date(startMs),
   });
+
+  if (
+    ["cancellation", "error", "failure", "timeout"].includes(
+      env.PIPELINE_RESULT,
+    )
+  ) {
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: env.PIPELINE_RESULT,
+    });
+  }
 
   if (eventsFile && existsSync(eventsFile)) {
     const lines = readFileSync(eventsFile, "utf-8")
