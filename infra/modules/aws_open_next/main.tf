@@ -64,6 +64,11 @@ module "initializer" {
 module "cloudfront" {
   source = "./modules/cloudfront"
 
+  providers = {
+    aws           = aws
+    aws.us-east-1 = aws.us-east-1
+  }
+
   environment = var.environment
   tags        = local.tags
 
