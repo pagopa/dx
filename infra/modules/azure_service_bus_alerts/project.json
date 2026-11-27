@@ -1,8 +1,8 @@
 {
-  "name": "azure_service_bus_alerts",
   "metadata": {
+    "version": "3.0.2",
     "description": "Quickly configure alerts on Azure Service Bus",
-    "provider": "azurerm",
-    "version": "3.0.1"
-  }
+    "provider": "azurerm"
+  },
+  "name": "azure_service_bus_alerts"
 }
