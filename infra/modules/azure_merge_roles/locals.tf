@@ -54,6 +54,10 @@ locals {
     for action in var.additional_actions : trimspace(action)
   ]))
 
+  normalized_excluded_actions = sort(distinct([
+    for action in var.excluded_actions : trimspace(action)
+  ]))
+
   normalized_additional_data_actions = sort(distinct([
     for action in var.additional_data_actions : trimspace(action)
   ]))
@@ -83,49 +87,54 @@ locals {
     # narrower grants, and partial wildcard overlaps with the same static
     # prefix as enough evidence that the exclusion should be dropped. A block
     # cannot cancel the exact same exclusion it declares itself.
-    not_actions = sort([
-      for excluded_action in distinct(flatten([
-        for permission in local.normalized_source_permissions : permission.not_actions
-      ])) : excluded_action
-      if !(
-        anytrue([
-          for permission in local.normalized_source_permissions : (
-            !contains([for denied_action in permission.not_actions : lower(denied_action)], lower(excluded_action)) &&
-            anytrue([
-              for allowed_action in permission.actions : (
-                length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
-                length(regexall("^${replace(replace(lower(excluded_action), ".", "[.]"), "*", ".*")}$", lower(allowed_action))) > 0 ||
-                (
-                  length(regexall("\\*", allowed_action)) > 0 &&
-                  length(regexall("\\*", excluded_action)) > 0 &&
+    # Caller exclusions are appended after the permissive source-role merge so
+    # overlapping source and additional grants cannot remove them.
+    not_actions = sort(distinct(concat(
+      [
+        for excluded_action in distinct(flatten([
+          for permission in local.normalized_source_permissions : permission.not_actions
+        ])) : excluded_action
+        if !(
+          anytrue([
+            for permission in local.normalized_source_permissions : (
+              !contains([for denied_action in permission.not_actions : lower(denied_action)], lower(excluded_action)) &&
+              anytrue([
+                for allowed_action in permission.actions : (
+                  length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
+                  length(regexall("^${replace(replace(lower(excluded_action), ".", "[.]"), "*", ".*")}$", lower(allowed_action))) > 0 ||
                   (
-                    startswith(lower(allowed_action), element(split("*", lower(excluded_action)), 0)) ||
-                    startswith(lower(excluded_action), element(split("*", lower(allowed_action)), 0))
+                    length(regexall("\\*", allowed_action)) > 0 &&
+                    length(regexall("\\*", excluded_action)) > 0 &&
+                    (
+                      startswith(lower(allowed_action), element(split("*", lower(excluded_action)), 0)) ||
+                      startswith(lower(excluded_action), element(split("*", lower(allowed_action)), 0))
+                    )
                   )
                 )
-              )
-            ])
-          )
-        ]) ||
-        # Additional actions must also participate in overlap detection,
-        # otherwise an explicit extra grant could remain blocked by a kept
-        # exclusion from a source role.
-        anytrue([
-          for allowed_action in local.normalized_additional_actions : (
-            length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
-            length(regexall("^${replace(replace(lower(excluded_action), ".", "[.]"), "*", ".*")}$", lower(allowed_action))) > 0 ||
-            (
-              length(regexall("\\*", allowed_action)) > 0 &&
-              length(regexall("\\*", excluded_action)) > 0 &&
+              ])
+            )
+          ]) ||
+          # Additional actions must also participate in overlap detection,
+          # otherwise an explicit extra grant could remain blocked by a kept
+          # exclusion from a source role.
+          anytrue([
+            for allowed_action in local.normalized_additional_actions : (
+              length(regexall("^${replace(replace(lower(allowed_action), ".", "[.]"), "*", ".*")}$", lower(excluded_action))) > 0 ||
+              length(regexall("^${replace(replace(lower(excluded_action), ".", "[.]"), "*", ".*")}$", lower(allowed_action))) > 0 ||
               (
-                startswith(lower(allowed_action), element(split("*", lower(excluded_action)), 0)) ||
-                startswith(lower(excluded_action), element(split("*", lower(allowed_action)), 0))
+                length(regexall("\\*", allowed_action)) > 0 &&
+                length(regexall("\\*", excluded_action)) > 0 &&
+                (
+                  startswith(lower(allowed_action), element(split("*", lower(excluded_action)), 0)) ||
+                  startswith(lower(excluded_action), element(split("*", lower(allowed_action)), 0))
+                )
               )
             )
-          )
-        ])
-      )
-    ])
+          ])
+        )
+      ],
+      local.normalized_excluded_actions,
+    )))
 
     # Apply the same permissive overlap policy to data-plane permissions.
     not_data_actions = sort([

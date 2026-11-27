@@ -136,6 +136,36 @@ run "additional_actions_must_reject_legacy_classic_provider_operations" {
   expect_failures = [var.additional_actions]
 }
 
+run "excluded_actions_must_not_contain_blank_values" {
+  command = plan
+
+  variables {
+    excluded_actions = ["Microsoft.Storage/storageAccounts/listKeys/action", "   "]
+  }
+
+  expect_failures = [var.excluded_actions]
+}
+
+run "excluded_actions_must_reject_unsupported_characters" {
+  command = plan
+
+  variables {
+    excluded_actions = ["Microsoft.Storage/storageAccounts/listKeys[action]"]
+  }
+
+  expect_failures = [var.excluded_actions]
+}
+
+run "excluded_actions_must_reject_legacy_classic_provider_operations" {
+  command = plan
+
+  variables {
+    excluded_actions = ["Microsoft.ClassicStorage/storageAccounts/listKeys/action"]
+  }
+
+  expect_failures = [var.excluded_actions]
+}
+
 run "additional_data_actions_must_not_contain_blank_values" {
   command = plan
 
