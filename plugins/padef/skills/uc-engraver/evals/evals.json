@@ -124,6 +124,59 @@
         "Names the domain entities it touches by name."
       ],
       "files": []
+    },
+    {
+      "id": 9,
+      "name": "proposal-reduced-body",
+      "prompt": "A colleague outside the DR ownership proposes a new behavior: an operator exports a receipt from the support console. They supply a Call for Task with the trigger, the happy path, and the expected outcome, but no errors, tracking, contracts, or sequence diagram. Record it as a proposal on the existing parent DR/SRS.",
+      "expected_output": "A proposal child in draft status with proposer and owner recorded, a reduced body of trigger, main flow, and one binary acceptance check, and every unsupported section left as an explicit gap.",
+      "expectations": [
+        "Sets the frontmatter status to draft and records proposed_by and owner.",
+        "Fills only the source artifact, trigger, main flow, and at least one binary acceptance check on a Must Use Case.",
+        "Leaves typed errors, tracking events, component and contract references, and the sequence diagram as open questions or justified gaps instead of inventing them.",
+        "Keeps the proposal out of ready status and out of the backlog.",
+        "Registers the proposal in the parent catalog with its stable ID, title, and child link."
+      ],
+      "files": []
+    },
+    {
+      "id": 10,
+      "name": "confluence-parent-without-local-workspace",
+      "prompt": "The parent DR/SRS exists only as a Confluence page: Design Review 'Receipt lookup' at https://example.atlassian.net/wiki/spaces/PADEF/pages/123. There is no local checkout and no use-cases directory. Create UC-02 for looking up a receipt by payment reference.",
+      "expected_output": "The skill authors the child body for the Confluence parent, does not create a local use-cases tree, and publishes only after confirmation through confluence-librarian.",
+      "expectations": [
+        "Treats the Confluence URL as the existing parent and reads its Use Case index.",
+        "Does not create a local use-cases/ directory or an orphan file tree for a Confluence-only parent.",
+        "Produces the child body and asks for confirmation before publishing.",
+        "Delegates publication to confluence-librarian and records the returned child URL in the parent catalog.",
+        "Verifies the parent page after publication instead of claiming success from the write response alone."
+      ],
+      "files": []
+    },
+    {
+      "id": 11,
+      "name": "language-follows-conversation",
+      "prompt": "Crea l'UC-03 per il rimborso di un pagamento duplicato partendo dalla DR/SRS esistente. Rispondi in italiano.",
+      "expected_output": "A Use Case whose visible content is written in Italian, with machine-facing values still in English.",
+      "expectations": [
+        "Writes headings, prose, and field values in Italian.",
+        "Keeps IDs, status values, error identifiers, endpoint names, and URLs in English.",
+        "Does not fall back to English because the bundled template is in English."
+      ],
+      "files": []
+    },
+    {
+      "id": 12,
+      "name": "rejected-proposal-retired",
+      "prompt": "The parent owner reviews the proposal recorded as UC-04, 'Export a receipt as CSV', and rejects it: the behavior stays out of scope. Update the Use Case accordingly without losing traceability.",
+      "expected_output": "UC-04 keeps its stable ID and stays in the catalog with status retired and its rejection visible.",
+      "expectations": [
+        "Sets the frontmatter status to retired.",
+        "Keeps the UC-04 ID and the document instead of deleting it.",
+        "Records the rejection and its owner as the reason for retirement.",
+        "Does not reuse the retired ID for another Use Case and does not project it to the backlog."
+      ],
+      "files": []
     }
   ]
 }

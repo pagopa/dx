@@ -63,8 +63,8 @@ bundled template as a read-only input.
 - Keep the Use Case catalog link-first: a stable `UC-XX` ID, a title, and a link
   to the child page. Status, priority, component and contract references, and
   behavior detail live only on the child page. Typed errors live on the child
-  page too, with semantic identifiers and no owner. The two states (`draft`,
-  `ready`) and the gates live in
+  page too, with semantic identifiers and no owner. The statuses (`draft`,
+  `ready`, `retired`) and the gates live in
   [`references/dr-srs-model.md`](./references/dr-srs-model.md).
 - Keep the `Domain model and glossary` descriptive: entities, relations, states,
   invariants, and terms referenced by name, with no identifiers and no schema or
@@ -142,12 +142,12 @@ bundled template as a read-only input.
    `review` → `baseline`) only when the user explicitly requests it and the
    document has enough context, owner, scope, solution, and evidence to be
    meaningfully reviewed. _Backlog readiness_ lives on each Use Case page as a
-   single `draft` or `ready` status and does not wait for the whole document:
-   the child is `ready` when it has a trigger, a main flow, at least one binary
-   acceptance check on Must, a priority, its component and contract references,
-   and its domain entities and typed errors. Downstream backlog generation
-   consumes the `ready` children and ignores the rest. A promotion is proposed
-   with evidence and confirmed by a human reviewer; never apply it
+   single `draft`, `ready`, or `retired` status and does not wait for the whole
+   document: the child is `ready` when it has a trigger, a main flow, at least
+   one binary acceptance check on Must, a priority, its component and contract
+   references, and its domain entities and typed errors. Downstream backlog
+   generation consumes the `ready` children and ignores the rest. A promotion is
+   proposed with evidence and confirmed by a human reviewer; never apply it
    autonomously.
 
 ## Clarification rules
