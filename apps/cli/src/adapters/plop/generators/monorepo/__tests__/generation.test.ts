@@ -111,23 +111,23 @@ const registerOwnershipTests = (
     );
   });
 
-  it("includes the personal owner and additional users without team reviewers", async () => {
-    const personalPayload: Payload = {
+  it("includes individual code owners without team reviewers", async () => {
+    const individualOwnersPayload: Payload = {
       ...payload,
       ownership: {
-        namespaceType: "User",
+        namespaceType: "Organization",
         owners: ["@alice", "@bob"],
         reviewerTeams: [],
       },
-      repoName: "personal-repo",
-      repoOwner: "alice",
+      repoName: "org-repo",
+      repoOwner: "example-org",
     };
     const result = await getPlop()
       .getGenerator(PLOP_MONOREPO_GENERATOR_NAME)
-      .runActions(personalPayload);
+      .runActions(individualOwnersPayload);
     expect(result.failures).toEqual([]);
     const files = await readGeneratedFiles(
-      path.join(getTempDir(), personalPayload.repoName),
+      path.join(getTempDir(), individualOwnersPayload.repoName),
       ["CODEOWNERS", "infra/repository/main.tf"],
     );
     expect(files["CODEOWNERS"]).toBe(

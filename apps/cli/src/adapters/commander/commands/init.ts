@@ -78,38 +78,23 @@ type RepositoryPullRequest = {
 };
 
 export const getOwnershipGuidance = (payload: MonorepoPayload) => {
-  const { namespaceType, owners, reviewerTeams } = payload.ownership;
-  const additionalOwners = owners.filter(
-    (owner) => owner.toLowerCase() !== `@${payload.repoOwner}`.toLowerCase(),
-  );
-  const requiresAuthorization =
-    namespaceType === "Organization" || additionalOwners.length > 0;
+  const { owners, reviewerTeams } = payload.ownership;
   const repository = `${payload.repoOwner}/${payload.repoName}`;
   const authorizationRepository =
-    namespaceType === "Organization" &&
     payload.repoOwner.toLowerCase() === "pagopa"
       ? "https://github.com/pagopa/eng-github-authorization"
       : undefined;
-  const instructions = requiresAuthorization
-    ? [
-        authorizationRepository
-          ? `Open a PR in ${authorizationRepository} to register ${repository}, grant ${owners.join(", ")} repository Write access (or higher), and associate the repository with the product GitHub App. Use exactly the same teams as CODEOWNERS and repository.reviewers_teams: ${reviewerTeams.join(", ") || "(no teams selected)"}.`
-          : namespaceType === "Organization"
-            ? `Use ${payload.repoOwner}'s authorization process to grant ${owners.join(", ")} Write access (or higher) to ${repository}. Keep team grants aligned with CODEOWNERS and repository.reviewers_teams: ${reviewerTeams.join(", ") || "(no teams selected)"}.`
-            : `Grant ${additionalOwners.join(", ")} Write access (or higher) to ${repository} and have them accept collaborator invitations.`,
-        "Repository access has not been validated or granted by DX CLI. CODEOWNERS and deployment reviewer settings do not grant access.",
-      ]
-    : [];
   return {
     authorizationRepository,
     instructions: [
-      ...instructions,
+      authorizationRepository
+        ? `Open a PR in ${authorizationRepository} to register ${repository}, grant ${owners.join(", ")} repository Write access (or higher), and associate the repository with the product GitHub App. Use exactly the same teams as CODEOWNERS and repository.reviewers_teams: ${reviewerTeams.join(", ") || "(no teams selected)"}.`
+        : `Use ${payload.repoOwner}'s authorization process to grant ${owners.join(", ")} Write access (or higher) to ${repository}. Keep team grants aligned with CODEOWNERS and repository.reviewers_teams: ${reviewerTeams.join(", ") || "(no teams selected)"}.`,
+      "Repository access has not been validated or granted by DX CLI. CODEOWNERS and deployment reviewer settings do not grant access.",
       "Code-owner review requests become effective once access is granted and CODEOWNERS is merged into the pull request's base branch.",
     ],
     owners,
-    permissionStatus: requiresAuthorization
-      ? "manual-authorization-required"
-      : "personal-owner",
+    permissionStatus: "manual-authorization-required",
     reviewerTeams,
   };
 };
@@ -729,14 +714,14 @@ export const makeInitCommand = (
     .addOption(
       new Option(
         "--owner <owner>",
-        "GitHub organization or user that will own the repository",
+        "GitHub organization that will own the repository",
       ),
     )
     .addOption(
       Object.assign(
         new Option(
           "--code-owner <@user|@org/team>",
-          "Code owner (repeatable); required for organizations, personal repository owner is included automatically",
+          "Code owner (repeatable); required for organizations",
         ),
         { attributeName: () => "codeOwners" },
       ).argParser((value: string, previous: string[] = []) => [

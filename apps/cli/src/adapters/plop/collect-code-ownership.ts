@@ -1,5 +1,5 @@
 /**
- * Collects optional personal or required organization owners before generation.
+ * Collects required organization owners before generation.
  */
 import inquirer from "inquirer";
 import { z } from "zod/v4";
@@ -21,16 +21,22 @@ export const collectCodeOwnership = async (
   github: GitHubService,
   nonInteractive: boolean,
 ) => {
+  if (namespace.type !== "Organization") {
+    throw new Error(
+      `GitHub account @${namespace.login} is a personal account. Use a GitHub organization as --owner for dx init.`,
+    );
+  }
+
   if (references !== undefined || nonInteractive) {
     return resolveCodeOwnership(namespace, references ?? [], github);
   }
   const answer: unknown = await inquirer.prompt({
-    message: `Code owners (@username or @${namespace.login}/team, separated by spaces${namespace.type === "User" ? `; @${namespace.login} is included automatically` : "; required"})`,
+    message: `Code owners (@username or @${namespace.login}/team, separated by spaces; required)`,
     name: "codeOwners",
     type: "input",
     validate: (value: string) => {
       const owners = entries(value);
-      if (owners.length === 0 && namespace.type === "Organization") {
+      if (owners.length === 0) {
         return "At least one code owner is required";
       }
       return owners.every((owner) => codeOwnerSchema.safeParse(owner).success)

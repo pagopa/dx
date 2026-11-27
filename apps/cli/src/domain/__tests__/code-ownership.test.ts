@@ -9,7 +9,6 @@ import type { GitHubService } from "../github.js";
 import { codeOwnerSchema, resolveCodeOwnership } from "../code-ownership.js";
 
 const organization = { login: "pagopa", type: "Organization" } as const;
-const personal = { login: "alice", type: "User" } as const;
 
 describe("code-owner syntax", () => {
   it.each([
@@ -91,7 +90,7 @@ describe("resolveCodeOwnership", () => {
 
   it("resolves canonical owners and deduplicates users and team slugs", async () => {
     const github = mock<GitHubService>();
-    github.getAccount.mockResolvedValue(personal);
+    github.getAccount.mockResolvedValue({ login: "alice", type: "User" });
     github.getTeam.mockResolvedValue({
       privacy: "closed",
       slug: "product-team",
@@ -115,38 +114,10 @@ describe("resolveCodeOwnership", () => {
     );
   });
 
-  it("includes a personal namespace owner without requiring flags or extra API calls", async () => {
-    const github = mock<GitHubService>();
-    await expect(resolveCodeOwnership(personal, [], github)).resolves.toEqual({
-      namespaceType: "User",
-      owners: ["@alice"],
-      reviewerTeams: [],
-    });
-    expect(github.getAccount).not.toHaveBeenCalled();
-  });
-
-  it("keeps all personal owners on the same ownership list", async () => {
-    const github = mock<GitHubService>();
-    github.getAccount.mockResolvedValue({ login: "bob", type: "User" });
-    await expect(
-      resolveCodeOwnership(personal, ["@ALICE", "@bob"], github),
-    ).resolves.toMatchObject({
-      owners: ["@alice", "@bob"],
-      reviewerTeams: [],
-    });
-    expect(github.getAccount).toHaveBeenCalledExactlyOnceWith("bob");
-  });
-
   it("requires an explicit owner for an organization", async () => {
     await expect(
       resolveCodeOwnership(organization, [], mock<GitHubService>()),
     ).rejects.toThrow("require at least one code owner");
-  });
-
-  it("rejects explicit blank values even for personal repositories", async () => {
-    await expect(
-      resolveCodeOwnership(personal, [" "], mock<GitHubService>()),
-    ).rejects.toThrow("blank values are not allowed");
   });
 
   it("does not accept an organization as an individual owner", async () => {
@@ -157,16 +128,13 @@ describe("resolveCodeOwnership", () => {
     ).rejects.toThrow("not an individual code owner");
   });
 
-  it.each([organization, personal])(
-    "rejects teams outside the repository organization ($type)",
-    async (namespace) => {
-      const github = mock<GitHubService>();
-      await expect(
-        resolveCodeOwnership(namespace, ["@another-org/team"], github),
-      ).rejects.toThrow("must be a team in the repository organization");
-      expect(github.getTeam).not.toHaveBeenCalled();
-    },
-  );
+  it("rejects teams outside the repository organization", async () => {
+    const github = mock<GitHubService>();
+    await expect(
+      resolveCodeOwnership(organization, ["@another-org/team"], github),
+    ).rejects.toThrow("must be a team in the repository organization");
+    expect(github.getTeam).not.toHaveBeenCalled();
+  });
 
   it("rejects secret teams", async () => {
     const github = mock<GitHubService>();

@@ -76,6 +76,7 @@ const makeRoot = (command: Command, outputMessages: string[] = []) => {
       /* silence stdout in tests */
     },
   };
+  command.exitOverride();
   command.configureOutput(output);
   return new Command()
     .exitOverride()
