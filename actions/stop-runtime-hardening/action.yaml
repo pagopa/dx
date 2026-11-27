@@ -1,0 +1,12 @@
+name: Stop Runtime Hardening
+description: Stop Falco and write its runtime findings to the job summary.
+
+runs:
+  using: composite
+  steps:
+    - name: Stop Falco and summarize findings
+      if: ${{ always() }}
+      shell: bash
+      env:
+        ACTION_PATH: ${{ github.action_path }}
+      run: bash "$ACTION_PATH/stop.sh" /tmp/falco_events.json

@@ -1,0 +1,10 @@
+{
+  "name": "stop-runtime-hardening",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Stop Falco monitoring and report runtime findings",
+  "type": "module",
+  "scripts": {
+    "test": "bash test.sh"
+  }
+}

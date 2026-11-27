@@ -1,0 +1,10 @@
+{
+  "name": "start-runtime-hardening",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Start Falco monitoring and Bullfrog egress filtering",
+  "type": "module",
+  "scripts": {
+    "test": "bash test.sh"
+  }
+}
